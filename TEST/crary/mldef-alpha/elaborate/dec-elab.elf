@@ -1,0 +1,761 @@
+
+%{
+NULL
+}%
+
+dec-elab/null		: dec-elab Mec Sec dec/null md/unit sg/one.
+
+
+%{
+MONOMORPHIC VAL BINDINGS
+
+}%
+
+dec-elab/val-mono	: dec-elab Mec Sec (dec/val tyvar-list/nil Pe Ee)
+			   (md/lete E T ([x] md/letp (M x) ([a] [m] M' a m)))
+			   S'
+			   <- resolve-in-basis Mec Sec (name/val identifier/bind) (sg/datom tagged) Mbind
+			   <- expr-elab Mec Sec Ee E T
+			   <- ({x} tm-assm x T
+				 -> pat-elab Mec Sec Pe (tm/snd Mbind) x T (M x) S)
+			   <- distribute-sg sg/one ([_] S) S'
+			   <- ({a} {m}
+				 md-fst m a
+				 -> distribute-md sg/one ([_] S) ([_] [_] m) (M' a m)).
+
+
+
+%{ 
+POLYMORPHIC VAL BINDINGS 
+
+}%
+
+is-value       : module -> sg -> expr -> type.
+is-value-row   : module -> sg -> expr-row -> type.
+is-constructor : module -> sg -> longid -> type.
+
+is-value/longid		: is-value Mec Sec (expr/longid _).
+
+is-value/record		: is-value Mec Sec (expr/record ERe)
+			   <- is-value-row Mec Sec ERe.
+
+is-value/app		: is-value Mec Sec (expr/app (expr/longid I) Ee)
+			   <- is-constructor Mec Sec I
+			   <- is-value Mec Sec Ee.
+
+%% this disallows type-constrained constructors, like everyone does
+
+is-value/constraint	: is-value Mec Sec (expr/constraint Ee _)
+			   <- is-value Mec Sec Ee.
+
+is-value/fn		: is-value Mec Sec (expr/fn _).
+
+is-value-row/nil	: is-value-row Mec Sec expr-row/nil.
+
+is-value-row/cons	: is-value-row Mec Sec (expr-row/cons L Ee ERe)
+			   <- is-value Mec Sec Ee
+			   <- is-value-row Mec Sec ERe.
+
+%% don't need to bother with nullary case
+
+is-constructor/data	: is-constructor Mec Sec I
+			   <- resolve-long Mec Sec name/val I _ (sg/named (name/dcon1 _ _) _).
+
+is-constructor/exn	: is-constructor Mec Sec I
+			   <- resolve-long Mec Sec name/val I _ (sg/named name/econ1 _).
+
+
+irrefutable     : module -> sg -> pat -> type.
+irrefutable-row : module -> sg -> pat-row -> type.
+
+irrefutable/bind	: irrefutable Mec Sec (pat/longid (longid/short I))
+			   <- noresolve Mec Sec (name/val I).
+
+irrefutable/bind-shadow : irrefutable Mec Sec (pat/longid (longid/short I))
+			   <- resolve Mec Sec (name/val I) _ (sg/named name/ordinary _).
+
+irrefutable/dcon0	: irrefutable Mec Sec (pat/longid I)
+			   <- resolve-long Mec Sec name/val I _ (sg/named (name/dcon0 0 1) _).
+
+irrefutable/wild	: irrefutable Mec Sec pat/wild.
+
+irrefutable/constraint  : irrefutable Mec Sec (pat/constraint Pe Te)
+			   <- irrefutable Mec Sec Pe.
+
+irrefutable/app		: irrefutable Mec Sec (pat/app I Pe)
+			   <- resolve-long Mec Sec name/val I _ (sg/named (name/dcon1 0 1) _)
+			   <- irrefutable Mec Sec Pe.
+
+irrefutable/record	: irrefutable Mec Sec (pat/record PRe)
+			   <- irrefutable-row Mec Sec PRe.
+
+irrefutable/as		: irrefutable Mec Sec (pat/as Pe1 Pe2)
+			   <- irrefutable Mec Sec Pe1
+			   <- irrefutable Mec Sec Pe2.
+
+irrefutable-row/nil	: irrefutable-row Mec Sec pat-row/nil.
+
+irrefutable-row/flex	: irrefutable-row Mec Sec pat-row/flex.
+
+irrefutable-row/cons	: irrefutable-row Mec Sec (pat-row/cons L Pe PRe)
+			   <- irrefutable Mec Sec Pe
+			   <- irrefutable-row Mec Sec PRe.
+			      
+
+
+polyargs-elab : tyvar-list -> sg -> type.
+
+polyargs-elab/nil-done  : polyargs-elab tyvar-list/nil sg/one.
+
+polyargs-elab/nil-another
+			: polyargs-elab tyvar-list/nil
+			   (sg/prod (sg/satom t) S)
+			   <- polyargs-elab tyvar-list/nil S.
+
+polyargs-elab/cons	: polyargs-elab (tyvar-list/cons I TVLe)
+			   (sg/sigma (sg/named (name/con I) (sg/satom t)) ([_] S))
+			   <- polyargs-elab TVLe S.
+
+
+
+dec-elab/val-poly	: dec-elab Mec Sec (dec/val TVLe Pe Ee) Mdist Sdist
+			   <- resolve-in-basis Mec Sec (name/val identifier/bind) (sg/datom tagged) Mbind
+			   <- is-value Mec Sec Ee
+			   <- irrefutable Mec Sec Pe
+			   <- polyargs-elab TVLe S
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> expr-elab (md/pair Mec m) (sg/sigma Sec ([_] S)) Ee (E a m) (T a))
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> {x} tm-assm x (T a)
+				 -> pat-elab (md/pair Mec m) (sg/sigma Sec ([_] S)) Pe (tm/snd Mbind) x (T a) (Mpat a m x) (Spat a))
+			   <- distribute-sg S Spat Sdist
+			   <- distribute-md S Spat
+			      ([a] [m]
+				 md/letp
+				 (md/lam S ([a'] [m'] md/datom (E a' m') (T a')))
+				 ([_] [f] Mpat a m (tm/snd (md/app f m))))
+			      Mdist.
+
+%{ 
+FUN BINDINGS
+
+}%
+
+funbind-fwd	: funbind -> con -> sg -> (term -> module) -> type.
+
+funbind-fwd/nil	: funbind-fwd funbind/nil unit sg/one ([x] md/unit).
+
+funbind-fwd/cons	: funbind-fwd (funbind/cons FBe I _ _) 
+			   (prod Tprefix T)
+			   (sg/sigma Sprefix ([_] sg/named (name/val I) (sg/named name/ordinary (sg/datom T))))
+			   ([x] md/pair 
+			      (Mprefix (tm/pi1 x))
+			      (md/in (name/val I) (md/in name/ordinary (md/datom (tm/pi2 x) T))))
+			   <- funbind-fwd FBe Tprefix Sprefix Mprefix
+			   <- cn-of T t.
+
+elprod    : con -> con -> con
+          = [t1] [t2] prod (labeled (label/number 1) t1) (prod (labeled (label/number 2) t2) unit).
+
+tm/elpair : term -> term -> term
+          = [e1] [e2] tm/pair (tm/in (label/number 1) e1) (tm/pair (tm/in (label/number 2) e2) tm/unit).
+
+
+curry-funbind	 : nat -> con -> term -> con -> (term -> term) -> con -> con -> type.
+%% input: number of arguments, overall remaining (curried) type, argument tuple accumulator, arg tuple accumulator's type
+%% output: curried function (depends on uncurried function), uncurried function's argument type, function's return type
+
+curry-funbind/nil	: curry-funbind 0 T Eargs Targs ([f] tm/app f Eargs) Targs T.
+
+curry-funbind/cons	: curry-funbind (s N) (arrow T1 Trest) Eargs Targs
+			   ([f] tm/lam T1 ([x] Efun f x))
+			   Tdom Tcod
+			   <- ({x}
+				 curry-funbind N Trest (tm/elpair Eargs x) (elprod Targs T1) 
+				 ([f] Efun f x) Tdom Tcod).
+
+
+ty-option-equiv : module -> sg -> ty-option -> con -> type.
+
+ty-option-equiv/none	: ty-option-equiv Mec Sec ty-option/none T.
+
+ty-option-equiv/some	: ty-option-equiv Mec Sec (ty-option/some Te) T
+			   <- ty-elab Mec Sec Te T'
+			   <- cn-equiv T T' t.
+
+
+tuplify-pat	: pat -> pat-seq N -> pat -> type.
+
+tuplify-pat/nil		: tuplify-pat Pe pat-seq/nil Pe.
+
+tuplify-pat/cons	: tuplify-pat Pe1 (pat-seq/cons Pe2 PSe) Pefinal
+			   <- tuplify-pat
+			      (pat/record (pat-row/cons (label/number 1) Pe1 (pat-row/cons (label/number 2) Pe2 pat-row/nil)))
+			      PSe
+			      Pefinal.
+
+
+matchify	: funarms N -> match -> type.
+
+matchify/nil		: matchify funarms/nil match/nil.
+
+matchify/cons		: matchify (funarms/cons PSe Ee FAe) (match/cons Pe Ee Me)
+			   <- tuplify-pat (pat/record pat-row/nil) PSe Pe
+			   <- matchify PAe Me.
+
+
+funbind-elab	: module -> sg -> term -> funbind -> con -> term -> type.
+%% input: elab ctx, match exn, funbind, overall IL type that must be returned
+%% output: the bundle term
+
+funbind-elab/nil	: funbind-elab Mec Sec Ematch funbind/nil unit tm/unit.
+
+funbind-elab/cons	: funbind-elab Mec Sec Ematch 
+			   (funbind/cons FBe I (FAe : funarms (s N)) TOe) (prod T Ttail)
+			   (tm/pair (Efun (tm/lam Tdom Ebody)) Etail)
+			   <- funbind-elab Mec Sec Ematch FBe Ttail Etail
+			   <- curry-funbind (s N) T tm/unit unit ([f] Efun f) Tdom Tcod
+			   <- ty-option-equiv Mec Sec TOe Tcod
+			   <- matchify FAe Me
+			   <- ({x}
+				 match-elab Mec Sec Me Ematch x Tdom (Ebody x) Tcod).
+
+
+dec-elab/fun		: dec-elab Mec Sec (dec/fun TVLe FBe) Mdist Sdist
+			   <- resolve-in-basis Mec Sec (name/val identifier/match) (sg/datom tagged) Mmatch
+			   <- polyargs-elab TVLe S
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> funbind-fwd FBe (Tfwd a) (Sfwd a) ([this] Mfwd a m this))
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> {this} tm-assm this (Tfwd a)
+				 -> funbind-elab 
+				    (md/pair (md/pair Mec m) (Mfwd a m this))
+				    (sg/sigma (sg/sigma Sec ([_] S)) ([_] Sfwd a))
+				    (tm/snd Mmatch)
+				    FBe
+				    (Tfwd a)
+				    (E a m this))
+			   <- distribute-sg S Sfwd Sdist
+			   <- distribute-md S Sfwd
+			      ([a] [m]
+				 md/lete
+				 (tm/fix (Tfwd a)
+				    ([this] E a m this))
+				 (Tfwd a)
+				 ([this] Mfwd a m this))
+			      Mdist.
+
+
+
+%{
+OPEN
+
+}%
+
+dec-elab/open		: dec-elab Mec Sec (dec/open I) M S
+			   <- resolve-long Mec Sec name/mod I M S.
+
+
+
+%{
+NULLARY EXCEPTIONS
+}%
+
+dec-elab/exn0		: dec-elab Mec Sec (dec/exn0 I)
+			   (md/lete
+			      (tm/newtag unit)
+			      (tag unit)
+			      ([x]
+				 md/in (name/ec I)
+				 (md/pair
+				    (md/datom x (tag unit))
+				    (md/in (name/val I)
+				       (md/in name/econ0
+					  (md/lam sg/one ([_] [_] md/datom (tm/tag x tm/unit) tagged)))))))
+			   (sg/named (name/ec I)
+			      (sg/prod
+				 (sg/datom (tag unit))
+				 (sg/named (name/val I)
+				    (sg/named name/econ0
+				       (sg/pi sg/one ([_] sg/datom tagged)))))).
+
+
+
+%{
+UNARY EXCEPTIONS
+}%
+
+dec-elab/exn1		: dec-elab Mec Sec (dec/exn1 I Te)
+			   (md/lete
+			      (tm/newtag T)
+			      (tag T)
+			      ([x]
+				 md/in (name/ec I)
+				 (md/pair
+				    (md/datom x (tag T))
+				    (md/in (name/val I)
+				       (md/in name/econ1
+					  (md/lam sg/one
+					     ([_] [_] md/datom 
+						(tm/lam T ([y] tm/tag x y))
+						(arrow T tagged))))))))
+			   (sg/named (name/ec I)
+			      (sg/prod
+				 (sg/datom (tag T))
+				 (sg/named (name/val I)
+				    (sg/named name/econ1
+				       (sg/pi sg/one ([_] sg/datom (arrow T tagged)))))))
+			   <- ty-elab Mec Sec Te T.
+				    
+
+
+%{
+EXCEPTION COPYING
+}%
+
+dec-elab/exncopy0	: dec-elab Mec Sec (dec/exncopy Inew Iold)
+			   (md/in (name/ec Inew)
+			      (md/pair
+				 (md/pi1 M)
+				 (md/in (name/val Inew)
+				    (md/out (md/pi2 M)))))
+			   (sg/named (name/ec Inew)
+			      (sg/prod
+				 (sg/datom (tag unit))
+				 (sg/named (name/val Inew)
+				    (sg/named name/econ0
+				       (sg/pi sg/one ([_] sg/datom tagged))))))
+			   <- resolve-long Mec Sec name/ec Iold M
+			      (sg/prod
+				 (sg/datom (tag unit))
+				 (sg/named (name/val _)
+				    (sg/named name/econ0
+				       (sg/pi sg/one ([_] sg/datom tagged))))).
+
+dec-elab/exncopy1	: dec-elab Mec Sec (dec/exncopy Inew Iold)
+			   (md/in (name/ec Inew)
+			      (md/pair
+				 (md/pi1 M)
+				 (md/in (name/val Inew)
+				    (md/out (md/pi2 M)))))
+			   (sg/named (name/ec Inew)
+			      (sg/prod
+				 (sg/datom (tag T))
+				 (sg/named (name/val Inew)
+				    (sg/named name/econ1
+				       (sg/pi sg/one ([_] sg/datom (arrow T tagged)))))))
+			   <- resolve-long Mec Sec name/ec Iold M
+			      (sg/prod
+				 (sg/datom (tag T))
+				 (sg/named (name/val _)
+				    (sg/named name/econ1
+				       (sg/pi sg/one ([_] sg/datom (arrow T tagged)))))).
+
+
+
+
+%{
+TYPE BINDING
+
+}%
+
+tyargs-elab : tyvar-list -> sg -> type.
+
+tyargs-elab/nil		: tyargs-elab tyvar-list/nil sg/one.
+
+tyargs-elab/cons	: tyargs-elab (tyvar-list/cons I TVLe)
+			   (sg/sigma (sg/named (name/con I) (sg/satom t)) ([_] S))
+			   <- tyargs-elab TVLe S.
+
+
+dec-elab/type		: dec-elab Mec Sec (dec/type TVLe I Te) 
+			   (md/in (name/con I) (md/satom (lam K ([a] T a))))
+			   (sg/named (name/con I) (sg/satom (pi K ([a] sing (T a)))))
+			   <- tyargs-elab TVLe S
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> ty-elab (md/pair Mec m) (sg/sigma Sec ([_] S)) Te (T a)).
+
+
+
+%{
+DATATYPE BINDINGS
+
+}%
+
+bypass-function		: (con -> con) -> (con -> term -> term) -> type.
+
+bypass-function/nil	: bypass-function ([res] res) ([res] [x] x).
+
+bypass-function/cons	: bypass-function ([res] arrow (T1 res) (T2 res))
+			   ([res] [x] tm/lam (T1 res) ([_] E res x))
+			   <- bypass-function ([res] T2 res) ([res] [x] E res x).
+
+
+dconbind-elab	: module                     %% Elaboration context
+		   -> sg
+		   -> con                    %% Ultimate type
+		   -> nat                    %% Number of arms seen so far
+		   -> dconbind               %% To elaborate
+%%
+		   -> nat                    %% Total arms (including seen so far)
+		   -> con                    %% Sum type
+		   -> (term -> module)       %% Constructor module (depends on injector)
+		   -> sg                     %% Constructor signature
+		   -> (con -> term -> term)  %% Destructor (depends on result type, and destructee)
+		   -> (con -> con)           %% Destructor type (depends on result type)
+		   -> type.
+
+dconbind-elab/nil	: dconbind-elab Mec Sec Tult N dconbind/nil
+			   N 
+			   void
+			   ([_] md/unit)
+			   sg/one
+			   ([res] [x] tm/abort x res)
+			   ([res] res).
+
+dconbind-elab/nullary	: dconbind-elab Mec Sec Tult N (dconbind/nullary I CBe)
+			   Ntotal 
+			   (plus unit T)
+			   ([inj] %% inj : arrow (plus unit T) Tult
+			      md/pair
+			      (md/in
+				 (name/val I)
+				 (md/in
+				    (name/dcon0 N Ntotal)
+				    (md/datom 
+				       (tm/app inj (tm/in1 tm/unit T))
+				       Tult)))
+			      (Mcon (tm/lam T ([x] tm/app inj (tm/in2 x unit)))))
+			   (sg/sigma
+			      (sg/named (name/val I) (sg/named (name/dcon0 N Ntotal) (sg/datom Tult)))
+			      ([_] Scon))
+			   ([res] [x] %% x : plus unit T
+			      tm/lam (arrow unit res)
+			      ([f1]
+				 tm/case x
+				 ([y] tm/lett (tm/app f1 y) ([z] Ebypass res z))
+				 ([y] Edest res y)))
+			   ([res] arrow (arrow unit res) (Tdest res))
+			   <- dconbind-elab Mec Sec Tult (s N) CBe
+			      Ntotal T Mcon Scon Edest Tdest
+			   <- bypass-function ([res] Tdest res) ([res] [x] Ebypass res x).
+
+dconbind-elab/unary	: dconbind-elab Mec Sec Tult N (dconbind/unary I Te CBe)
+			   Ntotal 
+			   (plus T1 T)
+			   ([inj] %% inj : arrow (plus T1 T) Tult
+			      md/pair
+			      (md/in
+				 (name/val I)
+				 (md/in
+				    (name/dcon1 N Ntotal)
+				    (md/datom 
+				       (tm/lam T1
+					  ([x] tm/app inj (tm/in1 x T)))
+				       (arrow T1 Tult))))
+			      (Mcon (tm/lam T ([x] tm/app inj (tm/in2 x T1)))))
+			   (sg/sigma
+			      (sg/named (name/val I) (sg/named (name/dcon1 N Ntotal) (sg/datom (arrow T1 Tult))))
+			      ([_] Scon))
+			   ([res] [x] %% x : plus T1 T
+			      tm/lam (arrow T1 res)
+			      ([f1]
+				 tm/case x
+				 ([y] tm/lett (tm/app f1 y) ([z] Ebypass res z))
+				 ([y] Edest res y)))
+			   ([res] arrow (arrow T1 res) (Tdest res))
+			   <- ty-elab Mec Sec Te T1
+			   <- dconbind-elab Mec Sec Tult (s N) CBe
+			      Ntotal T Mcon Scon Edest Tdest
+			   <- bypass-function ([res] Tdest res) ([res] [x] Ebypass res x).
+
+
+datbind-elab		: module -> sg -> datbind -> sg -> (con -> sg) -> module -> module -> type.
+
+datbind-elab/nil	: datbind-elab Mec Sec datbind/nil
+			   sg/one ([_] sg/one) md/unit md/unit.
+
+datbind-elab/data	: datbind-elab Mec Sec (datbind/data TVLe I CBe DBe)
+			   %% type signature
+			   (sg/sigma
+			      %% this type
+			      (sg/named (name/con I) (sg/satom (karrow K t))) 
+			      %% latter datatypes
+			      ([this] Sfwd this))
+			   %% operations signature
+			   ([b] sg/prod
+			      %% this datatype
+			      (sg/named (name/dtc I)
+				 (sg/prod
+				    %% extra copy of type
+				    (sg/satom (pi K ([a] sing (app (pi1 b) a))))
+				    (sg/prod
+				       %% destructor
+				       (sg/pi S
+					  ([a] sg/pi (sg/satom t)
+					     ([res] sg/datom
+						(arrow
+						   (app (pi1 b) a)
+						   (Tdest (pi1 b) (pi2 b) a res)))))
+				       %% constructors
+				       (Scon' (pi1 b) (pi2 b)))))
+			      %% latter datatypes
+			      (Sdt (pi1 b) (pi2 b)))
+			   %% type implementation
+			   (md/pair
+			      %% this type
+			      (md/in (name/con I) 
+				 (md/satom (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))))
+			      %% latter datatypes
+			      (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))))
+			   %% operations implementation
+			   (md/pair
+			      %% this datatype
+			      (md/in (name/dtc I)
+				 (md/pair
+				    %% extra copy of type
+				    (md/satom (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+				    (md/pair
+				       %% destructor
+				       (md/lam S
+					  ([a] [ma] md/lam (sg/satom t)
+					     ([res] [_] md/datom
+						(tm/lam (rec K ([this] [a] T this (Cfwd this) a) a)
+						   ([x] 
+						      Edest 
+						      (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+						      (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+						      (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+						      a ma res (tm/unroll x)))
+						(arrow 
+						   (rec K ([this] [a] T this (Cfwd this) a) a)
+						   (Tdest 
+						      (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+						      (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+						      a res)))))
+				       %% constructors
+				       Mcon')))
+			      %% latter datatypes
+			      (Mdt (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))))
+			   <- tyargs-elab TVLe S
+			   <- sg-fst S K
+			   <- ({this} cn-of this (karrow K t)
+				 -> datbind-elab 
+				    (md/pair Mec (md/in (name/con I) (md/satom this)))
+				    (sg/sigma Sec ([_] sg/named (name/con I) (sg/satom (karrow K t))))
+				    DBe
+				    (Sfwd this) ([b] Sdt this b) (Mfwd this) (Mdt this))
+			   <- ({this} sg-fst (Sfwd this) (Kfwd this))
+			   <- ({this} md-fst (Mfwd this) (Cfwd this))
+			   <- ({this} cn-of this (karrow K t)
+				 -> {latter} cn-of latter (Kfwd this)
+				 -> {mlatter} md-assm mlatter (Sfwd this)
+				 -> md-fst mlatter latter
+				 -> {a} cn-of a K
+				 -> {ma} md-assm ma S
+				 -> md-fst ma a
+				 -> dconbind-elab
+				    (md/pair
+				       Mec
+				       (md/pair
+					  (md/in (name/con I) (md/satom this))
+					  (md/pair
+					     (Mfwd this)
+					     ma)))
+				    (sg/prod
+				       Sec
+				       (sg/prod
+					  (sg/named (name/con I) (sg/satom (pi K ([a] sing (app this a)))))
+					  (sg/prod
+					     (Sfwd this)
+					     S)))
+				    (app this a) 0 CBe
+				    N (T this latter a) ([inj] Mcon this latter mlatter a ma inj) (Scon this latter a) ([res] [x] Edest this latter mlatter a ma res x) ([res] Tdest this latter a res))
+			   <- ({this} {latter}
+				 distribute-sg S ([a] Scon this latter a)
+				 (Scon' this latter))
+			   <- distribute-md S 
+			      ([a] Scon 
+				 (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+				 (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+				 a)
+			      ([a] [ma] 
+				 Mcon
+				 (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+				 (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+				 (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+				 a ma
+				 (tm/lam 
+				    (T 
+				       (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+				       (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+				       a)
+				    ([x] tm/roll x K ([this] [a] T this (Cfwd this) a) a)))
+			      Mcon'.
+
+%% Withtypes may depend on earlier datatypes, and are available to earlier datatypes.
+%% This gives the desired behavior provided withtypes appear last, which can be assured
+%% by the parser.
+
+datbind-elab/with	: datbind-elab Mec Sec (datbind/with TVLe I Te DBe)
+			   (sg/sigma
+			      (sg/named (name/con I) (sg/satom (pi K ([a] sing (T a)))))
+			      ([_] Sfwd))
+			   ([b] Sdt (pi2 b))
+			   (md/pair
+			      (md/in (name/con I) (md/satom (lam K ([a] T a))))
+			      Mfwd)
+			   Mdt
+			   <- tyargs-elab TVLe S
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {ma} md-assm ma S
+				 -> md-fst ma a
+				 -> ty-elab (md/pair Mec ma) (sg/sigma Sec ([_] S)) Te (T a))
+			   <- datbind-elab Mec Sec DBe
+			      Sfwd ([b] Sdt b) Mfwd Mdt.
+
+
+dec-elab/datatype	: dec-elab Mec Sec (dec/datatype DBe) 
+			   (md/seal (md/pair Mfwd Mdt) (sg/sigma Sfwd ([a] Sdt a)))
+			   (sg/sigma Sfwd ([a] Sdt a)) 
+			   <- datbind-elab Mec Sec DBe Sfwd Sdt Mfwd Mdt.
+
+
+
+%{
+DATATYPE COPYING
+
+}%
+
+dec-elab/dtcopy	: dec-elab Mec Sec (dec/dtcopy Inew Iold)
+			   (md/pair
+			      (md/in (name/con Inew) (md/pi1 M))
+			      (md/in (name/dtc Inew) M))
+			   (sg/sigma
+			      (sg/named (name/con Inew) (sg/satom (pi K ([a] sing (app C a)))))
+			      ([_] sg/named (name/dtc Inew) S))
+			   <- resolve-long Mec Sec name/dtc Iold M S
+			   <- sg-sub S (sg/sigma (sg/satom (karrow K t)) ([_] _))
+			   <- md-fst (md/pi1 M) C.
+
+
+
+%{
+STRUCTURE BINDINGS
+}%
+
+dec-elab/structure	: dec-elab Mec Sec (dec/structure I Re)
+			   (md/in (name/mod I) M)
+			   (sg/named (name/mod I) S)
+			   <- strexp-elab Mec Sec Re M S.
+
+
+
+%{
+FUNCTOR BINDINGS
+}%
+
+functorbind-elab	: module         %% Elaboration context
+			   -> sg
+			   -> name       %% Functor name
+			   -> name       %% Argument name
+			   -> sigexp     %% Argument signature
+			   -> strexp     %% Functor body
+%%
+			   -> module     %% Resulting functor
+			   -> sg         %% Its signature
+			   -> type.
+
+functorbind-elab/i	: functorbind-elab Mec Sec Lfunc Larg Se Re
+			   (md/in Lfunc (md/lam S ([a] [m] Mbody a m)))
+			   (sg/named Lfunc (sg/pi S ([a] Sbody a)))
+			   <- sigexp-elab Mec Sec Se S
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> strexp-elab
+				    (md/pair Mec (md/in Larg m))
+				    (sg/prod Sec (sg/named Larg S))
+				    Re
+				    (Mbody a m) (Sbody a)).
+
+dec-elab/functor	: dec-elab Mec Sec (dec/functor Ifunc Iarg Se Re) M S
+			   <- functorbind-elab Mec Sec (name/fun Ifunc) (name/mod Iarg) Se Re M S.
+
+dec-elab/functor-anon
+			: dec-elab Mec Sec (dec/functor-anon Ifunc SPe Re) M S
+			   <- functorbind-elab Mec Sec (name/fun Ifunc) name/funcarg (sigexp/sig SPe) Re M S.
+
+
+
+%{
+SIGNATURE BINDINGS
+
+Parser prevents these from appearing except at top level, if you care about that sort of thing.
+}%
+
+dec-elab/signature	: dec-elab Mec Sec (dec/signature I Se)
+			   (md/in (name/sig I) (md/sgatom S))
+			   (sg/named (name/sig I) (sg/sgatom S))
+			   <- sigexp-elab Mec Sec Se S.
+
+
+
+%{
+LOCAL
+
+}%
+
+dec-elab/local		: dec-elab Mec Sec (dec/local De1 De2) 
+			   (md/dpair (md/in name/hide M1) ([a] [m] M2 a (md/out m)))
+			   (sg/sigma (sg/named name/hide S1) ([a] S2 a))
+			   <- dec-elab Mec Sec De1 M1 S1
+			   <- sg-fst S1 K1
+			   <- ({a} cn-of a K1
+				 -> {m} md-assm m S1
+				 -> md-fst m a
+				 -> dec-elab (md/pair Mec m) (sg/sigma Sec ([_] S1)) De2 (M2 a m) (S2 a)).
+
+
+
+%{
+SEQ
+
+}%
+
+dec-elab/seq		: dec-elab Mec Sec (dec/seq De1 De2)
+			   (md/dpair M1 ([a] [m] M2 a m))
+			   (sg/sigma S1 ([a] S2 a))
+			   <- dec-elab Mec Sec De1 M1 S1
+			   <- sg-fst S1 K1
+			   <- ({a} cn-of a K1
+				 -> {m} md-assm m S1
+				 -> md-fst m a
+				 -> dec-elab (md/pair Mec m) (sg/sigma Sec ([_] S1)) De2 (M2 a m) (S2 a)).
+
+
+%{
+PAR
+
+}%
+
+dec-elab/par		: dec-elab Mec Sec (dec/par De1 De2)
+			   (md/pair M1 M2)
+			   (sg/sigma S1 ([_] S2))
+			   <- dec-elab Mec Sec De1 M1 S1
+			   <- dec-elab Mec Sec De2 M2 S2.

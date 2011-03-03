@@ -1,0 +1,503 @@
+
+%{
+Operations on sets of type identifiers.  Sets are represented as unsorted lists with possible duplicates.
+}%
+
+varset-member : identifier -> tyvar-list -> type.
+
+varset-member/hit	: varset-member I (tyvar-list/cons I _).
+
+varset-member/miss	: varset-member I (tyvar-list/cons _ S)
+			   <- varset-member I S.
+
+
+
+varset-absent : identifier -> tyvar-list -> type.
+
+varset-absent/nil	: varset-absent I tyvar-list/nil.
+
+varset-absent/cons	: varset-absent I (tyvar-list/cons I' S)
+			   <- identifier-neq I I'
+			   <- varset-absent I S.
+
+
+
+varset-union : tyvar-list -> tyvar-list -> tyvar-list -> type.
+
+varset-union/nil	: varset-union tyvar-list/nil S S.
+
+varset-union/cons1	: varset-union (tyvar-list/cons I S1) S2 (tyvar-list/cons I S)
+			   <- varset-union S1 S2 S.
+
+
+
+varset-subset : tyvar-list -> tyvar-list -> type.
+
+varset-subset/nil	: varset-subset tyvar-list/nil S.
+
+varset-subset/cons	: varset-subset (tyvar-list/cons I S1) S2
+			   <- varset-member I S2
+			   <- varset-subset S1 S2.
+
+
+
+varset-remove : identifier -> tyvar-list -> tyvar-list -> type.
+
+varset-remove/nil	: varset-remove I tyvar-list/nil tyvar-list/nil.
+
+varset-remove/hit	: varset-remove I (tyvar-list/cons I S) S'
+			   <- varset-remove I S S'.
+
+varset-remove/miss	: varset-remove I (tyvar-list/cons I' S) (tyvar-list/cons I' S')
+			   <- varset-remove I S S'.
+
+
+
+varset-difference : tyvar-list -> tyvar-list -> tyvar-list -> type.
+
+varset-difference/nil	: varset-difference S tyvar-list/nil S.
+
+varset-difference/cons	: varset-difference S1 (tyvar-list/cons I S2) S'
+			   <- varset-difference S1 S2 S
+			   <- varset-remove I S S'.
+
+
+
+%{
+In each of the following, S (first) and SG (last) are sets of tyvars (that is, identifiers
+concretely rendered as 'a).
+
+ * S is the set of tyvars in scope.  Every tyvar that occurs must be a member of S.
+
+ * SG is the set of tyvars that occur "unguarded", that is, outside a val or fun declaration
+   or a val specification.  (See the Definition, page 18.)
+
+Only short tyvars from the name/con namespace are tracked.  Others are ignored.
+
+We don't allow the binding of tyvars (except by tyvar-lists).  This means we don't have
+to return the scope created by a declaration or specification, since they will only
+bind identifiers we are ignoring anyway.
+}%
+
+
+prepass-ty		: tyvar-list -> ty -> tyvar-list -> type.
+prepass-ty-row		: tyvar-list -> ty-row -> tyvar-list -> type.
+prepass-ty-list		: tyvar-list -> ty-list -> tyvar-list -> type.
+prepass-ty-option	: tyvar-list -> ty-option -> tyvar-list -> type.
+
+prepass-pat		: tyvar-list -> pat -> tyvar-list -> type.
+prepass-pat-row		: tyvar-list -> pat-row -> tyvar-list -> type.
+prepass-pat-seq		: tyvar-list -> pat-seq N -> tyvar-list -> type.
+
+prepass-expr		: tyvar-list -> expr -> expr -> tyvar-list -> type.
+prepass-expr-row	: tyvar-list -> expr-row -> expr-row -> tyvar-list -> type.
+prepass-match		: tyvar-list -> match -> match -> tyvar-list -> type.
+
+prepass-funarms		: tyvar-list -> funarms N -> funarms N -> tyvar-list -> type.
+prepass-funbind	: tyvar-list -> funbind -> funbind -> tyvar-list -> type.
+prepass-dconbind	: tyvar-list -> dconbind -> tyvar-list -> type.
+prepass-datbind		: tyvar-list -> datbind -> tyvar-list -> type.
+prepass-dec		: tyvar-list -> dec -> dec -> tyvar-list -> type.
+
+prepass-strexp		: tyvar-list -> strexp -> strexp -> tyvar-list -> type.
+
+prepass-spec		: tyvar-list -> spec -> spec -> tyvar-list -> type.
+prepass-sigexp		: tyvar-list -> sigexp -> sigexp -> tyvar-list -> type.
+
+
+
+%% Key cases
+
+extend-tyargs		: tyvar-list      %% identifiers in scope (can't be added)
+			   -> tyvar-list  %% old identifier list
+			   -> tyvar-list  %% new identifier list
+			   -> tyvar-list  %% identifiers added
+			   -> type.
+
+extend-tyargs/done	: extend-tyargs S TVLe TVLe tyvar-list/nil.
+
+extend-tyargs/another	: extend-tyargs S TVLe (tyvar-list/cons I TVLe') (tyvar-list/cons I SG)
+			   <- tyvar-identifier I
+			   <- varset-absent I S
+			   <- extend-tyargs (tyvar-list/cons I S) TVLe TVLe' SG.
+
+
+
+prepass-dec/val	: prepass-dec S (dec/val TVLe Pe Ee) (dec/val TVLe' Pe Ee') tyvar-list/nil
+			   <- extend-tyargs S TVLe TVLe' Sadded
+			   <- varset-union S TVLe' S'
+			   <- prepass-pat S' Pe SG1
+			   <- prepass-expr S' Ee Ee' SG2
+			   <- varset-union SG1 SG2 SG
+			   <- varset-subset Sadded SG.
+
+prepass-dec/fun	: prepass-dec S (dec/fun TVLe FVBe) (dec/fun TVLe' FVBe') tyvar-list/nil
+			   <- extend-tyargs S TVLe TVLe' Sadded
+			   <- varset-union S TVLe' S'
+			   <- prepass-funbind S' FVBe FVBe' SG
+			   <- varset-subset Sadded SG.
+
+prepass-spec/val	: prepass-spec S (spec/val TVLe I Te) (spec/val TVLe' I Te) tyvar-list/nil
+			   <- extend-tyargs S TVLe TVLe' Sadded
+			   <- varset-union S TVLe' S'
+			   <- prepass-ty S' Te SG
+			   <- varset-subset Sadded SG.
+
+
+
+%% Types
+
+prepass-ty/exn		: prepass-ty S ty/exn tyvar-list/nil.
+
+prepass-ty/id		: prepass-ty S (ty/longid (longid/short I)) tyvar-list/nil
+			   <- non-tyvar-identifier I.
+
+prepass-ty/tyvar	: prepass-ty S (ty/longid (longid/short I)) (tyvar-list/cons I tyvar-list/nil)
+			   <- tyvar-identifier I
+			   <- varset-member I S.
+
+prepass-ty/longid	: prepass-ty S (ty/longid (longid/cons _ _)) tyvar-list/nil.
+
+prepass-ty/record	: prepass-ty S (ty/record TRe) SG
+			   <- prepass-ty-row S TRe SG.
+
+prepass-ty/id-app	: prepass-ty S (ty/longid-app (longid/short I) TLe) SG
+			   <- prepass-ty-list S TLe (tyvar-list/cons I SG).
+
+prepass-ty/longid-app	: prepass-ty S (ty/longid-app (longid/cons _ _) TLe) SG
+			   <- prepass-ty-list S TLe SG.
+
+prepass-ty/arrow	: prepass-ty S (ty/arrow Te1 Te2) SG
+			   <- prepass-ty S Te1 SG1
+			   <- prepass-ty S Te2 SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+prepass-ty-row/nil	: prepass-ty-row S ty-row/nil tyvar-list/nil.
+
+prepass-ty-row/cons	: prepass-ty-row S (ty-row/cons _ Te TRe) SG
+			   <- prepass-ty S Te SG1
+			   <- prepass-ty-row S TRe SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+prepass-ty-list/nil	: prepass-ty-list S ty-list/nil tyvar-list/nil.
+
+prepass-ty-list/cons	: prepass-ty-list S (ty-list/cons Te TRe) SG
+			   <- prepass-ty S Te SG1
+			   <- prepass-ty-list S TRe SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+prepass-ty-option/none	: prepass-ty-option S ty-option/none tyvar-list/nil.
+
+prepass-ty-option/some	: prepass-ty-option S (ty-option/some Te) SG
+			   <- prepass-ty S Te SG.
+
+
+
+%% Patterns
+
+prepass-pat/longid	: prepass-pat S (pat/longid _) tyvar-list/nil.
+
+prepass-pat/wild	: prepass-pat S pat/wild tyvar-list/nil.
+
+prepass-pat/constraint	: prepass-pat S (pat/constraint Pe Te) SG
+			   <- prepass-pat S Pe SG1
+			   <- prepass-ty S Te SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-pat/app		: prepass-pat S (pat/app _ Pe) SG
+			   <- prepass-pat S Pe SG.
+
+prepass-pat/record	: prepass-pat S (pat/record PRe) SG
+			   <- prepass-pat-row S PRe SG.
+
+prepass-pat/as		: prepass-pat S (pat/as Pe1 Pe2) SG
+			   <- prepass-pat S Pe1 SG1
+			   <- prepass-pat S Pe2 SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+prepass-pat-row/nil	: prepass-pat-row S pat-row/nil tyvar-list/nil.
+
+prepass-pat-row/flex	: prepass-pat-row S pat-row/flex tyvar-list/nil.
+
+prepass-pat-row/cons	: prepass-pat-row S (pat-row/cons L Pe PRe) SG
+			   <- prepass-pat S Pe SG1
+			   <- prepass-pat-row S PRe SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+prepass-pat-seq/nil	: prepass-pat-seq S pat-seq/nil tyvar-list/nil.
+
+prepass-pat-seq/cons	: prepass-pat-seq S (pat-seq/cons Pe PRe) SG
+			   <- prepass-pat S Pe SG1
+			   <- prepass-pat-seq S PRe SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+
+%% Expressions
+
+prepass-expr/longid	: prepass-expr S (expr/longid I) (expr/longid I) tyvar-list/nil.
+
+prepass-expr/record	: prepass-expr S (expr/record ERe) (expr/record ERe') SG
+			   <- prepass-expr-row S ERe ERe' SG.
+
+prepass-expr/let	: prepass-expr S (expr/let De Ee) (expr/let De' Ee') SG
+			   <- prepass-dec S De De' SG1
+			   <- prepass-expr S Ee Ee' SG2
+			   <- varset-union SG1 SG2 SG.
+			   
+prepass-expr/app	: prepass-expr S (expr/app Ee1 Ee2) (expr/app Ee1' Ee2') SG
+			   <- prepass-expr S Ee1 Ee1' SG1
+			   <- prepass-expr S Ee2 Ee2' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-expr/constraint	: prepass-expr S (expr/constraint Ee Te) (expr/constraint Ee' Te) SG
+			   <- prepass-ty S Te SG1
+			   <- prepass-expr S Ee Ee' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-expr/handle	: prepass-expr S (expr/handle Ee Me) (expr/handle Ee' Me') SG
+			   <- prepass-expr S Ee Ee' SG1
+			   <- prepass-match S Me Me' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-expr/raise	: prepass-expr S (expr/raise Ee) (expr/raise Ee') SG
+			   <- prepass-expr S ERe ERe' SG.
+
+prepass-expr/fn		: prepass-expr S (expr/fn Me) (expr/fn Me') SG
+			   <- prepass-match S ERe ERe' SG.
+
+
+prepass-expr-row/nil	: prepass-expr-row S expr-row/nil expr-row/nil tyvar-list/nil.
+
+prepass-expr-row/cons	: prepass-expr-row S (expr-row/cons L Ee ERe) (expr-row/cons L Ee' ERe') SG
+			   <- prepass-expr S Ee Ee' G1
+			   <- prepass-expr-row S ERe ERe' SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+
+prepass-match/nil	: prepass-match S match/nil match/nil tyvar-list/nil.
+
+prepass-match/cons	: prepass-match S (match/cons Pe Ee Me) (match/cons Pe Ee' Me') SG
+			   <- prepass-pat S Pe SG1
+			   <- prepass-expr S Ee Ee' SG2
+			   <- prepass-match S Me Me' SG3
+			   <- varset-union SG2 SG3 SG23
+			   <- varset-union SG1 SG23 SG.
+
+
+
+%% Declarations
+
+prepass-funarms/nil	: prepass-funarms S funarms/nil funarms/nil tyvar-list/nil.
+
+prepass-funarms/cons	: prepass-funarms S (funarms/cons Pe Ee FAe) (funarms/cons Pe Ee' FAe') SG
+			   <- prepass-pat-seq S Pe SG1
+			   <- prepass-expr S Ee Ee' SG2
+			   <- prepass-funarms S FAe FAe' SG3
+			   <- varset-union SG2 SG3 SG23
+			   <- varset-union SG1 SG23 SG.
+
+
+prepass-funbind/nil	: prepass-funbind S funbind/nil funbind/nil tyvar-list/nil.
+
+prepass-funbind/cons	: prepass-funbind S (funbind/cons FVBe I FAe TOe) (funbind/cons FVBe' I FAe' TOe) SG
+			   <- prepass-funbind S FVBe FVBe' SG1
+			   <- prepass-funarms S FAe FAe' SG2
+			   <- prepass-ty-option S TOe SG3
+			   <- varset-union SG2 SG3 SG23
+			   <- varset-union SG1 SG23 SG.
+
+
+
+prepass-dconbind/nil	: prepass-dconbind S dconbind/nil tyvar-list/nil.
+
+prepass-dconbind/nullary
+			: prepass-dconbind S (dconbind/nullary I CBe) SG
+			   <- prepass-dconbind S CBe SG.
+
+prepass-dconbind/unary	: prepass-dconbind S (dconbind/unary I Te CBe) SG
+			   <- prepass-ty S Te SG1
+			   <- prepass-dconbind S CBe SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+prepass-datbind/nil	: prepass-datbind S datbind/nil tyvar-list/nil.
+
+prepass-datbind/data	: prepass-datbind S (datbind/data TVLe I CBe DBe) SG
+			   <- non-tyvar-identifier I
+			   <- varset-union S TVLe S'
+			   <- prepass-dconbind S' CBe SG1
+			   <- varset-difference SG1 TVLe SG1'
+			   <- prepass-datbind S DBe SG2
+			   <- varset-union SG1' SG2 SG.
+
+prepass-datbind/with	: prepass-datbind S (datbind/with TVLe I Te DBe) SG
+			   <- non-tyvar-identifier I
+			   <- varset-union S TVLe S'
+			   <- prepass-ty S' Te SG1
+			   <- varset-difference SG1 TVLe SG1'
+			   <- prepass-datbind S DBe SG2
+			   <- varset-union SG1' SG2 SG.
+
+
+
+prepass-dec/null	: prepass-dec S dec/null dec/null tyvar-list/nil.
+
+prepass-dec/open	: prepass-dec S (dec/open I) (dec/open I) tyvar-list/nil.
+
+prepass-dec/exn0	: prepass-dec S (dec/exn0 I) (dec/exn0 I) tyvar-list/nil.
+
+prepass-dec/exn1	: prepass-dec S (dec/exn1 I Te) (dec/exn1 I Te) SG
+			   <- prepass-ty S Te SG.
+
+prepass-dec/exncopy	: prepass-dec S (dec/exncopy I I') (dec/exncopy I I') tyvar-list/nil.
+
+prepass-dec/type	: prepass-dec S (dec/type TVLe I Te) (dec/type TVLe I Te) SG'
+			   <- non-tyvar-identifier I
+			   <- varset-union S TVLe S'
+			   <- prepass-ty S' Te SG
+			   <- varset-difference SG TVLe SG'.
+
+prepass-dec/datatype	: prepass-dec S (dec/datatype DBe) (dec/datatype DBe) SG
+			   <- prepass-datbind S DBe SG.
+
+prepass-dec/dtcopy	: prepass-dec S (dec/dtcopy I I') (dec/dtcopy I I') tyvar-list/nil.
+
+prepass-dec/structure	: prepass-dec S (dec/structure I Re) (dec/structure I Re') SG
+			   <- prepass-strexp S Re Re' SG.
+
+prepass-dec/functor	: prepass-dec S (dec/functor I1 I2 Se Re) (dec/functor I1 I2 Se' Re') SG
+			   <- prepass-sigexp S Se Se' SG1
+			   <- prepass-strexp S Re Re' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-dec/functor-anon
+			: prepass-dec S (dec/functor-anon I Ge Re) (dec/functor-anon I Ge' Re') SG
+			   <- prepass-spec S Ge Ge' SG1
+			   <- prepass-strexp S Re Re' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-dec/signature
+			: prepass-dec S (dec/signature I Se) (dec/signature I Se') SG
+			   <- prepass-sigexp S Se Se' SG.
+
+prepass-dec/local	: prepass-dec S (dec/local De1 De2) (dec/local De1' De2') SG
+			   <- prepass-dec S De1 De1' SG1
+			   <- prepass-dec S De2 De2' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-dec/seq		: prepass-dec S (dec/seq De1 De2) (dec/seq De1' De2') SG
+			   <- prepass-dec S De1 De1' SG1
+			   <- prepass-dec S De2 De2' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-dec/par		: prepass-dec S (dec/par De1 De2) (dec/par De1' De2') SG
+			   <- prepass-dec S De1 De1' SG1
+			   <- prepass-dec S De2 De2' SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+
+%% Structures
+
+prepass-strexp/longid	: prepass-strexp S (strexp/longid I) (strexp/longid I) tyvar-list/nil.
+
+prepass-strexp/struct	: prepass-strexp S (strexp/struct De) (strexp/struct De') SG
+			   <- prepass-dec S De De' SG.
+
+prepass-strexp/app	: prepass-strexp S (strexp/app I Ee) (strexp/app I Ee') SG
+			   <- prepass-strexp S Ee Ee' SG.
+
+prepass-strexp/ascribe	: prepass-strexp S (strexp/ascribe Re Se) (strexp/ascribe Re' Se') SG
+			   <- prepass-strexp S Re Re' SG1
+			   <- prepass-sigexp S Se Se' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-strexp/seal	: prepass-strexp S (strexp/seal Re Se) (strexp/seal Re' Se') SG
+			   <- prepass-strexp S Re Re' SG1
+			   <- prepass-sigexp S Se Se' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-strexp/let	: prepass-strexp S (strexp/let De Re) (strexp/let De' Re') SG
+			   <- prepass-dec S De De' SG1
+			   <- prepass-strexp S Re Re' SG2
+			   <- varset-union SG1 SG2 SG.
+
+
+
+%% Signatures
+
+prepass-spec/null	: prepass-spec S spec/null spec/null tyvar-list/nil.
+
+prepass-spec/type	: prepass-spec S (spec/type TVLe I TOe) (spec/type TVLe I TOe) SG'
+			   <- non-tyvar-identifier I
+			   <- varset-union S TVLe S'
+			   <- prepass-ty-option S' TOe SG
+			   <- varset-difference SG TVLe SG'.
+
+prepass-spec/exn0	: prepass-spec S (spec/exn0 I) (spec/exn0 I) tyvar-list/nil.
+
+prepass-spec/exn1	: prepass-spec S (spec/exn1 I Te) (spec/exn1 I Te) SG
+			   <- prepass-ty S Te SG.
+
+prepass-spec/datatype	: prepass-spec S (spec/datatype DBe) (spec/datatype DBe) SG
+			   <- prepass-datbind S DBe SG.
+
+prepass-spec/dtcopy	: prepass-spec S (spec/dtcopy I I') (spec/dtcopy I I') tyvar-list/nil.
+
+prepass-spec/structure	: prepass-spec S (spec/structure I Se) (spec/structure I Se') SG
+			   <- prepass-sigexp S Se Se' SG.
+
+prepass-spec/functor	: prepass-spec S (spec/functor I1 I2 Se1 Se2) (spec/functor I1 I2 Se1' Se2') SG
+			   <- prepass-sigexp S Se1 Se1' SG1
+			   <- prepass-sigexp S Se2 Se2' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-spec/functor-anon
+			: prepass-spec S (spec/functor-anon I Ge Se) (spec/functor-anon I Ge' Se') SG
+			   <- prepass-spec S Ge Ge' SG1
+			   <- prepass-sigexp S Se Se' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-spec/include	: prepass-spec S (spec/include I) (spec/include I) tyvar-list/nil.
+
+prepass-spec/signature	: prepass-spec S (spec/signature I Se) (spec/signature I Se') SG
+			   <- prepass-sigexp S Se Se' SG.
+
+prepass-spec/seq	: prepass-spec S (spec/seq Ge1 Ge2) (spec/seq Ge1' Ge2') SG
+			   <- prepass-spec S Ge1 Ge1' SG1
+			   <- prepass-spec S Ge2 Ge2' SG2
+			   <- varset-union SG1 SG2 SG.
+
+prepass-spec/sharing-type
+			: prepass-spec S (spec/sharing-type Ge IL) (spec/sharing-type Ge' IL) SG
+			   <- prepass-spec S Ge Ge' SG.
+
+prepass-spec/sharing-structure
+			: prepass-spec S (spec/sharing-structure Ge IL) (spec/sharing-structure Ge' IL) SG
+			   <- prepass-spec S Ge Ge' SG.
+
+
+
+prepass-sigexp/longid	: prepass-sigexp S (sigexp/longid I) (sigexp/longid I) tyvar-list/nil.
+
+prepass-sigexp/sig	: prepass-sigexp S (sigexp/sig Ge) (sigexp/sig Ge') SG
+			   <- prepass-spec S Ge Ge' SG.
+
+prepass-sigexp/where-type
+			: prepass-sigexp S (sigexp/where-type Se TVLe I Te) (sigexp/where-type Se' TVLe I Te) SG
+			   <- prepass-sigexp S Se Se' SG1
+			   <- varset-union S TVLe S'
+			   <- prepass-ty S' Te SG2
+			   <- varset-difference SG2 TVLe SG2'
+			   <- varset-union SG1 SG2' SG.
+
+prepass-sigexp/where-structure
+			: prepass-sigexp S (sigexp/where-structure Se I1 I2) (sigexp/where-structure Se' I1 I2) SG
+			   <- prepass-sigexp S Se Se' SG.

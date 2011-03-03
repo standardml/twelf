@@ -1,0 +1,1198 @@
+
+%%%%%  Locations  %%%%%
+
+loc-neq-antisymm : loc-neq L L -> false -> type.
+%mode loc-neq-antisymm +X1 -X2.
+
+-	: loc-neq-antisymm (loc-neq/lt Dlt) Dfalse
+	   <- loc-lt-antisymm Dlt Dfalse.
+
+-	: loc-neq-antisymm (loc-neq/gt Dlt) Dfalse
+	   <- loc-lt-antisymm Dlt Dfalse.
+
+%worlds () (loc-neq-antisymm _ _).
+%total {} (loc-neq-antisymm _ _).
+
+
+
+
+%%%%%  Stores  %%%%%
+
+store-lookup-fun : store-of _ ST _
+		    -> store-lookup ST L E1
+		    -> store-lookup ST L E2
+%%
+		    -> entry-eq E1 E2 -> type.
+%mode store-lookup-fun +X1 +X2 +X3 -X4.
+
+-	: store-lookup-fun _ store-lookup/hit store-lookup/hit entry-eq/i.
+
+-	: store-lookup-fun (store-of/cons _ _ Dstof) (store-lookup/miss D1) (store-lookup/miss D2) Deq
+	   <- store-lookup-fun Dstof D1 D2 Deq.
+
+-	: store-lookup-fun (store-of/cons Dbounds _ Dstof) store-lookup/hit (store-lookup/miss Dlookup) Deq
+	   <- store-lookup-bound Dstof Dlookup Dbounds Dfalse
+	   <- false-implies-entry-eq Dfalse Deq.
+
+-	: store-lookup-fun (store-of/cons Dbounds _ Dstof) (store-lookup/miss Dlookup) store-lookup/hit Deq
+	   <- store-lookup-bound Dstof Dlookup Dbounds Dfalse
+	   <- false-implies-entry-eq Dfalse Deq.
+
+%worlds () (store-lookup-fun _ _ _ _).
+%total D (store-lookup-fun D _ _ _).
+
+
+
+store-update-fun : store-of _ ST _
+		    -> store-update ST L EN ST1
+		    -> store-update ST L EN ST2
+%%
+		    -> store-eq ST1 ST2 -> type.
+%mode store-update-fun +X1 +X2 +X3 -X4.
+
+-	: store-update-fun _ store-update/hit store-update/hit store-eq/i.
+
+-	: store-update-fun (store-of/cons _ _ Dstof) (store-update/miss D1) (store-update/miss D2) Deq'
+	   <- store-update-fun Dstof D1 D2 Deq
+	   <- store-resp-store ([st] store/cons st L EN) Deq Deq'.
+
+-	: store-update-fun (store-of/cons Dbounds _ Dstof) store-update/hit (store-update/miss Dupdate) Deq
+	   <- store-update-bound Dstof Dupdate Dbounds Dfalse
+	   <- false-implies-store-eq Dfalse Deq.
+
+-	: store-update-fun (store-of/cons Dbounds _ Dstof) (store-update/miss Dupdate) store-update/hit Deq
+	   <- store-update-bound Dstof Dupdate Dbounds Dfalse
+	   <- false-implies-store-eq Dfalse Deq.
+
+%worlds () (store-update-fun _ _ _ _).
+%total D (store-update-fun D _ _ _).
+
+
+
+
+%%%%%  Determinism  %%%%%
+
+determ-step-value : step ST E _ _
+		     -> value E
+%%
+		     -> false -> type.
+%mode determ-step-value +X1 +X2 -X3.
+
+-	: determ-step-value (step/pair1 Dstep) (value/pair _ Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-value (step/pair2 Dstep _) (value/pair Dvalue _) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-value (step/in1 Dstep) (value/in1 Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-value (step/in2 Dstep) (value/in2 Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-value (step/tag1 Dstep) (value/tag _ Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-value (step/tag2 Dstep _) (value/tag Dvalue _) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-value (step/roll Dstep) (value/roll Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-value (step/in Dstep) (value/in Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+%worlds () (determ-step-value _ _ _).
+%total D (determ-step-value D _ _).
+
+
+
+determ-step-value-md : step-md ST M _ _
+			-> value-md M
+%%
+			-> false
+			-> type.
+%mode determ-step-value-md +X1 +X2 -X3.
+
+-	: determ-step-value-md (step-md/datom Dstep) (value-md/datom Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-value-md (step-md/pair1 Dstep) (value-md/pair _ Dvalue) Dfalse
+	   <- determ-step-value-md Dstep Dvalue Dfalse.
+
+-	: determ-step-value-md (step-md/pair2 Dstep _) (value-md/pair Dvalue _) Dfalse
+	   <- determ-step-value-md Dstep Dvalue Dfalse.
+
+-	: determ-step-value-md (step-md/in Dstep) (value-md/in Dvalue) Dfalse
+	   <- determ-step-value-md Dstep Dvalue Dfalse.
+
+%worlds () (determ-step-value-md _ _ _).
+%total D (determ-step-value-md D _ _).
+
+
+
+determ-raises-value : raises E _
+		       -> value E
+%%
+		       -> false -> type.
+%mode determ-raises-value +X1 +X2 -X3.
+
+-	: determ-raises-value (raises/pair1 Draises) (value/pair _ Dvalue) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-raises-value (raises/pair2 Draises _) (value/pair Dvalue _) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-raises-value (raises/in1 Draises) (value/in1 Dvalue) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-raises-value (raises/in2 Draises) (value/in2 Dvalue) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-raises-value (raises/tag1 Draises) (value/tag _ Dvalue) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-raises-value (raises/tag2 Draises _) (value/tag Dvalue _) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-raises-value (raises/roll Draises) (value/roll Dvalue) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-raises-value (raises/in Dstep) (value/in Dvalue) Dfalse
+	   <- determ-raises-value Dstep Dvalue Dfalse.
+
+%worlds () (determ-raises-value _ _ _).
+%total D (determ-raises-value D _ _).
+
+
+
+determ-raises-value-md : raises-md M _
+			  -> value-md M
+%%
+			  -> false 
+			  -> type.
+%mode determ-raises-value-md +X1 +X2 -X3.
+
+-	: determ-raises-value-md (raises-md/datom Draises) (value-md/datom Dvalue) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-raises-value-md (raises-md/pair1 Draises) (value-md/pair _ Dvalue) Dfalse
+	   <- determ-raises-value-md Draises Dvalue Dfalse.
+
+-	: determ-raises-value-md (raises-md/pair2 Draises _) (value-md/pair Dvalue _) Dfalse
+	   <- determ-raises-value-md Draises Dvalue Dfalse.
+
+-	: determ-raises-value-md (raises-md/in Dstep) (value-md/in Dvalue) Dfalse
+	   <- determ-raises-value-md Dstep Dvalue Dfalse.
+
+%worlds () (determ-raises-value-md _ _ _).
+%total D (determ-raises-value-md D _ _).
+
+
+
+determ-step-raises : step ST E _ _
+		      -> raises E _
+%%
+		      -> false -> type.
+%mode determ-step-raises +X1 +X2 -X3.
+
+determ-step-raises-md : step-md ST M _ _
+			 -> raises-md M _
+%%
+			 -> false -> type.
+%mode determ-step-raises-md +X1 +X2 -X3.
+
+-	: determ-step-raises (step/abort Dstep) (raises/abort Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/pair1 Dstep) (raises/pair1 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/pair2 Dstep _) (raises/pair2 Draises _) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/pair1 Dstep) (raises/pair2 _ Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-raises (step/pair2 _ Dvalue) (raises/pair1 Draises) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/pi1 Dstep) (raises/pi1 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/pi2 Dstep) (raises/pi2 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/pi1-beta Dvalue2 Dvalue1) (raises/pi1 Draises) Dfalse
+	   <- determ-raises-value Draises (value/pair Dvalue2 Dvalue1) Dfalse.
+
+-	: determ-step-raises (step/pi2-beta Dvalue2 Dvalue1) (raises/pi2 Draises) Dfalse
+	   <- determ-raises-value Draises (value/pair Dvalue2 Dvalue1) Dfalse.
+
+-	: determ-step-raises (step/app1 Dstep) (raises/app1 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/app2 Dstep _) (raises/app2 Draises _) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/app1 Dstep) (raises/app2 _ Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-raises (step/app2 _ Dvalue) (raises/app1 Draises) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/app-beta _) (raises/app1 Draises) Dfalse
+	   <- determ-raises-value Draises value/lam Dfalse.
+
+-	: determ-step-raises (step/app-beta Dvalue) (raises/app2 Draises _) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/in1 Dstep) (raises/in1 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/in2 Dstep) (raises/in2 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/case Dstep) (raises/case Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/case-beta1 Dvalue) (raises/case Draises) Dfalse
+	   <- determ-raises-value Draises (value/in1 Dvalue) Dfalse.
+
+-	: determ-step-raises (step/case-beta2 Dvalue) (raises/case Draises) Dfalse
+	   <- determ-raises-value Draises (value/in2 Dvalue) Dfalse.
+
+-	: determ-step-raises (step/ref Dstep) (raises/ref Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/ref-beta _ Dvalue) (raises/ref Draises) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/deref Dstep) (raises/deref Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/assign1 Dstep) (raises/assign1 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/assign2 Dstep _) (raises/assign2 Draises _) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/assign1 Dstep) (raises/assign2 _ Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-raises (step/assign2 _ Dvalue) (raises/assign1 Draises) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/assign-beta _ Dvalue) (raises/assign2 Draises _) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/tag1 Dstep) (raises/tag1 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/tag2 Dstep _) (raises/tag2 Draises _) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/tag1 Dstep) (raises/tag2 _ Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-raises (step/tag2 _ Dvalue) (raises/tag1 Draises) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/iftag1 Dstep) (raises/iftag1 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/iftag2 Dstep _) (raises/iftag2 Draises _) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/iftag1 Dstep) (raises/iftag2 _ Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-raises (step/iftag2 _ Dvalue) (raises/iftag1 Draises) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/iftag-beta1 Dvalue) (raises/iftag1 Draises) Dfalse
+	   <- determ-raises-value Draises (value/tag Dvalue value/tagloc) Dfalse.
+
+-	: determ-step-raises (step/iftag-beta2 _ Dvalue) (raises/iftag1 Draises) Dfalse
+	   <- determ-raises-value Draises (value/tag Dvalue value/tagloc) Dfalse.
+
+-	: determ-step-raises (step/roll Dstep) (raises/roll Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/unroll Dstep) (raises/unroll Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/unroll-beta Dvalue) (raises/unroll Draises) Dfalse
+	   <- determ-raises-value Draises (value/roll Dvalue) Dfalse.
+
+-	: determ-step-raises (step/in Dstep) (raises/in Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/out Dstep) (raises/out Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/out-beta Dvalue) (raises/out Draises) Dfalse
+	   <- determ-raises-value Draises (value/in Dvalue) Dfalse.
+
+-	: determ-step-raises (step/raise Dstep) (raises/raise1 Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/raise Dstep) (raises/raise2 Dvalue) Dfalse
+	   <- determ-step-value Dstep Dvalue Dfalse.
+
+-	: determ-step-raises (step/lett1 Dstep) (raises/lett Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/lett2 Dvalue) (raises/lett Draises) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+-	: determ-step-raises (step/snd Dstep) (raises/snd Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises (step/snd-beta Dvalue) (raises/snd (raises-md/datom Draises)) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+
+
+-	: determ-step-raises-md (step-md/datom Dstep) (raises-md/datom Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/pair1 Dstep) (raises-md/pair1 Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/pair2 Dstep _) (raises-md/pair2 Draises _) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/pair1 Dstep) (raises-md/pair2 _ Dvalue) Dfalse
+	   <- determ-step-value-md Dstep Dvalue Dfalse.
+
+-	: determ-step-raises-md (step-md/pair2 _ Dvalue) (raises-md/pair1 Draises) Dfalse
+	   <- determ-raises-value-md Draises Dvalue Dfalse.
+
+-	: determ-step-raises-md (step-md/dpair1 Dstep) (raises-md/dpair Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/dpair2 _ Dvalue) (raises-md/dpair Draises) Dfalse
+	   <- determ-raises-value-md Draises Dvalue Dfalse.
+
+-	: determ-step-raises-md (step-md/pi1 Dstep) (raises-md/pi1 Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/pi2 Dstep) (raises-md/pi2 Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/pi1-beta Dvalue2 Dvalue1) (raises-md/pi1 Draises) Dfalse
+	   <- determ-raises-value-md Draises (value-md/pair Dvalue2 Dvalue1) Dfalse.
+
+-	: determ-step-raises-md (step-md/pi2-beta Dvalue2 Dvalue1) (raises-md/pi2 Draises) Dfalse
+	   <- determ-raises-value-md Draises (value-md/pair Dvalue2 Dvalue1) Dfalse.
+
+-	: determ-step-raises-md (step-md/app1 Dstep) (raises-md/app1 Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/app2 Dstep _) (raises-md/app2 Draises _) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/app1 Dstep) (raises-md/app2 _ Dvalue) Dfalse
+	   <- determ-step-value-md Dstep Dvalue Dfalse.
+
+-	: determ-step-raises-md (step-md/app2 _ Dvalue) (raises-md/app1 Draises) Dfalse
+	   <- determ-raises-value-md Draises Dvalue Dfalse.
+
+-	: determ-step-raises-md (step-md/app-beta _ _) (raises-md/app1 Draises) Dfalse
+	   <- determ-raises-value-md Draises value-md/lam Dfalse.
+
+-	: determ-step-raises-md (step-md/app-beta _ Dvalue) (raises-md/app2 Draises _) Dfalse
+	   <- determ-raises-value-md Draises Dvalue Dfalse.
+
+-	: determ-step-raises-md (step-md/in Dstep) (raises-md/in Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/out Dstep) (raises-md/out Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/out-beta Dvalue) (raises-md/out Draises) Dfalse
+	   <- determ-raises-value-md Draises (value-md/in Dvalue) Dfalse.
+
+-	: determ-step-raises-md (step-md/let1 Dstep) (raises-md/let Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/let2 _ Dvalue) (raises-md/let Draises) Dfalse
+	   <- determ-raises-value-md Draises Dvalue Dfalse.
+
+-	: determ-step-raises-md (step-md/letp1 Dstep) (raises-md/letp Draises) Dfalse
+	   <- determ-step-raises-md Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/letp2 _ Dvalue) (raises-md/letp Draises) Dfalse
+	   <- determ-raises-value-md Draises Dvalue Dfalse.
+
+-	: determ-step-raises-md (step-md/lete1 Dstep) (raises-md/lete Draises) Dfalse
+	   <- determ-step-raises Dstep Draises Dfalse.
+
+-	: determ-step-raises-md (step-md/lete2 Dvalue) (raises-md/lete Draises) Dfalse
+	   <- determ-raises-value Draises Dvalue Dfalse.
+
+%worlds () (determ-step-raises _ _ _) (determ-step-raises-md _ _ _).
+%total (D1 D2) (determ-step-raises D1 _ _) (determ-step-raises-md D2 _ _).
+
+
+
+determ-raises : raises E V1
+		 -> raises E V2
+%%
+		 -> term-eq V1 V2 -> type.
+%mode determ-raises +X1 +X2 -X3.
+
+determ-raises-md : raises-md M V1
+		    -> raises-md M V2
+%%
+		    -> term-eq V1 V2 -> type.
+%mode determ-raises-md +X1 +X2 -X3.
+
+-	: determ-raises (raises/abort D1) (raises/abort D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/pair1 D1) (raises/pair1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/pair2 D1 _) (raises/pair2 D2 _) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/pair1 Draises) (raises/pair2 _ Dvalue) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/pair2 _ Dvalue) (raises/pair1 Draises) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/pi1 D1) (raises/pi1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/pi2 D1) (raises/pi2 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/app1 D1) (raises/app1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/app2 D1 _) (raises/app2 D2 _) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/app1 Draises) (raises/app2 _ Dvalue) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/app2 _ Dvalue) (raises/app1 Draises) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/in1 D1) (raises/in1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/in2 D1) (raises/in2 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/case D1) (raises/case D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/ref D1) (raises/ref D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/deref D1) (raises/deref D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/assign1 D1) (raises/assign1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/assign2 D1 _) (raises/assign2 D2 _) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/assign1 Draises) (raises/assign2 _ Dvalue) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/assign2 _ Dvalue) (raises/assign1 Draises) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/tag1 D1) (raises/tag1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/tag2 D1 _) (raises/tag2 D2 _) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/tag1 Draises) (raises/tag2 _ Dvalue) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/tag2 _ Dvalue) (raises/tag1 Draises) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/iftag1 D1) (raises/iftag1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/iftag2 D1 _) (raises/iftag2 D2 _) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/iftag1 Draises) (raises/iftag2 _ Dvalue) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/iftag2 _ Dvalue) (raises/iftag1 Draises) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/roll D1) (raises/roll D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/unroll D1) (raises/unroll D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/tag1 D1) (raises/tag1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/in D1) (raises/in D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/out D1) (raises/out D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/raise1 D1) (raises/raise1 D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/raise2 _) (raises/raise2 _) term-eq/i.
+
+-	: determ-raises (raises/raise1 Draises) (raises/raise2 Dvalue) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/raise2 Dvalue) (raises/raise1 Draises) Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises (raises/lett D1) (raises/lett D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises (raises/snd D1) (raises/snd D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+
+
+-	: determ-raises-md (raises-md/datom D1) (raises-md/datom D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/pair1 D1) (raises-md/pair1 D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/pair2 D1 _) (raises-md/pair2 D2 _) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/pair1 Draises) (raises-md/pair2 _ Dvalue) Deq
+	   <- determ-raises-value-md Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises-md (raises-md/pair2 _ Dvalue) (raises-md/pair1 Draises) Deq
+	   <- determ-raises-value-md Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises-md (raises-md/dpair D1) (raises-md/dpair D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/pi1 D1) (raises-md/pi1 D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/pi2 D1) (raises-md/pi2 D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/app1 D1) (raises-md/app1 D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/app2 D1 _) (raises-md/app2 D2 _) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/app1 Draises) (raises-md/app2 _ Dvalue) Deq
+	   <- determ-raises-value-md Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises-md (raises-md/app2 _ Dvalue) (raises-md/app1 Draises) Deq
+	   <- determ-raises-value-md Draises Dvalue Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-raises-md (raises-md/in D1) (raises-md/in D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/out D1) (raises-md/out D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/let D1) (raises-md/let D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/letp D1) (raises-md/letp D2) Deq
+	   <- determ-raises-md D1 D2 Deq.
+
+-	: determ-raises-md (raises-md/lete D1) (raises-md/lete D2) Deq
+	   <- determ-raises D1 D2 Deq.
+
+%worlds () (determ-raises _ _ _) (determ-raises-md _ _ _).
+%total (D1 D2) (determ-raises D1 _ _) (determ-raises-md D2 _ _).
+
+
+
+determ-step : store-of _ ST _
+	       -> step ST E ST1 E1
+	       -> step ST E ST2 E2
+%%
+	       -> store-eq ST1 ST2
+	       -> term-eq E1 E2 -> type.
+%mode determ-step +X1 +X2 +X3 -X4 -X5.
+
+determ-step-md : store-of _ ST _
+		  -> step-md ST M ST1 M1
+		  -> step-md ST M ST2 M2
+%%
+		  -> store-eq ST1 ST2
+		  -> module-eq M1 M2 -> type.
+%mode determ-step-md +X1 +X2 +X3 -X4 -X5.
+
+-	: determ-step _ _ _ store-eq/i term-eq/i.
+
+-	: determ-step Dstof (step/abort D1) (step/abort D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/abort e T) Deq Deq'.
+
+-	: determ-step Dstof (step/pair1 D1) (step/pair1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/pair e E2) Deq Deq'.
+
+-	: determ-step Dstof (step/pair2 D1 _) (step/pair2 D2 _) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/pair E1 e) Deq Deq'.
+
+-	: determ-step _ (step/pair1 Dstep) (step/pair2 _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/pair2 _ Dvalue) (step/pair1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/pi1 D1) (step/pi1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term tm/pi1 Deq Deq'.
+
+-	: determ-step _ (step/pi1 Dstep) (step/pi1-beta Dvalue2 Dvalue1) Deqst Deq
+	   <- determ-step-value Dstep (value/pair Dvalue2 Dvalue1) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/pi1-beta Dvalue2 Dvalue1) (step/pi1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep (value/pair Dvalue2 Dvalue1) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/pi2 D1) (step/pi2 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term tm/pi2 Deq Deq'.
+
+-	: determ-step _ (step/pi2 Dstep) (step/pi2-beta Dvalue2 Dvalue1) Deqst Deq
+	   <- determ-step-value Dstep (value/pair Dvalue2 Dvalue1) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/pi2-beta Dvalue2 Dvalue1) (step/pi2 Dstep) Deqst Deq
+	   <- determ-step-value Dstep (value/pair Dvalue2 Dvalue1) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/app1 D1) (step/app1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/app e E) Deq Deq'.
+
+-	: determ-step Dstof (step/app2 D1 _) (step/app2 D2 _) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/app E e) Deq Deq'.
+
+-	: determ-step _ (step/app1 Dstep) (step/app2 _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/app2 _ Dvalue) (step/app1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/app2 Dstep _) (step/app-beta Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/app-beta Dvalue) (step/app2 Dstep _) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/in1 D1) (step/in1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/in1 e T) Deq Deq'.
+
+-	: determ-step Dstof (step/in2 D1) (step/in2 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/in2 e T) Deq Deq'.
+
+-	: determ-step Dstof (step/case D1) (step/case D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/case e E1 E2) Deq Deq'.
+
+-	: determ-step _ (step/case Dstep) (step/case-beta1 Dvalue) Deqst Deq
+	   <- determ-step-value Dstep (value/in1 Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/case-beta1 Dvalue) (step/case Dstep) Deqst Deq
+	   <- determ-step-value Dstep (value/in1 Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/case Dstep) (step/case-beta2 Dvalue) Deqst Deq
+	   <- determ-step-value Dstep (value/in2 Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/case-beta2 Dvalue) (step/case Dstep) Deqst Deq
+	   <- determ-step-value Dstep (value/in2 Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/ref D1) (step/ref D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term tm/ref Deq Deq'.
+
+-	: determ-step _ (step/ref Dstep) (step/ref-beta _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/ref-beta _ Dvalue) (step/ref Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/deref D1) (step/deref D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term tm/deref Deq Deq'.
+
+-	: determ-step Dstof (step/deref-beta D1) (step/deref-beta D2) store-eq/i Deq'
+	   <- store-lookup-fun Dstof D1 D2 Deq
+	   <- entry-eq-invert-ref Deq Deq'.
+
+-	: determ-step _ (step/deref Dstep) (step/deref-beta _) Deqst Deq
+	   <- determ-step-value Dstep value/refloc Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/deref-beta _) (step/deref Dstep) Deqst Deq
+	   <- determ-step-value Dstep value/refloc Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/assign1 D1) (step/assign1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/assign e E) Deq Deq'.
+
+-	: determ-step Dstof (step/assign2 D1 _) (step/assign2 D2 _) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/assign E e) Deq Deq'.
+
+-	: determ-step Dstof (step/assign-beta D1 _) (step/assign-beta D2 _) Deq term-eq/i
+	   <- store-update-fun Dstof D1 D2 Deq.
+
+-	: determ-step _ (step/assign1 Dstep) (step/assign2 _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/assign2 _ Dvalue) (step/assign1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/assign2 Dstep _) (step/assign-beta _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/assign-beta _ Dvalue) (step/assign2 Dstep _) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/tag1 D1) (step/tag1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/tag e E2) Deq Deq'.
+
+-	: determ-step Dstof (step/tag2 D1 _) (step/tag2 D2 _) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/tag E1 e) Deq Deq'.
+
+-	: determ-step _ (step/tag1 Dstep) (step/tag2 _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/tag2 _ Dvalue) (step/tag1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/iftag1 D1) (step/iftag1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/iftag e E2 E3 E4) Deq Deq'.
+
+-	: determ-step Dstof (step/iftag2 D1 _) (step/iftag2 D2 _) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/iftag E1 e E3 E4) Deq Deq'.
+
+-	: determ-step _ (step/iftag1 Dstep) (step/iftag2 _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag2 _ Dvalue) (step/iftag1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag-beta1 _) (step/iftag-beta2 Dneq _) Deqst Deq
+	   <- loc-neq-antisymm Dneq Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag-beta2 Dneq _) (step/iftag-beta1 _) Deqst Deq
+	   <- loc-neq-antisymm Dneq Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag1 Dstep) (step/iftag-beta1 Dvalue) Deqst Deq
+	   <- determ-step-value Dstep (value/tag Dvalue value/tagloc) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag-beta1 Dvalue) (step/iftag1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep (value/tag Dvalue value/tagloc) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag1 Dstep) (step/iftag-beta2 _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep (value/tag Dvalue value/tagloc) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag-beta2 _ Dvalue) (step/iftag1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep (value/tag Dvalue value/tagloc) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag2 Dstep _) (step/iftag-beta1 Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag-beta1 Dvalue) (step/iftag2 Dstep _) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag2 Dstep _) (step/iftag-beta2 _ Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/iftag-beta2 _ Dvalue) (step/iftag2 Dstep _) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/roll D1) (step/roll D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/roll e K C1 C2) Deq Deq'.
+
+-	: determ-step Dstof (step/unroll D1) (step/unroll D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term tm/unroll Deq Deq'.
+
+-	: determ-step _ (step/unroll Dstep) (step/unroll-beta Dvalue) Deqst Deq
+	   <- determ-step-value Dstep (value/roll Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/unroll-beta Dvalue) (step/unroll Dstep) Deqst Deq
+	   <- determ-step-value Dstep (value/roll Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/in D1) (step/in D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/in I e) Deq Deq'.
+
+-	: determ-step Dstof (step/out D1) (step/out D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term tm/out Deq Deq'.
+
+-	: determ-step Dstof (step/out Dstep) (step/out-beta Dvalue) Deqst Deq
+	   <- determ-step-value Dstep (value/in Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/out-beta Dvalue) (step/out Dstep) Deqst Deq
+	   <- determ-step-value Dstep (value/in Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/raise D1) (step/raise D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/raise e T) Deq Deq'.
+
+-	: determ-step Dstof (step/try D1) (step/try D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/try e E2) Deq Deq'.
+
+-	: determ-step _ (step/try-handle D1 : step _ (tm/try _ E) _ _) (step/try-handle D2) store-eq/i Deq'
+	   <- determ-raises D1 D2 Deq
+	   <- term-resp-term E Deq Deq'.
+
+-	: determ-step _ (step/try Dstep) (step/try-done Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/try-done Dvalue) (step/try Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/try Dstep) (step/try-handle Draises) Deqst Deq
+	   <- determ-step-raises Dstep Draises Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/try-handle Draises) (step/try Dstep) Deqst Deq
+	   <- determ-step-raises Dstep Draises Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/try-done Dvalue) (step/try-handle Draises) Deqst Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/try-handle Draises) (step/try-done Dvalue) Deqst Deq
+	   <- determ-raises-value Draises Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/lett1 D1) (step/lett1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- term-resp-term ([e] tm/lett e E2) Deq Deq'.
+
+-	: determ-step Dstof (step/lett1 Dstep) (step/lett2 Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/lett2 Dvalue) (step/lett1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step Dstof (step/snd D1) (step/snd D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- term-resp-module tm/snd Deq Deq'.
+
+-	: determ-step _ (step/snd Dstep) (step/snd-beta Dvalue) Deqst Deq
+	   <- determ-step-value-md Dstep (value-md/datom Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: determ-step _ (step/snd-beta Dvalue) (step/snd Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep (value-md/datom Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-term-eq Dfalse Deq.
+
+
+
+-	: determ-step-md _ _ _ store-eq/i module-eq/i.
+
+-	: determ-step-md Dstof (step-md/datom D1) (step-md/datom D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- module-resp-term ([m] md/datom m T) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/pair1 D1) (step-md/pair1 D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module ([m] md/pair m M2) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/pair2 D1 _) (step-md/pair2 D2 _) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module ([m] md/pair M1 m) Deq Deq'.
+
+-	: determ-step-md _ (step-md/pair1 Dstep) (step-md/pair2 _ Dvalue) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/pair2 _ Dvalue) (step-md/pair1 Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/dpair1 D1) (step-md/dpair1 D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module ([m] md/dpair m M2) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/dpair2 Dfst _ : step-md _ (md/dpair M1 M2) _ _) (step-md/dpair2 Dfst' _) store-eq/i Deq'
+	   <- md-fst-fun Dfst Dfst' Deq
+	   <- module-resp-con ([c] md/pair M1 (M2 c M1)) Deq Deq'.
+
+-	: determ-step-md _ (step-md/dpair1 Dstep) (step-md/dpair2 _ Dvalue) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/dpair2 _ Dvalue) (step-md/dpair1 Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/pi1 D1) (step-md/pi1 D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module md/pi1 Deq Deq'.
+
+-	: determ-step-md _ (step-md/pi1 Dstep) (step-md/pi1-beta Dvalue2 Dvalue1) Deqst Deq
+	   <- determ-step-value-md Dstep (value-md/pair Dvalue2 Dvalue1) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/pi1-beta Dvalue2 Dvalue1) (step-md/pi1 Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep (value-md/pair Dvalue2 Dvalue1) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/pi2 D1) (step-md/pi2 D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module md/pi2 Deq Deq'.
+
+-	: determ-step-md _ (step-md/pi2 Dstep) (step-md/pi2-beta Dvalue2 Dvalue1) Deqst Deq
+	   <- determ-step-value-md Dstep (value-md/pair Dvalue2 Dvalue1) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/pi2-beta Dvalue2 Dvalue1) (step-md/pi2 Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep (value-md/pair Dvalue2 Dvalue1) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/app1 D1) (step-md/app1 D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module ([m] md/app m M2) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/app2 D1 _) (step-md/app2 D2 _) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module ([m] md/app M1 m) Deq Deq'.
+
+-	: determ-step-md _ (step-md/app1 Dstep) (step-md/app2 _ Dvalue) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/app2 _ Dvalue) (step-md/app1 Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/app-beta _ Dvalue) (step-md/app2 Dstep _) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/app2 Dstep _) (step-md/app-beta _ Dvalue) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/app-beta Dfst _ : step-md _ (md/app (md/lam _ M1) M2) _ _) (step-md/app-beta Dfst' _) store-eq/i Deq'
+	   <- md-fst-fun Dfst Dfst' Deq
+	   <- module-resp-con ([c] M1 c M2) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/in D1) (step-md/in D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module ([m] md/in L m) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/out D1) (step-md/out D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module md/out Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/out Dstep) (step-md/out-beta Dvalue) Deqst Deq
+	   <- determ-step-value-md Dstep (value-md/in Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/out-beta Dvalue) (step-md/out Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep (value-md/in Dvalue) Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/let1 D1) (step-md/let1 D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module ([m] md/let m M2 S) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/let2 Dfst _ : step-md _ (md/let M1 M2 S) _ _) (step-md/let2 Dfst' _) store-eq/i Deq'
+	   <- md-fst-fun Dfst Dfst' Deq
+	   <- module-resp-con ([c] M2 c M1) Deq Deq'.
+
+-	: determ-step-md _ (step-md/let1 Dstep) (step-md/let2 _ Dvalue) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/let2 _ Dvalue) (step-md/let1 Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/letp1 D1) (step-md/letp1 D2) Deqst Deq'
+	   <- determ-step-md Dstof D1 D2 Deqst Deq
+	   <- module-resp-module ([m] md/letp m M2) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/letp2 Dfst _ : step-md _ (md/letp M1 M2) _ _) (step-md/letp2 Dfst' _) store-eq/i Deq'
+	   <- md-fst-fun Dfst Dfst' Deq
+	   <- module-resp-con ([c] M2 c M1) Deq Deq'.
+
+-	: determ-step-md _ (step-md/letp1 Dstep) (step-md/letp2 _ Dvalue) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md _ (step-md/letp2 _ Dvalue) (step-md/letp1 Dstep) Deqst Deq
+	   <- determ-step-value-md Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/lete1 D1) (step-md/lete1 D2) Deqst Deq'
+	   <- determ-step Dstof D1 D2 Deqst Deq
+	   <- module-resp-term ([e] md/lete e T M) Deq Deq'.
+
+-	: determ-step-md Dstof (step-md/lete1 Dstep) (step-md/lete2 Dvalue) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+-	: determ-step-md Dstof (step-md/lete2 Dvalue) (step-md/lete1 Dstep) Deqst Deq
+	   <- determ-step-value Dstep Dvalue Dfalse
+	   <- false-implies-store-eq Dfalse Deqst
+	   <- false-implies-module-eq Dfalse Deq.
+
+%worlds () (determ-step _ _ _ _ _) (determ-step-md _ _ _ _ _).
+%total (D1 D2) (determ-step _ D1 _ _ _) (determ-step-md _ D2 _ _ _).

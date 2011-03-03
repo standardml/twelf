@@ -1,0 +1,41 @@
+%%%% lemmas that take the uninhabited judgment as input.
+%%%% when you are nowhere, anything is possible!
+
+
+
+uninhabited-fst-sg	: {M:sg}{C:kd}
+			   uninhabited 
+			   -> fst-sg M C
+			   -> type.
+%mode uninhabited-fst-sg +M +C +DU -DM.
+
+%worlds () 
+(uninhabited-fst-sg _ _ _ _).
+%total {} (uninhabited-fst-sg _ _ _ _).
+
+
+
+uninhabited-sg-sub	: {S1:sg} {S2:sg}
+			   uninhabited 
+			   -> sg-sub S1 S2
+			   -> type.
+%mode uninhabited-sg-sub +M +C +DU -DM.
+
+%worlds () 
+(uninhabited-sg-sub _ _ _ _).
+%total {} (uninhabited-sg-sub _ _ _ _).
+
+
+
+uninhabited-sg-wf	: {S1:sg}
+			   uninhabited 
+			   -> sg-wf S1
+			   -> type.
+%mode uninhabited-sg-wf +M +DU -DM.
+
+%worlds () 
+(uninhabited-sg-wf _ _ _).
+%total {} (uninhabited-sg-wf _ _ _).
+
+
+

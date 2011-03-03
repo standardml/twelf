@@ -1,0 +1,45 @@
+%%%% reflexivity of kinds
+
+kd-refl/deq : kd-wf K -> kd-deq K K -> type.
+%mode kd-refl/deq +D1 -D2.
+
+- : kd-refl/deq kd-wf/kd/unit kd-deq/kd/unit.
+
+- : kd-refl/deq kd-wf/kd/type kd-deq/kd/type.
+
+- : kd-refl/deq (kd-wf/kd/sing D1) (kd-deq/kd/sing (cn-deq/refl D1)).
+
+- : kd-refl/deq (kd-wf/kd/sgm D1 D2) (kd-deq/kd/sgm D3 D4)
+     <- kd-refl/deq D1 D3
+     <- {a:cn} {da:ofkd a _} 
+	kd-refl/deq (D2 a da) (D4 a da).
+
+- : kd-refl/deq (kd-wf/kd/pi D1 D2) (kd-deq/kd/pi D3 D4)
+     <- kd-refl/deq D1 D3
+     <- {a:cn} {da:ofkd a _} 
+	kd-refl/deq (D2 a da) (D4 a da).
+
+%worlds (ofkd-block) (kd-refl/deq _ _).
+%total (D1) (kd-refl/deq D1 _).
+
+kd-refl/sub : kd-wf K -> kd-sub K K -> type.
+%mode kd-refl/sub +D1 -D2.
+
+- : kd-refl/sub kd-wf/kd/unit kd-sub/kd/unit.
+
+- : kd-refl/sub kd-wf/kd/type kd-sub/kd/type.
+
+- : kd-refl/sub (kd-wf/kd/sing D1) (kd-sub/kd/sing-kd/sing (cn-deq/refl D1)).
+
+- : kd-refl/sub (kd-wf/kd/sgm D1 D2) (kd-sub/kd/sgm D3 D4 D2)
+     <- kd-refl/sub D1 D3
+     <- {a:cn} {da:ofkd a _} 
+	kd-refl/sub (D2 a da) (D4 a da).
+
+- : kd-refl/sub (kd-wf/kd/pi D1 D2) (kd-sub/kd/pi D3 D4 D2)
+     <- kd-refl/sub D1 D3
+     <- {a:cn} {da:ofkd a _} 
+	kd-refl/sub (D2 a da) (D4 a da).
+
+%worlds (ofkd-block | can-mofkd-block | ofkd+vdt-block) (kd-refl/sub _ _).
+%total (D1) (kd-refl/sub D1 _).

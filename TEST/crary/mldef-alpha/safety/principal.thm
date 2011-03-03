@@ -1,0 +1,3434 @@
+
+%%%%%  Principal Kinds  %%%%%
+
+cn-ofp : con -> kind -> type.
+
+cn-ofp/pair	: cn-ofp (pair C1 C2) (sigma K1 ([_] K2))
+		   <- cn-ofp C1 K1
+		   <- cn-ofp C2 K2.
+
+cn-ofp/pi1	: cn-ofp (pi1 C) K1
+		   <- cn-ofp C (sigma K1 ([_] K2)).
+
+cn-ofp/pi2	: cn-ofp (pi2 C) K2
+		   <- cn-ofp C (sigma K1 ([_] K2)).
+
+cn-ofp/lam	: cn-ofp (lam K1 C) (pi K1 K2)
+		   <- kd-wf K1
+		   <- single K1 K1s
+		   <- ({a} cn-of a K1
+			 -> cn-ofp a (K1s a)
+			 -> cn-ofp (C a) (K2 a)).
+
+cn-ofp/app	: cn-ofp (app C1 C2) (K2 C2)
+		   <- cn-ofp C1 (pi K1 K2)
+		   <- cn-of C2 K1.
+
+cn-ofp/star	: cn-ofp star one.
+
+cn-ofp/unit	: cn-ofp unit (sing unit).
+
+cn-ofp/void	: cn-ofp void (sing void).
+
+cn-ofp/prod	: cn-ofp (prod T1 T2) (sing (prod T1 T2))
+		   <- cn-of T1 t
+		   <- cn-of T2 t.
+
+cn-ofp/arrow	: cn-ofp (arrow T1 T2) (sing (arrow T1 T2))
+		   <- cn-of T1 t
+		   <- cn-of T2 t.
+
+cn-ofp/plus	: cn-ofp (plus T1 T2) (sing (plus T1 T2))
+		   <- cn-of T1 t
+		   <- cn-of T2 t.
+
+cn-ofp/ref	: cn-ofp (ref T) (sing (ref T))
+		   <- cn-of T t.
+
+cn-ofp/tag	: cn-ofp (tag T) (sing (tag T))
+		   <- cn-of T t.
+
+cn-ofp/tagged	: cn-ofp tagged (sing tagged).
+
+cn-ofp/rec	: cn-ofp (rec K C1 C2) (sing (rec K C1 C2))
+		   <- kd-wf K
+		   <- ({a} cn-of a (pi K ([_] t)) -> {b} cn-of b K -> cn-of (C1 a b) t)
+		   <- cn-of C2 K.
+
+cn-ofp/labeled	: cn-ofp (labeled L T) (sing (labeled L T))
+		   <- cn-of T t.
+
+
+
+%block conbind-prin
+   : some {K:kind} {K':con -> kind}
+      block {a:con} {d:cn-of a K} {dp:cn-ofp a (K' a)}.
+
+
+%block cn-ofp-block
+   : some {C:con} {K:kind}
+      block {d:cn-ofp C K}.
+
+
+cn-ofp-resp : con-eq C C' -> kind-eq K K' -> cn-ofp C K -> cn-ofp C' K' -> type.
+%mode cn-ofp-resp +X1 +X2 +X3 -X4.
+
+-	: cn-ofp-resp _ _ D D.
+
+%worlds (conbind-reg | conbind-prin | cn-ofp-block) (cn-ofp-resp _ _ _ _).
+%total {} (cn-ofp-resp _ _ _ _).
+
+
+
+cn-ofp-fun : cn-ofp C K -> cn-ofp C K' -> kind-eq K K' -> type.
+%mode cn-ofp-fun +X1 +X2 -X3.
+
+-	: cn-ofp-fun _ _ kind-eq/i.
+
+-	: cn-ofp-fun (cn-ofp/pair D2 D1) (cn-ofp/pair D2' D1') Deq
+	   <- cn-ofp-fun D1 D1' Deq1
+	   <- cn-ofp-fun D2 D2' Deq2
+	   <- sigma-resp Deq1 ([_] Deq2) Deq.
+
+-	: cn-ofp-fun (cn-ofp/pi1 D) (cn-ofp/pi1 D') Deq1
+	   <- cn-ofp-fun D D' Deq
+	   <- kind-eq-sigma-invert Deq Deq1 Deq2.
+
+-	: cn-ofp-fun (cn-ofp/pi2 D) (cn-ofp/pi2 D') (Deq2 unit)
+	   <- cn-ofp-fun D D' Deq
+	   <- kind-eq-sigma-invert Deq Deq1 Deq2.
+
+-	: cn-ofp-fun (cn-ofp/lam Dofp Dsing _) (cn-ofp/lam Dofp' Dsing' _) Deq'
+	   <- single-fun Dsing Dsing' (DeqK1s : {a} kind-eq (K1s a) (K1s' a))
+	   <- ({a} {d:cn-of a K1} {dp:cn-ofp a (K1s a)}
+		 cn-ofp-resp con-eq/i (DeqK1s a) dp
+		 (DP a d dp : cn-ofp a (K1s' a)))
+	   <- ({a} {d} {dp}
+		 cn-ofp-fun (Dofp a d dp) (Dofp' a d (DP a d dp)) (Deq a))
+	   <- pi-resp kind-eq/i Deq Deq'.
+
+-	: cn-ofp-fun (cn-ofp/app _ D) (cn-ofp/app _ D') (Deq2 _)
+	   <- cn-ofp-fun D D' Deq
+	   <- kind-eq-pi-invert Deq _ (Deq2 : {a} kind-eq (K2 a) (K2' a)).
+
+%worlds (conbind-prin) (cn-ofp-fun _ _ _).
+%total D (cn-ofp-fun D _ _).
+
+
+
+cn-ofp-sound : cn-ofp C K -> cn-of C K -> type.
+%mode cn-ofp-sound +X1 -X2.
+
+%block conbind-prin-sound
+   : some {K:kind} {K':con -> kind}
+      {DwfK:kd-wf K}
+      {Dof:{a} cn-of a K -> cn-of a (K' a)}
+      block {a:con} {d:cn-of a K} 
+      {ds:cn-assm d}
+      {_:mcn-assm d ds}
+      {_:cn-of-reg d DwfK}
+      {dp:cn-ofp a (K' a)}
+      {_:cn-ofp-sound dp (Dof a d)}.
+
+%block cn-ofp-block-sound
+   : some {C:con} {K:kind} {Dof:cn-of C K}
+      block {d:cn-ofp C K} {_:cn-ofp-sound d Dof}.
+
+
+-	: cn-ofp-sound (cn-ofp/pair Dofp2 Dofp1) (cn-of/pair ([_] [_] Dwf2) Dof2 Dof1)
+	   <- cn-ofp-sound Dofp1 Dof1
+	   <- cn-ofp-sound Dofp2 Dof2
+	   <- cn-of-reg Dof2 Dwf2.
+
+-	: cn-ofp-sound (cn-ofp/pi1 Dofp) (cn-of/pi1 Dof)
+	   <- cn-ofp-sound Dofp Dof.
+
+-	: cn-ofp-sound (cn-ofp/pi2 Dofp) (cn-of/pi2 Dof)
+	   <- cn-ofp-sound Dofp Dof.
+
+-	: cn-ofp-sound 
+	   (cn-ofp/lam
+	      (Dofp : {a} cn-of a K1 -> cn-ofp a (K1s a) -> cn-ofp (C a) (K2 a))
+	      (Dsing : single K1 K1s)
+	      (DwfK1 : kd-wf K1))
+	   (cn-of/lam Dof DwfK1)
+	   <- single-intro Dsing DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a d)
+		 -> cn-ofp-sound (Dofp a d dp)
+		    (Dof a d : cn-of (C a) (K2 a))).
+
+-	: cn-ofp-sound
+	   (cn-ofp/app
+	      (Dof2 : cn-of C2 K1)
+	      (Dofp1 : cn-ofp C1 (pi K1 K2)))
+	   (cn-of/app Dof2 Dof1)
+	   <- cn-ofp-sound Dofp1 (Dof1 : cn-of C1 (pi K1 K2)).
+
+-	: cn-ofp-sound cn-ofp/star cn-of/star.
+
+-	: cn-ofp-sound cn-ofp/unit (cn-of/sing cn-of/unit).
+
+-	: cn-ofp-sound cn-ofp/void (cn-of/sing cn-of/void).
+
+-	: cn-ofp-sound (cn-ofp/prod D2 D1) (cn-of/sing (cn-of/prod D2 D1)).
+
+-	: cn-ofp-sound (cn-ofp/arrow D2 D1) (cn-of/sing (cn-of/arrow D2 D1)).
+
+-	: cn-ofp-sound (cn-ofp/plus D2 D1) (cn-of/sing (cn-of/plus D2 D1)).
+
+-	: cn-ofp-sound (cn-ofp/ref D) (cn-of/sing (cn-of/ref D)).
+
+-	: cn-ofp-sound (cn-ofp/tag D) (cn-of/sing (cn-of/tag D)).
+
+-	: cn-ofp-sound cn-ofp/tagged (cn-of/sing cn-of/tagged).
+
+-	: cn-ofp-sound (cn-ofp/rec D3 D2 D1) (cn-of/sing (cn-of/rec D3 D2 D1)).
+
+-	: cn-ofp-sound (cn-ofp/labeled D) (cn-of/sing (cn-of/labeled D)).
+
+%worlds (conbind-reg | conbind-prin-sound | cn-ofp-block-sound) (cn-ofp-sound _ _).
+%total D (cn-ofp-sound D _).
+
+
+
+tidy : kind -> type.
+
+tidy/sing	: tidy (sing C).
+
+tidy/pi		: tidy (pi K1 K2)
+		   <- ({a} tidy (K2 a)).
+
+tidy/sigma	: tidy (sigma K1 ([_] K2))
+		   <- tidy K1
+		   <- tidy K2.
+
+tidy/one	: tidy one.
+
+
+
+
+tidy-kd-sub-sigma-form : tidy K -> kd-sub K (sigma K1 K2) -> kind-eq K (sigma K1' ([_] K2')) -> type.
+%mode tidy-kd-sub-sigma-form +X1 +X2 -X3.
+
+tidy-kd-sub-sigma-form-aux : tidy K -> kind-eq K (sigma K1' K2') -> kind-eq K (sigma K1' ([_] K2'')) -> type.
+%mode tidy-kd-sub-sigma-form-aux +X1 +X2 -X3.
+
+-	: tidy-kd-sub-sigma-form-aux (tidy/sigma _ _) D D.
+
+%worlds (conblock) (tidy-kd-sub-sigma-form-aux _ _ _).
+%total {} (tidy-kd-sub-sigma-form-aux _ _ _).
+
+-	: tidy-kd-sub-sigma-form Dtidy Dsub Deq'
+	   <- kd-sub-sigma-form' Dsub Deq
+	   <- tidy-kd-sub-sigma-form-aux Dtidy Deq Deq'.
+
+%worlds (conbind) (tidy-kd-sub-sigma-form _ _ _).
+%total {} (tidy-kd-sub-sigma-form _ _ _).
+
+
+
+single-tidy : single K Ks -> ({a} tidy (Ks a)) -> type.
+%mode single-tidy +X1 -X2.
+
+-	: single-tidy single/t ([_] tidy/sing).
+
+-	: single-tidy single/sing ([_] tidy/sing).
+
+-	: single-tidy (single/pi Dsing) ([b] tidy/pi ([a] Dtidy a (app b a)))
+	   <- ({a} single-tidy (Dsing a) ([b] Dtidy a b)).
+
+-	: single-tidy (single/sigma Dsing2 Dsing1) ([b] tidy/sigma (Dtidy2 (pi1 b) (pi2 b)) (Dtidy1 (pi1 b)))
+	   <- single-tidy Dsing1 Dtidy1
+	   <- ({a} single-tidy (Dsing2 a) ([b] Dtidy2 a b)).
+
+-	: single-tidy single/one ([_] tidy/one).
+
+%worlds (conblock) (single-tidy _ _).
+%total D (single-tidy D _).
+
+
+
+cn-ofp-tidy : cn-ofp C K -> tidy K -> type.
+%mode cn-ofp-tidy +X1 -X2.
+
+%block conbind-prin-tidy
+   : some {K:kind} {K':con -> kind} {Dtidy:{a} tidy (K' a)}
+      block {a:con} {d:cn-of a K} {dp:cn-ofp a (K' a)}
+      {_:cn-ofp-tidy dp (Dtidy a)}.
+
+%block cn-ofp-block-tidy
+   : some {C:con} {K:kind} {Dtidy:tidy K}
+      block {d:cn-ofp C K} {_:cn-ofp-tidy d Dtidy}.
+
+-	: cn-ofp-tidy (cn-ofp/pair D2 D1) (tidy/sigma D2' D1')
+	   <- cn-ofp-tidy D1 D1'
+	   <- cn-ofp-tidy D2 D2'.
+
+-	: cn-ofp-tidy (cn-ofp/pi1 D) D1
+	   <- cn-ofp-tidy D (tidy/sigma D2 D1).
+
+-	: cn-ofp-tidy (cn-ofp/pi2 D) D2
+	   <- cn-ofp-tidy D (tidy/sigma D2 D1).
+
+-	: cn-ofp-tidy (cn-ofp/lam Dofp Dsing _) (tidy/pi Dtidy')
+	   <- single-tidy Dsing Dtidy
+	   <- ({a} {d} {dp}
+		 cn-ofp-tidy dp (Dtidy a)
+		 -> cn-ofp-tidy (Dofp a d dp) (Dtidy' a)).
+
+-	: cn-ofp-tidy (cn-ofp/app _ Dofp) (Dtidy _)
+	   <- cn-ofp-tidy Dofp (tidy/pi (Dtidy : {a} tidy (K2 a))).
+
+-	: cn-ofp-tidy _ tidy/sing.
+
+-	: cn-ofp-tidy _ tidy/one.
+
+%worlds (conbind-reg | conbind-prin-tidy | cn-ofp-block-tidy) (cn-ofp-tidy _ _).
+%total D (cn-ofp-tidy D _).
+
+
+
+cn-ofp-complete : cn-of C K -> single K Ks -> cn-ofp C K' -> kd-sub K' (Ks C) -> type.
+%mode cn-ofp-complete +X1 -X2 -X3 -X4.
+
+cn-ofp-complete' : cn-of C K -> single K Ks -> cn-ofp C K' -> kd-sub K' (Ks C) -> type.
+%mode cn-ofp-complete' +X1 +X2 -X3 -X4.
+
+
+%block conbind-prin-comp
+   : some 
+      {K:kind} {K':con -> kind} {Ks:con -> kind}
+      {DwfK:kd-wf K}
+      {Dof:{a} cn-of a K -> cn-of a (K' a)}
+      {Dtidy:{a} tidy (K' a)}
+      {Dsing:single K Ks} 
+      {Dsub:{a} cn-of a K -> kd-sub (K' a) (Ks a)} 
+      block 
+      {a:con} {d:cn-of a K} 
+      {ds:cn-assm d}
+      {_:mcn-assm d ds}
+      {_:cn-of-reg d DwfK}
+      {dp:cn-ofp a (K' a)}
+      {_:cn-ofp-sound dp (Dof a d)}
+      {_:cn-ofp-tidy dp (Dtidy a)}
+      {_:cn-ofp-complete d Dsing dp (Dsub a d)}.
+
+
+-	: cn-ofp-complete 
+	   (cn-of/pair
+	      (DwfK2 : {a} cn-of a K1 -> kd-wf (K2 a))
+	      (DofC2 : cn-of C2 (K2 C1))
+	      (DofC1 : cn-of C1 K1))
+	   %%
+	   (single/sigma Dsing2 Dsing1)
+	   (cn-ofp/pair DofpC2 DofpC1)
+	   (kd-sub/sigma
+	      ([_] [_] DwfK2s (pi1 (pair C1 C2)) (cn-of/pi1 (cn-of/pair DwfK2 DofC2 DofC1)) (pi2 (pair C1 C2)) (cn-of/pi2 (cn-of/pair DwfK2 DofC2 DofC1)))
+	      ([_] [_] kd-sub/trans (kd-sub/refl DequivK2s) Dsub2)
+	      (kd-sub/trans (kd-sub/refl (kd-equiv/symm DequivK1s)) Dsub1))
+	   <- cn-ofp-complete DofC1
+	      (Dsing1 : single K1 K1s)
+	      (DofpC1 : cn-ofp C1 K1')
+	      (Dsub1 : kd-sub K1' (K1s C1))
+	   <- ({a} can-single (K2 a) (Dsing2 a : single (K2 a) ([b] K2s a b)))
+	   <- cn-ofp-complete' DofC2 (Dsing2 C1)
+	      (DofpC2 : cn-ofp C2 K2')
+	      (Dsub2 : kd-sub K2' (K2s C1 C2))
+	   <- cn-of-reg DofC1
+	      (DwfK1 : kd-wf K1)
+	   <- single-formation Dsing1 DwfK1
+	      (DwfK1s : {b} cn-of b K1 -> kd-wf (K1s b))
+	   <- functionality-kd DwfK1s (cn-equiv/beta1 DofC2 DofC1)
+	      (DequivK1s : kd-equiv (K1s (pi1 (pair C1 C2))) (K1s C1))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-formation (Dsing2 a) (DwfK2 a d)
+		    (DwfK2s a d : {b} cn-of b (K2 a) -> kd-wf (K2s a b)))
+	   <- functionality-kd2 DwfK2s
+	      (cn-equiv/symm (cn-equiv/beta1 DofC2 DofC1))
+	      (cn-equiv/symm (cn-equiv/beta2 DofC2 DofC1))
+	      (DequivK2s : kd-equiv (K2s C1 C2) (K2s (pi1 (pair C1 C2)) (pi2 (pair C1 C2)))).
+
+-	: cn-ofp-complete
+	   (cn-of/pi1
+	      (Dof : cn-of C (sigma K1 K2)))
+	   %%
+	   Dsing1
+	   (cn-ofp/pi1 Dofp')
+	   Dsub1
+	   <- cn-ofp-complete Dof
+	      (single/sigma
+		 (Dsing2 : {a} single (K2 a) ([b] K2s a b))
+		 (Dsing1 : single K1 ([b] K1s b)))
+	      (Dofp : cn-ofp C K')
+	      (Dsub : kd-sub K' (sigma (K1s (pi1 C)) ([_] K2s (pi1 C) (pi2 C))))
+	   <- cn-ofp-tidy Dofp
+	      (Dtidy : tidy K')
+	   <- tidy-kd-sub-sigma-form Dtidy Dsub
+	      (Deq : kind-eq K' (sigma K1' ([_] K2')))
+	   <- cn-ofp-resp con-eq/i Deq Dofp
+	      (Dofp' : cn-ofp C (sigma K1' ([_] K2')))
+	   <- kd-sub-resp Deq kind-eq/i Dsub
+	      (Dsub' : kd-sub (sigma K1' ([_] K2')) (sigma (K1s (pi1 C)) ([_] K2s (pi1 C) (pi2 C))))
+	   <- kd-sub-sigma-invert Dsub'
+	      (Dsub1 : kd-sub K1' (K1s (pi1 C)))
+	      (Dsub2 : {a} cn-of a K1' -> kd-sub K2' (K2s (pi1 C) (pi2 C)))
+	      _.
+
+-	: cn-ofp-complete
+	   (cn-of/pi2
+	      (Dof : cn-of C (sigma K1 K2)))
+	   %%
+	   (Dsing2 (pi1 C))
+	   (cn-ofp/pi2 Dofp')
+	   (Dsub2 (pi1 C) (cn-of/pi1 Dof'))
+	   <- cn-ofp-complete Dof
+	      (single/sigma
+		 (Dsing2 : {a} single (K2 a) ([b] K2s a b))
+		 (Dsing1 : single K1 ([b] K1s b)))
+	      (Dofp : cn-ofp C K')
+	      (Dsub : kd-sub K' (sigma (K1s (pi1 C)) ([_] K2s (pi1 C) (pi2 C))))
+	   <- cn-ofp-tidy Dofp
+	      (Dtidy : tidy K')
+	   <- tidy-kd-sub-sigma-form Dtidy Dsub
+	      (Deq : kind-eq K' (sigma K1' ([_] K2')))
+	   <- cn-ofp-resp con-eq/i Deq Dofp
+	      (Dofp' : cn-ofp C (sigma K1' ([_] K2')))
+	   <- kd-sub-resp Deq kind-eq/i Dsub
+	      (Dsub' : kd-sub (sigma K1' ([_] K2')) (sigma (K1s (pi1 C)) ([_] K2s (pi1 C) (pi2 C))))
+	   <- kd-sub-sigma-invert Dsub'
+	      (Dsub1 : kd-sub K1' (K1s (pi1 C)))
+	      (Dsub2 : {a} cn-of a K1' -> kd-sub K2' (K2s (pi1 C) (pi2 C)))
+	      _
+	   <- cn-ofp-sound Dofp'
+	      (Dof' : cn-of C (sigma K1' ([_] K2'))).
+
+-	: cn-ofp-complete
+	   (cn-of/lam
+	      (Dof : {a} cn-of a K1 -> cn-of (C a) (K2 a))
+	      (DwfK1 : kd-wf K1))
+	   %%
+	   (single/pi Dsing2)
+	   (cn-ofp/lam Dofp Dsing1 DwfK1)
+	   (kd-sub/pi
+	      DwfK2'
+	      ([a] [d:cn-of a K1]
+		 kd-sub/trans
+		 (kd-sub/refl (kd-equiv/symm (Dequiv a d)))
+		 (Dsub a d))
+	      (kd-sub/reflid DwfK1))
+	   <- can-single K1 (Dsing1 : single K1 K1s)
+	   <- ({a}
+		 can-single (K2 a) (Dsing2 a : single (K2 a) ([b] K2s a b)))
+	   <- single-formation Dsing1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-intro Dsing1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- single-tidy Dsing1 (Dtidy : {a} tidy (K1s a))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a d)
+		 -> cn-ofp-tidy dp (Dtidy a)
+		 -> cn-ofp-complete d Dsing1 dp (kd-sub/reflid (DwfK1s a d))
+		 -> cn-ofp-complete' (Dof a d) (Dsing2 a)
+		    (Dofp a d dp : cn-ofp (C a) (K2' a))
+		    (Dsub a d : kd-sub (K2' a) (K2s a (C a))))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> cn-of-reg (Dof a d)
+		    (DwfK2 a d : kd-wf (K2 a)))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-formation (Dsing2 a) (DwfK2 a d)
+		    (DwfK2s a d : {b} cn-of b (K2 a) -> kd-wf (K2s a b)))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> functionality-kd (DwfK2s a d)
+		    (cn-equiv/beta d Dof)
+		    (Dequiv a d : kd-equiv (K2s a (app (lam K1 C) a)) (K2s a (C a))))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> kd-sub-reg (Dsub a d)
+		    (DwfK2' a d : kd-wf (K2' a)) (DDDD a d)).
+
+-	: cn-ofp-complete
+	   (cn-of/app
+	      (DofC2 : cn-of C2 K1)
+	      (DofC1 : cn-of C1 (pi K1 K2)))
+	   %%
+	   (Dsing C2)
+	   (cn-ofp/app (cn-of/subsume Dsub1 DofC2) DofpC1')
+	   (Dsub2 C2 DofC2)
+	   <- ({a}
+		 can-single (K2 a) (Dsing a : single (K2 a) ([b] K2s a b)))
+	   <- cn-ofp-complete' DofC1 (single/pi Dsing)
+	      (DofpC1 : cn-ofp C1 K')
+	      (Dsub : kd-sub K' (pi K1 ([a] K2s a (app C1 a))))
+	   <- kd-sub-pi-form' Dsub
+	      (Deq : kind-eq K' (pi K1' K2'))
+	   <- cn-ofp-resp con-eq/i Deq DofpC1
+	      (DofpC1' : cn-ofp C1 (pi K1' K2'))
+	   <- kd-sub-resp Deq kind-eq/i Dsub
+	      (Dsub' : kd-sub (pi K1' K2') (pi K1 ([a] K2s a (app C1 a))))
+	   <- kd-sub-pi-invert Dsub'
+	      (Dsub1 : kd-sub K1 K1')
+	      (Dsub2 : {a} cn-of a K1 -> kd-sub (K2' a) (K2s a (app C1 a)))
+	      _.
+	      
+-	: cn-ofp-complete cn-of/star single/one cn-ofp/star kd-sub/one.
+
+-	: cn-ofp-complete cn-of/unit single/t cn-ofp/unit (kd-sub/sing cn-equiv/unit).
+
+-	: cn-ofp-complete cn-of/void single/t cn-ofp/void (kd-sub/sing cn-equiv/void).
+
+-	: cn-ofp-complete (cn-of/prod Dof2 Dof1)
+	   single/t (cn-ofp/prod Dof2 Dof1) (kd-sub/sing (cn-equiv/refl (cn-of/prod Dof2 Dof1))).
+
+-	: cn-ofp-complete (cn-of/arrow Dof2 Dof1)
+	   single/t (cn-ofp/arrow Dof2 Dof1) (kd-sub/sing (cn-equiv/refl (cn-of/arrow Dof2 Dof1))).
+
+-	: cn-ofp-complete (cn-of/plus Dof2 Dof1)
+	   single/t (cn-ofp/plus Dof2 Dof1) (kd-sub/sing (cn-equiv/refl (cn-of/plus Dof2 Dof1))).
+
+-	: cn-ofp-complete (cn-of/ref Dof)
+	   single/t (cn-ofp/ref Dof) (kd-sub/sing (cn-equiv/refl (cn-of/ref Dof))).
+
+-	: cn-ofp-complete (cn-of/tag Dof)
+	   single/t (cn-ofp/tag Dof) (kd-sub/sing (cn-equiv/refl (cn-of/tag Dof))).
+
+-	: cn-ofp-complete cn-of/tagged single/t cn-ofp/tagged (kd-sub/sing cn-equiv/tagged).
+
+-	: cn-ofp-complete (cn-of/rec Dof2 Dof1 Dwf)
+	   single/t (cn-ofp/rec Dof2 Dof1 Dwf) (kd-sub/sing (cn-equiv/refl (cn-of/rec Dof2 Dof1 Dwf))).
+
+-	: cn-ofp-complete (cn-of/labeled Dof)
+	   single/t (cn-ofp/labeled Dof) (kd-sub/sing (cn-equiv/refl (cn-of/labeled Dof))).
+
+-	: cn-ofp-complete 
+	   (cn-of/sing 
+	      (Dof : cn-of C t))
+	   single/sing
+	   Dofp
+	   Dsub
+	   <- cn-ofp-complete Dof
+	      single/t 
+	      (Dofp : cn-ofp C K)
+	      (Dsub : kd-sub K (sing C)).
+
+-	: cn-ofp-complete
+	   (cn-of/extpi
+	      (Dof : {a} cn-of a K1 -> cn-of (app C a) (K2 a))
+	      (DofPre : cn-of C (pi K1 K2pre)))
+	   %%
+	   (single/pi Dsing2)
+	   Dofp'
+	   (kd-sub/pi
+	      DwfK2'
+	      Dsub2'
+	      Dsub1)
+	   <- cn-of-reg DofPre
+	      (kd-wf/pi _ (DwfK1 : kd-wf K1))
+	   <- can-single K1 (Dsing1 : single K1 K1s)
+	   <- ({a}
+		 can-single (K2 a) (Dsing2 a : single (K2 a) ([b] K2s a b)))
+	   <- ({a}
+		 can-single (K2pre a) (Dsing2pre a : single (K2pre a) ([b] K2pres a b)))
+	   <- cn-ofp-complete' DofPre (single/pi Dsing2pre)
+	      (Dofp : cn-ofp C K')
+	      (DsubPre : kd-sub K' (pi K1 ([a] K2pres a (app C a))))
+	   <- kd-sub-pi-form' DsubPre
+	      (DeqK' : kind-eq K' (pi K1' K2'))
+	   <- cn-ofp-resp con-eq/i DeqK' Dofp
+	      (Dofp' : cn-ofp C (pi K1' K2'))
+	   <- kd-sub-resp DeqK' kind-eq/i DsubPre
+	      (DsubPre' : kd-sub (pi K1' K2') (pi K1 ([a] K2pres a (app C a))))
+	   <- kd-sub-pi-invert DsubPre'
+	      (Dsub1 : kd-sub K1 K1')
+	      _
+	      _
+	   <- single-formation Dsing1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-intro Dsing1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- single-tidy Dsing1 (Dtidy : {a} tidy (K1s a))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a d)
+		 -> cn-ofp-tidy dp (Dtidy a)
+		 -> cn-ofp-complete d Dsing1 dp (kd-sub/reflid (DwfK1s a d))
+		 -> cn-ofp-complete' (Dof a d) (Dsing2 a)
+		    (cn-ofp/app
+		       (DDD a d)
+		       (Dofp'' a d dp : cn-ofp C (pi (K1'' a) ([b] K2'' a b))))
+		    (Dsub2 a d : kd-sub (K2'' a a) (K2s a (app C a))))
+	   <- ({a} {d} {dp}
+		 cn-ofp-fun (Dofp'' a d dp) Dofp'
+		 (DeqPi a : kind-eq (pi (K1'' a) ([a'] K2'' a a')) (pi K1' K2')))
+	   <- ({a}
+		 kind-eq-pi-invert (DeqPi a)
+		 (DeqK1'' a : kind-eq (K1'' a) K1')
+		 (DeqK2'' a : {a'} kind-eq (K2'' a a') (K2' a')))
+	   <- ({a} {d}
+		 kd-sub-resp (DeqK2'' a a) kind-eq/i (Dsub2 a d)
+		 (Dsub2' a d : kd-sub (K2' a) (K2s a (app C a))))
+	   <- cn-ofp-sound Dofp'
+	      (Dof' : cn-of C (pi K1' K2'))
+	   <- cn-of-reg Dof'
+	      (kd-wf/pi
+		 (DwfK2' : {a} cn-of a K1' -> kd-wf (K2' a))
+		 _).
+
+-	: cn-ofp-complete
+	   (cn-of/extsigma
+	      (DwfK2 : {a} cn-of a K1 -> kd-wf (K2 a))
+	      (Dof2 : cn-of (pi2 C) (K2 (pi1 C)))
+	      (Dof1 : cn-of (pi1 C) K1))
+	   %%
+	   (single/sigma Dsing2 Dsing1)
+	   Dofp
+	   (kd-sub/sigma
+	      ([_] [_] DwfK2sInst)
+	      ([a] [d:cn-of a K1'] Dsub2')
+	      Dsub1)
+	   <- cn-of-reg Dof1
+	      (DwfK1 : kd-wf K1)
+	   <- can-single K1 (Dsing1 : single K1 K1s)
+	   <- ({a}
+		 can-single (K2 a) (Dsing2 a : single (K2 a) ([b] K2s a b)))
+	   <- cn-ofp-complete' Dof1 Dsing1
+	      (cn-ofp/pi1
+		 (Dofp : cn-ofp C (sigma K1' ([_] K2'))))
+	      (Dsub1 : kd-sub K1' (K1s (pi1 C)))
+	   <- cn-ofp-complete' Dof2 (Dsing2 (pi1 C))
+	      (cn-ofp/pi2
+		 (Dofp' : cn-ofp C (sigma K1'' ([_] K2''))))
+	      (Dsub2 : kd-sub K2'' (K2s (pi1 C) (pi2 C)))
+	   <- cn-ofp-fun Dofp' Dofp
+	      (DeqSigma : kind-eq (sigma K1'' ([_] K2'')) (sigma K1' ([_] K2')))
+	   <- kind-eq-sigma-invert DeqSigma
+	      (DeqK1'' : kind-eq K1'' K1')
+	      (DeqK2'' : con -> kind-eq K2'' K2')
+	   <- kd-sub-resp (DeqK2'' unit) kind-eq/i Dsub2
+	      (Dsub2' : kd-sub K2' (K2s (pi1 C) (pi2 C)))
+	   <- cn-ofp-sound Dofp
+	      (Dof' : cn-of C (sigma K1' ([_] K2')))
+	   <- cn-of-reg Dof'
+	      (kd-wf/sigma
+		 (DwfK2' : {a} cn-of a K1' -> kd-wf K2')
+		 (DwfK1' : kd-wf K1'))
+	   <- kd-sub-reg Dsub2'
+	      _
+	      (DwfK2sInst : kd-wf (K2s (pi1 C) (pi2 C))).
+
+-	: cn-ofp-complete
+	   (cn-of/subsume
+	      (Dsub : kd-sub K1 K2)
+	      (Dof : cn-of C K1))
+	   %%
+	   Dsing2 Dofp (kd-sub/trans (Dsub'' C Dof) Dsub')
+	   <- cn-ofp-complete Dof
+	      (Dsing1 : single K1 K1s)
+	      (Dofp : cn-ofp C K1')
+	      (Dsub' : kd-sub K1' (K1s C))
+	   <- can-single K2 (Dsing2 : single K2 K2s)
+	   <- single-sub Dsing1 Dsing2 Dsub
+	      (Dsub'' : {a} cn-of a K1 -> kd-sub (K1s a) (K2s a)).
+
+
+
+-	: cn-ofp-complete' Dof Dsing Dofp Dsub'
+	   <- cn-ofp-complete Dof Dsing' Dofp Dsub
+	   <- single-fun Dsing' Dsing (Deq : {a} kind-eq (Ks a) (Ks' a))
+	   <- kd-sub-resp kind-eq/i (Deq _) Dsub Dsub'.
+
+%worlds (conbind-prin-comp) (cn-ofp-complete _ _ _ _) (cn-ofp-complete' _ _ _ _).
+%total (D1 D2) (cn-ofp-complete D1 _ _ _) (cn-ofp-complete' D2 _ _ _).
+
+
+
+cn-ofp-is-sing : cn-ofp C K -> single K Ks -> kd-equiv K (Ks C) -> type.
+%mode cn-ofp-is-sing +X1 +X2 -X3.
+
+-	: cn-ofp-is-sing (Dofp : cn-ofp C K) (Dsing : single K Ks) Dequiv
+	   <- cn-ofp-sound Dofp 
+	      (Dof : cn-of C K)
+	   <- cn-ofp-complete' Dof Dsing
+	      (Dofp' : cn-ofp C K')
+	      (Dsub : kd-sub K' (Ks C))
+	   <- cn-ofp-fun Dofp' Dofp 
+	      (Deq : kind-eq K' K)
+	   <- kd-sub-resp Deq kind-eq/i Dsub
+	      (Dsub' : kd-sub K (Ks C))
+	   <- cn-of-reg Dof
+	      (Dwf : kd-wf K)
+	   <- single-subsume Dsing Dwf
+	      (Dsub'' : {a} cn-of a K -> kd-sub (Ks a) K)
+	   <- kd-sub-antisymm Dsub' (Dsub'' C Dof)
+	      (Dequiv : kd-equiv K (Ks C)).
+
+%worlds (conbind-prin-comp) (cn-ofp-is-sing _ _ _).
+%total {} (cn-ofp-is-sing _ _ _).
+
+
+
+cn-ofp-complete'' : cn-of C K -> cn-ofp C K' -> kd-sub K' K -> type.
+%mode cn-ofp-complete'' +X1 -X2 -X3.
+
+-	: cn-ofp-complete'' 
+	   (Dof : cn-of C K) 
+	   %%
+	   Dofp
+	   (kd-sub/trans (Dsub' C Dof) Dsub)
+	   <- cn-ofp-complete Dof
+	      (Dsing : single K Ks)
+	      (Dofp : cn-ofp C K')
+	      (Dsub : kd-sub K' (Ks C))
+	   <- cn-of-reg Dof
+	      (DwfK : kd-wf K)
+	   <- single-omnibus Dsing DwfK
+	      (Dsub' : {a} cn-of a K -> kd-sub (Ks a) K)
+	      _.
+
+%worlds (conbind-prin-comp) (cn-ofp-complete'' _ _ _).
+%total {} (cn-ofp-complete'' _ _ _).
+
+
+
+%block cn-ofp-block-sound-tidy
+   : some {C:con} {K:kind} {Dof:cn-of C K} {Dtidy:tidy K}
+      block {d:cn-ofp C K} {_:cn-ofp-sound d Dof} {_:cn-ofp-tidy d Dtidy}.
+
+
+
+%block conbind-prin-sound-tidy
+   : some {K:kind} {K':con -> kind}
+      {DwfK:kd-wf K}
+      {Dof:{a} cn-of a K -> cn-of a (K' a)}
+      {Dtidy:{a} tidy (K' a)}
+      block {a:con} {d:cn-of a K} 
+      {ds:cn-assm d}
+      {_:mcn-assm d ds}
+      {_:cn-of-reg d DwfK}
+      {dp:cn-ofp a (K' a)}
+      {_:cn-ofp-sound dp (Dof a d)}
+      {_:cn-ofp-tidy dp (Dtidy a)}.
+
+
+
+cn-ofp-narrow-main : (cn-ofp X K1 -> cn-ofp C K2)
+		      -> kd-sub K1' K1
+		      -> tidy K1'
+%%
+		      -> (cn-ofp X K1' -> cn-ofp C K2')
+		      -> kd-sub K2' K2
+		      -> type.
+%mode cn-ofp-narrow-main +X1 +X2 +X3 -X4 -X5.
+
+-	: cn-ofp-narrow-main ([_] Dofp) _ _
+	   ([_] Dofp) (kd-sub/reflid Dwf)
+	   <- cn-ofp-sound Dofp Dof
+	   <- cn-of-reg Dof Dwf.
+
+-	: cn-ofp-narrow-main ([d] d) Dsub _
+	   ([d] d) Dsub.
+
+-	: cn-ofp-narrow-main ([d] cn-ofp/pair (D2 d) (D1 d)) Dsub Dtidy
+	   ([d] cn-ofp/pair (D2' d) (D1' d))
+	   (kd-sub/sigma ([_] [_] Dwf) ([_] [_] Dsub2) Dsub1)
+	   <- cn-ofp-narrow-main D1 Dsub Dtidy D1' Dsub1
+	   <- cn-ofp-narrow-main D2 Dsub Dtidy D2' Dsub2
+	   <- kd-sub-reg Dsub2 _ Dwf.
+
+-	: cn-ofp-narrow-main ([d] cn-ofp/pi1 (Dofp d)) Dsub Dtidy
+	   ([d] cn-ofp/pi1 (Dofp'' d)) Dsub1
+	   <- cn-ofp-narrow-main Dofp Dsub Dtidy Dofp' Dsub'
+	   <- ({d}
+		 cn-ofp-tidy d Dtidy
+		 -> cn-ofp-tidy (Dofp' d) Dtidy')
+	   <- tidy-kd-sub-sigma-form Dtidy' Dsub' Deq
+	   <- ({d}
+		 cn-ofp-resp con-eq/i Deq (Dofp' d) 
+		 (Dofp'' d))
+	   <- kd-sub-resp Deq kind-eq/i Dsub' Dsub''
+	   <- kd-sub-sigma-invert Dsub'' Dsub1 _ _.
+
+-	: cn-ofp-narrow-main ([d] cn-ofp/pi2 (Dofp d)) Dsub Dtidy
+	   ([d] cn-ofp/pi2 (Dofp'' d)) (Dsub2 _ DofInh)
+	   <- cn-ofp-narrow-main Dofp Dsub Dtidy Dofp' Dsub'
+	   <- ({d}
+		 cn-ofp-tidy d Dtidy
+		 -> cn-ofp-tidy (Dofp' d) Dtidy')
+	   <- tidy-kd-sub-sigma-form Dtidy' Dsub' Deq
+	   <- ({d}
+		 cn-ofp-resp con-eq/i Deq (Dofp' d) 
+		 (Dofp'' d))
+	   <- kd-sub-resp Deq kind-eq/i Dsub' Dsub''
+	   <- kd-sub-sigma-invert Dsub'' Dsub1 Dsub2 _
+	   <- kd-sub-reg Dsub1 Dwf _
+	   <- inhabitation Dwf DofInh.
+
+-	: cn-ofp-narrow-main ([d] cn-ofp/lam (Dofp d) Dsing Dwf) Dsub Dtidy
+	   ([d] cn-ofp/lam (Dofp' d) Dsing Dwf)
+	   (kd-sub/pi Dwf2 Dsub' (kd-sub/reflid Dwf))
+	   <- single-intro Dsing Dwf DofKs
+	   <- single-tidy Dsing Dtidy'
+	   <- ({b} {e:cn-of b K} {es}
+		 mcn-assm e es
+		 -> cn-of-reg e Dwf
+		 -> {ep:cn-ofp b (Ks b)}
+		    cn-ofp-sound ep (DofKs b e)
+		 -> cn-ofp-tidy ep (Dtidy' b)
+		 -> cn-ofp-narrow-main ([d] Dofp d b e ep) Dsub Dtidy ([d] Dofp' d b e ep) (Dsub' b e))
+	   <- ({b} {e:cn-of b K} {es}
+		 mcn-assm e es
+		 -> cn-of-reg e Dwf
+		 -> kd-sub-reg (Dsub' b e)
+		    (Dwf2 b e) (DDD b e)).
+
+-	: cn-ofp-narrow-main ([d] cn-ofp/app Dof2 (Dofp1 d : cn-ofp C1 (pi K1 K2))) Dsub Dtidy
+	   ([d] cn-ofp/app (cn-of/subsume Dsub1 Dof2) (Dofp1'' d)) (Dsub2 _ Dof2)
+	   <- cn-ofp-narrow-main Dofp1 Dsub Dtidy Dofp1' Dsub'
+	   <- kd-sub-pi-form' Dsub' Deq
+	   <- ({d}
+		 cn-ofp-resp con-eq/i Deq (Dofp1' d) (Dofp1'' d))
+	   <- kd-sub-resp Deq kind-eq/i Dsub' Dsub''
+	   <- kd-sub-pi-invert Dsub'' Dsub1 Dsub2 _.
+
+%worlds (conbind-reg | conbind-prin-sound-tidy | cn-ofp-block-sound-tidy) (cn-ofp-narrow-main _ _ _ _ _).
+%total D (cn-ofp-narrow-main D _ _ _ _).
+
+
+
+cn-ofp-narrow : kd-sub K1' K1
+		 -> single K1' K1s'
+		 -> single K1 K1s
+		 -> ({a} cn-of a K1 -> cn-ofp a (K1s a) -> cn-ofp (C a) (K2 a))
+%%
+		 -> ({a} cn-of a K1' -> cn-ofp a (K1s' a) -> cn-ofp (C a) (K2' a))
+		 -> ({a} cn-of a K1' -> kd-sub (K2' a) (K2 a))
+		 -> type.
+%mode cn-ofp-narrow +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: cn-ofp-narrow
+	   (DsubK1 : kd-sub K1' K1)
+	   (DsingK1' : single K1' K1s')
+	   (DsingK1 : single K1 K1s)
+	   (Dofp : {a} cn-of a K1 -> cn-ofp a (K1s a) -> cn-ofp (C a) (K2 a))
+	   %%
+	   Dofp'
+	   DsubK2
+	   <- kd-sub-reg DsubK1
+	      (DwfK1' : kd-wf K1') _
+	   <- single-sub DsingK1' DsingK1 DsubK1
+	      (DsubK1s : {a} cn-of a K1' -> kd-sub (K1s' a) (K1s a))
+	   <- single-tidy DsingK1'
+	      (DtidyK1s' : {a} tidy (K1s' a))
+	   <- ({a} {d:cn-of a K1'} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1'
+		 -> cn-ofp-narrow-main
+		    ([dp:cn-ofp a (K1s a)] Dofp a (cn-of/subsume DsubK1 d) dp)
+		    (DsubK1s a d) (DtidyK1s' a)
+		    ([dp:cn-ofp a (K1s' a)] Dofp' a d dp : cn-ofp (C a) (K2' a))
+		    (DsubK2 a d : kd-sub (K2' a) (K2 a))).
+
+%worlds (conbind-prin-sound-tidy) (cn-ofp-narrow _ _ _ _ _ _).
+%total {} (cn-ofp-narrow _ _ _ _ _ _).
+
+
+
+cn-ofp-equiv : kd-sub K1' K1
+		-> single K1 K1s
+		-> ({a} cn-of a K1' -> kd-equiv (K1s' a) (K1s a))
+		-> ({a} tidy (K1s' a))
+		-> ({a} cn-of a K1 -> cn-ofp a (K1s a) -> cn-ofp (C a) (K2 a))
+%%
+		-> ({a} cn-of a K1' -> cn-ofp a (K1s' a) -> cn-ofp (C a) (K2' a))
+		-> ({a} cn-of a K1' -> kd-equiv (K2' a) (K2 a))
+		-> type.
+%mode cn-ofp-equiv +X1 +X2 +X3 +X4 +X5 -X6 -X7.
+
+-	: cn-ofp-equiv
+	   (DsubK1 : kd-sub K1' K1)
+	   (DsingK1 : single K1 K1s)
+	   (DequivK1s' : {a} cn-of a K1' -> kd-equiv (K1s' a) (K1s a))
+	   (DtidyK1s' : {a} tidy (K1s' a))
+	   (Dofp : {a} cn-of a K1 -> cn-ofp a (K1s a) -> cn-ofp (C a) (K2 a))
+	   %%
+	   Dofp'
+	   DequivK2
+	   <- kd-sub-reg DsubK1
+	      (DwfK1' : kd-wf K1') _
+	   <- single-tidy DsingK1
+	      (DtidyK1s : {a} tidy (K1s a))
+	   <- ({a} {d:cn-of a K1'} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1'
+		 -> cn-ofp-narrow-main
+		    ([dp:cn-ofp a (K1s a)] Dofp a (cn-of/subsume DsubK1 d) dp)
+		    (kd-sub/refl (DequivK1s' a d)) (DtidyK1s' a)
+		    ([dp:cn-ofp a (K1s' a)] Dofp' a d dp : cn-ofp (C a) (K2' a))
+		    (DsubK2 a d : kd-sub (K2' a) (K2 a)))
+	   <- ({a} {d:cn-of a K1'} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1'
+		 -> cn-ofp-narrow-main
+		    ([dp:cn-ofp a (K1s' a)] Dofp' a d dp)
+		    (kd-sub/refl (kd-equiv/symm (DequivK1s' a d))) (DtidyK1s a)
+		    ([dp:cn-ofp a (K1s a)] Dofp'' a d dp : cn-ofp (C a) (K2'' a))
+		    (DsubK2' a d : kd-sub (K2'' a) (K2' a)))
+	   <- ({a} {d:cn-of a K1'} {dp:cn-ofp a (K1s a)}
+		 cn-ofp-fun (Dofp'' a d dp) (Dofp a (cn-of/subsume DsubK1 d) dp)
+		 (Deq a : kind-eq (K2'' a) (K2 a)))
+	   <- ({a} {d:cn-of a K1'}
+		 kd-sub-resp (Deq a) kind-eq/i (DsubK2' a d)
+		 (DsubK2'' a d : kd-sub (K2 a) (K2' a)))
+	   <- ({a} {d:cn-of a K1'} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1'
+		 -> kd-sub-antisymm (DsubK2 a d) (DsubK2'' a d)
+		    (DequivK2 a d : kd-equiv (K2' a) (K2 a))).
+	   
+%worlds (conbind-prin-sound-tidy) (cn-ofp-equiv _ _ _ _ _ _ _).
+%total {} (cn-ofp-equiv _ _ _ _ _ _ _).
+
+
+
+cn-ofp-cut : kd-wf K1
+	      -> single K1 K1s
+	      -> ({a} cn-of a K1 -> cn-ofp a (K1s a) -> cn-ofp (C2 a) (K2 a))
+	      -> cn-ofp C1 K1'
+	      -> kd-sub K1' K1
+	      -> kd-equiv K1' (K1s C1)
+%%
+	      -> cn-ofp (C2 C1) K2'
+	      -> kd-equiv K2' (K2 C1)
+	      -> type.
+%mode cn-ofp-cut +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+-	: cn-ofp-cut
+	   (DwfK1 : kd-wf K1)
+	   (DsingK1 : single K1 K1s)
+	   (Dofp2 : {a} cn-of a K1 -> cn-ofp a (K1s a) -> cn-ofp (C2 a) (K2 a))
+	   (Dofp1 : cn-ofp C1 K1')
+	   (DsubK1 : kd-sub K1' K1)
+	   (DequivK1 : kd-equiv K1' (K1s C1))
+	   %%
+	   (Dofp2' C1 (DofK1s C1 (cn-of/subsume DsubK1 DofC1)) Dofp1)
+	   (DequivK2 C1 (DofK1s C1 (cn-of/subsume DsubK1 DofC1)))
+	   <- single-formation DsingK1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-subsume DsingK1 DwfK1
+	      (DsubK1s : {a} cn-of a K1 -> kd-sub (K1s a) K1)
+	   <- single-elim DsingK1 DwfK1
+	      (DequivK1sElim : {a} cn-of a K1 -> {b} cn-of b (K1s a) -> cn-equiv a b K1)
+	   <- cn-ofp-sound Dofp1
+	      (DofC1 : cn-of C1 K1')
+	   <- ({a} {d:cn-of a (K1s C1)} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d (DwfK1s C1 (cn-of/subsume DsubK1 DofC1))
+		 -> functionality-kd DwfK1s (DequivK1sElim C1 (cn-of/subsume DsubK1 DofC1) a d)
+		    (DequivK1s a d : kd-equiv (K1s C1) (K1s a)))
+	   <- cn-ofp-tidy Dofp1
+	      (DtidyK1' : tidy K1')
+	   <- cn-ofp-equiv
+	      (DsubK1s C1 (cn-of/subsume DsubK1 DofC1) 
+		 : kd-sub (K1s C1) K1)
+	      DsingK1
+	      ([a] [d:cn-of a (K1s C1)]
+		 kd-equiv/trans
+		 (DequivK1s a d)
+		 DequivK1
+		 : kd-equiv K1' (K1s a))
+	      ([_] DtidyK1')
+	      ([a] [d:cn-of a K1] [dp:cn-ofp a (K1s a)] Dofp2 a d dp)
+	      %%
+	      (Dofp2' : {a} cn-of a (K1s C1) -> cn-ofp a K1' -> cn-ofp (C2 a) (K2' a))
+	      (DequivK2 : {a} cn-of a (K1s C1) -> kd-equiv (K2' a) (K2 a))
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a)).
+
+%worlds (conbind-prin-sound-tidy) (cn-ofp-cut _ _ _ _ _ _ _ _).
+%total {} (cn-ofp-cut _ _ _ _ _ _ _ _).
+
+
+
+
+%%%%%  Purity  %%%%%
+
+purity-join : purity -> purity -> purity -> type.
+
+purity-join/pure	: purity-join pure pure pure.
+
+purity-join/impure1	: purity-join impure _ impure.
+
+purity-join/impure2	: purity-join _ impure impure.
+
+
+
+purity-sub : purity -> purity -> type.
+
+purity-sub/refl		: purity-sub P P.
+
+purity-sub/forget	: purity-sub pure impure.
+
+
+
+purity-join-resp : purity-eq P1 P1' -> purity-eq P2 P2' -> purity-eq P P' -> purity-join P1 P2 P -> purity-join P1' P2' P' -> type.
+%mode purity-join-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: purity-join-resp _ _ _ D D.
+
+%worlds () (purity-join-resp _ _ _ _ _).
+%total {} (purity-join-resp _ _ _ _ _).
+
+
+
+purity-join-fun : purity-join P1 P2 P -> purity-join P1 P2 P' -> purity-eq P P' -> type.
+%mode purity-join-fun +X1 +X2 -X3.
+
+-	: purity-join-fun _ _ purity-eq/i.
+
+%worlds () (purity-join-fun _ _ _).
+%total {} (purity-join-fun _ _ _).
+
+
+
+eq-pure-impure : purity-eq pure impure -> false -> type.
+%mode eq-pure-impure +X1 -X2.
+%worlds () (eq-pure-impure _ _).
+%total {} (eq-pure-impure _ _).
+
+
+
+eq-impure-pure : purity-eq impure pure -> false -> type.
+%mode eq-impure-pure +X1 -X2.
+%worlds () (eq-impure-pure _ _).
+%total {} (eq-impure-pure _ _).
+
+
+
+purity-join-sub : purity-join P1 P2 P
+%%
+		   -> purity-sub P1 P
+		   -> purity-sub P2 P
+		   -> type.
+%mode purity-join-sub +X1 -X2 -X3.
+
+-	: purity-join-sub _ purity-sub/refl purity-sub/refl.
+
+-	: purity-join-sub _ purity-sub/refl purity-sub/forget.
+
+-	: purity-join-sub _ purity-sub/forget purity-sub/refl.
+
+%worlds () (purity-join-sub _ _ _).
+%total {} (purity-join-sub _ _ _).
+
+
+
+purity-join-lub : purity-sub P1 P
+		   -> purity-sub P2 P
+%%
+		   -> purity-join P1 P2 P'
+		   -> purity-sub P' P
+		   -> type.
+%mode purity-join-lub +X1 +X2 -X3 -X4.
+
+-	: purity-join-lub D _ purity-join/pure D.
+
+-	: purity-join-lub _ _ purity-join/impure1 purity-sub/refl.
+
+-	: purity-join-lub _ _ purity-join/impure2 purity-sub/refl.
+
+%worlds () (purity-join-lub _ _ _ _).
+%total {} (purity-join-lub _ _ _ _).
+
+
+
+purity-sub-pure : {P} purity-sub pure P -> type.
+%mode purity-sub-pure +X1 -X2.
+
+-	: purity-sub-pure _ purity-sub/refl.
+
+-	: purity-sub-pure _ purity-sub/forget.
+
+%worlds () (purity-sub-pure _ _).
+%total {} (purity-sub-pure _ _).
+
+
+
+purity-sub-impure : {P} purity-sub P impure -> type.
+%mode purity-sub-impure +X1 -X2.
+
+-	: purity-sub-impure _ purity-sub/refl.
+
+-	: purity-sub-impure _ purity-sub/forget.
+
+%worlds () (purity-sub-impure _ _).
+%total {} (purity-sub-impure _ _).
+
+
+
+purity-subsume : md-of P F M S
+		  -> purity-sub P P'
+%%
+		  -> md-of P' F M S
+		  -> type.
+%mode purity-subsume +X1 +X2 -X3.
+
+-	: purity-subsume D purity-sub/refl D.
+
+-	: purity-subsume D purity-sub/forget (md-of/forget D).
+
+%worlds (conbind | modbind | termbind | modbind-detached) (purity-subsume _ _ _).
+%total {} (purity-subsume _ _ _).
+
+
+
+purity-sub-trans : purity-sub P1 P2 -> purity-sub P2 P3 -> purity-sub P1 P3 -> type.
+%mode purity-sub-trans +X1 +X2 -X3.
+
+-	: purity-sub-trans _ _ purity-sub/refl.
+
+-	: purity-sub-trans _ _ purity-sub/forget.
+
+%worlds () (purity-sub-trans _ _ _).
+%total {} (purity-sub-trans _ _ _).
+
+
+
+
+%%%%%  Principal Signatures  %%%%%
+
+md-ofp : purity -> sttp -> module -> sg -> type.
+
+md-ofp/var	: md-ofp pure F X (Ss C)
+		   <- md-assm X S
+		   <- single-sg S Ss
+		   <- md-fst X C.
+
+md-ofp/unit	: md-ofp pure F md/unit sg/one.
+
+md-ofp/satom	: md-ofp pure F (md/satom C) (sg/satom K)
+		   <- cn-ofp C K.
+
+md-ofp/datom	: md-ofp pure F (md/datom E T) (sg/datom T)
+		   <- tm-of F E T.
+
+md-ofp/sgatom	: md-ofp pure F (md/sgatom S) (sg/sgatom S)
+		   <- sg-wf S.
+
+md-ofp/pair	: md-ofp P F (md/pair M1 M2) (sg/sigma S1 ([_] S2))
+		   <- md-ofp P1 F M1 S1
+		   <- md-ofp P2 F M2 S2
+		   <- purity-join P1 P2 P.
+
+%% This clumsy formulation for dpair is because we need to give a tidy
+%% signature for pure modules, but it is impossible to give one when the
+%% first constitutent is impure. There's no uniform way to handle both
+%% cases.  (The pure case is a nuisance in several places.)
+
+md-ofp/dpair-pure
+		: md-ofp P F (md/dpair M1 M2) (sg/sigma S1 ([_] S2 C1))
+		   <- md-ofp pure F M1 S1
+		   <- sg-fst S1 K1
+		   <- md-fst M1 C1
+		   <- single K1 K1s
+		   <- ({a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> cn-ofp a (K1s a)
+			 -> md-ofp P F (M2 a m) (S2 a)).
+
+md-ofp/dpair-impure
+		: md-ofp impure F (md/dpair M1 M2) (sg/sigma S1 S2)
+		   <- md-ofp impure F M1 S1
+		   <- sg-fst S1 K1
+		   <- single K1 K1s
+		   <- ({a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> cn-ofp a (K1s a)
+			 -> md-ofp P F (M2 a m) (S2 a)).
+
+md-ofp/pi1	: md-ofp pure F (md/pi1 M) S1
+		   <- md-ofp pure F M (sg/sigma S1 ([_] S2)).
+
+md-ofp/pi2	: md-ofp pure F (md/pi2 M) S2
+		   <- md-ofp pure F M (sg/sigma S1 ([_] S2)).
+
+md-ofp/lam	: md-ofp pure F (md/lam S1 M) (sg/pi S1 S2)
+		   <- sg-wf S1
+		   <- sg-fst S1 K1
+		   <- single K1 K1s
+		   <- ({a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> cn-ofp a (K1s a)
+			 -> md-ofp P F (M a m) (S2 a)).
+
+md-ofp/app	: md-ofp impure F (md/app M1 M2) (S2 C2)
+		   <- md-ofp P F M1 (sg/pi S1 S2)
+		   <- md-of pure F M2 S1
+		   <- md-fst M2 C2.
+
+md-ofp/in	: md-ofp P F (md/in L M) (sg/named L S)
+		   <- md-ofp P F M S.
+
+md-ofp/out	: md-ofp P F (md/out M) S
+		   <- md-ofp P F M (sg/named L S).
+
+md-ofp/let	: md-ofp impure F (md/let M1 M2 S) S
+		   <- md-of P1 F M1 S1
+		   <- sg-fst S1 K1
+		   <- ({a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> md-of P2 F (M2 a m) S).
+
+md-ofp/letp	: md-ofp P F (md/letp M1 M2) (S2 C1)
+		   <- md-ofp pure F M1 S1
+		   <- sg-fst S1 K1
+		   <- md-fst M1 C1
+		   <- single K1 K1s
+		   <- ({a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> cn-ofp a (K1s a)
+			 -> md-ofp P F (M2 a m) (S2 a)).
+
+md-ofp/lete	: md-ofp P F (md/lete E T M) S
+		   <- tm-of F E T
+		   <- ({x} tm-assm x T
+			 -> md-ofp P F (M x) S).
+
+md-ofp/seal	: md-ofp impure F (md/seal M S) S
+		   <- md-of P F M S.
+
+
+
+%block modbind-prin
+   : some {K:kind} {S:sg} {K':con -> kind}
+      block {a:con} {da:cn-of a K} {m:module} {dm:md-assm m S} 
+      {dfst:md-fst m a}
+      {dp:cn-ofp a (K' a)}.
+
+
+%block modbind-prin-sound
+   : some {K:kind} {S:sg} {K':con -> kind}
+      {DwfK:kd-wf K} {DwfS:sg-wf S} {DfstS:sg-fst S K}
+      {Dof:{a} cn-of a K -> cn-of a (K' a)}
+      block {a:con} {da:cn-of a K} {m:module} {dm:md-assm m S} 
+      {dfst:md-fst m a}
+      {das:cn-assm da}
+      {_:mcn-assm da das}
+      {_:cn-of-reg da DwfK}
+      {_:md-assm-reg dm dfst DfstS da DwfS}
+      {dp:cn-ofp a (K' a)}
+      {_:cn-ofp-sound dp (Dof a da)}.
+
+
+%block modbind-prin-sound-tidy
+   : some {K:kind} {S:sg} {K':con -> kind}
+      {DwfK:kd-wf K} {DwfS:sg-wf S} {DfstS:sg-fst S K}
+      {Dof:{a} cn-of a K -> cn-of a (K' a)}
+      {DtidyK' : {a} tidy (K' a)}
+      block {a:con} {da:cn-of a K} {m:module} {dm:md-assm m S} 
+      {dfst:md-fst m a}
+      {das:cn-assm da}
+      {_:mcn-assm da das}
+      {_:cn-of-reg da DwfK}
+      {_:md-assm-reg dm dfst DfstS da DwfS}
+      {dp:cn-ofp a (K' a)}
+      {_:cn-ofp-sound dp (Dof a da)}
+      {_:cn-ofp-tidy dp (DtidyK' a)}.
+
+
+
+md-ofp-resp : purity-eq P P' -> sttp-eq F F' -> module-eq M M' -> sg-eq S S' -> md-ofp P F M S -> md-ofp P' F' M' S' -> type.
+%mode md-ofp-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: md-ofp-resp _ _ _ _ D D.
+
+%worlds (conbind | modbind-prin | modbind-detached | cn-ofp-block | termbind) (md-ofp-resp _ _ _ _ _ _).
+%total {} (md-ofp-resp _ _ _ _ _ _).
+
+
+
+md-ofp-resp-underbind : kind-eq K1 K1'
+			 -> sg-eq S1 S1'
+			 -> ({a} kind-eq (K1s a) (K1s' a)) 
+			 ->  ({a} cn-of a K1
+				-> {m} md-assm m S1
+				-> md-fst m a
+				-> cn-ofp a (K1s a)
+				-> md-ofp P F (M a m) (S2 a))
+			 ->  ({a} cn-of a K1'
+				-> {m} md-assm m S1'
+				-> md-fst m a
+				-> cn-ofp a (K1s' a)
+				-> md-ofp P F (M a m) (S2 a))
+			 -> type.
+%mode md-ofp-resp-underbind +X1 +X2 +X3 +X4 -X5.
+
+-	: md-ofp-resp-underbind _ _ _ D D.
+
+%worlds (modbind-prin | termbind) (md-ofp-resp-underbind _ _ _ _ _).
+%total {} (md-ofp-resp-underbind _ _ _ _ _).
+%reduces D = D' (md-ofp-resp-underbind _ _ _ D D').
+
+
+
+md-ofp-fun : md-ofp P F M S -> md-ofp P' F M S' -> purity-eq P P' -> sg-eq S S' -> type.
+%mode md-ofp-fun +X1 +X2 -X3 -X4.
+
+-	: md-ofp-fun (md-ofp/var Dfst Dsing Dassm) (md-ofp/var Dfst' Dsing' Dassm)
+	   purity-eq/i Deq
+	   <- single-sg-fun Dsing Dsing' (DeqSs : {a} sg-eq (Ss a) (Ss' a))
+	   <- md-fst-fun Dfst Dfst' DeqC
+	   <- sg-resp-con Ss' DeqC DeqSsC
+	   <- sg-eq-trans (DeqSs C) DeqSsC Deq.
+
+-	: md-ofp-fun md-ofp/unit md-ofp/unit purity-eq/i sg-eq/i.
+
+-	: md-ofp-fun (md-ofp/satom Dofp) (md-ofp/satom Dofp') purity-eq/i Deq'
+	   <- cn-ofp-fun Dofp Dofp' Deq
+	   <- sg-resp-kind sg/satom Deq Deq'.
+
+-	: md-ofp-fun (md-ofp/datom _) (md-ofp/datom _) purity-eq/i sg-eq/i.
+
+-	: md-ofp-fun (md-ofp/sgatom _) (md-ofp/sgatom _) purity-eq/i sg-eq/i.
+
+-	: md-ofp-fun (md-ofp/pair Djoin D2 D1) (md-ofp/pair Djoin' D2' D1') 
+	   Dpeq Deq
+	   <- md-ofp-fun D1 D1' Dpeq1 Deq1 
+	   <- md-ofp-fun D2 D2' Dpeq2 Deq2
+	   <- sg/sigma-resp Deq1 ([_] Deq2) Deq
+	   <- purity-join-resp Dpeq1 Dpeq2 purity-eq/i Djoin Djoin''
+	   <- purity-join-fun Djoin'' Djoin' Dpeq.
+
+-	: md-ofp-fun (md-ofp/dpair-pure Dofp2 Dsing DfstM DfstS Dofp1) (md-ofp/dpair-pure Dofp2' Dsing' DfstM' DfstS' Dofp1') 
+	   DeqP2 Deq
+	   <- md-ofp-fun Dofp1 Dofp1' _ DeqS1
+	   <- sg-eq-symm DeqS1 DeqS1'
+	   <- sg-fst-resp DeqS1' kind-eq/i DfstS' DfstS''
+	   <- sg-fst-fun DfstS'' DfstS DeqK1
+	   <- single-resp DeqK1 ([_] kind-eq/i) Dsing' Dsing''
+	   <- single-fun Dsing'' Dsing DeqK1s
+	   <- md-ofp-resp-underbind DeqK1 DeqS1' DeqK1s Dofp2' Dofp2''
+	   <- ({a} {da} {m} {dm} {dfst} {dp}
+		 md-ofp-fun (Dofp2 a da m dm dfst dp) (Dofp2'' a da m dm dfst dp) DeqP2 (DeqS2 a : sg-eq (S2 a) (S2' a)))
+	   <- md-fst-fun DfstM DfstM' DeqM
+	   <- sg-resp-con-funct DeqS2 DeqM DeqS2'
+	   <- sg/sigma-resp DeqS1 ([_] DeqS2') Deq.
+
+-	: md-ofp-fun (md-ofp/dpair-impure Dofp2 Dsing DfstS Dofp1) (md-ofp/dpair-impure Dofp2' Dsing' DfstS' Dofp1') 
+	   purity-eq/i Deq
+	   <- md-ofp-fun Dofp1 Dofp1' _ DeqS1
+	   <- sg-eq-symm DeqS1 DeqS1'
+	   <- sg-fst-resp DeqS1' kind-eq/i DfstS' DfstS''
+	   <- sg-fst-fun DfstS'' DfstS DeqK1
+	   <- single-resp DeqK1 ([_] kind-eq/i) Dsing' Dsing''
+	   <- single-fun Dsing'' Dsing DeqK1s
+	   <- md-ofp-resp-underbind DeqK1 DeqS1' DeqK1s Dofp2' Dofp2''
+	   <- ({a} {da} {m} {dm} {dfst} {dp}
+		 md-ofp-fun (Dofp2 a da m dm dfst dp) (Dofp2'' a da m dm dfst dp) DeqP2 (DeqS2 a : sg-eq (S2 a) (S2' a)))
+	   <- sg/sigma-resp DeqS1 DeqS2 Deq.
+
+-	: md-ofp-fun (md-ofp/dpair-pure _ _ _ _ Dofp1) (md-ofp/dpair-impure _ _ _ Dofp1')
+	   Dpeq' Deq
+	   <- md-ofp-fun Dofp1 Dofp1' Dpeq _
+	   <- eq-pure-impure Dpeq Dfalse
+	   <- false-implies-sg-eq Dfalse Deq
+	   <- false-implies-purity-eq Dfalse Dpeq'.
+
+-	: md-ofp-fun (md-ofp/dpair-impure _ _ _ Dofp1) (md-ofp/dpair-pure _ _ _ _ Dofp1') 
+	   Dpeq' Deq
+	   <- md-ofp-fun Dofp1 Dofp1' Dpeq _
+	   <- eq-impure-pure Dpeq Dfalse
+	   <- false-implies-sg-eq Dfalse Deq
+	   <- false-implies-purity-eq Dfalse Dpeq'.
+
+-	: md-ofp-fun (md-ofp/pi1 D) (md-ofp/pi1 D') 
+	   purity-eq/i Deq1
+	   <- md-ofp-fun D D' _ Deq
+	   <- sg-eq-sigma-invert Deq Deq1 Deq2.
+
+-	: md-ofp-fun (md-ofp/pi2 D) (md-ofp/pi2 D') 
+	   purity-eq/i (Deq2 unit)
+	   <- md-ofp-fun D D' _ Deq
+	   <- sg-eq-sigma-invert Deq Deq1 Deq2.
+
+-	: md-ofp-fun (md-ofp/lam Dofp Dsing Dfst _) (md-ofp/lam Dofp' Dsing' Dfst' _) 
+	   purity-eq/i Deq'
+	   <- sg-fst-fun Dfst' Dfst DeqK1
+	   <- single-resp DeqK1 ([_] kind-eq/i) Dsing' Dsing''
+	   <- single-fun Dsing'' Dsing DeqK1s
+	   <- md-ofp-resp-underbind DeqK1 sg-eq/i DeqK1s Dofp' Dofp''
+	   <- ({a} {da} {m} {dm} {dfst} {dp}
+		 md-ofp-fun (Dofp a da m dm dfst dp) (Dofp'' a da m dm dfst dp) DDD (Deq a))
+	   <- sg/pi-resp sg-eq/i Deq Deq'.
+
+-	: md-ofp-fun (md-ofp/app Dfst _ Dofp) (md-ofp/app Dfst' _ Dofp')
+	   purity-eq/i Deq
+	   <- md-ofp-fun Dofp Dofp' _ DeqPi
+	   <- sg-eq-pi-invert DeqPi _ (DeqS2 : {a} sg-eq (S2 a) (S2' a))
+	   <- md-fst-fun Dfst Dfst' DeqC
+	   <- sg-resp-con S2' DeqC DeqS2C
+	   <- sg-eq-trans (DeqS2 C) DeqS2C Deq.
+
+-	: md-ofp-fun (md-ofp/in Dofp) (md-ofp/in Dofp')
+	   Dpeq Deq'
+	   <- md-ofp-fun Dofp Dofp' Dpeq Deq
+	   <- sg-resp-sg ([s] sg/named L s) Deq Deq'.
+
+-	: md-ofp-fun (md-ofp/out Dofp) (md-ofp/out Dofp')
+	   Dpeq Deq'
+	   <- md-ofp-fun Dofp Dofp' Dpeq Deq
+	   <- sg-eq-named-invert Deq _ Deq'.
+
+-	: md-ofp-fun (md-ofp/let _ _ _) (md-ofp/let _ _ _) purity-eq/i sg-eq/i.
+
+-	: md-ofp-fun (md-ofp/letp Dofp2 Dsing DfstM DfstS Dofp1) (md-ofp/letp Dofp2' Dsing' DfstM' DfstS' Dofp1') 
+	   Dpeq Deq
+	   <- md-ofp-fun Dofp1 Dofp1' _ DeqS1
+	   <- sg-eq-symm DeqS1 DeqS1'
+	   <- sg-fst-resp DeqS1' kind-eq/i DfstS' DfstS''
+	   <- sg-fst-fun DfstS'' DfstS DeqK1
+	   <- single-resp DeqK1 ([_] kind-eq/i) Dsing' Dsing''
+	   <- single-fun Dsing'' Dsing DeqK1s
+	   <- md-ofp-resp-underbind DeqK1 DeqS1' DeqK1s Dofp2' Dofp2''
+	   <- ({a} {da} {m} {dm} {dfst} {dp}
+		 md-ofp-fun (Dofp2 a da m dm dfst dp) (Dofp2'' a da m dm dfst dp) 
+		 (Dpeq : purity-eq P2 P2')
+		 (DeqS2 a : sg-eq (S2 a) (S2' a)))
+	   <- md-fst-fun DfstM DfstM' DeqC
+	   <- sg-resp-con S2' DeqC DeqS2C
+	   <- sg-eq-trans (DeqS2 C1) DeqS2C Deq.
+
+-	: md-ofp-fun (md-ofp/lete Dofp _) (md-ofp/lete Dofp' _)
+	   Dpeq Deq
+	   <- ({x} {d}
+		 md-ofp-fun (Dofp x d) (Dofp' x d) Dpeq Deq).
+
+-	: md-ofp-fun (md-ofp/seal _) (md-ofp/seal _) purity-eq/i sg-eq/i.
+
+%worlds (modbind-prin | termbind) (md-ofp-fun _ _ _ _).
+%total D (md-ofp-fun D _ _ _).
+
+
+
+md-ofp-sound : md-ofp P F M S -> md-of P F M S -> type.
+%mode md-ofp-sound +X1 -X2.
+
+-	: md-ofp-sound 
+	   (md-ofp/var Dfst Dsing Dassm)
+	   Dof
+	   <- single-sg-intro Dsing (md-of/var Dassm) Dfst Dof.
+
+-	: md-ofp-sound md-ofp/unit md-of/unit.
+
+-	: md-ofp-sound
+	   (md-ofp/satom
+	      (Dofp : cn-ofp C K))
+	   (md-of/satom Dof)
+	   <- cn-ofp-sound Dofp (Dof : cn-of C K).
+
+-	: md-ofp-sound (md-ofp/datom Dof) (md-of/datom Dof).
+
+-	: md-ofp-sound (md-ofp/sgatom Dwf) (md-of/sgatom Dwf).
+
+-	: md-ofp-sound
+	   (md-ofp/pair Djoin Dofp2 Dofp1)
+	   (md-of/pair Dof2' Dof1')
+	   <- md-ofp-sound Dofp1 Dof1
+	   <- md-ofp-sound Dofp2 Dof2
+	   <- purity-join-sub Djoin Dsub1 Dsub2
+	   <- purity-subsume Dof1 Dsub1 Dof1'
+	   <- purity-subsume Dof2 Dsub2 Dof2'.
+
+-	: md-ofp-sound
+	   (md-ofp/dpair-pure
+	      (Dofp2 : {a} cn-of a K1
+			-> {m} md-assm m S1
+			-> md-fst m a
+			-> cn-ofp a (K1s a)
+			-> md-ofp P F (M2 a m) (S2 a))
+	      (DsingK1 : single K1 K1s)
+	      (DfstM1 : md-fst M1 C1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dofp1 : md-ofp pure F M1 S1))
+	   (md-of/subsume
+	      (sg-sub/sigma
+		 ([_] [_] DwfS2 C1 DofC1)
+		 DfstS1
+		 ([a] [da:cn-of a (K1s C1)] sg-sub/refl (sg-equiv/symm (Dequiv' a da)))
+		 (DfstS1s C1)
+		 (DsubS1s C1 DofC1))
+	      (md-of/dpair 
+		 Dof2'
+		 (DfstS1s C1) 
+		 Dof1''))
+	   <- md-ofp-sound Dofp1 
+	      (Dof1 : md-of pure F M1 S1)
+	   <- md-of-reg Dof1 
+	      (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1 
+	      (DwfK1 : kd-wf K1)
+	   <- single-intro DsingK1 DwfK1 
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> md-ofp-sound (Dofp2 a da m dm dfst dp)
+		    (Dof2 a da m dm dfst : md-of P F (M2 a m) (S2 a)))
+	   <- can-single-sg S1
+	      (DsingS1 : single-sg S1 S1s)
+	   <- single-sg-intro DsingS1 Dof1 DfstM1
+	      (Dof1' : md-of pure F M1 (S1s C1))
+	   <- md-of-forget' P Dof1'
+	      (Dof1'' : md-of P F M1 (S1s C1))
+	   <- single-sg-fst' DsingS1 DfstS1 DsingK1
+	      (DfstS1s : {a} sg-fst (S1s a) (K1s a))
+	   <- md-fst-reg Dof1 DfstM1 DfstS1
+	      (DofC1 : cn-of C1 K1)
+	   <- single-subsume DsingK1 DwfK1
+	      (DsubK1s : {a} cn-of a K1 -> kd-sub (K1s a) K1)
+	   <- single-sg-subsume DsingS1 DwfS1 DfstS1
+	      (DsubS1s : {a} cn-of a K1 -> sg-sub (S1s a) S1)
+	   <- ({a} {da:cn-of a (K1s C1)} {m} {dm:md-assm m (S1s C1)} {dfst:md-fst m a}
+		 substitution-md-md 
+		 ([dm:md-assm m S1] Dof2 a (cn-of/subsume (DsubK1s C1 DofC1) da) m dm dfst)
+		 (md-of/subsume (DsubS1s C1 DofC1) (md-of/var dm))
+		 (Dof2' a da m dm dfst : md-of P F (M2 a m) (S2 a)))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-of-reg (Dof2 a da m dm dfst)
+		    (DwfS2 a da : sg-wf (S2 a)))
+	   <- single-elim DsingK1 DwfK1
+	      (Dequiv : {a} cn-of a K1 -> {b} cn-of b (K1s a) -> cn-equiv a b K1)
+	   <- single-formation DsingK1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- ({a} {da:cn-of a (K1s C1)} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da (DwfK1s C1 DofC1)
+		 -> functionality-sg 
+		    DwfS2 
+		    (Dequiv C1 DofC1 a da : cn-equiv C1 a K1)
+		    (Dequiv' a da : sg-equiv (S2 C1) (S2 a))).
+
+-	: md-ofp-sound
+	   (md-ofp/dpair-impure Dofp2 Dsing DfstS1 Dofp1)
+	   (md-of/dpair Dof2' DfstS1 Dof1)
+	   <- md-ofp-sound Dofp1 Dof1
+	   <- md-of-reg Dof1 DwfS1
+	   <- sg-fst-reg DwfS1 DfstS1 DwfK1
+	   <- single-intro Dsing DwfK1 DofK1s
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> md-ofp-sound (Dofp2 a da m dm dfst dp)
+		    (Dof2 a da m dm dfst))
+	   <- ({a} {da} {m} {dm} {dfst}
+		 md-of-forget (Dof2 a da m dm dfst)
+		 (Dof2' a da m dm dfst)).
+
+-	: md-ofp-sound
+	   (md-ofp/pi1 Dofp)
+	   (md-of/pi1 Dof)
+	   <- md-ofp-sound Dofp Dof.
+
+-	: md-ofp-sound
+	   (md-ofp/pi2 Dofp)
+	   (md-of/pi2 Dfst Dof)
+	   <- md-ofp-sound Dofp Dof
+	   <- can-md-fst Dof Dfst.
+
+-	: md-ofp-sound
+	   (md-ofp/lam Dofp Dsing Dfst DwfS1)
+	   (md-of/lam Dof Dfst DwfS1)
+	   <- sg-fst-reg DwfS1 Dfst DwfK1
+	   <- single-intro Dsing DwfK1 DofK1s
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst Dfst da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> md-ofp-sound (Dofp a da m dm dfst dp)
+		    (Dof a da m dm dfst)).
+
+-	: md-ofp-sound
+	   (md-ofp/app DfstM2 Dof2 Dofp1)
+	   (md-of/app DfstM2 Dof2 Dof1)
+	   <- md-ofp-sound Dofp1 Dof1.
+
+-	: md-ofp-sound
+	   (md-ofp/in Dofp)
+	   (md-of/in Dof)
+	   <- md-ofp-sound Dofp Dof.
+
+-	: md-ofp-sound
+	   (md-ofp/out Dofp)
+	   (md-of/out Dof)
+	   <- md-ofp-sound Dofp Dof.
+
+-	: md-ofp-sound
+	   (md-ofp/let Dof2 Dfst Dof1)
+	   (md-of/let Dof2 Dfst Dof1).
+
+-	: md-ofp-sound
+	   (md-ofp/letp Dofp2 Dsing DfstM1 DfstS1 Dofp1)
+	   (md-of/letp Dof2 DfstM1 DfstS1 Dof1)
+	   <- md-ofp-sound Dofp1 Dof1
+	   <- md-of-reg Dof1 DwfS1
+	   <- sg-fst-reg DwfS1 DfstS1 DwfK1
+	   <- single-intro Dsing DwfK1 DofK1s
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> md-ofp-sound (Dofp2 a da m dm dfst dp)
+		    (Dof2 a da m dm dfst)).
+
+-	: md-ofp-sound
+	   (md-ofp/lete Dofp DofE)
+	   (md-of/lete DofM DofE)
+	   <- tm-of-reg DofE DwfT
+	   <- ({x} {d}
+		 tm-assm-reg d DwfT
+		 -> md-ofp-sound (Dofp x d) (DofM x d)).
+
+-	: md-ofp-sound
+	   (md-ofp/seal Dof)
+	   (md-of/seal Dof).
+
+%worlds (conbind-reg | conbind-prin-sound | modbind-prin-sound | modbind-detached-reg | cn-ofp-block-sound | termbind-reg) (md-ofp-sound _ _).
+%total D (md-ofp-sound D _).
+
+
+
+tidy-sg : sg -> type.
+
+tidy-sg/satom	: tidy-sg (sg/satom K).
+
+tidy-sg/datom	: tidy-sg (sg/datom T).
+
+tidy-sg/sgatom	: tidy-sg (sg/sgatom S).
+
+tidy-sg/pi	: tidy-sg (sg/pi S1 S2).
+
+tidy-sg/sigma	: tidy-sg (sg/sigma S1 ([_] S2))
+		   <- tidy-sg S1
+		   <- tidy-sg S2.
+
+tidy-sg/named	: tidy-sg (sg/named L S)
+		   <- tidy-sg S.
+
+tidy-sg/one	: tidy-sg sg/one.
+
+
+
+tidy-sg-sub-sigma-form : tidy-sg S -> sg-sub S (sg/sigma S1 S2) -> sg-eq S (sg/sigma S1' ([_] S2')) -> type.
+%mode tidy-sg-sub-sigma-form +X1 +X2 -X3.
+
+tidy-sg-sub-sigma-form-aux : tidy-sg S -> similar-sg S (sg/sigma S1 S2) -> sg-eq S (sg/sigma S1' ([_] S2')) -> type.
+%mode tidy-sg-sub-sigma-form-aux +X1 +X2 -X3.
+
+-	: tidy-sg-sub-sigma-form-aux (tidy-sg/sigma _ _) similar-sg/sigma sg-eq/i.
+
+%worlds (conblock) (tidy-sg-sub-sigma-form-aux _ _ _).
+%total {} (tidy-sg-sub-sigma-form-aux _ _ _).
+
+-	: tidy-sg-sub-sigma-form Dtidy Dsub Deq
+	   <- sg-sub-similar Dsub Dsimilar
+	   <- tidy-sg-sub-sigma-form-aux Dtidy Dsimilar Deq.
+
+%worlds (conbind) (tidy-sg-sub-sigma-form _ _ _).
+%total {} (tidy-sg-sub-sigma-form _ _ _).
+
+
+
+single-sg-tidy : single-sg S Ss -> ({a} tidy-sg (Ss a)) -> type.
+%mode single-sg-tidy +X1 -X2.
+
+-	: single-sg-tidy (single-sg/satom _) ([_] tidy-sg/satom).
+
+-	: single-sg-tidy single-sg/datom ([_] tidy-sg/datom).
+
+-	: single-sg-tidy single-sg/sgatom ([_] tidy-sg/sgatom).
+
+-	: single-sg-tidy single-sg/pi ([_] tidy-sg/pi).
+
+-	: single-sg-tidy (single-sg/sigma D2 D1) ([p] tidy-sg/sigma (Dtidy2 (pi1 p) (pi2 p)) (Dtidy1 (pi1 p)))
+	   <- single-sg-tidy D1 Dtidy1
+	   <- ({a} single-sg-tidy (D2 a) ([b] Dtidy2 a b)).
+
+-	: single-sg-tidy (single-sg/named D) ([a] tidy-sg/named (Dtidy a))
+	   <- single-sg-tidy D Dtidy.
+
+-	: single-sg-tidy single-sg/one ([_] tidy-sg/one).
+
+%worlds (conblock) (single-sg-tidy _ _).
+%total D (single-sg-tidy D _).
+
+
+
+md-ofp-tidy : md-ofp pure F M S -> tidy-sg S -> type.
+%mode md-ofp-tidy +X1 -X2.
+
+-	: md-ofp-tidy (md-ofp/var _ (Dsing : single-sg _ Ss) _) (Dtidy _)
+	   <- single-sg-tidy Dsing Dtidy.
+
+-	: md-ofp-tidy md-ofp/unit tidy-sg/one.
+
+-	: md-ofp-tidy (md-ofp/satom _) tidy-sg/satom.
+
+-	: md-ofp-tidy (md-ofp/datom _) tidy-sg/datom.
+
+-	: md-ofp-tidy (md-ofp/sgatom _) tidy-sg/sgatom.
+
+-	: md-ofp-tidy (md-ofp/pair purity-join/pure D2 D1) (tidy-sg/sigma D2' D1')
+	   <- md-ofp-tidy D1 D1'
+	   <- md-ofp-tidy D2 D2'.
+
+-	: md-ofp-tidy (md-ofp/dpair-pure D2 _ _ _ D1) (tidy-sg/sigma (D2' C1) D1')
+	   <- md-ofp-tidy D1 D1'
+	   <- ({a} {da} {m} {dm} {dfst} {dp}
+		 md-ofp-tidy (D2 a da m dm dfst dp) (D2' a : tidy-sg (S2 a))).
+
+-	: md-ofp-tidy (md-ofp/pi1 D) D1
+	   <- md-ofp-tidy D (tidy-sg/sigma D2 D1).
+
+-	: md-ofp-tidy (md-ofp/pi2 D) D2
+	   <- md-ofp-tidy D (tidy-sg/sigma D2 D1).
+
+-	: md-ofp-tidy (md-ofp/lam _ _ _ _) tidy-sg/pi.
+
+-	: md-ofp-tidy (md-ofp/in D) (tidy-sg/named D')
+	   <- md-ofp-tidy D D'.
+
+-	: md-ofp-tidy (md-ofp/out D) D'
+	   <- md-ofp-tidy D (tidy-sg/named D').
+
+-	: md-ofp-tidy (md-ofp/letp Dofp _ _ _ _) (Dtidy _)
+	   <- ({a} {da} {m} {dm} {dfst} {dp}
+		 md-ofp-tidy (Dofp a da m dm dfst dp) (Dtidy a : tidy-sg (S2 a))).
+
+-	: md-ofp-tidy (md-ofp/lete Dofp _) Dtidy
+	   <- ({x} {d}
+		 md-ofp-tidy (Dofp x d) Dtidy).
+
+%worlds (conbind | modbind-prin | modbind-detached | cn-ofp-block | termbind) (md-ofp-tidy _ _).
+%total D (md-ofp-tidy D _).
+
+
+
+md-ofp-narrow-main : {M}
+		      ({m} md-assm m S1 -> md-fst m C -> cn-ofp C Ks -> md-ofp P F (M m) S2)
+		      -> sg-sub S1' S1
+		      -> sg-fst S1' K1'
+		      -> cn-of C Ks'
+		      -> kd-sub Ks' K1'
+		      -> kd-sub Ks' Ks
+		      -> tidy Ks'
+%%
+		      -> ({m} md-assm m S1' -> md-fst m C -> cn-ofp C Ks' -> md-ofp P F (M m) S2')
+		      -> sg-sub S2' S2
+		      -> type.
+%mode md-ofp-narrow-main +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 -X9 -X10.
+
+-	: md-ofp-narrow-main _ 
+	   ([_] [_] [_] [_] 
+	      (Dofp : md-ofp P F M S2))
+	   _ _ _ _ _ _
+	   %%
+	   ([_] [_] [_] [_] Dofp) 
+	   (sg-sub/reflid Dwf)
+	   <- md-ofp-sound Dofp
+	      (Dof : md-of P F M S2)
+	   <- md-of-reg Dof
+	      (Dwf : sg-wf S2).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d:md-assm m S1] [dfst:md-fst m C] [_]
+	      md-ofp/var dfst (Dsing : single-sg S1 S1s) d)
+	   (Dsub : sg-sub S1' S1)
+	   (DfstS1' : sg-fst S1' K1')
+	   (DofC : cn-of C Ks')
+	   (DsubK1' : kd-sub Ks' K1')
+	   _ 
+	   _
+	   %%
+	   ([m] [d:md-assm m S1'] [dfst:md-fst m C] [_]
+	      md-ofp/var dfst Dsing' d)
+	   (Dsub' C (cn-of/subsume DsubK1' DofC))
+	   <- can-single-sg S1' (Dsing' : single-sg S1' S1s')
+	   <- single-sg-sub Dsing' Dsing Dsub DfstS1'
+	      (Dsub' : {a} cn-of a K1' -> sg-sub (S1s' a) (S1s a)).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d] [dfst] [dp] md-ofp/satom (Dofp dp))
+	   _ _ _ _
+	   Dsub Dtidy
+	   %%
+	   ([_] [_] [_] [dp] md-ofp/satom (Dofp' dp))
+	   (sg-sub/satom Dsub')
+	   <- cn-ofp-narrow-main Dofp Dsub Dtidy Dofp' Dsub'.
+
+-	: md-ofp-narrow-main _
+	   ([m] [d:md-assm m S1] [dfst] [_] md-ofp/datom (Dof m d dfst))
+	   (Dsub : sg-sub S1' S1) DfstS1' DofC DsubK1' _ _
+	   %%
+	   ([m] [d] [dfst] [_] md-ofp/datom (Dof' m d dfst))
+	   (sg-sub/datom (cn-equiv/refl Dwf2))
+	   <- ({m} {d:md-assm m S1'} {dfst}
+		 substitution-md-tm ([d':md-assm m S1] Dof m d' dfst) (md-of/subsume Dsub (md-of/var d))
+		 (Dof' m d dfst))
+	   <- sg-sub-reg Dsub DwfS1' _
+	   <- ({m} {d:md-assm m S1'} {dfst}
+		 md-assm-reg d dfst DfstS1' (cn-of/subsume DsubK1' DofC) DwfS1'
+		 -> tm-of-reg (Dof' m d dfst) Dwf2).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d] [dfst] [dp] md-ofp/pair Djoin (Dofp2 m d dfst dp) (Dofp1 m d dfst dp))
+	   Dsub Dfst Dof DsubK1' DsubK Dtidy
+	   %%
+	   ([m] [d] [dfst] [dp] md-ofp/pair Djoin (Dofp2' m d dfst dp) (Dofp1' m d dfst dp))
+	   (sg-sub/sigma ([_] [_] Dwf2b) DsingS1 ([_] [_] Dsub2) DsingS1' Dsub1)
+	   <- md-ofp-narrow-main _ Dofp1 Dsub Dfst Dof DsubK1' DsubK Dtidy Dofp1' Dsub1
+	   <- md-ofp-narrow-main _ Dofp2 Dsub Dfst Dof DsubK1' DsubK Dtidy Dofp2' Dsub2
+	   <- sg-sub-reg Dsub2 _ Dwf2b
+	   <- can-sg-fst S1' DsingS1'
+	   <- can-sg-fst S1 DsingS1.
+
+-	: md-ofp-narrow-main ([m] md/dpair (M1 m) ([b] [n] M2 m b n))
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/dpair-pure
+	      (Dofp2 m d dfst dp : {b} cn-of b K1
+				    -> {n} md-assm n S1
+				    -> md-fst n b
+				    -> cn-ofp b (K1s b)
+				    -> md-ofp P F (M2 m b n) (S2 b))
+	      (DsingK1 : single K1 K1s)
+	      (DfstM1 m dfst : md-fst (M1 m) C1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dofp1 m d dfst dp : md-ofp pure F (M1 m) S1))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp]
+	      md-ofp/dpair-pure
+	      (Dofp2'' m d dfst dp)
+	      DsingK1'
+	      (DfstM1 m dfst)
+	      DfstS1'
+	      (Dofp1' m d dfst dp))
+	   (sg-sub/sigma
+	      ([_] [_] DwfS2 C1 (cn-of/subsume DsubK1 DofC1))
+	      DfstS1
+	      ([_] [_] sg-sub/trans (DsubS2 C1 (cn-of/subsume DsubK1 DofC1)) (DsubS2' C1 DofC1))
+	      DfstS1' 
+	      DsubS1)
+	   <- sg-sub-reg Dsub
+	      (DwfS' : sg-wf S') _
+	   <- md-ofp-narrow-main _ Dofp1 Dsub Dfst Dof DsubK' DsubKs Dtidy
+	      (Dofp1' : {m} md-assm m S' -> md-fst m C -> cn-ofp C Ks' -> md-ofp pure F (M1 m) S1')
+	      (DsubS1 : sg-sub S1' S1)
+	   <- sg-sub-reg DsubS1
+	      (DwfS1' : sg-wf S1')
+	      (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {b} cn-of b K1 -> cn-of b (K1s b))
+	   <- single-tidy DsingK1
+	      (DtidyK1s : {a} tidy (K1s a))
+	   <- ({b} {db:cn-of b K1} {n} {dn:md-assm n S1} {dfstn:md-fst n b} {dbs}
+		 mcn-assm db dbs
+		 -> cn-of-reg db DwfK1
+		 -> md-assm-reg dn dfstn DfstS1 db DwfS1
+		 -> {dpb:cn-ofp b (K1s b)}
+		    cn-ofp-sound dpb (DofK1s b db)
+		 -> cn-ofp-tidy dpb (DtidyK1s b)
+		 -> md-ofp-narrow-main ([m] M2 m b n)
+		    ([m] [d:md-assm m S] [dfst] [dp:cn-ofp C Ks] Dofp2 m d dfst dp b db n dn dfstn dpb)
+		    Dsub Dfst Dof DsubK' DsubKs Dtidy
+		    %%
+		    ([m] [d:md-assm m S'] [dfst] [dp:cn-ofp C Ks'] 
+		       Dofp2' m d dfst dp b db n dn dfstn dpb
+		       : md-ofp P F (M2 m b n) (S2' b))
+		    (DsubS2 b db : sg-sub (S2' b) (S2 b)))
+	   <- can-sg-fst S1'
+	      (DfstS1' : sg-fst S1' K1')
+	   <- sg-fst-reg DwfS1' DfstS1'
+	      (DwfK1' : kd-wf K1')
+	   <- can-single K1'
+	      (DsingK1' : single K1' K1s')
+	   <- single-intro DsingK1' DwfK1'
+	      (DofK1s' : {b} cn-of b K1' -> cn-of b (K1s' b))
+	   <- single-subsume DsingK1' DwfK1'
+	      (DsubK1' : {b} cn-of b K1' -> kd-sub (K1s' b) K1')
+	   <- sg-sub-fst DsubS1 DfstS1' DfstS1
+	      (DsubK1 : kd-sub K1' K1)
+	   <- single-sub DsingK1' DsingK1 DsubK1
+	      (DsubK1s : {b} cn-of b K1' -> kd-sub (K1s' b) (K1s b))
+	   <- single-tidy DsingK1'
+	      (DtidyK1s' : {a} tidy (K1s' a))
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> {dp:cn-ofp C Ks'}
+		    cn-ofp-sound dp Dof
+		 -> cn-ofp-tidy dp Dtidy
+		 -> {b} {db:cn-of b K1'} {dbs}
+		    mcn-assm db dbs
+		 -> cn-of-reg db DwfK1'
+		 -> md-ofp-narrow-main ([n] M2 m b n)
+		    ([n] [dn:md-assm n S1] [dfstn:md-fst n b] [dpb:cn-ofp b (K1s b)] Dofp2' m d dfst dp b (cn-of/subsume DsubK1 db) n dn dfstn dpb)
+		    DsubS1 DfstS1' (DofK1s' b db) (DsubK1' b db) (DsubK1s b db) (DtidyK1s' b)
+		    %%
+		    ([n] [dn:md-assm n S1'] [dfstn:md-fst n b] [dpb:cn-ofp b (K1s' b)]
+		       Dofp2'' m d dfst dp b db n dn dfstn dpb
+		       : md-ofp P F (M2 m b n) (S2'' b))
+		    (DsubS2' b db : sg-sub (S2'' b) (S2' b)))
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> {dp:cn-ofp C Ks'}
+		    cn-ofp-sound dp Dof
+		 -> md-ofp-sound (Dofp1' m d dfst dp)
+		    (Dof1 m d dfst : md-of pure F (M1 m) S1'))
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> md-fst-reg (Dof1 m d dfst) (DfstM1 m dfst) DfstS1'
+		    (DofC1 : cn-of C1 K1'))
+	   <- ({b} {db:cn-of b K1} {dbs}
+		 mcn-assm db dbs
+		 -> cn-of-reg db DwfK1
+		 -> sg-sub-reg (DsubS2 b db)
+		    (DwfS2' b db) (DwfS2 b db : sg-wf (S2 b))).
+
+-	: md-ofp-narrow-main ([m] md/dpair (M1 m) ([b] [n] M2 m b n))
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/dpair-impure
+	      (Dofp2 m d dfst dp : {b} cn-of b K1
+				    -> {n} md-assm n S1
+				    -> md-fst n b
+				    -> cn-ofp b (K1s b)
+				    -> md-ofp P2 F (M2 m b n) (S2 b))
+	      (DsingK1 : single K1 K1s)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dofp1 m d dfst dp : md-ofp impure F (M1 m) S1))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp]
+	      md-ofp/dpair-impure
+	      (Dofp2'' m d dfst dp)
+	      DsingK1'
+	      DfstS1'
+	      (Dofp1' m d dfst dp))
+	   (sg-sub/sigma
+	      DwfS2
+	      DfstS1
+	      ([a] [d] sg-sub/trans (DsubS2 a (cn-of/subsume DsubK1 d)) (DsubS2' a d))
+	      DfstS1' 
+	      DsubS1)
+	   <- sg-sub-reg Dsub
+	      (DwfS' : sg-wf S') _
+	   <- md-ofp-narrow-main _ Dofp1 Dsub Dfst Dof DsubK' DsubKs Dtidy
+	      (Dofp1' : {m} md-assm m S' -> md-fst m C -> cn-ofp C Ks' -> md-ofp impure F (M1 m) S1')
+	      (DsubS1 : sg-sub S1' S1)
+	   <- sg-sub-reg DsubS1
+	      (DwfS1' : sg-wf S1')
+	      (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {b} cn-of b K1 -> cn-of b (K1s b))
+	   <- single-tidy DsingK1
+	      (DtidyK1s : {a} tidy (K1s a))
+	   <- ({b} {db:cn-of b K1} {n} {dn:md-assm n S1} {dfstn:md-fst n b} {dbs}
+		 mcn-assm db dbs
+		 -> cn-of-reg db DwfK1
+		 -> md-assm-reg dn dfstn DfstS1 db DwfS1
+		 -> {dpb:cn-ofp b (K1s b)}
+		    cn-ofp-sound dpb (DofK1s b db)
+		 -> cn-ofp-tidy dpb (DtidyK1s b)
+		 -> md-ofp-narrow-main ([m] M2 m b n)
+		    ([m] [d:md-assm m S] [dfst] [dp:cn-ofp C Ks] Dofp2 m d dfst dp b db n dn dfstn dpb)
+		    Dsub Dfst Dof DsubK' DsubKs Dtidy
+		    %%
+		    ([m] [d:md-assm m S'] [dfst] [dp:cn-ofp C Ks'] 
+		       Dofp2' m d dfst dp b db n dn dfstn dpb
+		       : md-ofp P2 F (M2 m b n) (S2' b))
+		    (DsubS2 b db : sg-sub (S2' b) (S2 b)))
+	   <- can-sg-fst S1'
+	      (DfstS1' : sg-fst S1' K1')
+	   <- sg-fst-reg DwfS1' DfstS1'
+	      (DwfK1' : kd-wf K1')
+	   <- can-single K1'
+	      (DsingK1' : single K1' K1s')
+	   <- single-intro DsingK1' DwfK1'
+	      (DofK1s' : {b} cn-of b K1' -> cn-of b (K1s' b))
+	   <- single-subsume DsingK1' DwfK1'
+	      (DsubK1' : {b} cn-of b K1' -> kd-sub (K1s' b) K1')
+	   <- sg-sub-fst DsubS1 DfstS1' DfstS1
+	      (DsubK1 : kd-sub K1' K1)
+	   <- single-sub DsingK1' DsingK1 DsubK1
+	      (DsubK1s : {b} cn-of b K1' -> kd-sub (K1s' b) (K1s b))
+	   <- single-tidy DsingK1'
+	      (DtidyK1s' : {a} tidy (K1s' a))
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> {dp:cn-ofp C Ks'}
+		    cn-ofp-sound dp Dof
+		 -> cn-ofp-tidy dp Dtidy
+		 -> {b} {db:cn-of b K1'} {dbs}
+		    mcn-assm db dbs
+		 -> cn-of-reg db DwfK1'
+		 -> md-ofp-narrow-main ([n] M2 m b n)
+		    ([n] [dn:md-assm n S1] [dfstn:md-fst n b] [dpb:cn-ofp b (K1s b)] Dofp2' m d dfst dp b (cn-of/subsume DsubK1 db) n dn dfstn dpb)
+		    DsubS1 DfstS1' (DofK1s' b db) (DsubK1' b db) (DsubK1s b db) (DtidyK1s' b)
+		    %%
+		    ([n] [dn:md-assm n S1'] [dfstn:md-fst n b] [dpb:cn-ofp b (K1s' b)]
+		       Dofp2'' m d dfst dp b db n dn dfstn dpb
+		       : md-ofp P2 F (M2 m b n) (S2'' b))
+		    (DsubS2' b db : sg-sub (S2'' b) (S2' b)))
+	   <- ({b} {db:cn-of b K1} {dbs}
+		 mcn-assm db dbs
+		 -> cn-of-reg db DwfK1
+		 -> sg-sub-reg (DsubS2 b db)
+		    (DwfS2' b db) (DwfS2 b db : sg-wf (S2 b))).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d] [dfst] [dp] md-ofp/pi1 (Dofp m d dfst dp))
+	   Dsub Dfst Dof DsubK1' DsubK Dtidy
+	   %%
+	   ([m] [d] [dfst] [dp] md-ofp/pi1 (Dofp'' m d dfst dp))
+	   Dsub1
+	   <- md-ofp-narrow-main _ Dofp Dsub Dfst Dof DsubK1' DsubK Dtidy 
+	      (Dofp' : {m} md-assm m S1'
+			-> md-fst m C1
+			-> cn-ofp C1 K1s'
+			-> md-ofp pure F (M m) S2')
+	      (Dsub' : sg-sub S2' (sg/sigma S2a ([_] S2b)))
+	   <- ({m} {d} {dfst} {dp}
+		 md-ofp-tidy (Dofp' m d dfst dp) Dtidy')
+	   <- tidy-sg-sub-sigma-form Dtidy' Dsub' Deq
+	   <- ({m} {d} {dfst} {dp}
+		 md-ofp-resp purity-eq/i sttp-eq/i module-eq/i Deq (Dofp' m d dfst dp)
+		 (Dofp'' m d dfst dp))
+	   <- sg-sub-resp Deq sg-eq/i Dsub' Dsub''
+	   <- sg-sub-sigma-invert Dsub'' Dsub1 _ _.
+
+-	: md-ofp-narrow-main _
+	   ([m] [d] [dfst] [dp] md-ofp/pi2 (Dofp m d dfst dp))
+	   Dsub Dfst Dof DsubK1' DsubK Dtidy
+	   %%
+	   ([m] [d] [dfst] [dp] md-ofp/pi2 (Dofp'' m d dfst dp))
+	   (Dsub2 _ DofInh)
+	   <- md-ofp-narrow-main _ Dofp Dsub Dfst Dof DsubK1' DsubK Dtidy 
+	      (Dofp' : {m} md-assm m S1'
+			-> md-fst m C1
+			-> cn-ofp C1 K1s'
+			-> md-ofp pure F (M m) S2')
+	      (Dsub' : sg-sub S2' (sg/sigma S2a ([_] S2b)))
+	   <- ({m} {d} {dfst} {dp}
+		 md-ofp-tidy (Dofp' m d dfst dp) Dtidy')
+	   <- tidy-sg-sub-sigma-form Dtidy' Dsub' Deq
+	   <- ({m} {d} {dfst} {dp}
+		 md-ofp-resp purity-eq/i sttp-eq/i module-eq/i Deq (Dofp' m d dfst dp)
+		 (Dofp'' m d dfst dp))
+	   <- sg-sub-resp Deq sg-eq/i Dsub' Dsub''
+	   <- sg-sub-sigma-invert Dsub'' Dsub1 Dfst1 Dsub2
+	   <- sg-sub-reg Dsub1 DwfS2a' _
+	   <- sg-fst-reg DwfS2a' Dfst1 DwfK2a'
+	   <- inhabitation DwfK2a' DofInh.
+
+-	: md-ofp-narrow-main ([m] md/lam S2 ([b] [n] M m b n))
+	   ([m] [d:md-assm m S1] [dfst:md-fst m C1] [dp:cn-ofp C1 K1s]
+	      md-ofp/lam 
+	      (Dofp m d dfst dp 
+		 : {b} cn-of b K2
+		    -> {n} md-assm n S2
+		    -> md-fst n b
+		    -> cn-ofp b (K2s b)
+		    -> md-ofp P F (M m b n) (S3 b))
+	      (Dsing2 : single K2 K2s)
+	      (Dfst2 : sg-fst S2 K2)
+	      (Dwf2 : sg-wf S2))
+	   (Dsub1 : sg-sub S1' S1) 
+	   (DfstS1' : sg-fst S1' K1')
+	   (DofC1 : cn-of C1 K1s')
+	   (DsubK1' : kd-sub K1s' K1')
+	   (DsubK1s : kd-sub K1s' K1s) 
+	   (Dtidy1 : tidy K1s')
+	   %%
+	   ([m] [d] [dfst] [dp] md-ofp/lam (Dofp' m d dfst dp) Dsing2 Dfst2 Dwf2)
+	   (sg-sub/pi
+	      Dwf3'
+	      Dfst2
+	      Dsub3
+	      Dfst2
+	      (sg-sub/reflid Dwf2))
+	   <- sg-fst-reg Dwf2 Dfst2 
+	      (DwfK2 : kd-wf K2)
+	   <- single-intro Dsing2 DwfK2
+	      (DofK2s : {b} cn-of b K2 -> cn-of b (K2s b))
+	   <- single-tidy Dsing2
+	      (Dtidy2 : {b} tidy (K2s b))
+	   <- ({b} {db:cn-of b K2} {n} {dn:md-assm n S2} {dfstn:md-fst n b} {dbs}
+		 mcn-assm db dbs
+		 -> cn-of-reg db DwfK2
+		 -> md-assm-reg dn dfstn Dfst2 db Dwf2
+		 -> {dpb:cn-ofp b (K2s b)}
+		    cn-ofp-sound dpb (DofK2s b db)
+		 -> cn-ofp-tidy dpb (Dtidy2 b)
+		 -> md-ofp-narrow-main ([m] M m b n)
+		    ([m] [d:md-assm m S1] [dfst] [dp:cn-ofp C1 K1s] Dofp m d dfst dp b db n dn dfstn dpb)
+		    Dsub1 DfstS1' DofC1 DsubK1' DsubK1s Dtidy1
+		    ([m] [d:md-assm m S1'] [dfst] [dp:cn-ofp C1 K1s'] 
+		       Dofp' m d dfst dp b db n dn dfstn dpb
+		       : md-ofp P F (M m b n) (S3' b))
+		    (Dsub3 b db : sg-sub (S3' b) (S3 b)))
+	   <- ({b} {db:cn-of b K2} {dbs}
+		 mcn-assm db dbs
+		 -> cn-of-reg db DwfK2
+		 -> sg-sub-reg (Dsub3 b db)
+		    (Dwf3' b db : sg-wf (S3' b))
+		    (DDD b db)).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/app 
+	      (DfstM2 m dfst : md-fst (M2 m) C2)
+	      (Dof2 m d dfst : md-of pure F (M2 m) S1)
+	      (Dofp1 m d dfst dp : md-ofp P F (M1 m) (sg/pi S1 S2)))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp]
+	      md-ofp/app
+	      (DfstM2 m dfst)
+	      (md-of/subsume Dsub1 (Dof2' m d dfst))
+	      (Dofp1'' m d dfst dp))
+	   (Dsub2 C2 DofC2)
+	   <- md-ofp-narrow-main _ Dofp1 Dsub Dfst Dof DsubK' DsubKs Dtidy
+	      (Dofp1' : {m} md-assm m S' -> md-fst m C -> cn-ofp C Ks' -> md-ofp P F (M1 m) S12')
+	      (Dsub12' : sg-sub S12' (sg/pi S1 S2))
+	   <- sg-sub-pi-form' Dsub12'
+	      (Deq : sg-eq S12' (sg/pi S1' S2'))
+	   <- ({m} {d} {dfst} {dp}
+		 md-ofp-resp purity-eq/i sttp-eq/i module-eq/i Deq (Dofp1' m d dfst dp)
+		 (Dofp1'' m d dfst dp : md-ofp P F (M1 m) (sg/pi S1' S2')))
+	   <- sg-sub-resp Deq sg-eq/i Dsub12'
+	      (Dsub12'' : sg-sub (sg/pi S1' S2') (sg/pi S1 S2))
+	   <- sg-sub-pi-invert Dsub12''
+	      (Dsub1 : sg-sub S1 S1')
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dsub2 : {a} cn-of a K1 -> sg-sub (S2' a) (S2 a))
+	   <- ({m} {d:md-assm m S'} {dfst}
+		 substitution-md-md ([d':md-assm m S] Dof2 m d' dfst) (md-of/subsume Dsub (md-of/var d))
+		 (Dof2' m d dfst : md-of pure F (M2 m) S1))
+	   <- sg-sub-reg Dsub
+	      (DwfS' : sg-wf S') _
+	   <- ({m} {d:md-assm m S'} {dfst}
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> md-fst-reg (Dof2' m d dfst) (DfstM2 m dfst) DfstS1
+		    (DofC2 : cn-of C2 K1)).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/in
+	      (Dofp m d dfst dp : md-ofp P F (M1 m) S1))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp] md-ofp/in (Dofp' m d dfst dp))
+	   (sg-sub/named Dsub1)
+	   <- md-ofp-narrow-main _ Dofp Dsub Dfst Dof DsubK' DsubKs Dtidy
+	      (Dofp' : {m} md-assm m S' -> md-fst m C -> cn-ofp C Ks' -> md-ofp P F (M1 m) S1')
+	      (Dsub1 : sg-sub S1' S1).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/out
+	      (Dofp m d dfst dp : md-ofp P F (M1 m) (sg/named L S1)))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp] md-ofp/out (Dofp'' m d dfst dp))
+	   Dsub1''
+	   <- md-ofp-narrow-main _ Dofp Dsub Dfst Dof DsubK' DsubKs Dtidy
+	      (Dofp' : {m} md-assm m S' -> md-fst m C -> cn-ofp C Ks' -> md-ofp P F (M1 m) S1')
+	      (Dsub1 : sg-sub S1' (sg/named L S1))
+	   <- sg-sub-named-form' Dsub1 (Deq : sg-eq S1' (sg/named L' S1''))
+	   <- ({m} {d} {dfst} {dp}
+		 md-ofp-resp purity-eq/i sttp-eq/i module-eq/i Deq (Dofp' m d dfst dp)
+		 (Dofp'' m d dfst dp : md-ofp P F (M1 m) (sg/named L' S1'')))
+	   <- sg-sub-resp Deq sg-eq/i Dsub1
+	      (Dsub1' : sg-sub (sg/named L' S1'') (sg/named L S1))
+	   <- sg-sub-named-invert Dsub1'
+	      _ (Dsub1'' : sg-sub S1'' S1).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/let
+	      (Dof2 m d dfst : {b} cn-of b K1
+				-> {n} md-assm n S1
+				-> md-fst n b
+				-> md-of P2 F (M2 m b n) S2)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof1 m d dfst : md-of P1 F (M1 m) S1))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp]
+	      md-ofp/let
+	      (Dof2' m d dfst)
+	      DfstS1
+	      (Dof1' m d dfst))
+	   (sg-sub/reflid (DwfS2 Cinh DofInh))
+	   <- ({m} {d:md-assm m S'} {dfst}
+		 substitution-md-md ([d':md-assm m S] Dof1 m d' dfst) (md-of/subsume Dsub (md-of/var d))
+		 (Dof1' m d dfst : md-of P1 F (M1 m) S1))
+	   <- ({m} {d:md-assm m S'} {dfst} {b} {db} {n} {dn} {dfstn}
+		 substitution-md-md ([d':md-assm m S] Dof2 m d' dfst b db n dn dfstn) (md-of/subsume Dsub (md-of/var d))
+		 (Dof2' m d dfst b db n dn dfstn : md-of P2 F (M2 m b n) S2))
+	   <- sg-sub-reg Dsub
+	      (DwfS' : sg-wf S') _
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> md-of-reg (Dof1' m d dfst)
+		    (DwfS1 : sg-wf S1))
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> {b} {db:cn-of b K1} {n} {dn:md-assm n S1} {dfstn:md-fst n b} {dbs}
+		    mcn-assm db dbs
+		 -> cn-of-reg db DwfK1
+		 -> md-assm-reg dn dfstn DfstS1 db DwfS1
+		 -> md-of-reg (Dof2' m d dfst b db n dn dfstn)
+		    (DwfS2 b db : sg-wf S2))
+	   <- inhabitation DwfK1 (DofInh : cn-of Cinh K1).
+
+-	: md-ofp-narrow-main ([m] md/letp (M1 m) ([b] [n] M2 m b n))
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/letp
+	      (Dofp2 m d dfst dp : {b} cn-of b K1
+				    -> {n} md-assm n S1
+				    -> md-fst n b
+				    -> cn-ofp b (K1s b)
+				    -> md-ofp P F (M2 m b n) (S2 b))
+	      (DsingK1 : single K1 K1s)
+	      (DfstM1 m dfst : md-fst (M1 m) C1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dofp1 m d dfst dp : md-ofp pure F (M1 m) S1))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp]
+	      md-ofp/letp
+	      (Dofp2'' m d dfst dp)
+	      DsingK1'
+	      (DfstM1 m dfst)
+	      DfstS1'
+	      (Dofp1' m d dfst dp))
+	   (sg-sub/trans (DsubS2 C1 (cn-of/subsume DsubK1 DofC1)) (DsubS2' C1 DofC1))
+	   <- sg-sub-reg Dsub
+	      (DwfS' : sg-wf S') _
+	   <- md-ofp-narrow-main _ Dofp1 Dsub Dfst Dof DsubK' DsubKs Dtidy
+	      (Dofp1' : {m} md-assm m S' -> md-fst m C -> cn-ofp C Ks' -> md-ofp pure F (M1 m) S1')
+	      (DsubS1 : sg-sub S1' S1)
+	   <- sg-sub-reg DsubS1
+	      (DwfS1' : sg-wf S1')
+	      (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {b} cn-of b K1 -> cn-of b (K1s b))
+	   <- single-tidy DsingK1
+	      (DtidyK1s : {a} tidy (K1s a))
+	   <- ({b} {db:cn-of b K1} {n} {dn:md-assm n S1} {dfstn:md-fst n b} {dbs}
+		 mcn-assm db dbs
+		 -> cn-of-reg db DwfK1
+		 -> md-assm-reg dn dfstn DfstS1 db DwfS1
+		 -> {dpb:cn-ofp b (K1s b)}
+		    cn-ofp-sound dpb (DofK1s b db)
+		 -> cn-ofp-tidy dpb (DtidyK1s b)
+		 -> md-ofp-narrow-main ([m] M2 m b n)
+		    ([m] [d:md-assm m S] [dfst] [dp:cn-ofp C Ks] Dofp2 m d dfst dp b db n dn dfstn dpb)
+		    Dsub Dfst Dof DsubK' DsubKs Dtidy
+		    %%
+		    ([m] [d:md-assm m S'] [dfst] [dp:cn-ofp C Ks'] 
+		       Dofp2' m d dfst dp b db n dn dfstn dpb
+		       : md-ofp P F (M2 m b n) (S2' b))
+		    (DsubS2 b db : sg-sub (S2' b) (S2 b)))
+	   <- can-sg-fst S1'
+	      (DfstS1' : sg-fst S1' K1')
+	   <- sg-fst-reg DwfS1' DfstS1'
+	      (DwfK1' : kd-wf K1')
+	   <- can-single K1'
+	      (DsingK1' : single K1' K1s')
+	   <- single-intro DsingK1' DwfK1'
+	      (DofK1s' : {b} cn-of b K1' -> cn-of b (K1s' b))
+	   <- single-subsume DsingK1' DwfK1'
+	      (DsubK1' : {b} cn-of b K1' -> kd-sub (K1s' b) K1')
+	   <- sg-sub-fst DsubS1 DfstS1' DfstS1
+	      (DsubK1 : kd-sub K1' K1)
+	   <- single-sub DsingK1' DsingK1 DsubK1
+	      (DsubK1s : {b} cn-of b K1' -> kd-sub (K1s' b) (K1s b))
+	   <- single-tidy DsingK1'
+	      (DtidyK1s' : {a} tidy (K1s' a))
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> {dp:cn-ofp C Ks'}
+		    cn-ofp-sound dp Dof
+		 -> cn-ofp-tidy dp Dtidy
+		 -> {b} {db:cn-of b K1'} {dbs}
+		    mcn-assm db dbs
+		 -> cn-of-reg db DwfK1'
+		 -> md-ofp-narrow-main ([n] M2 m b n)
+		    ([n] [dn:md-assm n S1] [dfstn:md-fst n b] [dpb:cn-ofp b (K1s b)] Dofp2' m d dfst dp b (cn-of/subsume DsubK1 db) n dn dfstn dpb)
+		    DsubS1 DfstS1' (DofK1s' b db) (DsubK1' b db) (DsubK1s b db) (DtidyK1s' b)
+		    %%
+		    ([n] [dn:md-assm n S1'] [dfstn:md-fst n b] [dpb:cn-ofp b (K1s' b)]
+		       Dofp2'' m d dfst dp b db n dn dfstn dpb
+		       : md-ofp P F (M2 m b n) (S2'' b))
+		    (DsubS2' b db : sg-sub (S2'' b) (S2' b)))
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> {dp:cn-ofp C Ks'}
+		    cn-ofp-sound dp Dof
+		 -> md-ofp-sound (Dofp1' m d dfst dp)
+		    (Dof1 m d dfst : md-of pure F (M1 m) S1'))
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> md-fst-reg (Dof1 m d dfst) (DfstM1 m dfst) DfstS1'
+		    (DofC1 : cn-of C1 K1')).
+
+-	: md-ofp-narrow-main ([m] md/lete (E m) T ([x] M m x))
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/lete
+	      (DofpM m d dfst dp : {x} tm-assm x T -> md-ofp P F (M m x) S2)
+	      (DofE m d dfst : tm-of F (E m) T))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp] md-ofp/lete ([x] [dx] DofpM' m d dfst dp x dx) (DofE' m d dfst))
+	   DsubS2
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C}
+		 substitution-md-tm ([d':md-assm m S] DofE m d' dfst) (md-of/subsume Dsub (md-of/var d))
+		 (DofE' m d dfst : tm-of F (E m) T))
+	   <- sg-sub-reg Dsub
+	      (DwfS' : sg-wf S') _
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> tm-of-reg (DofE' m d dfst) (DwfT : cn-of T t))
+	   <- ({x} {dx:tm-assm x T}
+		 tm-assm-reg dx DwfT
+		 -> md-ofp-narrow-main ([m] M m x)
+		    ([m] [d:md-assm m S] [dfst] [dp:cn-ofp C Ks] DofpM m d dfst dp x dx)
+		    Dsub Dfst Dof DsubK' DsubKs Dtidy
+		    %%
+		    ([m] [d:md-assm m S'] [dfst] [dp:cn-ofp C Ks']
+		       DofpM' m d dfst dp x dx
+		       : md-ofp P F (M m x) S2')
+		    (DsubS2 : sg-sub S2' S2)).
+
+-	: md-ofp-narrow-main _
+	   ([m] [d:md-assm m S] [dfst:md-fst m C] [dp:cn-ofp C Ks] 
+	      md-ofp/seal
+	      (Dof1 m d dfst : md-of P F (M m) S1))
+	   (Dsub : sg-sub S' S) (Dfst : sg-fst S' K') (Dof : cn-of C Ks') (DsubK' : kd-sub Ks' K') (DsubKs : kd-sub Ks' Ks) (Dtidy : tidy Ks')
+	   %%
+	   ([m] [d] [dfst] [dp] md-ofp/seal (Dof1' m d dfst))
+	   (sg-sub/reflid DwfS1)
+	   <- ({m} {d:md-assm m S'} {dfst}
+		 substitution-md-md ([d':md-assm m S] Dof1 m d' dfst) (md-of/subsume Dsub (md-of/var d))
+		 (Dof1' m d dfst : md-of P F (M m) S1))
+	   <- sg-sub-reg Dsub
+	      (DwfS' : sg-wf S') _
+	   <- ({m} {d:md-assm m S'} {dfst:md-fst m C} 
+		 md-assm-reg d dfst Dfst (cn-of/subsume DsubK' Dof) DwfS'
+		 -> md-of-reg (Dof1' m d dfst)
+		    (DwfS1 : sg-wf S1)).
+
+%worlds (conbind-reg | conbind-prin-sound-tidy | modbind-prin-sound-tidy | modbind-detached-reg | cn-ofp-block-sound-tidy | termbind-reg) (md-ofp-narrow-main _ _ _ _ _ _ _ _ _ _).
+%total M (md-ofp-narrow-main M _ _ _ _ _ _ _ _ _).
+
+
+
+md-ofp-narrow : sg-sub S1' S1
+		 -> sg-fst S1' K1'
+		 -> sg-fst S1 K1
+		 -> single K1' K1s'
+		 -> single K1 K1s
+		 -> ({a} cn-of a K1 -> {m} md-assm m S1 -> md-fst m a -> cn-ofp a (K1s a) -> md-ofp P F (M a m) (S2 a))
+%%
+		 -> ({a} cn-of a K1' -> {m} md-assm m S1' -> md-fst m a -> cn-ofp a (K1s' a) -> md-ofp P F (M a m) (S2' a))
+		 -> ({a} cn-of a K1' -> sg-sub (S2' a) (S2 a))
+		 -> type.
+%mode md-ofp-narrow +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+-	: md-ofp-narrow
+	   (Dsub1 : sg-sub S1' S1)
+	   (DfstS1' : sg-fst S1' K1')
+	   (DfstS1 : sg-fst S1 K1)
+	   (DsingK1' : single K1' K1s')
+	   (DsingK1 : single K1 K1s)
+	   (Dofp : {a} cn-of a K1 -> {m} md-assm m S1 -> md-fst m a -> cn-ofp a (K1s a) -> md-ofp P F (M a m) (S2 a))
+%%
+	   Dofp'
+	   Dsub2
+	   <- sg-sub-reg Dsub1
+	      (DwfS1' : sg-wf S1') _
+	   <- sg-fst-reg DwfS1' DfstS1'
+	      (DwfK1' : kd-wf K1')
+	   <- single-intro DsingK1' DwfK1'
+	      (DofK1s' : {a} cn-of a K1' -> cn-of a (K1s' a))
+	   <- single-subsume DsingK1' DwfK1'
+	      (DsubK1' : {a} cn-of a K1' -> kd-sub (K1s' a) K1')
+	   <- sg-sub-fst Dsub1 DfstS1' DfstS1
+	      (DsubK1 : kd-sub K1' K1)
+	   <- single-sub DsingK1' DsingK1 DsubK1
+	      (DsubK1s : {a} cn-of a K1' -> kd-sub (K1s' a) (K1s a))
+	   <- single-tidy DsingK1'
+	      (Dtidy : {a} tidy (K1s' a))
+	   <- ({a} {da:cn-of a K1'} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1'
+		 -> md-ofp-narrow-main ([m] M a m)
+		    ([m] [dm:md-assm m S1] [dfst:md-fst m a] [dp:cn-ofp a (K1s a)] Dofp a (cn-of/subsume DsubK1 da) m dm dfst dp)
+		    Dsub1 DfstS1' (DofK1s' a da) (DsubK1' a da) (DsubK1s a da) (Dtidy a)
+		    %%
+		    ([m] [dm:md-assm m S1'] [dfst:md-fst m a] [dp:cn-ofp a (K1s' a)] 
+		       Dofp' a da m dm dfst dp : md-ofp P F (M a m) (S2' a))
+		    (Dsub2 a da : sg-sub (S2' a) (S2 a))).
+
+%worlds (modbind-prin-sound-tidy | termbind-reg) (md-ofp-narrow _ _ _ _ _ _ _ _).
+%total {} (md-ofp-narrow _ _ _ _ _ _ _ _).
+
+
+
+md-ofp-fst : md-fst M C
+	      -> sg-fst S K
+	      -> md-ofp pure F M S
+%%
+	      -> cn-ofp C K'
+	      -> kd-equiv K' K
+	      -> type.
+%mode md-ofp-fst +X1 +X2 +X3 -X4 -X5.
+
+md-ofp-fst-assm : md-assm X S
+		   -> md-fst X C
+%%
+		   -> sg-fst S K
+		   -> single K Ks
+		   -> cn-ofp C (Ks C)
+		   -> type.
+%mode md-ofp-fst-assm +X1 +X2 -X3 -X4 -X5.
+
+
+%block modbind-prin-complete
+   : some {K:kind} {S:sg} {Ks:con -> kind}
+      {DwfK:kd-wf K} {DwfS:sg-wf S} {DfstS:sg-fst S K}
+      {Dof:{a} cn-of a K -> cn-of a (Ks a)}
+      {Dtidy:{a} tidy (Ks a)}
+      {Dsing:single K Ks} 
+      {DwfKs:{a} cn-of a K -> kd-wf (Ks a)}
+      block 
+      {a:con} {da:cn-of a K} {m:module} {dm:md-assm m S} 
+      {dfst:md-fst m a}
+      {das}
+      {_:mcn-assm da das}
+      {_:cn-of-reg da DwfK}
+      {_:md-assm-reg dm dfst DfstS da DwfS}
+      {dp:cn-ofp a (Ks a)}
+      {_:cn-ofp-sound dp (Dof a da)}
+      {_:cn-ofp-tidy dp (Dtidy a)}
+      {_:cn-ofp-complete da Dsing dp (kd-sub/reflid (DwfKs a da))}
+      {_:md-ofp-fst-assm dm dfst DfstS Dsing dp}.
+
+
+-	: md-ofp-fst
+	   (Dfst : md-fst X C)
+	   (DfstSsC : sg-fst (Ss C) Ksc)
+	   (md-ofp/var
+	      (Dfst : md-fst X C)
+	      (DsingS : single-sg S Ss)
+	      (Dassm : md-assm X S))
+	   %%
+	   Dofp'
+	   (kd-equiv/refl Dwf)
+	   <- md-ofp-fst-assm Dassm Dfst
+	      (DfstS : sg-fst S K)
+	      (DsingK : single K Ks)
+	      (Dofp : cn-ofp C (Ks C))
+	   <- single-sg-fst DsingS DfstS
+	      (DsingK' : single K Ks')
+	      (DfstSs : {a} sg-fst (Ss a) (Ks' a))
+	   <- single-fun DsingK' DsingK
+	      (DeqKs : {a} kind-eq (Ks' a) (Ks a))
+	   <- ({a}
+		 sg-fst-resp sg-eq/i (DeqKs a) (DfstSs a)
+		 (DfstSs' a : sg-fst (Ss a) (Ks a)))
+	   <- sg-fst-fun (DfstSs' C) DfstSsC
+	      (Deq : kind-eq (Ks C) Ksc)
+	   <- cn-ofp-resp con-eq/i Deq Dofp
+	      (Dofp' : cn-ofp C Ksc)
+	   <- cn-ofp-sound Dofp'
+	      (Dof : cn-of C Ksc)
+	   <- cn-of-reg Dof
+	      (Dwf : kd-wf Ksc).
+
+-	: md-ofp-fst md-fst/unit sg-fst/one md-ofp/unit cn-ofp/star kd-equiv/one.
+
+-	: md-ofp-fst md-fst/satom sg-fst/satom (md-ofp/satom D) D (kd-equiv/refl Dwf)
+	   <- cn-ofp-sound D Dof
+	   <- cn-of-reg Dof Dwf.
+
+-	: md-ofp-fst md-fst/datom sg-fst/datom (md-ofp/datom _) cn-ofp/star kd-equiv/one.
+
+-	: md-ofp-fst md-fst/sgatom sg-fst/sgatom (md-ofp/sgatom _) cn-ofp/star kd-equiv/one.
+
+-	: md-ofp-fst
+	   (md-fst/pair DfstM2 DfstM1)
+	   (sg-fst/sigma DfstS2 DfstS1)
+	   (md-ofp/pair purity-join/pure DofpM2 DofpM1)
+	   %%
+	   (cn-ofp/pair DofpC2 DofpC1)
+	   (kd-equiv/sigma ([a] [_] Dequiv2' a) Dequiv1)
+	   <- md-ofp-fst DfstM1 DfstS1 DofpM1 DofpC1 Dequiv1
+	   <- can-sg-fst S2 DfstS2'
+	   <- md-ofp-fst DfstM2 DfstS2' DofpM2 DofpC2 Dequiv2
+	   <- ({a}
+		 sg-fst-fun DfstS2' (DfstS2 a) (Deq a))
+	   <- ({a}
+		 kd-equiv-resp kind-eq/i (Deq a) Dequiv2
+		 (Dequiv2' a)).
+
+-	: md-ofp-fst
+	   (md-fst/dpair
+	      (DfstM2 : {a} {m} md-fst m a -> md-fst (M2 a m) (C2 a))
+	      (DfstM1 : md-fst M1 C1))
+	   (sg-fst/sigma
+	      (DfstS2a : {a} sg-fst (S2 C1') (K2a a))
+	      (DfstS1alt : sg-fst S1 K1alt))
+	   (md-ofp/dpair-pure
+	      (DofpM2 : {a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> cn-ofp a (K1s a)
+			 -> md-ofp pure F (M2 a m) (S2 a))
+	      (DsingK1 : single K1 K1s)
+	      (DfstM1' : md-fst M1 C1')
+	      (DfstS1 : sg-fst S1 K1)
+	      (DofpM1 : md-ofp pure F M1 S1))
+	   %%
+	   (cn-ofp/pair
+	      DofpC2C1
+	      DofpC1)
+	   (kd-equiv/sigma
+	      ([a] [_] Dequiv a)
+	      DequivK1alt)
+	   <- md-ofp-fst DfstM1 DfstS1 DofpM1
+	      (DofpC1 : cn-ofp C1 K1')
+	      (DequivK1 : kd-equiv K1' K1)
+	   <- can-single K1' 
+	      (DsingK1' : single K1' K1s')
+	   <- cn-ofp-is-sing DofpC1 DsingK1'
+	      (DequivK1' : kd-equiv K1' (K1s' C1))
+	   <- single-equiv DsingK1' DsingK1 DequivK1
+	      (DequivK1s : {a} cn-of a K1' -> kd-equiv (K1s' a) (K1s a))
+	   <- cn-ofp-sound DofpC1
+	      (DofC1 : cn-of C1 K1')
+	   <- kd-equiv-reg DequivK1
+	      _ (DwfK1 : kd-wf K1)
+	   <- md-ofp-sound DofpM1
+	      (DofM1 : md-of pure F M1 S1)
+	   <- md-of-reg DofM1
+	      (DwfS1 : sg-wf S1)
+	   <- single-formation DsingK1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- single-tidy DsingK1
+	      (DtidyK1s : {a} tidy (K1s a))
+	   <- ({a}
+		 can-sg-fst (S2 a)
+		 (DfstS2 a : sg-fst (S2 a) (K2 a)))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} 
+		 {dfst:md-fst m a}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> cn-ofp-tidy dp (DtidyK1s a)
+		 -> cn-ofp-complete da DsingK1 dp (kd-sub/reflid (DwfK1s a da))
+		 -> md-ofp-fst-assm dm dfst DfstS1 DsingK1 dp
+		 -> md-ofp-fst
+		    (DfstM2 a m dfst)
+		    (DfstS2 a)
+		    (DofpM2 a da m dm dfst dp)
+		    %%
+		    (DofpC2 a da dp : cn-ofp (C2 a) (K2' a))
+		    (DequivK2 a da : kd-equiv (K2' a) (K2 a)))
+	   <- cn-ofp-cut 
+	      DwfK1 
+	      DsingK1 
+	      DofpC2 
+	      DofpC1
+	      (kd-sub/refl DequivK1) 
+	      (kd-equiv/trans (DequivK1s C1 DofC1) DequivK1')
+	      %%
+	      (DofpC2C1 : cn-ofp (C2 C1) K2'')
+	      (DequivK2' : kd-equiv K2'' (K2' C1))
+	   <- sg-fst-fun DfstS1 DfstS1alt
+	      (DeqK1 : kind-eq K1 K1alt)
+	   <- kd-equiv-resp kind-eq/i DeqK1 DequivK1
+	      (DequivK1alt : kd-equiv K1' K1alt)
+	   <- md-fst-fun DfstM1' DfstM1
+	      (DeqC1 : con-eq C1' C1)
+	   <- sg-resp-con S2 DeqC1
+	      (DeqS2 : sg-eq (S2 C1') (S2 C1))
+	   <- ({a}
+		 sg-fst-resp DeqS2 kind-eq/i (DfstS2a a)
+		 (DfstS2a' a : sg-fst (S2 C1) (K2a a)))
+	   <- ({a}
+		 sg-fst-fun (DfstS2 C1) (DfstS2a' a)
+		 (DeqK2 a : kind-eq (K2 C1) (K2a a)))
+	   <- ({a}
+		 kd-equiv-resp kind-eq/i (DeqK2 a)
+		 (kd-equiv/trans (DequivK2 C1 (cn-of/equiv DequivK1 DofC1)) DequivK2')
+		 (Dequiv a : kd-equiv K2'' (K2a a))).
+
+-	: md-ofp-fst
+	   (md-fst/pi1 DfstM)
+	   DfstS1
+	   (md-ofp/pi1 DofpM)
+	   %%
+	   (cn-ofp/pi1 DofpC')
+	   Dequiv1
+	   <- can-sg-fst S2 DfstS2
+	   <- md-ofp-fst DfstM (sg-fst/sigma ([_] DfstS2) DfstS1) DofpM DofpC Dequiv
+	   <- cn-ofp-tidy DofpC Dtidy
+	   <- tidy-kd-sub-sigma-form Dtidy (kd-sub/refl Dequiv) Deq
+	   <- cn-ofp-resp con-eq/i Deq DofpC DofpC'
+	   <- kd-equiv-resp Deq kind-eq/i Dequiv Dequiv'
+	   <- injective-sigma Dequiv' Dequiv1 _.
+
+-	: md-ofp-fst
+	   (md-fst/pi2 DfstM)
+	   DfstS2
+	   (md-ofp/pi2 DofpM)
+	   %%
+	   (cn-ofp/pi2 DofpC')
+	   (Dequiv2 _ DofInh)
+	   <- can-sg-fst S1 DfstS1
+	   <- md-ofp-fst DfstM (sg-fst/sigma ([_] DfstS2) DfstS1) DofpM DofpC Dequiv
+	   <- cn-ofp-tidy DofpC Dtidy
+	   <- tidy-kd-sub-sigma-form Dtidy (kd-sub/refl Dequiv) Deq
+	   <- cn-ofp-resp con-eq/i Deq DofpC DofpC'
+	   <- kd-equiv-resp Deq kind-eq/i Dequiv Dequiv'
+	   <- injective-sigma Dequiv' Dequiv1 Dequiv2
+	   <- kd-equiv-reg Dequiv1 Dwf1 _
+	   <- inhabitation Dwf1 DofInh.
+
+-	: md-ofp-fst md-fst/lam sg-fst/pi (md-ofp/lam _ _ _ _) cn-ofp/star kd-equiv/one.
+
+-	: md-ofp-fst
+	   (md-fst/in DfstM)
+	   (sg-fst/named DfstS)
+	   (md-ofp/in DofpM)
+	   %%
+	   DofpC
+	   Dequiv
+	   <- md-ofp-fst DfstM DfstS DofpM DofpC Dequiv.
+
+-	: md-ofp-fst
+	   (md-fst/out DfstM)
+	   DfstS
+	   (md-ofp/out DofpM)
+	   %%
+	   DofpC
+	   Dequiv
+	   <- md-ofp-fst DfstM (sg-fst/named DfstS) DofpM DofpC Dequiv.
+
+-	: md-ofp-fst
+	   (md-fst/letp 
+	      (DfstM2 : {a} {m} md-fst m a -> md-fst (M2 a m) (C2 a))
+	      (DfstM1 : md-fst M1 C1))
+	   (DfstS2a : sg-fst (S2 C1') K2a)
+	   (md-ofp/letp
+	      (DofpM2 : {a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> cn-ofp a (K1s a)
+			 -> md-ofp pure F (M2 a m) (S2 a))
+	      (DsingK1 : single K1 K1s)
+	      (DfstM1' : md-fst M1 C1')
+	      (DfstS1 : sg-fst S1 K1)
+	      (DofpM1 : md-ofp pure F M1 S1))
+	   %%
+	   DofpC2C1
+	   Dequiv
+	   <- md-ofp-fst DfstM1 DfstS1 DofpM1
+	      (DofpC1 : cn-ofp C1 K1')
+	      (DequivK1 : kd-equiv K1' K1)
+	   <- can-single K1' 
+	      (DsingK1' : single K1' K1s')
+	   <- cn-ofp-is-sing DofpC1 DsingK1'
+	      (DequivK1' : kd-equiv K1' (K1s' C1))
+	   <- single-equiv DsingK1' DsingK1 DequivK1
+	      (DequivK1s : {a} cn-of a K1' -> kd-equiv (K1s' a) (K1s a))
+	   <- cn-ofp-sound DofpC1
+	      (DofC1 : cn-of C1 K1')
+	   <- kd-equiv-reg DequivK1
+	      _ (DwfK1 : kd-wf K1)
+	   <- md-ofp-sound DofpM1
+	      (DofM1 : md-of pure F M1 S1)
+	   <- md-of-reg DofM1
+	      (DwfS1 : sg-wf S1)
+	   <- single-formation DsingK1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- single-tidy DsingK1
+	      (DtidyK1s : {a} tidy (K1s a))
+	   <- ({a}
+		 can-sg-fst (S2 a)
+		 (DfstS2 a : sg-fst (S2 a) (K2 a)))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} 
+		 {dfst:md-fst m a}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> cn-ofp-tidy dp (DtidyK1s a)
+		 -> cn-ofp-complete da DsingK1 dp (kd-sub/reflid (DwfK1s a da))
+		 -> md-ofp-fst-assm dm dfst DfstS1 DsingK1 dp
+		 -> md-ofp-fst
+		    (DfstM2 a m dfst)
+		    (DfstS2 a)
+		    (DofpM2 a da m dm dfst dp)
+		    %%
+		    (DofpC2 a da dp : cn-ofp (C2 a) (K2' a))
+		    (DequivK2 a da : kd-equiv (K2' a) (K2 a)))
+	   <- cn-ofp-cut 
+	      DwfK1 
+	      DsingK1 
+	      DofpC2 
+	      DofpC1
+	      (kd-sub/refl DequivK1) 
+	      (kd-equiv/trans (DequivK1s C1 DofC1) DequivK1')
+	      %%
+	      (DofpC2C1 : cn-ofp (C2 C1) K2'')
+	      (DequivK2' : kd-equiv K2'' (K2' C1))
+	   <- md-fst-fun DfstM1' DfstM1
+	      (DeqC1 : con-eq C1' C1)
+	   <- sg-resp-con S2 DeqC1
+	      (DeqS2 : sg-eq (S2 C1') (S2 C1))
+	   <- sg-fst-resp DeqS2 kind-eq/i DfstS2a
+	      (DfstS2a' : sg-fst (S2 C1) K2a)
+	   <- sg-fst-fun (DfstS2 C1) DfstS2a'
+	      (DeqK2 : kind-eq (K2 C1) K2a)
+	   <- kd-equiv-resp kind-eq/i DeqK2
+	      (kd-equiv/trans (DequivK2 C1 (cn-of/equiv DequivK1 DofC1)) DequivK2')
+	      (Dequiv : kd-equiv K2'' K2a).
+
+-	: md-ofp-fst
+	   (md-fst/lete
+	      (DfstM : {x} md-fst (M x) C))
+	   (DfstS : sg-fst S K)
+	   (md-ofp/lete
+	      (DofpM : {x} tm-assm x T -> md-ofp pure F (M x) S)
+	      (DofE : tm-of F E T))
+	   %%
+	   DofpC DequivK
+	   <- tm-of-reg DofE (DwfT : cn-of T t)
+	   <- ({x} {d:tm-assm x T}
+		 tm-assm-reg d DwfT
+		 -> md-ofp-fst (DfstM x) DfstS (DofpM x d)
+		    (DofpC : cn-ofp C K')
+		    (DequivK : kd-equiv K' K)).
+		 
+%worlds (modbind-prin-complete | termbind-reg) (md-ofp-fst _ _ _ _ _) (md-ofp-fst-assm _ _ _ _ _).
+%total (D1 D2) (md-ofp-fst _ _ D1 _ _) (md-ofp-fst-assm D2 _ _ _ _).
+
+
+
+md-ofp-pure-fst : md-ofp pure F M S
+		   -> md-fst M C
+		   -> sg-fst S K
+		   -> single K Ks
+%%
+		   -> kd-equiv K (Ks C)
+		   -> type.
+%mode md-ofp-pure-fst +X1 +X2 +X3 +X4 -X5.
+
+-	: md-ofp-pure-fst
+	   (DofpM : md-ofp pure F M S)
+	   (DfstM : md-fst M C)
+	   (DfstS : sg-fst S K)
+	   (Dsing : single K Ks)
+	   %%
+	   (kd-equiv/trans
+	      (kd-equiv/trans
+		 (kd-equiv/symm (DequivKs C (cn-of/equiv DequivK DofC)))
+		 DequivKs')
+	      (kd-equiv/symm DequivK))
+	   <- md-ofp-fst DfstM DfstS DofpM
+	      (DofpC : cn-ofp C K')
+	      (DequivK : kd-equiv K' K)
+	   <- can-single K'
+	      (Dsing' : single K' Ks')
+	   <- cn-ofp-is-sing DofpC Dsing'
+	      (DequivKs' : kd-equiv K' (Ks' C))
+	   <- single-equiv Dsing Dsing' (kd-equiv/symm DequivK)
+	      (DequivKs : {a} cn-of a K -> kd-equiv (Ks a) (Ks' a))
+	   <- cn-ofp-sound DofpC
+	      (DofC : cn-of C K').
+
+%worlds (modbind-prin-complete | termbind-reg) (md-ofp-pure-fst _ _ _ _ _).
+%total {} (md-ofp-pure-fst _ _ _ _ _).
+
+
+
+md-ofp-complete : md-of P F M S 
+%%
+		   -> md-ofp P' F M S'
+		   -> sg-sub S' S
+		   -> purity-sub P' P
+		   -> type.
+%mode md-ofp-complete +X1 -X2 -X3 -X4.
+
+-	: md-ofp-complete
+	   (md-of/var 
+	      (Dassm : md-assm X S))
+	   %%
+	   (md-ofp/var Dfst Dsing Dassm)
+	   (Dsub C Dof)
+	   purity-sub/refl
+	   <- can-single-sg S
+	      (Dsing : single-sg S Ss)
+	   <- md-assm-reg Dassm
+	      (Dfst : md-fst X C)
+	      (DfstS : sg-fst S K)
+	      (Dof : cn-of C K)
+	      (DwfS : sg-wf S)
+	   <- single-sg-subsume Dsing DwfS DfstS
+	      (Dsub : {a} cn-of a K -> sg-sub (Ss a) S).
+
+-	: md-ofp-complete md-of/unit md-ofp/unit sg-sub/one purity-sub/refl.
+
+-	: md-ofp-complete
+	   (md-of/satom
+	      (Dof : cn-of C K))
+	   %%
+	   (md-ofp/satom Dofp)
+	   (sg-sub/satom Dsub)
+	   purity-sub/refl
+	   <- cn-ofp-complete'' Dof
+	      (Dofp : cn-ofp C K')
+	      (Dsub : kd-sub K' K).
+
+-	: md-ofp-complete
+	   (md-of/datom
+	      (Dof : tm-of F E T))
+	   %%
+	   (md-ofp/datom Dof)
+	   (sg-sub/datom (cn-equiv/refl Dwf))
+	   purity-sub/refl
+	   <- tm-of-reg Dof (Dwf : cn-of T t).
+
+-	: md-ofp-complete
+	   (md-of/sgatom
+	      (Dwf : sg-wf S))
+	   %%
+	   (md-ofp/sgatom Dwf)
+	   (sg-sub/reflid (sg-wf/sgatom Dwf))
+	   purity-sub/refl.
+
+-	: md-ofp-complete
+	   (md-of/pair 
+	      (Dof2 : md-of P F M2 S2)
+	      (Dof1 : md-of P F M1 S1))
+	   %%
+	   (md-ofp/pair Djoin Dofp2 Dofp1)
+	   (sg-sub/sigma
+	      ([_] [_] DwfS2) DfstS1 ([_] [_] Dsub2) DfstS1' Dsub1)
+	   Dpsub
+	   <- md-ofp-complete Dof1 
+	      (Dofp1 : md-ofp P1 F M1 S1')
+	      (Dsub1 : sg-sub S1' S1)
+	      (Dpsub1 : purity-sub P1 P)
+	   <- md-ofp-complete Dof2 
+	      (Dofp2 : md-ofp P2 F M2 S2')
+	      (Dsub2 : sg-sub S2' S2)
+	      (Dpsub2 : purity-sub P2 P)
+	   <- purity-join-lub Dpsub1 Dpsub2 Djoin Dpsub
+	   <- can-sg-fst S1 DfstS1
+	   <- can-sg-fst S1' DfstS1'
+	   <- sg-sub-reg Dsub2
+	      _ (DwfS2 : sg-wf S2).
+
+md-ofp-complete-dpair : md-ofp P1 F M1 S1'
+			 -> sg-sub S1' S1
+			 -> purity-sub P1 P
+			 -> sg-fst S1' K1'
+			 -> single K1' K1s'
+			 -> ({a} cn-of a K1'
+			       -> {m} md-assm m S1'
+			       -> md-fst m a
+			       -> cn-ofp a (K1s' a)
+			       -> md-ofp P2 F (M2 a m) (S2' a))
+			 -> ({a} cn-of a K1' -> sg-sub (S2' a) (S2 a))
+			 -> purity-sub P2 P
+			 -> sg-fst S1 K1
+			 -> ({a} cn-of a K1 -> sg-wf (S2 a))
+%%
+			 -> md-ofp P' F (md/dpair M1 M2) S
+			 -> sg-sub S (sg/sigma S1 S2)
+			 -> purity-sub P' P
+			 -> type.
+%mode md-ofp-complete-dpair +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 +X9 +X10 -X11 -X12 -X13.
+
+-	: md-ofp-complete
+	   (md-of/dpair
+	      (Dof2 : {a} cn-of a K1 
+		       -> {m} md-assm m S1 
+		       -> md-fst m a
+		       -> md-of P F (M2 a m) (S2 a))
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof1 : md-of P F M1 S1))
+	   %%
+	   Dofp
+	   Dsub
+	   Dpsub
+	   <- md-ofp-complete Dof1
+	      (Dofp1 : md-ofp P1 F M1 S1')
+	      (Dsub1 : sg-sub S1' S1)
+	      (Dpsub1 : purity-sub P1 P)
+	   <- can-single K1
+	      (Dsing : single K1 K1s)
+	   <- sg-sub-reg Dsub1
+	      _ (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-formation Dsing DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-intro Dsing DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- single-tidy Dsing
+	      (Dtidy : {a} tidy (K1s a))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} 
+		 {dfst:md-fst m a}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> cn-ofp-tidy dp (Dtidy a)
+		 -> cn-ofp-complete da Dsing dp (kd-sub/reflid (DwfK1s a da))
+		 -> md-ofp-fst-assm dm dfst DfstS1 Dsing dp
+		 -> md-ofp-complete (Dof2 a da m dm dfst)
+		    (Dofp2 a da m dm dfst dp : md-ofp P2 F (M2 a m) (S2' a))
+		    (Dsub2 a da : sg-sub (S2' a) (S2 a))
+		    (Dpsub2 : purity-sub P2 P))
+	   <- can-sg-fst S1'
+	      (DfstS1' : sg-fst S1' K1')
+	   <- can-single K1'
+	      (Dsing' : single K1' K1s')
+	   <- md-ofp-narrow Dsub1 DfstS1' DfstS1 Dsing' Dsing Dofp2
+	      (Dofp2' : {a} cn-of a K1'
+			 -> {m} md-assm m S1'
+			 -> md-fst m a
+			 -> cn-ofp a (K1s' a)
+			 -> md-ofp P2 F (M2 a m) (S2'' a))
+	      (Dsub2' : {a} cn-of a K1' -> sg-sub (S2'' a) (S2' a))
+	   <- sg-sub-fst Dsub1 DfstS1' DfstS1
+	      (DsubK1 : kd-sub K1' K1)
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} 
+		 {dfst:md-fst m a}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-of-reg (Dof2 a da m dm dfst)
+		    (DwfS2 a da : sg-wf (S2 a)))
+	   <- md-ofp-complete-dpair 
+	      Dofp1 Dsub1 Dpsub1 DfstS1' Dsing' Dofp2'
+	      ([a] [d:cn-of a K1'] sg-sub/trans (Dsub2 a (cn-of/subsume DsubK1 d)) (Dsub2' a d))
+	      Dpsub2 DfstS1 DwfS2
+	      %%
+	      (Dofp : md-ofp P' F (md/dpair M1 M2) S)
+	      (Dsub : sg-sub S (sg/sigma S1 S2))
+	      (Dpsub : purity-sub P' P).
+
+-	: md-ofp-complete-dpair
+	   (Dofp1 : md-ofp pure F M1 S1')
+	   (Dsub1 : sg-sub S1' S1)
+	   _
+	   (DfstS1' : sg-fst S1' K1')
+	   (Dsing : single K1' K1s')
+	   (Dofp2 : ({a} cn-of a K1'
+		       -> {m} md-assm m S1'
+		       -> md-fst m a
+		       -> cn-ofp a (K1s' a)
+		       -> md-ofp P2 F (M2 a m) (S2' a)))
+	   (Dsub2 : {a} cn-of a K1' -> sg-sub (S2' a) (S2 a))
+	   (Dpsub2 : purity-sub P2 P)
+	   (DfstS1 : sg-fst S1 K1)
+	   (DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	   %%
+	   (md-ofp/dpair-pure Dofp2 Dsing DfstM1 DfstS1' Dofp1)
+	   (sg-sub/sigma
+	      DwfS2
+	      DfstS1
+	      ([a] [d:cn-of a K1']
+		 sg-sub/trans
+		 (sg-sub/refl (DequivS2a a d))
+		 (Dsub2 C1 DofC1))
+	      DfstS1'
+	      Dsub1)
+	   Dpsub2
+	   <- md-ofp-sound Dofp1
+	      (Dof1 : md-of pure F M1 S1')
+	   <- can-md-fst Dof1
+	      (DfstM1 : md-fst M1 C1)
+	   <- md-fst-reg Dof1 DfstM1 DfstS1'
+	      (DofC1 : cn-of C1 K1')
+	   <- md-ofp-pure-fst Dofp1 DfstM1 DfstS1' Dsing
+	      (DequivK1' : kd-equiv K1' (K1s' C1))
+	   <- cn-of-reg DofC1
+	      (DwfK1' : kd-wf K1')
+	   <- single-elim Dsing DwfK1'
+	      (Dequiv : {a} cn-of a K1' -> {b} cn-of b (K1s' a) -> cn-equiv a b K1')
+	   <- sg-sub-fst Dsub1 DfstS1' DfstS1
+	      (DsubK1 : kd-sub K1' K1)
+	   <- ({a} {da:cn-of a K1'} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1'
+		 -> functionality-sg DwfS2
+		    (cn-equiv/subsume
+		       DsubK1
+		       (Dequiv C1 DofC1 a (cn-of/equiv DequivK1' da))
+		       : cn-equiv C1 a K1)
+		    (DequivS2a a da : sg-equiv (S2 C1) (S2 a))).
+	      
+-	: md-ofp-complete-dpair
+	   (Dofp1 : md-ofp impure F M1 S1')
+	   (Dsub1 : sg-sub S1' S1)
+	   (Dpsub1 : purity-sub impure P)
+	   (DfstS1' : sg-fst S1' K1')
+	   (Dsing : single K1' K1s')
+	   (Dofp2 : ({a} cn-of a K1'
+		       -> {m} md-assm m S1'
+		       -> md-fst m a
+		       -> cn-ofp a (K1s' a)
+		       -> md-ofp P2 F (M2 a m) (S2' a)))
+	   (Dsub2 : {a} cn-of a K1' -> sg-sub (S2' a) (S2 a))
+	   (Dpsub2 : purity-sub P2 P)
+	   (DfstS1 : sg-fst S1 K1)
+	   (DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	   %%
+	   (md-ofp/dpair-impure Dofp2 Dsing DfstS1' Dofp1)
+	   (sg-sub/sigma
+	      DwfS2
+	      DfstS1
+	      Dsub2
+	      DfstS1'
+	      Dsub1)
+	   Dpsub1.
+
+%worlds (modbind-prin-complete | termbind-reg) (md-ofp-complete-dpair _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total {} (md-ofp-complete-dpair _ _ _ _ _ _ _ _ _ _ _ _ _).
+
+-	: md-ofp-complete
+	   (md-of/pi1
+	      (Dof : md-of pure F M (sg/sigma S1 S2)))
+	   %%
+	   (md-ofp/pi1 Dofp')
+	   Dsub1
+	   purity-sub/refl
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp pure F M S')
+	      (Dsub : sg-sub S' (sg/sigma S1 S2))
+	      _
+	   <- md-ofp-tidy Dofp
+	      (Dtidy : tidy-sg S')
+	   <- tidy-sg-sub-sigma-form Dtidy Dsub
+	      (Deq : sg-eq S' (sg/sigma S1' ([_] S2')))
+	   <- md-ofp-resp purity-eq/i sttp-eq/i module-eq/i Deq Dofp
+	      (Dofp' : md-ofp pure F M (sg/sigma S1' ([_] S2')))
+	   <- sg-sub-resp Deq sg-eq/i Dsub
+	      (Dsub' : sg-sub (sg/sigma S1' ([_] S2')) (sg/sigma S1 S2))
+	   <- sg-sub-sigma-invert Dsub'
+	      (Dsub1 : sg-sub S1' S1)
+	      _ _.
+
+-	: md-ofp-complete
+	   (md-of/pi2
+	      (Dfst : md-fst M C)
+	      (Dof : md-of pure F M (sg/sigma S1 S2)))
+	   %%
+	   (md-ofp/pi2 Dofp')
+	   (Dsub2 (pi1 C) (cn-of/pi1 DofC))
+	   purity-sub/refl
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp pure F M S')
+	      (Dsub : sg-sub S' (sg/sigma S1 S2))
+	      _
+	   <- md-ofp-tidy Dofp
+	      (Dtidy : tidy-sg S')
+	   <- tidy-sg-sub-sigma-form Dtidy Dsub
+	      (Deq : sg-eq S' (sg/sigma S1' ([_] S2')))
+	   <- md-ofp-resp purity-eq/i sttp-eq/i module-eq/i Deq Dofp
+	      (Dofp' : md-ofp pure F M (sg/sigma S1' ([_] S2')))
+	   <- sg-sub-resp Deq sg-eq/i Dsub
+	      (Dsub' : sg-sub (sg/sigma S1' ([_] S2')) (sg/sigma S1 S2))
+	   <- sg-sub-sigma-invert Dsub'
+	      (Dsub1 : sg-sub S1' S1)
+	      (DfstS1' : sg-fst S1' K1')
+	      (Dsub2 : {a} cn-of a K1' -> sg-sub S2' (S2 a))
+	   <- md-ofp-sound Dofp'
+	      (Dof' : md-of pure F M (sg/sigma S1' ([_] S2')))
+	   <- can-sg-fst S2'
+	      (DfstS2' : sg-fst S2' K2')
+	   <- md-fst-reg Dof' Dfst (sg-fst/sigma ([_] DfstS2') DfstS1')
+	      (DofC : cn-of C (sigma K1' ([_] K2'))).
+
+-	: md-ofp-complete
+	   (md-of/lam
+	      (Dof : {a} cn-of a K1
+		      -> {m} md-assm m S1
+		      -> md-fst m a
+		      -> md-of P F (M a m) (S2 a))
+	      (DfstS1 : sg-fst S1 K1)
+	      (DwfS1 : sg-wf S1))
+	   %%
+	   (md-ofp/lam Dofp DsingK1 DfstS1 DwfS1)
+	   (sg-sub/pi
+	      DwfS2'
+	      DfstS1
+	      Dsub
+	      DfstS1
+	      (sg-sub/reflid DwfS1))
+	   purity-sub/refl
+	   <- can-single K1 (DsingK1 : single K1 K1s)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-formation DsingK1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- single-tidy DsingK1 (Dtidy : {a} tidy (K1s a))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} 
+		 {dfst:md-fst m a}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> cn-ofp-tidy dp (Dtidy a)
+		 -> cn-ofp-complete da DsingK1 dp (kd-sub/reflid (DwfK1s a da))
+		 -> md-ofp-fst-assm dm dfst DfstS1 DsingK1 dp
+		 -> md-ofp-complete (Dof a da m dm dfst)
+		    (Dofp a da m dm dfst dp : md-ofp P' F (M a m) (S2' a))
+		    (Dsub a da : sg-sub (S2' a) (S2 a))
+		    (Dpsub : purity-sub P' P))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> sg-sub-reg (Dsub a da)
+		    (DwfS2' a da : sg-wf (S2' a))
+		    (DDDD a da)).
+
+-	: md-ofp-complete
+	   (md-of/app
+	      (DfstM2 : md-fst M2 C2)
+	      (Dof2 : md-of pure F M2 S1)
+	      (Dof1 : md-of P F M1 (sg/pi S1 S2)))
+	   %%
+	   (md-ofp/app DfstM2 (md-of/subsume Dsub1 Dof2) Dofp1')
+	   (Dsub2 C2 DofC2)
+	   purity-sub/refl
+	   <- md-ofp-complete Dof1
+	      (Dofp1 : md-ofp P' F M1 S')
+	      (Dsub : sg-sub S' (sg/pi S1 S2))
+	      _
+	   <- sg-sub-pi-form' Dsub
+	      (Deq : sg-eq S' (sg/pi S1' S2'))
+	   <- md-ofp-resp purity-eq/i sttp-eq/i module-eq/i Deq Dofp1
+	      (Dofp1' : md-ofp P' F M1 (sg/pi S1' S2'))
+	   <- sg-sub-resp Deq sg-eq/i Dsub
+	      (Dsub' : sg-sub (sg/pi S1' S2') (sg/pi S1 S2))
+	   <- sg-sub-pi-invert Dsub'
+	      (Dsub1 : sg-sub S1 S1')
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dsub2 : {a} cn-of a K1 -> sg-sub (S2' a) (S2 a))
+	   <- md-fst-reg Dof2 DfstM2 DfstS1
+	      (DofC2 : cn-of C2 K1).
+
+-	: md-ofp-complete
+	   (md-of/in Dof)
+	   %%
+	   (md-ofp/in Dofp)
+	   (sg-sub/named Dsub)
+	   Dpsub
+	   <- md-ofp-complete Dof Dofp Dsub Dpsub.
+
+-	: md-ofp-complete
+	   (md-of/out 
+	      (Dof : md-of P F M (sg/named L S)))
+	   %%
+	   (md-ofp/out Dofp')
+	   Dsub''
+	   Dpsub
+	   <- md-ofp-complete Dof 
+	      (Dofp : md-ofp P' F M S')
+	      (Dsub : sg-sub S' (sg/named L S))
+	      (Dpsub : purity-sub P' P)
+	   <- sg-sub-named-form' Dsub
+	      (Deq : sg-eq S' (sg/named L' S''))
+	   <- md-ofp-resp purity-eq/i sttp-eq/i module-eq/i Deq Dofp
+	      (Dofp' : md-ofp P' F M (sg/named L' S''))
+	   <- sg-sub-resp Deq sg-eq/i Dsub
+	      (Dsub' : sg-sub (sg/named L' S'') (sg/named L S))
+	   <- sg-sub-named-invert Dsub' _ 
+	      (Dsub'' : sg-sub S'' S).
+
+-	: md-ofp-complete
+	   (md-of/let Dof2 Dfst Dof1)
+	   (md-ofp/let Dof2 Dfst Dof1)
+	   (sg-sub/reflid Dwf)
+	   purity-sub/refl
+	   <- md-of-reg (md-of/let Dof2 Dfst Dof1) Dwf.
+
+-	: md-ofp-complete
+	   (md-of/letp
+	      (Dof2 : {a} cn-of a K1 
+		       -> {m} md-assm m S1 
+		       -> md-fst m a
+		       -> md-of P F (M2 a m) (S2 a))
+	      (DfstM1 : md-fst M1 C1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof1 : md-of pure F M1 S1))
+	   %%
+	   (md-ofp/letp Dofp2' Dsing' DfstM1 DfstS1' Dofp1)
+	   (sg-sub/trans (Dsub2 C1 (cn-of/subsume DsubK1 DofC1)) (Dsub2' C1 DofC1))
+	   Dpsub
+	   <- md-ofp-complete Dof1
+	      (Dofp1 : md-ofp pure F M1 S1')
+	      (Dsub1 : sg-sub S1' S1)
+	      purity-sub/refl
+	   <- can-single K1
+	      (Dsing : single K1 K1s)
+	   <- sg-sub-reg Dsub1
+	      _ (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-formation Dsing DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-intro Dsing DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- single-tidy Dsing
+	      (Dtidy : {a} tidy (K1s a))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} 
+		 {dfst:md-fst m a}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> cn-ofp-tidy dp (Dtidy a)
+		 -> cn-ofp-complete da Dsing dp (kd-sub/reflid (DwfK1s a da))
+		 -> md-ofp-fst-assm dm dfst DfstS1 Dsing dp
+		 -> md-ofp-complete (Dof2 a da m dm dfst)
+		    (Dofp2 a da m dm dfst dp : md-ofp P' F (M2 a m) (S2' a))
+		    (Dsub2 a da : sg-sub (S2' a) (S2 a))
+		    (Dpsub : purity-sub P' P))
+	   <- can-sg-fst S1'
+	      (DfstS1' : sg-fst S1' K1')
+	   <- can-single K1'
+	      (Dsing' : single K1' K1s')
+	   <- md-ofp-narrow Dsub1 DfstS1' DfstS1 Dsing' Dsing Dofp2
+	      (Dofp2' : {a} cn-of a K1'
+			 -> {m} md-assm m S1'
+			 -> md-fst m a
+			 -> cn-ofp a (K1s' a)
+			 -> md-ofp P' F (M2 a m) (S2'' a))
+	      (Dsub2' : {a} cn-of a K1' -> sg-sub (S2'' a) (S2' a))
+	   <- md-ofp-sound Dofp1
+	      (Dof1' : md-of pure F M1 S1')
+	   <- md-fst-reg Dof1' DfstM1 DfstS1'
+	      (DofC1 : cn-of C1 K1')
+	   <- sg-sub-fst Dsub1 DfstS1' DfstS1
+	      (DsubK1 : kd-sub K1' K1).
+
+-	: md-ofp-complete
+	   (md-of/seal Dof)
+	   (md-ofp/seal Dof)
+	   (sg-sub/reflid Dwf)
+	   purity-sub/refl
+	   <- md-of-reg (md-of/seal Dof) Dwf.
+
+-	: md-ofp-complete
+	   (md-of/self
+	      (DofC : cn-of C K)
+	      (DfstM : md-fst M C)
+	      (DofM : md-of pure F M (sg/satom Koth)))
+	   %%
+	   DofpM'
+	   (sg-sub/satom (kd-sub/trans Dsub' (kd-sub/refl (kd-equiv/symm Dequiv))))
+	   purity-sub/refl
+	   <- md-ofp-complete DofM
+	      (DofpM : md-ofp pure F M S)
+	      (DsubS : sg-sub S (sg/satom Koth))
+	      purity-sub/refl
+	   <- sg-sub-satom-form' DsubS
+	      (DeqS : sg-eq S (sg/satom K'))
+	   <- md-ofp-resp purity-eq/i sttp-eq/i module-eq/i DeqS DofpM
+	      (DofpM' : md-ofp pure F M (sg/satom K'))
+	   <- md-ofp-fst DfstM sg-fst/satom DofpM'
+	      (DofpC : cn-ofp C K'')
+	      (Dequiv : kd-equiv K'' K')
+	   <- cn-ofp-complete'' DofC
+	      (DofpC' : cn-ofp C K''')
+	      (Dsub : kd-sub K''' K)
+	   <- cn-ofp-fun DofpC' DofpC
+	      (DeqK'' : kind-eq K''' K'')
+	   <- kd-sub-resp DeqK'' kind-eq/i Dsub
+	      (Dsub' : kd-sub K'' K).
+
+-	: md-ofp-complete
+	   (md-of/lete
+	      (DofM : {x} tm-assm x T -> md-of P F (M x) S)
+	      (DofE : tm-of F E T))
+	   %%
+	   (md-ofp/lete DofpM DofE)
+	   Dsub
+	   Dpsub
+	   <- tm-of-reg DofE (DwfT : cn-of T t)
+	   <- ({x} {d:tm-assm x T}
+		 tm-assm-reg d DwfT
+		 -> md-ofp-complete (DofM x d) 
+		    (DofpM x d : md-ofp P' F (M x) S') 
+		    (Dsub : sg-sub S' S)
+		    Dpsub).
+
+-	: md-ofp-complete
+	   (md-of/extsigma
+	      (Dof2 : md-of pure F (md/pi2 M) S2)
+	      (Dof1 : md-of pure F (md/pi1 M) S1))
+	   %%
+	   Dofp1
+	   (sg-sub/sigma
+	      ([_] [_] DwfS2)
+	      DfstS1
+	      ([_] [_] Dsub2')
+	      DfstS1'
+	      Dsub1)
+	   purity-sub/refl
+	   <- md-ofp-complete Dof1
+	      (md-ofp/pi1
+		 (Dofp1 : md-ofp pure F M (sg/sigma S1' ([_] S2'))))
+	      (Dsub1 : sg-sub S1' S1)
+	      _
+	   <- md-ofp-complete Dof2
+	      (md-ofp/pi2
+		 (Dofp2 : md-ofp pure F M (sg/sigma S1'' ([_] S2''))))
+	      (Dsub2 : sg-sub S2'' S2)
+	      _
+	   <- md-ofp-fun Dofp2 Dofp1
+	      _ (Deq : sg-eq (sg/sigma S1'' ([_] S2'')) (sg/sigma S1' ([_] S2')))
+	   <- sg-eq-sigma-invert Deq
+	      _ (Deq2 : con -> sg-eq S2'' S2')
+	   <- sg-sub-resp (Deq2 unit) sg-eq/i Dsub2
+	      (Dsub2' : sg-sub S2' S2)
+	   <- can-sg-fst S1 DfstS1
+	   <- can-sg-fst S1' DfstS1'
+	   <- sg-sub-reg Dsub2
+	      _ (DwfS2 : sg-wf S2).
+
+-	: md-ofp-complete
+	   (md-of/extnamed
+	      (Dof : md-of pure F (md/out M) S)
+	      (Dof' : md-of pure F M (sg/named L Soth)))
+	   %%
+	   Dofp
+	   Dsub'''
+	   purity-sub/refl
+	   <- md-ofp-complete Dof
+	      (md-ofp/out
+		 (Dofp : md-ofp pure F M (sg/named L' S')))
+	      (Dsub : sg-sub S' S)
+	      _
+	   <- md-ofp-complete Dof'
+	      (Dofp' : md-ofp pure F M S'')
+	      (Dsub' : sg-sub S'' (sg/named L Soth))
+	      _
+	   <- md-ofp-fun Dofp' Dofp
+	      _
+	      (DeqS'' : sg-eq S'' (sg/named L' S'))
+	   <- sg-sub-resp DeqS'' sg-eq/i Dsub'
+	      (Dsub'' : sg-sub (sg/named L' S') (sg/named L Soth))
+	   <- sg-sub-named-invert Dsub''
+	      (DeqL : name-eq L' L)
+	      _
+	   <- sg-resp-name ([l] sg/named l S) DeqL
+	      (Deq : sg-eq (sg/named L' S) (sg/named L S))
+	   <- sg-sub-resp sg-eq/i Deq (sg-sub/named Dsub)
+	      (Dsub''' : sg-sub (sg/named L' S') (sg/named L S)).
+
+-	: md-ofp-complete
+	   (md-of/subsume
+	      (Dsub : sg-sub S1 S2)
+	      (Dof : md-of P F M S1))
+	   Dofp
+	   (sg-sub/trans Dsub Dsub')
+	   Dpsub
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp P' F M S3)
+	      (Dsub' : sg-sub S3 S1)
+	      (Dpsub : purity-sub P' P).
+	      
+-	: md-ofp-complete
+	   (md-of/forget
+	      (Dof : md-of pure F M S))
+	   %%
+	   Dofp
+	   Dsub
+	   purity-sub/forget	   
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp pure F M S')
+	      (Dsub : sg-sub S' S)
+	      purity-sub/refl.
+
+%worlds (modbind-prin-complete | termbind-reg) (md-ofp-complete _ _ _ _).
+%total D (md-ofp-complete D _ _ _).

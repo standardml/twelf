@@ -1,0 +1,16 @@
+
+instance-reg : instance S M -> md-of pure st/nil M S -> type.
+%mode instance-reg +X1 -X2.
+
+-	: instance-reg instance/nil md-of/unit.
+
+-	: instance-reg 
+	   (instance/cons 
+	      (Dinstance : instance S M)
+	      (DofC : cn-of C K))
+	   (md-of/pair DofM (md-of/satom DofC))
+	   <- instance-reg Dinstance 
+	      (DofM : md-of pure st/nil M S).
+
+%worlds (conbind | termbind | modbind) (instance-reg _ _).
+%total D (instance-reg D _).

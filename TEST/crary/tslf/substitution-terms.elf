@@ -1,0 +1,193 @@
+%%%% substitution for terms 
+
+subst/tm-oftp	: ({x}{dx: assm/tm x C1} oftp L T (E2 x) C2)
+		   -> oftp L T E1 C1
+		   -> oftp L T (E2 E1) C2
+		   -> type.
+%mode subst/tm-oftp +D1 +D2 -D3.
+
+subst/tm-ofsg	: ({x}{dx: assm/tm x C1} ofsg L T Y (M2 x) S2)
+		   -> oftp L T E1 C1
+		   -> ofsg L T Y (M2 E1) S2
+		   -> type.
+%mode subst/tm-ofsg +D1 +D2 -D3.
+
+-	: subst/tm-oftp ([x] [dx] oftp/var dx) D1 D1.
+
+-	: subst/tm-oftp ([x] [dx] D) D1 D.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/pair (D1 x dx) (D2 x dx)) D 
+	   (oftp/tm/pair D1' D2')
+	   <- subst/tm-oftp D1 D D1'
+	   <- subst/tm-oftp D2 D D2'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/pj1 (D1 x dx)) D 
+	   (oftp/tm/pj1 D1')
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/pj2 (D1 x dx)) D 
+	   (oftp/tm/pj2 D1')
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/fun (DE x dx) DC) D1 
+	   (oftp/tm/fun DE' DC)
+	   <-({y}{dy}{z}{dz}
+		subst/tm-oftp ([x][dx] DE x dx y dy z dz) D1 
+		(DE' y dy z dz)).
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/tmapp (D1 x dx) (D2 x dx)) D 
+	   (oftp/tm/tmapp D1' D2')
+	   <- subst/tm-oftp D1 D D1'
+	   <- subst/tm-oftp D2 D D2'.
+
+-	: subst/tm-oftp ([x] [dx: assm/tm x C] oftp/tm/cnabs 
+			   ([a] [da: ofkd a K] D1 x dx a da) (DW: kd-wf K)) D 
+	   (oftp/tm/cnabs D1' DW)
+	   <- ({a:cn}{da:ofkd a K}
+		 subst/tm-oftp ([x] [dx: assm/tm x C] D1 x dx a da) 
+		 D (D1' a da)).
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/cnapp (D1 x dx) DC) D
+	   (oftp/tm/cnapp D1' DC)
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/set (D1 x dx) (D2 x dx)) D 
+	   (oftp/tm/set D1' D2')
+	   <- subst/tm-oftp D1 D D1'
+	   <- subst/tm-oftp D2 D D2'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/ref (D1 x dx)) D 
+	   (oftp/tm/ref D1')
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/raise (D1 x dx) DC) D 
+	   (oftp/tm/raise D1' DC)
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/get (D1 x dx)) D 
+	   (oftp/tm/get D1')
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/deq (D1 x dx) DQ) D 
+	   (oftp/deq D1' DQ)
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/term (D1 x dx)) D
+	   (oftp/tm/term D1')
+	   <- subst/tm-ofsg D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/inl (D1 x dx) DC) D 
+	   (oftp/tm/inl D1' DC)
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/inr (D1 x dx) DC) D 
+	   (oftp/tm/inr D1' DC)
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x][dx]oftp/tm/case (DO x dx) (DL x dx) (DR x dx)) D1 
+	   (oftp/tm/case DO' DL' DR')
+	   <- subst/tm-oftp DO D1 DO'
+	   <-({y}{dy}
+		subst/tm-oftp ([x][dx] DL x dx y dy) D1 
+		(DL' y dy))
+	   <-({y}{dy}
+		subst/tm-oftp ([x][dx] DR x dx y dy) D1 
+		(DR' y dy)).
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/try (D1 x dx) (D2 x dx)) D 
+	   (oftp/tm/try D1' D2')
+	   <- subst/tm-oftp D1 D D1'
+	   <-({y}{dy}
+		subst/tm-oftp ([x][dx] D2 x dx y dy) D
+		(D2' y dy)).
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/tag (D1 x dx) (D2 x dx)) D 
+	   (oftp/tm/tag D1' D2')
+	   <- subst/tm-oftp D1 D D1'
+	   <- subst/tm-oftp D2 D D2'.
+
+-	: subst/tm-oftp ([x][dx]oftp/tm/iftag (D1 x dx) (D2 x dx) 
+			   (D3 x dx) (D4 x dx)) D 
+	   (oftp/tm/iftag D1' D2' D3' D4')
+	   <- subst/tm-oftp D1 D D1'
+	   <- subst/tm-oftp D2 D D2'
+	   <-({y}{dy}
+		subst/tm-oftp ([x][dx] D3 x dx y dy) D
+		(D3' y dy))
+	   <- subst/tm-oftp D4 D D4'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/roll (D1 x dx) DC) D 
+	   (oftp/tm/roll D1' DC)
+	   <- subst/tm-oftp D1 D D1'.
+
+-	: subst/tm-oftp ([x] [dx] oftp/tm/unroll (D1 x dx)) D 
+	   (oftp/tm/unroll D1')
+	   <- subst/tm-oftp D1 D D1'.
+
+
+
+
+-	: subst/tm-ofsg ([x] [dx] D) D1 D.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/md/tm (D x dx)) D1 (ofsg/md/tm D')
+	   <- subst/tm-oftp D D1 D'.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/md/pair (D1 x dx) (D2 x dx)) D
+	   (ofsg/md/pair D1' D2')
+	   <- subst/tm-ofsg D1 D D1'
+	   <- subst/tm-ofsg D2 D D2'.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/md/pj1 (D1 x dx)) D
+	   (ofsg/md/pj1 D1')
+	   <- subst/tm-ofsg D1 D D1'.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/md/pj2 (D1 x dx) 
+			   ((DF: {x} fst-md (M x) C) x))
+	   D
+	   (ofsg/md/pj2 D1' (DF E))
+	   <- subst/tm-ofsg D1 D D1'.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/md/lam (DM x dx) DW FS) D
+	   (ofsg/md/lam DM' DW FS)
+	   <- ({s}{ds}{a}{da:ofkd a K1}{df: fst-md s a}
+		 subst/tm-ofsg ([x][dx] DM x dx s ds a da df) D 
+		 (DM' s ds a da df)).
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/md/app (D1 x dx) (D2 x dx)
+			   ((DF: {x} fst-md (M x) C) x))
+	   D
+	   (ofsg/md/app D1' D2' (DF E))
+	   <- subst/tm-ofsg D1 D D1'
+	   <- subst/tm-ofsg D2 D D2'.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/md/let (D1 x dx) (D2 x dx) DS DF) D
+	   (ofsg/md/let D1' D2' DS DF)
+	   <- subst/tm-ofsg D1 D D1'
+	   <- ({s}{ds}{a}{da:ofkd a K1}{df: fst-md s a}
+		 subst/tm-ofsg ([x][dx] D2 x dx s ds a da df) D 
+		 (D2' s ds a da df)).
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/md/seal (D1 x dx)) D
+	   (ofsg/md/seal D1')
+	   <- subst/tm-ofsg D1 D D1'.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/sgm-ext (D1 x dx) (D2 x dx)) D
+	   (ofsg/sgm-ext D1' D2')
+	   <- subst/tm-ofsg D1 D D1'
+	   <- subst/tm-ofsg D2 D D2'.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/kd-ext (D1 x dx)
+			   ((DF: {x} fst-md (M x) C) x) DC) D
+	   (ofsg/kd-ext D1' (DF E) DC)
+	   <- subst/tm-ofsg D1 D D1'.
+
+-	: subst/tm-ofsg ([x] [dx] ofsg/sub (D1 x dx) DS DP) D
+	   (ofsg/sub D1' DS DP)
+	   <- subst/tm-ofsg D1 D D1'.
+
+%worlds (oftp-block | ofkd-block | ofsg-block) 
+(subst/tm-oftp _ _ _)
+(subst/tm-ofsg _ _ _).
+%total (D1 D2) 
+(subst/tm-oftp D1 _ _)
+(subst/tm-ofsg D2 _ _).

@@ -1,0 +1,49 @@
+Regression test suite
+Robert J. Simmons, June 2009
+
+The current incarnation of the regression test suite is aimed at being run
+with MLton (with a higher cost of compliation, but a drastically reduced
+time for running the examples, which seems to make it worth it). The regression
+suite is designed to be run on the plparty.org web server, where the results
+from a nightly test can be observed at
+
+http://twelf.plparty.org/builds
+
+However, for most public code examples (and an archived and occasionally 
+updated version of all Literate Twelf files on the wiki), the regression suite 
+can be run locally.
+
+Various other old regression tests are floating around this directory; these
+should eventually be incorporated into an automatic process...
+
+== Method 1: Fully automatic run ==
+
+The following works in any system with MLton:
+twelf$ make check
+
+The following only works on Linux, and supports the nightly build process:
+twelf$ cd TEST
+twelf/TEST$ ./regression.sh
+
+== Method 2: Build regression executable (MLton) == 
+
+twelf$ cd TEST
+twelf/TEST$ mlton mlton-regression.cm
+twelf/TEST$ ./mlton-regression regression.txt
+twelf/TEST$ ./mlton-regression regression-public.txt
+twelf/TEST$ ./mlton-regression regression-crary.txt
+twelf/TEST$ ./mlton-regression regression-wiki.txt
+
+== Method 3: Run regression within SMLNJ == 
+
+twelf$ cd TEST
+twelf/TEST$ sml
+Standard ML of New Jersey...
+- CM.make "../sources.cm";
+- use "regression.sml";
+- RegressionTest.process "regression.txt";
+- RegressionTest.process "regression-public.txt";
+- RegressionTest.process "regression-crary.txt";
+- RegressionTest.process "regression-wiki.txt";
+- RegressionTest.test "../examples/guide/sources.cfg";
+- RegressionTest.testUnsafe "../examples/lp/test.cfg";

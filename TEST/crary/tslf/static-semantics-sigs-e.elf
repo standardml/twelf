@@ -1,0 +1,87 @@
+%%%%% Static Semantics for sigs %%%%%%
+
+
+esg-wf		: cxt -> sg -> type.
+%mode esg-wf *G *S.
+
+esg-deq		: cxt -> sg -> sg -> type.
+%mode esg-deq *G *S1 *S2.
+
+esg-sub		: cxt -> sg -> sg -> type.
+%mode esg-sub *G *S1 *S2.
+
+
+
+esg-wf/sg/unit	: esg-wf G sg/unit
+		   <- cxt-ordered G.
+
+esg-wf/sg/kd	: esg-wf G (sg/kd K)
+		   <- ekd-wf G K.
+
+esg-wf/sg/cn	: esg-wf G (sg/cn C)
+		   <- eofkd G C kd/type.
+
+esg-wf/sg/sgm	: esg-wf G (sg/sgm S1 S2)
+		   <- fst-sg S1 K1
+		   <- ({a:cn} isvar a I ->
+			 esg-wf (cxt/cons G a K1) (S2 a))
+		   <- esg-wf G S1.
+
+esg-wf/sg/pi	: esg-wf G (sg/pi S1 S2)
+		   <- fst-sg S1 K1
+		   <- ({a:cn} isvar a I ->
+			 esg-wf (cxt/cons G a K1) (S2 a))
+		   <- esg-wf G S1.
+
+
+
+esg-deq/sg/unit	: esg-deq G sg/unit sg/unit
+		   <- cxt-ordered G.
+
+esg-deq/sg/kd	: esg-deq G (sg/kd K1) (sg/kd K2)
+		   <- ekd-deq G K1 K2.
+
+esg-deq/sg/cn	: esg-deq G (sg/cn C1) (sg/cn C2)
+		   <- ecn-deq G C1 C2 kd/type.
+
+esg-deq/sg/sgm	: esg-deq G (sg/sgm S1 S2) (sg/sgm S3 S4)
+		   <- fst-sg S1 K1
+		   <- ({a:cn} isvar a I ->
+			 esg-deq (cxt/cons G a K1) (S2 a) (S4 a))
+		   <- esg-deq G S1 S3.
+
+esg-deq/sg/pi	: esg-deq G (sg/pi S1 S2) (sg/pi S3 S4)
+		   <- fst-sg S3 K3
+		   <- ({a:cn} isvar a I -> 
+			 esg-deq (cxt/cons G a K3) (S2 a) (S4 a))
+		   <- esg-deq G S3 S1.
+
+
+
+
+%{
+
+esg-sub/sg/unit	: esg-sub G sg/unit sg/unit
+		   <- cxt-ordered G.
+
+esg-sub/sg/kd	: esg-sub G (sg/kd K1) (sg/kd K2)
+		   <- ekd-sub G K1 K2.
+
+esg-sub/sg/cn	: esg-sub G (sg/cn C1) (sg/cn C2)
+		   <- ecn-deq G C1 C2 kd/type.
+
+esg-sub/sg/sgm	: esg-sub G (sg/sgm S1 S2) (sg/sgm S3 S4)
+		   <- fst-sg S3 K3
+		   <- fst-sg S1 K1
+		   <- ({a:cn} isvar a I ->
+			 esg-wf (cxt/cons G a K3) (S4 a))
+		   <- ({a:cn} isvar a I ->
+			 esg-sub (cxt/cons G a K1) (S2 a) (S4 a))
+		   <- esg-sub G S1 S3.
+
+esg-sub/sg/pi	: esg-sub G (sg/pi S1 S2) (sg/pi S3 S4)
+		   <- fst-sg S3 K3
+		   <- ({a:cn} isvar a I ->
+			 esg-deq (cxt/cons G a K3) (S2 a) (S4 a))
+		   <- esg-deq G S3 S1.
+}%

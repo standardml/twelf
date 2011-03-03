@@ -1,0 +1,227 @@
+
+%%%%%  Syntactic Classes  %%%%%
+
+longid		: type.  %name longid I.
+ty		: type.  %name ty Te.
+expr		: type.  %name expr Ee.
+dec		: type.  %name dec De.
+match		: type.  %name match Me.
+pat		: type.  %name pat Pe.
+strexp		: type.  %name strexp Re.
+spec		: type.  %name spec SPe.
+sigexp		: type.  %name sigexp Se.
+
+
+
+
+%%%%%  Long Identifiers  %%%%%
+
+longid/short	: identifier -> longid.
+longid/cons	: identifier -> longid -> longid.
+
+
+
+
+%%%%%  Types  %%%%
+
+%{
+A ty row consists of a finite sequence of label/type pairs.
+}%
+
+ty-row		: type.  %name ty-row TRe.
+ty-row/nil	: ty-row.
+ty-row/cons	: label -> ty -> ty-row -> ty-row.
+
+%{
+A ty list consists of a finite sequence of types.
+}%
+
+ty-list		: type.  %name ty-list TLe.
+ty-list/nil	: ty-list.
+ty-list/cons	: ty -> ty-list -> ty-list.
+
+ty/exn		: ty.
+ty/longid	: longid -> ty.
+ty/record	: ty-row -> ty.
+ty/longid-app	: longid -> ty-list -> ty.
+ty/arrow	: ty -> ty -> ty.
+
+
+
+
+%%%%%  Expressions  %%%%%
+
+%{
+An expression row consists of a finite sequence of label/expression pairs.
+}%
+expr-row	: type.  %name expr-row ERe.
+expr-row/nil	: expr-row.
+expr-row/cons	: label -> expr -> expr-row -> expr-row.
+
+expr/longid	: longid -> expr.	  % identifier as value
+expr/record	: expr-row -> expr.	  % record expression
+expr/let	: dec -> expr -> expr.    % let binding
+expr/app	: expr -> expr -> expr.   % application
+expr/constraint	: expr -> ty -> expr.	  % type constraint
+expr/handle	: expr -> match -> expr.  % handle an exception
+expr/raise	: expr -> expr.	          % raise an exception
+expr/fn		: match -> expr.	  % lambda abstraction
+
+
+
+
+%%%%%  Matches  %%%%%
+
+match/nil	: match.
+match/cons	: pat -> expr -> match -> match.
+
+
+
+
+%%%%%  Patterns  %%%%%
+
+%{
+An pattern row consists of a finite sequence of label/pattern pairs
+ending in nil or "...".
+}%
+pat-row	: type.  %name pat-row PRe.
+pat-row/nil	: pat-row.		% empty
+pat-row/flex	: pat-row.		% "..."
+pat-row/cons	: label -> pat -> pat-row -> pat-row. % cons
+
+
+pat/longid	: longid -> pat.	% long identifier
+pat/wild	: pat.			% wild card
+pat/constraint	: pat -> ty -> pat.	% type constraint
+pat/app		: longid -> pat -> pat.	% constructor and argument
+pat/record	: pat-row -> pat.	% record
+pat/as		: pat -> pat -> pat.	% conjunction
+
+
+
+
+%%%%%  Decs  %%%%%
+
+tyvar-list : type.  %name tyvar-list TVLe.
+
+tyvar-list/nil	: tyvar-list.
+tyvar-list/cons	: identifier -> tyvar-list -> tyvar-list.
+
+
+ty-option : type.  %name ty-option TOe.
+
+ty-option/none	: ty-option.
+ty-option/some	: ty -> ty-option.
+
+
+pat-seq : nat -> type.  %name pat-seq PSe.
+
+pat-seq/nil	: pat-seq 0.
+pat-seq/cons	: pat -> pat-seq N -> pat-seq (s N).
+
+
+funarms : nat -> type.  %name funarms FAe.
+
+funarms/nil	: funarms N.
+funarms/cons	: pat-seq N
+		   -> expr
+		   -> funarms N
+		   -> funarms N.
+
+
+funbind : type.  %name funbind FBe.
+
+funbind/nil	: funbind.
+funbind/cons	: funbind
+		   -> identifier
+		   -> funarms (s N)
+		   -> ty-option
+		   -> funbind.
+
+
+dconbind : type.  %name dconbind CBe.
+
+dconbind/nil	: dconbind.
+dconbind/nullary	
+		: identifier -> dconbind -> dconbind.
+dconbind/unary	: identifier -> ty -> dconbind -> dconbind.
+
+
+datbind : type.  %name datbind DBe.
+
+datbind/nil	: datbind.
+datbind/data	: tyvar-list -> identifier -> dconbind -> datbind -> datbind.
+datbind/with	: tyvar-list -> identifier -> ty -> datbind -> datbind.
+
+
+dec/null	: dec.
+dec/val		: tyvar-list -> pat -> expr -> dec.
+dec/fun		: tyvar-list -> funbind -> dec.
+dec/open	: longid -> dec.
+dec/exn0	: identifier -> dec.
+dec/exn1	: identifier -> ty -> dec.
+dec/exncopy	: identifier -> longid -> dec.
+dec/type	: tyvar-list -> identifier -> ty -> dec.
+dec/datatype	: datbind -> dec.
+dec/dtcopy	: identifier -> longid -> dec.
+dec/structure	: identifier -> strexp -> dec.
+dec/functor	: identifier -> identifier -> sigexp -> strexp -> dec.
+dec/functor-anon
+		: identifier -> spec -> strexp -> dec.
+dec/signature	: identifier -> sigexp -> dec.
+dec/local	: dec -> dec -> dec.
+dec/seq		: dec -> dec -> dec.
+dec/par		: dec -> dec -> dec.
+
+
+
+
+%%%%%  Structures  %%%%%
+
+strexp/longid	: longid -> strexp.
+strexp/struct	: dec -> strexp.
+strexp/app	: longid -> strexp -> strexp.
+strexp/ascribe	: strexp -> sigexp -> strexp.
+strexp/seal	: strexp -> sigexp -> strexp.
+strexp/let	: dec -> strexp -> strexp.
+
+
+
+
+%%%%%  Specifications  %%%%%
+
+longid-list	: type.  %name longid-list IL.
+longid-list/nil	: longid-list.
+longid-list/cons
+		: longid -> longid-list -> longid-list.
+
+spec/null	: spec.
+spec/val	: tyvar-list -> identifier -> ty -> spec.
+spec/type	: tyvar-list -> identifier -> ty-option -> spec.
+spec/exn0	: identifier -> spec.
+spec/exn1	: identifier -> ty -> spec.
+spec/datatype	: datbind -> spec.
+spec/dtcopy	: identifier -> longid -> spec.
+spec/structure	: identifier -> sigexp -> spec.
+spec/functor	: identifier -> identifier -> sigexp -> sigexp -> spec.
+spec/functor-anon
+		: identifier -> spec -> sigexp -> spec.
+spec/include	: sigexp -> spec.
+spec/signature	: identifier -> sigexp -> spec.
+spec/seq	: spec -> spec -> spec.
+spec/sharing-type
+		: spec -> longid-list -> spec.
+spec/sharing-structure
+		: spec -> longid-list -> spec.
+
+
+
+
+%%%%%  Signatures  %%%%%
+
+sigexp/longid	: longid -> sigexp.
+sigexp/sig	: spec -> sigexp.
+sigexp/where-type
+		: sigexp -> tyvar-list -> longid -> ty -> sigexp.
+sigexp/where-structure
+		: sigexp -> longid -> longid -> sigexp.

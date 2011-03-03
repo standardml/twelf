@@ -1,0 +1,1118 @@
+
+%%%%%  Kind Lemmas  %%%%%
+
+single-resp : kind-eq K K' -> ({a} kind-eq (Ks a) (Ks' a)) -> single K Ks -> single K' Ks' -> type.
+%mode single-resp +X1 +X2 +X3 -X4.
+
+-	: single-resp _ _ D D.
+
+%worlds (conblock) (single-resp _ _ _ _).
+%total {} (single-resp _ _ _ _).
+
+
+
+can-single : {K} single K Ks -> type.
+%mode can-single +X1 -X2.
+
+-	: can-single _ single/t.
+
+-	: can-single _ single/sing.
+
+-	: can-single _ single/one.
+
+-	: can-single _ (single/pi D)
+	   <- ({a} can-single _ (D a)).
+
+-	: can-single (sigma K1 K2) (single/sigma D2 D1)
+	   <- can-single K1 D1
+	   <- ({a}
+		 can-single (K2 a) (D2 a)).
+
+%worlds (conblock) (can-single _ _).
+%total K (can-single K _).
+
+
+
+single-fun : single K Ks -> single K Ks' -> ({a} kind-eq (Ks a) (Ks' a)) -> type.
+%mode single-fun +X1 +X2 -X3.
+
+-	: single-fun single/t single/t ([_] kind-eq/i).
+
+-	: single-fun single/sing single/sing ([_] kind-eq/i).
+
+-	: single-fun (single/pi Dsing) (single/pi Dsing') Deq'
+	   <- ({a}
+		 single-fun (Dsing a) (Dsing' a) ([b] Deq a b))
+	   <- ({b} pi-resp kind-eq/i ([a] Deq a (app b a)) (Deq' b)).
+
+-	: single-fun (single/sigma Dsing2 Dsing1) (single/sigma Dsing2' Dsing1') Deq
+	   <- single-fun Dsing1 Dsing1' Deq1
+	   <- ({a}
+		 single-fun (Dsing2 a) (Dsing2' a) ([b] Deq2 a b))
+	   <- ({b}
+		 sigma-resp (Deq1 (pi1 b)) ([_] Deq2 (pi1 b) (pi2 b)) (Deq b)).
+
+-	: single-fun single/one single/one ([_] kind-eq/i).
+
+%worlds (conblock) (single-fun _ _ _).
+%total D (single-fun D _ _).
+
+
+
+single-omnibus : single K Ks
+		  -> kd-wf K
+%%
+		  -> ({a} cn-of a K -> kd-sub (Ks a) K)
+		  -> ({a} cn-of a K -> {b} cn-of b (Ks a) -> cn-equiv a b (Ks a))
+		  -> type.
+%mode single-omnibus +X1 +X2 -X3 -X4.
+
+-	: single-omnibus single/t kd-wf/t
+	   ([a] [d] kd-sub/sing-t d)
+	   ([a] [d] [b] [e] cn-equiv/sing (cn-equiv/symm (cn-equiv/singelim e))).
+
+-	: single-omnibus single/sing (kd-wf/sing (Dof : cn-of C t))
+	   ([a] [d] kd-sub/sing (cn-equiv/singelim d))
+	   ([a] [d] [b] [e] cn-equiv/sing (cn-equiv/symm (cn-equiv/singelim e))).
+
+-	: single-omnibus
+	   (single/pi
+	      (Dsing : {a} single (K2 a) ([b] K2s a b)))
+	   (kd-wf/pi
+	      (DwfK2 : {a} cn-of a K1 -> kd-wf (K2 a))
+	      (DwfK1 : kd-wf K1))
+	   %%
+	   ([b] [db:cn-of b (pi K1 K2)]
+	      kd-sub/pi
+	      ([a] [da:cn-of a K1] DwfK2s a da (app b a) (cn-of/app da db))
+	      ([a] [da:cn-of a K1] Dsub a da (app b a) (cn-of/app da db))
+	      (kd-sub/reflid DwfK1))
+	   ([b] [db:cn-of b (pi K1 K2)] [c] [dc:cn-of c (pi K1 ([a] K2s a (app b a)))]
+	      cn-equiv/extpi
+	      ([a] [da:cn-of a K1]
+		 Dequiv a da (app b a) (cn-of/app da db) (app c a) (cn-of/app da dc))
+	      dc
+	      db)
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> single-omnibus (Dsing a) (DwfK2 a da)
+		    (Dsub a da : {b} cn-of b (K2 a) -> kd-sub (K2s a b) (K2 a))
+		    (Dequiv a da : {b} cn-of b (K2 a) -> {c} cn-of c (K2s a b) -> cn-equiv b c (K2s a b)))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> {b} {db:cn-of b (K2 a)} {dbs}
+		    mcn-assm db dbs
+		 -> cn-of-reg db (DwfK2 a da)
+		 -> kd-sub-reg (Dsub a da b db)
+		    (DwfK2s a da b db : kd-wf (K2s a b)) (DDD a da b db)).
+
+-	: single-omnibus
+	   (single/sigma
+	      (Dsing2 : {a} single (K2 a) ([b] K2s a b))
+	      (Dsing1 : single K1 ([b] K1s b)))
+	   (kd-wf/sigma
+	      (DwfK2 : {a} cn-of a K1 -> kd-wf (K2 a))
+	      (DwfK1 : kd-wf K1))
+	   %%
+	   ([b] [db:cn-of b (sigma K1 K2)]
+	      kd-sub/sigma
+	      DwfK2
+	      ([a] [da:cn-of a (K1s (pi1 b))]
+		 kd-sub/trans
+		 (kd-sub/refl
+		    (Dequiv (pi1 b) (cn-of/pi1 db) a da))
+		 (Dsub2 (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db)))
+	      (Dsub1 (pi1 b) (cn-of/pi1 db)))
+	   ([b] [db:cn-of b (sigma K1 K2)] [c] [dc:cn-of c (sigma (K1s (pi1 b)) ([_] K2s (pi1 b) (pi2 b)))]
+	      cn-equiv/extsigma
+	      ([_] [_] DwfK2s (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db))
+	      (Dequiv2 (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db) (pi2 c) (cn-of/pi2 dc))
+	      (Dequiv1 (pi1 b) (cn-of/pi1 db) (pi1 c) (cn-of/pi1 dc)))
+	   <- single-omnibus Dsing1 DwfK1
+	      (Dsub1 : {b} cn-of b K1 -> kd-sub (K1s b) K1)
+	      (Dequiv1 : {b} cn-of b K1 -> {c} cn-of c (K1s b) -> cn-equiv b c (K1s b))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> single-omnibus (Dsing2 a) (DwfK2 a da)
+		    (Dsub2 a da : {b} cn-of b (K2 a) -> kd-sub (K2s a b) (K2 a))
+		    (Dequiv2 a da : {b} cn-of b (K2 a) -> {c} cn-of c (K2s a b) -> cn-equiv b c (K2s a b)))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> kd-sub-reg (Dsub1 a da)
+		    (DwfK1s a da : kd-wf (K1s a)) (DDD a da))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> {b} {db:cn-of b (K1s a)} {dbs}
+		 mcn-assm db dbs
+		 -> cn-of-reg db (DwfK1s a da)
+		 -> functionality-kd DwfK2 
+		    (cn-equiv/subsume 
+		       (Dsub1 a da)
+		       (Dequiv1 a da b db)
+		       : cn-equiv a b K1)
+		    (Dequiv a da b db : kd-equiv (K2 a) (K2 b)))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> {b} {db:cn-of b (K2 a)} {dbs}
+		    mcn-assm db dbs
+		 -> cn-of-reg db (DwfK2 a da)
+		 -> kd-sub-reg (Dsub2 a da b db)
+		    (DwfK2s a da b db : kd-wf (K2s a b)) (DDDD a da b db)).
+
+-	: single-omnibus single/one kd-wf/one
+	   ([a] [d] kd-sub/one)
+	   ([a] [d] [b] [e] cn-equiv/one e d).
+
+%worlds (conbind-reg) (single-omnibus _ _ _ _).
+%total D (single-omnibus D _ _ _).
+
+
+
+single-subsume : single K Ks
+		  -> kd-wf K
+%%
+		  -> ({a} cn-of a K -> kd-sub (Ks a) K)
+		  -> type.
+%mode single-subsume +X1 +X2 -X3.
+
+-	: single-subsume Dsing Dwf Dsub
+	   <- single-omnibus Dsing Dwf Dsub _.
+
+%worlds (conbind-reg) (single-subsume _ _ _).
+%total {} (single-subsume _ _ _).
+
+
+
+single-formation : single K Ks
+		    -> kd-wf K
+%%
+		    -> ({a} cn-of a K -> kd-wf (Ks a))
+		    -> type.
+%mode single-formation +X1 +X2 -X3.
+
+-	: single-formation 
+	   (Dsing : single K Ks)
+	   (Dwf : kd-wf K)
+	   Dwf'
+	   <- single-subsume Dsing Dwf Dsub
+	   <- ({a} {d:cn-of a K} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d Dwf
+		 -> kd-sub-reg (Dsub a d)
+		    (Dwf' a d : kd-wf (Ks a)) (DDD a d)).
+
+%worlds (conbind-reg) (single-formation _ _ _).
+%total {} (single-formation _ _ _).
+
+
+
+single-intro : single K Ks
+		-> kd-wf K
+%%
+		-> ({a} cn-of a K -> cn-of a (Ks a))
+		-> type.
+%mode single-intro +X1 +X2 -X3.
+
+-	: single-intro
+	   (Dsing : single K Ks)
+	   (Dwf : kd-wf K)
+	   %%
+	   Dof
+	   <- single-omnibus Dsing Dwf
+	      _
+	      (Dequiv : {a} cn-of a K -> {b} cn-of b (Ks a) -> cn-equiv a b (Ks a))
+	   <- single-formation Dsing Dwf
+	      (Dwf' : {a} cn-of a K -> kd-wf (Ks a))
+	   <- ({a} {d:cn-of a K}
+		 inhabitation (Dwf' a d)
+		 (DofInh a d : cn-of (Cinh a) (Ks a)))
+	   <- ({a} {d:cn-of a K} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d Dwf
+		 -> cn-equiv-reg (Dequiv a d (Cinh a) (DofInh a d))
+		    (Dof a d : cn-of a (Ks a))
+		    (DDD1 a d)
+		    (DDD2 a d)).
+
+%worlds (conbind-reg) (single-intro _ _ _).
+%total {} (single-intro _ _ _).
+
+
+
+single-equiv-intro : single K Ks
+		      -> cn-equiv C1 C2 K
+%%
+		      -> cn-of C2 (Ks C1)
+		      -> type.
+%mode single-equiv-intro +X1 +X2 -X3.
+
+-	: single-equiv-intro
+	   (Dsing : single K Ks)
+	   (Dequiv : cn-equiv C1 C2 K)
+	   %%
+	   (cn-of/equiv
+	      Dequiv'
+	      (DofKs C2 DofC2))
+	   <- cn-equiv-reg Dequiv
+	      _
+	      (DofC2 : cn-of C2 K)
+	      (DwfK : kd-wf K)
+	   <- single-formation Dsing DwfK
+	      (DwfKs : {a} cn-of a K -> kd-wf (Ks a))
+	   <- functionality-kd DwfKs (cn-equiv/symm Dequiv)
+	      (Dequiv' : kd-equiv (Ks C2) (Ks C1))	      
+	   <- single-intro Dsing DwfK
+	      (DofKs : {a} cn-of a K -> cn-of a (Ks a)).
+
+%worlds (conbind-reg) (single-equiv-intro _ _ _).
+%total {} (single-equiv-intro _ _ _).
+
+
+
+single-equiv-intro-equiv : single K Ks
+			    -> cn-equiv C1 C2 K
+%%
+			    -> cn-equiv C1 C2 (Ks C1)
+			    -> type.
+%mode single-equiv-intro-equiv +X1 +X2 -X3.
+
+-	: single-equiv-intro-equiv
+	   (Dsing : single K Ks)
+	   (Dequiv : cn-equiv C1 C2 K)
+	   %%
+	   (Dequiv' C1 DofC1 C2 DofC2)
+	   <- cn-equiv-reg Dequiv
+	      (DofC1 : cn-of C1 K)
+	      _
+	      (DwfK : kd-wf K)
+	   <- single-equiv-intro Dsing Dequiv
+	      (DofC2 : cn-of C2 (Ks C1))
+	   <- single-omnibus Dsing DwfK
+	      _
+	      (Dequiv' : {a} cn-of a K -> {b} cn-of b (Ks a) -> cn-equiv a b (Ks a)).
+
+%worlds (conbind-reg) (single-equiv-intro-equiv _ _ _).
+%total {} (single-equiv-intro-equiv _ _ _).
+
+
+
+single-elim : single K Ks
+	       -> kd-wf K
+%%
+	       -> ({a} cn-of a K -> {b} cn-of b (Ks a) -> cn-equiv a b K)
+	       -> type.
+%mode single-elim +X1 +X2 -X3.
+
+-	: single-elim
+	   (Dsing : single K Ks)
+	   (DwfK : kd-wf K)
+	   %%
+	   ([a] [da] [b] [db] cn-equiv/subsume (Dsub a da) (Dequiv a da b db))
+	   <- single-omnibus Dsing DwfK
+	      (Dsub : {a} cn-of a K -> kd-sub (Ks a) K)
+	      (Dequiv : {a} cn-of a K -> {b} cn-of b (Ks a) -> cn-equiv a b (Ks a)).
+
+%worlds (conbind-reg) (single-elim _ _ _).
+%total {} (single-elim _ _ _).
+
+
+
+single-equiv : single K Ks
+		-> single K' Ks'
+		-> kd-equiv K K'
+%%
+		-> ({a} cn-of a K -> kd-equiv (Ks a) (Ks' a))
+		-> type.
+%mode single-equiv +X1 +X2 +X3 -X4.
+
+-	: single-equiv Dsing Dsing' (kd-equiv/refl Dwf)
+	   Dequiv
+	   <- single-formation Dsing Dwf Dwf'
+	   <- single-fun Dsing Dsing' Deq
+	   <- ({a} {d}
+		 kd-equiv-resp kind-eq/i (Deq a) (kd-equiv/refl (Dwf' a d))
+		 (Dequiv a d)).
+
+-	: single-equiv Dsing Dsing' (kd-equiv/symm Dequiv)
+	   ([a] [d] kd-equiv/symm (Dequiv' a (cn-of/equiv (kd-equiv/symm Dequiv) d)))
+	   <- single-equiv Dsing' Dsing Dequiv Dequiv'.
+
+-	: single-equiv Dsing1 Dsing3 (kd-equiv/trans Dequiv23 Dequiv12)
+	   ([a] [d] kd-equiv/trans (Dequiv23' a (cn-of/equiv Dequiv12 d)) (Dequiv12' a d))
+	   <- can-single _ Dsing2
+	   <- single-equiv Dsing1 Dsing2 Dequiv12 Dequiv12'
+	   <- single-equiv Dsing2 Dsing3 Dequiv23 Dequiv23'.
+
+-	: single-equiv single/sing single/sing (kd-equiv/sing Dequiv)
+	   ([a] [d] kd-equiv/refl (kd-wf/sing (cn-of/subsume (kd-sub/sing-t Dof) d)))
+	   <- cn-equiv-reg Dequiv Dof _ _.
+
+-	: single-equiv
+	   (single/pi
+	      (Dsing : {a} single (K2 a) ([b] K2s a b)))
+	   (single/pi
+	      (Dsing' : {a} single (K2' a) ([b] K2s' a b)))
+	   (kd-equiv/pi
+	      (Dequiv2 : {a} cn-of a K1 -> kd-equiv (K2 a) (K2' a))
+	      (Dequiv1 : kd-equiv K1 K1'))
+	   %%
+	   ([b] [db:cn-of b (pi K1 K2)] 
+	      kd-equiv/pi
+	      ([a] [da:cn-of a K1] Dequiv2' a da (app b a) (cn-of/app da db))
+	      Dequiv1)
+	   <- kd-equiv-reg Dequiv1
+	      (DwfK1 : kd-wf K1) _
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-equiv (Dsing a) (Dsing' a) (Dequiv2 a d)
+		    (Dequiv2' a d : {b} cn-of b (K2 a) -> kd-equiv (K2s a b) (K2s' a b))).
+
+-	: single-equiv
+	   (single/sigma
+	      (Dsing2 : {a} single (K2 a) ([b] K2s a b))
+	      (Dsing1 : single K1 K1s))
+	   (single/sigma
+	      (Dsing2' : {a} single (K2' a) ([b] K2s' a b))
+	      (Dsing1' : single K1' K1s'))
+	   (kd-equiv/sigma
+	      (Dequiv2 : {a} cn-of a K1 -> kd-equiv (K2 a) (K2' a))
+	      (Dequiv1 : kd-equiv K1 K1'))
+	   %%
+	   ([b] [db:cn-of b (sigma K1 K2)]
+	      kd-equiv/sigma
+	      ([_] [_] Dequiv2' (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db))
+	      (Dequiv1' (pi1 b) (cn-of/pi1 db)))
+	   <- single-equiv Dsing1 Dsing1' Dequiv1
+	      (Dequiv1' : {b} cn-of b K1 -> kd-equiv (K1s b) (K1s' b))
+	   <- kd-equiv-reg Dequiv1
+	      (DwfK1 : kd-wf K1) _
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-equiv (Dsing2 a) (Dsing2' a) (Dequiv2 a d)
+		    (Dequiv2' a d : {b} cn-of b (K2 a) -> kd-equiv (K2s a b) (K2s' a b))).
+
+%worlds (conbind-reg) (single-equiv _ _ _ _).
+%total D (single-equiv _ _ D _).
+
+
+
+single-sub : single K Ks
+	      -> single K' Ks'
+	      -> kd-sub K K'
+%%
+	      -> ({a} cn-of a K -> kd-sub (Ks a) (Ks' a))
+	      -> type.
+%mode single-sub +X1 +X2 +X3 -X4.
+
+-	: single-sub Dsing Dsing' (kd-sub/refl Dequiv)
+	   ([a] [d] kd-sub/refl (Dequiv' a d))
+	   <- single-equiv Dsing Dsing' Dequiv Dequiv'.
+
+-	: single-sub Dsing1 Dsing3 (kd-sub/trans Dsub23 Dsub12)
+	   ([a] [d] kd-sub/trans (Dsub23' a (cn-of/subsume Dsub12 d)) (Dsub12' a d))
+	   <- can-single _ Dsing2
+	   <- single-sub Dsing1 Dsing2 Dsub12 Dsub12'
+	   <- single-sub Dsing2 Dsing3 Dsub23 Dsub23'.
+
+-	: single-sub single/sing single/t (kd-sub/sing-t (Dof : cn-of C t))
+	   ([a] [d] kd-sub/reflid (kd-wf/sing (cn-of/subsume (kd-sub/sing-t Dof) d))).
+
+-	: single-sub
+	   (single/pi
+	      (Dsing : {a} single (K2 a) ([b] K2s a b)))
+	   (single/pi
+	      (Dsing' : {a} single (K2' a) ([b] K2s' a b)))
+	   (kd-sub/pi
+	      (Dwf2 : {a} cn-of a K1 -> kd-wf (K2 a))
+	      (Dsub2 : {a} cn-of a K1' -> kd-sub (K2 a) (K2' a))
+	      (Dsub1 : kd-sub K1' K1))
+	   %%
+	   ([b] [db:cn-of b (pi K1 K2)]
+	      kd-sub/pi
+	      ([a] [da:cn-of a K1] DwfK2s a da (app b a) (cn-of/app da db))
+	      ([a] [da:cn-of a K1'] Dsub2' a da (app b a) (cn-of/app (cn-of/subsume Dsub1 da) db))
+	      Dsub1)
+	   <- kd-sub-reg Dsub1
+	      (DwfK1' : kd-wf K1') (DwfK1 : kd-wf K1) 
+	   <- ({a} {d:cn-of a K1'} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1'
+		 -> single-sub (Dsing a) (Dsing' a) (Dsub2 a d)
+		    (Dsub2' a d : {b} cn-of b (K2 a) -> kd-sub (K2s a b) (K2s' a b)))
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-formation (Dsing a) (Dwf2 a d)
+		    (DwfK2s a d : {b} cn-of b (K2 a) -> kd-wf (K2s a b))).
+
+-	: single-sub
+	   (single/sigma
+	      (Dsing2 : {a} single (K2 a) ([b] K2s a b))
+	      (Dsing1 : single K1 K1s))
+	   (single/sigma
+	      (Dsing2' : {a} single (K2' a) ([b] K2s' a b))
+	      (Dsing1' : single K1' K1s'))
+	   (kd-sub/sigma
+	      (Dwf2 : {a} cn-of a K1' -> kd-wf (K2' a))
+	      (Dsub2 : {a} cn-of a K1 -> kd-sub (K2 a) (K2' a))
+	      (Dsub1 : kd-sub K1 K1'))
+	   %%
+	   ([b] [db:cn-of b (sigma K1 K2)]
+	      kd-sub/sigma
+	      ([_] [_] DwfK2s' (pi1 b) (cn-of/subsume Dsub1 (cn-of/pi1 db)) (pi2 b) (cn-of/pi2 (cn-of/subsume (kd-sub/sigma Dwf2 Dsub2 Dsub1) db)))
+	      ([_] [_] Dsub2' (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db))
+	      (Dsub1' (pi1 b) (cn-of/pi1 db)))
+	   <- single-sub Dsing1 Dsing1' Dsub1
+	      (Dsub1' : {b} cn-of b K1 -> kd-sub (K1s b) (K1s' b))
+	   <- kd-sub-reg Dsub1
+	      (DwfK1 : kd-wf K1) (DwfK1' : kd-wf K1')
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-sub (Dsing2 a) (Dsing2' a) (Dsub2 a d)
+		    (Dsub2' a d : {b} cn-of b (K2 a) -> kd-sub (K2s a b) (K2s' a b)))
+	   <- ({a} {d:cn-of a K1'} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1'
+		 -> single-formation (Dsing2' a) (Dwf2 a d)
+		    (DwfK2s' a d : {b} cn-of b (K2' a) -> kd-wf (K2s' a b))).
+
+%worlds (conbind-reg) (single-sub _ _ _ _).
+%total D (single-sub _ _ D _).
+
+
+
+
+%%%%%  Signature Lemmas  %%%%%
+
+single-sg-resp : sg-eq S S' -> ({a} sg-eq (Ss a) (Ss' a)) -> single-sg S Ss -> single-sg S' Ss' -> type.
+%mode single-sg-resp +X1 +X2 +X3 -X4.
+
+-	: single-sg-resp _ _ D D.
+
+%worlds (conblock) (single-sg-resp _ _ _ _).
+%total {} (single-sg-resp _ _ _ _).
+
+
+
+can-single-sg : {S} single-sg S Ss -> type.
+%mode can-single-sg +X1 -X2.
+
+-	: can-single-sg _ (single-sg/satom Dsing)
+	   <- can-single _ Dsing.
+
+-	: can-single-sg _ single-sg/datom.
+
+-	: can-single-sg _ single-sg/sgatom.
+
+-	: can-single-sg _ single-sg/pi.
+
+-	: can-single-sg (sg/sigma S1 S2) (single-sg/sigma D2 D1)
+	   <- can-single-sg S1 D1
+	   <- ({a}
+		 can-single-sg (S2 a) (D2 a)).
+
+-	: can-single-sg (sg/named L S) (single-sg/named D)
+	   <- can-single-sg S D.
+
+-	: can-single-sg _ single-sg/one.
+
+%worlds (conblock) (can-single-sg _ _).
+%total S (can-single-sg S _).
+
+
+
+single-sg-fun : single-sg S Ss -> single-sg S Ss' -> ({a} sg-eq (Ss a) (Ss' a)) -> type.
+%mode single-sg-fun +X1 +X2 -X3.
+
+-	: single-sg-fun _ _ ([_] sg-eq/i).
+
+-	: single-sg-fun (single-sg/satom Dsing) (single-sg/satom Dsing') Deq'
+	   <- single-fun Dsing Dsing' Deq
+	   <- ({a}
+		 sg-resp-kind sg/satom (Deq a) (Deq' a)).
+
+-	: single-sg-fun (single-sg/sigma Dsing2 Dsing1) (single-sg/sigma Dsing2' Dsing1') Deq
+	   <- single-sg-fun Dsing1 Dsing1' Deq1
+	   <- ({a}
+		 single-sg-fun (Dsing2 a) (Dsing2' a) ([b] Deq2 a b))
+	   <- ({b}
+		 sg/sigma-resp (Deq1 (pi1 b)) ([_] Deq2 (pi1 b) (pi2 b)) (Deq b)).
+
+-	: single-sg-fun (single-sg/named Dsing) (single-sg/named Dsing') Deq'
+	   <- single-sg-fun Dsing Dsing' Deq
+	   <- ({a}
+		 sg-resp-sg ([s] sg/named L s) (Deq a) (Deq' a)).
+
+%worlds (conblock) (single-sg-fun _ _ _).
+%total D (single-sg-fun D _ _).
+
+
+
+single-sg-fst : single-sg S Ss
+		 -> sg-fst S K
+%%
+		 -> single K Ks
+		 -> ({a} sg-fst (Ss a) (Ks a))
+		 -> type.
+%mode single-sg-fst +X1 +X2 -X3 -X4.
+
+-	: single-sg-fst (single-sg/satom Dsing) sg-fst/satom Dsing ([_] sg-fst/satom).
+
+-	: single-sg-fst single-sg/datom sg-fst/datom single/one ([_] sg-fst/datom).
+
+-	: single-sg-fst single-sg/sgatom sg-fst/sgatom single/one ([_] sg-fst/sgatom).
+
+-	: single-sg-fst single-sg/pi sg-fst/pi single/one ([_] sg-fst/pi).
+
+-	: single-sg-fst (single-sg/sigma Dsing2 Dsing1) (sg-fst/sigma Dfst2 Dfst1)
+	   (single/sigma Dsing2' Dsing1') 
+	   ([a] sg-fst/sigma ([_] Dfst2' (pi1 a) (pi2 a)) (Dfst1' (pi1 a)))
+	   <- single-sg-fst Dsing1 Dfst1 Dsing1' Dfst1'
+	   <- ({a}
+		 single-sg-fst (Dsing2 a) (Dfst2 a) (Dsing2' a) ([b] Dfst2' a b)).
+
+-	: single-sg-fst (single-sg/named Dsing) (sg-fst/named Dfst)
+	   Dsing' ([a] sg-fst/named (Dfst' a))
+	   <- single-sg-fst Dsing Dfst Dsing' Dfst'.
+
+-	: single-sg-fst single-sg/one sg-fst/one single/one ([_] sg-fst/one).
+
+%worlds (conblock) (single-sg-fst _ _ _ _).
+%total D (single-sg-fst D _ _ _).
+
+
+
+single-sg-fst' : single-sg S Ss
+		 -> sg-fst S K
+		 -> single K Ks
+%%
+		 -> ({a} sg-fst (Ss a) (Ks a))
+		 -> type.
+%mode single-sg-fst' +X1 +X2 +X3 -X4.
+
+-	: single-sg-fst' DsingS DfstS DsingK DfstSs'
+	   <- single-sg-fst DsingS DfstS DsingK' DfstSs
+	   <- single-fun DsingK' DsingK Deq
+	   <- ({a}
+		 sg-fst-resp sg-eq/i (Deq a) (DfstSs a) (DfstSs' a)).
+
+%worlds (conblock) (single-sg-fst' _ _ _ _).
+%total {} (single-sg-fst' _ _ _ _).
+
+
+
+single-sg-formation : single-sg S Ss
+		       -> sg-wf S
+		       -> sg-fst S K
+%%
+		       -> ({a} cn-of a K -> sg-wf (Ss a))
+		       -> type.
+%mode single-sg-formation +X1 +X2 +X3 -X4.
+
+-	: single-sg-formation _ Dwf _ ([_] [_] Dwf).
+
+-	: single-sg-formation (single-sg/satom Dsing) (sg-wf/satom Dwf) sg-fst/satom
+	   ([a] [d] sg-wf/satom (Dwf' a d))
+	   <- single-formation Dsing Dwf Dwf'.
+
+-	: single-sg-formation 
+	   (single-sg/sigma
+	      (Dsing2 : {a} single-sg (S2 a) ([b] S2s a b))
+	      (Dsing1 : single-sg S1 S1s))
+	   DwfSigma
+	   (sg-fst/sigma
+	      (DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	      (DfstS1 : sg-fst S1 K1))
+	   %%
+	   ([b] [d:cn-of b (sigma K1 K2)]
+	      sg-wf/sigma
+	      ([_] [_] DwfS2s (pi1 b) (cn-of/pi1 d) (pi2 b) (cn-of/pi2 d))
+	      (DfstS1s (pi1 b))
+	      (DwfS1s (pi1 b) (cn-of/pi1 d)))
+	   <- sg-wf-sigma-invert DwfSigma DfstS1
+	      (DwfS1 : sg-wf S1)
+	      (DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	   <- single-sg-formation Dsing1 DwfS1 DfstS1
+	      (DwfS1s : {b} cn-of b K1 -> sg-wf (S1s b))
+	   <- single-sg-fst Dsing1 DfstS1
+	      (Dsing1' : single K1 K1s)
+	      (DfstS1s : {b} sg-fst (S1s b) (K1s b))
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-sg-formation (Dsing2 a) (DwfS2 a d) (DfstS2 a)
+		    (DwfS2s a d : {b} cn-of b (K2 a) -> sg-wf (S2s a b))).
+
+-	: single-sg-formation
+	   (single-sg/named
+	      (Dsing : single-sg S Ss))
+	   (sg-wf/named
+	      (Dwf : sg-wf S))
+	   (sg-fst/named
+	      (DfstS : sg-fst S K))
+	   %%
+	   ([b] [d:cn-of b K] sg-wf/named (DwfSs b d))
+	   <- single-sg-formation Dsing Dwf DfstS
+	      (DwfSs : {a} cn-of a K -> sg-wf (Ss a)).
+
+%worlds (conbind-reg) (single-sg-formation _ _ _ _).
+%total D (single-sg-formation D _ _ _).
+
+
+
+single-sg-subsume : single-sg S Ss
+		     -> sg-wf S
+		     -> sg-fst S K
+%%
+		     -> ({a} cn-of a K -> sg-sub (Ss a) S)
+		     -> type.
+%mode single-sg-subsume +X1 +X2 +X3 -X4.
+
+-	: single-sg-subsume _ Dwf _ ([_] [_] sg-sub/reflid Dwf).
+
+-	: single-sg-subsume 
+	   (single-sg/satom Dsing)
+	   (sg-wf/satom Dwf)
+	   sg-fst/satom
+	   %%
+	   ([a] [d] sg-sub/satom (Dsub a d))
+	   <- single-subsume Dsing Dwf Dsub.
+
+-	: single-sg-subsume
+	   (single-sg/sigma
+	      (Dsing2 : {a} single-sg (S2 a) ([b] S2s a b))
+	      (Dsing1 : single-sg S1 S1s))
+	   DwfSigma
+	   (sg-fst/sigma
+	      (DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	      (DfstS1 : sg-fst S1 K1))
+	   %%
+	   ([b] [d:cn-of b (sigma K1 K2)]
+	      sg-sub/sigma
+	      DwfS2
+	      DfstS1
+	      ([c] [dc:cn-of c (K1s (pi1 b))]
+		 sg-sub/trans 
+		 (sg-sub/refl
+		    (Dequiv' (pi1 b) (cn-of/pi1 d) c dc))
+		 (Dsub2 (pi1 b) (cn-of/pi1 d) (pi2 b) (cn-of/pi2 d)))
+	      (DfstS1s (pi1 b))
+	      (Dsub1 (pi1 b) (cn-of/pi1 d)))
+	   <- sg-wf-sigma-invert DwfSigma DfstS1
+	      (DwfS1 : sg-wf S1)
+	      (DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	   <- single-sg-subsume Dsing1 DwfS1 DfstS1
+	      (Dsub1 : {b} cn-of b K1 -> sg-sub (S1s b) S1)
+	   <- single-sg-fst Dsing1 DfstS1
+	      (DsingK1 : single K1 K1s)
+	      (DfstS1s : {a} sg-fst (S1s a) (K1s a))
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-sg-subsume (Dsing2 a) (DwfS2 a d) (DfstS2 a)
+		    (Dsub2 a d : {b} cn-of b (K2 a) -> sg-sub (S2s a b) (S2 a)))
+	   <- single-elim DsingK1 DwfK1
+	      (Dequiv : {a} cn-of a K1 -> {b} cn-of b (K1s a) -> cn-equiv a b K1)
+	   <- single-formation DsingK1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> {b} {db:cn-of b (K1s a)} {dbs}
+		    mcn-assm db dbs
+		 -> cn-of-reg db (DwfK1s a da)
+		 -> functionality-sg DwfS2 (Dequiv a da b db)
+		    (Dequiv' a da b db : sg-equiv (S2 a) (S2 b))).
+
+-	: single-sg-subsume
+	   (single-sg/named
+	      (Dsing : single-sg S Ss))
+	   (sg-wf/named
+	      (DwfS : sg-wf S))
+	   (sg-fst/named
+	      (DfstS : sg-fst S K))
+	   %%
+	   ([a] [d:cn-of a K] sg-sub/named (Dsub a d))
+	   <- single-sg-subsume Dsing DwfS DfstS
+	      (Dsub : {a} cn-of a K -> sg-sub (Ss a) S).
+
+%worlds (conbind-reg) (single-sg-subsume _ _ _ _).
+%total D (single-sg-subsume D _ _ _).
+
+
+
+single-sg-intro : single-sg S Ss
+		   -> md-of pure F M S
+		   -> md-fst M C
+%%
+		   -> md-of pure F M (Ss C)
+		   -> type.
+%mode single-sg-intro +X1 +X2 +X3 -X4.
+
+-	: single-sg-intro 
+	   (single-sg/satom
+	      (Dsing : single K Ks))
+	   (Dof : md-of pure F M (sg/satom K))
+	   (Dfst : md-fst M C)
+	   %%
+	   (md-of/self
+	      (DofKs C DofC)
+	      Dfst
+	      Dof)
+	   <- md-fst-reg Dof Dfst sg-fst/satom
+	      (DofC : cn-of C K)
+	   <- cn-of-reg DofC
+	      (DwfK : kd-wf K)
+	   <- single-intro Dsing DwfK
+	      (DofKs : {a} cn-of a K -> cn-of a (Ks a)).
+
+-	: single-sg-intro single-sg/datom Dof _ Dof.
+
+-	: single-sg-intro single-sg/sgatom Dof _ Dof.
+
+-	: single-sg-intro single-sg/pi Dof _ Dof.
+
+-	: single-sg-intro
+	   (single-sg/sigma
+	      (Dsing2 : {a} single-sg (S2 a) ([b] S2s a b))
+	      (Dsing1 : single-sg S1 S1s))
+	   (Dof : md-of pure F M (sg/sigma S1 S2))
+	   (Dfst : md-fst M C)
+	   %%
+	   (md-of/extsigma Dof2 Dof1)
+	   <- single-sg-intro Dsing1 (md-of/pi1 Dof) (md-fst/pi1 Dfst)
+	      (Dof1 : md-of pure F (md/pi1 M) (S1s (pi1 C)))
+	   <- single-sg-intro (Dsing2 (pi1 C)) (md-of/pi2 Dfst Dof) (md-fst/pi2 Dfst)
+	      (Dof2 : md-of pure F (md/pi2 M) (S2s (pi1 C) (pi2 C))).
+
+-	: single-sg-intro
+	   (single-sg/named
+	      (Dsing : single-sg S Ss))
+	   (Dof : md-of pure F M (sg/named L S))
+	   (Dfst : md-fst M C)
+	   %%
+	   (md-of/extnamed Dof' Dof)
+	   <- single-sg-intro Dsing (md-of/out Dof) (md-fst/out Dfst)
+	      (Dof' : md-of pure F (md/out M) (Ss C)).
+
+-	: single-sg-intro single-sg/one Dof _ Dof.
+
+%worlds (conbind-reg | modbind-detached-reg | modbind-reg | termbind-reg) (single-sg-intro _ _ _ _).
+%total D (single-sg-intro D _ _ _).
+
+
+
+single-sg-equiv : single-sg S Ss
+		   -> single-sg S' Ss'
+		   -> sg-equiv S S'
+		   -> sg-fst S K
+%%
+		   -> ({a} cn-of a K -> sg-equiv (Ss a) (Ss' a))
+		   -> type.
+%mode single-sg-equiv +X1 +X2 +X3 +X4 -X5.
+
+-	: single-sg-equiv Dsing Dsing' (sg-equiv/refl Dwf) Dfst
+	   Dequiv
+	   <- single-sg-formation Dsing Dwf Dfst Dwf'
+	   <- single-sg-fun Dsing Dsing' Deq
+	   <- ({a} {d}
+		 sg-equiv-resp sg-eq/i (Deq a) (sg-equiv/refl (Dwf' a d))
+		 (Dequiv a d)).
+
+-	: single-sg-equiv Dsing Dsing' (sg-equiv/symm Dequiv) Dfst
+	   ([a] [d] sg-equiv/symm (Dequiv' a (cn-of/equiv (kd-equiv/symm DequivK) d)))
+	   <- can-sg-fst _ Dfst'
+	   <- single-sg-equiv Dsing' Dsing Dequiv Dfst' Dequiv'
+	   <- sg-equiv-fst Dequiv Dfst' Dfst DequivK.
+
+-	: single-sg-equiv Dsing1 Dsing3 (sg-equiv/trans Dequiv23 Dequiv12) Dfst1
+	   ([a] [d] sg-equiv/trans (Dequiv23' a (cn-of/equiv DequivK d)) (Dequiv12' a d))
+	   <- can-single-sg _ Dsing2
+	   <- can-sg-fst _ Dfst2
+	   <- single-sg-equiv Dsing1 Dsing2 Dequiv12 Dfst1 Dequiv12'
+	   <- single-sg-equiv Dsing2 Dsing3 Dequiv23 Dfst2 Dequiv23'
+	   <- sg-equiv-fst Dequiv12 Dfst1 Dfst2 DequivK.
+
+-	: single-sg-equiv (single-sg/satom Dsing) (single-sg/satom Dsing') (sg-equiv/satom Dequiv) sg-fst/satom
+	   ([a] [d] sg-equiv/satom (Dequiv' a d))
+	   <- single-equiv Dsing Dsing' Dequiv Dequiv'.
+
+-	: single-sg-equiv single-sg/datom single-sg/datom (sg-equiv/datom Dequiv) sg-fst/datom
+	   ([_] [_] sg-equiv/datom Dequiv).
+
+-	: single-sg-equiv single-sg/sgatom single-sg/sgatom (sg-equiv/sgatom Dequiv) sg-fst/sgatom
+	   ([_] [_] sg-equiv/sgatom Dequiv).
+
+-	: single-sg-equiv 
+	   single-sg/pi
+	   single-sg/pi
+	   (sg-equiv/pi
+	      (Dequiv2 : {a} cn-of a K1 -> sg-equiv (S2 a) (S2' a))
+	      (Dfst1 : sg-fst S1 K1)
+	      (Dequiv1 : sg-equiv S1 S1'))
+	   sg-fst/pi
+	   ([_] [_] sg-equiv/pi Dequiv2 Dfst1 Dequiv1).
+
+-	: single-sg-equiv
+	   (single-sg/sigma
+	      (Dsing2 : {a} single-sg (S2 a) ([b] S2s a b))
+	      (Dsing1 : single-sg S1 S1s))
+	   (single-sg/sigma
+	      (Dsing2' : {a} single-sg (S2' a) ([b] S2s' a b))
+	      (Dsing1' : single-sg S1' S1s'))
+	   (sg-equiv/sigma
+	      (Dequiv2 : {a} cn-of a K1' -> sg-equiv (S2 a) (S2' a))
+	      (Dfst1' : sg-fst S1 K1')
+	      (Dequiv1 : sg-equiv S1 S1'))
+	   (sg-fst/sigma
+	      (Dfst2 : {a} sg-fst (S2 a) (K2 a))
+	      (Dfst1 : sg-fst S1 K1))
+	   %%
+	   ([b] [db:cn-of b (sigma K1 K2)]
+	      sg-equiv/sigma
+	      ([_] [_] Dequiv2'' (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db))
+	      (DfstS1s (pi1 b))
+	      (Dequiv1' (pi1 b) (cn-of/pi1 db)))
+	   <- single-sg-equiv Dsing1 Dsing1' Dequiv1 Dfst1
+	      (Dequiv1' : {b} cn-of b K1 -> sg-equiv (S1s b) (S1s' b))
+	   <- ({b}
+		 can-sg-fst (S1s b) (DfstS1s b))
+	   <- sg-fst-fun Dfst1' Dfst1 (DeqK1 : kind-eq K1' K1)
+	   <- sg-equiv-resp-underbind DeqK1 Dequiv2
+	      (Dequiv2' : {a} cn-of a K1 -> sg-equiv (S2 a) (S2' a))
+	   <- sg-equiv-reg Dequiv1
+	      (DwfS1 : sg-wf S1) _
+	   <- sg-fst-reg DwfS1 Dfst1
+	      (DwfK1 : kd-wf K1)
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-sg-equiv (Dsing2 a) (Dsing2' a) (Dequiv2' a d) (Dfst2 a)
+		    (Dequiv2'' a d : {b} cn-of b (K2 a) -> sg-equiv (S2s a b) (S2s' a b))).
+
+-	: single-sg-equiv
+	   (single-sg/named
+	      (Dsing : single-sg S Ss))
+	   (single-sg/named
+	      (Dsing' : single-sg S' Ss'))
+	   (sg-equiv/named
+	      (Dequiv : sg-equiv S S'))
+	   (sg-fst/named
+	      (Dfst : sg-fst S K))
+	   %%
+	   ([a] [d] sg-equiv/named (Dequiv' a d))
+	   <- single-sg-equiv Dsing Dsing' Dequiv Dfst
+	      (Dequiv' : {a} cn-of a K -> sg-equiv (Ss a) (Ss' a)).
+
+%worlds (conbind-reg) (single-sg-equiv _ _ _ _ _).
+%total D (single-sg-equiv _ _ D _ _).
+
+
+
+single-sg-sub: single-sg S Ss
+		-> single-sg S' Ss'
+		-> sg-sub S S'
+		-> sg-fst S K
+%%
+		-> ({a} cn-of a K -> sg-sub (Ss a) (Ss' a))
+		-> type.
+%mode single-sg-sub +X1 +X2 +X3 +X4 -X5.
+
+-	: single-sg-sub Dsing Dsing' (sg-sub/refl Dequiv) Dfst
+	   ([a] [d] sg-sub/refl (Dequiv' a d))
+	   <- single-sg-equiv Dsing Dsing' Dequiv Dfst Dequiv'.
+
+-	: single-sg-sub Dsing1 Dsing3 (sg-sub/trans Dsub23 Dsub12) Dfst1
+	   ([a] [d] sg-sub/trans (Dsub23' a (cn-of/subsume DsubK d)) (Dsub12' a d))
+	   <- can-single-sg _ Dsing2
+	   <- can-sg-fst _ Dfst2
+	   <- single-sg-sub Dsing1 Dsing2 Dsub12 Dfst1 Dsub12'
+	   <- single-sg-sub Dsing2 Dsing3 Dsub23 Dfst2 Dsub23'
+	   <- sg-sub-fst Dsub12 Dfst1 Dfst2 DsubK.
+
+-	: single-sg-sub (single-sg/satom Dsing) (single-sg/satom Dsing') (sg-sub/satom Dsub) sg-fst/satom
+	   ([a] [d] sg-sub/satom (Dsub' a d))
+	   <- single-sub Dsing Dsing' Dsub Dsub'.
+
+-	: single-sg-sub 
+	   single-sg/pi
+	   single-sg/pi
+	   (sg-sub/pi
+	      (Dwf2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	      (Dfst1 : sg-fst S1 K1)
+	      (Dsub2 : {a} cn-of a K1' -> sg-sub (S2 a) (S2' a))
+	      (Dfst1' : sg-fst S1' K1')
+	      (Dsub1 : sg-sub S1' S1))
+	   sg-fst/pi
+	   ([_] [_] sg-sub/pi Dwf2 Dfst1 Dsub2 Dfst1' Dsub1).
+
+-	: single-sg-sub
+	   (single-sg/sigma
+	      (Dsing2 : {a} single-sg (S2 a) ([b] S2s a b))
+	      (Dsing1 : single-sg S1 S1s))
+	   (single-sg/sigma
+	      (Dsing2' : {a} single-sg (S2' a) ([b] S2s' a b))
+	      (Dsing1' : single-sg S1' S1s'))
+	   (sg-sub/sigma
+	      (Dwf2' : {a} cn-of a K1' -> sg-wf (S2' a))
+	      (Dfst1' : sg-fst S1' K1')
+	      (Dsub2 : {a} cn-of a K1alt -> sg-sub (S2 a) (S2' a))
+	      (Dfst1alt : sg-fst S1 K1alt)
+	      (Dsub1 : sg-sub S1 S1'))
+	   (sg-fst/sigma
+	      (Dfst2 : {a} sg-fst (S2 a) (K2 a))
+	      (Dfst1 : sg-fst S1 K1))
+	   %%
+	   ([b] [db:cn-of b (sigma K1 K2)]
+	      sg-sub/sigma
+	      ([_] [_] Dwf2s' (pi1 b) (cn-of/subsume DsubK1 (cn-of/pi1 db)) (pi2 b) (cn-of/subsume (Dsub2K (pi1 b) (cn-of/pi1 db)) (cn-of/pi2 db)))
+	      (DfstS1s' (pi1 b))
+	      ([_] [_] Dsub2'' (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db))
+	      (DfstS1s (pi1 b))
+	      (Dsub1' (pi1 b) (cn-of/pi1 db)))
+	   <- single-sg-sub Dsing1 Dsing1' Dsub1 Dfst1
+	      (Dsub1' : {b} cn-of b K1 -> sg-sub (S1s b) (S1s' b))
+	   <- ({b}
+		 can-sg-fst (S1s b) (DfstS1s b))
+	   <- sg-fst-fun Dfst1alt Dfst1 (DeqK1 : kind-eq K1alt K1)
+	   <- sg-sub-resp-underbind DeqK1 Dsub2
+	      (Dsub2' : {a} cn-of a K1 -> sg-sub (S2 a) (S2' a))
+	   <- sg-sub-reg Dsub1
+	      (DwfS1 : sg-wf S1) (DwfS1' : sg-wf S1')
+	   <- sg-fst-reg DwfS1 Dfst1
+	      (DwfK1 : kd-wf K1)
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1
+		 -> single-sg-sub (Dsing2 a) (Dsing2' a) (Dsub2' a d) (Dfst2 a)
+		    (Dsub2'' a d : {b} cn-of b (K2 a) -> sg-sub (S2s a b) (S2s' a b)))
+	   <- ({a}
+		 can-sg-fst (S1s' a) (DfstS1s' a : sg-fst (S1s' a) (K1s' a)))
+	   <- sg-fst-reg DwfS1' Dfst1'
+	      (DwfK1' : kd-wf K1')
+	   <- ({a}
+		 can-sg-fst (S2' a) (Dfst2' a : sg-fst (S2' a) (K2' a)))
+	   <- ({a} {d:cn-of a K1'} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfK1'
+		 -> single-sg-formation (Dsing2' a) (Dwf2' a d) (Dfst2' a)
+		    (Dwf2s' a d : {b} cn-of b (K2' a) -> sg-wf (S2s' a b)))
+	   <- sg-sub-fst Dsub1 Dfst1 Dfst1'
+	      (DsubK1 : kd-sub K1 K1')
+	   <- ({a} {d:cn-of a K1}
+		 sg-sub-fst (Dsub2' a d) (Dfst2 a) (Dfst2' a)
+		 (Dsub2K a d : kd-sub (K2 a) (K2' a))).
+
+-	: single-sg-sub
+	   (single-sg/named
+	      (Dsing : single-sg S Ss))
+	   (single-sg/named
+	      (Dsing' : single-sg S' Ss'))
+	   (sg-sub/named
+	      (Dsub : sg-sub S S'))
+	   (sg-fst/named
+	      (Dfst : sg-fst S K))
+	   %%
+	   ([a] [d] sg-sub/named (Dsub' a d))
+	   <- single-sg-sub Dsing Dsing' Dsub Dfst
+	      (Dsub' : {a} cn-of a K -> sg-sub (Ss a) (Ss' a)).
+
+%worlds (conbind-reg) (single-sg-sub _ _ _ _ _).
+%total D (single-sg-sub _ _ D _ _).
+
+
+
+md-of-forget : md-of P F M S -> md-of impure F M S -> type.
+%mode md-of-forget +X1 -X2.
+
+-	: md-of-forget Dof Dof.
+
+-	: md-of-forget Dof (md-of/forget Dof).
+
+%worlds (conbind | modbind | modbind-detached | termbind) (md-of-forget _ _).
+%total {} (md-of-forget _ _).
+
+
+
+md-of-forget' : {P} md-of pure F M S -> md-of P F M S -> type.
+%mode md-of-forget' +X1 +X2 -X3.
+
+-	: md-of-forget' pure Dof Dof.
+
+-	: md-of-forget' impure Dof (md-of/forget Dof).
+
+%worlds (conbind | modbind | modbind-detached | termbind) (md-of-forget' _ _ _).
+%total {} (md-of-forget' _ _ _).
+
+
+
+sg/sigma-dep-intro : md-of pure F M1 S1
+		      -> sg-fst S1 K1
+		      -> md-fst M1 C1
+		      -> md-of P F M2 (S2 C1)
+		      -> ({a} cn-of a K1 -> sg-wf (S2 a))
+%%
+		      -> md-of P F (md/pair M1 M2) (sg/sigma S1 ([a] S2 a))
+		      -> type.
+%mode sg/sigma-dep-intro +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: sg/sigma-dep-intro
+	   (DofM1 : md-of pure F M1 S1)
+	   (DfstS1 : sg-fst S1 K1)
+	   (DfstM1 : md-fst M1 C1)
+	   (DofM2 : md-of P F M2 (S2 C1))
+	   (DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	   %%
+	   (md-of/subsume
+	      (sg-sub/sigma
+		 DwfS2
+		 DfstS1
+		 ([a] [d:cn-of a (Ks C1)] sg-sub/refl (Dequiv' a d))
+		 (DfstSs C1)
+		 (Dsub1 C1 DofC1))
+	      (md-of/pair
+		 DofM2
+		 DofM1''))
+	   <- can-single-sg S1
+	      (DsingS1 : single-sg S1 Ss)
+	   <- single-sg-intro DsingS1 DofM1 DfstM1
+	      (DofM1' : md-of pure F M1 (Ss C1))
+	   <- md-of-forget' P DofM1'
+	      (DofM1'' : md-of P F M1 (Ss C1))
+	   <- md-of-reg DofM1
+	      (DwfS1 : sg-wf S1)
+	   <- md-fst-reg DofM1 DfstM1 DfstS1
+	      (DofC1 : cn-of C1 K1)
+	   <- single-sg-subsume DsingS1 DwfS1 DfstS1
+	      (Dsub1 : {a} cn-of a K1 -> sg-sub (Ss a) S1)
+	   <- single-sg-fst DsingS1 DfstS1
+	      (DsingK1 : single K1 Ks)
+	      (DfstSs : {a} sg-fst (Ss a) (Ks a))
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-elim DsingK1 DwfK1
+	      (Dequiv : {b} cn-of b K1 -> {a} cn-of a (Ks b) -> cn-equiv b a K1)
+	   <- single-formation DsingK1 DwfK1
+	      (DwfKs : {a} cn-of a K1 -> kd-wf (Ks a))
+	   <- ({a} {d:cn-of a (Ks C1)}
+		 {ds:cn-assm d}
+		 mcn-assm d ds
+		 -> cn-of-reg d (DwfKs C1 DofC1)
+		 -> functionality-sg DwfS2 (Dequiv C1 DofC1 a d)
+		    (Dequiv' a d : sg-equiv (S2 C1) (S2 a))).
+
+%worlds (conbind-reg | modbind-reg | termbind-reg) (sg/sigma-dep-intro _ _ _ _ _ _).
+%total {} (sg/sigma-dep-intro _ _ _ _ _ _).

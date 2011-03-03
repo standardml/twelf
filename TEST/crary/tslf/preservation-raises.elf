@@ -1,0 +1,150 @@
+preserve-raises/tm	: oftp L T E C
+			   -> raises/tm E V
+			   -> oftp L T V tp/tagged
+			   -> type.
+%mode preserve-raises/tm +D1 +D2 -D3.
+
+preserve-raises/md	: ofsg L T Y E C
+			   -> raises/md E V
+			   -> oftp L T V tp/tagged
+			   -> type.
+%mode preserve-raises/md +D1 +D2 -D3.
+
+-	: preserve-raises/tm DE (raises/tm/pair-1 S) D1'
+	   <- inv/oftp/tm/pair DE DQ D1 D2
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/pair-2 V S) D2'
+	   <- inv/oftp/tm/pair DE DQ D1 D2
+	   <- preserve-raises/tm D2 S D2'.
+
+-	: preserve-raises/tm DE (raises/tm/pj1 S) D1'
+	   <- inv/oftp/tm/pj1 DE D1
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/pj2 S) D1'
+	   <- inv/oftp/tm/pj2 DE D1
+	   <- preserve-raises/tm D1 S D1' .
+
+-	: preserve-raises/tm DE (raises/tm/tmapp-1 S) D1'
+	   <- inv/oftp/tm/tmapp DE DQ D1 D2
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/tmapp-2 V S) D2'
+	   <- inv/oftp/tm/tmapp DE DQ D1 D2
+	   <- preserve-raises/tm D2 S D2'.
+
+-	: preserve-raises/tm DE (raises/tm/cnapp S) D1'
+	   <- inv/oftp/tm/cnapp DE DQ D1 DC
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/set-1 S) D1'
+	   <- inv/oftp/tm/set DE DQ D1 D2
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/set-2 V S) D2'
+	   <- inv/oftp/tm/set DE DQ D1 D2
+	   <- preserve-raises/tm D2 S D2'.
+
+-	: preserve-raises/tm DE (raises/tm/get S) D1'
+	   <- inv/oftp/tm/get DE D1
+	   <- preserve-raises/tm D1 S D1' .
+
+-	: preserve-raises/tm DE (raises/tm/ref S) D1'
+	   <- inv/oftp/tm/ref DE DQ D1
+	   <- preserve-raises/tm D1 S D1' .
+
+-	: preserve-raises/tm DE (raises/tm/raise-1 S) D1
+	   <- inv/oftp/tm/raise DE D1.
+
+-	: preserve-raises/tm DE (raises/tm/raise-2 S) D1'
+	   <- inv/oftp/tm/raise DE D1
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/term S) D1'
+	   <- inv/oftp/tm/term DE D1
+	   <- preserve-raises/md D1 S D1' .
+
+-	: preserve-raises/tm DE (raises/tm/inl S) D1'
+	   <- inv/oftp/tm/inl DE D1 DC DQ
+	   <- preserve-raises/tm D1 S D1' .
+
+-	: preserve-raises/tm DE (raises/tm/inr S) D1'
+	   <- inv/oftp/tm/inr DE D1 DC DQ
+	   <- preserve-raises/tm D1 S D1' .
+
+-	: preserve-raises/tm DE (raises/tm/case S) D1'
+	   <- inv/oftp/tm/case DE D1 D2 D3
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/tag-1 S)  D1'
+	   <- inv/oftp/tm/tag DE DQ D1 D2
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/tag-2 V S) D2'
+	   <- inv/oftp/tm/tag DE DQ D1 D2
+	   <- preserve-raises/tm D2 S D2'.
+
+-	: preserve-raises/tm DE (raises/tm/iftag-1 S) D1'
+	   <- inv/oftp/tm/iftag DE D1 D2 D3 D4
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/iftag-2 _ S) D1'
+	   <- inv/oftp/tm/iftag DE D1 D2 D3 D4
+	   <- preserve-raises/tm D2 S D1'.
+
+-	: preserve-raises/tm DE (raises/tm/roll S) D1'
+	   <- inv/oftp/tm/roll DE DQ D1 _
+	   <- preserve-raises/tm D1 S D1' .
+
+-	: preserve-raises/tm DE (raises/tm/unroll S) D1'
+	   <- inv/oftp/tm/unroll DE DQ D1
+	   <- preserve-raises/tm D1 S D1' .
+
+
+
+-	: preserve-raises/md DE (raises/md/pair-1 S) D1' 
+	   <- inv/ofsg/md/pair DE D1 D2 DS
+	   <- preserve-raises/md D1 S D1'.
+
+-	: preserve-raises/md DE (raises/md/pair-2 _ S) D2'
+	   <- inv/ofsg/md/pair DE D1 D2 DS
+	   <- preserve-raises/md D2 S D2'.
+
+-	: preserve-raises/md DE (raises/md/pj1 S) D1'
+	   <- inv/ofsg/md/pj1 DE D1 DS
+	   <- preserve-raises/md D1 S D1'.
+
+-	: preserve-raises/md DE (raises/md/pj2 S) D1'
+	   <- inv/ofsg/md/pj2 DE D1 _ _ DS
+	   <- preserve-raises/md D1 S D1'.
+
+-	: preserve-raises/md DE (raises/md/app-1 S) D1'
+	   <- inv/ofsg/md/app DE D1 D2 DM DS
+	   <- preserve-raises/md D1 S D1'.
+
+-	: preserve-raises/md DE (raises/md/app-2 _ S) D2'
+	   <- inv/ofsg/md/app DE D1 D2 DM DS
+	   <- preserve-raises/md D2 S D2'.
+
+-	: preserve-raises/md DE (raises/md/tm S)  D1'
+	   <- inv/ofsg/md/tm DE D1 DS
+	   <- preserve-raises/tm D1 S D1'.
+
+-	: preserve-raises/md DE (raises/md/seal S) D1'
+	   <- inv/ofsg/md/seal DE D1
+	   <- preserve-raises/md D1 S D1' .
+
+-	: preserve-raises/md DE (raises/md/let S) D1'
+	   <- inv/ofsg/md/let DE D1 D2 DW DF DS
+	   <- preserve-raises/md D1 S D1'.
+
+%worlds () 
+(preserve-raises/tm _ _ _) 
+(preserve-raises/md _ _ _).
+%total (D4 D5) 
+(preserve-raises/tm _ D4 _) 
+(preserve-raises/md _ D5 _).
+
+
+

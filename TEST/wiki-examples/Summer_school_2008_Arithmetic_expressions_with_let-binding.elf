@@ -1,0 +1,119 @@
+%{
+
+{{Summer school 2008
+  |prev=Arithmetic expressions
+  |prevname=Arithmetic expressions
+  |next=Arithmetic expressions with call-by-value let-binding
+  |nextname=Arithmetic expressions with call-by-value let-binding
+}}
+
+Next, we add let-binding to our expression language.  Natural numbers
+and addition are the same as before.
+
+|hidden="true"}%
+
+nat : type.             %name nat M.
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) <- add M N P.
+
+%% addition is a total function on closed terms of type nat
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%{
+
+== Arithmetic expressions with let-binding ==
+
+=== Syntax ===
+
+First, the syntax:
+
+}%
+
+exp : type.				%name exp E.
+num : nat -> exp.
+plus : exp -> exp -> exp.
+let : exp -> (exp -> exp) -> exp.
+
+%{  
+
+Let-binding is represented using [[higher-order abstract syntax]]:
+<math>\mathsf{let} \, x \, = e_1 \, \mathsf{in} \, e_2</math> is
+represented by <tt>let e_1 ([x] e_2)</tt>; an LF variable is used to
+represent the bound-variable.  So the body of the <tt>let</tt> has LF
+type <tt>(exp -> exp)</tt>.
+
+}%
+
+%{
+
+=== Evaluation, using substitution ===
+
+}%
+
+ans : type.				%name ans A.
+anum : nat -> ans.
+
+eval : exp -> ans -> type.
+%mode eval +E1 -E2.
+
+eval/num
+   : eval (num N) (anum N).
+
+eval/plus
+   : eval (plus E1 E2) (anum N)
+      <- eval E1 (anum N1)
+      <- eval E2 (anum N2)
+      <- add N1 N2 N.
+
+eval/let
+   : eval (let E1 ([x] E2 x)) A
+      <- eval E1 (anum N)
+      <- eval (E2 (num N)) A.
+
+%{ 
+That is, to evaluate a <tt>let</tt>, we 
+* evaluate the let-bound term <tt>E1</tt> to an answer <tt>anum N</tt>
+* substitute its value into the body.  Substitution is represented by the LF application of <tt>E2</tt> to <tt>(num N)</tt>.
+* evaluate the result
+
+Twelf cannot prove this total without some help, because it's not
+obvious that the substitution instance <tt>(E2 (num N))</tt> is smaller
+than the input expression.
+
+}%
+
+%worlds () (eval _ _).
+
+%{
+
+<twelf ignore="true" check="decl">
+%total E (eval E _).
+</twelf>
+
+However, evaluation does terminate.  There are two different ways to see
+this: 
+
+# Observe that we only substitute ''values'' for variables. Consequently, it is possible to give a size metric on terms where all the substitution instances of <tt>E2</tt> are the same size as <tt>E2</tt>, by taking the size of a variable = the size of a value = one.  We can formalize this reasoning in Twelf in two ways:
+## We can prove termination ourselves as a [[metatheorem]].  We'll learn about this in class 3.
+## We can make the invariant that variables stand for values explicit in the syntax of the language, in which case Twelf can prove termination itself.  See [[Summer school 2008:Arithmetic expressions with call-by-value let-binding|Variation: Call-by-value let-binding syntax]]
+# Rather than recursively evaluating the substitution instance, we can give an environment semantics where the values of variables are tracked off to the side.  To evaluate a <tt>let</tt>, we recursively evaluate body (so evaluation is structurally inductive on the expression) in an extended environment.  See [[Summer school 2008:Arithmetic expressions with let-binding (hypothetical evaluation)|Variation: Defining evaluation with a hypothetical judgement]]
+
+At this point, you should explore one or both of these variations, and then proceed to see how we represent typed arithmetic expressions.
+
+
+{{Summer school 2008
+  |prev=Arithmetic expressions
+  |prevname=Arithmetic expressions
+  |next=Arithmetic expressions with call-by-value let-binding
+  |nextname=Arithmetic expressions with call-by-value let-binding
+}}
+
+}%

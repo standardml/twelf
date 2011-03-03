@@ -1934,9 +1934,9 @@ struct
     = Config
     val make = make
 
+    val version = Version.version_string
 
     val version = "Twelf 1.6beta, June 2010 (%trustme)"
-
     structure Table : 
       sig 
 	datatype Strategy = datatype TableParam.Strategy

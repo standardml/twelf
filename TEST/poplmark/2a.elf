@@ -1,0 +1,745 @@
+%% Here we define the types
+tp : type.  %name tp T.
+
+top	: tp.
+arrow	: tp -> tp -> tp.
+forall	: tp -> (tp -> tp) -> tp.
+
+
+assm : tp -> tp -> type.
+var  : tp -> type.
+sub  : tp -> tp -> type.
+
+%% Here we define subtyping
+sub_tp : tp -> tp -> type.
+
+
+sub_tp_top    : sub_tp _ top.
+
+sub_tp_refl   : sub_tp T T.
+
+sub_tp_trans  : sub_tp T1 T3
+		 <- sub_tp T1 T2
+		 <- sub_tp T2 T3.
+
+sub_tp_arrow  : sub_tp (arrow S1 S2) (arrow T1 T2)
+		 <- sub_tp T1 S1
+		 <- sub_tp S2 T2.
+
+sub_tp_forall : sub_tp (forall S1 S2) (forall T1 T2)
+		 <- sub_tp T1 S1
+		 <- ({x} sub_tp x T1 -> sub_tp (S2 x) (T2 x)).
+
+%% Now we define terms
+term : type.    %name term E.
+
+%% Now we define the different possible terms
+abs     : tp -> (term -> term) -> term.
+app     : term -> term -> term.
+tabs    : tp -> (tp -> term) -> term.
+tapp    : term -> tp -> term.
+
+%% Now we write a judgement to tell us whether a term is a value
+value : term -> type.
+
+value_abs     : value (abs _ _).
+value_tabs    : value (tabs _ _).
+
+
+%% Here we define the tping judgement
+of : term -> tp -> type.
+
+of_abs  : of 
+	   (abs T1 E)
+	   (arrow T1 T2)
+	   <- ({x} of x T1 -> of (E x) T2).
+
+of_app  : of
+	   (app E1 E2)
+	   T12
+	   <- of E1 (arrow T11 T12)
+	   <- of E2 T11.
+
+of_tabs : of
+	   (tabs T1 E)
+	   (forall T1 T2)
+	   <- ({x} sub_tp x T1 -> of (E x) (T2 x)).
+
+of_tapp : of
+	   (tapp E T2)
+	   (T12 T2)
+	   <- of E (forall T11 T12)
+	   <- sub_tp T2 T11.
+
+of_sub  : of
+	   E
+	   T
+	   <- of E S
+	   <- sub_tp S T.
+
+
+%% Here we define evaluation
+step : term -> term -> type.
+
+step_app      : step
+		 (app (abs _ E1) E2)
+		 (E1 E2).
+
+step_tapp     : step
+		 (tapp (tabs _ E1) T)
+		 (E1 T).
+
+step_app_fun  : step
+		 (app E1 E2)
+		 (app E1' E2)
+		 <- step E1 E1'.
+
+step_app_arg  : step
+		 (app V1 E2)
+		 (app V1 E2')
+		 <- value V1
+		 <- step E2 E2'.
+
+step_tapp_fun : step
+		 (tapp E T)
+		 (tapp E' T)
+		 <- step E E'.
+
+
+
+%% definition of what it means to make progress
+progresses : term -> type.
+
+%% E may be a value
+progresses_value : progresses E
+		    <- value E.
+
+%% Or E may take a step
+progresses_steps : progresses E
+		    <- step E E'.
+
+
+
+%% And a definition of false for good measure
+false : type.
+
+
+
+%%%%% A few lemmas %%%%% 
+absurd_tsa : sub_tp top (arrow _ _) -> false -> type.
+%mode absurd_tsa +X1 -X2.
+
+absurd_fsa : sub_tp (forall _ _) (arrow _ _) -> false -> type.
+%mode absurd_fsa +X1 -X2.
+
+-: absurd_tsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_tsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_tsa
+    (sub_tp_trans
+       _
+       D)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_fsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_fsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_fsa
+    (sub_tp_trans
+       _
+       D)
+    F
+    <- absurd_fsa D F.
+
+%worlds () (absurd_fsa _ _) (absurd_tsa _ _).
+%total (D D') (absurd_fsa D _) (absurd_tsa D' _).
+
+
+
+
+absurd_tsf : sub_tp top (forall _ _) -> false -> type.
+%mode absurd_tsf +X1 -X2.
+
+-: absurd_tsf 
+    (sub_tp_trans D _)
+    F
+    <- absurd_tsf D F.
+
+-: absurd_tsf 
+    (sub_tp_trans _ D)
+    F
+    <- absurd_tsf D F.
+		 
+-: absurd_tsf
+    (sub_tp_trans _ D)
+    F
+    <- absurd_tsa D F.
+
+%worlds () (absurd_tsf _ _).
+%total (D) (absurd_tsf D _).
+
+
+
+
+absurd_asf : sub_tp (arrow _ _) (forall _ _) -> false -> type.
+%mode absurd_asf +X1 -X2.
+
+-: absurd_asf 
+    (sub_tp_trans D _)
+    F
+    <- absurd_asf D F.
+
+-: absurd_asf 
+    (sub_tp_trans _ D)
+    F
+    <- absurd_asf D F.
+		 
+-: absurd_asf
+    (sub_tp_trans D _)
+    F
+    <- absurd_tsf D F.
+
+%worlds () (absurd_asf _ _).
+%total (D) (absurd_asf D _).
+
+
+
+absurd_ota : of (tabs _ _) (arrow _ _) -> false -> type.
+%mode absurd_ota +X1 -X2.
+
+-: absurd_ota
+    (of_sub D _)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_ota
+    (of_sub D _)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_ota
+    (of_sub _ D)
+    F
+    <- absurd_ota D F.
+
+%worlds () (absurd_ota _ _).
+%total (D) (absurd_ota D _).
+
+
+
+absurd_oaf : of (abs _ _) (forall _ _) -> false -> type.
+%mode absurd_oaf +X1 -X2.
+
+-: absurd_oaf
+    (of_sub D _)
+    F
+    <- absurd_tsf D F.
+
+-: absurd_oaf
+    (of_sub D _)
+    F
+    <- absurd_asf D F.
+
+-: absurd_oaf
+    (of_sub _ D)
+    F
+    <- absurd_oaf D F.
+
+%worlds () (absurd_oaf _ _).
+%total (D) (absurd_oaf D _).
+
+
+
+%%%%%  Reductio ad absurdio  %%%%%
+raa_sub_tp : false -> sub_tp T1 T2 -> type.
+%mode +{T1} +{T2} +{F} -{D:sub_tp T1 T2} (raa_sub_tp F D).
+%worlds () (raa_sub_tp _ _).
+%total [] (raa_sub_tp _ _).
+
+raa_sub_imp_sub : false -> ({x} sub_tp x T -> sub_tp (T1 x) (T2 x)) -> type.
+%mode +{T} +{T1} +{T2} +{F} -{D:{x} sub_tp x T -> sub_tp (T1 x) (T2 x)} (raa_sub_imp_sub F D).
+%worlds () (raa_sub_imp_sub _ _).
+%total [] (raa_sub_imp_sub _ _).
+
+raa_of : false -> of E T -> type.
+%mode +{E} +{T} +{F} -{D:of E T} (raa_of F D).
+%worlds () (raa_of _ _).
+%total [] (raa_of _ _).
+
+raa_of_imp_of : false -> ({x} of x T1 -> of (E x) T2) -> type.
+%mode +{E} +{T1} +{T2} +{F} -{D:{x} of x T1 -> of (E x) T2} (raa_of_imp_of F D).
+%worlds () (raa_of_imp_of _ _).
+%total [] (raa_of_imp_of _ _).
+
+raa_sub_imp_of : false -> ({x} sub_tp x T -> of (E x) (T2 x)) -> type.
+%mode +{T} +{E} +{T2} +{F} -{D:{x} sub_tp x T -> of (E x) (T2 x)} (raa_sub_imp_of F D).
+%worlds () (raa_sub_imp_of _ _).
+%total [] (raa_sub_imp_of _ _).
+
+
+
+%%%%% Some inversions %%%%% 
+invert_sub_arrow : sub_tp (arrow S1 S2) (arrow T1 T2)
+		    -> sub_tp T1 S1
+		    -> sub_tp S2 T2
+		    -> type.
+%mode invert_sub_arrow +X1 -X2 -X3.
+
+-: invert_sub_arrow
+    sub_tp_refl
+    sub_tp_refl
+    sub_tp_refl.
+
+-: invert_sub_arrow
+    (sub_tp_arrow S2sub T1sub)
+    T1sub
+    S2sub.
+
+-: invert_sub_arrow
+    (sub_tp_trans
+       T'sub
+       Tsub)
+    (sub_tp_trans
+       U1sub
+       T1sub)
+    (sub_tp_trans
+       U2sub
+       S2sub)
+   <- invert_sub_arrow Tsub U1sub S2sub
+   <- invert_sub_arrow T'sub T1sub U2sub.
+
+-: invert_sub_arrow
+    (sub_tp_trans
+       D
+       _)
+    T1sub
+    S2sub
+    <- absurd_fsa D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+-: invert_sub_arrow
+    (sub_tp_trans
+       D
+       _)
+    T1sub
+    S2sub
+    <- absurd_tsa D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+%worlds () (invert_sub_arrow _ _ _).
+%total (Tsub) (invert_sub_arrow Tsub _ _).
+
+
+
+invert_sub_forall : sub_tp (forall S1 S2) (forall T1 T2)
+		    -> sub_tp T1 S1
+		    -> ({x} sub_tp x T1 -> sub_tp (S2 x) (T2 x))
+		    -> type.
+%mode invert_sub_forall +X1 -X2 -X3.
+
+-: invert_sub_forall
+    (sub_tp_forall
+       S2sub
+       T1sub)
+    T1sub
+    S2sub.
+
+-: invert_sub_forall
+    sub_tp_refl
+    sub_tp_refl
+    ([x][d] sub_tp_refl).
+
+-: invert_sub_forall
+    (sub_tp_trans
+       T'sub
+       Tsub)
+    (sub_tp_trans
+       U1sub
+       T1sub)
+    ([x][d] sub_tp_trans
+       (U2sub x d)
+       (S2sub x 
+	  (sub_tp_trans T1sub d)))
+   <- invert_sub_forall Tsub U1sub S2sub
+   <- invert_sub_forall T'sub T1sub U2sub.
+
+%% contradictions
+-: invert_sub_forall
+    (sub_tp_trans
+       _
+       D)
+    T1sub
+    S2sub
+    <- absurd_fsa D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+-: invert_sub_forall
+    (sub_tp_trans
+       D
+       _)
+    T1sub
+    S2sub
+    <- absurd_tsf D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+%worlds () (invert_sub_forall _ _ _).
+%total (Dsub) (invert_sub_forall Dsub _ _).
+
+
+
+
+invert_of_abs : of (abs S1 E) (arrow T1 T2) 
+	  -> ({x} of x S1 -> of (E x) S2)
+	  -> sub_tp T1 S1
+	  -> sub_tp S2 T2
+	  -> type.
+%mode invert_of_abs +X1 -X2 -X3 -X4.
+
+-: invert_of_abs 
+    (of_abs
+       ([x][xassm] Eof x xassm))
+    Eof
+    sub_tp_refl
+    sub_tp_refl.
+
+-: invert_of_abs
+    (of_sub
+       Dsub
+       Eof)
+    Eof'
+    (sub_tp_trans T1sub U1sub)
+    (sub_tp_trans U2sub S2sub)
+    <- invert_of_abs Eof Eof' T1sub S2sub
+    <- invert_sub_arrow Dsub U1sub U2sub.
+
+-: invert_of_abs 
+    (of_sub
+       D
+       _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_tsa D F
+    <- raa_of_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+-: invert_of_abs 
+    (of_sub
+       D
+       _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_fsa D F
+    <- raa_of_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+%worlds () (invert_of_abs _ _ _ _).
+%total [Eof] (invert_of_abs Eof _ _ _).
+
+
+
+invert_of_tabs : of (tabs S1 E) (forall T1 T2) 
+	  -> ({x} sub_tp x S1 -> of (E x) (S2 x))
+	  -> sub_tp T1 S1
+	  -> ({x} sub_tp x T1 -> sub_tp (S2 x) (T2 x))
+	  -> type.
+%mode invert_of_tabs +X1 -X2 -X3 -X4.
+
+-: invert_of_tabs
+    (of_tabs
+       ([x][xsub] Eof x xsub))
+    Eof
+    sub_tp_refl
+    ([x][d] sub_tp_refl).
+    
+-: invert_of_tabs
+    (of_sub
+       Tsub
+       Eof)
+    Eof'
+    (sub_tp_trans U1sub T1sub)
+    ([x][d] sub_tp_trans
+       (U2sub x d)
+       (S2sub x
+	  (sub_tp_trans T1sub d)))
+    <- invert_of_tabs Eof Eof' U1sub S2sub
+    <- invert_sub_forall Tsub T1sub U2sub.
+
+-: invert_of_tabs
+    (of_sub D _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_tsf D F
+    <- raa_sub_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+-: invert_of_tabs
+    (of_sub D _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_asf D F
+    <- raa_sub_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+%worlds () (invert_of_tabs _ _ _ _).
+%total [Eof] (invert_of_tabs Eof _ _ _).
+
+
+
+%%%%%  Reductio ad absurdio  %%%%%
+raa_progresses : false -> progresses E -> type.
+%mode +{E} +{F} -{D:progresses E} (raa_progresses F D).
+%worlds () (raa_progresses _ _).
+%total [] (raa_progresses _ _).
+
+
+
+%% progress lemmas
+app_progresses : of (app E1 E2) T 
+	  -> progresses E1
+	  -> progresses E2 
+	  -> progresses (app E1 E2) -> type.
+%mode app_progresses +X1 +X2 +X3 -X4.
+
+-: app_progresses
+    (of_sub 
+       _
+       Eof)
+    E1prog
+    E2prog
+    E3prog
+    <- app_progresses Eof E1prog E2prog E3prog.
+
+-: app_progresses 
+    _
+    (progresses_steps E1step)
+    _
+    (progresses_steps (step_app_fun E1step)).
+
+-: app_progresses
+    (of_app
+       E2of
+       E1of)
+    (progresses_value E1val)
+    (progresses_steps E2step)
+    (progresses_steps (step_app_arg E2step E1val)).
+
+-: app_progresses
+    (of_app
+       E2of
+       E1of)
+    (progresses_value E1val)
+    (progresses_value E2val)
+    (progresses_steps step_app).
+
+-: app_progresses
+    (of_app
+       _
+       E1of)
+    _
+    _
+    D
+    <- absurd_ota E1of F
+    <- raa_progresses F D.  
+
+%worlds () (app_progresses _ _ _ _).
+%total [Eof] (app_progresses Eof _ _ _).
+
+
+
+tapp_progresses : of (tapp E T) T' 
+	  -> progresses E
+	  -> progresses (tapp E T) -> type.
+%mode tapp_progresses +X1 +X2 -X3.
+
+-: tapp_progresses
+    (of_sub 
+       _
+       Eof)
+    Eprog
+    E'prog
+    <- tapp_progresses Eof Eprog E'prog.
+
+-: tapp_progresses
+    _
+    (progresses_steps Estep)
+    (progresses_steps (step_tapp_fun Estep)).
+
+-: tapp_progresses
+    (of_tapp
+       E2of
+       E1of)
+    (progresses_value Eval)
+    (progresses_steps step_tapp).
+
+-: tapp_progresses
+    (of_tapp
+       _
+       Eof)
+    _
+    D
+    <- absurd_oaf Eof F
+    <- raa_progresses F D.  
+
+%worlds () (tapp_progresses _ _ _).
+%total [Eof] (tapp_progresses Eof _ _).
+
+
+%% Proof of Preservation
+preservation : of E T -> step E E' -> of E' T -> type.
+%mode preservation +X1 +X2 -X3.
+
+-: preservation 
+    (of_sub
+       Ssub
+       Eof)
+    Estep
+    (of_sub
+       Ssub
+       E'of)
+    <- preservation Eof Estep E'of.
+
+-: preservation
+    (of_app
+       E2of
+       E1of)
+    step_app
+    (of_sub
+       S2sub
+       (E1of' 
+	  _ 
+	  (of_sub 
+	     T1sub 
+	     E2of)))
+    <- invert_of_abs E1of E1of' T1sub S2sub.
+
+-: preservation
+    (of_app
+       E2of
+       E1of)
+    (step_app_fun
+       E1step)
+    (of_app
+       E2of
+       E1of')
+    <- preservation E1of E1step E1of'.
+
+-: preservation
+    (of_app
+       E2of
+       E1of)
+    (step_app_arg
+       E2step
+       _)
+    (of_app
+       E2of'
+       E1of)
+    <- preservation E2of E2step E2of'.
+
+-: preservation
+    (of_tapp
+       T2sub
+       Eof)
+    (step_tapp_fun
+       Estep)
+    (of_tapp
+       T2sub
+       Eof')
+    <- preservation Eof Estep Eof'.
+
+-: preservation
+    (of_tapp
+       T2sub
+       Eof)
+    step_tapp
+    (of_sub
+       (S2sub _ T2sub)
+       (Eof'
+	  _
+	  (sub_tp_trans
+	     T1sub
+	     T2sub)))
+    <- invert_of_tabs Eof Eof' T1sub S2sub.
+
+%worlds () (preservation _ _ _).
+%total (Eof) (preservation Eof _ _).
+
+
+
+%% progress proof
+progress : of E T -> progresses E -> type.
+%mode progress +X1 -X2.
+
+-: progress 
+    (of_sub
+       _
+       Eof)
+    Eprogress
+    <- progress Eof Eprogress.
+
+-: progress
+    (of_abs
+       _)
+    (progresses_value
+       value_abs).
+
+-: progress
+    (of_tabs
+       _)
+    (progresses_value
+       value_tabs).
+
+-: progress
+    (of_app
+       E2of
+       E1of)
+    Eprog
+    <- progress E1of E1prog
+    <- progress E2of E2prog
+    <- app_progresses (of_app E2of E1of) E1prog E2prog Eprog.
+
+-: progress
+    (of_tapp
+       Tsub
+       Eof)
+    E'prog
+    <- progress Eof Eprog
+    <- tapp_progresses (of_tapp Tsub Eof) Eprog E'prog.
+
+%worlds () (progress _ _).
+%total (Eof) (progress Eof _).
+

@@ -1,0 +1,881 @@
+
+%%%%%  Translation Commutes with Substitution (Explicit Context)  %%%%%
+
+trans-sub-e : ({x} append (cons G1 x A) (G2 x) (G x))
+		-> ({x} isvar x I
+		      -> {ex} vtrans ex x
+		      -> transe (G x) (EN ex) (B x))
+		-> transe G1 EM C
+		-> wfe G1 A
+		-> subtype C A ([_] M)
+		-> tsub B M Bx
+		-> csub G M Gx
+%%
+		-> transe Gx (EN EM) D
+		-> subtype D Bx _ -> type.
+%mode trans-sub-e +X1 +X2 +X3 +X4 +X5 +X6 +X7 -X8 -X9.
+
+ttrans-sub-e : ({x} append (cons G1 x A) (G2 x) (G x))
+		-> ({x} isvar x I
+		      -> {ex} vtrans ex x
+		      -> ttranse (G x) (EB ex) (B x))
+		-> transe G1 EM C
+		-> wfe G1 A
+		-> subtype C A ([_] M)
+		-> tsub B M Bx
+		-> csub G M Gx
+%%
+		-> ttranse Gx (EB EM) Bx -> type.
+%mode ttrans-sub-e +X1 +X2 +X3 +X4 +X5 +X6 +X7 -X8.
+
+-const	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/const
+	      (Dordered x d : ordered (G x))
+	      (Dself x : self (N x) (B x) (C x))
+	      (Dexpand x : expand (const K) (B x) (N x))
+	      (DwfB x : wf (B x))
+	      (Dkof x : kof K (B x)))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (DsubCx : tsub C M Cx)
+	   (Dcsub : csub G M Gx)
+%%
+	   (transe/const
+	      Dordered'
+	      Dself''
+	      (Dexpand'' aca)
+	      (Dwfc aca)
+	      (Dkof' aca))
+	   Dsubtype'
+	   <- kof-strengthen Dkof 
+	      (DeqB : {x} tp-eq (B x) B')
+	   <- ({x}
+		 kof-resp (DeqB x) (Dkof x)
+		 (Dkof' x : kof K B'))
+	   <- ({x}
+		 expand-resp atom-eq/i (DeqB x) term-eq/i (Dexpand x)
+		 (Dexpand' x : expand (const K) B' (N x)))
+	   <- strengthen-expand Dexpand'
+	      (DeqN : {x} term-eq (N x) N')
+	   <- ({x}
+		 expand-resp atom-eq/i tp-eq/i (DeqN x) (Dexpand' x)
+		 (Dexpand'' x : expand (const K) B' N'))
+	   <- ({x}
+		 self-resp (DeqN x) (DeqB x) tp-eq/i (Dself x)
+		 (Dself' x : self N' B' (C x)))
+	   <- ({x} wf-resp (DeqB x) (DwfB x) (Dwfc x))
+	   <- expand-reg (aof/const (Dwfc aca) (Dkof' aca) : aof (const K) B') (Dexpand'' aca)
+	      (DofN' : of N' B')
+	   <- can-self DofN'
+	      (Dself'' : self N' B' C')
+	   <- self-reg Dself'' DofN'
+	      (DofN'' : of N' C') _
+	   <- ({x}
+		 self-fun (Dself' x) Dself''
+		 (DeqC x : tp-eq (C x) C'))
+	   <- csub-ordered Dordered Dcsub
+	      (Dordered' : ordered Gx)
+	   <- tsub-absent C' M
+	      (DsubC' : tsub ([_] C') M C')
+	   <- tsub-resp DeqC term-eq/i tp-eq/i DsubCx
+	      (DsubCx' : tsub ([_] C') M Cx)
+	   <- tsub-fun DsubC' DsubCx'
+	      (DeqCx : tp-eq C' Cx)
+	   <- self-principal Dself'' (Dprincipal : principal C')
+	   <- subtype-refl-principal Dprincipal DofN''
+	      (Dsubtype : subtype C' C' ([_] N'))
+	   <- subtype-resp tp-eq/i DeqCx ([_] term-eq/i) Dsubtype
+	      (Dsubtype' : subtype C' Cx ([_] N')).
+
+-varsam	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/var
+	      (Dself x : self (N x) (A' x) (B x))
+	      (Dexpand x : expand x (A' x) (N x))
+	      (DwfeA' x d : wfe (G x) (A' x))
+	      (Dlookup x d : lookup (G x) x (A' x))
+	      xt)
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (DsubBx : tsub B M Bx)
+	   (Dcsub : csub G M Gx)
+%%
+	   DtransM'
+	   DsubtypeDBx
+	   <- ({x} {d:isvar x I}
+		 lookup-context (Dlookup x d)
+		    (Dordered x d : ordered (G x)))
+	   <- ({x} {d:isvar x I}
+		 append-ordered (Dappend x) (Dordered x d)
+		    (ordered/cons
+		       (Dbounded x d : bounded G1 x)))
+	   <- csub-ordered Dordered Dcsub
+	      (Dordered' : ordered Gx)
+	   <- csub-append Dcsub Dappend
+	      (Dappend' : append G1 G2' Gx)
+	   <- weaken-transe' Dappend' Dordered' DtransM
+	      (DtransM' : transe Gx EM D)
+	   <- ({x} {d:isvar x I}
+		 lookup-binder-fun (Dappend x) (Dlookup x d) (Deq x : tp-eq A (A' x)))
+	   <- ({x}
+		 tp-eq-symm (Deq x)
+		 (Deq' x : tp-eq (A' x) A))
+	   <- ({x} {d:isvar x I}
+		 lookup-resp ctx-eq/i atom-eq/i (Deq' x) (Dlookup x d)
+		    (Dlookup' x d : lookup (G x) x A))
+	   <- ({x}
+		 expand-resp atom-eq/i (Deq' x) term-eq/i (Dexpand x)
+		 (Dexpand' x : expand x A (N x)))
+	   <- ({x}
+		 self-resp term-eq/i (Deq' x) tp-eq/i (Dself x)
+		 (Dself' x : self (N x) A (B x)))
+	   <- transe-reg DtransM
+	      (DwfD : wfe G1 D)
+	   <- subtype-reg-e' DsubtypeDA DwfD DwfA
+	      (DofM : ofe G1 M A)
+	   <- ({x} {d:isvar x I}
+		 weaken-wfe (Dbounded x d) DwfA _
+		    (DwfA' x d : wfe (cons G1 x A) A))
+	   <- ({x} {d:isvar x I}
+		 weaken-wfe' (Dappend x) (Dordered x d) (DwfA' x d) 
+		    (DwfA'' x d : wfe (G x) A))
+	   <- ({x} {d:isvar x I}
+		 expand-reg-e (aofe/var (DwfA'' x d) (Dlookup' x d)) (Dexpand' x)
+		    (DofN x d : ofe (G x) (N x) A))
+	   <- expand-aosub-e Dappend Dcsub DofM ([x] [d] aofe/var (DwfA'' x d) (Dlookup' x d)) Dexpand' aosub/var
+	      (DsubNx' : sub N M M)
+	   <- tsub-absent A M
+	      (DsubA' : tsub ([_] A) M A)
+	   <- self-sub-e Dappend Dcsub DofM DofN Dself' DsubNx' DsubA' DsubBx
+	      (Dself'' : self M A Bx)
+	   <- transe-principal DtransM
+	      (DprincipalD : principal D)
+	   <- subtype-self-e DsubtypeDA DwfD DwfA DprincipalD Dself''
+	      (DsubtypeDBx : subtype D Bx ([_] M)).
+
+-varoth	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/var
+	      (Dself x : self (N x) (B x) (C x))
+	      (Dexpand x : expand Y (B x) (N x))
+	      (DwfB x d : wfe (G x) (B x))
+	      (Dlookup x d : lookup (G x) Y (B x))
+	      (Dvtrans : vtrans EY Y))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (DsubCx : tsub C M Cx)
+	   (Dcsub : csub G M Gx)
+%%
+	   (transe/var
+	      Dself'
+	      Dexpand'
+	      DwfBx
+	      Dlookup'
+	      Dvtrans)
+	   DsubtypeCx
+	   <- transe-reg DtransM
+	      (DwfD : wfe G1 D)
+	   <- subtype-reg-e' DsubtypeDA DwfD DwfA
+	      (DofM : ofe G1 M A)
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- csub-lookup Dcsub Dlookup DsubBx
+	      (Dlookup' : lookup Gx Y Bx)
+	   <- tsubst-e Dappend Dcsub DofM DsubBx DwfB
+	      (DwfBx : wfe Gx Bx)
+	   <- aasub-absent Y M
+	      (DsubY : aasub ([_] Y) M Y)
+	   <- can-expand Y Bx _
+	      (Dexpand' : expand Y Bx Nx)
+	   <- expand-aasub-e Dappend DofM ([x] [d] aofe/var (DwfB x d) (Dlookup x d)) Dexpand DsubY DsubBx Dexpand'
+	      (DsubNx : sub N M Nx)
+	   <- ({x} {d:isvar x I}
+		 expand-reg-e (aofe/var (DwfB x d) (Dlookup x d)) (Dexpand x)
+		    (DofN x d : ofe (G x) (N x) (B x)))
+	   <- self-sub-e Dappend Dcsub DofM DofN Dself DsubNx DsubBx DsubCx
+	      (Dself' : self Nx Bx Cx)
+	   <- ({x}
+		 self-principal (Dself x)
+		 (DprincipalC x : principal (C x)))
+	   <- principal-sub DprincipalC DsubCx
+	      (DprincipalCx : principal Cx)
+	   <- ({x} {d:isvar x I}
+		 self-reg-e (Dself x) (DofN x d)
+		    (DofN' x d : ofe (G x) (N x) (C x))
+		    (DsubtypeCB x))
+	   <- subst-e Dappend Dcsub DofM DsubNx DsubCx DofN'
+	      (DofNx : ofe Gx Nx Cx)
+	   <- subtype-refl-principal-e DprincipalCx DofNx
+	      (DsubtypeCx : subtype Cx Cx ([_] Nx)).
+
+-vari	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/vari
+	      (Dordered x d : ordered (G x))
+	      (Dself x : self (N x) (B x) (C x))
+	      (Dexpand x : expand Y (B x) (N x))
+	      (DwfB x : wf (B x))
+	      (Dvof x : vof Y (B x))
+	      (Dvtrans : vtrans EY Y))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (DsubCx : tsub C M Cx)
+	   (Dcsub : csub G M Gx)
+%%
+	   (transe/vari
+	      Dordered'
+	      Dself''
+	      Dexpand''
+	      (DwfB' aca)
+	      (Dvof' aca)
+	      Dvtrans)
+	   DsubtypeC''
+	   <- vof-noassm Dvof
+	      (DeqB : {x} tp-eq (B x) B')
+	   <- ({x}
+		 vof-resp atom-eq/i (DeqB x) (Dvof x)
+		 (Dvof' x : vof Y B'))
+	   <- ({x}
+		 wf-resp (DeqB x) (DwfB x)
+		 (DwfB' x : wf B'))
+	   <- ({x}
+		 expand-resp atom-eq/i (DeqB x) term-eq/i (Dexpand x)
+		 (Dexpand' x : expand Y B' (N x)))
+	   <- can-expand Y B' N'
+	      (Dexpand'' : expand Y B' N')
+	   <- ({x}
+		 expand-fun (Dexpand' x) Dexpand''
+		 (DeqN x : term-eq (N x) N'))
+	   <- ({x}
+		 self-resp (DeqN x) (DeqB x) tp-eq/i (Dself x)
+		 (Dself' x : self N' B' (C x)))
+	   <- expand-reg (aof/var (DwfB' aca) (Dvof' aca)) Dexpand''
+	      (DofN' : of N' B')
+	   <- can-self DofN'
+	      (Dself'' : self N' B' C')
+	   <- csub-ordered Dordered Dcsub
+	      (Dordered' : ordered Gx)
+	   <- ({x}
+		 self-fun (Dself' x) Dself''
+		 (DeqC x : tp-eq (C x) C'))
+	   <- tsub-absent C' M
+	      (DsubCabs : tsub ([_] C') M C')
+	   <- tsub-resp DeqC term-eq/i tp-eq/i DsubCx
+	      (DsubCx' : tsub ([_] C') M Cx)
+	   <- tsub-fun DsubCabs DsubCx'
+	      (DeqCx : tp-eq C' Cx)
+	   <- self-reg Dself'' DofN' 
+	      (DofN'' : of N' C') _
+	   <- of-reg DofN''
+	      (DwfC' : wf C')
+	   <- subtype-refl DwfC'
+	      (DsubtypeC' : subtype C' C' _) _
+	   <- subtype-resp tp-eq/i DeqCx ([_] term-eq/i) DsubtypeC'
+	      (DsubtypeC'' : subtype C' Cx _).
+
+-app	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/app
+	      (DsubCy x : tsub ([y] C x y) (O x) (Cy x))
+	      (DsubtypeEB x : subtype (E x) (B x) ([_] O x))
+	      (DtransO x d ex xt : transe (G x) (EO ex) (E x))
+	      (DtransN x d ex xt : transe (G x) (EN ex) (pi (B x) ([y] C x y))))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (DsubCyx : tsub Cy M Cyx)
+	   (Dcsub : csub G M Gx)
+%%
+	   (transe/app
+	      DsubTy
+	      DsubtypeFS
+	      DtransOx
+	      DtransNx)
+	   DsubtypeTyCyx
+	   <- transe-reg DtransM
+	      (DwfD : wfe G1 D)
+	   <- subtype-reg-e' DsubtypeDA DwfD DwfA
+	      (DofM : ofe G1 M A)
+	   <- ({x} {d:isvar x I}
+		 {ex} {xt:vtrans ex x}
+		    transe-reg (DtransN x d ex xt)
+		    (wfe/pi
+		       (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		       (DwfB x d : wfe (G x) (B x))))
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ({y} {e:isvar y J}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		    (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- trans-sub-e Dappend DtransN DtransM DwfA DsubtypeDA (tsub/pi DsubCx DsubBx) Dcsub
+	      (DtransNx : transe Gx (EN EM) (pi S T))
+	      (subtype/pi
+		 (DsubtypeUCx : {y} subtype (U y) (Cx y) _)
+		 (DsubU : {y} tsub ([y] T y) (Lbs y) (U y))
+		 (DsubtypeBS : subtype Bx S Lbs)
+		 : subtype (pi S T) (pi Bx Cx) _)
+	   <- ({x} {d:isvar x I}
+		 {ex} {xt:vtrans ex x}
+		    transe-reg (DtransO x d ex xt)
+		    (DwfE x d : wfe (G x) (E x)))
+	   <- can-tsub-e Dappend DwfE DofM
+	      (DsubEx : tsub E M Ex)
+	   <- trans-sub-e Dappend DtransO DtransM DwfA DsubtypeDA DsubEx Dcsub
+	      (DtransOx : transe Gx (EO EM) F)
+	      (DsubtypeFE : subtype F Ex Lfe)
+	   <- transe-reg DtransNx
+	      (wfe/pi
+		 (DwfT : {y} isvar y K -> wfe (cons Gx y S) (T y))
+		 (DwfS : wfe Gx S))
+	   <- transe-reg DtransOx
+	      (DwfF : wfe Gx F)
+	   <- tsubst-e Dappend Dcsub DofM DsubEx DwfE
+	      (DwfEx : wfe Gx Ex)
+	   <- tsubst-e Dappend Dcsub DofM DsubBx DwfB
+	      (DwfBx : wfe Gx Bx)
+	   <- subtype-sub-e Dappend Dcsub DofM DwfE DwfB DsubtypeEB DsubEx DsubBx
+	      (DsubOx : {y} sub ([x] O x) M (Ox' y))
+	      (DsubtypeEBx : subtype Ex Bx Ox')
+	   <- sub-closed DsubOx
+	      (DeqOx : {y} term-eq (Ox' y) Ox)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqOx DsubtypeEBx
+	      (DsubtypeEBx' : subtype Ex Bx ([_] Ox))
+	   <- ({y}
+		 sub-resp ([_] term-eq/i) term-eq/i (DeqOx y) (DsubOx y)
+		 (DsubOx' y : sub ([x] O x) M Ox))
+	   <- ({y}
+		 sub-absent Ox (Lfe y)
+		 (DsubLfb y : sub ([_] Ox) (Lfe y) Ox))
+	   <- subtype-reg-e' DsubtypeEBx' DwfEx DwfBx
+	      (DofOx : ofe Gx Ox Bx)
+	   <- subtype-reg-e DsubtypeBS DwfBx DwfS
+	      (DofLbs : {y} isvar y K' -> ofe (cons Gx y Bx) (Lbs y) S)
+	   <- can-sub-e ([_] append/nil) DofLbs DofOx
+	      (DsubP : sub Lbs Ox P)
+	   <- subtype-trans-e DwfF DwfEx DwfBx DsubtypeFE DsubtypeEBx' DsubLfb
+	      (DsubtypeFBx : subtype F Bx ([_] Ox))
+	   <- subtype-trans-e DwfF DwfBx DwfS DsubtypeFBx DsubtypeBS ([_] DsubP)
+	      (DsubtypeFS : subtype F S ([_] P))
+	   <- subtype-reg-e' DsubtypeFS DwfF DwfS
+	      (DofP : ofe Gx P S)
+	   <- can-tsub-e ([_] append/nil) DwfT DofP
+	      (DsubTy : tsub T P Ty)
+	   <- ({y} {e:isvar y J}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) DofM (DsubCx y) ([x] [d] DwfC x d y e)
+		    (DwfCx y e : wfe (cons Gx y Bx) (Cx y)))
+	   <- can-tsub-e ([_] append/nil) DwfCx DofOx
+	      (DsubCxy : tsub Cx Ox Cxy)
+	   <- tsubst-context-e DofLbs DwfT DsubU
+	      (DwfU : {y} isvar y K' -> wfe (cons Gx y Bx) (U y))
+	   <- ({y} {e:isvar y J}
+		 wfe-context (DwfCx y e)
+		    (ordered/cons
+		       (DboundedGxy y e : bounded Gx y)))
+	   <- bump-wfe DwfU ([y] [e] ordered/cons (DboundedGxy y e))
+	      (DwfU' : {y} isvar y J -> wfe (cons Gx y Bx) (U y))
+	   <- can-tsub-e ([_] append/nil) DwfU DofOx
+	      (DsubUy : tsub U Ox Uy)
+	   <- subtype-sub-e ([_] append/nil) csub/base DofOx DwfU' DwfCx DsubtypeUCx DsubUy DsubCxy
+	      _
+	      (DsubtypeUyCxy : subtype Uy Cxy _)
+	   <- ({y}
+		 tsub-absent (T y) Ox
+		 (DsubTabs y : tsub ([_] T y) Ox (T y)))
+	   <- ({y} {e:isvar y K'}
+		 ofe-context (DofLbs y e)
+		    (ordered/cons
+		       (DboundedK' y e : bounded Gx y)))
+	   <- weaken-wfe-insert1 DwfT DboundedK' _
+	      (DwfT' : {y} isvar y K' -> {z} isvar z K'' -> wfe (cons (cons Gx y Bx) z S) (T z))
+	   <- tsub-permute-e ([_] append/nil) DofOx DofLbs DwfT'
+	      DsubTabs DsubP DsubTy DsubU DsubUy
+	      (DeqTyUy : tp-eq Ty Uy)
+	   <- tp-eq-symm DeqTyUy
+	      (DeqUyTy : tp-eq Uy Ty)
+	   <- ({x} {d:isvar x I}
+		 subtype-reg-e' (DsubtypeEB x) (DwfE x d) (DwfB x d)
+		    (DofO x d : ofe (G x) (O x) (B x)))
+	   <- tsub-permute-e Dappend DofM DofO DwfC
+	      DsubCx (DsubOx' aca) DsubCxy DsubCy DsubCyx
+	      (DeqCxyCyx : tp-eq Cxy Cyx)
+	   <- subtype-resp DeqUyTy DeqCxyCyx ([_] term-eq/i) DsubtypeUyCxy
+	      (DsubtypeTyCyx : subtype Ty Cyx _).
+
+-pi1	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/pi1
+	      (DtransN x d ex xt : transe (G x) (EN ex) (sigma (B x) ([_] C x))))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (DsubBx : tsub B M Bx)
+	   (Dcsub : csub G M Gx)
+%%
+	   (transe/pi1 DtransN'')
+	   DsubtypeBE
+	   <- transe-reg DtransM
+	      (DwfD : wfe G1 D)
+	   <- subtype-reg-e' DsubtypeDA DwfD DwfA
+	      (DofM : ofe G1 M A)
+	   <- ({x} {d:isvar x I}
+		 {ex} {xt:vtrans ex x}
+		    transe-reg (DtransN x d ex xt)
+		    (wfe/sigma
+		       (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x))
+		       (DwfB x d : wfe (G x) (B x))))
+	   <- tsubst-e Dappend Dcsub DofM DsubBx DwfB
+	      (DwfBx : wfe Gx Bx)
+	   <- ({x} {d:isvar x I}
+		 tinhabitsub-e (DwfB x d) (DwfC x d)
+		    (DwfC' x d : wfe (G x) (C x)))
+	   <- can-tsub-e Dappend DwfC' DofM
+	      (DsubCx : tsub C M Cx)
+	   <- trans-sub-e Dappend DtransN DtransM DwfA DsubtypeDA (tsub/sigma ([y] DsubCx) DsubBx) Dcsub
+	      (DtransN' : transe Gx (EN EM) EF)
+	      (DsubtypeEF : subtype EF (sigma Bx ([_] Cx)) _)
+	   <- transe-principal DtransN'
+	      (DprincipalEF : principal EF)
+	   <- principal-subtype-sigma-invert DprincipalEF DsubtypeEF
+	      (DeqEF : tp-eq EF (sigma E ([_] F)))
+	   <- transe-resp ctx-eq/i eterm-eq/i DeqEF DtransN'
+	      (DtransN'' : transe Gx (EN EM) (sigma E ([_] F)))
+	   <- subtype-resp DeqEF tp-eq/i ([_] term-eq/i) DsubtypeEF
+	      (DsubtypeEF' : subtype (sigma E ([_] F)) (sigma Bx ([_] Cx)) _)
+	   <- subtype-sigma-invert DsubtypeEF'
+	      (DsubtypeBE : subtype E Bx N1)
+	      _
+	      _
+	      _.
+
+-pi2	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/pi2
+	      (DtransN x d ex xt : transe (G x) (EN ex) (sigma (B x) ([_] C x))))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (DsubCx : tsub C M Cx)
+	   (Dcsub : csub G M Gx)
+%%
+	   (transe/pi2 DtransN'')
+	   (DsubtypeFC' aca)
+	   <- transe-reg DtransM
+	      (DwfD : wfe G1 D)
+	   <- subtype-reg-e' DsubtypeDA DwfD DwfA
+	      (DofM : ofe G1 M A)
+	   <- ({x} {d:isvar x I}
+		 {ex} {xt:vtrans ex x}
+		    transe-reg (DtransN x d ex xt)
+		    (wfe/sigma
+		       (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x))
+		       (DwfB x d : wfe (G x) (B x))))
+	   <- ({x} {d:isvar x I}
+		 tinhabitsub-e (DwfB x d) (DwfC x d)
+		    (DwfC' x d : wfe (G x) (C x)))
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- trans-sub-e Dappend DtransN DtransM DwfA DsubtypeDA (tsub/sigma ([y] DsubCx) DsubBx) Dcsub
+	      (DtransN' : transe Gx (EN EM) EF)
+	      (DsubtypeEF : subtype EF (sigma Bx ([_] Cx)) _)
+	   <- transe-principal DtransN'
+	      (DprincipalEF : principal EF)
+	   <- principal-subtype-sigma-invert DprincipalEF DsubtypeEF
+	      (DeqEF : tp-eq EF (sigma E ([_] F)))
+	   <- transe-resp ctx-eq/i eterm-eq/i DeqEF DtransN'
+	      (DtransN'' : transe Gx (EN EM) (sigma E ([_] F)))
+	   <- subtype-resp DeqEF tp-eq/i ([_] term-eq/i) DsubtypeEF
+	      (DsubtypeEF' : subtype (sigma E ([_] F)) (sigma Bx ([_] Cx)) _)
+	   <- subtype-sigma-invert DsubtypeEF'
+	      (DsubtypeBE : subtype E Bx N1)
+	      (DsubCx' : {y} tsub ([_] Cx) (N1 y) (Cx' y))
+	      (DsubtypeFC : {y} subtype F (Cx' y) ([z] N2 y z))
+	      _
+	   <- ({y}
+		 tsub-absent Cx (N1 y)
+		 (DsubCxabs y : tsub ([_] Cx) (N1 y) Cx))
+	   <- ({y}
+		 tsub-fun (DsubCx' y) (DsubCxabs y)
+		 (DeqCx' y : tp-eq (Cx' y) Cx))
+	   <- ({y}
+		 subtype-resp tp-eq/i (DeqCx' y) ([_] term-eq/i) (DsubtypeFC y)
+		 (DsubtypeFC' y : subtype F Cx ([z] N2 y z))).
+
+-lam	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/lam
+	      (DtransN x d ex xt : {y} isvar y J
+				    -> {ey} vtrans ey y
+				    -> transe (cons (G x) y (B x)) (EN ex ey) (C x y))
+	      (DtransB x d ex xt : ttranse (G x) (EB ex) (B x)))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (tsub/pi
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+	   (Dcsub : csub G M Gx)
+%%
+	   (transe/lam DtransN' DtransB')
+	   (subtype/pi
+	      DsubtypeEC
+	      DsubE
+	      DsubtypeBx)
+	   <- transe-reg DtransM
+	      (DwfD : wfe G1 D)
+	   <- subtype-reg-e' DsubtypeDA DwfD DwfA
+	      (DofM : ofe G1 M A)
+	   <- ttrans-sub-e Dappend DtransB DtransM DwfA DsubtypeDA DsubBx Dcsub
+	      (DtransB' : ttranse Gx (EB EM) Bx)
+	   <- ({y} {e:isvar y J}
+		 {ey} {yt:vtrans ey y}
+		    trans-sub-e
+		    ([x] append/cons (Dappend x))
+		    ([x] [d] [ex] [xt] DtransN x d ex xt y e ey yt)
+		    DtransM
+		    DwfA
+		    DsubtypeDA
+		    (DsubCx y)
+		    (csub/cons DsubBx Dcsub)
+		    %%
+		    (DtransN' y e ey yt : transe (cons Gx y Bx) (EN EM ey) (E y))
+		    (DsubtypeEC y : subtype (E y) (Cx y) _))
+	   <- ({x} {d:isvar x I}
+		 {ex} {xt:vtrans ex x}
+		    ttranse-reg (DtransB x d ex xt)
+		    (DwfB x d : wfe (G x) (B x)))
+	   <- tsubst-e Dappend Dcsub DofM DsubBx DwfB
+	      (DwfBx : wfe Gx Bx)
+	   <- subtype-refl-e DwfBx
+	      (DsubtypeBx : subtype Bx Bx Z)
+	      (DexpandZ : {z} expand z Bx (Z z))
+	   <- ({y} {e:isvar y J}
+		 {ey} {yt:vtrans ey y}
+		    transe-reg (DtransN' y e ey yt)
+		    (DwfE y e : wfe (cons Gx y Bx) (E y)))
+	   <- tsub-expand-var-e DwfBx DwfE DexpandZ
+	      (DsubE : {y} tsub E (Z y) (E y)).
+
+-pair	: trans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      transe/pair
+	      (DtransO x d ex xt : transe (G x) (EO ex) (C x))
+	      (DtransN x d ex xt : transe (G x) (EN ex) (B x)))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (tsub/sigma
+	      (DsubCx' : {y} tsub ([x] C x) M (Cx' y))
+	      (DsubBx : tsub B M Bx))
+	   (Dcsub : csub G M Gx)
+%%
+	   (transe/pair
+	      DtransO'
+	      DtransN')
+	   (subtype/sigma
+	      ([_] DsubtypeFC)
+	      DsubCxabs'
+	      DsubtypeEB)
+	   <- trans-sub-e Dappend DtransN DtransM DwfA DsubtypeDA DsubBx Dcsub
+	      (DtransN' : transe Gx (EN EM) E)
+	      (DsubtypeEB : subtype E Bx P)
+	   <- tsub-closed DsubCx'
+	      (DeqCx : {y} tp-eq (Cx' y) Cx)
+	   <- ({y}
+		 tsub-resp ([_] tp-eq/i) term-eq/i (DeqCx y) (DsubCx' y)
+		 (DsubCx y : tsub ([x] C x) M Cx))
+	   <- trans-sub-e Dappend DtransO DtransM DwfA DsubtypeDA (DsubCx aca) Dcsub
+	      (DtransO' : transe Gx (EO EM) F)
+	      (DsubtypeFC : subtype F Cx _)
+	   <- ({y}
+		 tsub-absent Cx (P y)
+		 (DsubCxabs y : tsub ([_] Cx) (P y) Cx))
+	   <- ({y}
+		 tp-eq-symm (DeqCx y)
+		 (DeqCx' y : tp-eq Cx (Cx' y)))
+	   <- ({y}
+		 tsub-resp DeqCx' term-eq/i tp-eq/i (DsubCxabs y)
+		 (DsubCxabs' y : tsub ([y] Cx' y) (P y) Cx)).
+
+-star	: trans-sub-e _
+	   ([x] [d:isvar x I] [ex] [dt:vtrans ex x]
+	      (transe/star
+		 (Dordered x d : ordered (G x))))
+	   _ _ _
+	   tsub/one
+	   (Dcsub : csub G MA G')
+	   (transe/star Dordered')
+	   subtype/one
+	   <- csub-ordered Dordered Dcsub
+	      (Dordered' : ordered G').
+
+
+%%%
+
+
+-t	: ttrans-sub-e _
+	   ([x] [d:isvar x I] [ex] [dt:vtrans ex x]
+	      (ttranse/t
+		 (Dordered x d : ordered (G x))))
+	   _ _ _
+	   tsub/t
+	   (Dcsub : csub G MA G')
+	   (ttranse/t Dordered')
+	   <- csub-ordered Dordered Dcsub
+	      (Dordered' : ordered G').
+
+-pi	: ttrans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      ttranse/pi
+	      (DtransC x d ex xt : {y} isvar y J
+				    -> {ey} vtrans ey y
+				    -> ttranse (cons (G x) y (B x)) (EC ex ey) (C x y))
+	      (DtransB x d ex xt : ttranse (G x) (EB ex) (B x)))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (tsub/pi
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+	   (Dcsub : csub G M Gx)
+%%
+	   (ttranse/pi
+	      DtransCx
+	      DtransBx)
+	   <- ttrans-sub-e Dappend DtransB DtransM DwfA DsubtypeDA DsubBx Dcsub
+	      (DtransBx : ttranse Gx (EB EM) Bx)
+	   <- ({x} {d:isvar x I}
+		 {ex} {xt:vtrans ex x}
+		    {y} {e:isvar y J}
+		 {ey} {yt:vtrans ey y}
+		    ttranse-context (DtransC x d ex xt y e ey yt)
+		    (ordered/cons
+		       (Dbounded x d y e : bounded (G x) y)))
+	   <- ({y} {e:isvar y J}
+		 {ey} {yt:vtrans ey y}
+		    ttrans-sub-e ([x] append/cons (Dappend x))
+		    ([x] [d] [ex] [xt] DtransC x d ex xt y e ey yt)
+		    DtransM DwfA DsubtypeDA
+		    (DsubCx y)
+		    (csub/cons DsubBx Dcsub)
+		    %%
+		    (DtransCx y e ey yt : ttranse (cons Gx y Bx) (EC EM ey) (Cx y))).
+
+-sigma	: ttrans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      ttranse/sigma
+	      (DtransC x d ex xt : {y} isvar y J
+				    -> {ey} vtrans ey y
+				    -> ttranse (cons (G x) y (B x)) (EC ex ey) (C x y))
+	      (DtransB x d ex xt : ttranse (G x) (EB ex) (B x)))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (tsub/sigma
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+	   (Dcsub : csub G M Gx)
+%%
+	   (ttranse/sigma
+	      DtransCx
+	      DtransBx)
+	   <- ttrans-sub-e Dappend DtransB DtransM DwfA DsubtypeDA DsubBx Dcsub
+	      (DtransBx : ttranse Gx (EB EM) Bx)
+	   <- ({x} {d:isvar x I}
+		 {ex} {xt:vtrans ex x}
+		    {y} {e:isvar y J}
+		 {ey} {yt:vtrans ey y}
+		    ttranse-context (DtransC x d ex xt y e ey yt)
+		    (ordered/cons
+		       (Dbounded x d y e : bounded (G x) y)))
+	   <- ({y} {e:isvar y J}
+		 {ey} {yt:vtrans ey y}
+		    ttrans-sub-e ([x] append/cons (Dappend x))
+		    ([x] [d] [ex] [xt] DtransC x d ex xt y e ey yt)
+		    DtransM DwfA DsubtypeDA
+		    (DsubCx y)
+		    (csub/cons DsubBx Dcsub)
+		    %%
+		    (DtransCx y e ey yt : ttranse (cons Gx y Bx) (EC EM ey) (Cx y))).
+
+-sing	: ttrans-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d:isvar x I] [ex] [xt:vtrans ex x]
+	      ttranse/sing
+	      (Dtrans x d ex xt : transe (G x) (EN ex) (sing (R x))))
+	   (DtransM : transe G1 EM D)
+	   (DwfA : wfe G1 A)
+	   (DsubtypeDA : subtype D A ([_] M))
+	   (Dtsub : tsub ([x] sing (R x)) M (sing Rx))
+	   (Dcsub : csub G M Gx)
+%%	   
+	   (ttranse/sing DtransRx)
+	   <- tsub-sing-sub-at Dtsub
+	      (Dsub : sub ([x] at (R x)) M (at Rx))
+	   <- trans-sub-e Dappend
+	      Dtrans 
+	      DtransM DwfA DsubtypeDA
+	      Dtsub Dcsub
+	      (DtransP : transe Gx (EN EM) E)
+	      (DsubtypeE : subtype E (sing Rx) _)
+	   <- subtype-sing-invert DsubtypeE
+	      (DeqE : tp-eq E (sing Rx)) _
+	   <- transe-resp ctx-eq/i eterm-eq/i DeqE DtransP
+	      (DtransRx : transe Gx (EN EM) (sing Rx)).
+
+-one	: ttrans-sub-e _
+	   ([x] [d:isvar x I] [ex] [dt:vtrans ex x]
+	      (ttranse/one
+		 (Dordered x d : ordered (G x))))
+	   _ _ _
+	   tsub/one
+	   (Dcsub : csub G MA G')
+	   (ttranse/one Dordered')
+	   <- csub-ordered Dordered Dcsub
+	      (Dordered' : ordered G').
+
+%worlds (bind | ovar | tbind) (ttrans-sub-e _ _ _ _ _ _ _ _) (trans-sub-e _ _ _ _ _ _ _ _ _).
+%total (D1 D2) (ttrans-sub-e _ D1 _ _ _ _ _ _) (trans-sub-e _ D2 _ _ _ _ _ _ _).
+
+
+
+
+%%%%%  Translation Commutes with Substitution  %%%%%
+
+ttrans-sub : ({x} vof x A
+		-> {ex} vtrans ex x
+		-> ttrans (EB ex) (B x))
+	      -> trans EM C
+	      -> wf A
+	      -> subtype C A ([_] M)
+	      -> tsub B M Bx
+%%
+	      -> ttrans (EB EM) Bx -> type.
+%mode ttrans-sub +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: ttrans-sub DtransB DtransM DwfA Dsubtype Dtsub DtransB'
+	   <- ttrans1-to-ttranse 0 DtransB DtranseB
+	   <- trans-to-transe DtransM DtranseM
+	   <- wf-to-wfe DwfA DwfeA
+	   <- ttrans-sub-e ([_] append/nil) DtranseB DtranseM DwfeA Dsubtype Dtsub csub/base DtranseB'
+	   <- ttranse-to-ttrans DtranseB' DtransB'.
+
+%worlds (bind | tbind) (ttrans-sub _ _ _ _ _ _).
+%total {} (ttrans-sub _ _ _ _ _ _).
+
+
+
+trans-sub  : ({x} vof x A
+		-> {ex} vtrans ex x
+		-> trans (EN ex) (B x))
+	      -> trans EM C
+	      -> wf A
+	      -> subtype C A ([_] M)
+	      -> tsub B M Bx
+%%
+	      -> trans (EN EM) D 
+	      -> subtype D Bx _ -> type.
+%mode trans-sub +X1 +X2 +X3 +X4 +X5 -X6 -X7.
+
+-	: trans-sub DtransN DtransM DwfA Dsubtype Dtsub DtransN' Dsubtype'
+	   <- trans1-to-transe 0 DtransN DtranseN
+	   <- trans-to-transe DtransM DtranseM
+	   <- wf-to-wfe DwfA DwfeA
+	   <- trans-sub-e ([_] append/nil) DtranseN DtranseM DwfeA Dsubtype Dtsub csub/base DtranseN' Dsubtype'
+	   <- transe-to-trans DtranseN' DtransN'.
+
+%worlds (bind | tbind) (trans-sub _ _ _ _ _ _ _).
+%total {} (trans-sub _ _ _ _ _ _ _).
+
+
+
+trans-var-coerce : ttrans EA A
+		    -> ttrans EB B
+		    -> subtype A B M
+		    -> ({x} vof x A
+			  -> {ex} vtrans ex x
+			  -> ttrans (EC ex) (C x))
+		    -> ({x} vof x B
+			  -> {ex} vtrans ex x
+			  -> ttrans (EC ex) (D x))
+%%
+		    -> ({x} tsub D (M x) (C x)) -> type.
+%mode trans-var-coerce +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: trans-var-coerce
+	   (DtransA : ttrans EA A)
+	   (DtransB : ttrans EB B)
+	   (DsubtypeAB : subtype A B M)
+	   (DtransC : {x} vof x A -> {ex} vtrans ex x -> ttrans (EC ex) (C x))
+	   (DtransD : {x} vof x B -> {ex} vtrans ex x -> ttrans (EC ex) (D x))
+	   DsubC
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ttrans-reg DtransB
+	      (DwfB : wf B)
+	   <- ({x}
+		 can-expand x A (X x)
+		 (Dexpand x : expand x A (X x)))
+	   <- ({x} {d:vof x A}
+		 expand-reg (aof/var DwfA d) (Dexpand x)
+		 (DofX x d : of (X x) A))
+	   <- ({x} {d:vof x A}
+		 can-self (DofX x d)
+		 (Dself x : self (X x) A (As x)))
+	   <- ({x} {d:vof x A}
+		 self-reg (Dself x) (DofX x d)
+		 (DofX' x d : of (X x) (As x))
+		 (DsubtypeAsA x : subtype (As x) A ([_] X x)))
+	   <- ({x} {d:vof x A}
+		 of-reg (DofX' x d)
+		 (DwfAs x d : wf (As x)))
+	   <- ({x} {d:vof x B} {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransD x d ex xt)
+		 (DwfD x d : wf (D x)))
+	   <- subtype-reg DsubtypeAB DwfA DwfB
+	      (DofM : {x} vof x A -> of (M x) B)
+	   <- ({x} {d:vof x A}
+		 can-tsub DwfD (DofM x d)
+		 (DsubE x : tsub D (M x) (E x)))
+	   <- ({x} {d:vof x A}
+		 can-sub DofM (DofX x d)
+		 (DsubMx x : sub M (X x) (Mx x)))
+	   <- ({x} {d:vof x A}
+		 sub-expand (aof/var DwfA d) DofM (Dexpand x) (DsubMx x)
+		 (DeqM x : term-eq (Mx x) (M x)))
+	   <- ({x}
+		 sub-resp ([_] term-eq/i) term-eq/i (DeqM x) (DsubMx x)
+		 (DsubM x : sub M (X x) (M x)))
+	   <- ({x} {d:vof x A}
+		 subtype-trans (DwfAs x d) DwfA DwfB (DsubtypeAsA x) DsubtypeAB ([_] DsubM x)
+		 (DsubtypeAsB x : subtype (As x) B ([_] M x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 ttrans-sub DtransD
+		 (trans/var (Dself x) (Dexpand x) DwfA d xt
+		    : trans ex (As x))
+		 DwfB (DsubtypeAsB x) (DsubE x)
+		 (DtransE x d ex xt : ttrans (EC ex) (E x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 ttrans-fun (DtransE x d ex xt) (DtransC x d ex xt)
+		 (Deq x : tp-eq (E x) (C x)))
+	   <- ({x} 
+		 tsub-resp ([_] tp-eq/i) term-eq/i (Deq x) (DsubE x)
+		 (DsubC x : tsub D (M x) (C x))).
+
+%worlds (bind | tbind) (trans-var-coerce _ _ _ _ _ _).
+%total {} (trans-var-coerce _ _ _ _ _ _).

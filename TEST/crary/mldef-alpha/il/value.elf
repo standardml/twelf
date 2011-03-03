@@ -1,0 +1,53 @@
+
+%%%%%  Values  %%%%%
+
+value : term -> type.
+value-md : module -> type.
+
+value/unit	: value tm/unit.
+
+value/pair	: value (tm/pair E1 E2)
+		   <- value E1
+		   <- value E2.
+
+value/lam	: value (tm/lam _ _).
+
+value/in1	: value (tm/in1 E _)
+		   <- value E.
+
+value/in2	: value (tm/in2 E _)
+		   <- value E.
+
+value/refloc	: value (tm/refloc _).
+
+value/tagloc	: value (tm/tagloc _).
+
+value/tag	: value (tm/tag E1 E2)
+		   <- value E1
+		   <- value E2.
+
+value/roll	: value (tm/roll E _ _ _)
+		   <- value E.
+
+value/in	: value (tm/in I E)
+		   <- value E.
+
+
+
+value-md/unit	: value-md md/unit.
+
+value-md/satom	: value-md (md/satom _).
+
+value-md/datom	: value-md (md/datom E _)
+		   <- value E.
+
+value-md/sgatom	: value-md (md/sgatom S).
+
+value-md/pair	: value-md (md/pair M1 M2)
+		   <- value-md M1
+		   <- value-md M2.
+
+value-md/lam	: value-md (md/lam _ _).
+
+value-md/in	: value-md (md/in L M)
+		   <- value-md M.

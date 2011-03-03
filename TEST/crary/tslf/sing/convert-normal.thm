@@ -1,0 +1,215 @@
+
+%%%%  Normal Terms  %%%%%
+
+atomic : eterm -> type.
+normal : eterm -> type.
+tnormal : etp -> type.
+
+atomic/const	: atomic (econst C).
+
+atomic/forall	: atomic (eforall A)
+		   <- tnormal A.
+
+atomic/var	: atomic X
+		   <- variable X.
+
+atomic/app	: atomic (eapp M N)
+		   <- atomic M
+		   <- normal N.
+
+atomic/pi1	: atomic (epi1 M)
+		   <- atomic M.
+
+atomic/pi2	: atomic (epi2 M)
+		   <- atomic M.
+
+
+
+normal/atom	: normal M
+		   <- atomic M.
+
+normal/lam	: normal (elam A M)
+		   <- tnormal A
+		   <- ({x} variable x -> normal (M x)).
+
+normal/pair	: normal (epair M N)
+		   <- normal M
+		   <- normal N.
+
+
+
+tnormal/t	: tnormal et.
+
+tnormal/pi	: tnormal (epi A B)
+		   <- tnormal A
+		   <- ({x} variable x -> tnormal (B x)).
+
+tnormal/sigma	: tnormal (esigma A B)
+		   <- tnormal A
+		   <- ({x} variable x -> tnormal (B x)).
+
+tnormal/sing	: tnormal (esing M)
+		   <- atomic M.
+
+
+
+
+%%%%%  Converted Terms are Normal  %%%%%
+
+aconverte-atomic : aconverte G R A EM -> atomic EM -> type.
+%mode aconverte-atomic +X1 -X2.
+
+converte-normal : converte G M A EM -> normal EM -> type.
+%mode converte-normal +X1 -X2.
+
+tconverte-normal : tconverte G A EA -> tnormal EA -> type.
+%mode tconverte-normal +X1 -X2.
+
+-	: aconverte-atomic (aconverte/const _ _ _) atomic/const.
+
+-	: aconverte-atomic (aconverte/forall Dconv) (atomic/forall Dnorm)
+	   <- tconverte-normal Dconv Dnorm.
+
+-	: aconverte-atomic (aconverte/var Dvtrans _ _) (atomic/var Dvar)
+	   <- vtrans-variable Dvtrans Dvar.
+
+-	: aconverte-atomic (aconverte/vari Dvtrans _ _ _) (atomic/var Dvar)
+	   <- vtrans-variable Dvtrans Dvar.
+
+-	: aconverte-atomic (aconverte/app _ DconvM DconvR) (atomic/app Dnorm Datom)
+	   <- aconverte-atomic DconvR Datom
+	   <- converte-normal DconvM Dnorm.
+
+-	: aconverte-atomic (aconverte/pi1 Dconv) (atomic/pi1 Datom)
+	   <- aconverte-atomic Dconv Datom.
+
+-	: aconverte-atomic (aconverte/pi2 Dconv) (atomic/pi2 Datom)
+	   <- aconverte-atomic Dconv Datom.
+
+
+
+-	: converte-normal (converte/at Dconv) (normal/atom Datom)
+	   <- aconverte-atomic Dconv Datom.
+
+-	: converte-normal (converte/lam DconvM DconvA) (normal/lam DnormM DnormA)
+	   <- tconverte-normal DconvA DnormA
+	   <- ({x} {d} {ex} {xt} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> converte-normal (DconvM x d ex xt) (DnormM ex dv)).
+
+-	: converte-normal (converte/pair _ DconvN _ DconvM) (normal/pair DnormN DnormM)
+	   <- converte-normal DconvM DnormM
+	   <- converte-normal DconvN DnormN.
+
+-	: converte-normal (converte/sing Dconv) (normal/atom Datom)
+	   <- aconverte-atomic Dconv Datom.
+
+
+
+-	: tconverte-normal (tconverte/t _) tnormal/t.
+
+-	: tconverte-normal (tconverte/pi DconvB DconvA) (tnormal/pi DnormB DnormA)
+	   <- tconverte-normal DconvA DnormA
+	   <- ({x} {d} {ex} {xt} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> tconverte-normal (DconvB x d ex xt) (DnormB ex dv)).
+
+-	: tconverte-normal (tconverte/sigma DconvB DconvA) (tnormal/sigma DnormB DnormA)
+	   <- tconverte-normal DconvA DnormA
+	   <- ({x} {d} {ex} {xt} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> tconverte-normal (DconvB x d ex xt) (DnormB ex dv)).
+
+-	: tconverte-normal (tconverte/sing Dconv) (tnormal/sing Datom)
+	   <- aconverte-atomic Dconv Datom.
+
+%worlds (sbind | tvbind | ovar | evar) (aconverte-atomic _ _) (converte-normal _ _) (tconverte-normal _ _).
+%total (D1 D2 D3) (aconverte-atomic D1 _) (converte-normal D2 _) (tconverte-normal D3 _).
+
+
+
+
+%%%%%  Reduction is Reflexive on Normal Terms  %%%%%
+
+atomic-implies-oa : atomic M -> oa M -> type.
+%mode atomic-implies-oa +X1 -X2.
+
+-	: atomic-implies-oa atomic/const oa/const.
+
+-	: atomic-implies-oa (atomic/forall _) oa/forall.
+
+-	: atomic-implies-oa (atomic/var D) (oa/var D).
+
+-	: atomic-implies-oa (atomic/app _ _) oa/app.
+
+-	: atomic-implies-oa (atomic/pi1 _) oa/pi1.
+
+-	: atomic-implies-oa (atomic/pi2 _) oa/pi2.
+
+%worlds (sbind | tvbind | evar | evvar) (atomic-implies-oa _ _).
+%total {} (atomic-implies-oa _ _).
+
+
+
+atomic-reduce-refl : atomic M -> reduce M M -> type.
+%mode atomic-reduce-refl +X1 -X2.
+
+normal-reduce-refl : normal M -> reduce M M -> type.
+%mode normal-reduce-refl +X1 -X2.
+
+tnormal-reduce-refl : tnormal A -> treduce A A -> type.
+%mode tnormal-reduce-refl +X1 -X2.
+
+-	: atomic-reduce-refl atomic/const reduce/const.
+
+-	: atomic-reduce-refl (atomic/forall Dnorm) (reduce/forall D)
+	   <- tnormal-reduce-refl Dnorm D.
+
+-	: atomic-reduce-refl (atomic/var D) (reduce/var D).
+
+-	: atomic-reduce-refl (atomic/app Dnorm Datom) (reduce/app (reduce-app/atom Doa) D2 D1)
+	   <- atomic-reduce-refl Datom D1
+	   <- normal-reduce-refl Dnorm D2
+	   <- atomic-implies-oa Datom Doa.
+
+-	: atomic-reduce-refl (atomic/pi1 Datom) (reduce/pi1 (reduce-pi1/atom Doa) D)
+	   <- atomic-reduce-refl Datom D
+	   <- atomic-implies-oa Datom Doa.
+
+-	: atomic-reduce-refl (atomic/pi2 Datom) (reduce/pi2 (reduce-pi2/atom Doa) D)
+	   <- atomic-reduce-refl Datom D
+	   <- atomic-implies-oa Datom Doa.
+
+
+
+-	: normal-reduce-refl (normal/atom Datom) D
+	   <- atomic-reduce-refl Datom D.
+
+-	: normal-reduce-refl (normal/lam DnormM DnormA) (reduce/lam D2 D1)
+	   <- tnormal-reduce-refl DnormA D1
+	   <- ({x} {dv:variable x}
+		 normal-reduce-refl (DnormM x dv) (D2 x dv)).
+
+-	: normal-reduce-refl (normal/pair DnormN DnormM) (reduce/pair D2 D1)
+	   <- normal-reduce-refl DnormM D1
+	   <- normal-reduce-refl DnormN D2.
+
+
+
+-	: tnormal-reduce-refl tnormal/t treduce/t.
+
+-	: tnormal-reduce-refl (tnormal/pi DnormB DnormA) (treduce/pi D2 D1)
+	   <- tnormal-reduce-refl DnormA D1
+	   <- ({x} {dv}
+		 tnormal-reduce-refl (DnormB x dv) (D2 x dv)).
+
+-	: tnormal-reduce-refl (tnormal/sigma DnormB DnormA) (treduce/sigma D2 D1)
+	   <- tnormal-reduce-refl DnormA D1
+	   <- ({x} {dv}
+		 tnormal-reduce-refl (DnormB x dv) (D2 x dv)).
+
+-	: tnormal-reduce-refl (tnormal/sing Dnorm) (treduce/sing D)
+	   <- atomic-reduce-refl Dnorm D.
+
+%worlds (sbind | tvbind | evar | evvar) (atomic-reduce-refl _ _) (normal-reduce-refl _ _) (tnormal-reduce-refl _ _).
+%total (D1 D2 D3) (atomic-reduce-refl D1 _) (normal-reduce-refl D2 _) (tnormal-reduce-refl D3 _).

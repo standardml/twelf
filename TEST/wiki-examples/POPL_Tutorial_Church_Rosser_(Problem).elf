@@ -1,0 +1,376 @@
+%{
+
+In this exercise, we will prove the [[w:Church-Rosser theorem|Church-Rosser theorem]]. You are 
+provided with a syntax and two substitution lemmas, and your task will be
+to implement two cases of the diamond lemma - the 
+'''Application-Application''' case, and the '''Beta-Application''' case. 
+
+You will be able to uncomment the <tt>%total</tt> at the end when you are 
+done.
+
+The solution is [[POPL Tutorial/Church Rosser|here]].
+
+}%
+
+%{ == Syntax == }%
+
+exp : type.  %name exp E.
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+%{ 
+
+When we use this <tt>%block</tt>, it expresses that we can be working in a 
+context with arbitrary expression variables. This will be the only world we 
+will need for this exercise. 
+
+}%
+
+%block exps : block {x: exp}.
+
+
+%{ == Reduction == }%
+%{ 
+
+We can always reduce an expression to itself (which means that we don't 
+explicitly need a case to handle variables). We can reduce under binders and 
+reduce both sides of an application "in parallel." If we have a β-redex 
+<tt>(λx.ea) eb</tt>, then after reducing <tt>ea</tt> (with <tt>x</tt> free) to 
+<tt>ea'</tt> (with <tt>x</tt> free) and reducing <tt>eb</tt> to <tt>eb'</tt>,
+we can return <tt>[eb'/x]ea'</tt>, the substitution of <tt>eb'</tt> into
+<tt>ea'</tt>.
+
+The <tt>%worlds</tt> explicitly states that we will be reducing in a setting 
+with free variables. 
+
+}%
+
+reduce : exp -> exp -> type.
+
+reduce/id : reduce E E.
+
+reduce/lam : reduce (lam E) (lam E')
+              <- ({x:exp} reduce (E x) (E' x)).
+
+reduce/app : reduce (app E1 E2) (app E1' E2')
+              <- reduce E1 E1'
+              <- reduce E2 E2'.
+
+reduce/beta : reduce (app (lam E1) E2) (E1' E2')
+              <- ({x:exp} reduce (E1 x) (E1' x))
+              <- reduce E2 E2'.
+
+%worlds (exps) (reduce _ _).
+
+%{ == Substitution == }%
+%{ 
+
+The first substitution theorem says that if we have a term <tt>e1</tt> with 
+<tt>x</tt> free and a term <tt>e2</tt> that reduces to term <tt>e2'</tt>, 
+then <tt>[e2/x]e1</tt> reduces to <tt>[e2'/x]e1</tt>. 
+
+The interesting cases are really the first two - if the term is just the free 
+variable being substituted for, the result follows from the hypothesis. In the 
+case that the free variable is ''not'' free (i.e. the term has no hole), then 
+the result follows from the reflexivity of reduction. This is more than 
+sufficient to handle the case of a variable that is not the distinguished free 
+variable, and all other cases are covered.
+
+The proof is by induction on the structure of the term with the free variable.
+
+}%
+
+substitute1 : {E1:exp -> exp} reduce E2 E2' -> reduce (E1 E2) (E1 E2') -> type.
+%mode substitute1 +X1 +X2 -X3.
+
+- : substitute1 ([x] x) D D.
+
+- : substitute1 ([x] E) _ reduce/id.
+
+- : substitute1 ([x] lam ([y] E x y)) D (reduce/lam D')
+     <- ({y} substitute1 ([x] E x y) D (D' y)).
+
+- : substitute1 ([x] app (E1 x) (E2 x)) D (reduce/app D2 D1)
+     <- substitute1 E1 D D1
+     <- substitute1 E2 D D2.
+
+%worlds (exps) (substitute1 _ _ _).
+%total E (substitute1 E _ _).
+
+%{ 
+
+The second substitution theorem is similar, except that we are reducing 
+<tt>e1</tt> with <tt>x</tt> free to <tt>e1'</tt> as well as by reducing
+<tt>e2</tt> to <tt>e2'</tt>, showing that <tt>[e2/x]e1</tt> reduces to
+<tt>[e2'/x]e1'</tt>.
+
+Proof is by induction on the structure of the reduction of <tt>e1</tt> to 
+<tt>e1'</tt>. We call to the <tt>substitute1</tt> lemma 
+when we "bottom out" at the reflexive case <tt>reduce/id</tt>.
+
+}%
+
+substitute2 
+   : ({x:exp} reduce (E1 x) (E1' x)) 
+      -> reduce E2 E2' 
+      -> reduce (E1 E2) (E1' E2') 
+      -> type.
+%mode substitute2 +X1 +X2 -X3.
+
+- : substitute2 ([x] reduce/id : reduce (E x) (E x)) D D'
+     <- substitute1 E D D'.
+
+- : substitute2 ([x] reduce/lam ([y] D1 x y)) D2 (reduce/lam D)
+     <- ({y} substitute2 ([x] D1 x y) D2 (D y)).
+
+- : substitute2 ([x] reduce/app (D2 x) (D1 x)) D (reduce/app D2' D1')
+     <- substitute2 D1 D D1'
+     <- substitute2 D2 D D2'.
+
+- : substitute2 ([x] reduce/beta (D2 x) ([y] D1 x y)) D (reduce/beta D2' D1')
+     <- ({y} substitute2 ([x] D1 x y) D (D1' y))
+     <- substitute2 D2 D D2'.
+
+%worlds (exps) (substitute2 _ _ _).
+%total D (substitute2 D _ _).
+
+%{ == The Diamond Property == }%
+%{
+
+Now we come to the interesting part: the diamond property.
+
+    E
+   / \
+  /   \
+ E1   E2
+  \   /
+   \ /
+    E'
+
+If <tt>E</tt> reduces to both <tt>E1</tt>, and <tt>E2</tt>, then there is a 
+common E' such that <tt>E1</tt> and <tt>E2</tt> both reduce to it.
+
+}%
+
+diamond : reduce E E1 -> reduce E E2 -> reduce E1 E' -> reduce E2 E' -> type.
+%mode diamond +X1 +X2 -X3 -X4.
+
+%{ === Identity === }%
+%{ 
+
+If either case is the identity, then we are done. 
+
+ id:    E  D:       D:     E  id:
+ e=>e  / \ e=>e2    e=>e1 / \ e=>e
+      /   \              /   \
+     E    E2            E1    E
+ D:   \   /id:      id:  \   /D:
+ e=>e2 \ / e2=>e2   e1=>e1\ / e=>e1
+        e2                 E1
+
+}%
+
+- : diamond reduce/id D D reduce/id.
+- : diamond D reduce/id reduce/id D.
+
+%{ === Lambda-Lambda === }%
+%{ 
+
+If both cases are reductions under a binder, we pull the result straight 
+from the induction hypothesis. 
+
+             λx.e              by induction:
+ reduce/lam   / \  reduce/lam    D1, D2 ---> D1': e1'=>e'
+ (D1: e=>e1) /   \ (D2: e=>e2)               D2': e2'=>e'
+            /     \
+         λx.e1   λx.e2
+            \     /
+ reduce/lam  \   / reduce/lam
+ D1'          \ /  D2'
+             λx.e' 
+
+Note the oversimplification being made in the graphical presentation, in that
+the subterms and sub-derivations are not clearly shown to have a free variable.
+Twelf will, of course, not allow this sloppiness.
+
+}%
+
+- : diamond 
+     (reduce/lam (D1 : {x: exp} reduce (E x) (E1 x))
+        : reduce (lam E) (lam E1))
+     (reduce/lam (D2 : {x: exp} reduce (E x) (E2 x))
+        : reduce (lam E) (lam E2))
+     (reduce/lam D1') (reduce/lam D2')
+     <- ({x: exp} diamond (D1 x) (D2 x) 
+          (D1' x : reduce (E1 x) (E' x))
+          (D2' x : reduce (E2 x) (E' x))).
+
+%{ === Application-Application === }%
+%{
+
+If both cases are applications, we pull the result straight from the 
+induction hypothesis. 
+
+                  ea eb                by induction
+ reduce/app       /   \   reduce/app     D1a, D2a ---> D1a': e1a=>ea'
+ (D1b: eb=>e1b)  /     \  (D2b: eb=>e2b)               D2a': e2a=>ea'
+ (D1a: ea=>e1a) /       \ (D2a: ea=>e2a) D1b, D2b ---> D1b': e1b=>eb' 
+            e1a e1b   e2a e2b                          D2b': e2b=>eb'
+                \       /
+ reduce/app      \     /  reduce/app
+ D1b' D1a'        \   /   D2b' D2a'
+                 ea' eb'
+}%
+
+%% WRITE THIS CASE
+
+%{ === Beta-Beta === }%
+%{
+
+If both cases are beta reductions, we get the result from performing two 
+substitutions. 
+
+               (λx.ea) eb            by induction
+ reduce/beta      / \   reduce/beta    D1a, D2a ---> D1a': e1a=>ea'
+ (D1b: eb=>e1b)  /   \  (D2b: eb=>e2b)               D2a': e2a=>ea'
+ (D1a: ea=>e1a) /     \ (D2a: ea=>e1a) D1b, D2b ---> D1b': e1b=>eb'
+         [e1b/x]e1a  [e2b/x]e2a                      D2b': e2b=>eb'
+                \     /
+ substitute      \   /  substitute
+ D1b' into D1a'   \ /   D2b' into D2a'
+              [eb'/x]ea
+}% 
+
+- : diamond 
+     (reduce/beta 
+          (D1b : reduce Eb E1b)
+          (D1a : {x} reduce (Ea x) (E1a x))
+        : reduce (app (lam Ea) Eb) (E1a E1b))
+     (reduce/beta
+          (D2b : reduce Eb E2b)
+          (D2a : {x} reduce (Ea x) (E2a x))
+        : reduce (app (lam Ea) Eb) (E2a E2b))
+     D1 D2
+     <- ({x} diamond (D1a x) (D2a x)
+          (D1a' x : reduce (E1a x) (Ea' x))
+          (D2a' x : reduce (E2a x) (Ea' x)))
+     <- diamond D1b D2b
+          (D1b'   : reduce E1b Eb')
+          (D2b'   : reduce E2b Eb')
+     <- substitute2 D1a' D1b' 
+          (D1     : reduce (E1a E1b) (Ea' Eb'))
+     <- substitute2 D2a' D2b'
+          (D2     : reduce (E2a E2b) (Ea' Eb')).
+
+%{ === Beta-Application === }%
+%{
+
+If the left-hand side is a β-reduction 
+<tt>(λx.ea) eb => [e1b/x] e1a</tt> but the right-hand side is not, then we 
+know that the right-hand side reduction must be 
+<tt>(λx.ea) eb => (λx.e2a) e2b</tt>.
+
+Unfortunately, then we have two options - either <tt>λx.ea => λx.e2a</tt> by
+<tt>reduce/refl</tt> and <tt>reduce/lam</tt>. The <tt>reduce/refl</tt> case
+is essentially just an inconvenience caused by allowing identity reductions
+anywhere (not just at variables).
+
+The first subcase:
+
+              (λx.ea) eb              by induction  
+ reduce/beta      / \   reduce/app      D1a, D2a ---> D1a': e1a=>ea'
+ (D1b: eb=>e1b)  /   \  (D2b: eb=>e2b)                D2a': e2a=>ea'
+ (D1a: ea=>e1a) /     \ (reduce/lam     D1b, D2b ---> D1b': e1b=>eb'
+               /       \  (D2a: ea=>e2a))             D2b': e1b=>eb'
+        [e1b/x]e1a  (λx.e2a) e2b
+               \       /
+ substitute     \     / reduce/beta     
+ D1b' into D2a'  \   /  D2b' D2a'      
+                  \ /   
+               [eb'/x]ea'              
+}%
+
+%% WRITE THIS CASE
+
+%{
+
+The second subcase:
+
+              (λx.ea) eb              by induction  
+ reduce/beta      / \   reduce/app      D1b, D2b ---> D1b': e1b=>eb'
+ (D1b: eb=>e1b)  /   \  (D2b: eb=>e2b)                D2b': e1b=>eb'
+ (D1a: ea=>e1a) /     \ (reduce/id      
+               /       \   ea=>ea))     
+        [e1b/x]e1a   (λx.ea) e2b
+               \       /
+ substitute     \     / reduce/beta     
+ D1b' into e1a   \   /  D2b' D1a   
+                  \ /   
+               [eb'/x]e1a        
+}%
+
+- : diamond
+     (reduce/beta 
+          (D1b : reduce Eb E1b) 
+          (D1a : {x} reduce (Ea x) (E1a x))
+        : reduce (app (lam Ea) Eb) (E1a E1b))
+     (reduce/app 
+          (D2b : reduce Eb E2b) 
+          (reduce/id : reduce (lam Ea) (lam Ea))
+        : reduce (app (lam Ea) Eb) (app (lam Ea) E2b))
+     D1 (reduce/beta D2b' D1a) 
+     <- diamond D1b D2b
+          (D1b'   : reduce E1b Eb')
+          (D2b'   : reduce E2b Eb')
+     <- substitute1 E1a D1b' 
+          (D1     : reduce (E1a E1b) (E1a Eb')).
+
+
+%{ === Application-Beta === }%
+%{ 
+
+If the right-hand hand side is a β-reduction but the left-hand side is not, we 
+have to do the same two cases in reverse; we omit the graphics for those 
+two cases as they are symmetric.
+
+}% 
+
+- : diamond
+     (reduce/app 
+          (D1b : reduce Eb E1b) 
+          (reduce/id : reduce (lam Ea) (lam Ea))
+        : reduce (app (lam Ea) Eb) (app (lam Ea) E1b))
+     (reduce/beta 
+          (D2b : reduce Eb E2b) 
+          (D2a : {x} reduce (Ea x) (E2a x))
+        : reduce (app (lam Ea) Eb) (E2a E2b))
+     (reduce/beta D1b' D2a) D2
+     <- diamond D1b D2b
+          (D1b'   : reduce E1b Eb')
+          (D2b'   : reduce E2b Eb')
+     <- substitute1 E2a D2b' 
+          (D2     : reduce (E2a E2b) (E2a Eb')).
+
+- : diamond
+     (reduce/app
+          (D1b : reduce Eb E1b)
+          (reduce/lam (D1a : {x} reduce (Ea x) (E1a x)))
+        : reduce (app (lam Ea) Eb) (app (lam E1a) E1b))
+     (reduce/beta 
+          (D2b : reduce Eb E2b)
+          (D2a : {x} reduce (Ea x) (E2a x))
+        : reduce (app (lam Ea) Eb) (E2a E2b))
+     (reduce/beta D1b' D1a') D2
+     <- ({x} diamond (D1a x) (D2a x)
+          (D1a' x : reduce (E1a x) (Ea' x))
+          (D2a' x : reduce (E2a x) (Ea' x)))
+     <- diamond D1b D2b
+          (D1b'   : reduce E1b Eb')
+          (D2b'   : reduce E2b Eb')
+     <- substitute2 D2a' D2b' 
+          (D2     : reduce (E2a E2b) (Ea' Eb')).
+
+%{ Now we are done! We check in the <tt>exps</tt> world with free variables.}%
+
+%worlds (exps) (diamond _ _ _ _).
+%% %total D1 (diamond D1 D2 _ _).

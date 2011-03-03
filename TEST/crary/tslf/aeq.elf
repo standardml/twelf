@@ -1,0 +1,180 @@
+%%%% algorithmic equivalence for constructors a la SH
+
+% cn-path		: cn -> type.
+
+cn-nke		: cn -> kd -> type.
+%mode cn-nke +C -K.
+
+cn-redex	: cn -> cn -> type.
+%mode cn-redex +C1 -C2.
+
+cn-whr		: cn -> cn -> type.
+%mode cn-whr +C1 -C2.
+
+cn-whn		: cn -> cn -> type.
+%mode cn-whn +C1 -C2.
+
+kd-aeq		: kd -> kd -> type.
+%mode kd-aeq +K1 +K2.
+
+cn-aeq		: cn -> cn -> kd -> type.
+%mode cn-aeq +C1 +C2 *K.
+
+cn-peq		: cn -> cn -> kd -> type.
+%mode cn-peq +C1 +C2 *K.
+
+%%%%
+
+% cn-path/var	: cn-path D
+
+% cn-path/pj1	: cn-path 
+
+%%%% natural kind extraction
+%{
+cn-nke/tp/unit		: cn-nke tp/unit kd/type.
+
+cn-nke/tp/arrow		: cn-nke (tp/arrow _ _) kd/type.
+
+cn-nke/tp/cross		: cn-nke (tp/cross _ _) kd/type.
+
+cn-nke/tp/forall	: cn-nke (tp/forall _ _) kd/type.
+
+cn-nke/tp/ref		: cn-nke (tp/ref _) kd/type.
+
+cn-nke/tp/tag		: cn-nke (tp/tag _) kd/type.
+
+cn-nke/cn/unit		: cn-nke cn/unit kd/unit.
+}%
+cn-nke/cn/pj1		: cn-nke (cn/pj1 P1) K'
+			   <- cn-nke P1 (kd/sgm K' K'').
+
+cn-nke/cn/pj2		: cn-nke (cn/pj2 P1) (K'' (cn/pj1 P1))
+			   <- cn-nke P1 (kd/sgm K' K'').
+
+
+%%%%
+
+cn-redex/lam	: cn-redex (cn/app (cn/lam K C) C')  (C C').
+
+cn-redex/pj1	: cn-redex (cn/pj1(cn/pair C1 C2)) C1.
+
+cn-redex/pj2	: cn-redex (cn/pj2(cn/pair C1 C2)) C2.
+
+%%%%
+
+cn-whr/app	: cn-whr (cn/app C1 C2) (cn/app C1' C2)
+		   <- cn-whr C1 C1'.
+
+cn-whr/pj1	: cn-whr (cn/pj1 C1) (cn/pj1 C1')
+		   <- cn-whr C1 C1'.
+
+cn-whr/pj2	: cn-whr (cn/pj2 C1) (cn/pj2 C1')
+		   <- cn-whr C1 C1'.
+
+cn-whr/redex	: cn-whr C C'
+		   <- cn-redex C C'.
+
+cn-whr/def	: cn-whr P C
+		   <- cn-nke P (kd/sing C).
+
+%%%%
+
+cn-whn/step	: cn-whn C D
+		   <- cn-whr C C'
+		   <- cn-whn C' D.
+
+
+
+cn-whn/refl	: cn-whn C C.
+
+
+%%%%
+
+kd-aeq/kd/unit	: kd-aeq kd/unit kd/unit.
+
+kd-aeq/kd/type	: kd-aeq kd/type kd/type.
+
+kd-aeq/kd/sing	: kd-aeq (kd/sing C1) (kd/sing C2)
+		   <- cn-aeq C1 C2 kd/type.
+
+kd-aeq/kd/sgm	: kd-aeq (kd/sgm K1 K2) (kd/sgm K3 K4)
+		   <- ({a:cn} {da: ofkd a K1}
+			 kd-aeq (K2 a) (K4 a))
+		   <- kd-aeq K1 K3.
+
+kd-aeq/kd/pi	: kd-aeq (kd/pi K1 K2) (kd/pi K3 K4)
+		   <- ({a:cn} {da: ofkd a K3}
+			 kd-aeq (K2 a) (K4 a))
+		   <- kd-aeq K3 K1.
+
+%%%%
+
+cn-aeq/kd/unit	: cn-aeq C1 C2 kd/unit.
+
+cn-aeq/kd/type	: cn-aeq C1 C2 kd/type
+		   <- cn-whn C1 P1
+		   <- cn-whn C2 P2
+		   <- cn-peq P1 P2 kd/type.
+
+cn-aeq/kd/sing	: cn-aeq C1 C2 (kd/sing C).
+
+cn-aeq/kd/pi	: cn-aeq C1 C2 (kd/pi K1 K2)
+		   <- ({a:cn} {da:ofkd a K1}
+			 cn-aeq (cn/app C1 a) (cn/app C2 a) (K2 a)).
+
+cn-aeq/kd/sgm	: cn-aeq C1 C2 (kd/sgm K1 K2)
+		   <- cn-aeq (cn/pj2 C1) (cn/pj2 C2) (K2 (cn/pj1 C1))
+		   <- cn-aeq (cn/pj1 C1) (cn/pj2 C2) K1.
+		      
+
+%%%% path equivalence
+%{
+cn-peq/var		: cn-peq A A K
+			   <- ofkd A K.
+}%
+cn-peq/tp/unit		: cn-peq tp/unit tp/unit kd/type.
+
+cn-peq/tp/tagged	: cn-peq tp/tagged tp/tagged kd/type.
+
+cn-peq/tp/cross		: cn-peq (tp/cross C1 C1') (tp/cross C2 C2') kd/type
+			   <- cn-aeq C1' C2' kd/type
+			   <- cn-aeq C1 C2 kd/type.
+
+cn-peq/tp/arrow		: cn-peq (tp/arrow C1 C1') (tp/arrow C2 C2') kd/type
+			   <- cn-aeq C1' C2' kd/type
+			   <- cn-aeq C1 C2 kd/type.
+
+cn-peq/tp/sum		: cn-peq (tp/sum C1 C1') (tp/sum C2 C2') kd/type
+			   <- cn-aeq C1' C2' kd/type
+			   <- cn-aeq C1 C2 kd/type.
+
+cn-peq/tp/forall	: cn-peq (tp/forall K1 C1) (tp/forall K2 C2) kd/type
+			   <- kd-aeq K1 K2
+			   <- ({a} {da: ofkd a K1}
+				 cn-aeq (C1 a) (C2 a) kd/type).
+
+cn-peq/cn/mu		: cn-peq (cn/mu K1 C1) (cn/mu K2 C2) K
+			   <- kd-aeq K1 K2
+			   <- ({a} {da: ofkd a K}
+				 cn-aeq (C1 a) (C2 a) K).
+
+cn-peq/tp/ref		: cn-peq (tp/ref C1) (tp/ref C2) kd/type
+			   <- cn-aeq C1 C2 kd/type.
+
+cn-peq/tp/tag		: cn-peq (tp/tag C1) (tp/tag C2) kd/type
+			   <- cn-aeq C1 C2 kd/type.
+
+cn-peq/cn/unit		: cn-peq cn/unit cn/unit kd/unit.
+
+cn-peq/cn/app		: cn-peq (cn/app P1 C1) (cn/app P2 C2) (K'' C1)
+			   <- cn-peq P1 P2 (kd/pi K' K'')
+			   <- cn-aeq C1 C2 K'.
+
+cn-peq/cn/pj1		: cn-peq (cn/pj1 P1) (cn/pj2 P2) K'
+			   <- cn-peq P1 P2 (kd/sgm K' K'').
+
+cn-peq/cn/pj2		: cn-peq (cn/pj2 P1) (cn/pj2 P2) (K'' (cn/pj1 P1))
+			   <- cn-peq P1 P2 (kd/sgm K' K'').
+
+%worlds (ofkd-block) (cn-aeq _ _ _) (cn-peq _ _ _) (cn-whr _ _) (cn-whn _ _) 
+(kd-aeq _ _) (cn-nke _ _) (cn-redex _ _).

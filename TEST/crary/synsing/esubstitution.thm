@@ -1,0 +1,399 @@
+
+%%%%%  Worlds  %%%%%
+
+%block nbind : some {a:tp} {ea:etp}
+		 block {x:atom} {d:vof x a} {ex:eterm} {xt:vtrans ex x} {ed:evof ex ea}.
+
+
+
+
+%%%%%  Substitution  %%%%%
+
+esubst-of-gen		: (evof M A -> eof N B)
+			   -> (eof M A -> eof N B) -> type.
+%mode esubst-of-gen +X1 -X2.
+
+esubst-wf-gen		: (evof M A -> ewf B)
+			   -> (eof M A -> ewf B) -> type.
+%mode esubst-wf-gen +X1 -X2.
+
+esubst-subtp-gen	: (evof M A -> subtp B C)
+			   -> (eof M A -> subtp B C) -> type.
+%mode esubst-subtp-gen +X1 -X2.
+
+esubst-tequiv-gen	: (evof M A -> tequiv B C)
+			   -> (eof M A -> tequiv B C) -> type.
+%mode esubst-tequiv-gen +X1 -X2.
+
+esubst-equiv-gen	: (evof M A -> equiv N N' B)
+			   -> (eof M A -> equiv N N' B) -> type.
+%mode esubst-equiv-gen +X1 -X2.
+
+
+-varsam	: esubst-of-gen ([d] eof/var (D d) d) ([d] d).
+
+-varoth	: esubst-of-gen ([d] eof/var (D2 d) D1) ([d] eof/var (D2' d) D1)
+	   <- esubst-wf-gen D2 D2'.
+
+-const	: esubst-of-gen ([d] eof/const (D2 d) D) ([d] eof/const (D2' d) D)
+	   <- esubst-wf-gen D2 D2'.
+
+-lam	: esubst-of-gen ([d] eof/lam (D2 d) (D1 d)) ([d] eof/lam (D2' d) (D1' d))
+	   <- esubst-wf-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-of-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-app	: esubst-of-gen ([d] eof/app (D2 d) (D1 d)) ([d] eof/app (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- esubst-of-gen D2 D2'.
+
+-pair	: esubst-of-gen ([d] eof/pair (D3 d : {y} evof y A -> ewf (B y)) (D2 d) (D1 d)) ([d] eof/pair (D3' d) (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- esubst-of-gen D2 D2'
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D3 d y e) ([d] D3' d y e)).
+
+-star	: esubst-of-gen ([d] eof/star) ([d] eof/star).
+
+-pi1	: esubst-of-gen ([d] eof/pi1 (D d)) ([d] eof/pi1 (D' d))
+	   <- esubst-of-gen D D'.
+
+-pi2	: esubst-of-gen ([d] eof/pi2 (D d)) ([d] eof/pi2 (D' d))
+	   <- esubst-of-gen D D'.
+
+-sing	: esubst-of-gen ([d] eof/sing (D d)) ([d] eof/sing (D' d))
+	   <- esubst-of-gen D D'.
+
+-extpi	: esubst-of-gen ([d] eof/extpi (D2 d) (D1 d)) ([d] eof/extpi (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-of-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-extsig	: esubst-of-gen ([d] eof/extsigma (D3 d) (D2 d) (D1 d)) ([d] eof/extsigma (D3' d) (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- esubst-of-gen D2 D2'
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D3 d y e) ([d] D3' d y e)).
+
+-subsum	: esubst-of-gen ([d] eof/subsume (D2 d) (D1 d)) ([d] eof/subsume (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- esubst-subtp-gen D2 D2'.
+
+
+
+-t	: esubst-wf-gen ([d] ewf/t) ([d] ewf/t).
+
+-pi	: esubst-wf-gen ([d] ewf/pi (D2 d) (D1 d)) ([d] ewf/pi (D2' d) (D1' d))
+	   <- esubst-wf-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-sigma	: esubst-wf-gen ([d] ewf/sigma (D2 d) (D1 d)) ([d] ewf/sigma (D2' d) (D1' d))
+	   <- esubst-wf-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-sing	: esubst-wf-gen ([d] ewf/sing (D d)) ([d] ewf/sing (D' d))
+	   <- esubst-of-gen D D'.
+
+-one	: esubst-wf-gen ([d] ewf/one) ([d] ewf/one).
+
+
+
+-refl	: esubst-subtp-gen ([d] subtp/reflex (D d)) ([d] subtp/reflex (D' d))
+	   <- esubst-tequiv-gen D D'.
+
+-trans	: esubst-subtp-gen ([d] subtp/trans (D2 d) (D1 d)) ([d] subtp/trans (D2' d) (D1' d))
+	   <- esubst-subtp-gen D1 D1'
+	   <- esubst-subtp-gen D2 D2'.
+
+-sing_t	: esubst-subtp-gen ([d] subtp/sing_t (D d)) ([d] subtp/sing_t (D' d))
+	   <- esubst-of-gen D D'.
+
+-pi	: esubst-subtp-gen ([d] subtp/pi (D3 d) (D2 d) (D1 d)) ([d] subtp/pi (D3' d) (D2' d) (D1' d))
+	   <- esubst-subtp-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-subtp-gen ([d] D2 d y e) ([d] D2' d y e))
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D3 d y e) ([d] D3' d y e)).
+
+-sigma	: esubst-subtp-gen ([d] subtp/sigma (D3 d) (D2 d) (D1 d)) ([d] subtp/sigma (D3' d) (D2' d) (D1' d))
+	   <- esubst-subtp-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-subtp-gen ([d] D2 d y e) ([d] D2' d y e))
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D3 d y e) ([d] D3' d y e)).
+
+
+
+-refl	: esubst-tequiv-gen ([d] tequiv/reflex (D d)) ([d] tequiv/reflex (D' d))
+	   <- esubst-wf-gen D D'.
+
+-symm	: esubst-tequiv-gen ([d] tequiv/symm (D d)) ([d] tequiv/symm (D' d))
+	   <- esubst-tequiv-gen D D'.
+
+-trans	: esubst-tequiv-gen ([d] tequiv/trans (D2 d) (D1 d)) ([d] tequiv/trans (D2' d) (D1' d))
+	   <- esubst-tequiv-gen D1 D1'
+	   <- esubst-tequiv-gen D2 D2'.
+
+-pi	: esubst-tequiv-gen ([d] tequiv/pi (D2 d) (D1 d)) ([d] tequiv/pi (D2' d) (D1' d))
+	   <- esubst-tequiv-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-tequiv-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-sigma	: esubst-tequiv-gen ([d] tequiv/sigma (D2 d) (D1 d)) ([d] tequiv/sigma (D2' d) (D1' d))
+	   <- esubst-tequiv-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-tequiv-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-sing	: esubst-tequiv-gen ([d] tequiv/sing (D d)) ([d] tequiv/sing (D' d))
+	   <- esubst-equiv-gen D D'.
+
+
+
+-refl	: esubst-equiv-gen ([d] equiv/reflex (D d)) ([d] equiv/reflex (D' d))
+	   <- esubst-of-gen D D'.
+
+-symm	: esubst-equiv-gen ([d] equiv/symm (D d)) ([d] equiv/symm (D' d))
+	   <- esubst-equiv-gen D D'.
+
+-trans	: esubst-equiv-gen ([d] equiv/trans (D2 d) (D1 d)) ([d] equiv/trans (D2' d) (D1' d))
+	   <- esubst-equiv-gen D1 D1'
+	   <- esubst-equiv-gen D2 D2'.
+
+
+-lam	: esubst-equiv-gen ([d] equiv/lam (D2 d) (D1 d)) ([d] equiv/lam (D2' d) (D1' d))
+	   <- esubst-tequiv-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-equiv-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-app	: esubst-equiv-gen ([d] equiv/app (D2 d) (D1 d)) ([d] equiv/app (D2' d) (D1' d))
+	   <- esubst-equiv-gen D1 D1'
+	   <- esubst-equiv-gen D2 D2'.
+
+-pair	: esubst-equiv-gen ([d] equiv/pair (D3 d : {y} evof y A -> ewf (B y)) (D2 d) (D1 d)) ([d] equiv/pair (D3' d) (D2' d) (D1' d))
+	   <- esubst-equiv-gen D1 D1'
+	   <- esubst-equiv-gen D2 D2'
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D3 d y e) ([d] D3' d y e)).
+
+-pi1	: esubst-equiv-gen ([d] equiv/pi1 (D d)) ([d] equiv/pi1 (D' d))
+	   <- esubst-equiv-gen D D'.
+
+-pi2	: esubst-equiv-gen ([d] equiv/pi2 (D d)) ([d] equiv/pi2 (D' d))
+	   <- esubst-equiv-gen D D'.
+
+-sing	: esubst-equiv-gen ([d] equiv/sing (D d)) ([d] equiv/sing (D' d))
+	   <- esubst-equiv-gen D D'.
+
+-singel	: esubst-equiv-gen ([d] equiv/singelim (D d)) ([d] equiv/singelim (D' d))
+	   <- esubst-of-gen D D'.
+
+-one	: esubst-equiv-gen ([d] equiv/one (D2 d) (D1 d)) ([d] equiv/one (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- esubst-of-gen D2 D2'.
+
+-extpi	: esubst-equiv-gen ([d] equiv/extpi (D3 d) (D2 d) (D1 d)) ([d] equiv/extpi (D3' d) (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- esubst-of-gen D2 D2'
+	   <- ({y} {e}
+		 esubst-equiv-gen ([d] D3 d y e) ([d] D3' d y e)).
+
+-extpiw	: esubst-equiv-gen ([d] equiv/extpiw (D2 d) (D1 d)) ([d] equiv/extpiw (D2' d) (D1' d))
+	   <- esubst-equiv-gen D1 D1'
+	   <- ({y} {e}
+		 esubst-equiv-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-extsig	: esubst-equiv-gen ([d] equiv/extsigma (D3 d) (D2 d) (D1 d)) ([d] equiv/extsigma (D3' d) (D2' d) (D1' d))
+	   <- esubst-equiv-gen D1 D1'
+	   <- esubst-equiv-gen D2 D2'
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D3 d y e) ([d] D3' d y e)).
+
+-subsum	: esubst-equiv-gen ([d] equiv/subsume (D2 d) (D1 d)) ([d] equiv/subsume (D2' d) (D1' d))
+	   <- esubst-equiv-gen D1 D1'
+	   <- esubst-subtp-gen D2 D2'.
+
+-beta	: esubst-equiv-gen ([d] equiv/beta (D2 d) (D1 d)) ([d] equiv/beta (D2' d) (D1' d))
+	   <- ({y} {e}
+		 esubst-of-gen ([d] D1 d y e) ([d] D1' d y e))
+	   <- esubst-of-gen D2 D2'.
+
+-beta1	: esubst-equiv-gen ([d] equiv/beta1 (D2 d) (D1 d)) ([d] equiv/beta1 (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- esubst-of-gen D2 D2'.
+
+-beta2	: esubst-equiv-gen ([d] equiv/beta2 (D2 d) (D1 d)) ([d] equiv/beta2 (D2' d) (D1' d))
+	   <- esubst-of-gen D1 D1'
+	   <- esubst-of-gen D2 D2'.
+
+%worlds (evar | eofblock | ebind | etopenblock) (esubst-of-gen _ _) (esubst-wf-gen _ _) (esubst-subtp-gen _ _) (esubst-tequiv-gen _ _) (esubst-equiv-gen _ _).
+%total (D1 D2 D3 D4 D5) (esubst-of-gen D1 _) (esubst-wf-gen D2 _) (esubst-subtp-gen D3 _) (esubst-tequiv-gen D4 _) (esubst-equiv-gen D5 _).
+
+
+
+esubst : ({x} evof x A -> eof (M x) (B x))
+	  -> eof N A
+	  -> eof (M N) (B N) -> type.
+%mode esubst +X1 +X2 -X3.
+
+-	: esubst D1 D2 (D1' D2)
+	   <- esubst-of-gen (D1 _) D1'.
+
+%worlds (evar | eofblock | ebind | etopenblock) (esubst _ _ _).
+%total {} (esubst _ _ _).
+
+
+
+esubst2 : ({x} evof x A -> {y} evof y (B x) -> eof (M x y) (C x y))
+	   -> eof N A
+	   -> eof O (B N)
+	   -> eof (M N O) (C N O) -> type.
+%mode esubst2 +X1 +X2 +X3 -X4.
+
+-	: esubst2 DofM DofN DofO
+	   (Dof' DofN)
+	   <- ({d}
+		 esubst-of-gen ([e] DofM N d O e) ([e] Dof d e))
+	   <- esubst-of-gen ([d] Dof d DofO) Dof'.
+
+%worlds (ebind | etopenblock) (esubst2 _ _ _ _).
+%total {} (esubst2 _ _ _ _).
+
+
+
+esubst-subtp : ({x} evof x A -> subtp (B x) (EC x))
+		-> eof N A
+		-> subtp (B N) (EC N) -> type.
+%mode esubst-subtp +X1 +X2 -X3.
+
+-	: esubst-subtp D1 D2 (D1' D2)
+	   <- esubst-subtp-gen (D1 _) D1'.
+
+%worlds (evar | eofblock | ebind | etopenblock) (esubst-subtp _ _ _).
+%total {} (esubst-subtp _ _ _).
+
+
+
+esubst-wf : ({x} evof x A -> ewf (B x))
+	     -> eof N A
+	     -> ewf (B N) -> type.
+%mode esubst-wf +X1 +X2 -X3.
+
+-	: esubst-wf D1 D2 (D1' D2)
+	   <- esubst-wf-gen (D1 _) D1'.
+
+%worlds (evar | eofblock | ebind | etopenblock) (esubst-wf _ _ _).
+%total {} (esubst-wf _ _ _).
+
+
+
+esubst2-wf : ({x} evof x A -> {y} evof y (B x) -> ewf (C x y))
+	   -> eof N A
+	   -> eof O (B N)
+	   -> ewf (C N O) -> type.
+%mode esubst2-wf +X1 +X2 +X3 -X4.
+
+-	: esubst2-wf DwfC DofN DofO
+	   (Dwf' DofN)
+	   <- ({d}
+		 esubst-wf-gen ([e] DwfC N d O e) ([e] Dwf d e))
+	   <- esubst-wf-gen ([d] Dwf d DofO) Dwf'.
+
+%worlds (ebind | etopenblock) (esubst2-wf _ _ _ _).
+%total {} (esubst2-wf _ _ _ _).
+
+
+
+esubst-equiv : ({x} evof x A -> equiv (M x) (M' x) (B x))
+		-> eof N A
+		-> equiv (M N) (M' N) (B N) -> type.
+%mode esubst-equiv +X1 +X2 -X3.
+
+-	: esubst-equiv D1 D2 (D1' D2)
+	   <- esubst-equiv-gen (D1 _) D1'.
+
+%worlds (evar | eofblock | ebind | etopenblock) (esubst-equiv _ _ _).
+%total {} (esubst-equiv _ _ _).
+
+
+
+esubst2-equiv : ({x} evof x A -> {y} evof y (B x) -> equiv (M x y) (M' x y) (C x y))
+		 -> eof N A
+		 -> eof O (B N)
+		 -> equiv (M N O) (M' N O) (C N O) -> type.
+%mode esubst2-equiv +X1 +X2 +X3 -X4.
+
+-	: esubst2-equiv Dequiv DofN DofO
+	   (Dequiv'' DofN)
+	   <- ({d}
+		 esubst-equiv-gen ([e] Dequiv N d O e) ([e] Dequiv' d e))
+	   <- esubst-equiv-gen ([d] Dequiv' d DofO) Dequiv''.
+
+%worlds (ebind | etopenblock) (esubst2-equiv _ _ _ _).
+%total {} (esubst2-equiv _ _ _ _).
+
+
+
+esubst-tequiv : ({x} evof x A -> tequiv (B x) (B' x))
+		 -> eof N A
+		 -> tequiv (B N) (B' N) -> type.
+%mode esubst-tequiv +X1 +X2 -X3.
+
+-	: esubst-tequiv D1 D2 (D1' D2)
+	   <- esubst-tequiv-gen (D1 _) D1'.
+
+%worlds (evar | eofblock | ebind | etopenblock) (esubst-tequiv _ _ _).
+%total {} (esubst-tequiv _ _ _).
+
+
+
+esubst-subtp : ({x} evof x A -> subtp (B x) (B' x))
+		 -> eof N A
+		 -> subtp (B N) (B' N) -> type.
+%mode esubst-subtp +X1 +X2 -X3.
+
+-	: esubst-subtp D1 D2 (D1' D2)
+	   <- esubst-subtp-gen (D1 _) D1'.
+
+%worlds (evar | eofblock | ebind | etopenblock) (esubst-subtp _ _ _).
+%total {} (esubst-subtp _ _ _).
+
+
+
+
+%%%%%  Inhabitation  %%%%%
+
+einhabitation : ewf A -> eof M A -> type.
+%mode einhabitation +X1 -X2.
+
+-	: einhabitation ewf/t (eof/const ewf/t (ekof/i etopen/t ckof/unit)).
+
+-	: einhabitation (ewf/pi DwfB DwfA) (eof/lam Dof DwfA)
+	   <- ({x} {d}
+		 einhabitation (DwfB x d) (Dof x d)).
+
+-	: einhabitation (ewf/sigma DwfB DwfA) (eof/pair DwfB DofB' DofA)
+	   <- einhabitation DwfA DofA
+	   <- ({x} {d}
+		 einhabitation (DwfB x d) (DofB x d))
+	   <- esubst DofB DofA DofB'.
+
+-	: einhabitation (ewf/sing Dof) (eof/sing Dof).
+
+-	: einhabitation ewf/one eof/star.
+
+%worlds (ebind | etopenblock) (einhabitation _ _).
+%total D (einhabitation D _).
+
+
+
+estrengthen-wf : ewf A -> ({x} evof x A -> ewf B) -> ewf B -> type.
+%mode estrengthen-wf +X1 +X2 -X3.
+
+-	: estrengthen-wf DwfA DwfB DwfB'
+	   <- einhabitation DwfA Dof
+	   <- esubst-wf DwfB Dof DwfB'.
+
+%worlds (ebind | etopenblock) (estrengthen-wf _ _ _).
+%total {} (estrengthen-wf _ _ _).

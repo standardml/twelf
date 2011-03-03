@@ -1,0 +1,1225 @@
+
+%{
+Twelf code for Explicit Contexts in LF (version 3)
+}%
+
+
+%%%%%  Syntax  %%%%%
+
+tp      : type.  %name tp A.
+exp     : type.  %name exp M.
+
+o       : tp.
+p	: exp -> tp.
+pi      : tp -> (exp -> tp) -> tp.
+
+b       : exp.
+lam     : tp -> (exp -> exp) -> exp.
+app     : exp -> exp -> exp.
+
+
+
+
+%%%%%  Typing Rules (Implicit Context)  %%%%%
+
+of      : exp -> tp -> type.
+
+of/b    : of b o.
+
+of/lam  : of (lam A ([x] M x)) (pi A ([x] B x))
+           <- ({x} of x A -> of (M x) (B x)).
+
+of/app  : of (app M N) (B N)
+           <- of M (pi A ([x] B x))
+           <- of N A.
+
+
+
+
+%%%%%  Natural Numbers  %%%%%
+
+nat : type.  %name nat N.
+
+0 : nat.
+s : nat -> nat.
+
+
+
+nat-eq : nat -> nat -> type.
+nat-eq/i : nat-eq N N.
+
+
+
+lt : nat -> nat -> type.
+
+lt/z		: lt 0 (s _).
+lt/s		: lt (s N1) (s N2)
+		   <- lt N1 N2.
+
+
+
+
+%%%%%  Contexts  %%%%%
+
+isvar   : exp -> nat -> type.
+%{
+The assumption "isvar X I" indicates that the expression X is a variable
+and carries order stamp I.
+}%
+
+%{
+Isvar will be frozen shorly.  Make it depend on itself while we still can.
+}%
+-       : (isvar _ _ -> isvar _ _) -> type.
+
+
+ctx     : type.  %name ctx G.
+
+nil     : ctx.
+cons    : ctx -> exp -> tp -> ctx.
+
+
+
+precedes : exp -> exp -> type.
+
+precedes/i      : precedes X Y
+                   <- isvar X I
+                   <- isvar Y J
+                   <- lt I J.
+
+
+
+ordered : ctx -> type.
+bounded : ctx -> exp -> type.
+%{
+"ordered G" means that the assumptions are listed in increasing order by stamp.
+"bounded G X" means that G is ordered and all assumptions are less than X.
+}%
+
+ordered/nil     : ordered nil.
+
+ordered/cons    : ordered (cons G X _)
+                   <- bounded G X.
+
+bounded/nil     : bounded nil X
+                   <- isvar X _.
+
+bounded/cons    : bounded (cons G Y _) X
+                   <- precedes Y X
+                   <- bounded G Y.
+
+
+
+lookup : ctx -> exp -> tp -> type.
+
+lookup/hit      : lookup (cons G X A) X A.
+
+lookup/miss     : lookup (cons G Y _) X A
+                   <- lookup G X A.
+
+
+
+append : ctx -> ctx -> ctx -> type.
+
+append/nil      : append G nil G.
+
+append/cons     : append G1 (cons G2 X A) (cons G X A)
+                   <- append G1 G2 G.
+
+
+
+
+%%%%%  Typing Rules (Explicit Context)  %%%%%
+
+ofe     : ctx -> exp -> tp -> type.
+
+ofe/closed      : ofe G M A
+                   <- of M A.
+%{
+Once a variable is bound in the LF contexts (ie, implicitly), there's no way
+to make it explicit.  Therefore, if we wish to be able to convert to the explicit
+context system when we already have assumptions, we must have a rule for typing
+expressions that are closed with respect to the explicit context.
+
+Incidentally, this rule takes care of typing b, which is closed with respect to any
+explicit context.
+}%
+
+ofe/var		: ofe G X A
+		   <- lookup G X A.
+
+ofe/lam		: ofe G (lam A ([x] M x)) (pi A ([x] B x))
+		   <- ({x} ofe (cons G x A) (M x) (B x)).
+
+ofe/app		: ofe G (app M N) (B N)
+		   <- ofe G M (pi A ([x] B x))
+		   <- ofe G N A.
+
+
+
+
+%%%%%  Worlds  %%%%%
+
+%block var	: block {x:exp}.
+
+%block bind	: some {a:tp}
+		   block {x:exp} {d:of x a}.
+
+%block ovar	: some {i:nat}
+		   block 
+		   {x:exp}
+		   {d:isvar x i}.
+
+
+
+
+%%%%%  Equality  %%%%%
+
+ctx-eq : ctx -> ctx -> type.
+ctx-eq/i : ctx-eq G G.
+
+exp-eq : exp -> exp -> type.
+exp-eq/i : exp-eq M M.
+
+tp-eq : tp -> tp -> type.
+tp-eq/i : tp-eq A A.
+
+
+
+lt-resp : nat-eq N1 N1' -> nat-eq N2 N2' -> lt N1 N2 -> lt N1' N2' -> type.
+%mode lt-resp +D1 +D2 +D3 -D.
+
+-	: lt-resp nat-eq/i nat-eq/i D D.
+
+%worlds () (lt-resp _ _ _ _).
+%total {} (lt-resp _ _ _ _).
+
+
+
+ofe-resp : ctx-eq G G' -> exp-eq M M' -> tp-eq A A' -> ofe G M A -> ofe G' M' A' -> type.
+%mode ofe-resp +X1 +X2 +X3 +X4 -X5.
+
+-       : ofe-resp ctx-eq/i exp-eq/i tp-eq/i D D.
+
+%worlds (var | ovar | bind) (ofe-resp _ _ _ _ _).
+%total {} (ofe-resp _ _ _ _ _).
+
+
+
+
+%%%%%  Reductio Ad Absurdum  %%%%%
+
+false : type.
+
+
+false-implies-ofe : false -> ofe G M A -> type.
+%mode +{G:ctx} +{M:exp} +{A:tp} +{X1:false} -{X2:ofe G M A} (false-implies-ofe X1 X2).
+%worlds (var | ovar | bind) (false-implies-ofe _ _).
+%total {} (false-implies-ofe _ _).
+
+
+false-implies-tp-eq : false -> tp-eq A B -> type.
+%mode +{A:tp} +{B:tp} +{X1:false} -{X2:tp-eq A B} (false-implies-tp-eq X1 X2).
+%worlds (var | ovar | bind) (false-implies-tp-eq _ _).
+%total {} (false-implies-tp-eq _ _).
+
+
+false-implies-bounded : false -> bounded G X -> type.
+%mode +{G:ctx} +{X:exp} +{X1:false} -{X2:bounded G X} (false-implies-bounded X1 X2).
+%worlds (var | ovar | bind) (false-implies-bounded _ _).
+%total {} (false-implies-bounded _ _).
+
+
+false-implies-ordered : false -> ordered G -> type.
+%mode +{G:ctx} +{X1:false} -{X2:ordered G} (false-implies-ordered X1 X2).
+%worlds (var | ovar | bind) (false-implies-ordered _ _).
+%total {} (false-implies-ordered _ _).
+
+
+
+
+%%%%%  Lt  %%%%%
+
+lt-trans : lt N1 N2 -> lt N2 N3 -> lt N1 N3 -> type.
+%mode lt-trans +D1 +D2 -D3.
+
+-	: lt-trans lt/z (lt/s _) lt/z.
+
+-	: lt-trans (lt/s D1) (lt/s D2) (lt/s D3)
+	   <- lt-trans D1 D2 D3.
+
+%worlds () (lt-trans _ _ _).
+%total D (lt-trans D _ _).
+
+
+
+lt-antisymm : lt N N -> false -> type.
+%mode lt-antisymm +X1 -X2.
+
+-	: lt-antisymm (lt/s D) D'
+	   <- lt-antisymm D D'.
+
+%worlds () (lt-antisymm _ _).
+%total D (lt-antisymm D _).
+
+
+
+lt-succ : {N} lt N (s N) -> type.
+%mode lt-succ +X1 -X2.
+
+-	: lt-succ 0 lt/z.
+
+-	: lt-succ (s N) (lt/s D)
+	   <- lt-succ N D.
+
+%worlds () (lt-succ _ _).
+%total N (lt-succ N _).
+
+
+
+
+%%%%%  Ordered Variable Lemmas  %%%%%
+
+isvar-fun : isvar X I -> isvar X J -> nat-eq I J -> type.
+%mode isvar-fun +X1 +X2 -X3.
+
+-	:  isvar-fun D D nat-eq/i.
+
+%worlds (ovar | bind) (isvar-fun _ _ _).
+%total {} (isvar-fun _ _ _).
+
+
+
+precedes-trans : precedes X Y -> precedes Y Z -> precedes X Z -> type.
+%mode precedes-trans +X1 +X2 -X3.
+
+-       : precedes-trans
+           (precedes/i
+              (DltIJ : lt I J)
+              (DisvarY : isvar Y J)
+              (DisvarX : isvar X I))
+           (precedes/i
+              (DltJ'K : lt J' K)
+              (DisvarZ : isvar Z K)
+              (DisvarY' : isvar Y J'))
+           (precedes/i DltIK DisvarZ DisvarX)
+           <- isvar-fun DisvarY' DisvarY 
+              (Deq : nat-eq J' J)
+           <- lt-resp Deq nat-eq/i DltJ'K
+              (DltJK : lt J K)
+           <- lt-trans DltIJ DltJK
+              (DltIK : lt I K).
+
+%worlds (ovar | bind) (precedes-trans _ _ _).
+%total {} (precedes-trans _ _ _).
+
+
+
+precedes-irreflex : precedes X X -> false -> type.
+%mode precedes-irreflex +X1 -X2.
+
+-       : precedes-irreflex 
+	   (precedes/i 
+	      (Dlt : lt I J)
+	      (D2 : isvar X J)
+	      (D1 : isvar X I))
+	   Dfalse
+           <- isvar-fun D1 D2 (Deq : nat-eq I J)
+           <- lt-resp Deq nat-eq/i Dlt (Dlt' : lt J J)
+           <- lt-antisymm Dlt' Dfalse.
+
+%worlds (ovar | bind) (precedes-irreflex _ _).
+%total {} (precedes-irreflex _ _).
+
+
+
+bounded-isvar : bounded G X -> isvar X I -> type.
+%mode bounded-isvar +X1 -X2.
+
+-       : bounded-isvar (bounded/nil D) D.
+
+-       : bounded-isvar (bounded/cons _ (precedes/i _ D _)) D.
+
+%worlds (ovar | bind) (bounded-isvar _ _).
+%total {} (bounded-isvar _ _).
+
+
+
+isvar-not-lam : isvar (lam A M) I -> false -> type.
+%mode isvar-not-lam +X1 -X2.
+%worlds (ovar | bind) (isvar-not-lam _ _).
+%total {} (isvar-not-lam _ _).
+
+
+
+isvar-not-app : isvar (app M N) I -> false -> type.
+%mode isvar-not-app +X1 -X2.
+%worlds (ovar | bind) (isvar-not-app _ _).
+%total {} (isvar-not-app _ _).
+
+
+
+
+%%%%%  Explicit Context Lemmas  %%%%%
+
+bounded-is-ordered : bounded G X 
+%%
+		      -> ordered G
+		      -> type.
+%mode bounded-is-ordered +X1 -X2.
+
+-       : bounded-is-ordered (bounded/nil _) ordered/nil.
+
+-       : bounded-is-ordered (bounded/cons D _) (ordered/cons D).
+
+%worlds (ovar | bind) (bounded-is-ordered _ _).
+%total {} (bounded-is-ordered _ _).
+
+
+
+bounded-increase : bounded G X
+                    -> precedes X Y
+%%
+                    -> bounded G Y 
+		    -> type.
+%mode bounded-increase +X1 +X2 -X3.
+
+-       : bounded-increase
+           (bounded/nil _)
+           (precedes/i _ D _)
+           (bounded/nil D).
+
+-       : bounded-increase
+           (bounded/cons 
+              (Dbounded : bounded G Z)
+              (DprecZX : precedes Z X))
+           (DprecXY : precedes X Y)
+           (bounded/cons Dbounded DprecZY)
+           <- precedes-trans DprecZX DprecXY
+              (DprecZY : precedes Z Y).
+
+%worlds (ovar | bind) (bounded-increase _ _ _).
+%total {} (bounded-increase _ _ _).
+
+
+
+append-bounded : append G1 G2 G
+		  -> bounded G X
+%%
+		  -> bounded G1 X 
+		  -> type.
+%mode append-bounded +X1 +X2 -X3.
+
+-	: append-bounded append/nil D D.
+
+-	: append-bounded
+	   (append/cons 
+	      (Dappend : append G1 G2 G))
+	   (bounded/cons
+	      (Dbounded : bounded G Y)
+	      (Dprecedes : precedes Y X))
+	   Dbounded''
+	   <- append-bounded Dappend Dbounded 
+	      (Dbounded' : bounded G1 Y)
+	   <- bounded-increase Dbounded' Dprecedes 
+	      (Dbounded'' : bounded G1 X).
+
+%worlds (ovar | bind) (append-bounded _ _ _).
+%total D (append-bounded D _ _).
+
+
+
+extend-context : ordered G
+%%
+		  -> ({x} isvar x I -> bounded G x)
+		  -> type.
+%mode extend-context +X1 -X2.
+
+-       : extend-context ordered/nil ([x] [d:isvar x 0] bounded/nil d).
+
+-       : extend-context
+           (ordered/cons (Dbounded : bounded G Y))
+           ([x] [d:isvar x (s J)] bounded/cons Dbounded (precedes/i Dlt d Disvar))
+           <- bounded-isvar Dbounded
+              (Disvar : isvar Y J)
+           <- lt-succ J (Dlt : lt J (s J)).
+
+%worlds (ovar | bind) (extend-context _ _).
+%total {} (extend-context _ _).
+
+
+
+ordered-car : ordered (cons G X A) 
+%%
+	       -> isvar X I
+	       -> type.
+%mode ordered-car +X1 -X2.
+
+-	: ordered-car 
+	   (ordered/cons 
+	      (Dbounded : bounded G X))
+	   Disvar
+	   <- bounded-isvar Dbounded (Disvar : isvar X I).
+
+%worlds (ovar | bind) (ordered-car _ _).
+%total {} (ordered-car _ _).
+
+
+
+ordered-cdr : ordered (cons G X A) 
+%%
+	       -> ordered G 
+	       -> type.
+%mode ordered-cdr +X1 -X2.
+
+-	: ordered-cdr 
+	   (ordered/cons 
+	      (Dbounded : bounded G X)) 
+	   Dordered
+	   <- bounded-is-ordered Dbounded 
+	      (Dordered : ordered G).
+
+%worlds (ovar | bind) (ordered-cdr _ _).
+%total {} (ordered-cdr _ _).
+
+
+
+lookup-ordered : lookup G X A
+		  -> ordered G
+		  -> isvar X I 
+		  -> type.
+%mode lookup-ordered +X1 +X2 -X3.
+
+-	: lookup-ordered 
+	   lookup/hit 
+	   (Dordered : ordered (cons G X A))
+	   Disvar
+	   <- ordered-car Dordered (Disvar : isvar X I).
+
+-	: lookup-ordered 
+	   (lookup/miss 
+	      (Dlookup : lookup G X A))
+	   (Dordered : ordered (cons G Y B))
+	   Disvar
+	   <- ordered-cdr Dordered (Dordered' : ordered G)
+	   <- lookup-ordered Dlookup Dordered' (Disvar : isvar X I).
+
+%worlds (ovar | bind) (lookup-ordered _ _ _).
+%total D (lookup-ordered D _ _).
+
+
+
+bounded-contra : bounded (cons G X A) X 
+%%
+		  -> false
+		  -> type.
+%mode bounded-contra +X1 -X2.
+
+-	: bounded-contra 
+	   (bounded/cons _ (Dprecedes : precedes X X))
+	   Dfalse
+	   <- precedes-irreflex Dprecedes Dfalse.
+
+%worlds (ovar | bind) (bounded-contra _ _).
+%total {} (bounded-contra _ _).
+
+
+
+lookup-bounded-contra : lookup G X A
+			 -> bounded G X
+%%
+			 -> false 
+			 -> type.
+%mode lookup-bounded-contra +X1 +X2 -X3.
+
+-       : lookup-bounded-contra 
+	   lookup/hit
+	   (Dbounded : bounded (cons G X A) X)
+	   Dfalse
+           <- bounded-contra Dbounded Dfalse.
+
+-       : lookup-bounded-contra 
+	   (lookup/miss 
+	      (Dlookup : lookup G X A))
+	   (bounded/cons
+	      (Dbounded : bounded G Y)
+	      (Dprecedes : precedes Y X))
+	   Dfalse
+           <- bounded-increase Dbounded Dprecedes (Dbounded' : bounded G X)
+           <- lookup-bounded-contra Dlookup Dbounded' Dfalse.
+
+%worlds (ovar | bind) (lookup-bounded-contra _ _ _).
+%total D (lookup-bounded-contra D _ _).
+
+
+
+append-lookup-eq : ({x} append (cons G1 x A) (G2 x) (G x))
+		    -> ({x} isvar x I -> ordered (G x))
+		    -> ({x} lookup (G x) x (B x))
+%%
+		    -> ({x} tp-eq A (B x)) 
+		    -> type.
+%mode append-lookup-eq +X1 +X2 +X3 -X4.
+
+-       : append-lookup-eq _ _ ([x] lookup/hit) ([_] tp-eq/i).
+
+-       : append-lookup-eq 
+	   ([x] 
+	      append/cons 
+	      (Dappend x : append (cons G1 x A) (G2 x) (G x)))
+	   ([x] [d:isvar x I] 
+	      Dordered x d : ordered (cons (G x) (Y x) (C x)))
+	   ([x] 
+	      lookup/miss (Dlookup x : lookup (G x) x (B x)))
+           Deq
+	   <- ({x} {d:isvar x I}
+		 ordered-cdr (Dordered x d) (Dordered' x d : ordered (G x)))
+           <- append-lookup-eq Dappend Dordered' Dlookup (Deq : {x} tp-eq A (B x)).
+
+-       : append-lookup-eq 
+	   ([x] append/nil) 
+	   ([x] [d:isvar x I]
+	      ordered/cons (Dbounded x d : bounded G1 x))
+	   ([x] 
+	      lookup/miss (Dlookup x : lookup G1 x (B x)))
+           Deq
+           <- ({x} {d:isvar x I}
+                 lookup-bounded-contra (Dlookup x) (Dbounded x d) Dfalse)
+           <- ({x} false-implies-tp-eq Dfalse (Deq x)).
+
+-	: append-lookup-eq 
+	   ([x] 
+	      append/cons 
+	      (Dappend x : append (cons G1 x A) (G2 x) (G x)))
+	   ([x] [d:isvar x I]
+	      ordered/cons (Dbounded x d : bounded (G x) x))
+	   ([x] lookup/hit)
+	   Deq
+	   <- ({x} {d:isvar x I}
+		 append-bounded (Dappend x) (Dbounded x d) 
+		 (Dbounded' x d : bounded (cons G1 x A) x))
+	   <- ({x} {d:isvar x I}
+		 bounded-contra (Dbounded' x d) Dfalse)
+	   <- ({x} false-implies-tp-eq Dfalse (Deq x)).
+
+%worlds (ovar | bind) (append-lookup-eq _ _ _ _).
+%total D (append-lookup-eq D _ _ _).
+
+
+
+%% Lookup is preserved under deletion of other variables.
+lookup-pdv : ({x} append (cons G1 x A) (G2 x) (G x))
+               -> append G1 (G2 M) G'
+               -> ({x} lookup (G x) Y (B x))
+%%
+               -> lookup G' Y (B M) 
+	       -> type.
+%mode lookup-pdv +X1 +X2 +X3 -X4.
+
+-       : lookup-pdv 
+	   ([x] append/cons 
+	      (Dappend x : append (cons G1 x A) (G2 x) (G x)))
+	   (append/cons 
+	      (Dappend' : append G1 (G2 M) G'))
+	   ([x] lookup/hit)
+	   %%
+           lookup/hit.
+
+-       : lookup-pdv
+	   ([x] append/cons 
+	      (Dappend x : append (cons G1 x A) (G2 x) (G x)))
+	   (append/cons 
+	      (Dappend' : append G1 (G2 M) G'))
+	   ([x] 
+	      lookup/miss 
+	      (Dlookup x : lookup (G x) Y (B x)))
+	   %%
+           (lookup/miss Dlookup')
+           <- lookup-pdv Dappend Dappend' Dlookup Dlookup'.
+
+-       : lookup-pdv 
+	   ([x] append/nil) 
+	   append/nil 
+	   ([x] lookup/miss 
+	      (Dlookup x : lookup _ _ (B x)))
+	   %%
+           (Dlookup M).
+
+%worlds (ovar | bind) (lookup-pdv _ _ _ _).
+%total D (lookup-pdv D _ _ _).
+
+
+
+
+%%%%%  Weakening  %%%%%
+
+weaken-lookup-gen : append G1 G2 G
+                     -> append (cons G1 X A) G2 G'
+                     -> lookup G Y B
+%%
+                     -> lookup G' Y B 
+		     -> type.
+%mode weaken-lookup-gen +X1 +X2 +X3 -X4.
+
+-       : weaken-lookup-gen (append/cons _) (append/cons _) lookup/hit lookup/hit.
+
+-       : weaken-lookup-gen (append/cons Dappend) (append/cons Dappend') (lookup/miss Dlookup)
+           (lookup/miss Dlookup')
+           <- weaken-lookup-gen Dappend Dappend' Dlookup Dlookup'.
+
+-       : weaken-lookup-gen append/nil append/nil Dlookup (lookup/miss Dlookup).
+
+%worlds (var | bind) (weaken-lookup-gen _ _ _ _).
+%total D (weaken-lookup-gen D _ _ _).
+
+
+
+weaken-ofe-gen : append G1 G2 G
+                  -> append (cons G1 X A) G2 G'
+                  -> ofe G M B
+%%
+                  -> ofe G' M B 
+		  -> type.
+%mode weaken-ofe-gen +X1 +X2 +X3 -X4.
+
+-closed : weaken-ofe-gen _ _
+           (ofe/closed (Dof : of M B))
+           (ofe/closed Dof).
+
+-var    : weaken-ofe-gen Dappend Dappend'
+           (ofe/var Dlookup)
+           (ofe/var Dlookup')
+           <- weaken-lookup-gen Dappend Dappend' Dlookup Dlookup'.
+
+-lam    : weaken-ofe-gen Dappend Dappend'
+           (ofe/lam
+              (DofM : {y} ofe (cons G y B) (M y) (C y)))
+           (ofe/lam DofM'')
+           <- ({y}
+                 weaken-ofe-gen (append/cons Dappend) (append/cons Dappend') (DofM y)
+		 (DofM'' y : ofe (cons G' y B) (M y) (C y))).
+
+-app    : weaken-ofe-gen Dappend Dappend'
+           (ofe/app DofM2 DofM1)
+           (ofe/app DofM2' DofM1')
+           <- weaken-ofe-gen Dappend Dappend' DofM1 DofM1'
+           <- weaken-ofe-gen Dappend Dappend' DofM2 DofM2'.
+
+%worlds (var | bind) (weaken-ofe-gen _ _ _ _).
+%total D (weaken-ofe-gen _ _ D _).
+
+
+
+weaken1-ofe : ofe G M B 
+%%
+	       -> ofe (cons G X A) M B 
+	       -> type.
+%mode +{G:ctx} +{X:exp} +{M:exp} +{B:tp} +{A:tp} +{X1:ofe G M B}
+   -{X2:ofe (cons G X A) M B} (weaken1-ofe X1 X2).
+
+-       : weaken1-ofe Dof Dof'
+           <- weaken-ofe-gen append/nil append/nil Dof Dof'.
+
+%worlds (var | bind) (weaken1-ofe _ _).
+%total {} (weaken1-ofe _ _).
+
+
+
+weaken-ofe : append G1 G2 G 
+	      -> ofe G1 M A
+%%
+	      -> ofe G M A 
+	      -> type.
+%mode weaken-ofe +X1 +X2 -X3.
+
+-       : weaken-ofe append/nil D D.
+
+-       : weaken-ofe (append/cons Dappend) Dof Dof''
+           <- weaken-ofe Dappend Dof Dof'
+           <- weaken1-ofe Dof' Dof''.
+
+%worlds (var | bind) (weaken-ofe _ _ _).
+%total D (weaken-ofe D _ _).
+
+
+
+
+%%%%%  Substitution (Explicit Context)  %%%%%
+
+esubst : ({x} append (cons G1 x A) (G2 x) (G x))
+          -> append G1 (G2 M) G'
+	  -> ({x} isvar x I -> ordered (G x))
+          -> ofe G1 M A
+          -> ({x} ofe (G x) (N x) (B x))
+%%
+          -> ofe G' (N M) (B M) 
+	  -> type.
+%mode esubst +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	 : esubst
+           (DappendG : {x} append (cons G1 x A) (G2 x) (G x))
+           (DappendG' : append G1 (G2 M) G')
+	   _
+           (DofM : ofe G1 M A)
+           ([x]
+              ofe/closed 
+              (DofN x : of (N x) (B x)))
+           %% It follows from this that x does not appear in N, but it's easiest
+           %% to simply substitute M for x.
+           (ofe/closed (DofN M)).
+
+%% Substitution variable
+-	: esubst
+           (DappendG : {x} append (cons G1 x A) (G2 x) (G x))
+           (DappendG' : append G1 (G2 M) G')
+	   (Dordered : {x} isvar x I -> ordered (G x))
+           (DofM : ofe G1 M A)
+           ([x]
+              ofe/var
+              (Dlookup x : lookup (G x) x (B x)))
+           DofM''
+           <- append-lookup-eq DappendG Dordered Dlookup
+              (Deq : {x} tp-eq A (B x))
+           <- ({x}
+		 ofe-resp ctx-eq/i exp-eq/i (Deq x) DofM
+		 (DofM' x : ofe G1 M (B x)))
+           <- weaken-ofe DappendG' (DofM' M)
+              (DofM'' : ofe G' M (B M)).
+
+%% Other variable
+-	: esubst
+           (DappendG : {x} append (cons G1 x A) (G2 x) (G x))
+           (DappendG' : append G1 (G2 M) G')
+	   _
+           (DofM : ofe G1 M A)
+           ([x]
+              ofe/var
+              (Dlookup x : lookup (G x) Y (B x)))
+           (ofe/var Dlookup')
+           <- lookup-pdv DappendG DappendG' Dlookup
+              (Dlookup' : lookup G' Y (B M)).
+
+%{
+Two cases here eliminate an impossible situation, where we're looking up
+a non-variable in the context.
+}%
+
+-	: esubst _ _
+	   (Dordered : {x} isvar x I -> ordered (G x))
+	   _
+           ([x]
+              ofe/var 
+              (Dlookup x : lookup (G x) (lam (C x) (M x)) (B x)))
+           D
+           <- ({x} {d:isvar x I}
+                 lookup-ordered (Dlookup x) (Dordered x d)
+		 (Disvar x d : isvar (lam (C x) (M x)) J))
+           <- ({x} {d:isvar x I}
+                 isvar-not-lam (Disvar x d) Dfalse)
+           <- false-implies-ofe Dfalse D.
+
+-	: esubst _ _
+	   (Dordered : {x} isvar x I -> ordered (G x))
+	   _
+           ([x]
+              ofe/var 
+              (Dlookup x : lookup (G x) (app (M x) (N x)) (B x)))
+           D
+           <- ({x} {d:isvar x I}
+                 lookup-ordered (Dlookup x) (Dordered x d)
+		 (Disvar x d : isvar (app (M x) (N x)) J))
+           <- ({x} {d:isvar x I}
+                 isvar-not-app (Disvar x d) Dfalse)
+           <- false-implies-ofe Dfalse D.
+
+-	: esubst
+           (DappendG : {x} append (cons G1 x A) (G2 x) (G x))
+           (DappendG' : append G1 (G2 M) G')
+	   (Dordered : {x} isvar x I -> ordered (G x))
+           (DofM : ofe G1 M A)
+           ([x]
+              ofe/lam
+              (DofN x : {y} ofe (cons (G x) y (B x)) (N x y) (C x y))
+	      : ofe (G x) (lam (B x) ([y] N x y)) (pi (B x) ([y] C x y)))
+           (ofe/lam DofN'
+	      : ofe G' (lam (B M) ([y] N M y)) (pi (B M) ([y] C M y)))
+	   <- ({x} {d:isvar x I}
+		 extend-context (Dordered x d)
+		 (Dbounded x d : {y} isvar y J -> bounded (G x) y))
+           <- ({y} {e:isvar y J}
+                 esubst 
+		 ([x] append/cons (DappendG x)
+		    : append (cons G1 x A) (cons (G2 x) y (B x)) (cons (G x) y (B x)))
+		 (append/cons DappendG'
+		    : append G1 (cons (G2 M) y (B M)) (cons G' y (B M)))
+		 ([x] [d:isvar x I]
+		    ordered/cons (Dbounded x d y e)
+		    : ordered (cons (G x) y (B x)))
+		 DofM
+		 ([x] DofN x y)
+		 (DofN' y : ofe (cons G' y (B M)) (N M y) (C M y))).
+
+-	: esubst
+           (DappendG : {x} append (cons G1 x A) (G2 x) (G x))
+           (DappendG' : append G1 (G2 M) G')
+	   (Dordered : {x} isvar x I -> ordered (G x))
+           (DofM : ofe G1 M A)
+           ([x]
+              ofe/app
+              (DofN2 x : ofe (G x) (N2 x) (B x))
+              (DofN1 x : ofe (G x) (N1 x) (pi (B x) ([y] C x y))))
+           (ofe/app DofN2' DofN1')
+           <- esubst DappendG DappendG' Dordered DofM DofN1
+              (DofN1' : ofe G' (N1 M) (pi (B M) ([y] C M y)))
+           <- esubst DappendG DappendG' Dordered DofM DofN2
+              (DofN2' : ofe G' (N2 M) (B M)).
+
+%worlds (ovar | bind) (esubst _ _ _ _ _ _).
+%total D (esubst _ _ _ _ D _).
+
+
+
+
+%%%%%  Translation to Implicit Form  %%%%%
+
+ofi     : ctx -> exp -> tp -> type.
+
+ofi/nil         : ofi nil M A
+                   <- of M A.
+
+ofi/cons        : ofi (cons G X A) M B
+                   <- (of X A -> ofi G M B).
+
+
+
+%block ofblock : some {x:exp} {a:tp} block {d:of x a}.
+
+
+
+of-to-ofi : {G} 
+	     of M A
+%%
+	     -> ofi G M A
+	     -> type.
+%mode of-to-ofi +X1 +X2 -X3.
+
+-       : of-to-ofi nil D (ofi/nil D).
+
+-       : of-to-ofi (cons G X B) D (ofi/cons ([_] D'))
+           <- of-to-ofi G D D'.
+
+%worlds (var | bind | ofblock) (of-to-ofi _ _ _).
+%total G (of-to-ofi G _ _).
+
+
+
+ofi-lookup : lookup G X A 
+%%
+	      -> ofi G X A 
+	      -> type.
+%mode ofi-lookup +X1 -X2.
+
+-       : ofi-lookup lookup/hit (ofi/cons D)
+           <- ({d}
+                 of-to-ofi _ d (D d)).
+
+-       : ofi-lookup (lookup/miss D) (ofi/cons ([_] D'))
+           <- ofi-lookup D D'.
+
+%worlds (var | bind | ofblock) (ofi-lookup _ _).
+%total D (ofi-lookup D _).
+
+
+
+ofi-lam : {G} 
+	   ({x} ofi (cons G x A) (M x) (B x))
+%%
+	   -> ofi G (lam A ([x] M x)) (pi A ([x] B x)) 
+	   -> type.
+%mode ofi-lam +X1 +X2 -X3.
+
+-       : ofi-lam nil ([x] ofi/cons ([d] ofi/nil (D x d))) (ofi/nil (of/lam D)).
+
+-       : ofi-lam (cons G Y C) ([x] ofi/cons ([d:of x A] ofi/cons ([e:of Y C] D x d e))) (ofi/cons D')
+           <- ({e} ofi-lam G ([x] ofi/cons ([d] D x d e)) (D' e)).
+
+%worlds (var | bind | ofblock) (ofi-lam _ _ _).
+%total G (ofi-lam G _ _).
+
+
+
+ofi-app : ofi G M (pi A ([x] B x)) 
+	   -> ofi G N A 
+%%
+	   -> ofi G (app M N) (B N) 
+	   -> type.
+%mode ofi-app +X1 +X2 -X3.
+
+-       : ofi-app (ofi/nil DofM) (ofi/nil DofN) (ofi/nil (of/app DofN DofM)).
+
+-       : ofi-app (ofi/cons DofM) (ofi/cons DofN) (ofi/cons DofMN)
+           <- ({d} 
+                 ofi-app (DofM d) (DofN d) (DofMN d)).
+
+%worlds (var | bind | ofblock) (ofi-app _ _ _).
+%total D (ofi-app D _ _).
+
+
+
+ofe-to-ofi : ofe G M A 
+%%
+	      -> ofi G M A 
+	      -> type.
+%mode ofe-to-ofi +X1 -X2.
+
+-closed : ofe-to-ofi 
+           (ofe/closed 
+	      (Dof : of M A))
+           Dofi'
+           <- of-to-ofi G Dof (Dofi' : ofi G M A).
+
+-var    : ofe-to-ofi
+           (ofe/var 
+	      (Dlookup : lookup G X A))
+           Dofi
+           <- ofi-lookup Dlookup (Dofi : ofi G X A).
+
+-lam    : ofe-to-ofi
+           (ofe/lam
+              (Dofe : {x} ofe (cons G x A) (M x) (B x)))
+           Dofi'
+           <- ({x}
+                 ofe-to-ofi (Dofe x) (Dofi x : ofi (cons G x A) (M x) (B x)))
+           <- ofi-lam G Dofi (Dofi' : ofi G (lam A ([x] M x)) (pi A ([x] B x))).
+
+-app    : ofe-to-ofi
+           (ofe/app
+              (DofeN : ofe G N A)
+              (DofeM : ofe G M (pi A ([x] B x))))
+           DofiMN
+           <- ofe-to-ofi DofeM (DofiM : ofi G M (pi A ([x] B x)))
+           <- ofe-to-ofi DofeN (DofiN : ofi G N A)
+           <- ofi-app DofiM DofiN DofiMN.
+
+%worlds (var | bind) (ofe-to-ofi _ _).
+%total D (ofe-to-ofi D _).
+
+
+
+ofe-to-of : ofe nil M A 
+%%
+	     -> of M A
+	     -> type.
+%mode ofe-to-of +X1 -X2.
+
+-       : ofe-to-of (Dofe : ofe nil M A) Dof
+           <- ofe-to-ofi Dofe 
+              (ofi/nil 
+                 (Dof : of M A)
+                 : ofi nil M A).
+
+%worlds (var | bind) (ofe-to-of _ _).
+%total {} (ofe-to-of _ _).
+
+
+
+
+%%%%%  Translation to Explicit Form  %%%%%
+
+%{
+The main tool for translation to explicit form is a lemma that cuts an
+explicit-context "lookup" against an implicit-context "of" assumption.
+}%
+
+cut-of : {M}  %% induction variable
+          ({x} of x A -> of (M x) (B x))
+          -> ({x} lookup (G x) x A)
+%%
+          -> ({x} ofe (G x) (M x) (B x)) 
+	  -> type.
+%mode cut-of +X1 +X2 +X3 -X4.
+
+cut-ofe : {M}  %% induction variable
+           ({x} of x A -> ofe (G x) (M x) (B x))
+           -> ({x} lookup (G x) x A)
+%%
+           -> ({x} ofe (G x) (M x) (B x)) 
+	   -> type.
+%mode cut-ofe +X1 +X2 +X3 -X4.
+
+-closed : cut-of ([_] M)
+           ([x] [d:of x A]
+              Dof : of M B)
+           (Dlookup : {x} lookup (G x) x A)
+%%
+           ([x] ofe/closed Dof).
+
+-var    : cut-of ([x] x)
+           ([x] [d:of x A] d)
+           (Dlookup : {x} lookup (G x) x A)
+%%
+           ([x] ofe/var (Dlookup x)).
+
+-lam    : cut-of ([x] lam (B x) ([y] N x y))
+           ([x] [d:of x A]
+              of/lam
+              (Dof x d : {y} of y (B x) -> of (N x y) (C x y)))
+           (Dlookup : {x} lookup (G x) x A)
+%%
+           ([x] ofe/lam ([y] Dofe' x y))
+           <- ({x} {d:of x A}
+                 cut-of ([y] N x y) 
+		 ([y] [e:of y (B x)] Dof x d y e) 
+		 ([y] lookup/hit)
+	         %%
+		 ([y] Dofe x d y : ofe (cons (G x) y (B x)) (N x y) (C x y)))
+           <- ({y}
+                 cut-ofe ([x] N x y) 
+		 ([x] [d:of x A] Dofe x d y) 
+		 ([x] lookup/miss (Dlookup x))
+	         %%
+		 ([x] Dofe' x y : ofe (cons (G x) y (B x)) (N x y) (C x y))).
+
+-app    : cut-of ([x] app (M x) (N x))
+           ([x] [d:of x A]
+              of/app
+              (DofN x d : of (N x) (B x))
+              (DofM x d : of (M x) (pi (B x) ([y] C x y))))
+           (Dlookup : {x} lookup (G x) x A)
+%%
+           ([x] ofe/app (DofeN x) (DofeM x))
+           <- cut-of M DofM Dlookup
+              (DofeM : {x} ofe (G x) (M x) (pi (B x) ([y] C x y)))
+           <- cut-of N DofN Dlookup
+              (DofeN : {x} ofe (G x) (N x) (B x)).
+
+
+
+-closed : cut-ofe M
+           ([x] [d:of x A]
+              ofe/closed
+              (Dof x d : of (M x) (B x)))
+           (Dlookup : {x} lookup (G x) x A)
+%%
+           Dofe
+           <- cut-of M Dof Dlookup
+              (Dofe : {x} ofe (G x) (M x) (B x)).
+
+-var    : cut-ofe Y
+           ([x] [d:of x A]
+              ofe/var
+              (Dlookup x : lookup (G x) (Y x) (B x)))  %% (Y x) might or might not be x.
+           _
+%%
+           ([x] ofe/var (Dlookup x)).
+
+-lam    : cut-ofe ([x] lam (B x) ([y] M x y))
+           ([x] [d:of x A]
+              ofe/lam
+              (Dofe x d : {y} ofe (cons (G x) y (B x)) (M x y) (C x y)))
+           (Dlookup : {x} lookup (G x) x A)
+%%
+           ([x] ofe/lam ([y] Dofe' x y))
+           <- ({y}
+		 cut-ofe ([x] M x y)
+		 ([x] [d:of x A] Dofe x d y)
+		 ([x] lookup/miss (Dlookup x))
+	         %%
+		 ([x] Dofe' x y : ofe (cons (G x) y (B x)) (M x y) (C x y))).
+
+-app    : cut-ofe ([x] app (M x) (N x))
+           ([x] [d:of x A]
+              ofe/app
+              (DofeN x d : ofe (G x) (N x) (B x))
+              (DofeM x d : ofe (G x) (M x) (pi (B x) ([y] C x y))))
+           (Dlookup : {x} lookup (G x) x A)
+%%
+           ([x] ofe/app (DofeN' x) (DofeM' x))
+           <- cut-ofe M DofeM Dlookup
+              (DofeM' : {x} ofe (G x) (M x) (pi (B x) ([y] C x y)))
+           <- cut-ofe N DofeN Dlookup
+              (DofeN' : {x} ofe (G x) (N x) (B x)).
+
+%worlds (var | bind) (cut-of _ _ _ _) (cut-ofe _ _ _ _).
+%total (M1 M2) (cut-of M1 _ _ _) (cut-ofe M2 _ _ _).
+
+
+
+%{
+This one is trivial to prove, using the ofe/closed rule.
+}%
+
+of-to-ofe : of M A -> ofe nil M A -> type.
+%mode of-to-ofe +X1 -X2.
+
+-closed	: of-to-ofe D (ofe/closed D).
+
+%worlds (bind) (of-to-ofe _ _).
+%total {} (of-to-ofe _ _).
+
+
+
+%{
+If we have at least one bound variable in play, then we need cut.
+}%
+
+of1-to-ofe : ({x} of x A -> of (M x) (B x))
+%%	      
+	      -> ({x} ofe (cons nil x A) (M x) (B x)) 
+	      -> type.
+%mode of1-to-ofe +X1 -X2.
+
+-	: of1-to-ofe (Dof : {x} of x A -> of (M x) (B x)) Dofe
+	   <- cut-of M Dof 
+	      ([x] lookup/hit : lookup (cons nil x A) x A)
+	      %%
+	      (Dofe : {x} ofe (cons nil x A) (M x) (B x)).
+
+%worlds (bind) (of1-to-ofe _ _).
+%total {} (of1-to-ofe _ _).
+
+
+
+
+%%%%%  Wrapup  %%%%%
+
+subst : of M A 
+         -> ({x} of x A -> of (N x) (B x)) 
+%%
+         -> of (N M) (B M) -> type.
+%mode subst +X1 +X2 -X3.
+
+%{
+Of course, we can prove this trivially with:
+
+-       : subst 
+           (DofM : of M A)
+           (DofN : {x} of x A -> of (N x) (B x)) 
+%%         
+           (DofN M DofM).
+
+but that would defeat the point.
+}%
+
+-       : subst 
+           (DofM : of M A)
+           (DofN : {x} of x A -> of (N x) (B x))
+%%
+           DofNM
+	   <- of-to-ofe DofM
+	      (DofeM : ofe nil M A)
+	   <- of1-to-ofe DofN
+              (DofeN : {x} ofe (cons nil x A) (N x) (B x))
+           <- esubst
+              ([x] append/nil : append (cons nil x A) nil (cons nil x A))
+              (append/nil : append nil nil nil)
+	      ([x] [d:isvar x 0] ordered/cons (bounded/nil d))
+	      DofeM
+              DofeN
+              %%
+              (DofeNM : ofe nil (N M) (B M))
+           <- ofe-to-of DofeNM
+              (DofNM : of (N M) (B M)).
+
+%worlds (bind) (subst _ _ _).
+%total {} (subst _ _ _).

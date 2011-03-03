@@ -1,0 +1,148 @@
+
+%%%%%  Ordered Variables  %%%%%
+
+isvar : atom -> nat -> type.
+
+-	: (isvar _ _ -> isvar _ _) -> type.
+
+
+precedes : atom -> atom -> type.
+
+precedes/i	: precedes X Y
+		   <- isvar X I
+		   <- isvar Y J
+		   <- lt I J.
+
+
+
+
+%%%%%  Contexts  %%%%%
+
+ctx : type.  %name ctx G.
+
+nil	: ctx.
+cons	: ctx -> atom -> tp -> ctx.
+
+
+
+bounded : ctx -> atom -> type.
+
+bounded/nil	: bounded nil X
+		   <- isvar X _.
+bounded/cons	: bounded (cons G Y _) X
+		   <- precedes Y X
+		   <- bounded G Y.
+
+
+
+ordered : ctx -> type.
+
+ordered/nil	: ordered nil.
+ordered/cons	: ordered (cons G X _)
+		   <- bounded G X.
+
+
+
+lookup : ctx -> atom -> tp -> type.
+
+lookup/hit	: lookup (cons G X A) X A
+		   <- bounded G X.
+lookup/miss	: lookup (cons G Y _) X A
+		   <- bounded G Y
+		   <- lookup G X A.
+
+
+
+csub : (atom -> ctx) -> term -> ctx -> type.
+
+csub/base	: csub ([x] cons G x A) M G.
+csub/cons	: csub ([x] cons (G x) Y (A x)) M (cons G' Y A')
+		   <- csub G M G'
+		   <- tsub A M A'.
+
+
+
+append : ctx -> ctx -> ctx -> type.
+
+append/nil	: append G nil G.
+append/cons	: append G1 (cons G2 X A) (cons G X A)
+		   <- append G1 G2 G.
+
+
+
+
+%%%%%  Typing with Explicit Contexts  %%%%%
+
+wfe	: ctx -> tp -> type.
+aofe	: ctx -> atom -> tp -> type.
+ofe	: ctx -> term -> tp -> type.
+
+
+wfe/t		: wfe G t
+		   <- ordered G.
+
+wfe/pi		: wfe G (pi A B)
+		   <- wfe G A
+		   <- ({x} isvar x I -> wfe (cons G x A) (B x)).
+
+wfe/sigma	: wfe G (sigma A B)
+		   <- wfe G A
+		   <- ({x} isvar x I -> wfe (cons G x A) (B x)).
+
+wfe/sing	: wfe G (sing R)
+		   <- aofe G R t.
+
+wfe/one		: wfe G one
+		   <- ordered G.
+
+
+
+aofe/closed	: aofe G R A
+		   <- aof R A
+		   <- ordered G.
+
+aofe/var	: aofe G X A
+		   <- lookup G X A
+		   <- wfe G A.
+
+aofe/app	: aofe G (app R M) B'
+		   <- aofe G R (pi A B)
+		   <- ofe G M A
+		   <- tsub B M B'
+		   <- wfe G B'.
+
+aofe/pi1	: aofe G (pi1 R) A
+		   <- aofe G R (sigma A B).
+
+aofe/pi2	: aofe G (pi2 R) (B (pi1 R))
+		   <- aofe G R (sigma A B).
+
+
+
+ofe/at		: ofe G (at R) t
+		   <- aofe G R t.
+
+ofe/lam		: ofe G (lam M) (pi A B)
+		   <- wfe G A
+		   <- ({x} isvar x I -> ofe (cons G x A) (M x) (B x)).
+
+ofe/pair	: ofe G (pair M N) (sigma A B)
+		   <- ofe G M A
+		   <- tsub B M B'
+		   <- ofe G N B'
+		   <- ({x} isvar x I -> wfe (cons G x A) (B x)).
+
+ofe/star	: ofe G star one
+		   <- ordered G.
+
+ofe/sing	: ofe G (at R) (sing R)
+		   <- aofe G R t.
+
+
+
+
+%%%%%  Worlds  %%%%%
+
+%block ovar	: some {n:nat} block {x:atom} {d:isvar x n}.
+%block obind	: some {a:tp} {n:nat}
+		   block {x:atom} {d:vof x a} {d':isvar x n}.

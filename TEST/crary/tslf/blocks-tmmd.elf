@@ -1,0 +1,38 @@
+
+
+%block tm-block			: block {x : tm}.
+
+%block oftp-block		: some 
+				   {c : cn}
+				   block
+				   {x : tm} {dx : assm/tm x c}.
+
+%block oftp+vdt-block		: some
+				   {c : cn} {cwf: ofkd c kd/type} 
+				   block
+				   {x: tm}
+				   {dx : assm/tm x c}
+				   {_ : vdt/assm/tm dx cwf}.
+
+%block md-block			: block {m : md}.
+
+%block ofsg-block		: some
+				   {S1:sg} {K1:kd}
+				   block
+				   {s:md} {ds:assm/md s S1}
+				   {a:cn} {da:ofkd a K1}
+				   {dfm: fst-md s a}.
+
+%block  ofsg+vdt-block		: some
+				   {S1:sg} {K1:kd} 
+				   {DWK: kd-wf K1} {DWS: sg-wf S1}
+				   {DFS: fst-sg S1 K1}
+				   block
+				   {s:md} {ds:assm/md s S1}
+				   {a:cn} {da:ofkd a K1}
+				   {dm: mofkd da met/unit} {_: can-mofkd da dm}
+				   {va: vdt/ofkd da DWK}
+				   {dfm: fst-md s a}
+ 				   {_: vdt/assm/md ds DWS DFS dfm da}
+				   {_: fst-md-seq dfm dfm seq/cn/refl}.
+

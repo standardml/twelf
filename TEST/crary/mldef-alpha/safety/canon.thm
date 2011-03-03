@@ -1,0 +1,361 @@
+
+%%%%%  Canonical forms property  %%%%%
+
+cf : term -> con -> type.
+
+cf/unit		: cf E unit
+		   <- term-eq tm/unit E.
+
+cf/void		: cf E void
+		   <- false.
+
+cf/prod		: cf E (prod T1 T2)
+		   <- term-eq (tm/pair E1 E2) E.
+
+cf/arrow	: cf E (arrow T1 T2)
+		   <- term-eq (tm/lam T' E') E.
+
+cf/plus1	: cf E (plus T1 T2)
+		   <- term-eq (tm/in1 E' T') E.
+
+cf/plus2	: cf E (plus T1 T2)
+		   <- term-eq (tm/in2 E' T') E.
+
+cf/ref		: cf E (ref T)
+		   <- term-eq (tm/refloc L) E.
+
+cf/tag		: cf E (tag T)
+		   <- term-eq (tm/tagloc L) E.
+
+cf/tagged	: cf E tagged
+		   <- term-eq (tm/tag (tm/tagloc L) E') E.
+
+cf/rec		: cf E (rec K C1 C2)
+		   <- term-eq (tm/roll E' K' C1' C2') E.
+
+cf/labeled	: cf E (labeled I T)
+		   <- term-eq (tm/in I' E') E.
+
+
+
+cf-md : module -> sg -> type.
+
+cf-md/one	: cf-md M sg/one
+		   <- module-eq md/unit M.
+
+cf-md/satom	: cf-md M (sg/satom K)
+		   <- module-eq (md/satom C) M.
+
+cf-md/datom	: cf-md M (sg/datom T)
+		   <- module-eq (md/datom E T') M.
+
+cf-md/sgatom	: cf-md M (sg/sgatom S)
+		   <- module-eq (md/sgatom S') M.
+
+cf-md/pi	: cf-md M (sg/pi S1 S2)
+		   <- module-eq (md/lam S' M') M.
+
+cf-md/sigma	: cf-md M (sg/sigma S1 S2)
+		   <- module-eq (md/pair M1 M2) M.
+
+cf-md/named	: cf-md M (sg/named L S)
+		   <- module-eq (md/in L' M') M.
+
+
+
+
+%%%%%  Canonical forms for terms  %%%%%
+
+similar-trans : similar T1 T2
+		 -> similar T2 T3
+%%
+		 -> similar T1 T3
+		 -> type.
+%mode similar-trans +X1 +X2 -X3.
+
+-	: similar-trans _ _ similar/unit.
+
+-	: similar-trans _ _ similar/void.
+
+-	: similar-trans _ _ similar/prod.
+
+-	: similar-trans _ _ similar/arrow.
+
+-	: similar-trans _ _ similar/plus.
+
+-	: similar-trans _ _ similar/ref.
+
+-	: similar-trans _ _ similar/tag.
+
+-	: similar-trans _ _ similar/tagged.
+
+-	: similar-trans _ _ similar/rec.
+
+-	: similar-trans _ _ similar/labeled.
+
+%worlds () (similar-trans _ _ _).
+%total {} (similar-trans _ _ _).
+
+
+
+
+canonical-forms-base : tm-of F E T'
+			-> value E
+			-> similar T' T
+%%
+			-> cf E T -> type.
+%mode canonical-forms-base +X1 +X2 +X3 -X4.
+
+canonical-forms-equiv : tm-of F E T1
+			 -> value E
+			 -> cn-equiv T1 T2 t
+			 -> similar T2 T3
+%%
+			 -> cf E T3 -> type.
+%mode canonical-forms-equiv +X1 +X2 +X3 +X4 -X5.
+
+-unit	: canonical-forms-base tm-of/unit value/unit similar/unit (cf/unit term-eq/i).
+
+canonical-forms-void : tm-of F tm/unit void -> false -> type.
+%mode canonical-forms-void +X1 -X2.
+
+-	: canonical-forms-void (tm-of/equiv Dequiv Dof) Dfalse
+	   <- canonical-forms-equiv Dof value/unit Dequiv similar/void (cf/void Dfalse).
+
+%% A contortion to get Twelf to split the value argument.
+-	: canonical-forms-base Dof value/unit similar/void (cf/void Dfalse)
+	   <- canonical-forms-void Dof Dfalse.
+
+
+-prod	: canonical-forms-base (tm-of/pair _ _) (value/pair _ _) similar/prod (cf/prod term-eq/i).
+
+-arrow	: canonical-forms-base (tm-of/lam _ _) value/lam similar/arrow (cf/arrow term-eq/i).
+
+-plus	: canonical-forms-base (tm-of/in1 _ _) (value/in1 _) similar/plus (cf/plus1 term-eq/i).
+
+-plus	: canonical-forms-base (tm-of/in2 _ _) (value/in2 _) similar/plus (cf/plus2 term-eq/i).
+
+-ref	: canonical-forms-base (tm-of/refloc _ _) value/refloc similar/ref (cf/ref term-eq/i).
+
+-tag	: canonical-forms-base (tm-of/tagloc _ _) value/tagloc similar/tag (cf/tag term-eq/i).
+
+-tagged	: canonical-forms-base (tm-of/tag _ Dof) (value/tag _ Dvalue) similar/tagged (cf/tagged Deq')
+	   <- canonical-forms-base Dof Dvalue (similar/tag : similar (tag T) (tag T)) (cf/tag Deq)
+	   <- term-resp-term ([e] tm/tag e E) Deq Deq'.
+
+-mu	: canonical-forms-base (tm-of/roll _ _ _ _) (value/roll _) similar/rec (cf/rec term-eq/i).
+
+-lab	: canonical-forms-base (tm-of/in _) (value/in _) similar/labeled (cf/labeled term-eq/i).
+
+-equiv	: canonical-forms-base (tm-of/equiv Dequiv Dof) Dvalue Dsimilar Dcf
+	   <- canonical-forms-equiv Dof Dvalue Dequiv Dsimilar Dcf.
+
+
+-	: canonical-forms-equiv (tm-of/equiv Dequiv Dof) Dvalue Dequiv' Dsimilar Dcf
+	   <- canonical-forms-equiv Dof Dvalue (cn-equiv/trans Dequiv' Dequiv) Dsimilar Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/unit Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/prod Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/arrow Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/plus Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/ref Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/tag Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/tagged Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/rec Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+-	: canonical-forms-equiv Dof Dvalue Dequiv Dsimilar23 Dcf
+	   <- consistency Dequiv similar/labeled Dsimilar23 Dsimilar12
+	   <- similar-trans Dsimilar12 Dsimilar23 Dsimilar13
+	   <- canonical-forms-base Dof Dvalue Dsimilar13 Dcf.
+
+%worlds () (canonical-forms-base _ _ _ _) (canonical-forms-equiv _ _ _ _ _) (canonical-forms-void _ _).
+%total (D1 D2 D3) (canonical-forms-void D1 _) (canonical-forms-base D2 _ _ _) (canonical-forms-equiv D3 _ _ _ _).
+
+
+
+canonical-forms : tm-of F E T
+		   -> value E
+		   -> similar T T
+%%
+		   -> cf E T -> type.
+%mode canonical-forms +X1 +X2 +X3 -X4.
+
+-	: canonical-forms Dof Dvalue Dsimilar Dcf
+	   <- canonical-forms-base Dof Dvalue Dsimilar Dcf.
+
+%worlds () (canonical-forms _ _ _ _).
+%total {} (canonical-forms _ _ _ _).
+
+
+
+
+%%%%%  Canonical forms for modules  %%%%%
+
+appcontext : (module -> module) -> type.
+
+appcontext/base	: appcontext ([m] m).
+
+appcontext/pi1	: appcontext ([m] md/pi1 (H m))
+		   <- appcontext H.
+
+
+
+md-of-appcontext : appcontext H
+		      -> md-of P F (H M) S
+%%
+		      -> md-of P' F M S'
+		      -> purity-sub P' P
+		      -> type.
+%mode md-of-appcontext +X1 +X2 -X3 -X4.
+
+-	: md-of-appcontext appcontext/base D D purity-sub/refl.
+
+-	: md-of-appcontext (appcontext/pi1 Dac) (md-of/pi1 D) D' Dpsub
+	   <- md-of-appcontext Dac D D' Dpsub.
+
+-	: md-of-appcontext Dac (md-of/self _ _ D) D' purity-sub/refl
+	   <- md-of-appcontext Dac D D' purity-sub/refl.
+
+-	: md-of-appcontext Dac (md-of/extsigma _ D) D' purity-sub/refl
+	   <- md-of-appcontext (appcontext/pi1 Dac) D D' purity-sub/refl.
+
+-	: md-of-appcontext Dac (md-of/extnamed _ D) D' purity-sub/refl
+	   <- md-of-appcontext Dac D D' purity-sub/refl.
+
+-	: md-of-appcontext Dac (md-of/forget D) D' Dpsub
+	   <- md-of-appcontext Dac D D' _
+	   <- purity-sub-impure _ Dpsub.
+
+-	: md-of-appcontext Dac (md-of/subsume _ D) D' Dpsub
+	   <- md-of-appcontext Dac D D' Dpsub.
+
+%worlds () (md-of-appcontext _ _ _ _).
+%total D (md-of-appcontext _ D _ _).
+%reduces D' <= D (md-of-appcontext _ D D' _).
+
+
+
+md-of-pi1 : md-of P F (md/pi1 M) S
+%%
+	     -> md-of pure F M (sg/sigma S1 S2)
+	     -> type.
+%mode md-of-pi1 +X1 -X2.
+
+-	: md-of-pi1 (md-of/pi1 D) D.
+
+-	: md-of-pi1 (md-of/self _ _ D) D'
+	   <- md-of-pi1 D D'.
+
+-	: md-of-pi1 (md-of/extsigma _ D) D''
+	   <- md-of-appcontext (appcontext/pi1 appcontext/base) D D' purity-sub/refl
+	   <- md-of-pi1 D' D''.
+
+-	: md-of-pi1 (md-of/extnamed _ D) D'
+	   <- md-of-pi1 D D'.
+
+-	: md-of-pi1 (md-of/forget D) D'
+	   <- md-of-pi1 D D'.
+
+-	: md-of-pi1 (md-of/subsume _ D) D'
+	   <- md-of-pi1 D D'.
+
+%worlds () (md-of-pi1 _ _).
+%total D (md-of-pi1 D _).
+%reduces D' < D (md-of-pi1 D D').
+
+
+
+cf-md-similar : cf-md M S
+		 -> similar-sg S S'
+%%
+		 -> cf-md M S'
+		 -> type.
+%mode cf-md-similar +X1 +X2 -X3.
+
+-	: cf-md-similar (cf-md/one D) _ (cf-md/one D).
+-	: cf-md-similar (cf-md/satom D) _ (cf-md/satom D).
+-	: cf-md-similar (cf-md/datom D) _ (cf-md/datom D).
+-	: cf-md-similar (cf-md/sgatom D) _ (cf-md/sgatom D).
+-	: cf-md-similar (cf-md/pi D) _ (cf-md/pi D).
+-	: cf-md-similar (cf-md/sigma D) _ (cf-md/sigma D).
+-	: cf-md-similar (cf-md/named D) _ (cf-md/named D).
+
+%worlds () (cf-md-similar _ _ _).
+%total {} (cf-md-similar _ _ _).
+
+
+
+canonical-forms-md : md-of P F M S
+		      -> value-md M
+%%
+		      -> cf-md M S -> type.
+%mode canonical-forms-md +X1 +X2 -X3.
+
+-	: canonical-forms-md md-of/unit value-md/unit (cf-md/one module-eq/i).
+
+-	: canonical-forms-md (md-of/satom _) value-md/satom (cf-md/satom module-eq/i).
+
+-	: canonical-forms-md (md-of/datom _) (value-md/datom _) (cf-md/datom module-eq/i).
+
+-	: canonical-forms-md (md-of/sgatom _) value-md/sgatom (cf-md/sgatom module-eq/i).
+
+-	: canonical-forms-md (md-of/pair _ _) (value-md/pair _ _) (cf-md/sigma module-eq/i).
+
+-	: canonical-forms-md (md-of/lam _ _ _) value-md/lam (cf-md/pi module-eq/i).
+
+-	: canonical-forms-md (md-of/in _) (value-md/in _) (cf-md/named module-eq/i).
+
+-	: canonical-forms-md (md-of/self _ _ Dof) Dvalue Dcf'
+	   <- canonical-forms-md Dof Dvalue Dcf
+	   <- cf-md-similar Dcf similar-sg/satom Dcf'.
+
+-	: canonical-forms-md (md-of/extsigma _ Dof) Dvalue Dcf'
+	   <- md-of-pi1 Dof Dof'
+	   <- canonical-forms-md Dof' Dvalue Dcf
+	   <- cf-md-similar Dcf similar-sg/sigma Dcf'.
+
+-	: canonical-forms-md (md-of/extnamed _ Dof) Dvalue Dcf'
+	   <- canonical-forms-md Dof Dvalue Dcf
+	   <- cf-md-similar Dcf similar-sg/named Dcf'.
+
+-	: canonical-forms-md (md-of/forget Dof) Dvalue Dcf
+	   <- canonical-forms-md Dof Dvalue Dcf.
+
+-	: canonical-forms-md (md-of/subsume Dsub Dof) Dvalue Dcf'
+	   <- canonical-forms-md Dof Dvalue Dcf
+	   <- sg-sub-similar Dsub Dsimilar
+	   <- cf-md-similar Dcf Dsimilar Dcf'.
+
+%worlds () (canonical-forms-md _ _ _).
+%total D (canonical-forms-md D _ _).

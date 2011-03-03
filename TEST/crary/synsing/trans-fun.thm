@@ -1,0 +1,134 @@
+
+%%%%%  Translation Functionality Proof  %%%%%
+
+kof-fun : kof C A -> kof C A' -> tp-eq A A' -> type.
+%mode kof-fun +X1 +X2 -X3.
+
+-	: kof-fun (kof/i D Dckof) (kof/i D' Dckof) Deq
+	   <- topen-fun D D' Deq.
+
+%worlds (var) (kof-fun _ _ _).
+%total {} (kof-fun _ _ _).
+
+
+
+trans-fun : trans EM A -> trans EM A' -> tp-eq A A' -> type.
+%mode trans-fun +X1 +X2 -X3.
+
+ttrans-fun : ttrans EA A -> ttrans EA A' -> tp-eq A A' -> type.
+%mode ttrans-fun +X1 +X2 -X3.
+
+-const	: trans-fun
+	   (trans/const Dself Dexpand _ Dkof)
+	   (trans/const Dself' Dexpand' _ Dkof')
+	   Deq
+	   <- kof-fun Dkof Dkof' Deqt
+	   <- expand-resp atom-eq/i Deqt term-eq/i Dexpand Dexpand''
+	   <- expand-fun Dexpand'' Dexpand' Deqm
+	   <- self-resp Deqm Deqt tp-eq/i Dself Dself''
+	   <- self-fun Dself'' Dself' Deq.
+
+-var	: trans-fun
+	   (trans/var
+	      (Dself : self M A B)
+	      (Dexpand : expand X A M)
+	      _
+	      (Dvof : vof X A)
+	      (Dvtrans : vtrans EM X))
+	   (trans/var
+	      (Dself' : self M' A B')
+	      (Dexpand' : expand X A M')
+	      _
+	      (Dvof : vof X A)
+	      (Dvtrans : vtrans EM X))
+	   DeqB
+	   <- expand-fun Dexpand Dexpand'
+	      (DeqM : term-eq M M')
+	   <- self-resp DeqM tp-eq/i tp-eq/i Dself
+	      (Dself'' : self M' A B)
+	   <- self-fun Dself'' Dself'
+	      (DeqB : tp-eq B B').
+
+-app	: trans-fun
+	   (trans/app Dsub Dsubtype DtransN DtransM)
+	   (trans/app Dsub' Dsubtype' DtransN' DtransM')
+	   Deq
+	   <- trans-fun DtransM DtransM' DeqPi
+	   <- tp-eq-cdr-pi DeqPi DeqA DeqB
+	   <- trans-fun DtransN DtransN' DeqC
+	   <- subtype-resp DeqC DeqA ([_] term-eq/i) Dsubtype Dsubtype''
+	   <- subtype-fun Dsubtype'' Dsubtype' (DeqN : atom -> term-eq N N')
+	   <- tsub-resp DeqB (DeqN aca) tp-eq/i Dsub Dsub''
+	   <- tsub-fun Dsub'' Dsub' Deq.
+
+-pi1	: trans-fun
+	   (trans/pi1 Dtrans)
+	   (trans/pi1 Dtrans')
+	   D
+	   <- trans-fun Dtrans Dtrans' DeqSig
+	   <- tp-eq-cdr-sigma DeqSig D _.
+
+-pi2	: trans-fun
+	   (trans/pi2 Dtrans)
+	   (trans/pi2 Dtrans')
+	   (D aca)
+	   <- trans-fun Dtrans Dtrans' DeqSig
+	   <- tp-eq-cdr-sigma DeqSig _ D.
+
+-lam	: trans-fun
+	   (trans/lam Dtrans Dttrans)
+	   (trans/lam Dtrans' Dttrans')
+	   Deq
+	   <- ttrans-fun Dttrans Dttrans' Deqt
+	   <- trans-resp-underbind Deqt Dtrans Dtrans''
+	   <- ({x} {d} {ex} {xt}
+		 trans-fun (Dtrans'' x d ex xt) (Dtrans' x d ex xt) (Deqm x))
+	   <- pi-resp Deqt Deqm Deq.
+
+-pair	: trans-fun
+	   (trans/pair Dtrans2 Dtrans1)
+	   (trans/pair Dtrans2' Dtrans1')
+	   Deq
+	   <- trans-fun Dtrans1 Dtrans1' Deq1
+	   <- trans-fun Dtrans2 Dtrans2' Deq2
+	   <- sigma-resp Deq1 ([_] Deq2) Deq.
+
+-star	: trans-fun
+	   trans/star
+	   trans/star
+	   tp-eq/i.
+
+
+
+-t	: ttrans-fun ttrans/t ttrans/t tp-eq/i.
+
+-pi	: ttrans-fun
+	   (ttrans/pi Dtrans Dttrans)
+	   (ttrans/pi Dtrans' Dttrans')
+	   Deq
+	   <- ttrans-fun Dttrans Dttrans' Deqt
+	   <- ttrans-resp-underbind Deqt Dtrans Dtrans''
+	   <- ({x} {d} {ex} {xt}
+		 ttrans-fun (Dtrans'' x d ex xt) (Dtrans' x d ex xt) (Deqm x))
+	   <- pi-resp Deqt Deqm Deq.
+
+-sigma	: ttrans-fun
+	   (ttrans/sigma Dtrans Dttrans)
+	   (ttrans/sigma Dtrans' Dttrans')
+	   Deq
+	   <- ttrans-fun Dttrans Dttrans' Deqt
+	   <- ttrans-resp-underbind Deqt Dtrans Dtrans''
+	   <- ({x} {d} {ex} {xt}
+		 ttrans-fun (Dtrans'' x d ex xt) (Dtrans' x d ex xt) (Deqm x))
+	   <- sigma-resp Deqt Deqm Deq.
+
+-sing	: ttrans-fun
+	   (ttrans/sing Dtrans)
+	   (ttrans/sing Dtrans')
+	   Deq
+	   <- trans-fun Dtrans Dtrans' Deq.
+
+-one	: ttrans-fun ttrans/one ttrans/one tp-eq/i.
+
+%worlds (var | bind | tbind) (ttrans-fun _ _ _) (trans-fun _ _ _).
+%total (D1 D2) (trans-fun _ D1 _) (ttrans-fun _ D2 _).

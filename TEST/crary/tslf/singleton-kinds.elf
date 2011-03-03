@@ -1,0 +1,26 @@
+%%%% singleton kinds
+
+sing/kd : cn -> kd -> kd -> type.
+
+%mode sing/kd +C +K -SK.
+		
+sing/kd/unit	: sing/kd _ kd/unit kd/unit.
+
+sing/kd/type    : sing/kd C kd/type (kd/sing C).
+
+sing/kd/sing    : sing/kd C (kd/sing _) (kd/sing C).
+
+sing/kd/pi      : sing/kd C (kd/pi K1 K2) (kd/pi K1 K2')
+		   <- ({a} sing/kd (cn/app C a) (K2 a) (K2' a)).
+
+%{
+sing/kd/sgm     : sing/kd C (kd/sgm K1 K2) (kd/sgm K1' ([a] K2' (cn/pj1 C)))
+		   <- sing/kd (cn/pj1 C) K1 K1'
+		   <- {a} sing/kd (cn/pj2 C) (K2 a) (K2' a).
+}%		
+
+sing/kd/sgm     : sing/kd C (kd/sgm K1 K2) (kd/sgm K1' ([a] K2'))
+		   <- sing/kd (cn/pj2 C) (K2 (cn/pj1 C)) K2'
+		   <- sing/kd (cn/pj1 C) K1 K1'.
+
+		

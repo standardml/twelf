@@ -1,0 +1,43 @@
+%%%% symmetry of signatures 
+
+
+sg-sym	: sg-deq S1 S2
+		   -> sg-deq S2 S1
+		   -> type.
+%mode sg-sym +D1 -D2.
+
+-	: sg-sym sg-deq/sg/unit sg-deq/sg/unit.
+
+-	: sg-sym (sg-deq/sg/cn D) (sg-deq/sg/cn (cn-deq/sym D)).
+
+-	: sg-sym (sg-deq/sg/kd D) (sg-deq/sg/kd D')
+	   <- kd-sym D D'.
+
+-	: sg-sym (sg-deq/sg/sgm D1 D2 FS) (sg-deq/sg/sgm D1' D2'' FS2)
+	   <- sg-sym D1 D1'
+	   <- fst-sg-complete S2 FS2
+	   <- vdt/sg-deq D1 FS FS2 _ _ Dkeq
+	   <- vdt/kd-deq Dkeq DKK1 DKK2
+	   <- ({a:cn} {da:ofkd a K1}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DKK1}
+		sg-sym (D2 a da) (D2' a da))
+	   <- kd-anti Dkeq DKK1 DKK2 _ DS'
+	   <- kd-wkn/sg-deq D2' DS' D2''.
+
+-	: sg-sym (sg-deq/sg/pi D1 D2 FS) (sg-deq/sg/pi D1' D2'' FS2)
+	   <- sg-sym D1 D1'
+	   <- fst-sg-complete S2 FS2
+	   <- vdt/sg-deq D1 FS FS2 _ _ Dkeq
+	   <- vdt/kd-deq Dkeq DKK1 DKK2
+	   <- ({a:cn} {da:ofkd a K1}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DKK1}
+		sg-sym (D2 a da) (D2' a da))
+	   <- kd-anti Dkeq DKK1 DKK2 _ DS'
+	   <- kd-wkn/sg-deq D2' DS' D2''.
+
+
+%worlds (ofkd+vdt-block) (sg-sym _ _).
+%total (D3) (sg-sym D3 _) .
+

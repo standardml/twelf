@@ -1,0 +1,230 @@
+
+%{%block assm/md-block	: some {S1:sg}{K1:kd}{_:fst-sg S1 K1}
+			   {s:md}{a:cn}{da: ofkd a K1}{dm: fst-md s a}
+			   block 
+			   {ds: assm/md s S1}.
+}%
+
+
+subst/md-ofsg^	: (assm/md M S
+		     -> ofsg L T Y M' S')
+		   -> ofsg L T pty/p M S
+		   -> ofsg L T Y M' S'
+		   -> type.
+%mode subst/md-ofsg^ +D1 +D2 -D4.
+
+subst/md-oftp^	: (assm/md M S
+		     -> oftp L T E C')
+		   -> ofsg L T pty/p M S
+		   -> oftp L T E C'
+		   -> type.
+%mode subst/md-oftp^ +D1 +D2 -D4.
+
+-	: subst/md-ofsg^ ([das] ofsg/var das) D1 D1.
+
+-	: subst/md-ofsg^ ([das] D) D1 D.
+
+-	: subst/md-ofsg^ ([das] ofsg/md/tm (DA das)) D1
+	   (ofsg/md/tm DA')
+	   <- subst/md-oftp^ DA D1 DA'.
+
+-	: subst/md-ofsg^ ([das] ofsg/md/pair (DA das) (DB das)) 
+	   D1
+	   (ofsg/md/pair DA' DB')
+	   <- subst/md-ofsg^ DA D1 DA'
+	   <- subst/md-ofsg^ DB D1 DB'.
+
+-	: subst/md-ofsg^ ([das] ofsg/md/pj1 (DA das)) D1
+	   (ofsg/md/pj1 DA')
+	   <- subst/md-ofsg^ DA D1 DA'.
+
+-	: subst/md-ofsg^ ([das] ofsg/md/pj2 (DA das) DC) D1
+	   (ofsg/md/pj2 DA' DC)
+	   <- subst/md-ofsg^ DA D1 DA'.
+
+-	: subst/md-ofsg^ ([das] ofsg/md/lam (D0 das) DW DFS) D1
+	   (ofsg/md/lam D0' DW DFS)
+	   <- ({s}{ds}{a}{da}{dm}
+		 subst/md-ofsg^ 
+		 ([das] D0 das s ds a da dm) D1
+		 (D0' s ds a da dm)).
+
+-	: subst/md-ofsg^ ([das] ofsg/md/app (DA das) (DB das) DC) D1
+	   (ofsg/md/app DA' DB' DC)
+	      <- subst/md-ofsg^ DA D1 DA'
+	      <- subst/md-ofsg^ DB D1 DB'.
+
+-	: subst/md-ofsg^ ([das] ofsg/md/let 
+			    (DZ das) (D0 das) DW DFS) D1
+	   (ofsg/md/let DZ' D0' DW DFS)
+	   <- subst/md-ofsg^ DZ D1 DZ'
+	   <- ({s}{ds}{a}{da}{dm}
+		 subst/md-ofsg^ 
+		 ([das] D0 das s ds a da dm) D1
+		 (D0' s ds a da dm)).
+
+-	: subst/md-ofsg^ ([das] ofsg/md/seal (DA das)) D1
+	   (ofsg/md/seal DA')
+	      <- subst/md-ofsg^ DA D1 DA'.
+
+-	: subst/md-ofsg^ ([das] ofsg/sgm-ext (DA das) (DB das)) 
+	   D1
+	   (ofsg/sgm-ext DA' DB')
+	      <- subst/md-ofsg^ DA D1 DA'
+	      <- subst/md-ofsg^ DB D1 DB'.
+
+-	: subst/md-ofsg^ ([das] ofsg/kd-ext (DA das) DM DP) 
+	   D1
+	   (ofsg/kd-ext DA' DM DP)
+	      <- subst/md-ofsg^ DA D1 DA'.
+
+-	: subst/md-ofsg^ ([das] ofsg/sub (DA das) DS DP) D1
+	   (ofsg/sub DA' DS DP)
+	      <- subst/md-ofsg^ DA D1 DA'.
+
+
+
+-	: subst/md-oftp^ ([das] D) D1 D.
+
+-	: subst/md-oftp^ ([das] oftp/tm/pair (D1 das) (D2 das)) 
+	   D 
+	   (oftp/tm/pair D1' D2': oftp L T (tm/pair E1 E2) (tp/cross C1 C2))
+	   <- subst/md-oftp^ D1 D (D1': oftp L T E1 C1)
+	   <- subst/md-oftp^ D2 D (D2': oftp L T E2 C2).
+
+-	: subst/md-oftp^ ([das] oftp/tm/pj1 (D1 das)) D 
+	   (oftp/tm/pj1 D1')
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/pj2 (D1 das)) D 
+	   (oftp/tm/pj2 D1')
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/fun (DE das) DC) D
+	   (oftp/tm/fun DE' DC)
+	   <-({y}{dy}{z}{dz}
+		subst/md-oftp^ ([das] DE das y dy z dz) D
+		(DE' y dy z dz)).
+
+-	: subst/md-oftp^ ([das] oftp/tm/tmapp (D1 das) (D2 das)) 
+	   D 
+	   (oftp/tm/tmapp D1' D2')
+	   <- subst/md-oftp^ D1 D D1'
+	   <- subst/md-oftp^ D2 D D2'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/cnabs 
+			   ([a] [da: ofkd a K] D1 das a da) (DW: kd-wf K)) 
+	   D 
+	   (oftp/tm/cnabs D1' DW)
+	   <- ({a:cn}{da:ofkd a K}
+		 subst/md-oftp^ ([das] D1 das a da) 
+		 D (D1' a da)).
+
+-	: subst/md-oftp^ ([das] oftp/tm/cnapp (D1 das) DC) D
+	   (oftp/tm/cnapp D1' DC)
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/set (D1 das) (D2 das)) D 
+	   (oftp/tm/set D1' D2')
+	   <- subst/md-oftp^ D1 D D1'
+	   <- subst/md-oftp^ D2 D D2'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/ref (D1 das)) D 
+	   (oftp/tm/ref D1')
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/raise (D1 das) DC) D 
+	   (oftp/tm/raise D1' DC)
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/get (D1 das)) D 
+	   (oftp/tm/get D1')
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/deq (D1 das) DQ) D 
+	   (oftp/deq D1' DQ)
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/term (D1 das)) D
+	   (oftp/tm/term D1')
+	   <- subst/md-ofsg^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/inl (D1 das) DC) D 
+	   (oftp/tm/inl D1' DC)
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/inr (D1 das) DC) D 
+	   (oftp/tm/inr D1' DC)
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das]oftp/tm/case (DO das) (DL das) 
+			    (DR das)) 
+	   D
+	   (oftp/tm/case DO' DL' DR')
+	   <- subst/md-oftp^ DO D DO'
+	   <-({y}{dy}
+		subst/md-oftp^ ([das] DL das y dy) D (DL' y dy))
+	   <-({y}{dy}
+		subst/md-oftp^ ([das] DR das y dy) D (DR' y dy)).
+
+-	: subst/md-oftp^ ([das] oftp/tm/try (D1 das) (D2 das)) 
+	   D 
+	   (oftp/tm/try D1' D2')
+	   <- subst/md-oftp^ D1 D D1'
+	   <-({y}{dy}
+		subst/md-oftp^ ([das] D2 das y dy) D (D2' y dy)).
+
+-	: subst/md-oftp^ ([das] oftp/tm/tag (D1 das) (D2 das)) 
+	   D 
+	   (oftp/tm/tag D1' D2')
+	   <- subst/md-oftp^ D1 D D1'
+	   <- subst/md-oftp^ D2 D D2'.
+
+-	: subst/md-oftp^ ([das]oftp/tm/iftag (D1 das) (D2 das) 
+			   (D3 das) (D4 das)) 
+	   D 
+	   (oftp/tm/iftag D1' D2' D3' D4')
+	   <- subst/md-oftp^ D1 D D1'
+	   <- subst/md-oftp^ D2 D D2'
+	   <-({y}{dy}
+		subst/md-oftp^ ([das] D3 das y dy) D (D3' y dy))
+	   <- subst/md-oftp^ D4 D D4'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/roll (D1 das) DC) D 
+	   (oftp/tm/roll D1' DC)
+	   <- subst/md-oftp^ D1 D D1'.
+
+-	: subst/md-oftp^ ([das] oftp/tm/unroll (D1 das)) D 
+	   (oftp/tm/unroll D1')
+	   <- subst/md-oftp^ D1 D D1'.
+
+%worlds (ofsg-block | ofkd-block | oftp-block)
+(subst/md-ofsg^ _ _ _) (subst/md-oftp^ _ _ _).
+%total (D1 D2) (subst/md-ofsg^ D1 _ _) (subst/md-oftp^ D2 _ _).
+
+
+
+subst/md-ofsg	: ({s}{ds: assm/md s S'}
+		     {a}{da: ofkd a K'}{dm: fst-md s a} 
+		     ofsg L T Y (M s a) (S a))
+		   -> ofsg L T pty/p M' S'
+		   -> fst-sg S' K'
+		   -> fst-md M' C'
+		   -> ofsg L T Y (M M' C') (S C')
+		   -> type.
+%mode subst/md-ofsg +D1 +D2 +D3 +DM -D4.
+
+-	: subst/md-ofsg D1 D2 DS DM D'
+	   <- vdt/ofsg/p D2 _ DS' DM' DC'
+	   <- fst-sg-seq DS' DS DQS
+	   <- fst-md-seq DM' DM DQM
+	   <- ofkd/seq-k DQS DC' DC''
+	   <- ofkd/seq-c DQM DC'' DC'''
+	   <- subst/md-ofsg^ ([dassm: assm/md M' S']
+			       D1 M' dassm C' DC''' DM) D2 D'.
+
+%worlds () (subst/md-ofsg _ _ _ _ _).
+%total {} (subst/md-ofsg _ _ _ _ _).
+
+
+

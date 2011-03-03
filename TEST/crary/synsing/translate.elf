@@ -1,0 +1,147 @@
+
+vtrans	: eterm -> atom -> type.
+ttrans	: etp -> tp -> type.
+trans	: eterm -> tp -> type.
+
+ttrans/t	: ttrans et t.
+
+ttrans/pi	: ttrans (epi EA EB) (pi A B)
+		   <- ttrans EA A
+		   <- ({x} vof x A
+			 -> {ex} vtrans ex x
+			 -> ttrans (EB ex) (B x)).
+			 
+ttrans/sigma	: ttrans (esigma EA EB) (sigma A B)
+		   <- ttrans EA A
+		   <- ({x} vof x A
+			 -> {ex} vtrans ex x
+			 -> ttrans (EB ex) (B x)).
+
+ttrans/sing	: ttrans (esing EM) (sing R)
+		   <- trans EM (sing R).
+
+ttrans/one	: ttrans eone one.
+
+
+
+trans/const	: trans (econst C) A'
+		   <- kof C A
+		   <- wf A
+		   <- expand (const C) A M
+		   <- self M A A'.
+
+trans/var	: trans EM A'
+		   <- vtrans EM X
+		   <- vof X A
+		   <- wf A
+		   <- expand X A M
+		   <- self M A A'.
+
+trans/app	: trans (eapp EM EN) Bx
+		   <- trans EM (pi A B)
+		   <- trans EN C
+		   <- subtype C A ([_] N)
+		   <- tsub ([x] B x) N Bx.
+
+trans/pi1	: trans (epi1 EM) A
+		   <- trans EM (sigma A ([_] B)).
+
+trans/pi2	: trans (epi2 EM) B
+		   <- trans EM (sigma A ([_] B)).
+
+trans/lam	: trans (elam EA EM) (pi A B)
+		   <- ttrans EA A
+		   <- ({x} vof x A
+			 -> {ex} vtrans ex x
+			 -> trans (EM ex) (B x)).
+
+trans/pair	: trans (epair EM EN) (sigma A ([_] B))
+		   <- trans EM A
+		   <- trans EN B.
+
+trans/star	: trans estar one.
+
+
+
+%block tbind	: some {r:atom}
+		   block {ex:eterm} {tr:vtrans ex r}.
+
+-	: (vtrans _ _ -> vtrans _ _) -> type.
+
+
+
+
+%%%%%  Explicit Contexts  %%%%%
+
+ttranse	: ctx -> etp -> tp -> type.
+transe	: ctx -> eterm -> tp -> type.
+
+ttranse/t	: ttranse G et t
+		   <- ordered G.
+
+ttranse/pi	: ttranse G (epi EA EB) (pi A B)
+		   <- ttranse G EA A
+		   <- ({x} isvar x I
+			 -> {ex} vtrans ex x
+			 -> ttranse (cons G x A) (EB ex) (B x)).
+			 
+ttranse/sigma	: ttranse G (esigma EA EB) (sigma A B)
+		   <- ttranse G EA A
+		   <- ({x} isvar x I
+			 -> {ex} vtrans ex x
+			 -> ttranse (cons G x A) (EB ex) (B x)).
+
+ttranse/sing	: ttranse G (esing EM) (sing R)
+		   <- transe G EM (sing R).
+
+ttranse/one	: ttranse G eone one
+		   <- ordered G.
+
+
+
+transe/const	: transe G (econst C) A'
+		   <- kof C A
+		   <- wf A
+		   <- expand (const C) A M
+		   <- self M A A'
+		   <- ordered G.
+
+transe/var	: transe G EM A'
+		   <- vtrans EM X
+		   <- lookup G X A
+		   <- wfe G A
+		   <- expand X A M
+		   <- self M A A'.
+
+transe/vari	: transe G EM A'
+		   <- vtrans EM X
+		   <- vof X A
+		   <- wf A
+		   <- expand X A M
+		   <- self M A A'
+		   <- ordered G.
+
+transe/app	: transe G (eapp EM EN) Bx
+		   <- transe G EM (pi A B)
+		   <- transe G EN C
+		   <- subtype C A ([_] N)
+		   <- tsub ([x] B x) N Bx.
+
+transe/pi1	: transe G (epi1 EM) A
+		   <- transe G EM (sigma A ([_] B)).
+
+transe/pi2	: transe G (epi2 EM) B
+		   <- transe G EM (sigma A ([_] B)).
+
+transe/lam	: transe G (elam EA EM) (pi A B)
+		   <- ttranse G EA A
+		   <- ({x} isvar x I
+			 -> {ex} vtrans ex x
+			 -> transe (cons G x A) (EM ex) (B x)).
+
+transe/pair	: transe G (epair EM EN) (sigma A ([_] B))
+		   <- transe G EM A
+		   <- transe G EN B.
+
+transe/star	: transe G estar one
+		   <- ordered G.

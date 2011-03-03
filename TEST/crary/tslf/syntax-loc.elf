@@ -1,0 +1,12 @@
+%%%% Syntax for locations
+
+loc	: type. 
+
+loc/z	: loc.
+loc/s	: loc -> loc.
+
+%worlds () (loc).
+
+seq/loc		: loc -> loc -> type.
+
+seq/loc/refl	: seq/loc L1 L1.

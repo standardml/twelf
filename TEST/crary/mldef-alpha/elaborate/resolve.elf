@@ -1,0 +1,209 @@
+
+%{
+NAME INEQUALITY
+
+Name resolution relies on equality and inequality of names.  Name
+equality is built-in (by using the same variable), but we must define
+name inequality ({name-neq}).  To avoid quadratic blow up of the
+definition of inequality, we define it as the symmetric closure of a
+strict order on names ({name-lt}).  The latter, in turn, includes a
+transitivity rule, so its definition is linear in the number of
+namespaces.
+
+}%
+
+name-lt : name -> name -> type.
+
+name-lt/val/con		: name-lt (name/val _) (name/con _).
+name-lt/con/mod		: name-lt (name/con _) (name/mod _).
+name-lt/mod/fun		: name-lt (name/mod _) (name/fun _).
+name-lt/fun/sig		: name-lt (name/fun _) (name/sig _).
+name-lt/sig/dtc 	: name-lt (name/sig _) (name/dtc _).
+name-lt/dtc/ec		: name-lt (name/dtc _) (name/ec _).
+name-lt/ec/dcon0	: name-lt (name/ec _) (name/dcon0 _ _).
+name-lt/dcon0/dcon1	: name-lt (name/dcon0 _ _) (name/dcon1 _ _).
+name-lt/dcon1/econ0	: name-lt (name/dcon1 _ _) name/econ0.
+name-lt/econ0/econ1	: name-lt name/econ0 name/econ1.
+name-lt/econ1/basis	: name-lt name/econ1 name/basis.
+name-lt/basis/hide	: name-lt name/basis name/hide.
+name-lt/hide/funcarg	: name-lt name/hide name/funcarg.
+
+name-lt/val		: name-lt (name/val I) (name/val I')
+			   <- identifier-lt I I'.
+
+name-lt/con		: name-lt (name/con I) (name/con I')
+			   <- identifier-lt I I'.
+
+name-lt/mod		: name-lt (name/mod I) (name/mod I')
+			   <- identifier-lt I I'.
+
+name-lt/fun		: name-lt (name/fun I) (name/fun I')
+			   <- identifier-lt I I'.
+
+name-lt/sig		: name-lt (name/sig I) (name/sig I')
+			   <- identifier-lt I I'.
+
+name-lt/dtc		: name-lt (name/dtc I) (name/dtc I')
+			   <- identifier-lt I I'.
+
+name-lt/ec		: name-lt (name/ec I) (name/ec I')
+			   <- identifier-lt I I'.
+
+name-lt/trans		: name-lt L1 L3
+			   <- name-lt L1 L2
+			   <- name-lt L2 L3.
+
+
+
+name-neq : name -> name -> type.
+
+name-neq/lt		: name-neq L L'
+			   <- name-lt L L'.
+
+name-neq/gt		: name-neq L L'
+			   <- name-lt L' L.
+
+
+
+%{
+SEARCHABILITY
+
+A searchable name is one within which name resolution can look to
+resolve a name.
+
+}%
+
+searchable : name -> type.
+
+searchable/dtc		: searchable (name/dtc _).
+searchable/ec		: searchable (name/ec _).
+searchable/basis	: searchable name/basis.
+searchable/funcarg	: searchable name/funcarg.
+
+
+
+unsearchable : name -> type.
+
+unsearchable/val	: unsearchable (name/val _).
+unsearchable/con	: unsearchable (name/con _).
+unsearchable/mod	: unsearchable (name/mod _).
+unsearchable/fun	: unsearchable (name/fun _).
+unsearchable/sig	: unsearchable (name/sig _).
+unsearchable/dcon0	: unsearchable (name/dcon0 _ _).
+unsearchable/dcon1	: unsearchable (name/dcon1 _ _).
+unsearchable/econ0	: unsearchable name/econ0.
+unsearchable/econ1	: unsearchable name/econ1.
+unsearchable/hide	: unsearchable name/hide.
+
+
+
+
+%{
+NAME RESOLUTION
+
+Input: IL module and signature; name to resolve.
+Output: resulting IL module and signature.
+
+Name resolution uses one auxiliary judgement:
+
+* {noresolve} judgement is the negation of {resolve}.  One may note
+  that it makes no essential use of its first argument.  The first
+  argument is included in order to maintain parallelism with
+  {resolve}, thereby making manifest that the two are negations of
+  each other.
+
+  Input: IL module and signature; name to resolve.
+  Output: none.
+
+}%
+
+noresolve		: module -> sg -> name -> type.
+
+%{
+
+When encountering a named sub-structure, name resolution succeds if
+the name matches the target name.  If the names do not match,
+resolution proceeds to search the sub-structure if its name is
+searchable.  If it is not searchable, or if the target name does not
+appear within, resolution fails.
+
+}%
+
+resolve/hit		: resolve M (sg/named L S) L (md/out M) S.
+
+resolve/searchable	: resolve M (sg/named L' S) L M' S'
+			   <- name-neq L L'
+			   <- searchable L'
+			   <- resolve (md/out M) S L M' S'.
+
+noresolve/named1	: noresolve M (sg/named L' S) L
+			   <- name-neq L L'
+			   <- noresolve (md/out M) S L.
+
+noresolve/named2	: noresolve M (sg/named L' S) L
+			   <- name-neq L L'
+			   <- unsearchable L'.
+
+
+%{
+
+Name resolution proceeds right-to-left.  Thus, the second component of
+a pair is searched first, and the first component is searched if the
+former search fails.  Resolution fails if both component searches
+fail.
+
+}%
+
+resolve/pi2		: resolve M (sg/sigma S1 S2) L M' S'
+			   <- md-fst M C
+			   <- resolve (md/pi2 M) (S2 (pi1 C)) L M' S'.
+
+resolve/pi1		: resolve M (sg/sigma S1 S2) L M' S'
+			   <- md-fst M C
+			   <- noresolve (md/pi2 M) (S2 (pi1 C)) L
+			   <- resolve (md/pi1 M) S1 L M' S'.
+
+noresolve/sigma		: noresolve M (sg/sigma S1 S2) L
+			   <- md-fst M C
+			   <- noresolve (md/pi2 M) (S2 (pi1 C)) L
+			   <- noresolve (md/pi1 M) S1 L.
+
+noresolve/one		: noresolve M sg/one L.
+
+
+
+
+%{
+LONGID RESOLUTION
+
+To resolve a long identifier, each constituent identifier is resolved
+in order.  All but the final identifier uses the {name/mod} namespace;
+the final identifier's namespace is given as an input (a function
+with type {identifier -> name}).
+
+Input: IL module and signature; namespace; long identifier to resolve.
+Output: resulting IL module and signature.
+
+}%
+
+resolve-long/short	: resolve-long M S F (longid/short I) M' S'
+			   <- resolve M S (F I) M' S'.
+
+resolve-long/cons	: resolve-long M S F (longid/cons I Is) M'' S''
+			   <- resolve M S (name/mod I) M' S'
+			   <- resolve-long M' S' F Is M'' S''.
+
+
+
+%{
+RESOLUTION IN BASIS
+
+Input: elaboration context; name to resolve; intended IL signature.
+Output: resulting IL module.
+
+}%
+
+resolve-in-basis/i	: resolve-in-basis Mec Sec L S M
+			   <- resolve Mec Sec name/basis Mbasis Sbasis
+			   <- resolve Mbasis Sbasis L M S'
+			   <- sg-sub S' S.

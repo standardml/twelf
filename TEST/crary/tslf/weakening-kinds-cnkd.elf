@@ -1,0 +1,137 @@
+%%%% weakening lemma for kinds. 
+
+%%%% proposition 3.5 in SH. only need to show (2). (1) follows by the encoding
+
+kd-wkn/ofkd : ({a:cn} ofkd a K2 -> ofkd (B a) (K a)) 
+	       -> kd-sub K1 K2
+	       -> ({a:cn} ofkd a K1 -> ofkd (B a) (K a))
+	       -> type. 			   
+%mode kd-wkn/ofkd +D1 +D2 -D4.
+
+- : kd-wkn/ofkd DI DS ([a] [da] (DI a (ofkd/sub da DS))).
+
+%worlds (ofkd-block) (kd-wkn/ofkd _ _ _).
+%total {} (kd-wkn/ofkd _ _ _).
+
+
+
+kd-wkn/kd-wf : ({a:cn} {da: ofkd a K2} kd-wf (K a)) 
+	       -> kd-sub K1 K2
+	       -> ({a:cn} {da: ofkd a K1} kd-wf (K a))
+	       -> type. 			   
+%mode kd-wkn/kd-wf +D1 +D2 -D4.
+
+- : kd-wkn/kd-wf DI DS ([a] [da] (DI a (ofkd/sub da DS))).
+
+%worlds (ofkd-block | ofkd+vdt-block) (kd-wkn/kd-wf _ _ _).
+%total {} (kd-wkn/kd-wf _ _ _).
+
+
+
+kd-wkn/kd-deq : ({a:cn} {da: ofkd a K2} kd-deq (K' a) (K'' a)) 
+	       -> kd-sub K1 K2
+	       -> ({a:cn} {da: ofkd a K1} kd-deq (K' a) (K'' a))
+	       -> type. 			   
+%mode kd-wkn/kd-deq +D1 +D2 -D4.
+
+- : kd-wkn/kd-deq DI DS ([a] [da] (DI a (ofkd/sub da DS))).
+
+%worlds (ofkd-block) (kd-wkn/kd-deq _ _ _).
+%total {} (kd-wkn/kd-deq _ _ _).
+
+
+
+kd-wkn/kd-sub : ({a:cn} {da: ofkd a K2} kd-sub (K' a) (K'' a)) 
+	       -> kd-sub K1 K2
+	       -> ({a:cn} {da: ofkd a K1} kd-sub (K' a) (K'' a))
+	       -> type. 						   
+%mode kd-wkn/kd-sub +D1 +D2 -D4.
+
+- : kd-wkn/kd-sub DI DS ([a] [da] (DI a (ofkd/sub da DS))).
+
+%worlds (ofkd-block) (kd-wkn/kd-sub _ _ _).
+%total {} (kd-wkn/kd-sub _ _ _).
+
+
+
+kd-wkn/cn-deq : ({a:cn} {da: ofkd a K2} cn-deq (C1 a) (C2 a) (K a)) 
+	       -> kd-sub K1 K2
+	       -> ({a:cn} {da: ofkd a K1} cn-deq (C1 a) (C2 a) (K a))
+	       -> type. 			   
+%mode kd-wkn/cn-deq +D1 +D2 -D4.
+
+- : kd-wkn/cn-deq DI DS ([a] [da] (DI a (ofkd/sub da DS))).
+
+%worlds (ofkd-block) (kd-wkn/cn-deq _ _ _).
+%total {} (kd-wkn/cn-deq _ _ _).
+
+
+
+
+
+kd-wkn-deq/ofkd : ({a:cn} ofkd a K2 
+		     -> ofkd (B a) (K a)) 
+		   -> kd-deq K1 K2
+		   -> ({a:cn} ofkd a K1 -> ofkd (B a) (K a))
+		   -> type. 			   
+%mode kd-wkn-deq/ofkd +D1 +D2 -D4.
+
+- : kd-wkn-deq/ofkd DI DS ([a] [da] (DI a (ofkd/deq da DS))).
+
+%worlds (ofkd-block) (kd-wkn-deq/ofkd _ _ _).
+%total {} (kd-wkn-deq/ofkd _ _ _).
+
+
+
+kd-wkn-deq/kd-wf : ({a:cn} {da: ofkd a K2} kd-wf (K a)) 
+	       -> kd-deq K1 K2
+	       -> ({a:cn} {da: ofkd a K1} kd-wf (K a))
+	       -> type. 			   
+%mode kd-wkn-deq/kd-wf +D1 +D2 -D4.
+
+- : kd-wkn-deq/kd-wf DI DS ([a] [da] (DI a (ofkd/deq da DS))).
+
+%worlds (ofkd-block | ofkd+vdt-block) (kd-wkn-deq/kd-wf _ _ _).
+%total {} (kd-wkn-deq/kd-wf _ _ _).
+
+
+
+kd-wkn-deq/kd-deq : ({a:cn} {da: ofkd a K2} kd-deq (K' a) (K'' a)) 
+	       -> kd-deq K1 K2
+	       -> ({a:cn} {da: ofkd a K1} kd-deq (K' a) (K'' a))
+	       -> type. 			   
+%mode kd-wkn-deq/kd-deq +D1 +D2 -D4.
+
+- : kd-wkn-deq/kd-deq DI DS ([a] [da] (DI a (ofkd/deq da DS))).
+
+%worlds (ofkd-block) (kd-wkn-deq/kd-deq _ _ _).
+%total {} (kd-wkn-deq/kd-deq _ _ _).
+
+
+
+kd-wkn-deq/kd-sub : ({a:cn} {da: ofkd a K2} kd-sub (K' a) (K'' a)) 
+	       -> kd-deq K1 K2
+	       -> ({a:cn} {da: ofkd a K1} kd-sub (K' a) (K'' a))
+	       -> type. 						   
+%mode kd-wkn-deq/kd-sub +D1 +D2 -D4.
+
+- : kd-wkn-deq/kd-sub DI DS ([a] [da] (DI a (ofkd/deq da DS))).
+
+%worlds (ofkd-block) (kd-wkn-deq/kd-sub _ _ _).
+%total {} (kd-wkn-deq/kd-sub _ _ _).
+
+
+
+kd-wkn-deq/cn-deq : ({a:cn} {da: ofkd a K2} cn-deq (C1 a) (C2 a) (K a)) 
+	       -> kd-deq K1 K2
+	       -> ({a:cn} {da: ofkd a K1} cn-deq (C1 a) (C2 a) (K a))
+	       -> type. 			   
+%mode kd-wkn-deq/cn-deq +D1 +D2 -D4.
+
+- : kd-wkn-deq/cn-deq DI DS ([a] [da] (DI a (ofkd/deq da DS))).
+
+%worlds (ofkd-block) (kd-wkn-deq/cn-deq _ _ _).
+%total {} (kd-wkn-deq/cn-deq _ _ _).
+
+
+

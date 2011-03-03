@@ -1,0 +1,146 @@
+%%%% metrics on typing derivations for the explicit system
+
+
+
+
+msg-wf	: sg-wf K -> met -> type.
+%mode msg-wf *D *M.
+
+msg-deq : sg-deq K1 K2 -> met -> type.
+%mode msg-deq *D *M.
+
+msg-wf/sg/unit	: msg-wf (sg-wf/sg/unit) met/unit.
+
+msg-wf/sg/cn	: msg-wf (sg-wf/sg/cn D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+msg-wf/sg/kd	: msg-wf (sg-wf/sg/kd D1) (met/sing D1')
+		   <- mkd-wf D1 D1'.
+
+msg-wf/sg/sgm	: msg-wf (sg-wf/sg/sgm D1 D2 _) (met/pair D1' D2')
+		   <- ({a}{da}{dm:mofkd da met/unit}
+			 msg-wf (D2 a da) D2')
+		   <- msg-wf D1 D1'.
+
+msg-wf/sg/pi	: msg-wf (sg-wf/sg/pi D1 D2 _) (met/pair D1' D2')
+		   <- ({a}{da}{dm:mofkd da met/unit}
+			 msg-wf (D2 a da) D2')
+		   <- msg-wf D1 D1'.
+
+
+
+msg-deq/sg/unit	: msg-deq (sg-deq/sg/unit) met/unit.
+
+msg-deq/sg/cn	: msg-deq (sg-deq/sg/cn D1) (met/sing D1')
+		   <- mcn-deq D1 D1'.
+
+msg-deq/sg/kd	: msg-deq (sg-deq/sg/kd D1) (met/sing D1')
+		   <- mkd-deq D1 D1'.
+
+msg-deq/sg/sgm	: msg-deq (sg-deq/sg/sgm D1 D2 _) (met/pair D1' D2')
+		   <- ({a}{da}{dm:mofkd da met/unit}
+			 msg-deq (D2 a da) D2')
+		   <- msg-deq D1 D1'.
+
+msg-deq/sg/pi	: msg-deq (sg-deq/sg/pi D1 D2 _) (met/pair D1' D2')
+		   <- ({a}{da}{dm:mofkd da met/unit}
+			 msg-deq (D2 a da) D2')
+		   <- msg-deq D1 D1'.
+
+
+
+
+can-msg-wf	: {D: sg-wf K} msg-wf D Km -> type.
+%mode can-msg-wf +D1 -D2.
+
+can-msg-deq	: {D: sg-deq K K'} msg-deq D Km -> type.
+%mode can-msg-deq +D1 -D2.
+-	: can-msg-wf sg-wf/sg/unit msg-wf/sg/unit.
+
+-	: can-msg-wf (sg-wf/sg/cn D1) (msg-wf/sg/cn D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-msg-wf (sg-wf/sg/kd D1) (msg-wf/sg/kd D1')
+	   <- can-mkd-wf D1 D1'.
+
+-	: can-msg-wf (sg-wf/sg/sgm D1 D2 _) (msg-wf/sg/sgm D1' D2')
+	   <- can-msg-wf D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-msg-wf (D2 a da) (D2' a da dm)).
+
+-	: can-msg-wf (sg-wf/sg/pi D1 D2 _) (msg-wf/sg/pi D1' D2')
+	   <- can-msg-wf D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-msg-wf (D2 a da) (D2' a da dm)).
+
+
+
+-	: can-msg-deq sg-deq/sg/unit msg-deq/sg/unit.
+
+-	: can-msg-deq (sg-deq/sg/cn D1) (msg-deq/sg/cn D1')
+	   <- can-mcn-deq D1 D1'.
+
+-	: can-msg-deq (sg-deq/sg/kd D1) (msg-deq/sg/kd D1')
+	   <- can-mkd-deq D1 D1'.
+
+-	: can-msg-deq (sg-deq/sg/sgm D1 D2 _) (msg-deq/sg/sgm D1' D2')
+	   <- can-msg-deq D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-msg-deq (D2 a da) (D2' a da dm)).
+
+-	: can-msg-deq (sg-deq/sg/pi D1 D2 _) (msg-deq/sg/pi D1' D2')
+	   <- can-msg-deq D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-msg-deq (D2 a da) (D2' a da dm)).
+
+%worlds (cn-block | can-mofkd-block | ovar-block)
+(can-msg-wf _ _) (can-msg-deq _ _).
+%total (D1 D2)
+(can-msg-wf D1 _) 
+(can-msg-deq D2 _).
+
+
+
+mesg-wf		: esg-wf G K -> met -> type.
+mesg-deq	: esg-deq G K1 K2 -> met -> type.
+
+
+
+
+mesg-wf/sg/unit	: mesg-wf (esg-wf/sg/unit _) met/unit.
+
+mesg-wf/sg/cn	: mesg-wf (esg-wf/sg/cn D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+mesg-wf/sg/kd	: mesg-wf (esg-wf/sg/kd D1) (met/sing D1')
+		   <- mekd-wf D1 D1'.
+
+mesg-wf/sg/sgm	: mesg-wf (esg-wf/sg/sgm D1 D2 _) (met/pair D1' D2')
+		   <- ({a} {da}
+			 mesg-wf (D2 a da) D2')
+		   <- mesg-wf D1 D1'.
+
+mesg-wf/sg/pi	: mesg-wf (esg-wf/sg/pi D1 D2 _) (met/pair D1' D2')
+		   <- ({a} {da}
+			 mesg-wf (D2 a da) D2')
+		   <- mesg-wf D1 D1'.
+
+mesg-deq/sg/unit	: mesg-deq (esg-deq/sg/unit _) met/unit.
+
+mesg-deq/sg/cn	: mesg-deq (esg-deq/sg/cn D1) (met/sing D1')
+			   <- mecn-deq D1 D1'.
+
+mesg-deq/sg/kd	: mesg-deq (esg-deq/sg/kd D1) (met/sing D1')
+			   <- mekd-deq D1 D1'.
+
+mesg-deq/sg/sgm		: mesg-deq (esg-deq/sg/sgm D1 D2 _) (met/pair D1' D2')
+			   <- ({a}{da}
+				 mesg-deq (D2 a da) D2')
+			   <- mesg-deq D1 D1'.
+
+mesg-deq/sg/pi		: mesg-deq (esg-deq/sg/pi D1 D2 _) (met/pair D1' D2')
+			   <- ({a}{da}
+				 mesg-deq (D2 a da) D2')
+			   <- mesg-deq D1 D1'.
+
+

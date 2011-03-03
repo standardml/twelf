@@ -1,0 +1,20 @@
+%%%% SH proposition 3.14, full functionality
+
+functf/cn-deq 		: cn-deq C1 C2 K 
+			   -> ({a} {da: ofkd a K} 
+				 cn-deq (Ca a) (Cb a) (K' a))
+			   -> cn-deq (Ca C1) (Cb C2) (K' C1)
+			   -> type.
+
+%mode functf/cn-deq +D1 +D2 -D3.
+
+- : functf/cn-deq Deq Deq' (cn-deq/trans (Deq' C1 D1) Deq2)
+     <- vdt/cn-deq Deq D1 D2 DK
+     <- ({a} {da: ofkd a K} 
+	   {dm: mofkd da met/unit} {_: can-mofkd da dm}
+	   {dw: vdt/ofkd da DK} 
+	   vdt/cn-deq (Deq' a da) (D1' a da) (D2' a da) (DK' a da))
+     <- funct/ofkd D2' Deq D1 D2 Deq2.
+
+%worlds (ofkd+vdt-block) (functf/cn-deq _ _ _).
+%total {} (functf/cn-deq _ _ _).

@@ -1,0 +1,402 @@
+
+%%%%%  Simple Substitition  %%%%%
+
+ssubst-gen : (vof R A -> of M B) -> (aof R A -> of M B) -> type.
+%mode ssubst-gen +X1 -X2.
+
+sasubst-gen : (vof R A -> aof Q B) -> (aof R A -> aof Q B) -> type.
+%mode sasubst-gen +X1 -X2.
+
+stsubst-gen : (vof R A -> wf B) -> (aof R A -> wf B) -> type.
+%mode stsubst-gen +X1 -X2.
+
+-at	: ssubst-gen ([d] of/at (D d)) ([d] of/at (D' d))
+	   <- sasubst-gen D D'.
+
+-lam	: ssubst-gen ([d] of/lam (D2 d) (D1 d)) ([d] of/lam (D2' d) (D1' d))
+	   <- stsubst-gen D1 D1'
+	   <- ({y} {e}
+		 ssubst-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-pair	: ssubst-gen ([d] of/pair (D4 d) (D3 d) D2 (D1 d)) ([d] of/pair (D4' d) (D3' d) D2 (D1' d))
+	   <- ssubst-gen D1 D1'
+	   <- ssubst-gen D3 D3'
+	   <- ({y} {e}
+		 stsubst-gen ([d] D4 d y e) ([d] D4' d y e)).
+
+-sing	: ssubst-gen ([d] of/sing (D d)) ([d] of/sing (D' d))
+	   <- sasubst-gen D D'.
+
+-star	: ssubst-gen ([d] of/star) ([d] of/star).
+
+
+
+
+-closed	: sasubst-gen ([d] D) ([d] D).
+
+-const	: sasubst-gen ([d] aof/const (D2 d) D1) ([d] aof/const (D2' d) D1)
+	   <- stsubst-gen D2 D2'.
+
+-varsam	: sasubst-gen ([d] aof/var _ d) ([d] d).
+
+-varoth	: sasubst-gen ([d] aof/var (D2 d) D1) ([d] aof/var (D2' d) D1)
+	   <- stsubst-gen D2 D2'.
+
+-app	: sasubst-gen ([d] aof/app (D4 d) D3 (D2 d) (D1 d)) ([d] aof/app (D4' d) D3 (D2' d) (D1' d))
+	   <- sasubst-gen D1 D1'
+	   <- ssubst-gen D2 D2'
+	   <- stsubst-gen D4 D4'.
+
+-pi1	: sasubst-gen ([d] aof/pi1 (D1 d)) ([d] aof/pi1 (D1' d))
+	   <- sasubst-gen D1 D1'.
+
+-pi2	: sasubst-gen ([d] aof/pi2 (D1 d)) ([d] aof/pi2 (D1' d))
+	   <- sasubst-gen D1 D1'.
+
+
+-t	: stsubst-gen ([d] wf/t) ([d] wf/t).
+
+-pi	: stsubst-gen ([d] wf/pi (D2 d) (D1 d)) ([d] wf/pi (D2' d) (D1' d)) 
+	   <- stsubst-gen D1 D1'
+	   <- ({y} {e} stsubst-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-sigma	: stsubst-gen ([d] wf/sigma (D2 d) (D1 d)) ([d] wf/sigma (D2' d) (D1' d)) 
+	   <- stsubst-gen D1 D1'
+	   <- ({y} {e} stsubst-gen ([d] D2 d y e) ([d] D2' d y e)).
+
+-sing	: stsubst-gen ([d] wf/sing (D1 d)) ([d] wf/sing (D1' d))
+	   <- sasubst-gen D1 D1'.
+
+-one	: stsubst-gen ([d] wf/one) ([d] wf/one).
+
+%worlds (var | bind | topenblock) (ssubst-gen _ _) (sasubst-gen _ _) (stsubst-gen _ _).
+%total (D1 D2 D3) (ssubst-gen D1 _) (sasubst-gen D2 _) (stsubst-gen D3 _).
+
+
+
+ssubst : ({x} vof x A -> of (M x) (B x))
+	  -> aof R A
+%%
+	  -> of (M R) (B R) -> type.
+%mode ssubst +X1 +X2 -X3.
+
+-	: ssubst D1 D2 (D1' D2)
+	   <- ssubst-gen (D1 _) D1'.
+
+%worlds (var | bind | topenblock) (ssubst _ _ _).
+%total {} (ssubst _ _ _).
+
+
+
+ssubst1 : ({x} vof x A -> {y} vof y (B x) -> of (M x y) (C x y))
+	    -> aof R A
+%%
+	    -> ({y} vof y (B R) -> of (M R y) (C R y)) -> type.
+%mode ssubst1 +X1 +X2 -X3.
+
+-	: ssubst1 Dof Daof (Dof' Daof)
+	   <- ({y} {e}
+		 ssubst-gen ([d] Dof R d y e) ([d] Dof' d y e)).
+
+%worlds (var | bind | topenblock) (ssubst1 _ _ _).
+%total {} (ssubst1 _ _ _).
+
+
+
+sasubst : ({x} vof x A -> aof (Q x) (B x))
+	  -> aof R A
+%%
+	  -> aof (Q R) (B R) -> type.
+%mode sasubst +X1 +X2 -X3.
+
+-	: sasubst D1 D2 (D1' D2)
+	   <- sasubst-gen (D1 _) D1'.
+
+%worlds (var | bind | topenblock) (sasubst _ _ _).
+%total {} (sasubst _ _ _).
+
+
+
+stsubst : ({x} vof x A -> wf (B x))
+	  -> aof R A
+%%
+	  -> wf (B R) -> type.
+%mode stsubst +X1 +X2 -X3.
+
+-	: stsubst D1 D2 (D1' D2)
+	   <- stsubst-gen (D1 _) D1'.
+
+%worlds (var | bind | topenblock) (stsubst _ _ _).
+%total {} (stsubst _ _ _).
+
+
+
+stsubst2 : ({x} vof x A -> {y} vof y (B x) -> {z} vof z (C x y) -> wf (D x y z))
+	    -> aof R A
+%%
+	    -> ({y} vof y (B R) -> {z} vof z (C R y) -> wf (D R y z)) -> type.
+%mode stsubst2 +X1 +X2 -X3.
+
+-	: stsubst2 Dwf Daof (Dwf' Daof)
+	   <- ({y} {e} {z} {f}
+		 stsubst-gen ([d] Dwf R d y e z f) ([d] Dwf' d y e z f)).
+
+%worlds (var | bind | topenblock) (stsubst2 _ _ _).
+%total {} (stsubst2 _ _ _).
+
+
+
+stsubst1 : ({x} vof x A -> {y} vof y (B x) -> wf (C x y))
+	    -> aof R A
+%%
+	    -> ({y} vof y (B R) -> wf (C R y)) -> type.
+%mode stsubst1 +X1 +X2 -X3.
+
+-	: stsubst1 Dwf Daof (Dwf' Daof)
+	   <- ({y} {e}
+		 stsubst-gen ([d] Dwf R d y e) ([d] Dwf' d y e)).
+
+%worlds (var | bind | topenblock) (stsubst1 _ _ _).
+%total {} (stsubst1 _ _ _).
+
+
+
+
+
+%%%%%  Simple Substitution (Explicit Context)  %%%%%
+
+ssubst-e : ({x} append (cons G1 x A) (G2 x) (G x))
+	     -> append G1 (G2 R) G'
+	     -> ({x} isvar x I -> ofe (G x) (M x) (B x))
+	     -> aofe G1 R A
+	     -> ofe G' (M R) (B R) -> type.
+%mode ssubst-e +X1 +X2 +X3 +X4 -X5.
+
+sasubst-e : ({x} append (cons G1 x A) (G2 x) (G x))
+	     -> append G1 (G2 R) G'
+	     -> ({x} isvar x I -> aofe (G x) (Q x) (B x))
+	     -> aofe G1 R A
+	     -> aofe G' (Q R) (B R) -> type.
+%mode sasubst-e +X1 +X2 +X3 +X4 -X5.
+
+stsubst-e : ({x} append (cons G1 x A) (G2 x) (G x))
+	     -> append G1 (G2 R) G'
+	     -> ({x} isvar x I -> wfe (G x) (B x))
+	     -> aofe G1 R A
+	     -> wfe G' (B R) -> type.
+%mode stsubst-e +X1 +X2 +X3 +X4 -X5.
+
+-at	: ssubst-e Dappend Dappend' ([x] [d] ofe/at (D1 x d)) DofR (ofe/at D1')
+	   <- sasubst-e Dappend Dappend' D1 DofR D1'.
+
+-lam	: ssubst-e Dappend Dappend' ([x] [d] ofe/lam (D2 x d) (D1 x d)) DofR (ofe/lam D2' D1')
+	   <- stsubst-e Dappend Dappend' D1 DofR D1'
+	   <- ({y} {e}
+		 ssubst-e ([x] append/cons (Dappend x)) (append/cons Dappend') ([x] [d] D2 x d y e) DofR (D2' y e)).
+
+-sing	: ssubst-e Dappend Dappend' ([x] [d] ofe/sing (D1 x d)) DofR (ofe/sing D1')
+	   <- sasubst-e Dappend Dappend' D1 DofR D1'.
+
+-pair	: ssubst-e Dappend Dappend' ([x] [d] ofe/pair (D4 x d) (D3 x d) (D2 x) (D1 x d)) (DofR : aofe _ R _) (ofe/pair D4' D3' (D2 R) D1')
+	   <- ssubst-e Dappend Dappend' D1 DofR D1'
+	   <- ssubst-e Dappend Dappend' D3 DofR D3'
+	   <- ({y} {e}
+		 stsubst-e ([x] append/cons (Dappend x)) (append/cons Dappend') ([x] [d] D4 x d y e) DofR (D4' y e)).
+
+-star	: ssubst-e 
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dappend' : append G1 (G2 R) G') 
+	   ([x] [d] ofe/star
+	      (Dordered x d : ordered (G x)))
+	   (DofR : aofe G1 R A)
+	   (ofe/star Dordered')
+	   <- scsub-ordered Dappend Dappend' Dordered Dordered'.
+
+
+
+-closed	: sasubst-e 
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dappend' : append G1 (G2 R) G') 
+	   ([x] [d] aofe/closed 
+	      (Dordered x d : ordered (G x))
+	      (Daof x : aof (Q x) (B x)))
+	   (DofR : aofe G1 R A)
+	   (aofe/closed
+	      Dordered'
+	      (Daof R))
+	   <- scsub-ordered Dappend Dappend' Dordered Dordered'.
+
+-varsam	: sasubst-e 
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dappend' : append G1 (G2 R) G') 
+	   ([x] [d] aofe/var
+	      (Dwf x d : wfe (G x) (B x))
+	      (Dlookup x d : lookup (G x) x (B x)))
+	   (DofR : aofe G1 R A)
+	   DofR''
+	   <- ({x} {d}
+		 lookup-binder-fun (Dappend x) (Dlookup x d) (Deq x))
+	   <- aofe-resp ctx-eq/i atom-eq/i (Deq R) DofR 
+	      (DofR' : aofe G1 R (B R))
+	   <- ({x} {d}
+		 lookup-context (Dlookup x d) 
+		 (Dordered x d : ordered (G x)))
+	   <- scsub-ordered Dappend Dappend' Dordered 
+	      (Dordered' : ordered G')
+	   <- weaken-aofe' Dappend' Dordered' DofR'
+	      (DofR'' : aofe G' R (B R)).
+
+-varoth	: sasubst-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dappend' : append G1 (G2 R) G') 
+	   ([x] [d] aofe/var
+	      (Dwf x d : wfe (G x) (B x))
+	      (Dlookup x d : lookup (G x) Y (B x)))
+	   (DofR : aofe G1 R A)
+	   (aofe/var Dwf' Dlookup')
+	   <- scsub-lookup Dappend Dappend' Dlookup
+	      (Dlookup' : lookup G' Y (B R))
+	   <- stsubst-e Dappend Dappend' Dwf DofR
+	      (Dwf' : wfe G' (B R)).
+
+-app	: sasubst-e Dappend Dappend' ([x] [d] aofe/app (D4 x d) (D3 x) (D2 x d) (D1 x d)) (DofR : aofe _ R _) (aofe/app D4' (D3 R) D2' D1')
+	   <- sasubst-e Dappend Dappend' D1 DofR D1'
+	   <- ssubst-e Dappend Dappend' D2 DofR D2'
+	   <- stsubst-e Dappend Dappend' D4 DofR D4'.
+
+-appbad	: sasubst-e _ _ ([x] [d] aofe/var _ (D x d)) _ D''
+	   <- ({x} {d}
+		 lookup-isvar (D x d) (D' x d : isvar (app (R x) (M x)) I))
+	   <- ({x} {d}
+		 isvar-app-contra (D' x d) Dfalse)
+	   <- false-implies-aofe Dfalse D''.
+
+-pi1	: sasubst-e Dappend Dappend' ([x] [d] aofe/pi1 (D1 x d)) DofR (aofe/pi1 D1')
+	   <- sasubst-e Dappend Dappend' D1 DofR D1'.
+
+-pi1bad	: sasubst-e _ _ ([x] [d] aofe/var _ (D x d)) _ D''
+	   <- ({x} {d}
+		 lookup-isvar (D x d) (D' x d : isvar (pi1 (R x)) I))
+	   <- ({x} {d}
+		 isvar-pi1-contra (D' x d) Dfalse)
+	   <- false-implies-aofe Dfalse D''.
+
+-pi2	: sasubst-e Dappend Dappend' ([x] [d] aofe/pi2 (D1 x d)) DofR (aofe/pi2 D1')
+	   <- sasubst-e Dappend Dappend' D1 DofR D1'.
+
+-pi2bad	: sasubst-e _ _ ([x] [d] aofe/var _ (D x d)) _ D''
+	   <- ({x} {d}
+		 lookup-isvar (D x d) (D' x d : isvar (pi2 (R x)) I))
+	   <- ({x} {d}
+		 isvar-pi2-contra (D' x d) Dfalse)
+	   <- false-implies-aofe Dfalse D''.
+
+
+-t	: stsubst-e 
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dappend' : append G1 (G2 R) G') 
+	   ([x] [d] wfe/t
+	      (Dordered x d : ordered (G x)))
+	   (DofR : aofe G1 R A)
+	   (wfe/t Dordered')
+	   <- scsub-ordered Dappend Dappend' Dordered Dordered'.
+
+-pi	: stsubst-e Dappend Dappend' ([x] [d] wfe/pi (D2 x d) (D1 x d)) DofR (wfe/pi D2' D1')
+	   <- stsubst-e Dappend Dappend' D1 DofR D1'
+	   <- ({y} {e}
+		 stsubst-e ([x] append/cons (Dappend x)) (append/cons Dappend') ([x] [d] D2 x d y e) DofR (D2' y e)).
+
+-sigma	: stsubst-e Dappend Dappend' ([x] [d] wfe/sigma (D2 x d) (D1 x d)) DofR (wfe/sigma D2' D1')
+	   <- stsubst-e Dappend Dappend' D1 DofR D1'
+	   <- ({y} {e}
+		 stsubst-e ([x] append/cons (Dappend x)) (append/cons Dappend') ([x] [d] D2 x d y e) DofR (D2' y e)).
+
+-at	: stsubst-e Dappend Dappend' ([x] [d] wfe/sing (D1 x d)) DofR (wfe/sing D1')
+	   <- sasubst-e Dappend Dappend' D1 DofR D1'.
+
+-one	: stsubst-e 
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dappend' : append G1 (G2 R) G') 
+	   ([x] [d] wfe/one
+	      (Dordered x d : ordered (G x)))
+	   (DofR : aofe G1 R A)
+	   (wfe/one Dordered')
+	   <- scsub-ordered Dappend Dappend' Dordered Dordered'.
+
+%worlds (var | bind | ovar | topenblock) (ssubst-e _ _ _ _ _) (sasubst-e _ _ _ _ _) (stsubst-e _ _ _ _ _).
+%total (D1 D2 D3) (ssubst-e _ _ D1 _ _) (sasubst-e _ _ D2 _ _) (stsubst-e _ _ D3 _ _).
+
+
+
+
+%%%%%  Regularity (Implicit Context Version)  %%%%%
+
+aof-reg : aof R A -> wf A -> type.
+%mode aof-reg +X1 -X2.
+
+-const	: aof-reg (aof/const D _) D.
+
+-var	: aof-reg (aof/var D _) D.
+
+-app	: aof-reg (aof/app D _ _ _) D.
+
+-pi1	: aof-reg (aof/pi1 Daof) D
+	   <- aof-reg Daof (wf/sigma _ D).
+
+-pi2	: aof-reg (aof/pi2 Daof) D'
+	   <- aof-reg Daof (wf/sigma D _)
+	   <- stsubst D (aof/pi1 Daof) D'.
+
+%worlds (var | ovar | bind | obind | topenblock) (aof-reg _ _).
+%total D (aof-reg D _).
+
+
+
+of-reg : of M A -> wf A -> type.
+%mode of-reg +X1 -X2.
+
+-at	: of-reg (of/at _) wf/t.
+
+-lam	: of-reg (of/lam Dof Dwf1) (wf/pi Dwf2 Dwf1)
+	   <- ({x} {d}
+		 of-reg (Dof x d) (Dwf2 x d)).
+
+-pair	: of-reg (of/pair Dwf2 _ _ Dof) (wf/sigma Dwf2 Dwf1)
+	   <- of-reg Dof Dwf1.
+
+-sing	: of-reg (of/sing Daof) (wf/sing Daof).
+
+-star	: of-reg of/star wf/one.
+
+%worlds (var | ovar | bind | obind | topenblock) (of-reg _ _).
+%total D (of-reg D _).
+
+
+
+
+%%%%%  Regularity (Explicit Context)  %%%%%
+
+%% ofe-reg appears in explicit-lemmas.thm
+
+aofe-reg : aofe G R A -> wfe G A -> type.
+%mode aofe-reg +X1 -X2.
+
+-closed	: aofe-reg (aofe/closed Dordered Daof) Dwfe'
+	   <- aof-reg Daof Dwf
+	   <- wf-to-wfe Dwf Dwfe
+	   <- append-all G (Dappend : append nil G G)
+	   <- weaken-wfe' Dappend Dordered Dwfe Dwfe'.
+
+-var	: aofe-reg (aofe/var D _) D.
+
+-app	: aofe-reg (aofe/app D _ _ _) D.
+
+-pi1	: aofe-reg (aofe/pi1 D) D'
+	   <- aofe-reg D (wfe/sigma _ D').
+
+-pi2	: aofe-reg (aofe/pi2 Daof) D
+	   <- aofe-reg Daof (wfe/sigma Dwf _)
+	   <- stsubst-e ([_] append/nil) append/nil Dwf (aofe/pi1 Daof) D.
+
+%worlds (bind | ovar | var | topenblock) (aofe-reg _ _).
+%total D (aofe-reg D _).

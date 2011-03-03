@@ -1,0 +1,2137 @@
+
+%%%%%  Map into the singleton language  %%%%%
+
+map	: cn -> eterm -> type.
+tmap	: kd -> etp -> type.
+
+%mode map *C *M.
+%mode tmap *K *A.
+
+tmap/t		: tmap kd/type et.
+
+tmap/sing	: tmap (kd/sing C) (esing M)
+		   <- map C M.
+
+tmap/pi		: tmap (kd/pi K1 K2) (epi A1 A2)
+		   <- tmap K1 A1
+		   <- ({a} {x}
+			 map a x
+			 -> tmap (K2 a) (A2 x)).
+
+tmap/sigma	: tmap (kd/sgm K1 K2) (esigma A1 A2)
+		   <- tmap K1 A1
+		   <- ({a} {x}
+			 map a x
+			 -> tmap (K2 a) (A2 x)).
+
+
+
+
+map/app		: map (cn/app C1 C2) (eapp M1 M2)
+		   <- map C1 M1
+		   <- map C2 M2.
+
+map/pi1		: map (cn/pj1 C) (epi1 M)
+		   <- map C M.
+
+map/pi2		: map (cn/pj2 C) (epi2 M)
+		   <- map C M.
+
+map/lam		: map (cn/lam K C) (elam A M)
+		   <- tmap K A
+		   <- ({a} {x}
+			 map a x
+			 -> map (C a) (M x)).
+
+map/pair	: map (cn/pair C1 C2) (epair M1 M2)
+		   <- map C1 M1
+		   <- map C2 M2.
+
+map/unit	: map tp/unit (econst unit).
+
+map/tagged	: map tp/tagged (econst tagged).
+
+map/ref		: map (tp/ref C) (eapp (econst ref) M)
+		   <- map C M.
+
+map/tag		: map (tp/tag C) (eapp (econst tag) M)
+		   <- map C M.
+
+map/mu		: map (cn/mu _ C) (eapp (econst mu) (elam et M))
+		   <- ({a} {x}
+			 map a x
+			 -> map (C a) (M x)).
+
+map/arrow	: map (tp/arrow C1 C2) (eapp (eapp (econst arrow) M1) M2)
+		   <- map C1 M1
+		   <- map C2 M2.
+
+map/cross	: map (tp/cross C1 C2) (eapp (eapp (econst cross) M1) M2)
+		   <- map C1 M1
+		   <- map C2 M2.
+
+map/sum		: map (tp/sum C1 C2) (eapp (eapp (econst dsum) M1) M2)
+		   <- map C1 M1
+		   <- map C2 M2.
+
+map/forall	: map (tp/forall K C) (eapp (eforall A) (elam A M))
+		   <- tmap K A
+		   <- ({a} {x}
+			 map a x
+			 -> map (C a) (M x)).
+
+
+
+%%%%%  Map from the singleton language  %%%%%
+
+unmap	: eterm -> cn -> type.
+tunmap	: etp -> kd -> type.
+
+%mode unmap *M *C.
+%mode tunmap *A *K.
+
+
+tunmap/t	: tunmap et kd/type.
+
+tunmap/sing	: tunmap (esing M) (kd/sing C)
+		   <- unmap M C.
+
+tunmap/pi	: tunmap (epi A1 A2) (kd/pi K1 K2)
+		   <- tunmap A1 K1
+		   <- ({x} {a}
+			 unmap x a
+			 -> tunmap (A2 x) (K2 a)).
+
+tunmap/sigma	: tunmap (esigma A1 A2) (kd/sgm K1 K2)
+		   <- tunmap A1 K1
+		   <- ({x} {a}
+			 unmap x a
+			 -> tunmap (A2 x) (K2 a)).
+
+
+
+unmap/app	: unmap (eapp M1 M2) (cn/app C1 C2)
+		   <- unmap M1 C1
+		   <- unmap M2 C2.
+
+unmap/pi1	: unmap (epi1 M) (cn/pj1 C)
+		   <- unmap M C.
+
+unmap/pi2	: unmap (epi2 M) (cn/pj2 C)
+		   <- unmap M C.
+
+unmap/lam	: unmap (elam A M) (cn/lam K C)
+		   <- tunmap A K
+		   <- ({x} {a}
+			 unmap x a
+			 -> unmap (M x) (C a)).
+
+unmap/pair	: unmap (epair M1 M2) (cn/pair C1 C2)
+		   <- unmap M1 C1
+		   <- unmap M2 C2.
+
+unmap/unit	: unmap (econst unit) tp/unit.
+
+unmap/tagged	: unmap (econst tagged) tp/tagged.
+
+unmap/ref	: unmap (econst ref) (cn/lam kd/type ([a] tp/ref a)).
+
+unmap/tag	: unmap (econst tag) (cn/lam kd/type ([a] tp/tag a)).
+
+unmap/mu	: unmap (econst mu) (cn/lam 
+				       (kd/pi kd/type ([_] kd/type)) 
+				       ([a] cn/mu kd/type ([b] cn/app a b))).
+
+unmap/arrow	: unmap (econst arrow) (cn/lam kd/type 
+					  ([a] cn/lam kd/type 
+					     ([b] tp/arrow a b))).
+
+unmap/cross	: unmap (econst cross) (cn/lam kd/type 
+					  ([a] cn/lam kd/type 
+					     ([b] tp/cross a b))).
+
+unmap/sum	: unmap (econst dsum) (cn/lam kd/type 
+					  ([a] cn/lam kd/type 
+					     ([b] tp/sum a b))).
+
+unmap/forall	: unmap (eforall A) (cn/lam 
+				      (kd/pi K ([_] kd/type))
+				      ([a] tp/forall K ([b] cn/app a b)))
+		   <- tunmap A K.
+
+
+
+
+%%%%%  Equality %%%%%
+
+cn-eq : cn -> cn -> type.
+cn-eq/i : cn-eq C C.
+
+kd-eq : kd -> kd -> type.
+kd-eq/i : kd-eq K K.
+
+
+
+%%% cons
+
+cn-resp-bind : {C:kd -> (cn -> cn) -> cn} kd-eq K K' -> ({a} cn-eq (D a) (D' a)) -> cn-eq (C K D) (C K' D') -> type.
+%mode cn-resp-bind +X1 +X2 +X3 -X4.
+
+-	: cn-resp-bind _ kd-eq/i ([_] cn-eq/i) cn-eq/i.
+
+%worlds (cn-block) (cn-resp-bind _ _ _ _).
+%total {} (cn-resp-bind _ _ _ _).
+
+
+cn-resp-cn : {C:cn -> cn} cn-eq C1 C2 -> cn-eq (C C1) (C C2) -> type.
+%mode cn-resp-cn +X1 +X2 -X3.
+
+-	: cn-resp-cn _ cn-eq/i cn-eq/i.
+
+%worlds (cn-block) (cn-resp-cn _ _ _).
+%total {} (cn-resp-cn _ _ _).
+
+
+cn-resp-cn2 : {C:cn -> cn -> cn} cn-eq C1 C2 -> cn-eq D1 D2 -> cn-eq (C C1 D1) (C C2 D2) -> type.
+%mode cn-resp-cn2 +X1 +X2 +X3 -X4.
+
+-	: cn-resp-cn2 _ cn-eq/i cn-eq/i cn-eq/i.
+
+%worlds (cn-block) (cn-resp-cn2 _ _ _ _).
+%total {} (cn-resp-cn2 _ _ _ _).
+
+
+cn-resp-kd : {C:kd -> cn} kd-eq K K' -> cn-eq (C K) (C K') -> type.
+%mode cn-resp-kd +X1 +X2 -X3.
+
+-	: cn-resp-kd _ kd-eq/i cn-eq/i.
+
+%worlds (cn-block) (cn-resp-kd _ _ _).
+%total {} (cn-resp-kd _ _ _).
+
+
+kd-resp-bind : {K:kd -> (cn -> kd) -> kd} kd-eq K1 K1' -> ({a:cn} kd-eq (K2 a) (K2' a)) -> kd-eq (K K1 K2) (K K1' K2') -> type.
+%mode kd-resp-bind +X1 +X2 +X3 -X4.
+
+-	: kd-resp-bind _ kd-eq/i ([_] kd-eq/i) kd-eq/i.
+
+%worlds (cn-block) (kd-resp-bind _ _ _ _).
+%total {} (kd-resp-bind _ _ _ _).
+
+
+kd-resp-cn : {K:cn -> kd} cn-eq C C' -> kd-eq (K C) (K C') -> type.
+%mode kd-resp-cn +X1 +X2 -X3.
+
+-	: kd-resp-cn _ cn-eq/i kd-eq/i.
+
+%worlds (cn-block) (kd-resp-cn _ _ _).
+%total {} (kd-resp-cn _ _ _).
+
+
+
+%%% respection
+
+cn-deq-resp : cn-eq C1 C1' -> cn-eq C2 C2' -> kd-eq K K' -> cn-deq C1 C2 K -> cn-deq C1' C2' K' -> type.
+%mode cn-deq-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: cn-deq-resp cn-eq/i cn-eq/i kd-eq/i D D.
+
+%worlds (ofkd+vdt-block | ofkd-block) (cn-deq-resp _ _ _ _ _).
+%total {} (cn-deq-resp _ _ _ _ _).
+
+
+
+kd-deq-resp : kd-eq K1 K1' -> kd-eq K2 K2' -> kd-deq K1 K2 -> kd-deq K1' K2' -> type.
+%mode kd-deq-resp +X1 +X2 +X3 -X4.
+
+-	: kd-deq-resp kd-eq/i kd-eq/i D D.
+
+%worlds (ofkd+vdt-block | ofkd-block) (kd-deq-resp _ _ _ _).
+%total {} (kd-deq-resp _ _ _ _).
+
+
+
+kd-wf-resp : kd-eq K K' -> kd-wf K -> kd-wf K' -> type.
+%mode kd-wf-resp +X1 +X2 -X3.
+
+-	: kd-wf-resp kd-eq/i D D.
+
+%worlds (ofkd+vdt-block | ofkd-block) (kd-wf-resp _ _ _).
+%total {} (kd-wf-resp _ _ _).
+
+
+
+ofkd-resp : cn-eq C C' -> kd-eq K K' -> ofkd C K -> ofkd C' K' -> type.
+%mode ofkd-resp +X1 +X2 +X3 -X4.
+
+-	: ofkd-resp cn-eq/i kd-eq/i D D.
+
+%worlds (ofkd+vdt-block | ofkd-block) (ofkd-resp _ _ _ _).
+%total {} (ofkd-resp _ _ _ _).
+
+
+
+cn-deq-resp : cn-eq C1 C1' -> cn-eq C2 C2' -> kd-eq K K' -> cn-deq C1 C2 K -> cn-deq C1' C2' K' -> type.
+%mode cn-deq-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: cn-deq-resp cn-eq/i cn-eq/i kd-eq/i D D.
+
+%worlds (ofkd+vdt-block | ofkd-block) (cn-deq-resp _ _ _ _ _).
+%total {} (cn-deq-resp _ _ _ _ _).
+
+
+
+
+
+%%%%%  Unmap Functionality  %%%%%
+
+can-unmap : {M} unmap M C -> type.
+%mode can-unmap +X1 -X2.
+
+can-tunmap : {A} tunmap A K -> type.
+%mode can-tunmap +X1 -X2.
+
+%block can-unmap-bind 
+   : some {a:cn} 
+      block {x:eterm} {xt:unmap x a}
+      {thm:can-unmap x xt}.
+
+%block can-unmap-bind-for-unmap
+   : some {a:cn} {b:etp}
+      block {x:eterm} {d:evof x b} {xt:unmap x a}
+      {thm:can-unmap x xt}.
+
+
+-	: can-unmap _ (unmap/app D2 D1)
+	   <- can-unmap _ D1
+	   <- can-unmap _ D2.
+
+-	: can-unmap _ (unmap/pi1 D)
+	   <- can-unmap _ D.
+
+-	: can-unmap _ (unmap/pi2 D)
+	   <- can-unmap _ D.
+
+-	: can-unmap _ (unmap/lam D2 D1)
+	   <- can-tunmap _ D1
+	   <- ({a} {x} {xt}
+		 can-unmap x xt
+		 -> can-unmap _ (D2 x a xt)).
+
+-	: can-unmap _ (unmap/pair D2 D1)
+	   <- can-unmap _ D1
+	   <- can-unmap _ D2.
+
+-	: can-unmap _ unmap/ref.
+-	: can-unmap _ unmap/tag.
+-	: can-unmap _ unmap/unit.
+-	: can-unmap _ unmap/tagged.
+-	: can-unmap _ unmap/arrow.
+-	: can-unmap _ unmap/cross.
+-	: can-unmap _ unmap/sum.
+-	: can-unmap _ unmap/mu.
+
+-	: can-unmap _ (unmap/forall D)
+	   <- can-tunmap _ D.
+
+
+-	: can-tunmap _ tunmap/t.
+
+-	: can-tunmap _ (tunmap/sing D)
+	   <- can-unmap _ D.
+
+-	: can-tunmap _ (tunmap/pi D2 D1)
+	   <- can-tunmap _ D1
+	   <- ({a} {x} {xt}
+		 can-unmap x xt
+		 -> can-tunmap _ (D2 x a xt)).
+
+-	: can-tunmap _ (tunmap/sigma D2 D1)
+	   <- can-tunmap _ D1
+	   <- ({a} {x} {xt}
+		 can-unmap x xt
+		 -> can-tunmap _ (D2 x a xt)).
+
+%worlds (cn-block | can-unmap-bind | can-unmap-bind-for-unmap) (can-unmap _ _) (can-tunmap _ _).
+%total (D1 D2) (can-unmap D1 _) (can-tunmap D2 _).
+
+
+
+unmap-fun : unmap M C -> unmap M C' -> cn-eq C C' -> type.
+%mode unmap-fun +X1 +X2 -X3.
+
+tunmap-fun : tunmap A K -> tunmap A K' -> kd-eq K K' -> type.
+%mode tunmap-fun +X1 +X2 -X3.
+
+%block unmap-fun-bind
+   : some {a:cn}
+      block {x:eterm} {xt:unmap x a}.
+
+%block unmap-fun-bind-for-invert
+   : some {a:cn}
+      block {x:eterm} {at:map a x} {xt:unmap x a}.
+
+%block unmap-fun-bind-for-unmap
+   : some {a:cn} {b:etp}
+      block {x:eterm} {d:evof x b} {xt:unmap x a}.
+
+-	: unmap-fun D D cn-eq/i.
+
+-	: unmap-fun (unmap/app D2 D1) (unmap/app D2' D1') Deq
+	   <- unmap-fun D1 D1' Deq1
+	   <- unmap-fun D2 D2' Deq2
+	   <- cn-resp-cn2 cn/app Deq1 Deq2 Deq.
+
+-	: unmap-fun (unmap/pi1 D) (unmap/pi1 D') Deq
+	   <- unmap-fun D D' Deq1
+	   <- cn-resp-cn cn/pj1 Deq1 Deq.
+
+-	: unmap-fun (unmap/pi2 D) (unmap/pi2 D') Deq
+	   <- unmap-fun D D' Deq1
+	   <- cn-resp-cn cn/pj2 Deq1 Deq.
+
+-	: unmap-fun (unmap/lam D2 D1) (unmap/lam D2' D1') Deq
+	   <- tunmap-fun D1 D1' Deq1
+	   <- ({a} {x} {xt}
+		 unmap-fun (D2 x a xt) (D2' x a xt) (Deq2 a))
+	   <- cn-resp-bind cn/lam Deq1 Deq2 Deq.
+
+-	: unmap-fun (unmap/pair D2 D1) (unmap/pair D2' D1') Deq
+	   <- unmap-fun D1 D1' Deq1
+	   <- unmap-fun D2 D2' Deq2
+	   <- cn-resp-cn2 cn/pair Deq1 Deq2 Deq.
+
+-	: unmap-fun (unmap/forall D) (unmap/forall D') Deq
+	   <- tunmap-fun D D' Deq1
+	   <- cn-resp-kd 
+	      ([k] cn/lam (kd/pi k [_] kd/type) ([a] tp/forall k ([b] cn/app a b)))
+	      Deq1 Deq.
+
+
+-	: tunmap-fun tunmap/t tunmap/t kd-eq/i.
+
+-	: tunmap-fun (tunmap/sing D) (tunmap/sing D') Deq
+	   <- unmap-fun D D' Deq1
+	   <- kd-resp-cn kd/sing Deq1 Deq.
+
+-	: tunmap-fun (tunmap/pi D2 D1) (tunmap/pi D2' D1') Deq
+	   <- tunmap-fun D1 D1' Deq1
+	   <- ({a} {x} {xt}
+		 tunmap-fun (D2 x a xt) (D2' x a xt) (Deq2 a))
+	   <- kd-resp-bind kd/pi Deq1 Deq2 Deq.
+
+-	: tunmap-fun (tunmap/sigma D2 D1) (tunmap/sigma D2' D1') Deq
+	   <- tunmap-fun D1 D1' Deq1
+	   <- ({a} {x} {xt}
+		 tunmap-fun (D2 x a xt) (D2' x a xt) (Deq2 a))
+	   <- kd-resp-bind kd/sgm Deq1 Deq2 Deq.
+
+
+-	: (map _ _ -> unmap-fun _ _ _) -> type.
+
+%worlds (cn-block | unmap-fun-bind | unmap-fun-bind-for-invert | unmap-fun-bind-for-unmap) (unmap-fun _ _ _) (tunmap-fun _ _ _).
+%total (D1 D2) (unmap-fun _ D1 _) (tunmap-fun _ D2 _).
+
+
+
+
+%%%%%  Unmap Inverts Map  %%%%%
+
+invert-map : ofkd C K
+	      -> map C M
+%%
+	      -> unmap M C'
+	      -> cn-deq C C' K -> type.
+%mode invert-map +X1 +X2 -X3 -X4.
+
+invert-tmap : kd-wf K
+	       -> tmap K A
+%%
+	       -> tunmap A K'
+	       -> kd-deq K K' -> type.
+%mode invert-tmap +X1 +X2 -X3 -X4.
+
+%block invert-bind : some {k:kd} {d_wf:kd-wf k}
+		      block {a:cn} {d:ofkd a k}
+		      {dm:mofkd d met/unit}
+		      {thm:can-mofkd d dm}
+		      {thm:vdt/ofkd d d_wf}
+		      {x:eterm} {at:map a x} {xt:unmap x a}
+		      {thm:invert-map d at xt (cn-deq/refl d)}.
+
+
+-app	: invert-map (ofkd/cn/app Dof1 Dof2) (map/app D2 D1) (unmap/app D2' D1') (cn-deq/cn/app Dequiv1 Dequiv2)
+	   <- invert-map Dof1 D1 D1' Dequiv1
+	   <- invert-map Dof2 D2 D2' Dequiv2.
+
+-pi1	: invert-map (ofkd/cn/pj1 Dof) (map/pi1 D) (unmap/pi1 D') (cn-deq/cn/pj1 Dequiv)
+	   <- invert-map Dof D D' Dequiv.
+
+-pi2	: invert-map (ofkd/cn/pj2 Dof) (map/pi2 D) (unmap/pi2 D') (cn-deq/cn/pj2 Dequiv)
+	   <- invert-map Dof D D' Dequiv.
+
+-lam	: invert-map (ofkd/cn/lam Dof2 Dof1) (map/lam D2 D1) (unmap/lam D2' D1') (cn-deq/cn/lam Dequiv2 Dequiv1)
+	   <- invert-tmap Dof1 D1 D1' Dequiv1
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d Dof1
+		 -> {x} {at} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-map (Dof2 a d) (D2 a x at) (D2' x a xt) (Dequiv2 a d)).
+
+-pair	: invert-map (ofkd/cn/pair Dof1 Dof2) (map/pair D2 D1) (unmap/pair D2' D1') (cn-deq/cn/pair Dequiv1 Dequiv2)
+	   <- invert-map Dof1 D1 D1' Dequiv1
+	   <- invert-map Dof2 D2 D2' Dequiv2.
+
+-sing	: invert-map (ofkd/kd/sing Dof) D D' (cn-deq/kd/sing2 Dequiv Dof')
+	   <- invert-map Dof D D' Dequiv
+	   <- vdt/cn-deq Dequiv _ Dof' _.
+
+-piext	: invert-map (ofkd/pi-ext Dof1 Dof2) D D' (cn-deq/pi-ext-2 Dequiv1 Dequiv2')
+	   <- invert-map Dof1 D D' Dequiv1
+	   <- vdt/ofkd Dof1
+	      (kd-wf/kd/pi
+		 (Dwf1 : kd-wf K1)
+		 _)
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d Dwf1
+		 -> {x} {at:map a x} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-map (Dof2 a d) (map/app at D) (unmap/app xt (D'' x a xt)) (Dequiv2 a d))
+	   <- ({a} {x} {at:map a x} {xt:unmap x a}
+		 unmap-fun (D'' x a xt) D' (Deq a))
+	   <- ({a} cn-resp-cn ([b] cn/app b a) (Deq a) (Deq' a))
+	   <- ({a} {d}
+		 cn-deq-resp cn-eq/i (Deq' a) kd-eq/i (Dequiv2 a d)
+		 (Dequiv2' a d)).
+
+-sigext	: invert-map (ofkd/sgm-ext Dof1 Dof2) D D' (cn-deq/sgm-ext Dequiv1 Dequiv2')
+	   <- invert-map Dof1 (map/pi1 D) (unmap/pi1 D') Dequiv1
+	   <- invert-map Dof2 (map/pi2 D) (unmap/pi2 D'') Dequiv2
+	   <- unmap-fun D'' D' Deq
+	   <- cn-resp-cn cn/pj2 Deq Deq'
+	   <- cn-deq-resp cn-eq/i Deq' kd-eq/i Dequiv2 Dequiv2'.
+
+-sub	: invert-map (ofkd/sub Dof Dsub) D D' (cn-deq/sub Dequiv Dsub)
+	   <- invert-map Dof D D' Dequiv.
+
+-deq	: invert-map (ofkd/deq Dof Dtequiv) D D' (cn-deq/deq Dequiv Dtequiv)
+	   <- invert-map Dof D D' Dequiv.
+
+-unit	: invert-map ofkd/tp/unit map/unit unmap/unit (cn-deq/refl ofkd/tp/unit).
+
+-tagged	: invert-map ofkd/tp/tagged map/tagged unmap/tagged (cn-deq/refl ofkd/tp/tagged).
+
+-ref	: invert-map (ofkd/tp/ref Dof) (map/ref D)
+	   (unmap/app D' unmap/ref)
+	   (cn-deq/trans
+	      (cn-deq/tp/ref
+		 Dequiv)
+	      (cn-deq/sym
+		 Dequiv'))
+	   <- invert-map Dof D D' Dequiv
+	   <- vdt/cn-deq Dequiv _ Dof' _
+	   <- cn-deq-beta ([a] [d] ofkd/tp/ref d) Dof' Dequiv'.
+
+-tag	: invert-map (ofkd/tp/tag Dof) (map/tag D)
+	   (unmap/app D' unmap/tag)
+	   (cn-deq/trans
+	      (cn-deq/tp/tag
+		 Dequiv)
+	      (cn-deq/sym
+		 Dequiv'))
+	   <- invert-map Dof D D' Dequiv
+	   <- vdt/cn-deq Dequiv _ Dof' _
+	   <- cn-deq-beta ([a] [d] ofkd/tp/tag d) Dof' Dequiv'.
+
+-arrow	: invert-map (ofkd/tp/arrow Dof1 Dof2) (map/arrow D2 D1)
+	   (unmap/app D2' (unmap/app D1' unmap/arrow))
+	   (cn-deq/trans
+	      (cn-deq/tp/arrow Dequiv1 Dequiv2)
+	      (cn-deq/sym
+		 (cn-deq/trans
+		    (cn-deq/cn/app
+		       Dequiv
+		       (cn-deq/refl Dof2'))
+		    Dequiv')))
+	   <- invert-map Dof1 D1 D1' Dequiv1
+	   <- invert-map Dof2 D2 D2' Dequiv2
+	   <- vdt/cn-deq Dequiv1 _ Dof1' _
+	   <- vdt/cn-deq Dequiv2 _ Dof2' _
+	   <- cn-deq-beta 
+	      ([a] [d] 
+		 ofkd/cn/lam
+		 ([b] [e] ofkd/tp/arrow d e)
+		 kd-wf/kd/type)
+	      Dof1'
+	      Dequiv
+	   <- cn-deq-beta
+	      ([b] [e] ofkd/tp/arrow Dof1' e)
+	      Dof2'
+	      Dequiv'.
+
+-cross	: invert-map (ofkd/tp/cross Dof1 Dof2) (map/cross D2 D1)
+	   (unmap/app D2' (unmap/app D1' unmap/cross))
+	   (cn-deq/trans
+	      (cn-deq/tp/cross Dequiv1 Dequiv2)
+	      (cn-deq/sym
+		 (cn-deq/trans
+		    (cn-deq/cn/app
+		       Dequiv
+		       (cn-deq/refl Dof2'))
+		    Dequiv')))
+	   <- invert-map Dof1 D1 D1' Dequiv1
+	   <- invert-map Dof2 D2 D2' Dequiv2
+	   <- vdt/cn-deq Dequiv1 _ Dof1' _
+	   <- vdt/cn-deq Dequiv2 _ Dof2' _
+	   <- cn-deq-beta 
+	      ([a] [d] 
+		 ofkd/cn/lam
+		 ([b] [e] ofkd/tp/cross d e)
+		 kd-wf/kd/type)
+	      Dof1'
+	      Dequiv
+	   <- cn-deq-beta
+	      ([b] [e] ofkd/tp/cross Dof1' e)
+	      Dof2'
+	      Dequiv'.
+
+-sum	: invert-map (ofkd/tp/sum Dof1 Dof2) (map/sum D2 D1)
+	   (unmap/app D2' (unmap/app D1' unmap/sum))
+	   (cn-deq/trans
+	      (cn-deq/tp/sum Dequiv1 Dequiv2)
+	      (cn-deq/sym
+		 (cn-deq/trans
+		    (cn-deq/cn/app
+		       Dequiv
+		       (cn-deq/refl Dof2'))
+		    Dequiv')))
+	   <- invert-map Dof1 D1 D1' Dequiv1
+	   <- invert-map Dof2 D2 D2' Dequiv2
+	   <- vdt/cn-deq Dequiv1 _ Dof1' _
+	   <- vdt/cn-deq Dequiv2 _ Dof2' _
+	   <- cn-deq-beta 
+	      ([a] [d] 
+		 ofkd/cn/lam
+		 ([b] [e] ofkd/tp/sum d e)
+		 kd-wf/kd/type)
+	      Dof1'
+	      Dequiv
+	   <- cn-deq-beta
+	      ([b] [e] ofkd/tp/sum Dof1' e)
+	      Dof2'
+	      Dequiv'.
+
+-mu	: invert-map (ofkd/cn/mu Dof _) (map/mu D)
+	   (unmap/app (unmap/lam D' tunmap/t) unmap/mu)
+	   (cn-deq/trans
+	      (cn-deq/cn/mu
+		 Dequiv
+		 kd-deq/kd/type)
+	      (cn-deq/sym
+		 (cn-deq/trans
+		    Dequiv'
+		    (cn-deq/cn/mu
+		       Dequiv''
+		       kd-deq/kd/type))))
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d kd-wf/kd/type
+		 -> {x} {at} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-map (Dof a d) (D a x at) (D' x a xt) (Dequiv a d))
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d kd-wf/kd/type
+		 -> vdt/cn-deq (Dequiv a d) (Dof'' a d) (Dof' a d) (Dwf a d))
+	   <- cn-deq-beta
+	      ([a] [d:ofkd a (kd/pi kd/type ([_] kd/type))] ofkd/cn/mu
+		 ([b] [e:ofkd b kd/type] ofkd/cn/app d e)
+		 kd-wf/kd/type)
+	      (ofkd/cn/lam Dof' kd-wf/kd/type)
+	      Dequiv'
+	   <- ({a} {d:ofkd a kd/type} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d kd-wf/kd/type
+		 -> cn-deq-beta Dof' d (Dequiv'' a d)).
+
+-forall	: invert-map (ofkd/tp/forall Dof Dwf) (map/forall D2 D1)
+	   (unmap/app (unmap/lam D2' D1') (unmap/forall D1'))
+	   (cn-deq/trans
+	      (cn-deq/tp/forall
+		 Dequiv2
+		 Dequiv1)
+	      (cn-deq/sym
+		 (cn-deq/trans
+		    Dequiv'
+		    (cn-deq/tp/forall
+		       Dequiv''
+		       Dequiv'''))))
+	   <- invert-tmap Dwf D1 D1' (Dequiv1 : kd-deq K K')
+	   <- vdt/kd-deq Dequiv1 _ Dwf'
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d Dwf
+		 -> {x} {at:map a x} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-map (Dof a d) (D2 a x at) (D2' x a xt) (Dequiv2 a d))
+	   <- ({a} {d:ofkd a K} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d Dwf
+		 -> vdt/cn-deq (Dequiv2 a d) (Dof'' a d) (Dof' a d) (Dwf'' a d))
+	   <- kd-sym Dequiv1 Dequiv1'
+	   <- cn-deq-beta
+	      ([a] [d:ofkd a (kd/pi K' ([_] kd/type))] 
+		 ofkd/tp/forall
+		 ([b] [e:ofkd b K'] ofkd/cn/app d e)
+		 Dwf')
+	      (ofkd/cn/lam ([a] [d] Dof' a (ofkd/deq d Dequiv1')) Dwf')
+	      Dequiv'
+	   <- ({a} {d:ofkd a K'} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d Dwf'
+		 -> cn-deq-beta ([a] [d] Dof' a (ofkd/deq d Dequiv1')) d (Dequiv'' a d))
+	   <- kd-refl/deq Dwf' Dequiv'''.
+
+
+
+-t	: invert-tmap kd-wf/kd/type tmap/t tunmap/t kd-deq/kd/type.
+
+-sing	: invert-tmap (kd-wf/kd/sing Dof) (tmap/sing D) (tunmap/sing D') (kd-deq/kd/sing Dequiv)
+	   <- invert-map Dof D D' Dequiv.
+
+-pi	: invert-tmap (kd-wf/kd/pi Dof1 Dof2) (tmap/pi D2 D1) (tunmap/pi D2' D1') (kd-deq/kd/pi Dequiv1' ([a] [d] Dequiv2 a (ofkd/deq d Dequiv1')))
+	   <- invert-tmap Dof1 D1 D1' (Dequiv1 : kd-deq K1 K1')
+	   <- kd-sym Dequiv1 Dequiv1'
+	   <- ({a} {d:ofkd a K1} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d Dof1
+		 -> {x} {at} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-tmap (Dof2 a d) (D2 a x at) (D2' x a xt) (Dequiv2 a d)).
+
+-sigma	: invert-tmap (kd-wf/kd/sgm Dof1 Dof2) (tmap/sigma D2 D1) (tunmap/sigma D2' D1') (kd-deq/kd/sgm Dequiv1 Dequiv2)
+	   <- invert-tmap Dof1 D1 D1' (Dequiv1 : kd-deq K1 K1')
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d Dof1
+		 -> {x} {at} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-tmap (Dof2 a d) (D2 a x at) (D2' x a xt) (Dequiv2 a d)).
+
+%worlds (invert-bind) (invert-map _ _ _ _) (invert-tmap _ _ _ _).
+%total (D1 D2) (invert-map D1 _ _ _) (invert-tmap D2 _ _ _).
+
+
+
+
+%%%%%  Unmap Preserves Typing  %%%%%
+
+unmap-vof	: evof X A
+		   -> unmap X C
+		   -> tunmap A K
+		   -> ofkd C K -> type.
+%mode unmap-vof +X1 +X2 -X3 -X4.
+
+unmap-of	: eof M A
+		   -> unmap M C
+		   -> tunmap A K
+		   -> ofkd C K -> type.
+%mode unmap-of +X1 +X2 -X3 -X4.
+
+unmap-of'	: eof M A
+		   -> unmap M C
+		   -> tunmap A K
+		   -> ofkd C K -> type.
+%mode unmap-of' +X1 +X2 +X3 -X4.
+
+unmap-wf	: ewf A
+		   -> tunmap A K
+		   -> kd-wf K -> type.
+%mode unmap-wf +X1 -X2 -X3.
+
+unmap-wf'	: ewf A
+		   -> tunmap A K
+		   -> kd-wf K -> type.
+%mode unmap-wf' +X1 +X2 -X3.
+
+unmap-subtp	: subtp A B
+		   -> tunmap A K
+		   -> tunmap B L
+		   -> kd-sub K L -> type.
+%mode unmap-subtp +X1 +X2 +X3 -X4.
+
+unmap-tequiv	: tequiv A B
+		   -> tunmap A K
+		   -> tunmap B L
+		   -> kd-deq K L -> type.
+%mode unmap-tequiv +X1 +X2 +X3 -X4.
+
+%% need the equiv argument last so that Twelf will split it
+unmap-equiv	: unmap M C
+		   -> unmap N D
+		   -> equiv M N A
+		   -> tunmap A K
+		   -> cn-deq C D K -> type.
+%mode unmap-equiv +X1 +X2 +X3 -X4 -X5.
+
+unmap-equiv'	: unmap M C
+		   -> unmap N D
+		   -> equiv M N A
+		   -> tunmap A K
+		   -> cn-deq C D K -> type.
+%mode unmap-equiv' +X1 +X2 +X3 +X4 -X5.
+
+
+%block unmap-bind 
+   : some {k:kd} {d_wf:kd-wf k} {b:etp} {d_unmap:tunmap b k}
+      block {a:cn} {e:ofkd a k}
+      {em:mofkd e met/unit}
+      {thm1:can-mofkd e em}
+      {thm2:vdt/ofkd e d_wf}
+      {x:eterm} {d:evof x b} {xt:unmap x a}
+      {thm:can-unmap x xt}
+      {thm:unmap-vof d xt d_unmap e}.
+
+-	: unmap-of (eof/var _ Dvof) D Dt Dof
+	   <- unmap-vof Dvof D Dt Dof.
+
+-	: unmap-of (eof/app Dof2 Dof1) (unmap/app Dmap2 Dmap1) 
+	   (DmapB _ _ Dmap2) (ofkd/cn/app Dof1' Dof2')
+	   <- unmap-of Dof1 Dmap1 (tunmap/pi DmapB DmapA) Dof1'
+	   <- unmap-of' Dof2 Dmap2 DmapA Dof2'.
+
+-	: unmap-of (eof/pi1 Dof) (unmap/pi1 Dmap)
+	   DmapA (ofkd/cn/pj1 Dof')
+	   <- unmap-of Dof Dmap (tunmap/sigma DmapB DmapA) Dof'.
+
+-	: unmap-of (eof/pi2 Dof) (unmap/pi2 Dmap)
+	   (DmapB _ _ (unmap/pi1 Dmap)) (ofkd/cn/pj2 Dof')
+	   <- unmap-of Dof Dmap (tunmap/sigma DmapB DmapA) Dof'.
+
+-	: unmap-of (eof/lam Dof Dwf) (unmap/lam Dmap DmapA) 
+	   (tunmap/pi DmapB DmapA) (ofkd/cn/lam Dof' Dwf')
+	   <- unmap-wf' Dwf DmapA Dwf'
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e Dwf'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-of (Dof x d) (Dmap x a xt) (DmapB x a xt) (Dof' a e)).
+
+-	: unmap-of (eof/pair Dwf2 Dof2 Dof1) (unmap/pair Dmap2 Dmap1)
+	   (tunmap/sigma DmapB DmapA)
+	   Dof'
+	   <- unmap-of Dof1 Dmap1 DmapA Dof1'
+	   <- vdt/ofkd Dof1' Dwf1'
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e Dwf1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-wf (Dwf2 x d) (DmapB x a xt) (Dwf2' a e))
+	   <- unmap-of' Dof2 Dmap2 (DmapB _ _ Dmap1) Dof2'
+	   <- ofkd-sgm-intro Dwf2' Dof1' Dof2' Dof'.
+
+-	: unmap-of (eof/sing Dof) Dmap
+	   (tunmap/sing Dmap)
+	   (ofkd/kd/sing Dof')
+	   <- unmap-of' Dof Dmap tunmap/t Dof'.
+
+-	: unmap-of (eof/subsume Dsub Dof) Dmap 
+	   DmapB
+	   (ofkd/sub Dof' Dsub')
+	   <- unmap-of Dof Dmap DmapA Dof'
+	   <- can-tunmap _ DmapB
+	   <- unmap-subtp Dsub DmapA DmapB Dsub'.
+
+-	: unmap-of (eof/extpi Dof2 Dof1) Dmap
+	   (tunmap/pi DmapB DmapA)
+	   (ofkd/pi-ext Dof1' Dof2')
+	   <- unmap-of Dof1 Dmap (tunmap/pi _ DmapA) Dof1'
+	   <- vdt/ofkd Dof1'
+	      (kd-wf/kd/pi
+		 Dwf1'
+		 _)
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e Dwf1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-of (Dof2 x d) (unmap/app xt Dmap)
+		    (DmapB x a xt)
+		    (Dof2' a e)).
+
+-	: unmap-of (eof/extsigma Dwf2 Dof2 Dof1) Dmap
+	   (tunmap/sigma DmapB DmapA)
+	   Dof'
+	   <- unmap-of Dof1 (unmap/pi1 Dmap) DmapA Dof1'
+	   <- vdt/ofkd Dof1' Dwf1'
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e Dwf1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-wf (Dwf2 x d) (DmapB x a xt) (Dwf2' a e))
+	   <- unmap-of' Dof2 (unmap/pi2 Dmap) (DmapB _ _ (unmap/pi1 Dmap)) Dof2'
+	   <- ofkd-sgm-ext-intro Dwf2' Dof1' Dof2' Dof'.
+
+
+
+-	: unmap-of (eof/const _ (ekof/i etopen/t ckof/unit)) unmap/unit
+	   tunmap/t
+	   ofkd/tp/unit.
+
+-	: unmap-of (eof/const _ (ekof/i etopen/t ckof/tagged)) unmap/tagged
+	   tunmap/t
+	   ofkd/tp/tagged.
+
+-	: unmap-of (eof/const _ (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)) unmap/ref
+	   (tunmap/pi ([_] [_] [_] tunmap/t) tunmap/t)
+	   (ofkd/cn/lam
+	      ([a] [e] ofkd/tp/ref e)
+	      kd-wf/kd/type).
+
+-	: unmap-of (eof/const _ (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)) unmap/tag
+	   (tunmap/pi ([_] [_] [_] tunmap/t) tunmap/t)
+	   (ofkd/cn/lam
+	      ([a] [e] ofkd/tp/tag e)
+	      kd-wf/kd/type).
+
+-	: unmap-of (eof/const _ (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)) unmap/arrow
+	   (tunmap/pi ([_] [_] [_] tunmap/pi ([_] [_] [_] tunmap/t) tunmap/t) tunmap/t)
+	   (ofkd/cn/lam ([a] [e] ofkd/cn/lam ([b] [f] ofkd/tp/arrow e f) kd-wf/kd/type) kd-wf/kd/type).
+
+-	: unmap-of (eof/const _ (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)) unmap/cross
+	   (tunmap/pi ([_] [_] [_] tunmap/pi ([_] [_] [_] tunmap/t) tunmap/t) tunmap/t)
+	   (ofkd/cn/lam ([a] [e] ofkd/cn/lam ([b] [f] ofkd/tp/cross e f) kd-wf/kd/type) kd-wf/kd/type).
+
+-	: unmap-of (eof/const _ (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)) unmap/sum
+	   (tunmap/pi ([_] [_] [_] tunmap/pi ([_] [_] [_] tunmap/t) tunmap/t) tunmap/t)
+	   (ofkd/cn/lam ([a] [e] ofkd/cn/lam ([b] [f] ofkd/tp/sum e f) kd-wf/kd/type) kd-wf/kd/type).
+
+-	: unmap-of (eof/forall Dwf) (unmap/forall Dmap)
+	   (tunmap/pi ([_] [_] [_] tunmap/t) (tunmap/pi ([_] [_] [_] tunmap/t) Dmap))
+	   (ofkd/cn/lam
+	      ([a] [e] ofkd/tp/forall ([b] [f] ofkd/cn/app e f) Dwf')
+	      (kd-wf/kd/pi Dwf' ([_] [_] kd-wf/kd/type)))
+	   <- unmap-wf' Dwf Dmap Dwf'.
+
+-	: unmap-of (eof/const _ (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)) unmap/mu
+	   (tunmap/pi ([_] [_] [_] tunmap/t) (tunmap/pi ([_] [_] [_] tunmap/t) tunmap/t))
+	   (ofkd/cn/lam
+	      ([a] [e] ofkd/cn/mu ([b] [f] ofkd/cn/app e f) kd-wf/kd/type)
+	      (kd-wf/kd/pi kd-wf/kd/type ([_] [_] kd-wf/kd/type))).
+
+
+%%%
+
+
+-	: unmap-of' Dof Dmap DmapA Dof''
+	   <- unmap-of Dof Dmap DmapA' Dof'
+	   <- tunmap-fun DmapA' DmapA Deq
+	   <- ofkd-resp cn-eq/i Deq Dof' Dof''.
+
+
+%%%
+
+
+-	: unmap-wf ewf/t tunmap/t kd-wf/kd/type.
+
+-	: unmap-wf (ewf/pi Dwf2 Dwf1) (tunmap/pi Dmap2 Dmap1) (kd-wf/kd/pi Dwf1' Dwf2')
+	   <- unmap-wf Dwf1 Dmap1 Dwf1'
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e Dwf1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt Dmap1 e
+		 -> unmap-wf (Dwf2 x d) (Dmap2 x a xt) (Dwf2' a e)).
+
+-	: unmap-wf (ewf/sigma Dwf2 Dwf1) (tunmap/sigma Dmap2 Dmap1) (kd-wf/kd/sgm Dwf1' Dwf2')
+	   <- unmap-wf Dwf1 Dmap1 Dwf1'
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e Dwf1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt Dmap1 e
+		 -> unmap-wf (Dwf2 x d) (Dmap2 x a xt) (Dwf2' a e)).
+
+-	: unmap-wf (ewf/sing Dof) (tunmap/sing Dmap) (kd-wf/kd/sing Dof')
+	   <- can-unmap _ Dmap
+	   <- unmap-of Dof Dmap tunmap/t Dof'.
+
+
+%%%
+
+
+-	: unmap-wf' Dwf Dmap Dwf''
+	   <- unmap-wf Dwf Dmap' Dwf'
+	   <- tunmap-fun Dmap' Dmap Deq
+	   <- kd-wf-resp Deq Dwf' Dwf''.
+
+
+%%%
+
+
+-	: unmap-subtp (subtp/reflex Dequiv) Dmap1 Dmap2 Dsub'
+	   <- unmap-tequiv Dequiv Dmap1 Dmap2 Dequiv'
+	   <- vdt/kd-deq Dequiv' Dwf1' Dwf2'
+	   <- kd-anti Dequiv' Dwf1' Dwf2' Dsub' _.
+
+-	: unmap-subtp (subtp/trans Dsub23 Dsub12) Dmap1 Dmap3 Dsub13'
+	   <- can-tunmap _ Dmap2
+	   <- unmap-subtp Dsub12 Dmap1 Dmap2 Dsub12'
+	   <- unmap-subtp Dsub23 Dmap2 Dmap3 Dsub23'
+	   <- kd-trans/sub Dsub12' Dsub23' Dsub13'.
+
+-	: unmap-subtp (subtp/sing_t Dof) (tunmap/sing Dmap) tunmap/t (kd-sub/kd/sing-kd/type Dof')
+	   <- unmap-of' Dof Dmap tunmap/t Dof'.
+
+-	: unmap-subtp (subtp/pi DwfB1 DsubB DsubA) (tunmap/pi DmapB1 DmapA1) (tunmap/pi DmapB2 DmapA2)
+	   (kd-sub/kd/pi DsubA' DsubB' DwfB1')
+	   <- unmap-subtp DsubA DmapA2 DmapA1 DsubA'
+	   <- vdt/kd-sub DsubA' DwfA2' DwfA1'
+	   <- ({a} {e} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA2'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA2 e
+		 -> unmap-subtp (DsubB x d) (DmapB1 x a xt) (DmapB2 x a xt) (DsubB' a e))
+	   <- ({a} {e} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA1 e
+		 -> unmap-wf' (DwfB1 x d) (DmapB1 x a xt) (DwfB1' a e)).
+
+-	: unmap-subtp (subtp/sigma DwfB2 DsubB DsubA) (tunmap/sigma DmapB1 DmapA1) (tunmap/sigma DmapB2 DmapA2)
+	   (kd-sub/kd/sgm DsubA' DsubB' DwfB2')
+	   <- unmap-subtp DsubA DmapA1 DmapA2 DsubA'
+	   <- vdt/kd-sub DsubA' DwfA1' DwfA2'
+	   <- ({a} {e} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA1 e
+		 -> unmap-subtp (DsubB x d) (DmapB1 x a xt) (DmapB2 x a xt) (DsubB' a e))
+	   <- ({a} {e} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA2'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA2 e
+		 -> unmap-wf' (DwfB2 x d) (DmapB2 x a xt) (DwfB2' a e)).
+
+
+%%%
+
+
+-	: unmap-tequiv (tequiv/reflex Dwf) Dmap Dmap' Dequiv''
+	   <- tunmap-fun Dmap Dmap' Deq
+	   <- unmap-wf' Dwf Dmap Dwf'
+	   <- kd-refl/deq Dwf' Dequiv'
+	   <- kd-deq-resp kd-eq/i Deq Dequiv' Dequiv''.
+
+-	: unmap-tequiv (tequiv/symm Dequiv) Dmap Dmap' Dequiv''
+	   <- unmap-tequiv Dequiv Dmap' Dmap Dequiv'
+	   <- kd-sym Dequiv' Dequiv''.
+
+-	: unmap-tequiv (tequiv/trans Dsub23 Dsub12) Dmap1 Dmap3 Dsub13'
+	   <- can-tunmap _ Dmap2
+	   <- unmap-tequiv Dsub12 Dmap1 Dmap2 Dsub12'
+	   <- unmap-tequiv Dsub23 Dmap2 Dmap3 Dsub23'
+	   <- kd-trans/deq Dsub12' Dsub23' Dsub13'.
+
+-	: unmap-tequiv (tequiv/sing Dequiv) (tunmap/sing Dmap1) (tunmap/sing Dmap2) (kd-deq/kd/sing Dequiv')
+	   <- unmap-equiv' Dmap1 Dmap2 Dequiv tunmap/t Dequiv'.
+
+-	: unmap-tequiv (tequiv/pi DequivB DequivA) (tunmap/pi DmapB1 DmapA1) (tunmap/pi DmapB2 DmapA2)
+	   (kd-deq/kd/pi DequivA'' ([a] [e] DequivB' a (ofkd/deq e DequivA'')))
+	   <- unmap-tequiv DequivA DmapA1 DmapA2 DequivA'
+	   <- vdt/kd-deq DequivA' DwfA1' DwfA2'
+	   <- kd-sym DequivA' DequivA''
+	   <- ({a} {e} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA1 e
+		 -> unmap-tequiv (DequivB x d) (DmapB1 x a xt) (DmapB2 x a xt) (DequivB' a e)).
+
+-	: unmap-tequiv (tequiv/sigma DequivB DequivA) (tunmap/sigma DmapB1 DmapA1) (tunmap/sigma DmapB2 DmapA2)
+	   (kd-deq/kd/sgm DequivA' DequivB')
+	   <- unmap-tequiv DequivA DmapA1 DmapA2 DequivA'
+	   <- vdt/kd-deq DequivA' DwfA1' DwfA2'
+	   <- ({a} {e} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA1 e
+		 -> unmap-tequiv (DequivB x d) (DmapB1 x a xt) (DmapB2 x a xt) (DequivB' a e)).
+
+
+%%%
+
+
+-	: unmap-equiv Dmap Dmap' (equiv/reflex Dof) DmapA Dequiv'
+	   <- unmap-fun Dmap Dmap' Deq
+	   <- unmap-of Dof Dmap DmapA Dof'
+	   <- cn-deq-resp cn-eq/i Deq kd-eq/i (cn-deq/refl Dof') Dequiv'.
+
+-	: unmap-equiv Dmap1 Dmap2 (equiv/symm Dequiv) DmapA (cn-deq/sym Dequiv')
+	   <- unmap-equiv Dmap2 Dmap1 Dequiv DmapA Dequiv'.
+
+-	: unmap-equiv Dmap1 Dmap3 (equiv/trans Dsub23 Dsub12) DmapA (cn-deq/trans Dsub12' Dsub23')
+	   <- can-unmap _ Dmap2
+	   <- unmap-equiv Dmap1 Dmap2 Dsub12 DmapA Dsub12'
+	   <- unmap-equiv' Dmap2 Dmap3 Dsub23 DmapA Dsub23'.
+
+-	: unmap-equiv (unmap/app Dmap2 Dmap1) (unmap/app Dmap2' Dmap1') (equiv/app Dequiv2 Dequiv1)
+	   (DmapB _ _ Dmap2)
+	   (cn-deq/cn/app Dequiv1' Dequiv2')
+	   <- unmap-equiv Dmap1 Dmap1' Dequiv1 (tunmap/pi DmapB DmapA) Dequiv1'
+	   <- unmap-equiv' Dmap2 Dmap2' Dequiv2 DmapA Dequiv2'.
+
+-	: unmap-equiv (unmap/pi1 Dmap1) (unmap/pi1 Dmap2) (equiv/pi1 Dequiv)
+	   DmapA
+	   (cn-deq/cn/pj1 Dequiv')
+	   <- unmap-equiv Dmap1 Dmap2 Dequiv (tunmap/sigma DmapB DmapA) Dequiv'.
+
+-	: unmap-equiv (unmap/pi2 Dmap1) (unmap/pi2 Dmap2) (equiv/pi2 Dequiv)
+	   (DmapB _ _ (unmap/pi1 Dmap1))
+	   (cn-deq/cn/pj2 Dequiv')
+	   <- unmap-equiv Dmap1 Dmap2 Dequiv (tunmap/sigma DmapB DmapA) Dequiv'.
+
+-	: unmap-equiv (unmap/lam Dmap1 DmapA1) (unmap/lam Dmap2 DmapA2) (equiv/lam Dequiv2 Dequiv1) 
+	   (tunmap/pi DmapB DmapA1) (cn-deq/cn/lam Dequiv2' Dequiv1')
+	   <- unmap-tequiv Dequiv1 DmapA1 DmapA2 Dequiv1'
+	   <- vdt/kd-deq Dequiv1' DwfA1' DwfA2'
+	   <- ({a} {e} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA1 e
+		 -> unmap-equiv (Dmap1 x a xt) (Dmap2 x a xt) (Dequiv2 x d) (DmapB x a xt) (Dequiv2' a e)).
+
+-	: unmap-equiv (unmap/pair Dmap2 Dmap1) (unmap/pair Dmap2' Dmap1') (equiv/pair Dwf2 Dequiv2 Dequiv1)
+	   (tunmap/sigma DmapB DmapA)
+	   Dequiv'
+	   <- unmap-equiv Dmap1 Dmap1' Dequiv1 DmapA Dequiv1'
+	   <- vdt/cn-deq Dequiv1' _ _ Dwf1'
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e Dwf1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-wf (Dwf2 x d) (DmapB x a xt) (Dwf2' a e))
+	   <- unmap-equiv' Dmap2 Dmap2' Dequiv2 (DmapB _ _ Dmap1) Dequiv2'
+	   <- cn-deq-sgm-intro Dwf2' Dequiv1' Dequiv2' Dequiv'.
+
+-	: unmap-equiv Dmap1 Dmap2 (equiv/sing Dequiv)
+	   (tunmap/sing Dmap1)
+	   (cn-deq/kd/sing2 Dequiv' Dof2')
+	   <- unmap-equiv' Dmap1 Dmap2 Dequiv tunmap/t Dequiv'
+	   <- vdt/cn-deq Dequiv' _ Dof2' _.
+
+-	: unmap-equiv Dmap1 Dmap2 (equiv/singelim Dof)
+	   tunmap/t
+	   (cn-deq/kd/singelim Dwf' Dof')
+	   <- unmap-of' Dof Dmap1 (tunmap/sing Dmap2) Dof'
+	   <- vdt/ofkd Dof' (kd-wf/kd/sing Dwf').
+
+-	: unmap-equiv Dmap1 Dmap2 (equiv/extpi Dequiv Dof2 Dof1)
+	   (tunmap/pi DmapB DmapA)
+	   (cn-deq/pi-ext Dof1' Dof2' Dequiv')
+	   <- unmap-of Dof1 Dmap1 (tunmap/pi DmapB' DmapA) Dof1'
+	   <- vdt/ofkd Dof1'
+	      (kd-wf/kd/pi DwfA' _)
+	   <- ({a} {x} {xt:unmap x a}
+		 can-unmap x xt
+		 -> can-tunmap _ (DmapB'' x a xt))
+	   <- unmap-of' Dof2 Dmap2 (tunmap/pi DmapB'' DmapA) Dof2'
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-equiv (unmap/app xt Dmap1) (unmap/app xt Dmap2) (Dequiv x d)
+		    (DmapB x a xt) (Dequiv' a e)).
+
+-	: unmap-equiv Dmap1 Dmap2 (equiv/extpiw Dequiv DequivPre)
+	   (tunmap/pi DmapB DmapA)
+	   (cn-deq/pi-ext-2 DequivPre' Dequiv')
+	   <- unmap-equiv Dmap1 Dmap2 DequivPre (tunmap/pi _ DmapA) DequivPre'
+	   <- vdt/cn-deq DequivPre' _ _
+	      (kd-wf/kd/pi DwfA' _)
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-equiv (unmap/app xt Dmap1) (unmap/app xt Dmap2) (Dequiv x d)
+		    (DmapB x a xt) (Dequiv' a e)).
+
+-	: unmap-equiv Dmap Dmap' (equiv/extsigma Dwf2 Dequiv2 Dequiv1)
+	   (tunmap/sigma DmapB DmapA)
+	   Dequiv'
+	   <- unmap-equiv (unmap/pi1 Dmap) (unmap/pi1 Dmap') Dequiv1 DmapA Dequiv1'
+	   <- vdt/cn-deq Dequiv1' _ _
+	      Dwf1'
+	   <- ({a} {e:ofkd a K1} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e Dwf1'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-wf (Dwf2 x d) (DmapB x a xt) (Dwf2' a e))
+	   <- unmap-equiv' (unmap/pi2 Dmap) (unmap/pi2 Dmap') Dequiv2 (DmapB _ _ (unmap/pi1 Dmap)) Dequiv2'
+	   <- cn-deq-sgm-ext-intro Dwf2' Dequiv1' Dequiv2' Dequiv'.
+
+-	: unmap-equiv Dmap1 Dmap2 (equiv/subsume Dsub Dequiv)
+	   DmapB
+	   (cn-deq/sub Dequiv' Dsub')
+	   <- unmap-equiv Dmap1 Dmap2 Dequiv DmapA Dequiv'
+	   <- can-tunmap _ DmapB
+	   <- unmap-subtp Dsub DmapA DmapB Dsub'.
+
+-	: unmap-equiv (unmap/app Dmap2 (unmap/lam Dmap1 DmapA)) Dmap (equiv/beta Dof2 Dof1) 
+	   (DmapB _ _ Dmap2)
+	   Dequiv''
+	   <- unmap-fun (Dmap1 _ _ Dmap2) Dmap Deq
+	   <- unmap-of' Dof2 Dmap2 DmapA Dof2'
+	   <- vdt/ofkd Dof2' DwfA'
+	   <- ({a} {e} {em:mofkd e met/unit}
+		 can-mofkd e em
+		 -> vdt/ofkd e DwfA'
+		 -> {x} {d} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d xt DmapA e
+		 -> unmap-of (Dof1 x d) (Dmap1 x a xt) (DmapB x a xt) (Dof1' a e))
+	   <- cn-deq-beta Dof1' Dof2' Dequiv'
+	   <- cn-deq-resp cn-eq/i Deq kd-eq/i Dequiv' Dequiv''.
+
+-	: unmap-equiv (unmap/pi1 (unmap/pair Dmap2 Dmap1)) Dmap1' (equiv/beta1 Dof2 Dof1)
+	   DmapA
+	   Dequiv''
+	   <- unmap-fun Dmap1 Dmap1' Deq
+	   <- unmap-of Dof1 Dmap1 DmapA Dof1'
+	   <- unmap-of Dof2 Dmap2 DmapB Dof2'
+	   <- stone-2/108 Dof1' Dof2' Dequiv'
+	   <- cn-deq-resp cn-eq/i Deq kd-eq/i Dequiv' Dequiv''.
+
+-	: unmap-equiv (unmap/pi2 (unmap/pair Dmap2 Dmap1)) Dmap2' (equiv/beta2 Dof2 Dof1)
+	   DmapB
+	   Dequiv''
+	   <- unmap-fun Dmap2 Dmap2' Deq
+	   <- unmap-of Dof1 Dmap1 DmapA Dof1'
+	   <- unmap-of Dof2 Dmap2 DmapB Dof2'
+	   <- stone-2/109 Dof1' Dof2' Dequiv'
+	   <- cn-deq-resp cn-eq/i Deq kd-eq/i Dequiv' Dequiv''.
+
+-	: unmap-equiv (unmap/forall Dmap1) (unmap/forall Dmap2) (equiv/forall Dequiv)
+	   (tunmap/pi ([_] [_] [_] tunmap/t) (tunmap/pi ([_] [_] [_] tunmap/t) Dmap1))
+	   (cn-deq/cn/lam
+	      ([a] [e]
+		 cn-deq/tp/forall
+		 ([b] [f]
+		    cn-deq/refl
+		    (ofkd/cn/app e f))
+		 Dequiv')
+	      (kd-deq/kd/pi
+		 Dequiv''
+		 ([_] [_] kd-deq/kd/type)))
+	   <- unmap-tequiv Dequiv Dmap1 Dmap2 Dequiv'
+	   <- kd-sym Dequiv' Dequiv''.
+
+
+%%%
+
+
+-	: unmap-equiv' Dmap1 Dmap2 Dequiv DmapA Dequiv''
+	   <- unmap-equiv Dmap1 Dmap2 Dequiv DmapA' Dequiv'
+	   <- tunmap-fun DmapA' DmapA Deq
+	   <- cn-deq-resp cn-eq/i cn-eq/i Deq Dequiv' Dequiv''.
+
+
+%worlds (unmap-bind) (unmap-vof _ _ _ _) (unmap-of _ _ _ _) (unmap-of' _ _ _ _) (unmap-wf _ _ _) (unmap-wf' _ _ _) (unmap-subtp _ _ _ _) (unmap-tequiv _ _ _ _) (unmap-equiv _ _ _ _ _) (unmap-equiv' _ _ _ _ _).
+%total (D1 D2 D3 D4 D5 D6 D7 D8 D9) (unmap-vof D1 _ _ _) (unmap-of D2 _ _ _) (unmap-of' D3 _ _ _) (unmap-wf D4 _ _) (unmap-wf' D5 _ _) (unmap-subtp D6 _ _ _) (unmap-tequiv D7 _ _ _) (unmap-equiv _ _ D8 _ _) (unmap-equiv' _ _ D9 _ _).
+
+
+
+invert-map-equiv : map C1 M1
+		    -> map C2 M2
+		    -> tmap K A
+		    -> ofkd C1 K
+		    -> ofkd C2 K
+		    -> equiv M1 M2 A
+%%
+		    -> cn-deq C1 C2 K -> type.
+%mode invert-map-equiv +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+-	: invert-map-equiv Dmap1 Dmap2 Dmap Dof1 Dof2 Dequiv
+	   (cn-deq/trans
+	      Dequiv1'
+	      (cn-deq/trans
+		 (cn-deq/deq
+		    Dequiv'
+		    Dtequiv'')
+		 (cn-deq/sym Dequiv2')))
+	   <- invert-map Dof1 Dmap1 Dunmap1 Dequiv1'
+	   <- invert-map Dof2 Dmap2 Dunmap2 Dequiv2'
+	   <- vdt/ofkd Dof1 Dwf
+	   <- invert-tmap Dwf Dmap Dunmap Dtequiv'
+	   <- unmap-equiv' Dunmap1 Dunmap2 Dequiv Dunmap Dequiv'
+	   <- kd-sym Dtequiv' Dtequiv''.
+
+%worlds () (invert-map-equiv _ _ _ _ _ _ _).
+%total {} (invert-map-equiv _ _ _ _ _ _ _).
+
+
+
+invert-map-equiv1 : tmap K' A'
+		     -> ({a} {x} map a x -> map (C1 a) (M1 x))
+		     -> ({a} {x} map a x -> map (C2 a) (M2 x))
+		     -> ({a} {x} map a x -> tmap (K a) (A x))
+		     -> kd-wf K'
+		     -> ({a} ofkd a K' -> ofkd (C1 a) (K a))
+		     -> ({a} ofkd a K' -> ofkd (C2 a) (K a))
+		     -> ({x} evof x A' -> equiv (M1 x) (M2 x) (A x))
+%%
+		     -> ({a} ofkd a K' -> cn-deq (C1 a) (C2 a) (K a)) -> type.
+%mode invert-map-equiv1 +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 -X9.
+
+-	: invert-map-equiv1 DmapB Dmap1 Dmap2 Dmap DofB Dof1 Dof2 Dequiv
+	   ([a] [d]
+	      cn-deq/trans
+	      (Dequiv1' a d)
+	      (cn-deq/trans
+		 (cn-deq/deq
+		    (Dequiv' a (ofkd/deq d DequivB))
+		    (Dtequiv'' a d))
+		 (cn-deq/sym (Dequiv2' a d))))
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d DofB
+		 -> {x} {at} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-map (Dof1 a d) (Dmap1 a x at) (Dunmap1 x a xt) (Dequiv1' a d))
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d DofB
+		 -> {x} {at} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-map (Dof2 a d) (Dmap2 a x at) (Dunmap2 x a xt) (Dequiv2' a d))
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d DofB
+		 -> vdt/ofkd (Dof1 a d) (Dwf a d))
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d DofB
+		 -> {x} {at} {xt}
+		    invert-map d at xt (cn-deq/refl d)
+		 -> invert-tmap (Dwf a d) (Dmap a x at) (Dunmap x a xt) (Dtequiv' a d))
+	   <- invert-tmap DofB DmapB DunmapB (DequivB : kd-deq K K')
+	   <- vdt/kd-deq DequivB _ DofB'
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d DofB'
+		 -> {x} {d'} {xt}
+		    can-unmap x xt
+		 -> unmap-vof d' xt DunmapB d
+		 -> unmap-equiv' (Dunmap1 x a xt) (Dunmap2 x a xt) (Dequiv x d') (Dunmap x a xt) (Dequiv' a d))
+	   <- ({a} {d} {dm:mofkd d met/unit}
+		 can-mofkd d dm
+		 -> vdt/ofkd d DofB
+		 -> kd-sym (Dtequiv' a d) (Dtequiv'' a d)).
+
+%worlds () (invert-map-equiv1 _ _ _ _ _ _ _ _ _).
+%total {} (invert-map-equiv1 _ _ _ _ _ _ _ _ _).
+
+
+
+invert-map-tequiv : tmap K1 A1
+		     -> tmap K2 A2
+		     -> kd-wf K1
+		     -> kd-wf K2
+		     -> tequiv A1 A2
+%%
+		     -> kd-deq K1 K2 -> type.
+%mode invert-map-tequiv +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: invert-map-tequiv Dmap1 Dmap2 Dwf1 Dwf2 Dequiv Dequiv''
+	   <- invert-tmap Dwf1 Dmap1 Dunmap1 Dequiv1'
+	   <- invert-tmap Dwf2 Dmap2 Dunmap2 Dequiv2'
+	   <- unmap-tequiv Dequiv Dunmap1 Dunmap2 Dequiv'
+	   <- kd-trans/deq Dequiv1' Dequiv' Dequiv1''
+	   <- kd-sym Dequiv2' Dequiv2''
+	   <- kd-trans/deq Dequiv1'' Dequiv2'' Dequiv''.
+
+%worlds () (invert-map-tequiv _ _ _ _ _ _).
+%total {} (invert-map-tequiv _ _ _ _ _ _).
+
+
+
+false-implies-uninhabited : false -> uninhabited -> type.
+%mode false-implies-uninhabited +X1 -X2.
+%worlds () (false-implies-uninhabited _ _).
+%total {} (false-implies-uninhabited _ _).
+
+
+
+
+%%%%%  Map Functionality  %%%%%
+
+can-map : {C} map C M -> type.
+%mode can-map +X1 -X2.
+
+can-tmap : {K} tmap K A -> type.
+%mode can-tmap +X1 -X2.
+
+%block can-map-bind
+   : some {m:eterm}
+      block {a:cn} {at:map a m}
+      {thm:can-map a at}.
+
+%block can-map-bind-for-map
+   : some {x:eterm} {k:kd}
+      block 
+      {a:cn} {e:ofkd a k} {at:map a x}
+      {thm:can-map a at}.
+
+-	: can-map _ (map/app D2 D1)
+	   <- can-map _ D1
+	   <- can-map _ D2.
+
+-	: can-map _ (map/pi1 D)
+	   <- can-map _ D.
+
+-	: can-map _ (map/pi2 D)
+	   <- can-map _ D.
+
+-	: can-map _ (map/lam D2 D1)
+	   <- can-tmap _ D1
+	   <- ({a} {x} {xt}
+		 can-map x xt
+		 -> can-map _ (D2 x a xt)).
+
+-	: can-map _ (map/pair D2 D1)
+	   <- can-map _ D1
+	   <- can-map _ D2.
+
+-	: can-map _ map/unit.
+-	: can-map _ map/tagged.
+
+-	: can-map _ (map/ref D)
+	   <- can-map _ D.
+
+-	: can-map _ (map/tag D)
+	   <- can-map _ D.
+
+-	: can-map _ (map/arrow D2 D1)
+	   <- can-map _ D1
+	   <- can-map _ D2.
+
+-	: can-map _ (map/cross D2 D1)
+	   <- can-map _ D1
+	   <- can-map _ D2.
+
+-	: can-map _ (map/sum D2 D1)
+	   <- can-map _ D1
+	   <- can-map _ D2.
+
+-	: can-map _ (map/forall D2 D1)
+	   <- can-tmap _ D1
+	   <- ({a} {x} {xt}
+		 can-map x xt
+		 -> can-map _ (D2 x a xt)).
+
+-	: can-map _ (map/mu D2)
+	   <- ({a} {x} {xt}
+		 can-map x xt
+		 -> can-map _ (D2 x a xt)).
+
+
+-	: can-tmap _ tmap/t.
+
+-	: can-tmap _ (tmap/sing D)
+	   <- can-map _ D.
+
+-	: can-tmap _ (tmap/pi D2 D1)
+	   <- can-tmap _ D1
+	   <- ({a} {x} {xt}
+		 can-map x xt
+		 -> can-tmap _ (D2 x a xt)).
+
+-	: can-tmap _ (tmap/sigma D2 D1)
+	   <- can-tmap _ D1
+	   <- ({a} {x} {xt}
+		 can-map x xt
+		 -> can-tmap _ (D2 x a xt)).
+
+
+%worlds (evar | can-map-bind | can-map-bind-for-map) (can-map _ _) (can-tmap _ _).
+%total (D1 D2) (can-map D1 _) (can-tmap D2 _).
+
+
+
+map-fun : map C M -> map C M' -> eterm-eq M M' -> type.
+%mode map-fun +X1 +X2 -X3.
+
+tmap-fun : tmap K A -> tmap K A' -> etp-eq A A' -> type.
+%mode tmap-fun +X1 +X2 -X3.
+
+%block map-fun-bind
+   : some {x:eterm}
+      block
+      {a:cn} {at:map a x}.
+
+%block map-fun-bind-for-map
+   : some {x:eterm} {k:kd}
+      block 
+      {a:cn} {e:ofkd a k} {at:map a x}.
+
+-	: map-fun D D eterm-eq/i.
+
+-	: map-fun (map/app D2 D1) (map/app D2' D1') Deq
+	   <- map-fun D1 D1' Deq1
+	   <- map-fun D2 D2' Deq2
+	   <- eterm-resp-eterm2 eapp Deq1 Deq2 Deq.
+
+-	: map-fun (map/pi1 D) (map/pi1 D') Deq
+	   <- map-fun D D' Deq1
+	   <- eterm-resp-eterm epi1 Deq1 Deq.
+
+-	: map-fun (map/pi2 D) (map/pi2 D') Deq
+	   <- map-fun D D' Deq1
+	   <- eterm-resp-eterm epi2 Deq1 Deq.
+
+-	: map-fun (map/lam D2 D1) (map/lam D2' D1') Deq
+	   <- tmap-fun D1 D1' Deq1
+	   <- ({a} {x} {xt}
+		 map-fun (D2 x a xt) (D2' x a xt) (Deq2 a))
+	   <- elam-resp Deq1 Deq2 Deq.
+
+-	: map-fun (map/pair D2 D1) (map/pair D2' D1') Deq
+	   <- map-fun D1 D1' Deq1
+	   <- map-fun D2 D2' Deq2
+	   <- eterm-resp-eterm2 epair Deq1 Deq2 Deq.
+
+-	: map-fun (map/ref D) (map/ref D') Deq
+	   <- map-fun D D' Deq1
+	   <- eterm-resp-eterm ([m] eapp (econst ref) m) Deq1 Deq.
+
+-	: map-fun (map/tag D) (map/tag D') Deq
+	   <- map-fun D D' Deq1
+	   <- eterm-resp-eterm ([m] eapp (econst tag) m) Deq1 Deq.
+
+-	: map-fun (map/arrow D2 D1) (map/arrow D2' D1') Deq
+	   <- map-fun D1 D1' Deq1
+	   <- map-fun D2 D2' Deq2
+	   <- eterm-resp-eterm2 ([m] [n] eapp (eapp (econst arrow) m) n) Deq1 Deq2 Deq.
+
+-	: map-fun (map/cross D2 D1) (map/cross D2' D1') Deq
+	   <- map-fun D1 D1' Deq1
+	   <- map-fun D2 D2' Deq2
+	   <- eterm-resp-eterm2 ([m] [n] eapp (eapp (econst cross) m) n) Deq1 Deq2 Deq.
+
+-	: map-fun (map/sum D2 D1) (map/sum D2' D1') Deq
+	   <- map-fun D1 D1' Deq1
+	   <- map-fun D2 D2' Deq2
+	   <- eterm-resp-eterm2 ([m] [n] eapp (eapp (econst dsum) m) n) Deq1 Deq2 Deq.
+
+-	: map-fun (map/forall D2 D1) (map/forall D2' D1') Deq
+	   <- tmap-fun D1 D1' Deq1
+	   <- ({a} {x} {xt}
+		 map-fun (D2 x a xt) (D2' x a xt) (Deq2 a))
+	   <- eterm-resp-bind ([a] [m] eapp (eforall a) (elam a m)) Deq1 Deq2 Deq.
+
+-	: map-fun (map/mu D) (map/mu D') Deq
+	   <- ({a} {x} {xt}
+		 map-fun (D x a xt) (D' x a xt) (Deq1 a))
+	   <- eterm-resp-halfbind ([m] eapp (econst mu) (elam et m)) Deq1 Deq.
+
+
+
+-	: tmap-fun tmap/t tmap/t etp-eq/i.
+
+-	: tmap-fun (tmap/sing D) (tmap/sing D') Deq
+	   <- map-fun D D' Deq1
+	   <- etp-resp-eterm esing Deq1 Deq.
+
+-	: tmap-fun (tmap/pi D2 D1) (tmap/pi D2' D1') Deq
+	   <- tmap-fun D1 D1' Deq1
+	   <- ({a} {x} {xt}
+		 tmap-fun (D2 x a xt) (D2' x a xt) (Deq2 a))
+	   <- etp-resp-bind epi Deq1 Deq2 Deq.
+
+-	: tmap-fun (tmap/sigma D2 D1) (tmap/sigma D2' D1') Deq
+	   <- tmap-fun D1 D1' Deq1
+	   <- ({a} {x} {xt}
+		 tmap-fun (D2 x a xt) (D2' x a xt) (Deq2 a))
+	   <- etp-resp-bind esigma Deq1 Deq2 Deq.
+
+%worlds (evar | map-fun-bind | map-fun-bind-for-map) (map-fun _ _ _) (tmap-fun _ _ _).
+%total (D1 D2) (map-fun _ D1 _) (tmap-fun _ D2 _).
+
+
+
+
+%%%%%  Map Preserves Typing  %%%%%
+
+map-of		: ofkd C K
+		   -> map C M
+		   -> tmap K A
+		   -> eof M A -> type.
+%mode map-of +X1 +X2 -X3 -X4.
+
+map-of'		: ofkd C K
+		   -> map C M
+		   -> tmap K A
+		   -> eof M A -> type.
+%mode map-of' +X1 +X2 +X3 -X4.
+
+map-wf		: kd-wf K
+		   -> tmap K A
+		   -> ewf A -> type.
+%mode map-wf +X1 -X2 -X3.
+
+map-wf'		: kd-wf K
+		   -> tmap K A
+		   -> ewf A -> type.
+%mode map-wf' +X1 +X2 -X3.
+
+map-subtp	: kd-sub K L
+		   -> tmap K A
+		   -> tmap L B
+		   -> subtp A B -> type.
+%mode map-subtp +X1 +X2 +X3 -X4.
+
+map-tequiv	: kd-deq K L
+		   -> tmap K A
+		   -> tmap L B
+		   -> tequiv A B -> type.
+%mode map-tequiv +X1 +X2 +X3 -X4.
+
+map-equiv'	: map C M
+		   -> map D N
+		   -> cn-deq C D K
+		   -> tmap K A
+		   -> equiv M N A -> type.
+%mode map-equiv' +X1 +X2 +X3 -X4 -X5.
+
+map-equiv''	: map C M
+		   -> map D N
+		   -> cn-deq C D K
+		   -> tmap K A
+		   -> equiv M N A -> type.
+%mode map-equiv'' +X1 +X2 +X3 +X4 -X5.
+
+
+%block map-bind
+   : some {b:etp} {k:kd} {d_map: tmap k b} {d_wf:ewf b}
+      block {x:eterm} {d:evof x b}
+      {a:cn} {e:ofkd a k} {at:map a x}
+      {thm:can-map a at}
+      {thm:map-of e at d_map (eof/var d_wf d)}.
+
+-	: map-of (ofkd/cn/app Dof1 Dof2) (map/app Dmap2 Dmap1) 
+	   (DmapB _ _ Dmap2) (eof/app Dof2' Dof1')
+	   <- map-of Dof1 Dmap1 (tmap/pi DmapB DmapA) Dof1'
+	   <- map-of' Dof2 Dmap2 DmapA Dof2'.
+
+-	: map-of (ofkd/cn/pj1 Dof) (map/pi1 Dmap)
+	   DmapA
+	   (eof/pi1 Dof')
+	   <- map-of Dof Dmap (tmap/sigma DmapB DmapA) Dof'.
+
+-	: map-of (ofkd/cn/pj2 Dof) (map/pi2 Dmap)
+	   (DmapB _ _ (map/pi1 Dmap))
+	   (eof/pi2 Dof')
+	   <- map-of Dof Dmap (tmap/sigma DmapB DmapA) Dof'.
+
+-	: map-of (ofkd/cn/lam Dof Dwf) (map/lam Dmap DmapA) 
+	   (tmap/pi DmapB DmapA)
+	   (eof/lam Dof' Dwf')
+	   <- map-wf' Dwf DmapA Dwf'
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at DmapA (eof/var Dwf' d)
+		 -> map-of (Dof a e) (Dmap a x at) (DmapB a x at) (Dof' x d)).
+
+-	: map-of (ofkd/cn/pair Dof1 Dof2) (map/pair Dmap2 Dmap1)
+	   (tmap/sigma ([_] [_] [_] DmapB) DmapA)
+	   (eof/pair ([_] [_] Dwf2) Dof2' Dof1')
+	   <- map-of Dof1 Dmap1 DmapA Dof1'
+	   <- map-of Dof2 Dmap2 DmapB Dof2'
+	   <- eof-reg Dof2' Dwf2.
+
+-	: map-of (ofkd/kd/sing Dof) Dmap
+	   (tmap/sing Dmap)
+	   (eof/sing Dof')
+	   <- map-of' Dof Dmap tmap/t Dof'.
+
+-	: map-of (ofkd/sgm-ext Dof1 Dof2) Dmap
+	   (tmap/sigma ([_] [_] [_] DmapB) DmapA)
+	   (eof/extsigma ([_] [_] Dwf2') Dof2' Dof1')
+	   <- map-of Dof1 (map/pi1 Dmap) DmapA Dof1'
+	   <- map-of Dof2 (map/pi2 Dmap) DmapB Dof2'
+	   <- eof-reg Dof2' Dwf2'.
+
+-	: map-of (ofkd/pi-ext DofPre Dof) Dmap
+	   (tmap/pi DmapB DmapA)
+	   (eof/extpi Dof' DofPre')
+	   <- map-of DofPre Dmap (tmap/pi _ DmapA) DofPre'
+	   <- eof-reg DofPre'
+	      (ewf/pi
+		 _
+		 Dwf')
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at DmapA (eof/var Dwf' d)
+		 -> map-of (Dof a e) (map/app at Dmap) (DmapB a x at) (Dof' x d)).
+
+-	: map-of (ofkd/sub Dof Dsub) Dmap
+	   DmapB
+	   (eof/subsume Dsub' Dof')
+	   <- map-of Dof Dmap DmapA Dof'
+	   <- can-tmap _ DmapB
+	   <- map-subtp Dsub DmapA DmapB Dsub'.
+
+-	: map-of (ofkd/deq Dof Dsub) Dmap
+	   DmapB
+	   (eof/equiv Dsub' Dof')
+	   <- map-of Dof Dmap DmapA Dof'
+	   <- can-tmap _ DmapB
+	   <- map-tequiv Dsub DmapA DmapB Dsub'.
+
+-	: map-of ofkd/tp/unit map/unit
+	   tmap/t
+	   (eof/const ewf/t (ekof/i etopen/t ckof/unit)).
+
+-	: map-of ofkd/tp/tagged map/tagged
+	   tmap/t
+	   (eof/const ewf/t (ekof/i etopen/t ckof/tagged)).
+
+-	: map-of (ofkd/tp/ref Dof) (map/ref Dmap)
+	   tmap/t
+	   (eof/app Dof' (eof/const 
+			    (ewf/pi ([_] [_] ewf/t) ewf/t) 
+			    (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)))
+	   <- map-of' Dof Dmap tmap/t Dof'.
+
+-	: map-of (ofkd/tp/tag Dof) (map/tag Dmap)
+	   tmap/t
+	   (eof/app Dof' (eof/const 
+			    (ewf/pi ([_] [_] ewf/t) ewf/t) 
+			    (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)))
+	   <- map-of' Dof Dmap tmap/t Dof'.
+
+-	: map-of (ofkd/tp/arrow Dof1 Dof2) (map/arrow Dmap2 Dmap1)
+	   tmap/t
+	   (eof/app Dof2' 
+	      (eof/app Dof1' 
+		 (eof/const
+		    (ewf/pi ([_] [_] ewf/pi ([_] [_] ewf/t) ewf/t) ewf/t)
+		    (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow))))
+	   <- map-of' Dof1 Dmap1 tmap/t Dof1'
+	   <- map-of' Dof2 Dmap2 tmap/t Dof2'.
+
+-	: map-of (ofkd/tp/cross Dof1 Dof2) (map/cross Dmap2 Dmap1)
+	   tmap/t
+	   (eof/app Dof2' 
+	      (eof/app Dof1' 
+		 (eof/const
+		    (ewf/pi ([_] [_] ewf/pi ([_] [_] ewf/t) ewf/t) ewf/t)
+		    (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross))))
+	   <- map-of' Dof1 Dmap1 tmap/t Dof1'
+	   <- map-of' Dof2 Dmap2 tmap/t Dof2'.
+
+-	: map-of (ofkd/tp/sum Dof1 Dof2) (map/sum Dmap2 Dmap1)
+	   tmap/t
+	   (eof/app Dof2' 
+	      (eof/app Dof1' 
+		 (eof/const
+		    (ewf/pi ([_] [_] ewf/pi ([_] [_] ewf/t) ewf/t) ewf/t)
+		    (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum))))
+	   <- map-of' Dof1 Dmap1 tmap/t Dof1'
+	   <- map-of' Dof2 Dmap2 tmap/t Dof2'.
+
+-	: map-of (ofkd/tp/forall Dof Dwf) (map/forall Dmap2 Dmap1)
+	   tmap/t
+	   (eof/app
+	      (eof/lam Dof' Dwf')
+	      (eof/forall Dwf'))
+	   <- map-wf' Dwf Dmap1 Dwf'
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1 (eof/var Dwf' d)
+		 -> map-of' (Dof a e) (Dmap2 a x at) tmap/t (Dof' x d)).
+
+-	: map-of (ofkd/cn/mu Dof _) (map/mu Dmap)
+	   tmap/t
+	   (eof/app
+	      (eof/lam Dof' ewf/t)
+	      (eof/const
+		 (ewf/pi ([_] [_] ewf/t) (ewf/pi ([_] [_] ewf/t) ewf/t))
+		 (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)))
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at tmap/t (eof/var ewf/t d)
+		 -> map-of' (Dof a e) (Dmap a x at) tmap/t (Dof' x d)).
+
+
+%%%
+
+
+-	: map-of' Dof Dmap DmapA Dof''
+	   <- map-of Dof Dmap DmapA' Dof'
+	   <- tmap-fun DmapA' DmapA Deq
+	   <- eof-resp eterm-eq/i Deq Dof' Dof''.
+
+
+%%%
+
+
+
+-	: map-wf kd-wf/kd/type tmap/t ewf/t.
+
+-	: map-wf (kd-wf/kd/sing Dof) (tmap/sing Dmap) (ewf/sing Dof')
+	   <- can-map _ Dmap
+	   <- map-of' Dof Dmap tmap/t Dof'.
+
+-	: map-wf (kd-wf/kd/pi Dwf1 Dwf2) (tmap/pi Dmap2 Dmap1) (ewf/pi Dwf2' Dwf1')
+	   <- map-wf Dwf1 Dmap1 Dwf1'
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1 (eof/var Dwf1' d)
+		 -> map-wf (Dwf2 a e) (Dmap2 a x at) (Dwf2' x d)).
+
+-	: map-wf (kd-wf/kd/sgm Dwf1 Dwf2) (tmap/sigma Dmap2 Dmap1) (ewf/sigma Dwf2' Dwf1')
+	   <- map-wf Dwf1 Dmap1 Dwf1'
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1 (eof/var Dwf1' d)
+		 -> map-wf (Dwf2 a e) (Dmap2 a x at) (Dwf2' x d)).
+
+
+%%%
+
+
+-	: map-wf' Dwf Dmap Dwf''
+	   <- map-wf Dwf Dmap' Dwf'
+	   <- tmap-fun Dmap' Dmap Deq
+	   <- ewf-resp Deq Dwf' Dwf''.
+
+
+%%%
+
+
+-	: map-subtp kd-sub/kd/type tmap/t tmap/t subtp/t.
+
+-	: map-subtp (kd-sub/kd/sing-kd/sing Dequiv) (tmap/sing Dmap) (tmap/sing Dmap')
+	   (subtp/sing Dequiv')
+	   <- map-equiv'' Dmap Dmap' Dequiv tmap/t Dequiv'.
+
+-	: map-subtp (kd-sub/kd/sing-kd/type Dof) (tmap/sing Dmap) tmap/t
+	   (subtp/sing_t Dof')
+	   <- map-of' Dof Dmap tmap/t Dof'.
+
+-	: map-subtp (kd-sub/kd/sgm Dsub1 Dsub2 Dwf2) (tmap/sigma Dmap2 Dmap1) (tmap/sigma Dmap2' Dmap1')
+	   (subtp/sigma Dwf2' Dsub2' Dsub1')
+	   <- map-subtp Dsub1 Dmap1 Dmap1' Dsub1'
+	   <- subtp-reg Dsub1' Dwf1 Dwf1'
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1 (eof/var Dwf1 d)
+		 -> map-subtp (Dsub2 a e) (Dmap2 a x at) (Dmap2' a x at) (Dsub2' x d))
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1' (eof/var Dwf1' d) 
+		 -> map-wf' (Dwf2 a e) (Dmap2' a x at) (Dwf2' x d)).
+
+-	: map-subtp (kd-sub/kd/pi Dsub1 Dsub2 Dwf2) (tmap/pi Dmap2 Dmap1) (tmap/pi Dmap2' Dmap1')
+	   (subtp/pi Dwf2' Dsub2' Dsub1')
+	   <- map-subtp Dsub1 Dmap1' Dmap1 Dsub1'
+	   <- subtp-reg Dsub1' Dwf1' Dwf1
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1' (eof/var Dwf1' d)
+		 -> map-subtp (Dsub2 a e) (Dmap2 a x at) (Dmap2' a x at) (Dsub2' x d))
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1 (eof/var Dwf1 d) 
+		 -> map-wf' (Dwf2 a e) (Dmap2 a x at) (Dwf2' x d)).
+
+
+%%%
+
+
+-	: map-tequiv kd-deq/kd/type tmap/t tmap/t tequiv/t.
+
+-	: map-tequiv (kd-deq/kd/sing Dequiv) (tmap/sing Dmap) (tmap/sing Dmap') (tequiv/sing Dequiv')
+	   <- map-equiv'' Dmap Dmap' Dequiv tmap/t Dequiv'.
+
+-	: map-tequiv (kd-deq/kd/sgm Dequiv1 Dequiv2) (tmap/sigma Dmap2 Dmap1) (tmap/sigma Dmap2' Dmap1') 
+	   (tequiv/sigma Dequiv2' Dequiv1')
+	   <- map-tequiv Dequiv1 Dmap1 Dmap1' Dequiv1'
+	   <- tequiv-reg Dequiv1' Dwf1' _
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1 (eof/var Dwf1' d)
+		 -> map-tequiv (Dequiv2 a e) (Dmap2 a x at) (Dmap2' a x at) (Dequiv2' x d)).
+
+-	: map-tequiv (kd-deq/kd/pi Dequiv1 Dequiv2) (tmap/pi Dmap2 Dmap1) (tmap/pi Dmap2' Dmap1') 
+	   (tequiv/symm
+	      (tequiv/pi 
+		 ([x] [d] tequiv/symm (Dequiv2' x d))
+		 Dequiv1'))
+	   <- map-tequiv Dequiv1 Dmap1' Dmap1 Dequiv1'
+	   <- tequiv-reg Dequiv1' Dwf1'' _
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1' (eof/var Dwf1'' d)
+		 -> map-tequiv (Dequiv2 a e) (Dmap2 a x at) (Dmap2' a x at) (Dequiv2' x d)).
+	      
+
+%%%
+
+
+-	: map-equiv' Dmap Dmap' (cn-deq/refl Dof) DmapA Dequiv'
+	   <- map-fun Dmap Dmap' Deq
+	   <- map-of Dof Dmap DmapA Dof'
+	   <- equiv-resp eterm-eq/i Deq etp-eq/i (equiv/reflex Dof') Dequiv'.
+
+-	: map-equiv' Dmap Dmap' (cn-deq/sym Dequiv) DmapA (equiv/symm Dequiv')
+	   <- map-equiv' Dmap' Dmap Dequiv DmapA Dequiv'.
+
+-	: map-equiv' Dmap1 Dmap3 (cn-deq/trans D12 D23) DmapA (equiv/trans D23' D12')
+	   <- can-map _ Dmap2
+	   <- map-equiv' Dmap1 Dmap2 D12 DmapA D12'
+	   <- map-equiv'' Dmap2 Dmap3 D23 DmapA D23'.
+
+-	: map-equiv' (map/app Dmap2 Dmap1) (map/app Dmap2' Dmap1') (cn-deq/cn/app Dequiv1 Dequiv2) 
+	   (DmapB _ _ Dmap2)
+	   (equiv/app Dequiv2' Dequiv1')
+	   <- map-equiv' Dmap1 Dmap1' Dequiv1 (tmap/pi DmapB DmapA) Dequiv1'
+	   <- map-equiv'' Dmap2 Dmap2' Dequiv2 DmapA Dequiv2'.
+
+-	: map-equiv' (map/pi1 Dmap) (map/pi1 Dmap') (cn-deq/cn/pj1 Dequiv)
+	   DmapA
+	   (equiv/pi1 Dequiv')
+	   <- map-equiv' Dmap Dmap' Dequiv (tmap/sigma DmapB DmapA) Dequiv'.
+
+-	: map-equiv' (map/pi2 Dmap) (map/pi2 Dmap') (cn-deq/cn/pj2 Dequiv)
+	   (DmapB _ _ (map/pi1 Dmap))
+	   (equiv/pi2 Dequiv')
+	   <- map-equiv' Dmap Dmap' Dequiv (tmap/sigma DmapB DmapA) Dequiv'.
+
+-	: map-equiv' (map/lam Dmap DmapA) (map/lam Dmap' DmapA') (cn-deq/cn/lam Dequiv2 Dequiv1) 
+	   (tmap/pi DmapB DmapA)
+	   (equiv/lam Dequiv2' Dequiv1')
+	   <- map-tequiv Dequiv1 DmapA DmapA' Dequiv1'
+	   <- tequiv-reg Dequiv1' Dwf' _
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at DmapA (eof/var Dwf' d)
+		 -> map-equiv' (Dmap a x at) (Dmap' a x at) (Dequiv2 a e) (DmapB a x at) (Dequiv2' x d)).
+
+-	: map-equiv' (map/pair Dmap2 Dmap1) (map/pair Dmap2' Dmap1') (cn-deq/cn/pair Dequiv1 Dequiv2)
+	   (tmap/sigma ([_] [_] [_] DmapB) DmapA)
+	   (equiv/pair ([_] [_] Dwf2) Dequiv2' Dequiv1')
+	   <- map-equiv' Dmap1 Dmap1' Dequiv1 DmapA Dequiv1'
+	   <- map-equiv' Dmap2 Dmap2' Dequiv2 DmapB Dequiv2'
+	   <- equiv-reg Dequiv2' _ _ Dwf2.
+
+-	: map-equiv' Dmap1 Dmap2 (cn-deq/kd/sing Dof)
+	   (tmap/sing Dmap2)
+	   (equiv/symm
+	      (equiv/sing
+		 (equiv/symm
+		    (equiv/singelim Dof'))))
+	   <- map-of' Dof Dmap1 (tmap/sing Dmap2) Dof'.
+
+-	: map-equiv' Dmap Dmap' (cn-deq/sgm-ext Dequiv1 Dequiv2)
+	   (tmap/sigma ([_] [_] [_] DmapB) DmapA)
+	   (equiv/extsigma ([_] [_] Dwf2') Dequiv2' Dequiv1')
+	   <- map-equiv' (map/pi1 Dmap) (map/pi1 Dmap') Dequiv1 DmapA Dequiv1'
+	   <- map-equiv' (map/pi2 Dmap) (map/pi2 Dmap') Dequiv2 DmapB Dequiv2'
+	   <- equiv-reg Dequiv2' _ _ Dwf2'.
+
+-	: map-equiv' Dmap Dmap' (cn-deq/pi-ext DofPre1 DofPre2 Dequiv)
+	   (tmap/pi DmapB DmapA)
+	   (equiv/extpi Dequiv' DofPre2' DofPre1')
+	   <- map-of DofPre1 Dmap (tmap/pi _ DmapA) DofPre1'
+	   <- ({x} {a} {at}
+		 can-map a at
+		 -> can-tmap _ (DmapB2 a x at))
+	   <- map-of' DofPre2 Dmap' (tmap/pi DmapB2 DmapA) DofPre2'
+	   <- eof-reg DofPre1'
+	      (ewf/pi
+		 _
+		 Dwf')
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at DmapA (eof/var Dwf' d)
+		 -> map-equiv' (map/app at Dmap) (map/app at Dmap') (Dequiv a e) (DmapB a x at) (Dequiv' x d)).
+
+-	: map-equiv' Dmap Dmap' (cn-deq/pi-ext-2 DequivPre Dequiv)
+	   (tmap/pi DmapB DmapA)
+	   (equiv/extpiw Dequiv' DequivPre')
+	   <- map-equiv' Dmap Dmap' DequivPre (tmap/pi _ DmapA) DequivPre'
+	   <- equiv-reg DequivPre' _ _
+	      (ewf/pi
+		 _
+		 Dwf')
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at DmapA (eof/var Dwf' d)
+		 -> map-equiv' (map/app at Dmap) (map/app at Dmap') (Dequiv a e) (DmapB a x at) (Dequiv' x d)).
+
+-	: map-equiv' Dmap Dmap' (cn-deq/sub Dequiv Dsub)
+	   DmapB
+	   (equiv/subsume Dsub' Dequiv')
+	   <- map-equiv' Dmap Dmap' Dequiv DmapA Dequiv'
+	   <- can-tmap _ DmapB
+	   <- map-subtp Dsub DmapA DmapB Dsub'.
+
+-	: map-equiv' Dmap Dmap' (cn-deq/deq Dequiv Dsub)
+	   DmapB
+	   (equiv/equiv Dsub' Dequiv')
+	   <- map-equiv' Dmap Dmap' Dequiv DmapA Dequiv'
+	   <- can-tmap _ DmapB
+	   <- map-tequiv Dsub DmapA DmapB Dsub'.
+
+-	: map-equiv' map/unit map/unit cn-deq/tp/unit
+	   tmap/t
+	   (equiv/reflex
+	      (eof/const ewf/t (ekof/i etopen/t ckof/unit))).
+
+-	: map-equiv' map/tagged map/tagged cn-deq/tp/tagged
+	   tmap/t
+	   (equiv/reflex
+	      (eof/const ewf/t (ekof/i etopen/t ckof/tagged))).
+
+-	: map-equiv' (map/ref Dmap) (map/ref Dmap') (cn-deq/tp/ref Dequiv)
+	   tmap/t
+	   (equiv/app
+	      Dequiv'
+	      (equiv/reflex
+		 (eof/const 
+		    (ewf/pi ([_] [_] ewf/t) ewf/t) 
+		    (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref))))
+	   <- map-equiv'' Dmap Dmap' Dequiv tmap/t Dequiv'.
+
+-	: map-equiv' (map/tag Dmap) (map/tag Dmap') (cn-deq/tp/tag Dequiv)
+	   tmap/t
+	   (equiv/app
+	      Dequiv'
+	      (equiv/reflex
+		 (eof/const 
+		    (ewf/pi ([_] [_] ewf/t) ewf/t) 
+		    (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag))))
+	   <- map-equiv'' Dmap Dmap' Dequiv tmap/t Dequiv'.
+
+-	: map-equiv' (map/arrow Dmap2 Dmap1) (map/arrow Dmap2' Dmap1') (cn-deq/tp/arrow Dequiv1 Dequiv2)
+	   tmap/t
+	   (equiv/app Dequiv2' 
+	      (equiv/app Dequiv1' 
+		 (equiv/reflex
+		    (eof/const
+		       (ewf/pi ([_] [_] ewf/pi ([_] [_] ewf/t) ewf/t) ewf/t)
+		       (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)))))
+	   <- map-equiv'' Dmap1 Dmap1' Dequiv1 tmap/t Dequiv1' 
+	   <- map-equiv'' Dmap2 Dmap2' Dequiv2 tmap/t Dequiv2'.
+
+-	: map-equiv' (map/cross Dmap2 Dmap1) (map/cross Dmap2' Dmap1') (cn-deq/tp/cross Dequiv1 Dequiv2)
+	   tmap/t
+	   (equiv/app Dequiv2' 
+	      (equiv/app Dequiv1' 
+		 (equiv/reflex
+		    (eof/const
+		       (ewf/pi ([_] [_] ewf/pi ([_] [_] ewf/t) ewf/t) ewf/t)
+		       (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)))))
+	   <- map-equiv'' Dmap1 Dmap1' Dequiv1 tmap/t Dequiv1' 
+	   <- map-equiv'' Dmap2 Dmap2' Dequiv2 tmap/t Dequiv2'.
+
+-	: map-equiv' (map/sum Dmap2 Dmap1) (map/sum Dmap2' Dmap1') (cn-deq/tp/sum Dequiv1 Dequiv2)
+	   tmap/t
+	   (equiv/app Dequiv2' 
+	      (equiv/app Dequiv1' 
+		 (equiv/reflex
+		    (eof/const
+		       (ewf/pi ([_] [_] ewf/pi ([_] [_] ewf/t) ewf/t) ewf/t)
+		       (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)))))
+	   <- map-equiv'' Dmap1 Dmap1' Dequiv1 tmap/t Dequiv1' 
+	   <- map-equiv'' Dmap2 Dmap2' Dequiv2 tmap/t Dequiv2'.
+
+-	: map-equiv' (map/forall Dmap2 Dmap1) (map/forall Dmap2' Dmap1') (cn-deq/tp/forall Dequiv2 Dequiv1)
+	   tmap/t
+	   (equiv/app
+	      (equiv/lam
+		 Dequiv2'
+		 Dequiv1')
+	      (equiv/forall Dequiv1'))
+	   <- map-tequiv Dequiv1 Dmap1 Dmap1' Dequiv1'
+	   <- tequiv-reg Dequiv1' Dwf' _
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at Dmap1 (eof/var Dwf' d)
+		 -> map-equiv'' (Dmap2 a x at) (Dmap2' a x at) (Dequiv2 a e) tmap/t (Dequiv2' x d)).
+
+-	: map-equiv' (map/mu Dmap) (map/mu Dmap') (cn-deq/cn/mu Dequiv _) 
+	   tmap/t
+	   (equiv/app
+	      (equiv/lam Dequiv' tequiv/t)
+	      (equiv/reflex
+		 (eof/const
+		    (ewf/pi ([_] [_] ewf/t) (ewf/pi ([_] [_] ewf/t) ewf/t))
+		    (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu))))
+	   <- ({x} {d} {a} {e} {at}
+		 can-map a at
+		 -> map-of e at tmap/t (eof/var ewf/t d)
+		 -> map-equiv'' (Dmap a x at) (Dmap' a x at) (Dequiv a e) tmap/t (Dequiv' x d)).
+
+
+%%%
+
+
+-	: map-equiv'' Dmap Dmap' Dequiv DmapA Dequiv''
+	   <- map-equiv' Dmap Dmap' Dequiv DmapA' Dequiv'
+	   <- tmap-fun DmapA' DmapA Deq
+	   <- equiv-resp eterm-eq/i eterm-eq/i Deq Dequiv' Dequiv''.
+
+%worlds (map-bind) (map-of _ _ _ _) (map-of' _ _ _ _) (map-wf _ _ _) (map-wf' _ _ _) (map-subtp _ _ _ _) (map-tequiv _ _ _ _) (map-equiv' _ _ _ _ _) (map-equiv'' _ _ _ _ _).
+%total (D1 D2 D3 D4 D5 D6 D7 D8) (map-of D1 _ _ _) (map-of' D2 _ _ _) (map-wf D3 _ _) (map-wf' D4 _ _) (map-subtp D5 _ _ _) (map-tequiv D6 _ _ _) (map-equiv' _ _ D7 _ _) (map-equiv'' _ _ D8 _ _).
+
+
+
+map-equiv : cn-deq C1 C2 K
+	     -> map C1 M1
+	     -> map C2 M2
+	     -> tmap K A
+	     -> equiv M1 M2 A -> type.
+%mode map-equiv +X1 -X2 -X3 -X4 -X5.
+
+-	: map-equiv Dequiv Dmap1 Dmap2 DmapA Dequiv'
+	   <- can-map _ Dmap1
+	   <- can-map _ Dmap2
+	   <- map-equiv' Dmap1 Dmap2 Dequiv DmapA Dequiv'.
+
+%worlds () (map-equiv _ _ _ _ _).
+%total {} (map-equiv _ _ _ _ _).

@@ -1,0 +1,86 @@
+
+
+sg-wf/seq	: seq/cn C1 C2
+		   -> sg-wf (K C1)
+		   -> sg-wf (K C2)
+		   -> type.
+
+%mode sg-wf/seq +D1 +D2 -D3.
+
+-	: sg-wf/seq seq/cn/refl D1 D1.
+
+%worlds (ofkd+vdt-block) (sg-wf/seq _ _ _).
+%total {} (sg-wf/seq _ _ _).
+
+
+
+fst-sg/seq	: seq/cn C1 C2
+		   -> fst-sg S (K C1)
+		   -> fst-sg S (K C2)
+		   -> type.
+
+%mode fst-sg/seq +D1 +D2 -D3.
+
+-	: fst-sg/seq seq/cn/refl D1 D1.
+
+%worlds (ofkd+vdt-block) (fst-sg/seq _ _ _).
+%total {} (fst-sg/seq _ _ _).
+
+
+
+sg-sub/seq-a	: seq/kd K1 K2
+		   -> ({a:cn} {da:ofkd a K1} sg-sub (K3 a) (K4 a))
+		   -> ({a:cn} {da:ofkd a K2} sg-sub (K3 a) (K4 a))
+		   -> type.
+
+%mode sg-sub/seq-a +D1 +D2 -D3.
+
+-	: sg-sub/seq-a seq/kd/refl D1 D1.
+
+%worlds (ofkd+vdt-block) (sg-sub/seq-a _ _ _).
+%total {} (sg-sub/seq-a _ _ _).
+
+
+
+sg-wf/seq-a	: seq/kd K1 K2
+		   -> ({a:cn} {da:ofkd a K1} sg-wf (K3 a))
+		   -> ({a:cn} {da:ofkd a K2} sg-wf (K3 a))
+		   -> type.
+
+%mode sg-wf/seq-a +D1 +D2 -D3.
+
+-	: sg-wf/seq-a seq/kd/refl D1 D1.
+
+%worlds (ofkd+vdt-block) (sg-wf/seq-a _ _ _).
+%total {} (sg-wf/seq-a _ _ _).
+
+
+
+seq/cn/sg-sub-o	: {S1: cn -> sg} 
+		   seq/cn C1 C2
+		   -> sg-sub S' (S1 C1)
+		   -> sg-sub S' (S1 C2)
+		   -> type.
+%mode seq/cn/sg-sub-o +S1 +S +D1 -D2.
+
+-	: seq/cn/sg-sub-o _ seq/cn/refl D1 D1.
+
+%worlds (ofkd+vdt-block) (seq/cn/sg-sub-o _ _ _ _).
+%total {} (seq/cn/sg-sub-o _ _ _ _).
+
+
+
+seq/cn/sg-sub-ol	: {S1: cn -> sg} 
+			   seq/cn C1 C2
+			   -> sg-sub (S1 C1) S'
+			   -> sg-sub (S1 C2) S'
+			   -> type.
+%mode seq/cn/sg-sub-ol +S1 +S +D1 -D2.
+
+-	: seq/cn/sg-sub-ol _ seq/cn/refl D1 D1.
+
+%worlds () (seq/cn/sg-sub-ol _ _ _ _).
+%total {} (seq/cn/sg-sub-ol _ _ _ _).
+
+
+

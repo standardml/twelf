@@ -1,0 +1,194 @@
+
+%{
+SIGNATURE COERCION
+}%
+
+
+%{
+The {coerce} judgement coerces an IL module to an IL signature.
+
+Input: module to be coerced; its signature; target signature.
+Output: resulting module; its signature.
+}%
+
+coerce			: module -> sg -> sg -> module -> sg -> type.
+coerce-field		: name -> module -> sg -> sg -> module -> sg -> type.
+
+coerce/named		: coerce M Sfrom (sg/named L Sto)
+			   (md/in L M'') (sg/named L S'')
+			   <- resolve M Sfrom L M' S'
+			   <- coerce-field L M' S' Sto M'' S''.
+
+coerce/sigma		: coerce M Sfrom (sg/sigma S1 S2)
+			   (md/dpair M1 M2) (sg/sigma S1' S2')
+			   <- coerce M Sfrom S1 M1 S1'
+			   <- sg-fst S1' K1'
+			   <- ({a} cn-of a K1'
+				 -> {m} md-assm m S1'
+				 -> md-fst m a
+				 -> coerce M Sfrom (S2 a) (M2 a m) (S2' a)).
+
+coerce/one		: coerce M Sfrom sg/one
+			   md/unit sg/one.
+
+
+
+coerce-field/val	: coerce-field (name/val _) M 
+			   (sg/named _ (sg/pi Sfrom ([a] sg/datom (Tfrom a)))) 
+			   (sg/named name/ordinary (sg/pi S ([a] sg/datom (T a))))
+			   (md/in name/ordinary
+			      (md/lam S
+				 ([a] [m] 
+				    md/app (md/out M) (Marg a m))))
+			   (sg/named name/ordinary (sg/pi S ([a] sg/datom (T a))))
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> instance Sfrom (Marg a m))
+			   <- ({a} {m} 
+				 md-fst m a
+				 -> md-fst (Marg a m) (Carg a))
+			   <- ({a} cn-of a K
+				 -> cn-equiv (Tfrom (Carg a)) (T a) t).
+
+coerce-field/con	: coerce-field (name/con _) M (sg/satom Kfrom) (sg/satom K)
+			   M (sg/satom Kfrom)
+			   <- kd-sub Kfrom K.
+
+coerce-field/mod	: coerce-field (name/mod _) M Sfrom S M' S'
+			   <- coerce M Sfrom S M' S'.
+
+coerce-field/fun	: coerce-field (name/fun _) M (sg/pi Sfrom1 ([a] Sfrom2 a)) (sg/pi S1 ([a] S2 a))
+			   (md/lam S1
+			      ([a] [m] 
+				 md/let
+				 (md/app M (M1 a m))
+				 ([b] [n] M2 a b n)
+				 (S2 a)))
+			   (sg/pi S1 ([a] S2 a))
+			   <- sg-fst S1 K1
+			   <- ({a} cn-of a K1
+				 -> {m} md-assm m S1
+				 -> md-fst m a
+				 -> coerce m S1 Sfrom1 (M1 a m) (S1' a))
+			   <- ({a} {m}
+				 md-fst m a
+				 -> md-fst (M1 a m) (C1 a))
+			   <- ({a}
+				 sg-fst (Sfrom2 a) (Kfrom2 a))
+			   <- ({a} cn-of a K1
+				 -> {b} cn-of b (Kfrom2 (C1 a))
+				 -> {n} md-assm n (Sfrom2 (C1 a))
+				 -> md-fst n b
+				 -> coerce n (Sfrom2 (C1 a)) (S2 a) (M2 a b n) (S2' a b)).
+
+coerce-field/sig	: coerce-field (name/sig _) M Sfrom S
+			   M S
+			   <- sg-equiv Sfrom S.
+
+coerce-field/dtc	: coerce-field (name/dtc _) M Sfrom S
+			   M S
+			   <- sg-equiv Sfrom S.
+
+coerce-field/ec		: coerce-field (name/ec _) M Sfrom S
+			   M S
+			   <- sg-equiv Sfrom S.
+
+
+
+
+%{
+IDENTIFIERS
+}%
+
+strexp-elab/longid	: strexp-elab Mec Sec (strexp/longid I) M (Ssing C)
+			   <- resolve-long Mec Sec name/mod I M S
+			   <- single-sg S Ssing
+			   <- md-fst M C.
+
+
+
+%{
+BASIC STRUCTURES
+}%
+
+strexp-elab/struct	: strexp-elab Mec Sec (strexp/struct De) M S
+			   <- dec-elab Mec Sec De M S.
+
+
+
+%{
+FUNCTOR APPLICATION
+}%
+
+strexp-elab/app		: strexp-elab Mec Sec (strexp/app I Re)
+			   (md/dpair
+			      (md/in name/hide M) 
+			      ([a] [m] md/app Mfun (Marg a (md/out m))))
+			   (sg/sigma (sg/named name/hide S) ([a] Scod (Carg a)))
+			   <- resolve-long Mec Sec name/fun I Mfun (sg/pi Sdom ([a] Scod a))
+			   <- strexp-elab Mec Sec Re M S
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> coerce m S Sdom (Marg a m) (Sarg a))
+			   <- ({a} {m}
+				 md-fst m a
+				 -> md-fst (Marg a m) (Carg a)).
+
+
+
+%{
+TRANSPARENT ASCRIPTION
+}%
+
+strexp-elab/ascribe	: strexp-elab Mec Sec (strexp/ascribe Re Se)
+			   (md/dpair
+			      (md/in name/hide M)
+			      ([a] [m] M' a (md/out m)))
+			   (sg/sigma (sg/named name/hide S) ([a] S'' a))
+			   <- strexp-elab Mec Sec Re M S
+			   <- sigexp-elab Mec Sec Se S'
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> coerce m S S' (M' a m) (S'' a)).
+
+%{
+SEALING
+}%
+
+strexp-elab/seal	: strexp-elab Mec Sec (strexp/seal Re Se)
+			   (md/let
+			      M
+			      ([a] [m] M' a m)
+			      S')
+			   S'
+			   <- strexp-elab Mec Sec Re M S
+			   <- sigexp-elab Mec Sec Se S'
+			   <- sg-fst S K
+			   <- ({a} cn-of a K
+				 -> {m} md-assm m S
+				 -> md-fst m a
+				 -> coerce m S S' (M' a m) (S'' a)).
+
+
+%{
+LET
+}%
+
+strexp-elab/let		: strexp-elab Mec Sec (strexp/let De Re)
+			   (md/dpair
+			      (md/in name/hide M1)
+			      ([a] [m] M2 a (md/out m)))
+			   (sg/sigma (sg/named name/hide S1) ([a] S2 a))
+			   <- dec-elab Mec Sec De M1 S1
+			   <- sg-fst S1 K1
+			   <- ({a} cn-of a K1
+				 -> {m} md-assm m S1
+				 -> md-fst m a
+				 -> strexp-elab (md/pair Mec m) (sg/prod Sec S1) Re (M2 a m) (S2 a)).
+				    

@@ -1,0 +1,853 @@
+
+%%%%%  Syntax  %%%%%
+
+atom		: type.  %name atom C.
+tp		: type.  %name tp A.
+term		: type.  %name term M x.
+
+
+atomic		: atom -> tp.
+lolli		: tp -> tp -> tp.
+tensor		: tp -> tp -> tp.
+with		: tp -> tp -> tp.
+plus		: tp -> tp -> tp.
+one		: tp.
+zero		: tp.
+top		: tp.
+!       	: tp -> tp.
+
+
+llam		: (term -> term) -> term.
+lapp		: term -> term -> term.
+
+tpair		: term -> term -> term.
+lett		: term -> (term -> term -> term) -> term.
+
+pair		: term -> term -> term.
+pi1		: term -> term.
+pi2		: term -> term.
+
+in1		: term -> term.
+in2		: term -> term.
+case		: term -> (term -> term) -> (term -> term) -> term.
+
+star		: term.
+leto		: term -> term -> term.
+
+any		: term -> term.
+
+unit		: term.
+
+bang		: term -> term.
+letb    	: term -> (term -> term) -> term.
+
+
+
+a		: atom.
+b		: atom.
+
+
+
+
+%%%%%  Linearity  %%%%%
+
+linear : (term -> term) -> type.
+
+linear/var	: linear ([x] x).
+
+linear/llam	: linear ([x] llam ([y] M x y))
+		   <- ({y} linear ([x] M x y)).
+
+linear/lapp1	: linear ([x] lapp (M x) N)
+		   <- linear M.
+
+linear/lapp2	: linear ([x] lapp M (N x))
+		   <- linear N.
+
+linear/tpair1	: linear ([x] tpair (M x) N)
+		   <- linear M.
+
+linear/tpair2	: linear ([x] tpair M (N x))
+		   <- linear N.
+
+linear/lett1	: linear ([x] lett (M x) ([y] [z] N y z))
+		   <- linear M.
+
+linear/lett2	: linear ([x] lett M ([y] [z] N x y z))
+		   <- ({y} {z} linear ([x] N x y z)).
+
+linear/pair	: linear ([x] pair (M x) (N x))
+		   <- linear M
+		   <- linear N.
+
+linear/pi1	: linear ([x] pi1 (M x))
+		   <- linear M.
+
+linear/pi2	: linear ([x] pi2 (M x))
+		   <- linear M.
+
+linear/in1	: linear ([x] in1 (M x))
+		   <- linear M.
+
+linear/in2	: linear ([x] in2 (M x))
+		   <- linear M.
+
+linear/case1	: linear ([x] case (M x) ([y] N1 y) ([y] N2 y))
+		   <- linear M.
+
+linear/case2	: linear ([x] case M ([y] N1 x y) ([y] N2 x y))
+		   <- ({y} linear ([x] N1 x y))
+		   <- ({y} linear ([x] N2 x y)).
+
+linear/leto1	: linear ([x] leto (M x) N)
+		   <- linear M.
+
+linear/leto2	: linear ([x] leto M (N x))
+		   <- linear N.
+
+linear/any1	: linear ([x] any (M x))
+		   <- linear M.
+
+linear/any2	: linear ([x] any M).
+
+linear/unit	: linear ([x] unit).
+
+linear/letb1	: linear ([x] letb (M x) N)
+		   <- linear M.
+
+linear/letb2	: linear ([x] letb M ([y] N x y))
+		   <- ({y} linear ([x] N x y)).
+
+
+
+
+%%%%%  Typing  %%%%%
+
+of		: term -> tp -> type.
+
+of/llam		: of (llam ([x] M x)) (lolli A B)
+		   <- ({x} of x A -> of (M x) B)
+		   <- linear ([x] M x).
+
+of/lapp		: of (lapp M N) B
+		   <- of M (lolli A B)
+		   <- of N A.
+
+of/tpair	: of (tpair M N) (tensor A B)
+		   <- of M A
+		   <- of N B.
+
+of/lett		: of (lett M ([x] [y] N x y)) C
+		   <- of M (tensor A B)
+		   <- ({x} of x A -> {y} of y B -> of (N x y) C)
+		   <- ({y} linear ([x] N x y))
+		   <- ({x} linear ([y] N x y)).
+
+of/pair		: of (pair M N) (with A B)
+		   <- of M A
+		   <- of N B.
+
+of/pi1		: of (pi1 M) A
+		   <- of M (with A B).
+
+of/pi2		: of (pi2 M) B
+		   <- of M (with A B).
+
+of/in1		: of (in1 M) (plus A B)
+		   <- of M A.
+
+of/in2		: of (in2 M) (plus A B)
+		   <- of M B.
+
+of/case		: of (case M ([x] N1 x) ([x] N2 x)) C
+		   <- of M (plus A B)
+		   <- ({x} of x A -> of (N1 x) C)
+		   <- ({x} of x B -> of (N2 x) C)
+		   <- linear ([x] N1 x)
+		   <- linear ([x] N2 x).
+
+of/star		: of star one.
+
+of/leto		: of (leto M N) T
+		   <- of M one
+		   <- of N T.
+
+of/any		: of (any M) T
+		   <- of M zero.
+
+of/unit		: of unit top.
+
+of/bang		: of (bang M) (! A)
+		   <- of M A.
+
+of/letb		: of (letb M ([x] N x)) B
+		   <- of M (! A)
+		   <- ({x} of x A -> of (N x) B).
+
+
+%block var	: block {x:term}.
+
+%block bind	: some {A:tp} block {x:term} {d:of x A}.
+
+
+
+
+%%%%%  Reduction  %%%%%
+
+reduce		: term -> term -> type.
+
+reduce/refl	: reduce M M.
+
+reduce/beta	: reduce (lapp (llam ([x] M x)) N) (M N).
+
+reduce/beta*	: reduce (lett (tpair M N) ([x] [y] O x y)) (O M N).
+
+reduce/beta&1	: reduce (pi1 (pair M N)) M.
+
+reduce/beta&2	: reduce (pi2 (pair M N)) N.
+
+reduce/beta+1	: reduce (case (in1 M) ([x] N1 x) ([x] N2 x)) (N1 M).
+
+reduce/beta+2	: reduce (case (in2 M) ([x] N1 x) ([x] N2 x)) (N2 M).
+
+reduce/betao	: reduce (leto star M) M.
+
+reduce/beta!	: reduce (letb (bang M) ([x] N x)) (N M).
+
+reduce/llam	: reduce (llam ([x] M x)) (llam ([x] M' x))
+		   <- ({x} reduce (M x) (M' x)).
+
+reduce/lapp	: reduce (lapp M N) (lapp M' N')
+		   <- reduce M M'
+		   <- reduce N N'.
+
+reduce/tpair	: reduce (tpair M N) (tpair M' N')
+		   <- reduce M M'
+		   <- reduce N N'.
+
+reduce/lett	: reduce (lett M ([x] [y] N x y)) (lett M' ([x] [y] N' x y))
+		   <- reduce M M'
+		   <- ({x} {y} reduce (N x y) (N' x y)).
+
+reduce/pair	: reduce (pair M N) (pair M' N')
+		   <- reduce M M'
+		   <- reduce N N'.
+
+reduce/pi1	: reduce (pi1 M) (pi1 M')
+		   <- reduce M M'.
+
+reduce/pi2	: reduce (pi2 M) (pi2 M')
+		   <- reduce M M'.
+
+reduce/in1	: reduce (in1 M) (in1 M')
+		   <- reduce M M'.
+
+reduce/in2	: reduce (in2 M) (in2 M')
+		   <- reduce M M'.
+
+reduce/case     : reduce (case M ([x] N1 x) ([x] N2 x)) (case M' ([x] N1' x) ([x] N2' x))
+		   <- reduce M M'
+		   <- ({x} reduce (N1 x) (N1' x))
+		   <- ({x} reduce (N2 x) (N2' x)).
+
+reduce/leto     : reduce (leto M N) (leto M' N')
+		   <- reduce M M'
+		   <- reduce N N'.
+
+reduce/any	: reduce (any M) (any M')
+		   <- reduce M M'.
+
+reduce/bang	: reduce (bang M) (bang M')
+		   <- reduce M M'.
+
+reduce/letb	: reduce (letb M ([x] N x)) (letb M' ([x] N' x))
+		   <- reduce M M'
+		   <- ({x} reduce (N x) (N' x)).
+
+
+
+
+%%%%%  Equality  %%%%%
+
+term-eq		: term -> term -> type.
+term-eq/i	: term-eq M M.
+
+
+case-resp : term-eq M1 M1' -> ({x} term-eq (M2 x) (M2' x)) -> ({x} term-eq (M3 x) (M3' x)) -> term-eq (case M1 M2 M3) (case M1' M2' M3') -> type.
+%mode case-resp +X1 +X2 +X3 -X4.
+
+-	: case-resp term-eq/i ([_] term-eq/i) ([_] term-eq/i) term-eq/i.
+
+%worlds (var) (case-resp _ _ _ _).
+%total {} (case-resp _ _ _ _).
+
+
+
+letb-resp : term-eq M1 M1' -> ({x} term-eq (M2 x) (M2' x)) -> term-eq (letb M1 M2) (letb M1' M2') -> type.
+%mode letb-resp +X1 +X2 -X3.
+
+-	: letb-resp term-eq/i ([x] term-eq/i) term-eq/i.
+
+%worlds (var) (letb-resp _ _ _).
+%total {} (letb-resp _ _ _).
+
+
+
+lett-resp : term-eq M1 M1' -> ({x} {y} term-eq (M2 x y) (M2' x y)) -> term-eq (lett M1 M2) (lett M1' M2') -> type.
+%mode lett-resp +X1 +X2 -X3.
+
+-	: lett-resp term-eq/i ([x] [y] term-eq/i) term-eq/i.
+
+%worlds (var) (lett-resp _ _ _).
+%total {} (lett-resp _ _ _).
+
+
+
+linear-resp : ({x} term-eq (M1 x) (M2 x)) -> linear M1 -> linear M2 -> type.
+%mode linear-resp +X1 +X2 -X3.
+
+-	: linear-resp ([x] term-eq/i) D D.
+
+%worlds (var) (linear-resp _ _ _).
+%total {} (linear-resp _ _ _).
+
+
+
+llam-resp : ({x} term-eq (M x) (M' x)) -> term-eq (llam M) (llam M') -> type.
+%mode llam-resp +X1 -X2.
+
+-	: llam-resp ([x] term-eq/i) term-eq/i.
+
+%worlds (var) (llam-resp _ _).
+%total {} (llam-resp _ _).
+
+
+
+term-resp-term : {N:term -> term} term-eq M M' -> term-eq (N M) (N M') -> type.
+%mode term-resp-term +X1 +X2 -X3.
+
+-	: term-resp-term _ term-eq/i term-eq/i.
+
+%worlds (var) (term-resp-term _ _ _).
+%total {} (term-resp-term _ _ _).
+
+
+
+term-resp-term2 : {N:term -> term -> term} term-eq M1 M1' -> term-eq M2 M2' -> term-eq (N M1 M2) (N M1' M2') -> type.
+%mode term-resp-term2 +X1 +X2 +X3 -X4.
+
+-	: term-resp-term2 _ term-eq/i term-eq/i term-eq/i.
+
+%worlds (var) (term-resp-term2 _ _ _ _).
+%total {} (term-resp-term2 _ _ _ _).
+
+
+
+
+%%%%%  Subject Reduction  %%%%%
+
+compose-linear : linear ([x] M1 x)
+		  -> linear ([x] M2 x)
+%%
+		  -> linear ([x] M1 (M2 x)) -> type.
+%mode compose-linear +X1 +X2 -X3.
+
+-	: compose-linear linear/var D D.
+
+-	: compose-linear (linear/llam D1) D2 (linear/llam D)
+	   <- ({y} compose-linear (D1 y) D2 (D y)).
+
+-	: compose-linear (linear/lapp1 D1) D2 (linear/lapp1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/lapp2 D1) D2 (linear/lapp2 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/tpair1 D1) D2 (linear/tpair1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/tpair2 D1) D2 (linear/tpair2 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/lett1 D1) D2 (linear/lett1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/lett2 D1) D2 (linear/lett2 D)
+	   <- ({y} {z} compose-linear (D1 y z) D2 (D y z)).
+
+-	: compose-linear (linear/pair D1b D1a) D2 (linear/pair Db Da)
+	   <- compose-linear D1a D2 Da
+	   <- compose-linear D1b D2 Db.
+
+-	: compose-linear (linear/pi1 D1) D2 (linear/pi1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/pi2 D1) D2 (linear/pi2 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/in1 D1) D2 (linear/in1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/in2 D1) D2 (linear/in2 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/case1 D1) D2 (linear/case1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/case2 D1b D1a) D2 (linear/case2 Db Da)
+	   <- ({y} compose-linear (D1a y) D2 (Da y))
+	   <- ({y} compose-linear (D1b y) D2 (Db y)).
+
+-	: compose-linear (linear/leto1 D1) D2 (linear/leto1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/leto2 D1) D2 (linear/leto2 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/any1 D1) D2 (linear/any1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear linear/any2 _ linear/any2.
+
+-	: compose-linear linear/unit _ linear/unit.
+
+-	: compose-linear (linear/letb1 D1) D2 (linear/letb1 D)
+	   <- compose-linear D1 D2 D.
+
+-	: compose-linear (linear/letb2 D1) D2 (linear/letb2 D)
+	   <- ({y} compose-linear (D1 y) D2 (D y)).
+
+%worlds (var) (compose-linear _ _ _).
+%total D (compose-linear D _ _).
+
+
+
+reduce-closed : ({x:term} reduce M1 (M2 x)) -> ({x:term} term-eq M2' (M2 x)) -> type.
+%mode reduce-closed +X1 -X2.
+
+-	: reduce-closed ([x] reduce/refl) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/beta) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/beta*) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/beta&1) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/beta&2) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/beta+1) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/beta+2) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/betao) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/beta!) ([x] term-eq/i).
+
+-	: reduce-closed ([x] reduce/llam (Dred x)) Deq'
+	   <- ({y} reduce-closed ([x] Dred x y) ([x] Deq x y))
+	   <- ({x} llam-resp (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/lapp (Dred2 x) (Dred1 x)) Deq
+	   <- reduce-closed Dred1 Deq1
+	   <- reduce-closed Dred2 Deq2
+	   <- ({x} term-resp-term2 lapp (Deq1 x) (Deq2 x) (Deq x)).
+
+-	: reduce-closed ([x] reduce/tpair (Dred2 x) (Dred1 x)) Deq
+	   <- reduce-closed Dred1 Deq1
+	   <- reduce-closed Dred2 Deq2
+	   <- ({x} term-resp-term2 tpair (Deq1 x) (Deq2 x) (Deq x)).
+
+-	: reduce-closed ([x] reduce/lett (Dred2 x) (Dred1 x)) Deq
+	   <- reduce-closed Dred1 Deq1
+	   <- ({y} {z} reduce-closed ([x] Dred2 x y z) ([x] Deq2 x y z))
+	   <- ({x} lett-resp (Deq1 x) (Deq2 x) (Deq x)).
+
+-	: reduce-closed ([x] reduce/pair (Dred2 x) (Dred1 x)) Deq
+	   <- reduce-closed Dred1 Deq1
+	   <- reduce-closed Dred2 Deq2
+	   <- ({x} term-resp-term2 pair (Deq1 x) (Deq2 x) (Deq x)).
+
+-	: reduce-closed ([x] reduce/pi1 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term pi1 (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/pi2 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term pi2 (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/in1 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term in1 (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/in2 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term in2 (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/case (Dred3 x) (Dred2 x) (Dred1 x)) Deq'
+	   <- reduce-closed Dred1 Deq1
+	   <- ({y} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
+	   <- ({y} reduce-closed ([x] Dred3 x y) ([x] Deq3 x y))
+	   <- ({x} case-resp (Deq1 x) (Deq2 x) (Deq3 x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/leto (Dred2 x) (Dred1 x)) Deq
+	   <- reduce-closed Dred1 Deq1
+	   <- (reduce-closed ([x] Dred2 x) ([x] Deq2 x))
+	   <- ({x} term-resp-term2 leto (Deq1 x) (Deq2 x) (Deq x)).
+
+-	: reduce-closed ([x] reduce/any (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term any (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/bang (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term bang (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/letb (Dred2 x) (Dred1 x)) Deq
+	   <- reduce-closed Dred1 Deq1
+	   <- ({y} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
+	   <- ({x} letb-resp (Deq1 x) (Deq2 x) (Deq x)).
+
+%worlds (var) (reduce-closed _ _).
+%total D (reduce-closed D _).
+
+
+
+sr-linear : ({x} reduce (M x) (M' x)) 
+	     -> ({x} of x A -> of (M x) B)
+	     -> linear M
+%%
+	     -> linear M' 
+	     -> type.
+%mode sr-linear +X1 +X2 +X3 -X4.
+
+-	: sr-linear ([x] reduce/refl) _ D D.
+
+-	: sr-linear ([x] reduce/beta : reduce (lapp (llam (M1 x)) M2) _)
+	   ([x] [d] of/lapp (Dof2 x d : of _ T2) (Dof1 x d : of _ (lolli T2 T1)))
+	   (linear/lapp1 (linear/llam Dlin))
+	   (Dlin M2).
+
+-	: sr-linear ([x] reduce/beta : reduce (lapp (llam M1) (M2 x)) _)
+	   ([x] [d] of/lapp (Dof2 x d : of _ T2) (of/llam (Dlin1 x) _ : of _ (lolli T2 T1)))
+	   (linear/lapp2 Dlin)
+	   Dlin'
+	   <- compose-linear (Dlin1 unit) Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/beta* : reduce (lett (tpair (M1 x) M2) M) _)
+	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d : of _ (tensor T1 T2)))
+	   (linear/lett1 (linear/tpair1 Dlin))
+	   Dlin'
+	   <- compose-linear (Dlin1 unit M2) Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/beta* : reduce (lett (tpair M1 (M2 x)) M) _)
+	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d : of _ (tensor T1 T2)))
+	   (linear/lett1 (linear/tpair2 Dlin))
+	   Dlin'
+	   <- compose-linear (Dlin2 unit M1) Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/beta* : reduce (lett (tpair M1 M2) (M x)) _)
+	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d : of _ (tensor T1 T2)))
+	   (linear/lett2 Dlin)
+	   (Dlin M1 M2).
+
+-	: sr-linear ([x] reduce/beta&1 : reduce (pi1 (pair (M1 x) (M2 x))) _)
+	   ([x] [d] of/pi1 (_ : of _ (with A B)))
+	   (linear/pi1 (linear/pair Dlin2 Dlin1))
+	   Dlin1.
+
+-	: sr-linear ([x] reduce/beta&2 : reduce (pi2 (pair (M1 x) (M2 x))) _)
+	   ([x] [d] of/pi2 (_ : of _ (with A B)))
+	   (linear/pi2 (linear/pair Dlin2 Dlin1))
+	   Dlin2.
+
+-	: sr-linear ([x] reduce/beta+1 : reduce (case (in1 (M x)) M1 M2) _)
+	   ([x] [d] of/case (Dlin2 x) (Dlin1 x) _ _ (_ : of _ (plus T1 T2)))
+	   (linear/case1 (linear/in1 Dlin))
+	   Dlin'
+	   <- compose-linear (Dlin1 unit) Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/beta+1 : reduce (case (in1 M) (M1 x) (M2 x)) _)
+	   ([x] [d] of/case (Dlin2 x) (Dlin1 x) _ _ (_ : of _ (plus T1 T2)))
+	   (linear/case2 Dlin2' Dlin1')
+	   (Dlin1' M).
+
+-	: sr-linear ([x] reduce/beta+2 : reduce (case (in2 (M x)) M1 M2) _)
+	   ([x] [d] of/case (Dlin2 x) (Dlin1 x) _ _ (_ : of _ (plus T1 T2)))
+	   (linear/case1 (linear/in2 Dlin))
+	   Dlin'
+	   <- compose-linear (Dlin2 unit) Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/beta+2 : reduce (case (in2 M) (M1 x) (M2 x)) _)
+	   ([x] [d] of/case (Dlin2 x) (Dlin1 x) _ _ (_ : of _ (plus T1 T2)))
+	   (linear/case2 Dlin2' Dlin1')
+	   (Dlin2' M).
+
+-	: sr-linear ([x] reduce/betao : reduce (leto star (M x)) _) _
+	   (linear/leto2 Dlin)
+	   Dlin.
+
+-	: sr-linear ([x] reduce/beta! : reduce (letb (bang M) ([y] N x y)) _)
+	   _
+	   (linear/letb2 Dlin)
+	   (Dlin M).
+
+-	: sr-linear ([x] reduce/llam (Dred x))
+	   ([x] [d] of/llam (Dlin1 x) (Dof x d))
+	   (linear/llam Dlin)
+	   (linear/llam Dlin')
+	   <- ({y} {e} 
+		 sr-linear ([x] Dred x y) ([x] [d] Dof x d y e) (Dlin y) (Dlin' y)).
+
+-	: sr-linear ([x] reduce/lapp (Dred2 x) (Dred1 x))
+	   ([x] [d] of/lapp (Dof2 x d) (Dof1 x d))
+	   (linear/lapp1 Dlin)
+	   Dlin''
+	   <- sr-linear Dred1 Dof1 Dlin Dlin'
+	   <- reduce-closed Dred2 Deq
+	   <- ({x} term-resp-term2 lapp term-eq/i (Deq x) (Deq' x))
+	   <- linear-resp Deq' (linear/lapp1 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/lapp (Dred2 x) (Dred1 x))
+	   ([x] [d] of/lapp (Dof2 x d) (Dof1 x d))
+	   (linear/lapp2 Dlin)
+	   Dlin''
+	   <- sr-linear Dred2 Dof2 Dlin Dlin'
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} term-resp-term2 lapp (Deq x) term-eq/i (Deq' x))
+	   <- linear-resp Deq' (linear/lapp2 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/tpair (Dred2 x) (Dred1 x))
+	   ([x] [d] of/tpair (Dof2 x d) (Dof1 x d))
+	   (linear/tpair1 Dlin)
+	   Dlin''
+	   <- sr-linear Dred1 Dof1 Dlin Dlin'
+	   <- reduce-closed Dred2 Deq
+	   <- ({x} term-resp-term2 tpair term-eq/i (Deq x) (Deq' x))
+	   <- linear-resp Deq' (linear/tpair1 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/tpair (Dred2 x) (Dred1 x))
+	   ([x] [d] of/tpair (Dof2 x d) (Dof1 x d))
+	   (linear/tpair2 Dlin)
+	   Dlin''
+	   <- sr-linear Dred2 Dof2 Dlin Dlin'
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} term-resp-term2 tpair (Deq x) term-eq/i (Deq' x))
+	   <- linear-resp Deq' (linear/tpair2 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/lett (Dred2 x) (Dred1 x))
+	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d))
+	   (linear/lett1 Dlin)
+	   Dlin''
+	   <- sr-linear Dred1 Dof1 Dlin Dlin'
+	   <- ({y} {z} reduce-closed ([x] Dred2 x y z) ([x] Deq x y z))
+	   <- ({x} lett-resp term-eq/i (Deq x) (Deq' x))
+	   <- linear-resp Deq' (linear/lett1 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/lett (Dred2 x) (Dred1 x))
+	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d))
+	   (linear/lett2 Dlin)
+	   Dlin''
+	   <- ({y} {e} {z} {f} 
+		 sr-linear ([x] Dred2 x y z) ([x] [d] Dof2 x d y e z f) (Dlin y z) (Dlin' y z))
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} lett-resp (Deq x) ([_] [_] term-eq/i) (Deq' x))
+	   <- linear-resp Deq' (linear/lett2 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/pair (Dred2 x) (Dred1 x))
+	   ([x] [d] of/pair (Dof2 x d) (Dof1 x d))
+	   (linear/pair Dlin2 Dlin1)
+	   (linear/pair Dlin2' Dlin1')
+	   <- sr-linear Dred1 Dof1 Dlin1 Dlin1'
+	   <- sr-linear Dred2 Dof2 Dlin2 Dlin2'.
+
+-	: sr-linear ([x] reduce/pi1 (Dred x))
+	   ([x] [d] of/pi1 (Dof x d))
+	   (linear/pi1 Dlin)
+	   (linear/pi1 Dlin')
+	   <- sr-linear Dred Dof Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/pi2 (Dred x))
+	   ([x] [d] of/pi2 (Dof x d))
+	   (linear/pi2 Dlin)
+	   (linear/pi2 Dlin')
+	   <- sr-linear Dred Dof Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/in1 (Dred x))
+	   ([x] [d] of/in1 (Dof x d))
+	   (linear/in1 Dlin)
+	   (linear/in1 Dlin')
+	   <- sr-linear Dred Dof Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/in2 (Dred x))
+	   ([x] [d] of/in2 (Dof x d))
+	   (linear/in2 Dlin)
+	   (linear/in2 Dlin')
+	   <- sr-linear Dred Dof Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/case (Dred3 x) (Dred2 x) (Dred1 x))
+	   ([x] [d] of/case (Dlin3 x) (Dlin2 x) (Dof3 x d) (Dof2 x d) (Dof1 x d))
+	   (linear/case1 Dlin)
+	   Dlin''
+	   <- sr-linear Dred1 Dof1 Dlin Dlin'
+	   <- ({y} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
+	   <- ({y} reduce-closed ([x] Dred3 x y) ([x] Deq3 x y))
+	   <- ({x} case-resp term-eq/i (Deq2 x) (Deq3 x) (Deq' x))
+	   <- linear-resp Deq' (linear/case1 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/case (Dred3 x) (Dred2 x) (Dred1 x))
+	   ([x] [d] of/case (Dlin3 x) (Dlin2 x) (Dof3 x d) (Dof2 x d) (Dof1 x d))
+	   (linear/case2 Dlin3' Dlin2')
+	   Dlin''
+	   <- ({x'} {d'} 
+		 sr-linear ([x] Dred2 x x') ([x] [d] Dof2 x d x' d') (Dlin2' x') (Dlin2'' x'))
+	   <- ({x'} {d'}
+		 sr-linear ([x] Dred3 x x') ([x] [d] Dof3 x d x' d') (Dlin3' x') (Dlin3'' x'))
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} case-resp (Deq x) ([y] term-eq/i) ([y] term-eq/i) (Deq' x))
+	   <- linear-resp Deq' (linear/case2 Dlin3'' Dlin2'') Dlin''.
+
+-	: sr-linear ([x] reduce/leto (Dred2 x) (Dred1 x))
+	   ([x] [d] of/leto (Dof2 x d) (Dof1 x d))
+	   (linear/leto1 Dlin)
+	   Dlin''
+	   <- sr-linear Dred1 Dof1 Dlin Dlin'
+	   <- reduce-closed Dred2 Deq
+	   <- ({x} term-resp-term2 leto term-eq/i (Deq x) (Deq' x))
+	   <- linear-resp Deq' (linear/leto1 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/leto (Dred2 x) (Dred1 x))
+	   ([x] [d] of/leto (Dof2 x d) (Dof1 x d))
+	   (linear/leto2 Dlin)
+	   Dlin''
+	   <- sr-linear Dred2 Dof2 Dlin Dlin'
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} term-resp-term2 leto (Deq x) term-eq/i (Deq' x))
+	   <- linear-resp Deq' (linear/leto2 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/any (Dred x))
+	   ([x] [d] of/any (Dof x d))
+	   (linear/any1 Dlin)
+	   (linear/any1 Dlin')
+	   <- sr-linear Dred Dof Dlin Dlin'.
+
+-	: sr-linear ([x] reduce/any (Dred x))
+	   ([x] [d] of/any (Dof x d))
+	   linear/any2
+	   Dlin
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term any (Deq x) (Deq' x))
+	   <- linear-resp Deq' linear/any2 Dlin.
+
+-	: sr-linear ([x] reduce/letb (Dred2 x) (Dred1 x))
+	   ([x] [d] of/letb (Dof2 x d) (Dof1 x d))
+	   (linear/letb1 Dlin)
+	   Dlin''
+	   <- sr-linear Dred1 Dof1 Dlin Dlin'
+	   <- ({y} reduce-closed ([x] Dred2 x y) ([x] Deq x y))
+	   <- ({x} letb-resp term-eq/i ([y] Deq x y) (Deq' x))
+	   <- linear-resp Deq' (linear/letb1 Dlin') Dlin''.
+
+-	: sr-linear ([x] reduce/letb ([y] Dred2 x y) (Dred1 x))
+	   ([x] [d] of/letb ([y] [e] Dof2 x d y e) (Dof1 x d))
+	   (linear/letb2 Dlin)
+	   Dlin''
+	   <- ({y} {e}
+		 sr-linear ([x] Dred2 x y) ([x] [d] Dof2 x d y e) (Dlin y) (Dlin' y))
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} letb-resp (Deq x) ([_] term-eq/i) (Deq' x))
+	   <- linear-resp Deq' (linear/letb2 Dlin') Dlin''.
+
+%worlds (bind) (sr-linear _ _ _ _).
+%total D (sr-linear D _ _ _).
+
+
+
+sr-of : reduce M M' 
+	 -> of M T
+%%
+	 -> of M' T 
+	 -> type.
+%mode sr-of +X1 +X2 -X3.
+
+-	: sr-of reduce/refl D D.
+
+-	: sr-of reduce/beta (of/lapp Dof2 (of/llam _ Dof1)) (Dof1 _ Dof2).
+
+-	: sr-of reduce/beta* (of/lett Dlin2 Dlin1 Dof (of/tpair Dof2 Dof1)) (Dof _ Dof1 _ Dof2).
+
+-	: sr-of reduce/beta&1 (of/pi1 (of/pair Dof2 Dof1)) Dof1.
+
+-	: sr-of reduce/beta&2 (of/pi2 (of/pair Dof2 Dof1)) Dof2.
+
+-	: sr-of reduce/beta+1 (of/case _ _ Dof2 Dof1 (of/in1 Dof')) (Dof1 _ Dof').
+
+-	: sr-of reduce/beta+2 (of/case _ _ Dof2 Dof1 (of/in2 Dof')) (Dof2 _ Dof').
+
+-	: sr-of reduce/betao (of/leto Dof _) Dof.
+
+-	: sr-of reduce/beta! (of/letb Dof2 (of/bang Dof1)) (Dof2 _ Dof1).
+
+-	: sr-of (reduce/llam Dred) (of/llam Dlin Dof) (of/llam Dlin' Dof')
+	   <- ({x} {d} 
+		 sr-of (Dred x) (Dof x d) (Dof' x d))
+	   <- sr-linear Dred Dof Dlin Dlin'.
+
+-	: sr-of (reduce/lapp Dred2 Dred1) (of/lapp Dof2 Dof1) (of/lapp Dof2' Dof1')
+	   <- sr-of Dred1 Dof1 Dof1'
+	   <- sr-of Dred2 Dof2 Dof2'.
+
+-	: sr-of (reduce/tpair Dred2 Dred1) (of/tpair Dof2 Dof1) (of/tpair Dof2' Dof1')
+	   <- sr-of Dred1 Dof1 Dof1'
+	   <- sr-of Dred2 Dof2 Dof2'.
+
+-	: sr-of (reduce/lett Dred2 Dred1) (of/lett Dlin2 Dlin1 Dof2 Dof1) (of/lett Dlin2' Dlin1' Dof2' Dof1')
+	   <- sr-of Dred1 Dof1 Dof1'
+	   <- ({x} {d:of x T1} {y} {e:of y T2}
+		 sr-of (Dred2 x y) (Dof2 x d y e) (Dof2' x d y e))
+	   <- ({y} {e:of y T2}
+		 sr-linear ([x] Dred2 x y) ([x] [d] Dof2 x d y e) (Dlin1 y) (Dlin1' y))
+	   <- ({x} {d:of x T1}
+		 sr-linear ([y] Dred2 x y) ([y] [e] Dof2 x d y e) (Dlin2 x) (Dlin2' x)).
+
+-	: sr-of (reduce/pair Dred2 Dred1) (of/pair Dof2 Dof1) (of/pair Dof2' Dof1')
+	   <- sr-of Dred1 Dof1 Dof1'
+	   <- sr-of Dred2 Dof2 Dof2'.
+
+-	: sr-of (reduce/pi1 Dred) (of/pi1 Dof) (of/pi1 Dof')
+	   <- sr-of Dred Dof Dof'.
+
+-	: sr-of (reduce/pi2 Dred) (of/pi2 Dof) (of/pi2 Dof')
+	   <- sr-of Dred Dof Dof'.
+
+-	: sr-of (reduce/in1 Dred) (of/in1 Dof) (of/in1 Dof')
+	   <- sr-of Dred Dof Dof'.
+
+-	: sr-of (reduce/in2 Dred) (of/in2 Dof) (of/in2 Dof')
+	   <- sr-of Dred Dof Dof'.
+
+-	: sr-of (reduce/case Dred3 Dred2 Dred1) (of/case Dlin3 Dlin2 Dof3 Dof2 Dof1) (of/case Dlin3' Dlin2' Dof3' Dof2' Dof1')
+	   <- sr-of Dred1 Dof1 Dof1'
+	   <- ({x} {d} 
+		 sr-of (Dred2 x) (Dof2 x d) (Dof2' x d))
+	   <- ({x} {d}
+		 sr-of (Dred3 x) (Dof3 x d) (Dof3' x d))
+	   <- sr-linear Dred2 Dof2 Dlin2 Dlin2'
+	   <- sr-linear Dred3 Dof3 Dlin3 Dlin3'.
+
+-	: sr-of (reduce/leto Dred2 Dred1) (of/leto Dof2 Dof1) (of/leto Dof2' Dof1')
+	   <- sr-of Dred1 Dof1 Dof1'
+	   <- sr-of Dred2 Dof2 Dof2'.
+
+-	: sr-of (reduce/any Dred) (of/any Dof) (of/any Dof')
+	   <- sr-of Dred Dof Dof'.
+
+-	: sr-of (reduce/bang Dred) (of/bang Dof) (of/bang Dof')
+	   <- sr-of Dred Dof Dof'.
+
+-	: sr-of (reduce/letb Dred2 Dred1) (of/letb Dof2 Dof1) (of/letb Dof2' Dof1')
+	   <- sr-of Dred1 Dof1 Dof1'
+	   <- ({x} {d}
+		 sr-of (Dred2 x) (Dof2 x d) (Dof2' x d)).
+
+%worlds (bind) (sr-of _ _ _).
+%total D (sr-of D _ _).

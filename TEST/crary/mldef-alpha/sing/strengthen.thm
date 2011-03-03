@@ -1,0 +1,764 @@
+
+%%%%%  Substitution for Absent Variables  %%%%%
+
+aasub-absent : {R} {M} aasub ([_] R) M R -> type.
+%mode aasub-absent +X1 +X2 -X3.
+
+-	: aasub-absent R M aasub/closed.
+
+%worlds (var | topenblock) (aasub-absent _ _ _).
+%total {} (aasub-absent _ _ _).
+
+
+
+sub-absent : {N} {M} sub ([_] N) M N -> type.
+%mode sub-absent +X1 +X2 -X3.
+
+-at	: sub-absent (at R) M (sub/aa aasub/closed).
+
+-lam	: sub-absent (lam N) M (sub/lam D)
+	   <- ({y}
+		 sub-absent (N y) M (D y)).
+
+-pair	: sub-absent (pair N1 N2) M (sub/pair D2 D1)
+	   <- sub-absent N1 M D1
+	   <- sub-absent N2 M D2.
+
+-star	: sub-absent star _ sub/star.
+
+%worlds (var | topenblock) (sub-absent _ _ _).
+%total N (sub-absent N _ _).
+
+
+
+tsub-absent : {A} {M} tsub ([_] A) M A -> type.
+%mode tsub-absent +X1 +X2 -X3.
+
+-t	: tsub-absent t M tsub/t.
+
+-pi	: tsub-absent (pi A1 A2) M (tsub/pi D2 D1)
+	   <- tsub-absent A1 M D1
+	   <- ({y}
+		 tsub-absent (A2 y) M (D2 y)).
+
+-sigma	: tsub-absent (sigma A1 A2) M (tsub/sigma D2 D1)
+	   <- tsub-absent A1 M D1
+	   <- ({y}
+		 tsub-absent (A2 y) M (D2 y)).
+
+-sing	: tsub-absent (sing R) M (tsub/singa aasub/closed).
+
+-one	: tsub-absent one _ tsub/one.
+
+%worlds (var | topenblock) (tsub-absent _ _ _).
+%total A (tsub-absent A _ _).
+
+
+
+
+%%%%%  Substitution Strengthening  %%%%%
+
+aasub-closed : ({x:atom} aasub R M (Q x)) -> ({x} atom-eq (Q x) Q') -> type.
+%mode aasub-closed +X1 -X2.
+
+aosub-closed : ({x:atom} aosub R M (N x)) -> ({x} term-eq (N x) N') -> type.
+%mode aosub-closed +X1 -X2.
+
+sub-closed : ({x:atom} sub N M (O x)) -> ({x:atom} term-eq (O x) O') -> type.
+%mode sub-closed +X1 -X2.
+
+tsub-closed : ({x:atom} tsub A M (B x)) -> ({x:atom} tp-eq (B x) B') -> type.
+%mode tsub-closed +X1 -X2.
+
+
+-closed	: aasub-closed ([_] aasub/closed) ([_] atom-eq/i).
+
+-app	: aasub-closed ([x] aasub/app (D2 x) (D1 x)) Deq
+	   <- aasub-closed D1 Deq1
+	   <- sub-closed D2 Deq2
+	   <- ({x} app-resp (Deq1 x) (Deq2 x) (Deq x)).
+
+-pi1	: aasub-closed ([x] aasub/pi1 (D1 x)) Deq'
+	   <- aasub-closed D1 Deq
+	   <- ({x} atom-resp-atom pi1 (Deq x) (Deq' x)).
+
+-pi2	: aasub-closed ([x] aasub/pi2 (D1 x)) Deq'
+	   <- aasub-closed D1 Deq
+	   <- ({x} atom-resp-atom pi2 (Deq x) (Deq' x)).
+
+
+-var	: aosub-closed ([_] aosub/var) ([_] term-eq/i).
+
+-app	: aosub-closed ([x] aosub/app (D3 x) (D2 x) (D1 x)) Deq
+	   <- aosub-closed D1 Deq1
+	   <- ({x} term-eq-cdr-lam (Deq1 x) (Deq1' x))
+	   <- sub-closed D2 Deq2
+	   <- sub-resp1 Deq1' Deq2 ([_] term-eq/i) D3 D3'
+	   <- sub-closed D3' Deq.
+
+-pi1	: aosub-closed ([x] aosub/pi1 (D1 x)) Deq1
+	   <- aosub-closed D1 Deq
+	   <- ({x} term-eq-cdr-pair (Deq x) (Deq1 x) (Deq2 x)).
+
+-pi2	: aosub-closed ([x] aosub/pi2 (D1 x)) Deq2
+	   <- aosub-closed D1 Deq
+	   <- ({x} term-eq-cdr-pair (Deq x) (Deq1 x) (Deq2 x)).
+
+
+-aa	: sub-closed ([x] sub/aa (D1 x)) Deq'
+	   <- aasub-closed D1 Deq
+	   <- ({x} term-resp-atom at (Deq x) (Deq' x)).
+
+-ao	: sub-closed ([x] sub/ao (D1 x)) Deq
+	   <- aosub-closed D1 Deq.
+
+-lam	: sub-closed ([x] sub/lam (D1 x)) Deq'
+	   <- ({y} sub-closed ([x] D1 x y) ([x] Deq x y))
+	   <- ({x} lam-resp (Deq x) (Deq' x)).
+
+-pair	: sub-closed ([x] sub/pair (D2 x) (D1 x)) Deq
+	   <- sub-closed D1 Deq1
+	   <- sub-closed D2 Deq2
+	   <- ({x} pair-resp (Deq1 x) (Deq2 x) (Deq x)).
+
+-star	: sub-closed ([x] sub/star) ([_] term-eq/i).
+
+
+
+
+
+
+-t	: tsub-closed ([_] tsub/t) ([_] tp-eq/i).
+
+-pi	: tsub-closed ([x] tsub/pi (D2 x) (D1 x)) Deq
+	   <- tsub-closed D1 Deq1
+	   <- ({y} tsub-closed ([x] D2 x y) ([x] Deq2 x y))
+	   <- ({x} pi-resp (Deq1 x) (Deq2 x) (Deq x)).
+
+-sigma	: tsub-closed ([x] tsub/sigma (D2 x) (D1 x)) Deq
+	   <- tsub-closed D1 Deq1
+	   <- ({y} tsub-closed ([x] D2 x y) ([x] Deq2 x y))
+	   <- ({x} sigma-resp (Deq1 x) (Deq2 x) (Deq x)).
+
+-singa	: tsub-closed ([x] tsub/singa (D1 x)) Deq'
+	   <- aasub-closed D1 Deq
+	   <- ({x} tp-resp-atom sing (Deq x) (Deq' x)).
+
+-singo	: tsub-closed ([x] tsub/singo (D1 x)) Deq''
+	   <- aosub-closed D1 Deq
+	   <- ({x} term-eq-cdr-at (Deq x) (Deq' x))
+	   <- ({x} tp-resp-atom sing (Deq' x) (Deq'' x)).
+
+-one	: tsub-closed ([x] tsub/one) ([_] tp-eq/i).
+
+%worlds (var | topenblock) (aasub-closed _ _) (aosub-closed _ _) (sub-closed _ _) (tsub-closed _ _).
+%total (D1 D2 D3 D4) (aasub-closed D1 _) (aosub-closed D2 _) (sub-closed D3 _) (tsub-closed D4 _).
+
+
+
+sub-closed' : ({x:atom} sub N M (O x)) -> sub N M O' -> type.
+%mode sub-closed' +X1 -X2.
+
+-	: sub-closed' Dsub (Dsub' aca)
+	   <- sub-closed Dsub Deq
+	   <- ({x} sub-resp ([_] term-eq/i) term-eq/i (Deq x) (Dsub x) (Dsub' x)).
+
+%worlds (var | topenblock) (sub-closed' _ _).
+%total {} (sub-closed' _ _).
+
+
+
+
+%%%%%  Kof  %%%%%
+
+csimp : ctp -> stp -> type.
+
+csimp/t		: csimp ct st.
+csimp/pi	: csimp (cpi A B) (spi S T)
+		   <- csimp A S
+		   <- ({x} csimp (B x) T).
+csimp/sigma	: csimp (csigma A B) (ssigma S T)
+		   <- csimp A S
+		   <- ({x} csimp (B x) T).
+csimp/sing	: csimp (csing R) st.
+csimp/one	: csimp cone sone.
+
+
+
+can-csimp : {A} csimp A T -> type.
+%mode can-csimp +X1 -X2.
+
+-t	: can-csimp ct csimp/t.
+
+-pi	: can-csimp (cpi A B) (csimp/pi D2 D1)
+	   <- can-csimp A D1
+	   <- ({x} can-csimp (B x) (D2 x)).
+
+-sigma	: can-csimp (csigma A B) (csimp/sigma D2 D1)
+	   <- can-csimp A D1
+	   <- ({x} can-csimp (B x) (D2 x)).
+
+-sing	: can-csimp (csing R) csimp/sing.
+
+-one	: can-csimp cone csimp/one.
+
+%worlds (catomblock | topenblock) (can-csimp _ _).
+%total A (can-csimp A _).
+
+
+
+can-cexpand* : {R} {T} csimp A T -> cexpand R A M -> type.
+%mode can-cexpand* +X1 +X2 +X3 -X4.
+
+-	: can-cexpand* _ _ _ cexpand/t.
+
+-	: can-cexpand* _ _ (csimp/pi Dsimp2 Dsimp1) (cexpand/pi D2 D1)
+	   <- ({x} can-cexpand* _ _ Dsimp1 (D1 x))
+	   <- ({x} can-cexpand* _ _ (Dsimp2 x) (D2 x)).
+
+-	: can-cexpand* _ _ (csimp/sigma (Dsimp2 : {x} csimp (B x) T) Dsimp1) (cexpand/sigma D2 D1)
+	   <- can-cexpand* _ _ Dsimp1 D1
+	   <- can-cexpand* _ _ (Dsimp2 _) D2.
+
+-	: can-cexpand* _ _ _ cexpand/sing.
+
+-	: can-cexpand* _ _ _ cexpand/one.
+
+%worlds (catomblock | topenblock) (can-cexpand* _ _ _ _).
+%total T (can-cexpand* _ T _ _).
+
+
+
+can-cexpand : {R} {A} cexpand R A M -> type.
+%mode can-cexpand +X1 +X2 -X3.
+
+-	: can-cexpand R A Dexpand
+	   <- can-csimp A Dsimp
+	   <- can-cexpand* _ _ Dsimp Dexpand.
+
+%worlds (catomblock | topenblock) (can-cexpand _ _ _).
+%total {} (can-cexpand _ _ _).
+
+
+
+can-cskof : {K} cskof K A B -> type.
+%mode can-cskof +X1 -X2.
+
+-	: can-cskof _ cskof/t.
+
+-	: can-cskof _ (cskof/pi Dexpand D2 D1)
+	   <- can-cskof _ D1
+	   <- can-cskof _ D2
+	   <- ({y} {x} can-cexpand _ _ (Dexpand y x)).
+
+-	: can-cskof _ (cskof/sigma Dexpand D2 D1)
+	   <- can-cskof _ D1
+	   <- can-cskof _ D2
+	   <- ({y} {x} can-cexpand _ _ (Dexpand y x)).
+
+-	: can-cskof _ cskof/sing.
+
+-	: can-cskof _ cskof/one.
+
+%worlds (catomblock | topenblock) (can-cskof _ _).
+%total K (can-cskof K _).
+
+
+
+cexpand-fun : cexpand R A M -> cexpand R A M' -> cterm-eq M M' -> type.
+%mode cexpand-fun +X1 +X2 -X3.
+
+-	: cexpand-fun cexpand/t cexpand/t cterm-eq/i.
+
+-	: cexpand-fun (cexpand/pi Dcexpand2 Dcexpand1) (cexpand/pi Dcexpand2' Dcexpand1') Deq
+	   <- ({x} cexpand-fun (Dcexpand1 x) (Dcexpand1' x) (Deq1 x))
+	   <- ({x} catom-resp-cterm ([m] capp R m) (Deq1 x) (Deq1' x))
+	   <- ({x} cexpand-resp (Deq1' x) ctp-eq/i cterm-eq/i (Dcexpand2 x) (Dcexpand2'' x))
+	   <- ({x} cexpand-fun (Dcexpand2'' x) (Dcexpand2' x) (Deq2 x))
+	   <- clam-resp ctp-eq/i Deq2 Deq.
+
+-	: cexpand-fun (cexpand/sigma Dcexpand2 Dcexpand1) (cexpand/sigma Dcexpand2' Dcexpand1') Deq
+	   <- cexpand-fun Dcexpand1 Dcexpand1' Deq1
+	   <- cexpand-fun Dcexpand2 Dcexpand2' Deq2
+	   <- cterm-resp-cterm2 cpair Deq1 Deq2 Deq.
+
+-	: cexpand-fun cexpand/sing cexpand/sing cterm-eq/i.
+
+-	: cexpand-fun cexpand/one cexpand/one cterm-eq/i.
+
+%worlds (catomblock | topenblock) (cexpand-fun _ _ _).
+%total D (cexpand-fun _ D _).
+
+
+
+cskof-fun : cskof K A1 B1 -> cskof K A2 B2 -> ctp-eq A1 A2 -> ({x} ctp-eq (B1 x) (B2 x)) -> type.
+%mode cskof-fun +X1 +X2 -X3 -X4.
+
+-	: cskof-fun cskof/t cskof/t ctp-eq/i ([_] ctp-eq/i).
+
+cskof-fun-eq : {F:ctp -> (catom -> ctp) -> ctp}
+		ctp-eq C C'
+		-> ctp-eq D D'
+		-> ({x} ctp-eq (A x) (A' x))
+		-> ({x} ctp-eq (B x) (B' x))
+		-> ({y} {x} cterm-eq (X y x) (X' y x))
+		-> ctp-eq (csigma C ([y] cpi (A y) ([_] D))) (csigma C' ([y] cpi (A' y) ([_] D')))
+		-> ({w} ctp-eq (F (A (cpi1 w)) ([x] B (capp (cpi2 w) (X (cpi1 w) x)))) (F (A' (cpi1 w)) ([x] B' (capp (cpi2 w) (X' (cpi1 w) x)))))
+		-> type.
+%mode cskof-fun-eq +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+-	: cskof-fun-eq F _ _ (_ : {x} ctp-eq (A x) (A x)) (_ : {x} ctp-eq (B x) (B x)) (_ : {y} {x} cterm-eq (M y x) (M y x)) ctp-eq/i ([_] ctp-eq/i).
+
+%worlds (catomblock | topenblock) (cskof-fun-eq _ _ _ _ _ _ _ _).
+%total {} (cskof-fun-eq _ _ _ _ _ _ _ _).
+
+-	: cskof-fun (cskof/pi Dexp Db Da) (cskof/pi Dexp' Db' Da') Deq1 Deq2
+	   <- cskof-fun Da Da' DeqC DeqA
+	   <- cskof-fun Db Db' DeqD DeqB
+	   <- ({y} {x} cexpand-resp catom-eq/i (DeqA y) cterm-eq/i (Dexp y x) (Dexp'' y x))
+	   <- ({y} {x} cexpand-fun (Dexp'' y x) (Dexp' y x) (DeqX y x))
+	   <- cskof-fun-eq cpi DeqC DeqD DeqA DeqB DeqX Deq1 Deq2.
+
+-	: cskof-fun (cskof/sigma Dexp Db Da) (cskof/sigma Dexp' Db' Da') Deq1 Deq2
+	   <- cskof-fun Da Da' DeqC DeqA
+	   <- cskof-fun Db Db' DeqD DeqB
+	   <- ({y} {x} cexpand-resp catom-eq/i (DeqA y) cterm-eq/i (Dexp y x) (Dexp'' y x))
+	   <- ({y} {x} cexpand-fun (Dexp'' y x) (Dexp' y x) (DeqX y x))
+	   <- cskof-fun-eq csigma DeqC DeqD DeqA DeqB DeqX Deq1 Deq2.
+
+-	: cskof-fun cskof/sing cskof/sing ctp-eq/i ([_] ctp-eq/i).
+
+-	: cskof-fun cskof/one cskof/one ctp-eq/i ([_] ctp-eq/i).
+
+%worlds (catomblock | topenblock) (cskof-fun _ _ _ _).
+%total D (cskof-fun D _ _ _).
+
+
+
+topen-fun : topen A B -> topen A B' -> tp-eq B B' -> type.
+%mode topen-fun +X1 +X2 -X3.
+
+topenr-fun : topenr Rc A R -> topenr Rc A' R' -> atom-eq R R' -> type.
+%mode topenr-fun +X1 +X2 -X3.
+
+topenm-fun : topenm Mc A M -> topenm Mc A' M' -> term-eq M M' -> type.
+%mode topenm-fun +X1 +X2 -X3.
+
+-	: topen-fun topen/t topen/t tp-eq/i.
+
+-	: topen-fun (topen/pi D2 D1) (topen/pi D2' D1') Deq
+	   <- topen-fun D1 D1' Deq1
+	   <- topen-resp-underbind Deq1 D2 D2''
+	   <- ({x} {xc} {d}
+		 topen-fun (D2'' xc x d) (D2' xc x d) (Deq2 x))
+	   <- pi-resp Deq1 Deq2 Deq.
+
+-	: topen-fun (topen/sigma D2 D1) (topen/sigma D2' D1') Deq
+	   <- topen-fun D1 D1' Deq1
+	   <- topen-resp-underbind Deq1 D2 D2''
+	   <- ({x} {xc} {d}
+		 topen-fun (D2'' xc x d) (D2' xc x d) (Deq2 x))
+	   <- sigma-resp Deq1 Deq2 Deq.
+
+-	: topen-fun (topen/sing D) (topen/sing D') Deq'
+	   <- topenr-fun D D' Deq
+	   <- tp-resp-atom sing Deq Deq'.
+
+-	: topen-fun topen/one topen/one tp-eq/i.
+
+-	: topenr-fun D D atom-eq/i.
+
+-	: topenr-fun (topenr/app _ D2 D1) (topenr/app _ D2' D1') Deq
+	   <- topenr-fun D1 D1' Deq1
+	   <- topenm-fun D2 D2' Deq2
+	   <- app-resp Deq1 Deq2 Deq.
+
+-	: topenr-fun (topenr/pi1 D) (topenr/pi1 D') Deq'
+	   <- topenr-fun D D' Deq
+	   <- atom-resp-atom pi1 Deq Deq'.
+
+-	: topenr-fun (topenr/pi2 D) (topenr/pi2 D') Deq'
+	   <- topenr-fun D D' Deq
+	   <- atom-resp-atom pi2 Deq Deq'.
+
+-	: topenm-fun (topenm/at D) (topenm/at D') Deq'
+	   <- topenr-fun D D' Deq
+	   <- term-resp-atom at Deq Deq'.
+
+-	: topenm-fun (topenm/at D) (topenm/sing D') Deq'
+	   <- topenr-fun D D' Deq
+	   <- term-resp-atom at Deq Deq'.
+
+-	: topenm-fun (topenm/sing D) (topenm/at D') Deq'
+	   <- topenr-fun D D' Deq
+	   <- term-resp-atom at Deq Deq'.
+
+-	: topenm-fun (topenm/sing D) (topenm/sing D') Deq'
+	   <- topenr-fun D D' Deq
+	   <- term-resp-atom at Deq Deq'.
+
+-	: topenm-fun (topenm/lam D2 D1) (topenm/lam D2' D1') Deq'
+	   <- topen-fun D1 D1' Deq1
+	   <- topenm-resp-underbind Deq1 D2 D2''
+	   <- ({x} {xc} {d}
+		 topenm-fun (D2'' xc x d) (D2' xc x d) (Deq x))
+	   <- lam-resp Deq Deq'.
+
+-	: topenm-fun (topenm/pair D2 _ D1) (topenm/pair D2' _ D1') Deq
+	   <- topenm-fun D1 D1' Deq1
+	   <- topenm-fun D2 D2' Deq2
+	   <- pair-resp Deq1 Deq2 Deq.
+
+-	: topenm-fun topenm/star topenm/star term-eq/i.
+
+%worlds (var | topenblock | topenblock) (topen-fun _ _ _) (topenr-fun _ _ _) (topenm-fun _ _ _).
+%total (D1 D2 D3) (topen-fun D1 _ _) (topenr-fun D2 _ _) (topenm-fun D3 _ _).
+
+
+
+kof-strengthen : ({x:atom} kof C (A x)) -> ({x} tp-eq (A x) A') -> type.
+%mode kof-strengthen +X1 -X2.
+
+-	: kof-strengthen 
+	   ([x] kof/i (Dopen x : topen Ac (A x)) (Dckof : ckof K Ac)) Deq
+	   <- ({x}
+		 topen-fun (Dopen x) (Dopen aca)
+		 (Deq x : tp-eq (A x) (A aca))).
+
+%worlds (var | topenblock) (kof-strengthen _ _).
+%total {} (kof-strengthen _ _).
+
+
+
+subst-kof : ({x:atom} kof C (A x)) -> tsub A M Ax -> kof C Ax -> type.
+%mode subst-kof +X1 +X2 -X3.
+
+-	: subst-kof Dkof Dsub Dkof''
+	   <- kof-strengthen Dkof Deq
+	   <- ({x}
+		 kof-resp (Deq x) (Dkof x)
+		 (Dkof' x))
+	   <- tsub-absent A' M Dsub'
+	   <- tsub-resp Deq term-eq/i tp-eq/i Dsub Dsub''
+	   <- tsub-fun Dsub' Dsub'' Deq'
+	   <- kof-resp Deq' (Dkof' aca) Dkof''.
+
+%worlds (var | topenblock) (subst-kof _ _ _).
+%total {} (subst-kof _ _ _).
+
+
+
+
+%%%%%  Noassm  %%%%%
+
+vof-noassm : ({x:atom} vof Y (A x)) -> ({x} tp-eq (A x) A') -> type.
+%mode vof-noassm +X1 -X2.
+
+-	: vof-noassm ([_] D) ([_] tp-eq/i).
+
+%worlds (var | bind | topenblock) (vof-noassm _ _).
+%total {} (vof-noassm _ _).
+
+
+
+vof-noassm' : ({x:atom} vof (Y x) (A x)) -> ({x} atom-eq (Y x) Y') -> ({x} tp-eq (A x) A') -> type.
+%mode vof-noassm' +X1 -X2 -X3.
+
+-	: vof-noassm' ([_] D) ([_] atom-eq/i) ([_] tp-eq/i).
+
+%worlds (var | bind | topenblock) (vof-noassm' _ _ _).
+%total {} (vof-noassm' _ _ _).
+
+
+
+aof-noassm : ({x:atom} aof (R x) (A x))
+	      -> ({x} atom-eq (R x) R')
+	      -> ({x} tp-eq (A x) A') -> type.
+%mode aof-noassm +X1 -X2 -X3.
+
+of-noassm : ({x:atom} of (M x) (A x))
+	     -> ({x} term-eq (M x) M') -> type.
+%mode of-noassm +X1 -X2.
+
+wf-noassm : ({x:atom} wf (A x))
+	     -> ({x} tp-eq (A x) A') -> type.
+%mode wf-noassm +X1 -X2.
+
+-const	: aof-noassm ([x] aof/const _ (Dkof x)) ([_] atom-eq/i) Deq
+	   <- kof-strengthen Dkof Deq.
+
+-var	: aof-noassm ([x] aof/var (Dwf x) D) ([_] atom-eq/i) ([_] tp-eq/i).
+
+-app	: aof-noassm ([x] aof/app _ (D3 x) (D2 x) (D1 x)) Deqa Deqt
+	   <- aof-noassm D1 Deq1 DeqAB
+	   <- of-noassm D2 Deq2
+	   <- ({x} tp-eq-cdr-pi (DeqAB x) _ (DeqB x))
+	   <- ({x} app-resp (Deq1 x) (Deq2 x) (Deqa x))
+	   <- ({x} tsub-resp (DeqB x) (Deq2 x) tp-eq/i (D3 x) (D3' x))
+	   <- tsub-closed D3' Deqt.
+
+-pi1	: aof-noassm ([x] aof/pi1 (D1 x)) Deqa' DeqA
+	   <- aof-noassm D1 Deqa DeqAB
+	   <- ({x} atom-resp-atom pi1 (Deqa x) (Deqa' x))
+	   <- ({x} tp-eq-cdr-sigma (DeqAB x) (DeqA x) _).
+
+-pi2	: aof-noassm ([x] aof/pi2 (D1 x)) Deqa' DeqB''
+	   <- aof-noassm D1 
+	      (Deqa : {x} atom-eq (R x) R') DeqAB
+	   <- ({x} atom-resp-atom pi2 (Deqa x) (Deqa' x))
+	   <- ({x} tp-eq-cdr-sigma (DeqAB x) _
+		 (DeqB x : {y} tp-eq (B x y) (B' y)))
+	   <- ({x} tp-resp-atom ([r] (B' (pi1 r))) (Deqa x) (DeqB' x))
+	   <- ({x} tp-eq-trans (DeqB x (pi1 (R x))) (DeqB' x) (DeqB'' x)).
+
+ 
+-at	: of-noassm ([x] of/at (D1 x)) Deq'
+	   <- aof-noassm D1 Deq _
+	   <- ({x} term-resp-atom at (Deq x) (Deq' x)).
+
+-lam	: of-noassm ([x] of/lam (D2 x) (D1 x)) Deq'
+	   <- wf-noassm D1 Deq1
+	   <- of-bind-resp1 Deq1 D2 D2'
+	   <- ({y} {e} of-noassm ([x] D2' x y e) ([x] Deq2 x y))
+	   <- ({x} lam-resp (Deq2 x) (Deq' x)).
+
+-pair	: of-noassm ([x] of/pair _ (D2 x) _ (D1 x)) Deq
+	   <- of-noassm D1 Deq1
+	   <- of-noassm D2 Deq2
+	   <- ({x} pair-resp (Deq1 x) (Deq2 x) (Deq x)).
+
+-sing	: of-noassm ([x] of/sing (D1 x)) Deq'
+	   <- aof-noassm D1 Deq _
+	   <- ({x} term-resp-atom at (Deq x) (Deq' x)).
+
+-star	: of-noassm ([x] of/star) ([_] term-eq/i).
+
+
+
+-t	: wf-noassm ([x] wf/t) ([_] tp-eq/i).
+
+-pi	: wf-noassm ([x] wf/pi (D2 x) (D1 x)) Deq'
+	   <- wf-noassm D1 Deq1
+	   <- wf-bind-resp1 Deq1 D2 D2'
+	   <- ({y} {e} wf-noassm ([x] D2' x y e) ([x] Deq2 x y))
+	   <- ({x} pi-resp (Deq1 x) (Deq2 x) (Deq' x)).
+
+-sigma	: wf-noassm ([x] wf/sigma (D2 x) (D1 x)) Deq'
+	   <- wf-noassm D1 Deq1
+	   <- wf-bind-resp1 Deq1 D2 D2'
+	   <- ({y} {e} wf-noassm ([x] D2' x y e) ([x] Deq2 x y))
+	   <- ({x} sigma-resp (Deq1 x) (Deq2 x) (Deq' x)).
+
+-sing	: wf-noassm ([x] wf/sing (D1 x)) Deq'
+	   <- aof-noassm D1 Deq _
+	   <- ({x} tp-resp-atom sing (Deq x) (Deq' x)).
+
+-one	: wf-noassm ([x] wf/one) ([_] tp-eq/i).
+
+%worlds (bind | var | topenblock) (aof-noassm _ _ _) (of-noassm _ _) (wf-noassm _ _).
+%total (D1 D2 D3) (aof-noassm D1 _ _) (of-noassm D2 _) (wf-noassm D3 _).
+
+
+
+vof-noassm-var : ({x} vof x (A x)) -> false -> type.
+%mode vof-noassm-var +X1 -X2.
+%worlds (bind | var | topenblock) (vof-noassm-var _ _).
+%total {} (vof-noassm-var _ _).
+
+
+
+aof-noassm-var : ({x} aof x (A x)) -> false -> type.
+%mode aof-noassm-var +X1 -X2.
+
+-	: aof-noassm-var ([x] aof/var _ (Dvof x)) Dfalse
+	   <- vof-noassm-var Dvof Dfalse.
+
+%worlds (bind | var | topenblock) (aof-noassm-var _ _).
+%total {} (aof-noassm-var _ _).
+
+
+
+vof-noassm-tsub : ({x} vof Y (A x)) -> tsub A M Ax -> vof Y Ax -> type.
+%mode vof-noassm-tsub +X1 +X2 -X3.
+
+-	: vof-noassm-tsub Dvof Dsub Dvof''
+	   <- vof-noassm Dvof Deq
+	   <- tsub-resp Deq term-eq/i tp-eq/i Dsub Dsub'
+	   <- tsub-absent A' M Dsub''
+	   <- tsub-fun Dsub'' Dsub' Deq'
+	   <- ({x}
+		 vof-resp atom-eq/i (Deq x) (Dvof x)
+		 (Dvof' x))
+	   <- vof-resp atom-eq/i Deq' (Dvof' aca) Dvof''.
+
+%worlds (bind | var | topenblock) (vof-noassm-tsub _ _ _).
+%total {} (vof-noassm-tsub _ _ _).
+
+
+
+
+%%%%%  Strengthening for Absent C-Variables  %%%%%
+
+topen-cstrengthen : ({xc} topenr xc A R -> topen Bc B) -> topen Bc B -> type.
+%mode topen-cstrengthen +X1 -X2.
+
+topenr-cstrengthen : ({xc} topenr xc A R -> topenr Qc B Q) -> topenr Qc B Q -> type.
+%mode topenr-cstrengthen +X1 -X2.
+
+topenm-cstrengthen : ({xc} topenr xc A R -> topenm Mc B M) -> topenm Mc B M -> type.
+%mode topenm-cstrengthen +X1 -X2.
+
+-	: topen-cstrengthen ([_] [_] topen/t) topen/t.
+
+-	: topen-cstrengthen ([xc] [do] topen/pi (Dopen2 xc do) (Dopen1 xc do)) (topen/pi Dopen2' Dopen1')
+	   <- topen-cstrengthen Dopen1 Dopen1'
+	   <- ({y} {yc} {eo}
+		 topen-cstrengthen ([xc] [do] Dopen2 xc do yc y eo) (Dopen2' yc y eo)).
+
+-	: topen-cstrengthen ([xc] [do] topen/sigma (Dopen2 xc do) (Dopen1 xc do)) (topen/sigma Dopen2' Dopen1')
+	   <- topen-cstrengthen Dopen1 Dopen1'
+	   <- ({y} {yc} {eo}
+		 topen-cstrengthen ([xc] [do] Dopen2 xc do yc y eo) (Dopen2' yc y eo)).
+
+-	: topen-cstrengthen ([xc] [do] topen/sing (Dopen xc do)) (topen/sing Dopen')
+	   <- topenr-cstrengthen Dopen Dopen'.
+
+-	: topen-cstrengthen ([_] [_] topen/one) topen/one.
+
+
+-	: topenr-cstrengthen ([_] [_] D) D.
+
+-	: topenr-cstrengthen ([xc] [do] topenr/app Dsub (Dopen2 xc do) (Dopen1 xc do)) (topenr/app Dsub Dopen2' Dopen1')
+	   <- topenr-cstrengthen Dopen1 Dopen1'
+	   <- topenm-cstrengthen Dopen2 Dopen2'.
+
+-	: topenr-cstrengthen ([xc] [do] topenr/pi1 (Dopen xc do)) (topenr/pi1 Dopen')
+	   <- topenr-cstrengthen Dopen Dopen'.
+
+-	: topenr-cstrengthen ([xc] [do] topenr/pi2 (Dopen xc do)) (topenr/pi2 Dopen')
+	   <- topenr-cstrengthen Dopen Dopen'.
+
+
+
+-	: topenm-cstrengthen ([xc] [do] topenm/at (Dopen xc do)) (topenm/at Dopen')
+	   <- topenr-cstrengthen Dopen Dopen'.
+
+-	: topenm-cstrengthen ([xc] [do] topenm/sing (Dopen xc do)) (topenm/sing Dopen')
+	   <- topenr-cstrengthen Dopen Dopen'.
+
+-	: topenm-cstrengthen ([xc] [do] topenm/lam (Dopen2 xc do) (Dopen1 xc do)) (topenm/lam Dopen2' Dopen1')
+	   <- topen-cstrengthen Dopen1 Dopen1'
+	   <- ({y} {yc} {eo}
+		 topenm-cstrengthen ([xc] [do] Dopen2 xc do yc y eo) (Dopen2' yc y eo)).
+
+-	: topenm-cstrengthen ([xc] [do] topenm/pair (Dopen2 xc do) Dsub (Dopen1 xc do)) (topenm/pair Dopen2' Dsub Dopen1')
+	   <- topenm-cstrengthen Dopen1 Dopen1'
+	   <- topenm-cstrengthen Dopen2 Dopen2'.
+
+-	: topenm-cstrengthen ([xc] [do] topenm/star) topenm/star.
+
+%worlds (var | bind | topenblock | topenblock) (topen-cstrengthen _ _) (topenr-cstrengthen _ _) (topenm-cstrengthen _ _).
+%total (D1 D2 D3) (topen-cstrengthen D1 _) (topenr-cstrengthen D2 _) (topenm-cstrengthen D3 _).
+
+
+
+ckof-strengthen : ({xc:catom} ckof C (A xc)) -> ({xc} ctp-eq (A xc) A') -> ckof C A' -> type.
+%mode ckof-strengthen +X1 -X2 -X3.
+
+-	: ckof-strengthen ([_] D) ([_] ctp-eq/i) D.
+
+-	: ckof-strengthen ([xc] ckof/rec (Dcskof xc)) Deq (ckof/rec Dcskof')
+	   <- can-cskof _ Dcskof'
+	   <- ({xc}
+		 cskof-fun (Dcskof xc) Dcskof' (DeqA xc) (DeqB xc))
+	   <- ({xc}
+		 ctp-resp-ctp2-bind1 ([A] [B] carrow (csigma A ([x] cprod (carrow (carrow (B x) ct) (carrow (B x) ct)) (B x))) ct)
+		 (DeqA xc) ([yc] DeqB xc yc)
+		 (Deq xc)).
+
+%worlds (topenblock | topenblock) (ckof-strengthen _ _ _).
+%total {} (ckof-strengthen _ _ _).
+
+
+
+kof-cstrengthen : ({xc} topenr xc A R -> kof C B) -> kof C B -> type.
+%mode kof-cstrengthen +X1 -X2.
+
+-	: kof-cstrengthen ([xc] [do] kof/i (Dopen xc do) (Dckof xc)) (kof/i Dopen'' Dckof')
+	   <- ckof-strengthen Dckof Deq Dckof'
+	   <- ({xc} {do}
+		 topen-resp (Deq xc) tp-eq/i (Dopen xc do) (Dopen' xc do))
+	   <- topen-cstrengthen Dopen' Dopen''.
+
+%worlds (bind | topenblock | topenblock) (kof-cstrengthen _ _).
+%total {} (kof-cstrengthen _ _).
+
+
+
+aof-cstrengthen : ({xc} topenr xc A R -> aof Q B) -> aof Q B -> type.
+%mode aof-cstrengthen +X1 -X2.
+
+of-cstrengthen : ({xc} topenr xc A R -> of M B) -> of M B -> type.
+%mode of-cstrengthen +X1 -X2.
+
+wf-cstrengthen : ({xc} topenr xc A R -> wf B) -> wf B -> type.
+%mode wf-cstrengthen +X1 -X2.
+
+-	: aof-cstrengthen ([xc] [do] aof/const (Dwf xc do) (Dkof xc do)) (aof/const Dwf' Dkof')
+	   <- wf-cstrengthen Dwf Dwf'
+	   <- kof-cstrengthen Dkof Dkof'.
+
+-	: aof-cstrengthen ([xc] [do] aof/var (Dwf xc do) Dvof) (aof/var Dwf' Dvof)
+	   <- wf-cstrengthen Dwf Dwf'.
+
+-	: aof-cstrengthen ([xc] [do] aof/app (Dwf xc do) Dsub (Dof xc do) (Daof xc do))
+	   (aof/app Dwf' Dsub Dof' Daof')
+	   <- aof-cstrengthen Daof Daof'
+	   <- of-cstrengthen Dof Dof'
+	   <- wf-cstrengthen Dwf Dwf'.
+
+-	: aof-cstrengthen ([xc] [do] aof/pi1 (Daof xc do)) (aof/pi1 Daof')
+	   <- aof-cstrengthen Daof Daof'.
+
+-	: aof-cstrengthen ([xc] [do] aof/pi2 (Daof xc do)) (aof/pi2 Daof')
+	   <- aof-cstrengthen Daof Daof'.
+
+-	: of-cstrengthen ([xc] [do] of/at (Daof xc do)) (of/at Daof')
+	   <- aof-cstrengthen Daof Daof'.
+
+-	: of-cstrengthen ([xc] [do] of/lam (Dof xc do) (Dwf xc do)) (of/lam Dof' Dwf')
+	   <- wf-cstrengthen Dwf Dwf'
+	   <- ({y} {e}
+		 of-cstrengthen ([xc] [do] Dof xc do y e) (Dof' y e)).
+
+-	: of-cstrengthen ([xc] [do] of/pair (Dwf xc do) (Dof2 xc do) Dsub (Dof1 xc do))
+	   (of/pair Dwf' Dof2' Dsub Dof1')
+	   <- of-cstrengthen Dof1 Dof1'
+	   <- of-cstrengthen Dof2 Dof2'
+	   <- ({y} {e}
+		 wf-cstrengthen ([xc] [do] Dwf xc do y e) (Dwf' y e)).
+
+-	: of-cstrengthen ([xc] [do] of/sing (Daof xc do)) (of/sing Daof')
+	   <- aof-cstrengthen Daof Daof'.
+
+-	: of-cstrengthen ([xc] [do] of/star) of/star.
+
+-	: wf-cstrengthen ([xc] [do] wf/t) wf/t.
+
+-	: wf-cstrengthen ([xc] [do] wf/pi (Dwf2 xc do) (Dwf1 xc do)) (wf/pi Dwf2' Dwf1')
+	   <- wf-cstrengthen Dwf1 Dwf1'
+	   <- ({y} {e}
+		 wf-cstrengthen ([xc] [do] Dwf2 xc do y e) (Dwf2' y e)).
+
+-	: wf-cstrengthen ([xc] [do] wf/sigma (Dwf2 xc do) (Dwf1 xc do)) (wf/sigma Dwf2' Dwf1')
+	   <- wf-cstrengthen Dwf1 Dwf1'
+	   <- ({y} {e}
+		 wf-cstrengthen ([xc] [do] Dwf2 xc do y e) (Dwf2' y e)).
+
+-	: wf-cstrengthen ([xc] [do] wf/sing (Daof xc do)) (wf/sing Daof')
+	   <- aof-cstrengthen Daof Daof'.
+
+-	: wf-cstrengthen ([xc] [do] wf/one) wf/one.
+
+%worlds (bind | topenblock) (aof-cstrengthen _ _) (of-cstrengthen _ _) (wf-cstrengthen _ _).
+%total (D1 D2 D3) (aof-cstrengthen D1 _) (of-cstrengthen D2 _) (wf-cstrengthen D3 _).

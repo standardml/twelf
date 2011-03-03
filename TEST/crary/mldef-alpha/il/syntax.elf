@@ -1,0 +1,237 @@
+
+%%%%%  Syntactic Classes  %%%%%
+
+kind	: type.  %name kind K.
+con	: type.  %name con C a.
+sg	: type.  %name sg S.
+term	: type.  %name term E x.
+module	: type.  %name module M m.
+
+entry	: type.  %name entry EN.
+store	: type.  %name store ST.
+entp	: type.  %name entp ET.
+sttp	: type.  %name sttp F.
+name	: type.  %name name L.
+
+
+
+
+%%%%%  Kinds  %%%%%
+
+t	: kind.
+sing	: con -> kind.
+pi	: kind -> (con -> kind) -> kind.
+sigma	: kind -> (con -> kind) -> kind.
+one	: kind.
+
+karrow  : kind -> kind -> kind
+        = [K1] [K2] pi K1 ([_] K2).
+
+kprod   : kind -> kind -> kind
+        = [K1] [K2] sigma K1 ([_] K2).
+
+
+
+
+%%%%%  Constructors  %%%%%
+
+pair	: con -> con -> con.
+pi1	: con -> con.
+pi2	: con -> con.
+lam	: kind -> (con -> con) -> con.
+app	: con -> con -> con.
+star	: con.
+
+unit	: con.
+void	: con.
+prod	: con -> con -> con.
+arrow	: con -> con -> con.
+plus	: con -> con -> con.
+ref	: con -> con.
+tag	: con -> con.
+tagged	: con.
+rec	: kind -> (con -> con -> con) -> con -> con.
+labeled	: label -> con -> con.
+
+mu	: (con -> con) -> con
+        = [C] rec one ([a] [b] app (lam t C) (app a star)) star.
+%% (Stated with a redex to provide a strict occurrence of C so
+%% Twelf will be happy.)
+
+
+
+
+%%%%%  Names  %%%%%
+
+name/val	: identifier -> name.  %% value identifiers
+name/con	: identifier -> name.  %% tycon identifiers
+name/mod	: identifier -> name.  %% module identifiers
+name/fun	: identifier -> name.  %% functor identifiers
+name/sig	: identifier -> name.  %% signature identifiers
+name/dtc	: identifier -> name.  %% datatype constructors
+name/ec		: identifier -> name.  %% exception constructors
+
+name/ordinary	: name.                %% not a constructor
+name/dcon0	: nat -> nat -> name.  %% nullary datatype constructor
+name/dcon1	: nat -> nat -> name.  %% unary datatype constructor
+name/econ0	: name.                %% nullary exception constructor
+name/econ1      : name.                %% unary exception constructor
+
+name/basis	: name.                %% the basis
+name/hide	: name.                %% hidden field
+name/funcarg	: name.                %% anonymous functor argument
+
+
+
+%%%%%  Signatures  %%%%%
+
+sg/one		: sg.
+sg/satom	: kind -> sg.
+sg/datom	: con -> sg.
+sg/sgatom	: sg -> sg.
+
+sg/pi		: sg -> (con -> sg) -> sg.
+sg/sigma	: sg -> (con -> sg) -> sg.
+sg/named	: name -> sg -> sg.
+
+sg/prod		: sg -> sg -> sg
+		= [S1] [S2] sg/sigma S1 ([_] S2).
+
+
+
+%%%%%  Terms  %%%%%
+
+tm/unit		: term.
+
+tm/abort	: term -> con -> term.
+
+tm/pair		: term -> term -> term.
+tm/pi1		: term -> term.
+tm/pi2		: term -> term.
+
+tm/lam		: con -> (term -> term) -> term.
+tm/app		: term -> term -> term.
+
+tm/in1		: term -> con -> term.
+tm/in2		: term -> con -> term.
+tm/case		: term -> (term -> term) -> (term -> term) -> term.
+
+tm/refloc	: location -> term.
+tm/ref		: term -> term.
+tm/deref	: term -> term.
+tm/assign	: term -> term -> term.
+
+tm/tagloc	: location -> term.
+tm/newtag	: con -> term.
+
+tm/tag		: term -> term -> term.
+tm/iftag	: term -> term -> (term -> term) -> term -> term.
+
+tm/roll		: term -> kind -> (con -> con -> con) -> con -> term.
+tm/unroll	: term -> term.
+
+tm/in		: label -> term -> term.
+tm/out		: term -> term.
+
+tm/raise	: term -> con -> term.
+tm/try		: term -> (term -> term) -> term.
+
+tm/lett		: term -> (term -> term) -> term.
+
+tm/snd		: module -> term.
+
+tm/rollmu	: term -> (con -> con) -> term
+		= [E] [C] tm/roll E one ([a] [b] app (lam t C) (app a star)) star.
+
+tm/theta	: con -> term
+		= [T] tm/app
+		   (tm/unroll
+		      (tm/rollmu
+			 (tm/lam 
+			    (mu ([a] arrow a (arrow (arrow (arrow unit T) T) T)))
+			    ([z] tm/lam (arrow (arrow unit T) T)
+			       ([f] tm/app 
+				  f 
+				  (tm/lam unit 
+				     ([_] tm/app (tm/app (tm/unroll z) z) f)))))
+		      ([a] arrow a (arrow (arrow (arrow unit T) T) T))))
+		   (tm/rollmu
+		      (tm/lam 
+			 (mu ([a] arrow a (arrow (arrow (arrow unit T) T) T)))
+			 ([z] tm/lam (arrow (arrow unit T) T)
+			    ([f] tm/app 
+			       f 
+			       (tm/lam unit 
+				  ([_] tm/app (tm/app (tm/unroll z) z) f)))))
+		      ([a] arrow a (arrow (arrow (arrow unit T) T) T))).
+		   
+%abbrev
+tm/fix		: con -> (term -> term) -> term
+		= [T] [E]
+		   tm/app
+		   (tm/lam unit
+		      ([_] tm/app 
+			 (tm/theta T)
+			 (tm/lam (arrow unit T) ([x] E (tm/app x tm/unit)))))
+		   tm/unit.
+
+
+
+
+%%%%%  Modules  %%%%%
+
+md/unit		: module.
+md/satom	: con -> module.
+md/datom	: term -> con -> module.
+md/sgatom	: sg -> module.
+
+md/pair		: module -> module -> module.
+md/dpair	: module -> (con -> module -> module) -> module.
+md/pi1		: module -> module.
+md/pi2		: module -> module.
+
+md/lam		: sg -> (con -> module -> module) -> module.
+md/app		: module -> module -> module.
+
+md/in		: name -> module -> module.
+md/out		: module -> module.
+
+md/let		: module -> (con -> module -> module) -> sg -> module.
+md/letp		: module -> (con -> module -> module) -> module.
+md/lete		: term -> con -> (term -> module) -> module.
+
+md/seal		: module -> sg -> module.
+
+tm/letm		: module -> (con -> module -> term) -> con -> term
+                = [M] [E] [T] tm/snd (md/let M ([a] [x] md/datom (E a x) T) (sg/datom T)).
+
+
+
+
+%%%%%  Entries & Stores  %%%%%
+
+entry/ref	: term -> entry.
+entry/tag	: con -> entry.
+
+store/nil	: store.
+store/cons	: store -> location -> entry -> store.
+
+
+
+
+%%%%%  Entry & Store Types  %%%%%
+
+et/ref		: con -> entp.
+et/tag		: con -> entp.
+
+st/nil		: sttp.
+st/cons		: sttp -> location -> entp -> sttp.
+
+
+
+%%%%%  Purity  %%%%%
+
+purity		: type.  %name purity P.
+
+pure		: purity.
+impure		: purity.

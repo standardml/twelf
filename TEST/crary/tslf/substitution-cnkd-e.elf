@@ -1,0 +1,770 @@
+
+
+
+subst-cxt-bounded	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+			   -> cxt-append-sub G1 G2 C G'
+			   -> ({x} isvar x I 
+				 -> cxt-bounded (G x) X)
+			   -> cxt-bounded G' X
+			   -> type.
+%mode subst-cxt-bounded +D1 +D2 +D3 -D4.
+
+-	: subst-cxt-bounded _ 
+	   (_ : cxt-append-sub _ _ _ _)
+	   ([x][di] 
+	      (cxt-bounded/cons (cxt-bounded/nil di)
+		 (cxt-precedes/i di DV DL)))
+	   (cxt-bounded/nil DV).
+
+-	: subst-cxt-bounded _
+	   (_ : cxt-append-sub _ _ _ (cxt/cons G1 _ K6))
+	   ([x][di]
+	      cxt-bounded/cons
+		 (cxt-bounded/cons (DB x di) 
+		    (cxt-precedes/i D1 di D12))
+		 (cxt-precedes/i di DV D23))
+	   (cxt-bounded/cons DB' 
+	      (cxt-precedes/i D1 DV D13))
+	   <- cxt-bounded-strengthen (cxt/cons G1 C1 K6)
+	      ([x][di]cxt-bounded/cons (DB x di) (cxt-precedes/i D1 di D12))
+	      (cxt-ordered/cons DB')
+	   <- loc-less-trans D12 D23 D13.
+
+-	: subst-cxt-bounded
+	   ([x] cxt-append/cons (DA x))
+	   (cxt-append-sub/cons DA')
+	   ([x][di]
+	      cxt-bounded/cons (DB x di) (cxt-precedes/i D1 D2 DL))
+	   (cxt-bounded/cons DB' (cxt-precedes/i D1 D2 DL))
+	   <- subst-cxt-bounded DA DA' 
+	      ([x][di] (DB x di))  DB'.
+
+%worlds (cn-block | isvar-fun-block) (subst-cxt-bounded _ _ _ _).
+%total D1 (subst-cxt-bounded D1 _ _ _).
+
+
+
+subst-cxt-ordered	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+			   -> cxt-append-sub G1 G2 C G'
+			   -> ({x} isvar x I 
+				 -> cxt-ordered (G x))
+			   -> cxt-ordered G'
+			   -> type.
+%mode subst-cxt-ordered +D1 +D2 +D3 -D4.
+
+-	: subst-cxt-ordered _ 
+	   cxt-append-sub/nil
+	   ([x][di] cxt-ordered/cons (DB x di))
+	   DO
+	   <- cxt-bounded-strengthen _ DB DO.
+
+-	: subst-cxt-ordered 
+	   ([x] cxt-append/cons (DA x))
+	   (cxt-append-sub/cons DA')
+	   ([x][di] cxt-ordered/cons (DB x di))
+	   (cxt-ordered/cons DB')
+	   <- subst-cxt-bounded DA DA' DB DB'.
+
+%worlds (cn-block | isvar-fun-block) (subst-cxt-ordered _ _ _ _).
+%total D1 (subst-cxt-ordered D1 _ _ _).
+						
+
+
+subst-cxt-lookup-c	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+			   -> cxt-append-sub G1 G2 C G'
+			   -> ({x} isvar x I 
+				 -> cxt-lookup (G x) C' (K' x))
+			   -> cxt-lookup G' C' (K' C)
+			   -> type.
+%mode subst-cxt-lookup-c +D1 +D2 +D3 -D4.
+
+-	: subst-cxt-lookup-c 
+	   ([x] cxt-append/cons (DA x)) 
+	   (cxt-append-sub/cons DA')
+	   ([x][di] cxt-lookup/hit (DB x di))
+	   (cxt-lookup/hit DB')
+ 	   <- subst-cxt-bounded DA DA' DB DB'.
+
+-	: subst-cxt-lookup-c 
+	   ([x] cxt-append/cons (DA x)) 
+	   (cxt-append-sub/cons DA')
+	   ([x][di] cxt-lookup/miss (DL x di) DP (DB x di))
+	   (cxt-lookup/miss DL' DP DB')
+ 	   <- subst-cxt-bounded DA DA' DB DB'
+ 	   <- subst-cxt-lookup-c DA DA' DL DL'.
+-	: subst-cxt-lookup-c
+	   ([x] cxt-append/cons (DA x))
+	   (cxt-append-sub/cons DA'
+	      : cxt-append-sub _ _ C _)
+	   ([x][di]
+	      cxt-lookup/miss 
+	      (cxt-lookup/miss (DL x di) (cxt-precedes/i DF di D12) _)
+	      DP
+	      (DB x di))
+	   (cxt-lookup/miss DL' DP DB')
+	   <- cxt-lookup-strengthen C DL DL'
+	   <- subst-cxt-bounded DA DA' DB DB'.
+
+-	: subst-cxt-lookup-c
+	   ([x] cxt-append/nil)
+	   (cxt-append-sub/nil : cxt-append-sub _ _ C _)
+	   ([x][di]
+	      (cxt-lookup/miss (DL x di)
+		 (cxt-precedes/i DI di D12) _))
+	      DL'
+	   <- cxt-lookup-strengthen C DL DL'.
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) 
+(subst-cxt-lookup-c _ _ _ _).
+%total D1 (subst-cxt-lookup-c D1 _ _ _).
+
+
+cxt-lookup-ioc	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+		   -> cxt-append-sub G1 G2 C G'
+		   -> ({x} isvar x I 
+			 -> cxt-lookup (G x) (C' x) (K' x))
+		   -> id-or-cl C' K'
+		   -> type.
+%mode cxt-lookup-ioc +D1 +D2 +D3 -D4.
+
+-	: cxt-lookup-ioc _
+	   cxt-append-sub/nil
+	   ([x][di] cxt-lookup/hit _: cxt-lookup _ x _) id-or-cl/id.
+
+-	: cxt-lookup-ioc
+	   _ cxt-append-sub/nil
+	   ([x][di] cxt-lookup/miss (DL x di) _ _)IOC
+	   <- cxt-lookup-ioc-c DL IOC.
+
+-	: cxt-lookup-ioc 
+	   ([x] cxt-append/cons _)
+	   (cxt-append-sub/cons _)
+	   ([x][di] cxt-lookup/hit _: cxt-lookup _ C _)  id-or-cl/cl.
+
+-	: cxt-lookup-ioc
+	   ([x] cxt-append/cons (DA x))
+	   (cxt-append-sub/cons DA')
+	   ([x][di] cxt-lookup/miss (DL x di) _ _)
+	   IOC
+	   <- cxt-lookup-ioc DA DA' DL IOC.
+
+%worlds (cn-block | ovar-block) (cxt-lookup-ioc _ _ _ _).
+%total D1 (cxt-lookup-ioc _ _ D1 _).
+
+
+
+eofkd/seq/kd	: seq/kd K1 K2
+		   -> eofkd G C K1
+		   -> eofkd G C K2
+		   -> type.
+%mode eofkd/seq/kd +D1 +D2 -D3.
+
+-	: eofkd/seq/kd seq/kd/refl D1 D1.
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) (eofkd/seq/kd _ _ _).
+%total D1 (eofkd/seq/kd D1 _ _).
+
+
+
+
+subst-cxt-lookup	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+			   -> cxt-append-sub G1 G2 C G'
+ 			   -> eofkd G1 C K
+			   -> ({x} isvar x I 
+				 -> cxt-lookup (G x) (C' x) (K' x))
+			   -> id-or-cl C' K'
+			   -> eofkd G' (C' C) (K' C)
+			   -> type.
+%mode subst-cxt-lookup +D1 +D2 +D3 +DC +DO -D4.
+ 
+-	: subst-cxt-lookup DA DA' DC DL id-or-cl/cl
+	   (eofkd/var DL')
+	   <- subst-cxt-lookup-c DA DA' DL DL'.
+
+-	: subst-cxt-lookup
+	   DA DA' DC DL id-or-cl/id DC''
+	   <- cxt-lookup-unique DA DL DQ
+	   <- ({x}{di: isvar x I}
+		 cxt-lookup-ordered (DL x di) (DO x di))
+	   <- subst-cxt-ordered DA DA' DO DO'
+	   <- wkn-eofkd-append DC DA' DO' DC'
+	   <- eofkd/seq/kd DQ DC' DC''.
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) 
+(subst-cxt-lookup _ _ _ _ _ _).
+%total D1 (subst-cxt-lookup _ _ _ _ D1 _).
+
+
+
+subst-f-cxt-lookup	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+			   -> cxt-append-sub G1 G2 C G'
+ 			   -> eofkd G1 Cz K
+			   -> ({x} isvar x I 
+				 -> cxt-lookup (G x) (C' x) (K' x))
+			   -> id-or-cl C' K'
+			   -> eofkd G' (C' Cz) (K' C)
+			   -> type.
+%mode subst-f-cxt-lookup +D1 +D2 +D3 +DC +DO -D4.
+ 
+-	: subst-f-cxt-lookup DA DA' DC DL id-or-cl/cl
+	   (eofkd/var DL')
+	   <- subst-cxt-lookup-c DA DA' DL DL'.
+
+-	: subst-f-cxt-lookup
+	   DA DA' DC DL id-or-cl/id DC''
+	   <- cxt-lookup-unique DA DL DQ
+	   <- ({x}{di: isvar x I}
+		 cxt-lookup-ordered (DL x di) (DO x di))
+	   <- subst-cxt-ordered DA DA' DO DO'
+	   <- wkn-eofkd-append DC DA' DO' DC'
+	   <- eofkd/seq/kd DQ DC' DC''.
+
+%worlds (cn-block | isvar-fun-block) (subst-f-cxt-lookup _ _ _ _ _ _).
+%total D1 (subst-f-cxt-lookup _ _ _ _ D1 _).
+
+
+subst-eofkd	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+ 		   -> cxt-append-sub G1 G2 C G'
+		   -> eofkd G1 C K
+		   -> ({x:cn} isvar x I -> eofkd (G x) (C' x) (K' x))
+		   -> eofkd G' (C' C) (K' C)
+		   -> type.
+%mode subst-eofkd +D1 +D2 +D3 +D4 -D5.
+
+subst-ecn-deq	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+ 		   -> cxt-append-sub G1 G2 C G'
+		   -> eofkd G1 C K
+		   -> ({x:cn} isvar x I -> ecn-deq (G x) (C' x) (C'' x) (K' x))
+		   -> ecn-deq G' (C' C) (C'' C) (K' C)
+		   -> type.
+%mode subst-ecn-deq +D1 +D2 +D3 +D4 -D5.
+
+subst-ekd-wf	: ({x:cn}cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+ 		   -> cxt-append-sub G1 G2 C G'
+		   -> eofkd G1 C K
+		   -> ({x} isvar x I -> ekd-wf (G x) (K' x))
+		   -> ekd-wf G' (K' C)
+		   -> type.
+%mode subst-ekd-wf +D1 +D2 +D3 +D4 -D5.
+
+subst-ekd-sub	: ({x:cn}cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+ 		   -> cxt-append-sub G1 G2 C G'
+		   -> eofkd G1 C K
+		   -> ({x} isvar x I -> ekd-sub (G x) (K' x) (K'' x))
+		   -> ekd-sub G' (K' C) (K'' C)
+		   -> type.
+%mode subst-ekd-sub +D1 +D2 +D3 +D4 -D5.
+
+subst-ekd-deq	: ({x:cn}cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+ 		   -> cxt-append-sub G1 G2 C G'
+		   -> eofkd G1 C K
+		   -> ({x} isvar x I -> ekd-deq (G x) (K' x) (K'' x))
+		   -> ekd-deq G' (K' C) (K'' C)
+		   -> type.
+%mode subst-ekd-deq +D1 +D2 +D3 +D4 -D5.
+
+-	: subst-ekd-wf DA DA' DC
+	   ([x][di: isvar _ I] ekd-wf/kd/unit (DO' x di))
+	   (ekd-wf/kd/unit DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ekd-wf DA DA' DC
+	   ([x][di: isvar _ I] ekd-wf/kd/type (DO' x di))
+	   (ekd-wf/kd/type DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ekd-wf DA DA' DC
+	   ([x][di: isvar x I] ekd-wf/kd/sing (D1 x di))
+	   (ekd-wf/kd/sing D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-ekd-wf DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] ekd-wf/kd/pi (D1 x di) 
+	      ([y][dy: isvar y YI] D2 x di y dy))
+	   (ekd-wf/kd/pi D1' D2')
+	   <- subst-ekd-wf DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ekd-wf 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-ekd-wf DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] ekd-wf/kd/sgm (D1 x di) 
+	      ([y][dy: isvar y YI] D2 x di y dy))
+	   (ekd-wf/kd/sgm D1' D2')
+	   <- subst-ekd-wf DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ekd-wf 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar _ I] eofkd/cn/unit (DO' x di))
+	   (eofkd/cn/unit DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar _ I] eofkd/tp/unit (DO' x di))
+	   (eofkd/tp/unit DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar _ I] eofkd/tp/tagged (DO' x di))
+	   (eofkd/tp/tagged DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/kd/sing (D1 x di))
+	   (eofkd/kd/sing D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/cn/pj1 (D1 x di))
+	   (eofkd/cn/pj1 D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/cn/pj2 (D1 x di))
+	   (eofkd/cn/pj2 D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/tp/ref (D1 x di))
+	   (eofkd/tp/ref D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/tp/tag (D1 x di))
+	   (eofkd/tp/tag D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/cn/pair (D1 x di) (D2 x di))
+	   (eofkd/cn/pair D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D2 D2'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/cn/app (D1 x di) (D2 x di))
+	   (eofkd/cn/app D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D2 D2'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/sgm-ext (D1 x di) (D2 x di))
+	   (eofkd/sgm-ext D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D2 D2'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/tp/cross (D1 x di) (D2 x di))
+	   (eofkd/tp/cross D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D2 D2'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/tp/arrow (D1 x di) (D2 x di))
+	   (eofkd/tp/arrow D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D2 D2'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/tp/sum (D1 x di) (D2 x di))
+	   (eofkd/tp/sum D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D2 D2'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/sub (D1 x di) (D2 x di))
+	   (eofkd/sub D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-ekd-sub DA DA' DC D2 D2'.
+
+-	: subst-eofkd DA DA' DC
+	   ([x][di: isvar x I] eofkd/deq (D1 x di) (D2 x di))
+	   (eofkd/deq D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-ekd-deq DA DA' DC D2 D2'.
+
+-	: subst-eofkd DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] eofkd/cn/lam 
+	      ([y][dy: isvar y YI] D2 x di y dy) (D1 x di))
+	   (eofkd/cn/lam D2' D1')
+	   <- subst-ekd-wf DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-eofkd 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-eofkd DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] eofkd/tp/forall 
+	      ([y][dy: isvar y YI] D2 x di y dy) (D1 x di))
+	   (eofkd/tp/forall D2' D1')
+	   <- subst-ekd-wf DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-eofkd 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-eofkd DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] eofkd/cn/mu 
+	      ([y][dy: isvar y YI] D2 x di y dy) (D1 x di))
+	   (eofkd/cn/mu D2' D1')
+	   <- subst-ekd-wf DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-eofkd 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-eofkd DA DA'
+	   (DC: eofkd _ C _)
+	   ([x][di: isvar _ I] eofkd/var (DL x di)) DC'
+	   <- cxt-lookup-ioc DA DA' DL IOC
+	   <- subst-cxt-lookup DA DA' DC DL IOC DC'.
+
+-	: subst-eofkd DA DA'
+	   (DC: eofkd G1 _ K)
+	   ([x][di: isvar x XI] eofkd/pi-ext  (D1 x di)
+	      ([y][dy: isvar y YI] D2 x di y dy))
+	   (eofkd/pi-ext D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-eofkd 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-eofkd DA DA' (DC: eofkd _ C _)
+	   ([x][di: isvar _ I] eofkd/closed (DC' x) (DO' x di))
+	   (eofkd/closed (DC' C) DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+
+
+
+-	: subst-ekd-deq DA DA' DC
+	   ([x][di: isvar _ I] ekd-deq/kd/unit (DO' x di))
+	   (ekd-deq/kd/unit DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ekd-deq DA DA' DC
+	   ([x][di: isvar _ I] ekd-deq/kd/type (DO' x di))
+	   (ekd-deq/kd/type DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ekd-deq DA DA' DC
+	   ([x][di: isvar x I] ekd-deq/kd/sing (D1 x di))
+	   (ekd-deq/kd/sing D1')
+	   <- subst-ecn-deq DA DA' DC D1 D1'.
+
+-	: subst-ekd-deq DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] ekd-deq/kd/pi (D1 x di) 
+	      ([y][dy: isvar y YI] D2 x di y dy))
+	   (ekd-deq/kd/pi D1' D2')
+	   <- subst-ekd-deq DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ekd-deq 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-ekd-deq DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] ekd-deq/kd/sgm (D1 x di) 
+	      ([y][dy: isvar y YI] D2 x di y dy))
+	   (ekd-deq/kd/sgm D1' D2')
+	   <- subst-ekd-deq DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ekd-deq 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+
+
+-	: subst-ekd-sub DA DA' DC
+	   ([x][di: isvar _ I] ekd-sub/kd/unit (DO' x di))
+	   (ekd-sub/kd/unit DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ekd-sub DA DA' DC
+	   ([x][di: isvar _ I] ekd-sub/kd/type (DO' x di))
+	   (ekd-sub/kd/type DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ekd-sub DA DA' DC
+	   ([x][di: isvar x I] ekd-sub/kd/sing-kd/sing (D1 x di))
+	   (ekd-sub/kd/sing-kd/sing D1')
+	   <- subst-ecn-deq DA DA' DC D1 D1'.
+
+-	: subst-ekd-sub DA DA' DC
+	   ([x][di: isvar x I] ekd-sub/kd/sing-kd/type (D1 x di))
+	   (ekd-sub/kd/sing-kd/type D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-ekd-sub DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] ekd-sub/kd/pi (D1 x di) 
+	      ([y][dy: isvar y YI] D2 x di y dy)
+	      ([y][dy: isvar y YI] D3 x di y dy))
+	   (ekd-sub/kd/pi D1' D2' D3')
+	   <- subst-ekd-sub DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ekd-sub 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy))
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ekd-wf 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D3 x di y dy) 
+		 (D3' y dy)).
+
+-	: subst-ekd-sub DA DA'
+	   (DC: eofkd G1 C K)
+	   ([x][di: isvar x XI] ekd-sub/kd/sgm (D1 x di) 
+	      ([y][dy: isvar y YI] D2 x di y dy)
+	      ([y][dy: isvar y YI] D3 x di y dy))
+	   (ekd-sub/kd/sgm D1' D2' D3')
+	   <- subst-ekd-sub DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ekd-sub 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy))
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ekd-wf 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D3 x di y dy) 
+		 (D3' y dy)).
+
+
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar _ I] ecn-deq/cn/unit (DO' x di))
+	   (ecn-deq/cn/unit DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar _ I] ecn-deq/tp/unit (DO' x di))
+	   (ecn-deq/tp/unit DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar _ I] ecn-deq/tp/tagged (DO' x di))
+	   (ecn-deq/tp/tagged DO)
+	   <- subst-cxt-ordered DA DA' DO' DO.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/kd/sing (D1 x di))
+	   (ecn-deq/kd/sing D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/refl (D1 x di))
+	   (ecn-deq/refl D1')
+	   <- subst-eofkd DA DA' DC D1 D1'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/sym (D1 x di))
+	   (ecn-deq/sym D1')
+	   <- subst-ecn-deq DA DA' DC D1 D1'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/cn/pj1 (D1 x di))
+	   (ecn-deq/cn/pj1 D1')
+	   <- subst-ecn-deq DA DA' DC D1 D1'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/cn/pj2 (D1 x di))
+	   (ecn-deq/cn/pj2 D1')
+	   <- subst-ecn-deq DA DA' DC D1 D1'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/tp/ref (D1 x di))
+	   (ecn-deq/tp/ref D1')
+	   <- subst-ecn-deq DA DA' DC D1 D1'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/tp/tag (D1 x di))
+	   (ecn-deq/tp/tag D1')
+	   <- subst-ecn-deq DA DA' DC D1 D1'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/kd/unit (D1 x di) (D2 x di))
+	   (ecn-deq/kd/unit D1' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/trans (D1 x di) (D2 x di))
+	   (ecn-deq/trans D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ecn-deq DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/cn/pair (D1 x di) (D2 x di))
+	   (ecn-deq/cn/pair D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ecn-deq DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/cn/app (D1 x di) (D2 x di))
+	   (ecn-deq/cn/app D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ecn-deq DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/sgm-ext (D1 x di) (D2 x di))
+	   (ecn-deq/sgm-ext D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ecn-deq DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/tp/cross (D1 x di) (D2 x di))
+	   (ecn-deq/tp/cross D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ecn-deq DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/tp/arrow (D1 x di) (D2 x di))
+	   (ecn-deq/tp/arrow D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ecn-deq DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/tp/sum (D1 x di) (D2 x di))
+	   (ecn-deq/tp/sum D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ecn-deq DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/sub (D1 x di) (D2 x di))
+	   (ecn-deq/sub D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ekd-sub DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA' DC
+	   ([x][di: isvar x I] ecn-deq/deq (D1 x di) (D2 x di))
+	   (ecn-deq/deq D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- subst-ekd-deq DA DA' DC D2 D2'.
+
+-	: subst-ecn-deq DA DA'
+	   (DC)
+	   ([x][di: isvar x XI] ecn-deq/cn/lam 
+	      ([y][dy: isvar y YI] D2 x di y dy) (D1 x di))
+	   (ecn-deq/cn/lam D2' D1')
+	   <- subst-ekd-deq DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-ecn-deq DA DA'
+	   (DC)
+	   ([x][di: isvar x XI] ecn-deq/tp/forall 
+	      ([y][dy: isvar y YI] D2 x di y dy) (D1 x di))
+	   (ecn-deq/tp/forall D2' D1')
+	   <- subst-ekd-deq DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-ecn-deq DA DA'
+	   (DC)
+	   ([x][di: isvar x XI] ecn-deq/cn/mu 
+	      ([y][dy: isvar y YI] D2 x di y dy) (D1 x di))
+	   (ecn-deq/cn/mu D2' D1')
+	   <- subst-ekd-deq DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-ecn-deq DA DA'
+	   (DC)
+	   ([x][di: isvar x XI] ecn-deq/pi-ext  (D1 x di) (D1a x di)
+	      ([y][dy: isvar y YI] D2 x di y dy))
+	   (ecn-deq/pi-ext D1' D1a' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D1a D1a'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-ecn-deq DA DA'
+	   (DC)
+	   ([x][di: isvar x XI] ecn-deq/pi-ext  (D1 x di) (D1a x di)
+	      ([y][dy: isvar y YI] D2 x di y dy))
+	   (ecn-deq/pi-ext D1' D1a' D2')
+	   <- subst-eofkd DA DA' DC D1 D1'
+	   <- subst-eofkd DA DA' DC D1a D1a'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+-	: subst-ecn-deq DA DA'
+	   (DC)
+	   ([x][di: isvar x XI] ecn-deq/pi-ext-2 (D1 x di) 
+	      ([y][dy: isvar y YI] D2 x di y dy))
+	   (ecn-deq/pi-ext-2 D1' D2')
+	   <- subst-ecn-deq DA DA' DC D1 D1'
+	   <- ({y}{dy: isvar y YI}{_: isvar-fun dy dy seq/loc/refl}
+		 subst-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA') 
+		 DC ([x][di: isvar x XI] D2 x di y dy) 
+		 (D2' y dy)).
+
+
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) (subst-eofkd _ _ _ _ _)
+(subst-ekd-wf _ _ _ _ _)
+(subst-ekd-sub _ _ _ _ _)
+(subst-ekd-deq _ _ _ _ _)
+(subst-ecn-deq _ _ _ _ _).
+%total (D1 D2 D3 D4 D5) 
+(subst-ekd-wf _ _ _ D2 _)
+(subst-eofkd _ _ _ D1 _)
+(subst-ekd-deq _ _ _ D4 _)
+(subst-ekd-sub _ _ _ D3 _)
+(subst-ecn-deq _ _ _ D5 _).
+
+

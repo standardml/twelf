@@ -1,0 +1,501 @@
+
+%%%%%  Definitions  %%%%%
+
+expand-il : con -> kind -> con -> type.
+
+expand-il/t	: expand-il R t R.
+
+expand-il/pi	: expand-il R (pi A B) (lam A N)
+		   <- ({x} expand-il x A (M x))
+		   <- ({x} expand-il (app R (M x)) (B x) (N x)).
+
+expand-il/sigma	: expand-il R (sigma A B) (pair M N)
+		   <- expand-il (pi1 R) A M
+		   <- expand-il (pi2 R) (B (pi1 R)) N.
+
+expand-il/sing	: expand-il R (sing R') R'.
+
+expand-il/one	: expand-il R one star.
+
+
+
+skof-il : skel -> kind -> (con -> kind) -> type.
+
+skof-il/t		: skof-il kt one ([_] t).
+
+skof-il/pi		: skof-il (kpi As Bs) (sigma C ([y] pi (A y) ([_] D))) ([w] pi (A (pi1 w)) ([x] B (app (pi2 w) (X (pi1 w) x))))
+		   <- skof-il As C ([y] A y)
+		   <- skof-il Bs D ([z] B z)
+		   <- ({y} {x} expand-il x (A y) (X y x)).
+
+skof-il/sigma	: skof-il (ksigma As Bs) (sigma C ([y] pi (A y) ([_] D))) ([w] sigma (A (pi1 w)) ([x] B (app (pi2 w) (X (pi1 w) x))))
+		   <- skof-il As C ([y] A y)
+		   <- skof-il Bs D ([z] B z)
+		   <- ({y} {x} expand-il x (A y) (X y x)).
+
+skof-il/sing	: skof-il ksing t ([x] sing x).
+
+skof-il/one	: skof-il kone one ([_] one).
+
+
+
+
+%%%%%  Equality  %%%%%
+
+expand-il-resp : con-eq R R' -> kind-eq A A' -> con-eq M M' -> expand-il R A M -> expand-il R' A' M' -> type.
+%mode expand-il-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: expand-il-resp _ _ _ D D.
+
+%worlds (conblock) (expand-il-resp _ _ _ _ _).
+%total {} (expand-il-resp _ _ _ _ _).
+
+
+
+skof-il-resp : skel-eq K K' -> kind-eq C C' -> ({x} kind-eq (A x) (A' x)) -> skof-il K C A -> skof-il K' C' A' -> type.
+%mode skof-il-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: skof-il-resp skel-eq/i kind-eq/i ([_] kind-eq/i) D D.
+
+%worlds (conblock) (skof-il-resp _ _ _ _ _).
+%total {} (skof-il-resp _ _ _ _ _).
+
+
+
+
+
+%%%%%  Unnecessary Stuff  %%%%%
+
+%%  Artifacts of the port from the singleton language.
+
+cn-of/var	: cn-of X K
+		   <- cn-of X K
+		   <- kd-wf K
+                = [d2] [d1] (cn-of/equiv (kd-equiv/refl d2) d1).
+
+
+
+cn-of-subst : ({x} cn-of x A -> cn-of (M x) (B x))
+	       -> cn-of N A
+	       -> cn-of (M N) (B N) -> type.
+%mode cn-of-subst +X1 +X2 -X3.
+
+-	: cn-of-subst D D1 (D _ D1).
+
+%worlds (conbind | conbind-reg) (cn-of-subst _ _ _).
+%total {} (cn-of-subst _ _ _).
+
+
+
+cn-of-subst2 : ({x} cn-of x A -> {y} cn-of y (B x) -> cn-of (M x y) (C x y))
+		-> cn-of N A
+		-> cn-of O (B N)
+		-> cn-of (M N O) (C N O) -> type.
+%mode cn-of-subst2 +X1 +X2 +X3 -X4.
+
+-	: cn-of-subst2 D D1 D2 (D _ D1 _ D2).
+
+%worlds (conbind | conbind-reg) (cn-of-subst2 _ _ _ _).
+%total {} (cn-of-subst2 _ _ _ _).
+
+
+
+kd-wf-subst : ({x} cn-of x A -> kd-wf (B x))
+	       -> cn-of N A
+	       -> kd-wf (B N) -> type.
+%mode kd-wf-subst +X1 +X2 -X3.
+
+-	: kd-wf-subst D D1 (D _ D1).
+
+%worlds (conbind | conbind-reg) (kd-wf-subst _ _ _).
+%total {} (kd-wf-subst _ _ _).
+
+
+
+cn-equiv-subst : ({x} cn-of x A -> cn-equiv (M x) (M' x) (B x))
+		   -> cn-of N A
+		   -> cn-equiv (M N) (M' N) (B N) -> type.
+%mode cn-equiv-subst +X1 +X2 -X3.
+
+-	: cn-equiv-subst D D1 (D _ D1).
+
+%worlds (conbind | conbind-reg) (cn-equiv-subst _ _ _).
+%total {} (cn-equiv-subst _ _ _).
+
+
+
+cn-equiv-subst2 : ({x} cn-of x A -> {y} cn-of y (B x) -> cn-equiv (M x y) (M' x y) (C x y))
+		    -> cn-of N A
+		    -> cn-of O (B N)
+		    -> cn-equiv (M N O) (M' N O) (C N O) -> type.
+%mode cn-equiv-subst2 +X1 +X2 +X3 -X4.
+
+-	: cn-equiv-subst2 D D1 D2 (D _ D1 _ D2).
+
+%worlds (conbind | conbind-reg) (cn-equiv-subst2 _ _ _ _).
+%total {} (cn-equiv-subst2 _ _ _ _).
+
+
+
+
+%%%%%  Expand-Il Theorems  %%%%%
+
+simp-il : kind -> stp -> type.
+
+simp-il/t		: simp-il t st.
+
+simp-il/pi	: simp-il (pi A B) (spi S T)
+		   <- simp-il A S
+		   <- ({x} simp-il (B x) T).
+
+simp-il/sigma	: simp-il (sigma A B) (ssigma S T)
+		   <- simp-il A S
+		   <- ({x} simp-il (B x) T).
+
+simp-il/sing	: simp-il (sing R) st.
+
+simp-il/one	: simp-il one sone.
+
+
+
+can-simp-il : {A} simp-il A T -> type.
+%mode can-simp-il +X1 -X2.
+
+-t	: can-simp-il t simp-il/t.
+
+-pi	: can-simp-il (pi A B) (simp-il/pi D2 D1)
+	   <- can-simp-il A D1
+	   <- ({x} can-simp-il (B x) (D2 x)).
+
+-sigma	: can-simp-il (sigma A B) (simp-il/sigma D2 D1)
+	   <- can-simp-il A D1
+	   <- ({x} can-simp-il (B x) (D2 x)).
+
+-sing	: can-simp-il (sing R) simp-il/sing.
+
+-one	: can-simp-il one simp-il/one.
+
+%worlds (conblock) (can-simp-il _ _).
+%total A (can-simp-il A _).
+
+
+
+can-expand-il* : {R} {T} simp-il A T -> expand-il R A M -> type.
+%mode can-expand-il* +X1 +X2 +X3 -X4.
+
+-	: can-expand-il* _ _ _ expand-il/t.
+
+-	: can-expand-il* _ _ (simp-il/pi Dsimp2 Dsimp1) (expand-il/pi D2 D1)
+	   <- ({x} can-expand-il* _ _ Dsimp1 (D1 x))
+	   <- ({x} can-expand-il* _ _ (Dsimp2 x) (D2 x)).
+
+-	: can-expand-il* _ _ (simp-il/sigma (Dsimp2 : {x} simp-il (B x) T) Dsimp1) (expand-il/sigma D2 D1)
+	   <- can-expand-il* _ _ Dsimp1 D1
+	   <- can-expand-il* _ _ (Dsimp2 _) D2.
+
+-	: can-expand-il* _ _ _ expand-il/sing.
+
+-	: can-expand-il* _ _ _ expand-il/one.
+
+%worlds (conblock) (can-expand-il* _ _ _ _).
+%total T (can-expand-il* _ T _ _).
+
+
+
+can-expand-il : {R} {A} expand-il R A M -> type.
+%mode can-expand-il +X1 +X2 -X3.
+
+-	: can-expand-il R A Dexpand
+	   <- can-simp-il A Dsimp
+	   <- can-expand-il* _ _ Dsimp Dexpand.
+
+%worlds (conblock) (can-expand-il _ _ _).
+%total {} (can-expand-il _ _ _).
+
+
+
+expand-il-fun : expand-il R A M -> expand-il R A M' -> con-eq M M' -> type.
+%mode expand-il-fun +X1 +X2 -X3.
+
+-	: expand-il-fun expand-il/t expand-il/t con-eq/i.
+
+-	: expand-il-fun (expand-il/pi Dexpand-il2 Dexpand-il1) (expand-il/pi Dexpand-il2' Dexpand-il1') Deq
+	   <- ({x} expand-il-fun (Dexpand-il1 x) (Dexpand-il1' x) (Deq1 x))
+	   <- ({x} con-resp-con ([m] app R m) (Deq1 x) (Deq1' x))
+	   <- ({x} expand-il-resp (Deq1' x) kind-eq/i con-eq/i (Dexpand-il2 x) (Dexpand-il2'' x))
+	   <- ({x} expand-il-fun (Dexpand-il2'' x) (Dexpand-il2' x) (Deq2 x))
+	   <- lam-resp kind-eq/i Deq2 Deq.
+
+-	: expand-il-fun (expand-il/sigma Dexpand-il2 Dexpand-il1) (expand-il/sigma Dexpand-il2' Dexpand-il1') Deq
+	   <- expand-il-fun Dexpand-il1 Dexpand-il1' Deq1
+	   <- expand-il-fun Dexpand-il2 Dexpand-il2' Deq2
+	   <- pair-resp Deq1 Deq2 Deq.
+
+-	: expand-il-fun expand-il/sing expand-il/sing con-eq/i.
+
+-	: expand-il-fun expand-il/one expand-il/one con-eq/i.
+
+%worlds (conblock) (expand-il-fun _ _ _).
+%total D (expand-il-fun _ D _).
+
+
+
+expand-il-equiv : cn-of R A -> expand-il R A M -> cn-equiv R M A -> type.
+%mode expand-il-equiv +X1 +X2 -X3.
+
+-	: expand-il-equiv D expand-il/t (cn-equiv/refl D).
+
+-	: expand-il-equiv DofR (expand-il/pi Dexpand2 Dexpand1)
+	   (cn-equiv/trans
+	      (cn-equiv/lam
+		 ([x] [d]
+		    cn-equiv/trans
+		    (DequivRX x d)
+		    (cn-equiv/app
+		       (DequivX x d)
+		       (cn-equiv/refl DofR)))
+		 (kd-equiv/refl DwfA))
+	      (cn-equiv/etapi
+		 DwfA
+		 DofR))
+	   <- cn-of-reg DofR 
+	      (kd-wf/pi (DwfB : {x} cn-of x A -> kd-wf (B x)) DwfA)
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfA
+		 -> expand-il-equiv d (Dexpand1 x)
+		    (DequivX x d))
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfA
+		 -> cn-equiv-reg (DequivX x d)
+		 (DD x d) (DofX x d) (DDD x d))
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfA
+		 -> functionality-kd DwfB (DequivX x d) (DequivBx x d))
+	   <- ({x} {d:cn-of x A} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d DwfA
+		 -> expand-il-equiv
+		    (cn-of/equiv
+		       (kd-equiv/symm (DequivBx x d))
+		       (cn-of/app (DofX x d) DofR))
+		    (Dexpand2 x)
+		    (DequivRX x d)).
+
+-	: expand-il-equiv DofR (expand-il/sigma Dexpand2 Dexpand1)
+	   (cn-equiv/trans
+	      (cn-equiv/pair
+		 DwfB
+		 Dequiv2
+		 Dequiv1)
+	      (cn-equiv/etasigma
+		 DwfB
+		 DofR))
+	   <- cn-of-reg DofR 
+	      (kd-wf/sigma (DwfB : {x} cn-of x A -> kd-wf (B x)) DwfA)
+	   <- expand-il-equiv (cn-of/pi1 DofR) Dexpand1 Dequiv1
+	   <- expand-il-equiv (cn-of/pi2 DofR) Dexpand2 Dequiv2.
+
+-	: expand-il-equiv DofR expand-il/sing
+	   (cn-equiv/symm
+	      (cn-equiv/sing
+		 (cn-equiv/symm
+		    (cn-equiv/singelim DofR)))).
+
+-	: expand-il-equiv DofR expand-il/one
+	   (cn-equiv/one
+	      cn-of/star
+	      DofR).
+
+%worlds (conbind-reg) (expand-il-equiv _ _ _).
+%total D (expand-il-equiv _ D _).
+
+
+
+expand-il-reg : cn-of R A -> expand-il R A M -> cn-of M A -> type.
+%mode expand-il-reg +X1 +X2 -X3.
+
+-	: expand-il-reg Dof Dexpand Dof'
+	   <- expand-il-equiv Dof Dexpand Dequiv
+	   <- cn-equiv-reg Dequiv _ Dof' _.
+
+%worlds (conbind-reg) (expand-il-reg _ _ _).
+%total {} (expand-il-reg _ _ _).
+
+
+
+
+%%%%%  Skof-Il Theorems  %%%%%
+
+can-skof-il : {K}
+	    skof-il K A B -> type.
+%mode can-skof-il +X1 -X2.
+
+-	: can-skof-il _ skof-il/t.
+
+-	: can-skof-il _ (skof-il/pi Dexp D2 D1)
+	   <- can-skof-il _ D1
+	   <- can-skof-il _ D2
+	   <- ({y} {x} can-expand-il _ _ (Dexp y x)).
+
+-	: can-skof-il _ (skof-il/sigma Dexp D2 D1)
+	   <- can-skof-il _ D1
+	   <- can-skof-il _ D2
+	   <- ({y} {x} can-expand-il _ _ (Dexp y x)).
+
+-	: can-skof-il _ skof-il/sing.
+
+-	: can-skof-il _ skof-il/one.
+
+%worlds (conblock) (can-skof-il _ _).
+%total K (can-skof-il K _).
+
+
+
+skof-il-fun : skof-il K A B -> skof-il K A' B' -> kind-eq A A' -> ({x} kind-eq (B x) (B' x)) -> type.
+%mode skof-il-fun +X1 +X2 -X3 -X4.
+
+-	: skof-il-fun skof-il/t skof-il/t kind-eq/i ([_] kind-eq/i).
+
+skof-il-fun-eq : {F:kind -> (con -> kind) -> kind}
+		kind-eq C C'
+		-> kind-eq D D'
+		-> ({x} kind-eq (A x) (A' x))
+		-> ({x} kind-eq (B x) (B' x))
+		-> ({y} {x} con-eq (X y x) (X' y x))
+		-> kind-eq (sigma C ([y] pi (A y) ([_] D))) (sigma C' ([y] pi (A' y) ([_] D')))
+		-> ({w} kind-eq (F (A (pi1 w)) ([x] B (app (pi2 w) (X (pi1 w) x)))) (F (A' (pi1 w)) ([x] B' (app (pi2 w) (X' (pi1 w) x)))))
+		-> type.
+%mode skof-il-fun-eq +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+-	: skof-il-fun-eq F _ _ (_ : {x} kind-eq (A x) (A x)) (_ : {x} kind-eq (B x) (B x)) (_ : {y} {x} con-eq (X y x) (X y x)) kind-eq/i ([_] kind-eq/i).
+
+%worlds (conblock) (skof-il-fun-eq _ _ _ _ _ _ _ _).
+%total {} (skof-il-fun-eq _ _ _ _ _ _ _ _).
+
+-	: skof-il-fun (skof-il/pi Dexp Db Da) (skof-il/pi Dexp' Db' Da') Deq1 Deq2
+	   <- skof-il-fun Da Da' DeqC DeqA
+	   <- skof-il-fun Db Db' DeqD (DeqB : {x} kind-eq (B x) (B' x))
+	   <- ({y} {x} expand-il-resp con-eq/i (DeqA y) con-eq/i (Dexp y x) (Dexp'' y x))
+	   <- ({y} {x} expand-il-fun (Dexp'' y x) (Dexp' y x) (DeqX y x : con-eq (X y x) (X' y x)))
+	   <- skof-il-fun-eq pi DeqC DeqD DeqA DeqB DeqX Deq1 Deq2.
+
+-	: skof-il-fun (skof-il/sigma Dexp Db Da) (skof-il/sigma Dexp' Db' Da') Deq1 Deq2
+	   <- skof-il-fun Da Da' DeqC DeqA
+	   <- skof-il-fun Db Db' DeqD (DeqB : {x} kind-eq (B x) (B' x))
+	   <- ({y} {x} expand-il-resp con-eq/i (DeqA y) con-eq/i (Dexp y x) (Dexp'' y x))
+	   <- ({y} {x} expand-il-fun (Dexp'' y x) (Dexp' y x) (DeqX y x : con-eq (X y x) (X' y x)))
+	   <- skof-il-fun-eq sigma DeqC DeqD DeqA DeqB DeqX Deq1 Deq2.
+
+-	: skof-il-fun skof-il/sing skof-il/sing kind-eq/i ([_] kind-eq/i).
+
+-	: skof-il-fun skof-il/one skof-il/one kind-eq/i ([_] kind-eq/i).
+
+%worlds (conblock) (skof-il-fun _ _ _ _).
+%total D (skof-il-fun D _ _ _).
+
+
+
+skof-il-reg : skof-il K A B
+%%
+	    -> kd-wf A 
+	    -> ({x} cn-of x A -> kd-wf (B x)) -> type.
+%mode skof-il-reg +X1 -X2 -X3.
+
+-	: skof-il-reg skof-il/t kd-wf/one ([_] [_] kd-wf/t).
+
+-	: skof-il-reg (skof-il/pi Dexpand Dskof-il2 Dskof-il1) 
+	   (kd-wf/sigma 
+	      ([y] [d] kd-wf/pi ([_] [_] DwfD) (DwfA y d)) 
+	      DwfC) 
+	   ([w] [d] 
+	      kd-wf/pi 
+	      ([x] [e] DwfBz w d x e)
+	      (DwfAy w d))
+	   <- skof-il-reg Dskof-il1 
+	      (DwfC : kd-wf C) 
+	      (DwfA : {y} cn-of y C -> kd-wf (A y))
+	   <- skof-il-reg Dskof-il2
+	      (DwfD : kd-wf D)
+	      (DwfB : {z} cn-of z D -> kd-wf (B z))
+	   <- ({w} {d:cn-of w (sigma C ([y] pi (A y) ([_] D)))} 
+		 kd-wf-subst 
+		 DwfA
+		 (cn-of/pi1 d)
+		 (DwfAy w d))
+	   <- ({y} {dy} {dys}
+		 mcn-assm dy dys
+		 -> cn-of-reg dy DwfC
+		 -> {x} {dx} {dxs}
+		    mcn-assm dx dxs
+		    -> cn-of-reg dx (DwfA y dy)
+		    -> expand-il-reg dx (Dexpand y x)
+		       (DofX y dy x dx))
+	   <- ({w} {d:cn-of w (sigma C ([y] pi (A y) ([_] D)))}
+		 {x} {e:cn-of x (A (pi1 w))}
+		 cn-of-subst2
+		 DofX 
+		 (cn-of/pi1 d)
+		 (cn-of/var (DwfAy w d) e)
+		 (DofX' w d x e))
+	   <- ({w} {d:cn-of w (sigma C ([y] pi (A y) ([_] D)))}
+		 {x} {e:cn-of x (A (pi1 w))}
+		 kd-wf-subst
+		 DwfB
+		 (cn-of/app
+		    (DofX' w d x e)
+		    (cn-of/pi2 (cn-of/var (kd-wf/sigma ([y] [d] kd-wf/pi ([_] [_] DwfD) (DwfA y d)) DwfC) d)))
+		 (DwfBz w d x e)).
+
+-	: skof-il-reg (skof-il/sigma Dexpand Dskof-il2 Dskof-il1) 
+	   (kd-wf/sigma 
+	      ([y] [d] kd-wf/pi ([_] [_] DwfD) (DwfA y d)) 
+	      DwfC) 
+	   ([w] [d] 
+	      kd-wf/sigma
+	      ([x] [e] DwfBz w d x e)
+	      (DwfAy w d))
+	   <- skof-il-reg Dskof-il1 
+	      (DwfC : kd-wf C) 
+	      (DwfA : {y} cn-of y C -> kd-wf (A y))
+	   <- skof-il-reg Dskof-il2
+	      (DwfD : kd-wf D)
+	      (DwfB : {z} cn-of z D -> kd-wf (B z))
+	   <- ({w} {d:cn-of w (sigma C ([y] pi (A y) ([_] D)))} 
+		 kd-wf-subst 
+		 DwfA
+		 (cn-of/pi1 d)
+		 (DwfAy w d))
+	   <- ({y} {dy} {dys}
+		 mcn-assm dy dys
+		 -> cn-of-reg dy DwfC
+		 -> {x} {dx} {dxs}
+		    mcn-assm dx dxs
+		    -> cn-of-reg dx (DwfA y dy)
+		    -> expand-il-reg dx (Dexpand y x)
+		       (DofX y dy x dx))
+	   <- ({w} {d:cn-of w (sigma C ([y] pi (A y) ([_] D)))}
+		 {x} {e:cn-of x (A (pi1 w))}
+		 cn-of-subst2
+		 DofX 
+		 (cn-of/pi1 d)
+		 (cn-of/var (DwfAy w d) e)
+		 (DofX' w d x e))
+	   <- ({w} {d:cn-of w (sigma C ([y] pi (A y) ([_] D)))}
+		 {x} {e:cn-of x (A (pi1 w))}
+		 kd-wf-subst
+		 DwfB
+		 (cn-of/app
+		    (DofX' w d x e)
+		    (cn-of/pi2 (cn-of/var (kd-wf/sigma ([y] [d] kd-wf/pi ([_] [_] DwfD) (DwfA y d)) DwfC) d)))
+		 (DwfBz w d x e)).
+
+-	: skof-il-reg skof-il/sing kd-wf/t ([x] [d] kd-wf/sing (cn-of/var kd-wf/t d)).
+
+-	: skof-il-reg skof-il/one kd-wf/one ([_] [_] kd-wf/one).
+
+%worlds (conbind-reg) (skof-il-reg _ _ _).
+%total D (skof-il-reg D _ _).
+

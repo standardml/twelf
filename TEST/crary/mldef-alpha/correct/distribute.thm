@@ -1,0 +1,166 @@
+
+distribute-sg-reg : sg-wf S
+		     -> sg-fst S K
+		     -> ({a} cn-of a K -> sg-wf (Spat a))
+		     -> distribute-sg S Spat Sdist
+%%
+		     -> sg-wf Sdist
+		     -> type.
+%mode distribute-sg-reg +X1 +X2 +X3 +X4 -X5.
+
+- : distribute-sg-reg
+     (DwfS : sg-wf S)
+     (DfstS : sg-fst S K)
+     _
+     distribute-sg/one
+     %%
+     sg-wf/one.
+
+- : distribute-sg-reg
+     (DwfS : sg-wf S)
+     (DfstS : sg-fst S K)
+     ([a] [da:cn-of a K]
+	sg-wf/sigma
+	(DwfS2 a da : {b} cn-of b (K1 a) -> sg-wf (S2 a))
+	(DfstS1 a : sg-fst (S1 a) (K1 a))
+	(DwfS1 a da : sg-wf (S1 a)))
+     (distribute-sg/sigma
+	(Ddist2 : distribute-sg S ([a] S2 a) S2')
+	(Ddist1 : distribute-sg S ([a] S1 a) S1'))
+     %%
+     (sg-wf/sigma ([_] [_] DwfS2') DfstS1' DwfS1')
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- distribute-sg-reg DwfS DfstS DwfS1
+	Ddist1
+	(DwfS1' : sg-wf S1')
+     <- ({a} {da:cn-of a K}
+	   sg-fst-reg (DwfS1 a da) (DfstS1 a)
+	   (DwfK1 a da : kd-wf (K1 a)))
+     <- ({a} {da:cn-of a K}
+	   inhabitation (DwfK1 a da)
+	   (DofC1 a da : cn-of (C1 a) (K1 a)))
+     <- distribute-sg-reg DwfS DfstS ([a] [da] DwfS2 a da (C1 a) (DofC1 a da))
+	Ddist2
+	(DwfS2' : sg-wf S2')
+     <- can-sg-fst S1'
+	(DfstS1' : sg-fst S1' K1').
+
+- : distribute-sg-reg
+     (DwfS : sg-wf S)
+     (DfstS : sg-fst S K)
+     ([a] [da:cn-of a K]
+	sg-wf/named
+	(DwfS' a da : sg-wf (S' a)))
+     (distribute-sg/named
+	(Ddist : distribute-sg S ([a] S' a) S''))
+     %%
+     (sg-wf/named DwfS'')
+     <- distribute-sg-reg DwfS DfstS DwfS' Ddist
+	(DwfS'' : sg-wf S'').
+
+- : distribute-sg-reg
+     (DwfS : sg-wf S)
+     (DfstS : sg-fst S K)
+     ([a] [da:cn-of a K]
+	sg-wf/datom
+	(DofT a da : cn-of (T a) t))
+     distribute-sg/datom
+     %%
+     (sg-wf/pi ([a] [da] sg-wf/datom (DofT a da)) DfstS DwfS).
+
+%worlds (conbind | modbind | termbind) (distribute-sg-reg _ _ _ _ _).
+%total D (distribute-sg-reg _ _ _ D _).
+
+
+
+distribute-md-reg : sg-wf S
+		     -> sg-fst S K
+		     -> ({a} cn-of a K
+			-> {m} md-assm m S
+			-> md-fst m a
+			-> md-of pure st/nil (Mpat a m) (Spat a))
+		     -> distribute-sg S Spat Sdist
+		     -> distribute-md S Spat Mpat Mdist
+%%
+		     -> md-of pure st/nil Mdist Sdist
+		     -> type.
+%mode distribute-md-reg +X1 +X2 +X3 +X4 +X5 -X6.
+
+- : distribute-md-reg
+     (DwfS : sg-wf S)
+     (DfstS : sg-fst S K)
+     (DofMpat : {a} cn-of a K
+		 -> {m} md-assm m S
+		 -> md-fst m a
+		 -> md-of pure st/nil (Mpat a m) sg/one)
+     distribute-sg/one
+     distribute-md/one
+     %%
+     md-of/unit.
+
+- : distribute-md-reg
+     (DwfS : sg-wf S)
+     (DfstS : sg-fst S K)
+     (DofMpat : {a} cn-of a K
+		 -> {m} md-assm m S
+		 -> md-fst m a
+		 -> md-of pure st/nil (Mpat a m) (sg/sigma (S1 a) ([_] S2 a)))
+     (distribute-sg/sigma
+	(DdistS2 : distribute-sg S ([a] S2 a) S2')
+	(DdistS1 : distribute-sg S ([a] S1 a) S1'))
+     (distribute-md/sigma
+	(DdistM2 : distribute-md S ([a] S2 a) ([a] [m] md/pi2 (Mpat a m)) M2)
+	(DdistM1 : distribute-md S ([a] S1 a) ([a] [m] md/pi1 (Mpat a m)) M1))
+     %%
+     (md-of/pair DofM2 DofM1)
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK 
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> can-md-fst (DofMpat a da m dm dfst)
+	      (DfstMpat a m dfst : md-fst (Mpat a m) (Cpat a)))
+     <- distribute-md-reg DwfS DfstS
+	([a] [da] [m] [dm] [dfst] md-of/pi1 (DofMpat a da m dm dfst))
+	DdistS1 DdistM1
+	(DofM1 : md-of pure st/nil M1 S1')
+     <- distribute-md-reg DwfS DfstS
+	([a] [da] [m] [dm] [dfst] md-of/pi2 (DfstMpat a m dfst) (DofMpat a da m dm dfst))
+	DdistS2 DdistM2
+	(DofM2 : md-of pure st/nil M2 S2').
+
+- : distribute-md-reg
+     (DwfS : sg-wf S)
+     (DfstS : sg-fst S K)
+     (DofMpat : {a} cn-of a K
+		 -> {m} md-assm m S
+		 -> md-fst m a
+		 -> md-of pure st/nil (Mpat a m) (sg/named L (S' a)))
+     (distribute-sg/named
+	(DdistS : distribute-sg S ([a] S' a) S''))
+     (distribute-md/named
+	(DdistM : distribute-md S ([a] S' a) ([a] [m] md/out (Mpat a m)) M'))
+     %%
+     (md-of/in DofM')
+     <- distribute-md-reg DwfS DfstS
+	([a] [da] [m] [dm] [dfst] md-of/out (DofMpat a da m dm dfst))
+	DdistS DdistM
+	(DofM' : md-of pure st/nil M' S'').
+
+- : distribute-md-reg
+     (DwfS : sg-wf S)
+     (DfstS : sg-fst S K)
+     (DofMpat : {a} cn-of a K
+		 -> {m} md-assm m S
+		 -> md-fst m a
+		 -> md-of pure st/nil (Mpat a m) (sg/datom (T a)))
+     distribute-sg/datom
+     distribute-md/datom
+     %%
+     (md-of/lam DofMpat DfstS DwfS).
+
+%worlds (conbind-reg | modbind-reg | termbind-reg) (distribute-md-reg _ _ _ _ _ _).
+%total D (distribute-md-reg _ _ _ _ D _).

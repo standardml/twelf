@@ -1,0 +1,99 @@
+
+%% LONGID
+
+- : sigexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (sigexp-elab/longid
+	(Dresolve : resolve-long Mec Sec name/sig I M (sg/sgatom S)))
+     %%
+     DwfS
+     <- resolve-long-reg DofEC Dresolve
+	(DofM : md-of pure st/nil M (sg/sgatom S))
+     <- md-of-reg DofM
+	(sg-wf/sgatom
+	   (DwfS : sg-wf S)).
+
+
+%% SIG
+
+- : sigexp-elab-reg 
+     (DofEC : md-of pure st/nil Mec Sec)
+     (sigexp-elab/sig
+	(Delab : spec-elab Mec Sec SPe S))
+     Dwf
+     <- spec-elab-reg DofEC Delab (Dwf : sg-wf S).
+
+
+%% WHERE TYPE
+
+- : sigexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (sigexp-elab/where-type
+	(Dpatch : patch-sg P S (sg/satom (pi Karg ([a] sing (T a)))) S')
+	(Dsub : kd-sub (pi Karg ([a] sing (T a))) Kresolved)
+	(Dapply : {n} apply-path P n (M n))
+	(Dresolve : {b} {n}
+		     md-fst n b
+		     -> resolve-long n S name/con I (M n) (sg/satom Kresolved))
+	(DelabT : {a} cn-of a Karg
+		   -> {m} md-assm m Sarg
+		   -> md-fst m a
+		   -> ty-elab (md/pair Mec m) (sg/sigma Sec ([_] Sarg)) Te (T a))
+	(DfstSarg : sg-fst Sarg Karg)
+	(DelabSarg : tyargs-elab TVLe Sarg)
+	(DelabS : sigexp-elab Mec Sec Se S))
+     DwfS'
+     <- sigexp-elab-reg DofEC DelabS
+	(DwfS : sg-wf S)
+     <- tyargs-elab-reg DelabSarg
+	(DwfSarg : sg-wf Sarg)
+     <- sg-fst-reg DwfSarg DfstSarg
+	(DwfKarg : kd-wf Karg)
+     <- ({a} {da:cn-of a Karg} {m} {dm:md-assm m Sarg} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfKarg
+	   -> md-assm-reg dm dfst DfstSarg da DwfSarg
+	   -> ty-elab-reg (md-of/pair (md-of/var dm) DofEC) (DelabT a da m dm dfst)
+	      (DofT a da : cn-of (T a) t))
+     <- resolve-long-proj' Dresolve Dapply
+	(Dproj : sg-proj P S ([_] sg/satom Kresolved))
+     <- can-sg-fst S
+	(DfstS : sg-fst S K)
+     <- patch-sg-reg DwfS DfstS Dproj ([_] [_] sg-sub/satom Dsub) Dpatch
+	(Dsub' : sg-sub S' S)
+     <- sg-sub-reg Dsub'
+	(DwfS' : sg-wf S') _.
+
+%% WHERE TYPE
+
+- : sigexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (sigexp-elab/where-structure
+	(Dpatch : patch-sg P S (Snewsing Cnew) S')
+	(Dsub : sg-sub (Snewsing Cnew) Sresolved)
+	(Dapply : {n} apply-path P n (M n))
+	(Dresolve : {b} {n}
+		     md-fst n b
+		     -> resolve-long n S name/con I (M n) Sresolved)
+	(Dsingle : single-sg Snew ([a] Snewsing a))
+	(DfstMnew : md-fst Mnew Cnew)
+	(DresolveNew : resolve-long Mec Sec name/mod Inew Mnew Snew)
+	(DelabS : sigexp-elab Mec Sec Se S))
+     DwfS'
+     <- sigexp-elab-reg DofEC DelabS
+	(DwfS : sg-wf S)
+     <- resolve-long-reg DofEC DresolveNew 
+	(DofMnew : md-of pure st/nil Mnew Snew)
+     <- can-sg-fst Snew
+	(DfstSnew : sg-fst Snew Knew)
+     <- md-fst-reg DofMnew DfstMnew DfstSnew
+	(DofCnew : cn-of Cnew Knew)
+     <- resolve-long-proj' Dresolve Dapply
+	(Dproj : sg-proj P S ([_] Sresolved))
+     <- can-sg-fst S
+	(DfstS : sg-fst S K)
+     <- patch-sg-reg DwfS DfstS Dproj ([_] [_] Dsub) Dpatch
+	(Dsub' : sg-sub S' S)
+     <- sg-sub-reg Dsub'
+	(DwfS' : sg-wf S') _.

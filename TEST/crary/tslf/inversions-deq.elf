@@ -1,0 +1,167 @@
+
+inv/cn-deq/tp/cross	: cn-deq (tp/cross C1 C2) (tp/cross C3 C4) kd/type
+			   -> cn-deq C1 C3 kd/type
+			   -> cn-deq C2 C4 kd/type
+			   -> type.
+%mode inv/cn-deq/tp/cross +D1 -D2 -D3.
+
+-	: inv/cn-deq/tp/cross D D1 D2
+	   <- map-equiv D (map/cross Dmap2 Dmap1) (map/cross Dmap2' Dmap1') tmap/t Deq
+	   <- binary-equiv-inversion
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      Deq
+	      Deq1
+	      Deq2
+	   <- vdt/cn-deq D Dof Dof' _
+	   <- inv/ofkd/tp/cross Dof kd-sub/kd/type Dof1 Dof2
+	   <- inv/ofkd/tp/cross Dof' kd-sub/kd/type Dof1' Dof2'
+	   <- invert-map-equiv Dmap1 Dmap1' tmap/t Dof1 Dof1' Deq1 D1
+	   <- invert-map-equiv Dmap2 Dmap2' tmap/t Dof2 Dof2' Deq2 D2.
+
+%worlds () (inv/cn-deq/tp/cross _ _ _).
+%total {} (inv/cn-deq/tp/cross _ _ _).
+
+
+
+inv/cn-deq/tp/ref	: cn-deq (tp/ref C1) (tp/ref C3) kd/type
+			   -> cn-deq C1 C3 kd/type
+			   -> type.
+%mode inv/cn-deq/tp/ref +D1 -D2.
+
+-	: inv/cn-deq/tp/ref D D1
+	   <- map-equiv D (map/ref Dmap1) (map/ref Dmap1') tmap/t Deq
+	   <- unary-equiv-inversion
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      Deq
+	      Deq1
+	   <- vdt/cn-deq D Dof Dof' _
+	   <- inv/ofkd/tp/ref Dof kd-sub/kd/type Dof1
+	   <- inv/ofkd/tp/ref Dof' kd-sub/kd/type Dof1'
+	   <- invert-map-equiv Dmap1 Dmap1' tmap/t Dof1 Dof1' Deq1 D1.
+
+%worlds () (inv/cn-deq/tp/ref _ _).
+%total {} (inv/cn-deq/tp/ref _ _).
+
+
+
+inv/cn-deq/tp/forall	: cn-deq (tp/forall K1 C1) (tp/forall K2 C2) kd/type
+			   -> kd-deq K1 K2
+			   -> ({a}{da: ofkd a K1} cn-deq (C1 a) (C2 a) kd/type)
+			   -> type.
+%mode inv/cn-deq/tp/forall +D1 -D2 -D3.
+
+-	: inv/cn-deq/tp/forall D D1 D2
+	   <- map-equiv D (map/forall Dmap2 Dmap1) (map/forall Dmap2' Dmap1') tmap/t Deq
+	   <- forall-equiv-inversion Deq Deq1 Deq2
+	   <- vdt/cn-deq D Dof Dof' _
+	   <- inv/ofkd/tp/forall Dof kd-sub/kd/type Dwf Dof1
+	   <- inv/ofkd/tp/forall Dof' kd-sub/kd/type Dwf' Dof1'
+	   <- invert-map-tequiv Dmap1 Dmap1' Dwf Dwf' Deq1 D1
+	   <- elam-equiv-invert Deq2
+	      _ _ Deq2'
+	   <- invert-map-equiv1 
+	      Dmap1 Dmap2 Dmap2' ([_] [_] [_] tmap/t)
+	      Dwf Dof1 ([a] [d] Dof1' a (ofkd/deq d D1)) Deq2'
+	      D2.
+	      
+%worlds () (inv/cn-deq/tp/forall _ _ _).
+%total {} (inv/cn-deq/tp/forall _ _ _).
+
+
+
+inv/cn-deq/tp/arrow	: cn-deq (tp/arrow C1 C2) (tp/arrow C3 C4) kd/type
+			   -> cn-deq C1 C3 kd/type
+			   -> cn-deq C2 C4 kd/type
+			   -> type.
+%mode inv/cn-deq/tp/arrow +D1 -D2 -D3.
+
+-	: inv/cn-deq/tp/arrow D D1 D2
+	   <- map-equiv D (map/arrow Dmap2 Dmap1) (map/arrow Dmap2' Dmap1') tmap/t Deq
+	   <- binary-equiv-inversion
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      Deq
+	      Deq1
+	      Deq2
+	   <- vdt/cn-deq D Dof Dof' _
+	   <- inv/ofkd/tp/arrow Dof kd-sub/kd/type Dof1 Dof2
+	   <- inv/ofkd/tp/arrow Dof' kd-sub/kd/type Dof1' Dof2'
+	   <- invert-map-equiv Dmap1 Dmap1' tmap/t Dof1 Dof1' Deq1 D1
+	   <- invert-map-equiv Dmap2 Dmap2' tmap/t Dof2 Dof2' Deq2 D2.
+
+%worlds () (inv/cn-deq/tp/arrow _ _ _).
+%total {} (inv/cn-deq/tp/arrow _ _ _).
+
+
+
+
+inv/cn-deq/tp/sum	: cn-deq (tp/sum C1 C2) (tp/sum C3 C4) kd/type
+			   -> cn-deq C1 C3 kd/type
+			   -> cn-deq C2 C4 kd/type
+			   -> type.
+%mode inv/cn-deq/tp/sum +D1 -D2 -D3.
+
+-	: inv/cn-deq/tp/sum D D1 D2
+	   <- map-equiv D (map/sum Dmap2 Dmap1) (map/sum Dmap2' Dmap1') tmap/t Deq
+	   <- binary-equiv-inversion
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      Deq
+	      Deq1
+	      Deq2
+	   <- vdt/cn-deq D Dof Dof' _
+	   <- inv/ofkd/tp/sum Dof kd-sub/kd/type Dof1 Dof2
+	   <- inv/ofkd/tp/sum Dof' kd-sub/kd/type Dof1' Dof2'
+	   <- invert-map-equiv Dmap1 Dmap1' tmap/t Dof1 Dof1' Deq1 D1
+	   <- invert-map-equiv Dmap2 Dmap2' tmap/t Dof2 Dof2' Deq2 D2.
+
+%worlds () (inv/cn-deq/tp/sum _ _ _).
+%total {} (inv/cn-deq/tp/sum _ _ _).
+
+
+
+
+inv/cn-deq/cn/mu	: cn-deq (cn/mu K1 C1) (cn/mu K2 C2) kd/type
+			   -> ({a}{da: ofkd a kd/type} cn-deq (C1 a) (C2 a) kd/type)
+			   -> type.
+%mode inv/cn-deq/cn/mu +D1 -D2.
+
+-	: inv/cn-deq/cn/mu D D2
+	   <- map-equiv D (map/mu Dmap2) (map/mu Dmap2') tmap/t Deq
+	   <- unary-equiv-inversion 
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      Deq Deq2
+	   <- vdt/cn-deq D Dof Dof' _
+	   <- inv/ofkd/cn/mu Dof kd-sub/kd/type Dof1
+	   <- inv/ofkd/cn/mu Dof' kd-sub/kd/type Dof1'
+	   <- elam-equiv-invert Deq2
+	      _ _ Deq2'
+	   <- invert-map-equiv1 
+	      tmap/t Dmap2 Dmap2' ([_] [_] [_] tmap/t)
+	      kd-wf/kd/type Dof1 Dof1' Deq2'
+	      D2.
+
+%worlds () (inv/cn-deq/cn/mu _ _).
+%total {} (inv/cn-deq/cn/mu _ _).
+
+
+
+inv/cn-deq/tp/tag	: cn-deq (tp/tag C1) (tp/tag C3) kd/type
+			   -> cn-deq C1 C3 kd/type
+			   -> type.
+%mode inv/cn-deq/tp/tag +D1 -D2.
+
+-	: inv/cn-deq/tp/tag D D1
+	   <- map-equiv D (map/tag Dmap1) (map/tag Dmap1') tmap/t Deq
+	   <- unary-equiv-inversion
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      Deq
+	      Deq1
+	   <- vdt/cn-deq D Dof Dof' _
+	   <- inv/ofkd/tp/tag Dof kd-sub/kd/type Dof1
+	   <- inv/ofkd/tp/tag Dof' kd-sub/kd/type Dof1'
+	   <- invert-map-equiv Dmap1 Dmap1' tmap/t Dof1 Dof1' Deq1 D1.
+
+%worlds () (inv/cn-deq/tp/tag _ _).
+%total {} (inv/cn-deq/tp/tag _ _).
+
+
+

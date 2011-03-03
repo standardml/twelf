@@ -1,0 +1,281 @@
+
+%%%%%  Inversion Lemmas (Simply Typed, Explicit Context)  %%%%%
+
+aofes-invert-app : aofes G (app R M) T -> aofes G R (spi S T) -> ofes G M S -> type.
+%mode aofes-invert-app +X1 -X2 -X3.
+
+-	: aofes-invert-app (aofes/app D2 D1) D1 D2.
+
+-	: aofes-invert-app (aofes/closed Dordered Dsimp (aof/app _ Dsub Dof Daof))
+	   (aofes/closed Dordered (simp/pi DsimpB' DsimpA) Daof)
+	   Dofes'
+	   <- can-simp A (DsimpA : simp A S)
+	   <- ({x:atom} can-simp (B x) (DsimpB x : simp (B x) T'))
+	   <- tsub-preserves-simp Dsub DsimpB DsimpBx
+	   <- simp-fun DsimpBx Dsimp (Deq : stp-eq T' T)
+	   <- ({x} simp-resp tp-eq/i Deq (DsimpB x) (DsimpB' x : simp (B x) T))
+	   <- of-to-ofe Dof Dofe
+	   <- ofe-simp simpctx/nil DsimpA Dofe Dofes
+	   <- sappend-all _ Dappend
+	   <- weaken-ofes' Dappend Dordered Dofes Dofes'.
+
+-	: aofes-invert-app (aofes/var Dlookup) D1 D2
+	   <- slookup-isvar Dlookup Disvar
+	   <- isvar-app-contra Disvar Dfalse
+	   <- false-implies-aofes Dfalse D1
+	   <- false-implies-ofes Dfalse (D2 : ofes _ _ st).
+
+-	: (isvar-fun _ _ _ -> aofes-invert-app _ _ _) -> type.
+
+%worlds (var | ovar | bind) (aofes-invert-app _ _ _).
+%total {} (aofes-invert-app _ _ _).
+
+
+
+aofes-invert-pi1 : aofes G (pi1 R) T -> aofes G R (ssigma T S) -> type.
+%mode aofes-invert-pi1 +X1 -X2.
+
+-	: aofes-invert-pi1 (aofes/pi1 D) D.
+
+-	: aofes-invert-pi1 (aofes/closed Dordered Dsimp (aof/pi1 Daof))
+	   (aofes/closed Dordered (simp/sigma DsimpB Dsimp) Daof)
+	   <- ({x} can-simp (B x) (DsimpB x : simp (B x) T)).
+
+-	: aofes-invert-pi1 (aofes/var Dlookup) D
+	   <- slookup-isvar Dlookup Disvar
+	   <- isvar-pi1-contra Disvar Dfalse
+	   <- false-implies-aofes Dfalse (D : aofes _ _ (ssigma _ st)).
+
+-	: (isvar-fun _ _ _ -> aofes-invert-pi1 _ _) -> type.
+
+%worlds (var | ovar | bind) (aofes-invert-pi1 _ _).
+%total {} (aofes-invert-pi1 _ _).
+
+
+
+aofes-invert-pi2 : aofes G (pi2 R) T -> aofes G R (ssigma S T) -> type.
+%mode aofes-invert-pi2 +X1 -X2.
+
+-	: aofes-invert-pi2 (aofes/pi2 D) D.
+
+-	: aofes-invert-pi2 (aofes/closed Dordered Dsimp (aof/pi2 Daof))
+	   (aofes/closed Dordered (simp/sigma DsimpB' DsimpA) Daof)
+	   <- can-simp A (DsimpA : simp A S)
+	   <- ({x:atom} can-simp (B x) (DsimpB x : simp (B x) T'))
+	   <- simp-fun (DsimpB _) Dsimp (Deq : stp-eq T' T)
+	   <- ({x} simp-resp tp-eq/i Deq (DsimpB x) (DsimpB' x : simp (B x) T)).
+
+-	: aofes-invert-pi2 (aofes/var Dlookup) D
+	   <- slookup-isvar Dlookup Disvar
+	   <- isvar-pi2-contra Disvar Dfalse
+	   <- false-implies-aofes Dfalse (D : aofes _ _ (ssigma st _)).
+
+-	: (isvar-fun _ _ _ -> aofes-invert-pi2 _ _) -> type.
+
+%worlds (var | ovar | bind) (aofes-invert-pi2 _ _).
+%total {} (aofes-invert-pi2 _ _).
+
+
+
+aofes-invert-forall : aofes G (forall A) T -> wfes G A -> type.
+%mode aofes-invert-forall +X1 -X2.
+
+-	: aofes-invert-forall (aofes/forall _ D) D.
+
+-	: aofes-invert-forall (aofes/closed Dordered _ (aof/forall Dwf)) Dwfes'
+	   <- wf-to-wfe Dwf Dwfe
+	   <- wfe-simp simpctx/nil Dwfe Dwfes
+	   <- sappend-all _ Dappend
+	   <- weaken-wfes' Dappend Dordered Dwfes Dwfes'.
+
+-	: aofes-invert-forall (aofes/var Dlookup) D
+	   <- slookup-isvar Dlookup Disvar
+	   <- isvar-forall-contra Disvar Dfalse
+	   <- false-implies-wfes Dfalse D.
+
+-	: (isvar-fun _ _ _ -> aofes-invert-forall _ _) -> type.
+
+%worlds (var | bind | ovar) (aofes-invert-forall _ _).
+%total {} (aofes-invert-forall _ _).
+
+
+
+ofes-invert-st : ofes G M st -> term-eq M (at R) -> type.
+%mode ofes-invert-st +X1 -X2.
+
+-	: ofes-invert-st (ofes/at _) term-eq/i.
+
+-	: (isvar-fun _ _ _ -> ofes-invert-st _ _) -> type.
+
+%worlds (var | ovar | bind) (ofes-invert-st _ _).
+%total {} (ofes-invert-st _ _).
+
+
+
+
+%%%%%  Inversion Lemmas (Explicit Context)  %%%%%
+
+aofe-invert-var : ({x} isvar x I -> aofe (G x) x (A x)) -> ({x} isvar x I -> lookup (G x) x (A x)) -> type.
+%mode aofe-invert-var +X1 -X2.
+
+-	: aofe-invert-var ([x] [d] aofe/var _ (Dlookup x d)) Dlookup.
+
+-	: aofe-invert-var ([x] [d] aofe/closed _ (Daof x)) ([x] [_] Dlookup x)
+	   <- aof-noassm-var Daof Dfalse
+	   <- ({x} false-implies-lookup Dfalse (Dlookup x)).
+
+%worlds (var | ovar | bind) (aofe-invert-var _ _).
+%total {} (aofe-invert-var _ _).
+
+
+
+aofe-invert-forall : aofe G (forall A) B -> wfe G A -> tp-eq B (pi (pi A ([_] t)) ([_] t)) -> type.
+%mode aofe-invert-forall +X1 -X2 -X3.
+
+-	: aofe-invert-forall (aofe/forall D) D tp-eq/i.
+
+-	: aofe-invert-forall (aofe/closed Dord (aof/forall Dwf)) Dwfe' tp-eq/i
+	   <- wf-to-wfe Dwf Dwfe
+	   <- append-all _ Dappend
+	   <- weaken-wfe' Dappend Dord Dwfe Dwfe'.
+
+-	: aofe-invert-forall (aofe/var _ Dlookup) Dwf Deq
+	   <- lookup-isvar Dlookup Disvar
+	   <- isvar-forall-contra Disvar Dfalse
+	   <- false-implies-wfe Dfalse Dwf
+	   <- false-implies-tp-eq Dfalse Deq.
+
+%worlds (var | bind | ovar) (aofe-invert-forall _ _ _).
+%total {} (aofe-invert-forall _ _ _).
+
+
+
+aofe-invert-app : aofe G (app R M) C -> aofe G R (pi A B) -> ofe G M A -> tsub B M C -> type.
+%mode aofe-invert-app +X1 -X2 -X3 -X4.
+
+-	: aofe-invert-app (aofe/app _ D3 D2 D1) D1 D2 D3.
+
+-	: aofe-invert-app (aofe/closed Dordered (aof/app _ Dsub Dof Daof))
+	   (aofe/closed Dordered Daof)
+	   Dofe'
+	   Dsub
+	   <- of-to-ofe Dof Dofe
+	   <- append-all _ Dappend
+	   <- weaken-ofe' Dappend Dordered Dofe Dofe'.
+
+-	: aofe-invert-app (aofe/var _ Dlookup) Daofe Dofe Dsub
+	   <- lookup-isvar Dlookup Disvar
+	   <- isvar-app-contra Disvar Dfalse
+	   <- false-implies-aofe Dfalse (Daofe : aofe _ _ (pi t ([_] t)))
+	   <- false-implies-ofe Dfalse Dofe
+	   <- false-implies-tsub Dfalse Dsub.
+
+-	: (isvar-fun _ _ _ -> aofe-invert-app _ _ _ _) -> type.
+
+%worlds (var | ovar | bind) (aofe-invert-app _ _ _ _).
+%total {} (aofe-invert-app _ _ _ _).
+
+
+
+aofe-invert-pi1 : aofe G (pi1 R) A -> aofe G R (sigma A B) -> type.
+%mode aofe-invert-pi1 +X1 -X2.
+
+-	: aofe-invert-pi1 (aofe/pi1 D) D.
+
+-	: aofe-invert-pi1 (aofe/closed Dordered (aof/pi1 D)) (aofe/closed Dordered D).
+
+-	: aofe-invert-pi1 (aofe/var _ Dlookup) Daofe
+	   <- lookup-isvar Dlookup Disvar
+	   <- isvar-pi1-contra Disvar Dfalse
+	   <- false-implies-aofe Dfalse (Daofe : aofe _ _ (sigma _ ([_] t))).
+
+%worlds (var | ovar | bind) (aofe-invert-pi1 _ _).
+%total {} (aofe-invert-pi1 _ _).
+
+
+
+aofe-invert-pi2 : aofe G (pi2 R) C -> aofe G R (sigma A B) -> tp-eq C (B (pi1 R)) -> type.
+%mode aofe-invert-pi2 +X1 -X2 -X3.
+
+-	: aofe-invert-pi2 (aofe/pi2 D) D tp-eq/i.
+
+-	: aofe-invert-pi2 (aofe/closed Dordered (aof/pi2 D)) (aofe/closed Dordered D) tp-eq/i.
+
+-	: aofe-invert-pi2 (aofe/var _ Dlookup) Daofe Deq
+	   <- lookup-isvar Dlookup Disvar
+	   <- isvar-pi2-contra Disvar Dfalse
+	   <- false-implies-aofe Dfalse (Daofe : aofe _ _ (sigma t ([_] t)))
+	   <- false-implies-tp-eq Dfalse Deq.
+
+-	: (isvar-fun _ _ _ -> aofe-invert-pi2 _ _ _) -> type.
+
+%worlds (var | ovar | bind) (aofe-invert-pi2 _ _ _).
+%total {} (aofe-invert-pi2 _ _ _).
+
+
+
+ofe-invert-at : ofe G (at R) A -> aofe G R t -> type.
+%mode ofe-invert-at +X1 -X2.
+
+-	: ofe-invert-at (ofe/at D) D.
+
+-	: ofe-invert-at (ofe/sing D) D.
+
+-	: (isvar-fun _ _ _ -> ofe-invert-at _ _) -> type.
+
+%worlds (var | bind | ovar) (ofe-invert-at _ _).
+%total {} (ofe-invert-at _ _).
+
+
+
+ofe-invert-sing : ofe G M (sing R) -> term-eq M (at R) -> type.
+%mode ofe-invert-sing +X1 -X2.
+
+-	: ofe-invert-sing (ofe/sing _) term-eq/i.
+
+%worlds (bind | ovar | var) (ofe-invert-sing _ _).
+%total {} (ofe-invert-sing _ _).
+
+
+
+ofe-at-pi-contra : ofe G (at R) (pi A B) -> false -> type.
+%mode ofe-at-pi-contra +X1 -X2.
+%worlds (bind | ovar | var) (ofe-at-pi-contra _ _).
+%total {} (ofe-at-pi-contra _ _).
+
+
+
+ofe-at-sigma-contra : ofe G (at R) (sigma A B) -> false -> type.
+%mode ofe-at-sigma-contra +X1 -X2.
+%worlds (bind | ovar | var) (ofe-at-sigma-contra _ _).
+%total {} (ofe-at-sigma-contra _ _).
+
+
+
+ofe-lam-sigma-contra : ofe G (lam M) (sigma A B) -> false -> type.
+%mode ofe-lam-sigma-contra +X1 -X2.
+%worlds (bind | ovar | var) (ofe-lam-sigma-contra _ _).
+%total {} (ofe-lam-sigma-contra _ _).
+
+
+
+ofe-pair-pi-contra : ofe G (pair M N) (pi A B) -> false -> type.
+%mode ofe-pair-pi-contra +X1 -X2.
+%worlds (bind | ovar | var) (ofe-pair-pi-contra _ _).
+%total {} (ofe-pair-pi-contra _ _).
+
+
+
+
+%%%%%  Miscellaneous  %%%%%
+
+tsub-sing-sub-at : tsub ([x] sing (R x)) M (sing Rx)
+		    -> sub ([x] at (R x)) M (at Rx) -> type.
+%mode tsub-sing-sub-at +X1 -X2.
+
+-a	: tsub-sing-sub-at (tsub/singa D) (sub/aa D).
+
+-o	: tsub-sing-sub-at (tsub/singo D) (sub/ao D).
+
+%worlds (var) (tsub-sing-sub-at _ _).
+%total {} (tsub-sing-sub-at _ _).

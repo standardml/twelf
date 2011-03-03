@@ -1,0 +1,16 @@
+%%%% lemmas that take the uninhabited judgment as input.
+%%%% when you are nowhere, anything is possible!
+
+
+
+uninhabited-seq/cn	: {S1:cn} {S2:cn}
+			   uninhabited 
+			   -> seq/cn S1 S2
+			   -> type.
+%mode uninhabited-seq/cn +M +C +DU -DM.
+
+%worlds (cn-block) 
+(uninhabited-seq/cn _ _ _ _).
+%total {} (uninhabited-seq/cn _ _ _ _).
+
+

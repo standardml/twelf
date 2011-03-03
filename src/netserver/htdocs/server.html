@@ -1,14 +1,14 @@
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" version="XHTML 1.2" xml:lang="en">
   <head>
     <title>Twelf Web Interface</title>
-    <script type="text/javascript" src="server.js">
+    <script type="text/javascript" src="server.js"/>
     <link rel="stylesheet" type="text/css" href="server.css"/>
   </head>  
-<body>
-<div id="container">
-<h1><img id ="twelfguy" src="twelfguy.png" alt="Twelf"> Web Interface</h1>
-<div class="quiet">(email <tt>jcreed at cs.cmu.edu</tt> for support)</div>
    <body id="body"> 
+<div id="container">
+<h1><img id ="twelfguy" src="twelfguy.png" alt="Twelf"/> Web Interface</h1>
+<div class="quiet">(email <tt>jcreed at cs.cmu.edu</tt> for support)</div>
+
 <div class="io inputimg"><textarea class="console" id="input"  ></textarea></div>
 
 <div class="floatright">
@@ -41,12 +41,12 @@
    <option value="polylam">polylam</option>
    <option value="tapl-ch13">tapl-ch13</option>
    </select>
-   <input type="submit" class="submit" value="run example" onclick="btnExample()">
+   <input type="submit" class="submit" value="run example" onclick="btnExample()"/>
 </div>
 
 
 <!-- <a href="#" type="submit" class="submit" value="send" onclick="press()">send</A> -->
-<input type="submit" class="submit" value="send" onclick="btnReadDecl()">
+<input type="submit" class="submit" value="send" onclick="btnReadDecl()"/>
 <!-- <input type="submit" class="submit" value="quit" onclick="btnQuit()"> -->
 <!-- <input type="submit" class="submit" value="decl" onclick="btnDecl()"> -->
 
@@ -61,8 +61,9 @@
 </select> 
 <input type="submit" class="submit" value="set chatter" onclick="btnChatter()"> -->
 
-<div class="io outputimg"><textarea class="console" id="output" readonly=true ></textarea></div>
+<div class="io outputimg"><textarea class="console" id="output" readonly="true" />
 <span id="tip"></span>
 </div>
-  </body>
+</div>
+</body>
 </html>

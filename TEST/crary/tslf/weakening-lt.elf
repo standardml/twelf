@@ -1,0 +1,422 @@
+%%%% weakening lemma for locations. 
+
+lt-wkn/oftp	: lt-extend L C L' LC
+		   -> oftp L T E C'
+		   -> oftp L' T E C'
+		   -> type.
+%mode lt-wkn/oftp +D1 +D2 -D3.
+ 
+lt-wkn/ofsg	: lt-extend L C L' LC
+		   -> ofsg L T Y M S
+		   -> ofsg L' T Y M S
+		   -> type.
+%mode lt-wkn/ofsg +D1 +D2 -D3.
+
+-	: lt-wkn/oftp _ (oftp/tm/loc LK DC) 
+	   (oftp/tm/loc (lt-look/miss LK) DC).
+
+-	: lt-wkn/oftp _ (oftp/var D) (oftp/var D).
+
+-	: lt-wkn/oftp _ oftp/tm/unit oftp/tm/unit.
+
+-	: lt-wkn/oftp L (oftp/tm/pair D1 D2) (oftp/tm/pair D1' D2')
+	   <- lt-wkn/oftp L D1 D1'
+	   <- lt-wkn/oftp L D2 D2'.
+
+-	: lt-wkn/oftp L (oftp/tm/tag D1 D2) (oftp/tm/tag D1' D2')
+	   <- lt-wkn/oftp L D1 D1'
+	   <- lt-wkn/oftp L D2 D2'.
+
+-	: lt-wkn/oftp L (oftp/tm/tmapp D1 D2) (oftp/tm/tmapp D1' D2')
+	   <- lt-wkn/oftp L D1 D1'
+	   <- lt-wkn/oftp L D2 D2'.
+
+-	: lt-wkn/oftp L (oftp/tm/set D1 D2) (oftp/tm/set D1' D2')
+	   <- lt-wkn/oftp L D1 D1'
+	   <- lt-wkn/oftp L D2 D2'.
+
+-	: lt-wkn/oftp L (oftp/tm/pj1 D1) (oftp/tm/pj1 D1')
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/pj2 D1) (oftp/tm/pj2 D1')
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/cnapp D1 DC) (oftp/tm/cnapp D1' DC)
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/deq D1 DC) (oftp/deq D1' DC)
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/ref D1) (oftp/tm/ref D1')
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/raise D1 DC) (oftp/tm/raise D1' DC)
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/get D1) (oftp/tm/get D1')
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/term D1) (oftp/tm/term D1')
+	   <- lt-wkn/ofsg L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/fun D1 DC) (oftp/tm/fun D1' DC)
+	   <- ({x}{dx}{y}{dy}
+		 lt-wkn/oftp L (D1 x dx y dy) (D1' x dx y dy)).
+
+-	: lt-wkn/oftp L (oftp/tm/cnabs D1 DC) (oftp/tm/cnabs D1' DC)
+	   <- ({a}{da}
+		 lt-wkn/oftp L (D1 a da) (D1' a da)).
+
+-	: lt-wkn/oftp L (oftp/tm/inl D1 DC) (oftp/tm/inl D1' DC)
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/inr D1 DC) (oftp/tm/inr D1' DC)
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/case D1 D2 D3) (oftp/tm/case D1' D2' D3')
+	   <- lt-wkn/oftp L D1 D1'
+	   <- ({x}{dx}
+		 lt-wkn/oftp L (D2 x dx) (D2' x dx))
+	   <- ({x}{dx}
+		 lt-wkn/oftp L (D3 x dx) (D3' x dx)).
+
+
+-	: lt-wkn/oftp L (oftp/tm/iftag D1 D2 D3 D4) 
+	   (oftp/tm/iftag D1' D2' D3' D4')
+	   <- lt-wkn/oftp L D1 D1'
+	   <- lt-wkn/oftp L D2 D2'
+	   <- ({x}{dx}
+		 lt-wkn/oftp L (D3 x dx) (D3' x dx))
+	   <- lt-wkn/oftp L D4 D4'.
+
+-	: lt-wkn/oftp L (oftp/tm/try D1 D2) (oftp/tm/try D1' D2')
+	   <- lt-wkn/oftp L D1 D1'
+	   <- ({x}{dx}
+		 lt-wkn/oftp L (D2 x dx) (D2' x dx)).
+
+-	: lt-wkn/oftp L (oftp/tm/tagloc D1 D2) (oftp/tm/tagloc D1 D2).
+
+-	: lt-wkn/oftp L (oftp/tm/new-tag D1) (oftp/tm/new-tag D1).
+
+-	: lt-wkn/oftp L (oftp/tm/roll D1 DC) (oftp/tm/roll D1' DC)
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/oftp L (oftp/tm/unroll D1) (oftp/tm/unroll D1')
+	   <- lt-wkn/oftp L D1 D1'.
+
+
+
+
+
+-	: lt-wkn/ofsg _ (ofsg/var D) (ofsg/var D).
+
+-	: lt-wkn/ofsg _ ofsg/md/unit ofsg/md/unit.
+
+-	: lt-wkn/ofsg _ (ofsg/md/cn D) (ofsg/md/cn D).
+
+-	: lt-wkn/ofsg L (ofsg/md/pair D1 D2) (ofsg/md/pair D1' D2')
+	   <- lt-wkn/ofsg L D1 D1'
+	   <- lt-wkn/ofsg L D2 D2'.
+
+-	: lt-wkn/ofsg L (ofsg/md/app D1 D2 DF) (ofsg/md/app D1' D2' DF)
+	   <- lt-wkn/ofsg L D1 D1'
+	   <- lt-wkn/ofsg L D2 D2'.
+
+-	: lt-wkn/ofsg L (ofsg/md/pj1 D1) (ofsg/md/pj1 D1')
+	   <- lt-wkn/ofsg L D1 D1'.
+
+-	: lt-wkn/ofsg L (ofsg/md/pj2 D1 DC) (ofsg/md/pj2 D1' DC)
+	   <- lt-wkn/ofsg L D1 D1'.
+
+-	: lt-wkn/ofsg L (ofsg/sub D1 DC DP) (ofsg/sub D1' DC DP)
+	   <- lt-wkn/ofsg L D1 D1'.
+
+-	: lt-wkn/ofsg L (ofsg/md/tm D1) (ofsg/md/tm D1')
+	   <- lt-wkn/oftp L D1 D1'.
+
+-	: lt-wkn/ofsg L (ofsg/md/lam D1 DC DF) (ofsg/md/lam D1' DC DF)
+	   <- ({x}{dx}{y}{dy}{dm}
+		 lt-wkn/ofsg L (D1 x dx y dy dm) (D1' x dx y dy dm)).
+
+-	: lt-wkn/ofsg L (ofsg/sgm-ext D1 D2) (ofsg/sgm-ext D1' D2')
+	   <- lt-wkn/ofsg L D1 D1'
+	   <- lt-wkn/ofsg L D2 D2'.
+
+-	: lt-wkn/ofsg L (ofsg/kd-ext D1 D2 D3) (ofsg/kd-ext D1' D2 D3)
+	   <- lt-wkn/ofsg L D1 D1'.
+
+-	: lt-wkn/ofsg L (ofsg/md/seal D1) (ofsg/md/seal D1')
+	   <- lt-wkn/ofsg L D1 D1'.
+
+-	: lt-wkn/ofsg L (ofsg/md/let D2 D1 DW DF) (ofsg/md/let D2' D1' DW DF)
+	   <- ({x}{dx}{y}{dy}{dm}
+		 lt-wkn/ofsg L (D1 x dx y dy dm) (D1' x dx y dy dm))
+	   <- lt-wkn/ofsg L D2 D2'.
+
+%worlds (oftp-block | ofkd-block | ofsg-block) 
+(lt-wkn/oftp _ _ _) (lt-wkn/ofsg _ _ _).
+%total (D1 D2)
+(lt-wkn/oftp _ D1 _) (lt-wkn/ofsg _ D2 _).
+
+
+
+tt-wkn/oftp	: lt-extend T C T' LC
+		   -> oftp L T E C'
+		   -> oftp L T' E C'
+		   -> type.
+%mode tt-wkn/oftp +D1 +D2 -D3.
+ 
+tt-wkn/ofsg	: lt-extend T C T' LC
+		   -> ofsg L T Y M S
+		   -> ofsg L T' Y M S
+		   -> type.
+%mode tt-wkn/ofsg +D1 +D2 -D3.
+
+-	: tt-wkn/oftp _ (oftp/tm/loc LK DC) 
+	   (oftp/tm/loc LK DC).
+
+-	: tt-wkn/oftp _ (oftp/var D) (oftp/var D).
+
+-	: tt-wkn/oftp _ oftp/tm/unit oftp/tm/unit.
+
+-	: tt-wkn/oftp L (oftp/tm/pair D1 D2) (oftp/tm/pair D1' D2')
+	   <- tt-wkn/oftp L D1 D1'
+	   <- tt-wkn/oftp L D2 D2'.
+
+-	: tt-wkn/oftp L (oftp/tm/tag D1 D2) (oftp/tm/tag D1' D2')
+	   <- tt-wkn/oftp L D1 D1'
+	   <- tt-wkn/oftp L D2 D2'.
+
+-	: tt-wkn/oftp L (oftp/tm/tmapp D1 D2) (oftp/tm/tmapp D1' D2')
+	   <- tt-wkn/oftp L D1 D1'
+	   <- tt-wkn/oftp L D2 D2'.
+
+-	: tt-wkn/oftp L (oftp/tm/set D1 D2) (oftp/tm/set D1' D2')
+	   <- tt-wkn/oftp L D1 D1'
+	   <- tt-wkn/oftp L D2 D2'.
+
+-	: tt-wkn/oftp L (oftp/tm/pj1 D1) (oftp/tm/pj1 D1')
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/pj2 D1) (oftp/tm/pj2 D1')
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/cnapp D1 DC) (oftp/tm/cnapp D1' DC)
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/deq D1 DC) (oftp/deq D1' DC)
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/ref D1) (oftp/tm/ref D1')
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/raise D1 DC) (oftp/tm/raise D1' DC)
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/get D1) (oftp/tm/get D1')
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/term D1) (oftp/tm/term D1')
+	   <- tt-wkn/ofsg L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/fun D1 DC) (oftp/tm/fun D1' DC)
+	   <- ({x}{dx}{y}{dy}
+		 tt-wkn/oftp L (D1 x dx y dy) (D1' x dx y dy)).
+
+-	: tt-wkn/oftp L (oftp/tm/cnabs D1 DC) (oftp/tm/cnabs D1' DC)
+	   <- ({a}{da}
+		 tt-wkn/oftp L (D1 a da) (D1' a da)).
+
+-	: tt-wkn/oftp L (oftp/tm/inl D1 DC) (oftp/tm/inl D1' DC)
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/inr D1 DC) (oftp/tm/inr D1' DC)
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/case D1 D2 D3) (oftp/tm/case D1' D2' D3')
+	   <- tt-wkn/oftp L D1 D1'
+	   <- ({x}{dx}
+		 tt-wkn/oftp L (D2 x dx) (D2' x dx))
+	   <- ({x}{dx}
+		 tt-wkn/oftp L (D3 x dx) (D3' x dx)).
+
+-	: tt-wkn/oftp L (oftp/tm/iftag D1 D2 D3 D4) 
+	   (oftp/tm/iftag D1' D2' D3' D4')
+	   <- tt-wkn/oftp L D1 D1'
+	   <- tt-wkn/oftp L D2 D2'
+	   <- ({x}{dx}
+		 tt-wkn/oftp L (D3 x dx) (D3' x dx))
+	   <- tt-wkn/oftp L D4 D4'.
+
+-	: tt-wkn/oftp L (oftp/tm/try D1 D2) (oftp/tm/try D1' D2')
+	   <- tt-wkn/oftp L D1 D1'
+	   <- ({x}{dx}
+		 tt-wkn/oftp L (D2 x dx) (D2' x dx)).
+
+-	: tt-wkn/oftp L (oftp/tm/tagloc D1 D2) 
+	   (oftp/tm/tagloc (lt-look/miss D1) D2).
+
+-	: tt-wkn/oftp L (oftp/tm/new-tag D1) (oftp/tm/new-tag D1).
+
+-	: tt-wkn/oftp L (oftp/tm/roll D1 DC) (oftp/tm/roll D1' DC)
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/oftp L (oftp/tm/unroll D1) (oftp/tm/unroll D1')
+	   <- tt-wkn/oftp L D1 D1'.
+
+
+
+
+-	: tt-wkn/ofsg _ (ofsg/var D) (ofsg/var D).
+
+-	: tt-wkn/ofsg _ ofsg/md/unit ofsg/md/unit.
+
+-	: tt-wkn/ofsg _ (ofsg/md/cn D) (ofsg/md/cn D).
+
+-	: tt-wkn/ofsg L (ofsg/md/pair D1 D2) (ofsg/md/pair D1' D2')
+	   <- tt-wkn/ofsg L D1 D1'
+	   <- tt-wkn/ofsg L D2 D2'.
+
+-	: tt-wkn/ofsg L (ofsg/md/app D1 D2 DF) (ofsg/md/app D1' D2' DF)
+	   <- tt-wkn/ofsg L D1 D1'
+	   <- tt-wkn/ofsg L D2 D2'.
+
+-	: tt-wkn/ofsg L (ofsg/md/pj1 D1) (ofsg/md/pj1 D1')
+	   <- tt-wkn/ofsg L D1 D1'.
+
+-	: tt-wkn/ofsg L (ofsg/md/pj2 D1 DC) (ofsg/md/pj2 D1' DC)
+	   <- tt-wkn/ofsg L D1 D1'.
+
+-	: tt-wkn/ofsg L (ofsg/sub D1 DC DP) (ofsg/sub D1' DC DP)
+	   <- tt-wkn/ofsg L D1 D1'.
+
+-	: tt-wkn/ofsg L (ofsg/md/tm D1) (ofsg/md/tm D1')
+	   <- tt-wkn/oftp L D1 D1'.
+
+-	: tt-wkn/ofsg L (ofsg/md/lam D1 DC DF) (ofsg/md/lam D1' DC DF)
+	   <- ({x}{dx}{y}{dy}{dm}
+		 tt-wkn/ofsg L (D1 x dx y dy dm) (D1' x dx y dy dm)).
+
+-	: tt-wkn/ofsg L (ofsg/sgm-ext D1 D2) (ofsg/sgm-ext D1' D2')
+	   <- tt-wkn/ofsg L D1 D1'
+	   <- tt-wkn/ofsg L D2 D2'.
+
+-	: tt-wkn/ofsg L (ofsg/kd-ext D1 D2 D3) (ofsg/kd-ext D1' D2 D3)
+	   <- tt-wkn/ofsg L D1 D1'.
+
+-	: tt-wkn/ofsg L (ofsg/md/seal D1) (ofsg/md/seal D1')
+	   <- tt-wkn/ofsg L D1 D1'.
+
+-	: tt-wkn/ofsg L (ofsg/md/let D2 D1 DW DF) (ofsg/md/let D2' D1' DW DF)
+	   <- ({x}{dx}{y}{dy}{dm}
+		 tt-wkn/ofsg L (D1 x dx y dy dm) (D1' x dx y dy dm))
+	   <- tt-wkn/ofsg L D2 D2'.
+
+%worlds (oftp-block | ofkd-block | ofsg-block) 
+(tt-wkn/oftp _ _ _) (tt-wkn/ofsg _ _ _).
+%total (D1 D2)
+(tt-wkn/oftp _ D1 _) (tt-wkn/ofsg _ D2 _).
+
+
+
+lt-wkn-sub/oftp : lt-sub L L'
+		   -> oftp L T E C'
+		   -> oftp L' T E C'
+		   -> type.
+%mode lt-wkn-sub/oftp +D1 +D2 -D3.
+
+-	: lt-wkn-sub/oftp lt-sub/refl D1 D1.
+
+-	: lt-wkn-sub/oftp (lt-sub/trans LL LX) D1 D1''
+	   <- lt-wkn-sub/oftp LL D1 D1'
+	   <- lt-wkn/oftp LX D1' D1''.
+
+
+%worlds (oftp-block | ofkd-block | ofsg-block) (lt-wkn-sub/oftp _ _ _).
+%total (D1) (lt-wkn-sub/oftp D1 _ _).
+
+
+
+lt-wkn-sub/ofsg : lt-sub L L'
+		   -> ofsg L T Y M S
+		   -> ofsg L' T Y M S
+		   -> type.
+%mode lt-wkn-sub/ofsg +D1 +D2 -D3.
+
+-	: lt-wkn-sub/ofsg lt-sub/refl D1 D1.
+
+-	: lt-wkn-sub/ofsg (lt-sub/trans LL LX) D1 D1''
+	   <- lt-wkn-sub/ofsg LL D1 D1'
+	   <- lt-wkn/ofsg LX D1' D1''.
+
+
+%worlds (ofsg-block | ofkd-block | oftp-block) (lt-wkn-sub/ofsg _ _ _).
+%total (D1) (lt-wkn-sub/ofsg D1 _ _).
+
+
+
+tt-wkn-sub/oftp : lt-sub T T'
+		   -> oftp L T E C'
+		   -> oftp L T' E C'
+		   -> type.
+%mode tt-wkn-sub/oftp +D1 +D2 -D3.
+
+-	: tt-wkn-sub/oftp lt-sub/refl D1 D1.
+
+-	: tt-wkn-sub/oftp (lt-sub/trans LL LX) D1 D1''
+	   <- tt-wkn-sub/oftp LL D1 D1'
+	   <- tt-wkn/oftp LX D1' D1''.
+
+
+%worlds (oftp-block | ofkd-block | ofsg-block) (tt-wkn-sub/oftp _ _ _).
+%total (D1) (tt-wkn-sub/oftp D1 _ _).
+
+
+
+tt-wkn-sub/ofsg : lt-sub T T'
+		   -> ofsg L T Y M S
+		   -> ofsg L T' Y M S
+		   -> type.
+%mode tt-wkn-sub/ofsg +D1 +D2 -D3.
+
+-	: tt-wkn-sub/ofsg lt-sub/refl D1 D1.
+
+-	: tt-wkn-sub/ofsg (lt-sub/trans LL LX) D1 D1''
+	   <- tt-wkn-sub/ofsg LL D1 D1'
+	   <- tt-wkn/ofsg LX D1' D1''.
+
+
+%worlds (ofsg-block | ofkd-block | oftp-block) (tt-wkn-sub/ofsg _ _ _).
+%total (D1) (tt-wkn-sub/ofsg D1 _ _).
+
+
+
+lt-tt-wkn-sub/oftp	: lt-sub L L'
+			   -> lt-sub T T'
+			   -> oftp L T E C'
+			   -> oftp L' T' E C'
+			   -> type.
+%mode lt-tt-wkn-sub/oftp +D1 +D2 +D3 -D4.
+
+-	: lt-tt-wkn-sub/oftp LS TS D1 D1''
+	   <- lt-wkn-sub/oftp LS D1 D1'
+	   <- tt-wkn-sub/oftp TS D1' D1''.
+
+%worlds (ofsg-block | ofkd-block | oftp-block) (lt-tt-wkn-sub/oftp _ _ _ _).
+%total {} (lt-tt-wkn-sub/oftp _ _ _ _).
+
+
+
+lt-tt-wkn-sub/ofsg	: lt-sub L L'
+			   -> lt-sub T T'
+			   -> ofsg L T Y E C'
+			   -> ofsg L' T' Y E C'
+			   -> type.
+%mode lt-tt-wkn-sub/ofsg +D1 +D2 +D3 -D4.
+
+-	: lt-tt-wkn-sub/ofsg LS TS D1 D1''
+	   <- lt-wkn-sub/ofsg LS D1 D1'
+	   <- tt-wkn-sub/ofsg TS D1' D1''.
+
+%worlds (ofsg-block | ofkd-block | oftp-block) (lt-tt-wkn-sub/ofsg _ _ _ _).
+%total {} (lt-tt-wkn-sub/ofsg _ _ _ _).

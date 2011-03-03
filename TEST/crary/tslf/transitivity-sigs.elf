@@ -1,0 +1,111 @@
+%%%% transitivity for signatures
+
+sg-trans/deq*	: {S2:sg}
+		   sg-deq S1 S2 
+		   -> sg-deq S2 S3 
+		   -> sg-deq S1 S3 
+		   -> type.
+%mode sg-trans/deq* +S2 +D1 +D2 -D3.
+
+-	: sg-trans/deq* _ sg-deq/sg/unit sg-deq/sg/unit sg-deq/sg/unit.
+
+-	: sg-trans/deq* _ (sg-deq/sg/kd KS1) (sg-deq/sg/kd KS2) 
+	   (sg-deq/sg/kd KS3)
+	   <- kd-trans/deq KS1 KS2 KS3.
+
+-	: sg-trans/deq* _ (sg-deq/sg/cn DQ1) (sg-deq/sg/cn DQ2)
+	   (sg-deq/sg/cn (cn-deq/trans DQ1 DQ2)).
+
+-	: sg-trans/deq* (sg/sgm S1 S2) (sg-deq/sg/sgm DS1' DS1'' DF1)
+	   (sg-deq/sg/sgm DS2' DS2'' DF2) 
+	   (sg-deq/sg/sgm DS3' DS3'' DF1)
+	   <- sg-trans/deq* S1 DS1' DS2' DS3'
+	   <- vdt/sg-deq DS1' DF1 DF2 _ _ DQ1
+	   <- vdt/kd-deq DQ1 DKW1 _
+	   <- sg-anti DS1' DF1 DF2 _ _ DKS12 _
+	   <- kd-wkn/sg-deq DS2'' DKS12 DS2''w
+	   <- ({a}{da}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da DKW1}
+		 sg-trans/deq* (S2 a) 
+		 (DS1'' a da) (DS2''w a da) (DS3'' a da)).
+
+-	: sg-trans/deq* (sg/pi S1 S2) (sg-deq/sg/pi DS1' DS1'' DF1)
+	   (sg-deq/sg/pi DS2' DS2'' DF2) 
+	   (sg-deq/sg/pi DS3' DS3'' DF2)
+	   <- sg-trans/deq* S1 DS2' DS1' DS3'
+	   <- vdt/sg-deq DS2' DF2 DF1 _ _ DQ1
+	   <- vdt/kd-deq DQ1 DKW1 _
+	   <- sg-anti DS2' DF2 DF1 _ _ DKS32 _
+	   <- kd-wkn/sg-deq DS1'' DKS32 DS1''w
+	   <- ({a}{da}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da DKW1}
+		 sg-trans/deq* (S2 a) 
+		 (DS1''w a da) (DS2'' a da) (DS3'' a da)).
+
+%worlds (ofkd+vdt-block) (sg-trans/deq* _ _ _ _).
+%total {D1} (sg-trans/deq* D1 _ _ _).
+
+
+
+sg-trans/sub*	: {S2:sg}
+		   sg-sub S1 S2 
+		   -> sg-sub S2 S3 
+		   -> sg-sub S1 S3 
+		   -> type.
+%mode sg-trans/sub* +S2 +D1 +D2 -D3.
+
+-	: sg-trans/sub* _ sg-sub/sg/unit sg-sub/sg/unit sg-sub/sg/unit.
+
+-	: sg-trans/sub* _ (sg-sub/sg/kd KS1) (sg-sub/sg/kd KS2) 
+	   (sg-sub/sg/kd KS3)
+	   <- kd-trans/sub KS1 KS2 KS3.
+
+-	: sg-trans/sub* _ (sg-sub/sg/cn DQ1) (sg-sub/sg/cn DQ2)
+	   (sg-sub/sg/cn (cn-deq/trans DQ1 DQ2)).
+
+-	: sg-trans/sub* (sg/sgm S1 S2) (sg-sub/sg/sgm DS1' DS1'' DW1 DF1 _)
+	   (sg-sub/sg/sgm DS2' DS2'' DW3 DF2 DF3) 
+	   (sg-sub/sg/sgm DS3' DS3'' DW3 DF1 DF3)
+	   <- sg-trans/sub* S1 DS1' DS2' DS3'
+	   <- vdt/sg-sub DS1' DF1 DF2 _ _ DKS12
+	   <- vdt/kd-sub DKS12 DKW1 _
+	   <- kd-wkn/sg-sub DS2'' DKS12 DS2''w
+	   <- ({a}{da}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da DKW1}
+		 sg-trans/sub* (S2 a) 
+		 (DS1'' a da) (DS2''w a da) (DS3'' a da)).
+
+-	: sg-trans/sub* (sg/pi S1 S2) (sg-sub/sg/pi DS1' DS1'' DF1)
+	   (sg-sub/sg/pi DS2' DS2'' DF2) 
+	   (sg-sub/sg/pi DS3' DS3'' DF2)
+	   <- sg-trans/deq* S1 DS2' DS1' DS3'
+	   <- vdt/sg-deq DS2' DF2 DF1 _ _ DQ1
+	   <- vdt/kd-deq DQ1 DKW1 _
+	   <- sg-anti DS2' DF2 DF1 _ _ DKS32 _
+	   <- kd-wkn/sg-deq DS1'' DKS32 DS1''w
+	   <- ({a}{da}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da DKW1}
+		 sg-trans/deq* (S2 a) 
+		 (DS1''w a da) (DS2'' a da) (DS3'' a da)).
+
+%worlds (ofkd+vdt-block) (sg-trans/sub* _ _ _ _).
+%total {D1} (sg-trans/sub* D1 _ _ _).
+
+
+
+sg-trans/sub	: sg-sub S1 S2 
+		   -> sg-sub S2 S3 
+		   -> sg-sub S1 S3 
+		   -> type.
+%mode sg-trans/sub +D1 +D2 -D3.
+
+-	: sg-trans/sub DS1 DS2 DS3
+	   <- sg-trans/sub* _ DS1 DS2 DS3.
+
+%worlds (ofkd+vdt-block) (sg-trans/sub _ _ _).
+%total {D1} (sg-trans/sub D1 _ _).
+

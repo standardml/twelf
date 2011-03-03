@@ -1,0 +1,58 @@
+
+
+constant : type.  %name constant K.
+
+
+%%%%%  Constant Types  %%%%%
+
+ctp	: type.  %name ctp A.
+catom	: type.  %name catom R.
+cterm	: type.  %name cterm M.
+
+ct	: ctp.
+cpi	: ctp -> (catom -> ctp) -> ctp.
+csigma	: ctp -> (catom -> ctp) -> ctp.
+csing	: catom -> ctp.
+cone	: ctp.
+
+capp	: catom -> cterm -> catom.
+cpi1	: catom -> catom.
+cpi2	: catom -> catom.
+
+cat	: catom -> cterm.
+clam	: ctp -> (catom -> cterm) -> cterm.
+cpair   : cterm -> cterm -> cterm.
+cstar	: cterm.
+
+
+carrow  : ctp -> ctp -> ctp
+        = [a1] [a2] cpi a1 ([_] a2).
+
+cprod  : ctp -> ctp -> ctp
+        = [a1] [a2] csigma a1 ([_] a2).
+
+
+%block catomblock : block {xc:catom}.
+
+
+
+
+%%%%%  Constants  %%%%%
+
+ckof	: constant -> ctp -> type.
+%mode ckof +K -A.
+
+const/arrow	: constant.
+ckof/arrow	: ckof const/arrow (carrow ct (carrow ct ct)).
+
+const/prod	: constant.
+ckof/prod	: ckof const/prod (carrow ct (carrow ct ct)).
+
+const/unit	: constant.
+ckof/unit	: ckof const/unit ct.
+
+const/ref	: constant.
+ckof/ref	: ckof const/ref (carrow ct ct).
+
+const/plus	: constant.
+ckof/plus	: ckof const/plus (carrow ct (carrow ct ct)).

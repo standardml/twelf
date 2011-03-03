@@ -1,0 +1,8 @@
+%% syntax:
+
+%worlds (cn-block) (cn) (kd).
+
+%% static semantics
+
+%worlds (ofkd-block) (ofkd _ _) (kd-wf _) (kd-deq _ _) (kd-sub _ _) 
+(cn-deq _ _ _).

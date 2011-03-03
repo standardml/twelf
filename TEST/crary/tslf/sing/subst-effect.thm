@@ -1,0 +1,1954 @@
+
+%%%%%  Head Variables  %%%%%
+
+headvar : (atom -> atom) -> type.
+
+headvar/var	: headvar ([x] x).
+headvar/app	: headvar ([x] app (R x) (M x))
+		   <- headvar R.
+headvar/pi1	: headvar ([x] pi1 (R x))
+		   <- headvar R.
+headvar/pi2	: headvar ([x] pi2 (R x))
+		   <- headvar R.
+
+
+
+
+%%%%%  Equality  %%%%%
+
+headvar-resp : ({x:atom} atom-eq (R x) (R' x)) -> headvar R -> headvar R' -> type.
+%mode headvar-resp +X1 +X2 -X3.
+
+-	: headvar-resp ([-] atom-eq/i) D D.
+
+%worlds (var) (headvar-resp _ _ _).
+%total {} (headvar-resp _ _ _).
+
+
+
+
+%%%%%  Simple Type Lemmas  %%%%%
+
+simp-fun : simp A T -> simp A T' -> stp-eq T T' -> type.
+%mode simp-fun +X1 +X2 -X3.
+
+-t	: simp-fun simp/t simp/t stp-eq/i.
+-pi	: simp-fun (simp/pi Dsimp2 Dsimp1) (simp/pi Dsimp2' Dsimp1') Deq
+	   <- simp-fun Dsimp1 Dsimp1' Deq1
+	   <- ({x} simp-fun (Dsimp2 x) (Dsimp2' x) Deq2)
+	   <- stp-resp-stp ([t] spi t T2) Deq1 Deq1'
+	   <- stp-resp-stp ([t] spi T1' t) Deq2 Deq2'
+	   <- stp-eq-trans Deq1' Deq2' Deq.
+-sigma	: simp-fun (simp/sigma Dsimp2 Dsimp1) (simp/sigma Dsimp2' Dsimp1') Deq
+	   <- simp-fun Dsimp1 Dsimp1' Deq1
+	   <- ({x} simp-fun (Dsimp2 x) (Dsimp2' x) Deq2)
+	   <- stp-resp-stp ([t] ssigma t T2) Deq1 Deq1'
+	   <- stp-resp-stp ([t] ssigma T1' t) Deq2 Deq2'
+	   <- stp-eq-trans Deq1' Deq2' Deq.
+-sing	: simp-fun simp/sing simp/sing stp-eq/i.
+
+%worlds (var) (simp-fun _ _ _).
+%total D (simp-fun D _ _).
+
+
+
+employ-stp-leq : {S} {T} stp-leq S T -> type.
+%mode employ-stp-leq +S +T +X1.
+
+-	: employ-stp-leq _ _ stp-leq/eq.
+-	: employ-stp-leq _ _ (stp-leq/pi1 D)
+	   <- employ-stp-leq _ _ D.
+-	: employ-stp-leq _ _ (stp-leq/pi2 D)
+	   <- employ-stp-leq _ _ D.
+-	: employ-stp-leq _ _ (stp-leq/sigma1 D)
+	   <- employ-stp-leq _ _ D.
+-	: employ-stp-leq _ _ (stp-leq/sigma2 D)
+	   <- employ-stp-leq _ _ D.
+
+%worlds () (employ-stp-leq _ _ _).
+%total D (employ-stp-leq _ _ D).
+%reduces S <= T (employ-stp-leq S T _).
+
+
+
+stp-leq-trans : stp-leq T1 T2 -> stp-leq T2 T3 -> stp-leq T1 T3 -> type.
+%mode stp-leq-trans +X1 +X2 -X3.
+
+-	: stp-leq-trans D stp-leq/eq D.
+-	: stp-leq-trans D (stp-leq/pi1 D') (stp-leq/pi1 D'')
+	   <- stp-leq-trans D D' D''.
+-	: stp-leq-trans D (stp-leq/pi2 D') (stp-leq/pi2 D'')
+	   <- stp-leq-trans D D' D''.
+-	: stp-leq-trans D (stp-leq/sigma1 D') (stp-leq/sigma1 D'')
+	   <- stp-leq-trans D D' D''.
+-	: stp-leq-trans D (stp-leq/sigma2 D') (stp-leq/sigma2 D'')
+	   <- stp-leq-trans D D' D''.
+
+%worlds () (stp-leq-trans _ _ _).
+%total D (stp-leq-trans _ D _).
+
+
+
+tsub-preserves-simp : tsub A _ B -> ({x} simp (A x) T) -> simp B T -> type.
+%mode tsub-preserves-simp +X1 +X2 -X3.
+
+-	: tsub-preserves-simp tsub/t ([x] simp/t) simp/t.
+-	: tsub-preserves-simp (tsub/pi Dsub2 Dsub1) ([x] simp/pi ([y] Dsimp2 x y) (Dsimp1 x)) (simp/pi Dsimp2' Dsimp1')
+	   <- tsub-preserves-simp Dsub1 Dsimp1 Dsimp1'
+	   <- ({y} tsub-preserves-simp (Dsub2 y) ([x] Dsimp2 x y) (Dsimp2' y)).
+-	: tsub-preserves-simp (tsub/sigma Dsub2 Dsub1) ([x] simp/sigma ([y] Dsimp2 x y) (Dsimp1 x)) (simp/sigma Dsimp2' Dsimp1')
+	   <- tsub-preserves-simp Dsub1 Dsimp1 Dsimp1'
+	   <- ({y} tsub-preserves-simp (Dsub2 y) ([x] Dsimp2 x y) (Dsimp2' y)).
+-	: tsub-preserves-simp (tsub/singa _) ([_] simp/sing) simp/sing.
+-	: tsub-preserves-simp (tsub/singo _) ([_] simp/sing) simp/sing.
+
+%worlds (var) (tsub-preserves-simp _ _ _).
+%total D (tsub-preserves-simp _ D _).
+
+
+
+can-simp : {A} simp A T -> type.
+%mode can-simp +X1 -X2.
+
+-t	: can-simp t simp/t.
+
+-pi	: can-simp (pi A B) (simp/pi D2 D1)
+	   <- can-simp A D1
+	   <- ({x} can-simp (B x) (D2 x)).
+
+-sigma	: can-simp (sigma A B) (simp/sigma D2 D1)
+	   <- can-simp A D1
+	   <- ({x} can-simp (B x) (D2 x)).
+
+-sing	: can-simp (sing R) simp/sing.
+
+%worlds (var) (can-simp _ _).
+%total A (can-simp A _).
+
+
+
+
+%%%%%  Simplifying Typings  %%%%%
+
+simpctx : ctx -> sctx -> type.
+
+simpctx/nil	: simpctx nil snil.
+simpctx/cons	: simpctx (cons G X A) (scons G' X T)
+		   <- simpctx G G'
+		   <- simp A T.
+
+
+
+can-simpctx : {G} simpctx G G' -> type.
+%mode can-simpctx +X1 -X2.
+
+-	: can-simpctx nil simpctx/nil.
+
+-	: can-simpctx (cons G X A) (simpctx/cons D2 D1)
+	   <- can-simpctx G D1
+	   <- can-simp A D2.
+
+%worlds (var) (can-simpctx _ _).
+%total G (can-simpctx G _).
+
+
+
+bounded-simpctx : simpctx G G' -> bounded G X -> sbounded G' X -> type.
+%mode bounded-simpctx +X1 +X2 -X3.
+
+-	: bounded-simpctx simpctx/nil (bounded/nil D) (sbounded/nil D).
+
+-	: bounded-simpctx (simpctx/cons _ Dsimp) (bounded/cons Dbound Dprec) (sbounded/cons Dbound' Dprec)
+	   <- bounded-simpctx Dsimp Dbound Dbound'.
+
+%worlds (var | ovar) (bounded-simpctx _ _ _).
+%total D (bounded-simpctx D _ _).
+
+
+
+ordered-simpctx : simpctx G G' -> ordered G -> sordered G' -> type.
+%mode ordered-simpctx +X1 +X2 -X3.
+
+-	: ordered-simpctx simpctx/nil ordered/nil sordered/nil.
+
+-	: ordered-simpctx (simpctx/cons _ Dsimp) (ordered/cons Dbound) (sordered/cons Dbound')
+	   <- bounded-simpctx Dsimp Dbound Dbound'.
+
+%worlds (var | ovar) (ordered-simpctx _ _ _).
+%total {} (ordered-simpctx _ _ _).
+
+
+
+lookup-simp : simpctx G G' -> simp A T -> lookup G X A -> slookup G' X T -> type.
+%mode lookup-simp +X1 +X2 +X3 -X4.
+
+-	: lookup-simp (simpctx/cons Dsimp Dsimpctx) Dsimp' (lookup/hit Dbound) D
+	   <- bounded-simpctx Dsimpctx Dbound Dbound'
+	   <- simp-fun Dsimp Dsimp' Deq
+	   <- slookup-resp sctx-eq/i atom-eq/i Deq (slookup/hit Dbound') D.
+
+-	: lookup-simp (simpctx/cons _ Dsimpctx) Dsimp (lookup/miss Dlookup Dbound) (slookup/miss Dlookup' Dbound')
+	   <- lookup-simp Dsimpctx Dsimp Dlookup Dlookup'
+	   <- bounded-simpctx Dsimpctx Dbound Dbound'.
+
+%worlds (var | ovar) (lookup-simp _ _ _ _).
+%total D (lookup-simp _ _ D _).
+
+
+
+aofe-simp : simpctx G G' -> simp A T -> aofe G R A -> aofes G' R T -> type.
+%mode aofe-simp +X1 +X2 +X3 -X4.
+
+ofe-simp : simpctx G G' -> simp A T -> ofe G M A -> ofes G' M T -> type.
+%mode ofe-simp +X1 +X2 +X3 -X4.
+
+wfe-simp : simpctx G G' -> wfe G A -> wfes G' A -> type.
+%mode wfe-simp +X1 +X2 -X3.
+
+-	: aofe-simp Dsimpctx Dsimp (aofe/closed Dord Daof) (aofes/closed Dord' Dsimp Daof)
+	   <- ordered-simpctx Dsimpctx Dord Dord'.
+
+-	: aofe-simp Dsimpctx (simp/pi ([_] simp/t) (simp/pi ([_] simp/t) Dsimp)) (aofe/forall Dwf) (aofes/forall Dsimp Dwf')
+	   <- wfe-simp Dsimpctx Dwf Dwf'.
+
+-	: aofe-simp Dsimpctx Dsimp (aofe/var _ Dlookup) (aofes/var Dlookup')
+	   <- lookup-simp Dsimpctx Dsimp Dlookup Dlookup'.
+
+-	: aofe-simp Dsimpctx Dsimp (aofe/app _ Dsub Dof Daof) D
+	   <- can-simp _ DsimpA
+	   <- ({x} can-simp _ (DsimpB x))
+	   <- aofe-simp Dsimpctx (simp/pi DsimpB DsimpA) Daof Daof'
+	   <- ofe-simp Dsimpctx DsimpA Dof Dof'
+	   <- tsub-preserves-simp Dsub DsimpB Dsimp'
+	   <- simp-fun Dsimp' Dsimp Deq
+	   <- aofes-resp sctx-eq/i atom-eq/i Deq (aofes/app Dof' Daof') D.
+
+-	: aofe-simp Dsimpctx Dsimp (aofe/pi1 Daof) (aofes/pi1 Daof')
+	   <- ({x} can-simp _ (DsimpB x))
+	   <- aofe-simp Dsimpctx (simp/sigma DsimpB Dsimp) Daof Daof'.
+
+-	: aofe-simp Dsimpctx Dsimp (aofe/pi2 Daof) D
+	   <- can-simp _ DsimpA
+	   <- ({x} can-simp _ (DsimpB x : simp (B x) _))
+	   <- aofe-simp Dsimpctx (simp/sigma DsimpB DsimpA) Daof Daof'
+	   <- simp-fun (DsimpB _) Dsimp Deq
+	   <- aofes-resp sctx-eq/i atom-eq/i Deq (aofes/pi2 Daof') D.
+
+
+-	: ofe-simp Dsimpctx simp/t (ofe/at Daof) (ofes/at Daof')
+	   <- aofe-simp Dsimpctx simp/t Daof Daof'.
+
+-	: ofe-simp Dsimpctx (simp/pi DsimpB DsimpA) (ofe/lam Dof _) (ofes/lam Dof')
+	   <- ({x} {d}
+		 ofe-simp (simpctx/cons DsimpA Dsimpctx) (DsimpB x) (Dof x d) (Dof' x d)).
+
+-	: ofe-simp Dsimpctx (simp/sigma DsimpB DsimpA) (ofe/pair _ Dof2 Dsub Dof1) (ofes/pair Dof2' Dof1')
+	   <- ofe-simp Dsimpctx DsimpA Dof1 Dof1'
+	   <- tsub-preserves-simp Dsub DsimpB DsimpB'
+	   <- ofe-simp Dsimpctx DsimpB' Dof2 Dof2'.
+
+-	: ofe-simp Dsimpctx simp/sing (ofe/sing Daof) (ofes/at Daof')
+	   <- aofe-simp Dsimpctx simp/t Daof Daof'.
+
+
+-	: wfe-simp Dsimpctx (wfe/t Dord) (wfes/t Dord')
+	   <- ordered-simpctx Dsimpctx Dord Dord'.
+
+-	: wfe-simp Dsimpctx (wfe/pi D2 D1) (wfes/pi D2' Dsimp D1')
+	   <- wfe-simp Dsimpctx D1 D1'
+	   <- can-simp _ Dsimp
+	   <- ({x} {d}
+		 wfe-simp (simpctx/cons Dsimp Dsimpctx) (D2 x d) (D2' x d)).
+
+-	: wfe-simp Dsimpctx (wfe/sigma D2 D1) (wfes/sigma D2' Dsimp D1')
+	   <- wfe-simp Dsimpctx D1 D1'
+	   <- can-simp _ Dsimp
+	   <- ({x} {d}
+		 wfe-simp (simpctx/cons Dsimp Dsimpctx) (D2 x d) (D2' x d)).
+
+-	: wfe-simp Dsimpctx (wfe/sing D) (wfes/sing D')
+	   <- aofe-simp Dsimpctx simp/t D D'.
+
+%worlds (bind | var | ovar) (aofe-simp _ _ _ _) (ofe-simp _ _ _ _) (wfe-simp _ _ _).
+%total (D1 D2 D3) (aofe-simp _ _ D1 _) (ofe-simp _ _ D2 _) (wfe-simp _ D3 _).
+
+
+
+context-append-simp-lookup : ({x} append (cons G1 x A) (G2 x) (G x))
+			      -> ({x} isvar x I -> bounded (G x) (Y x))
+			      -> simp A T
+%%
+			      -> ({x} simpctx (G x) (G' x))
+			      -> ({x} isvar x I -> sbounded (G' x) (Y x))
+			      -> ({x} isvar x I -> slookup (G' x) x T) -> type.
+%mode context-append-simp-lookup +X1 +X2 +X3 -X4 -X5 -X6.
+
+-	: context-append-simp-lookup ([x] append/nil) ([x] [d] bounded/cons (Dbounded x d) (Dprecedes x d)) Dsimp
+	   ([x] simpctx/cons Dsimp Dsimpctx)
+	   ([x] [d] sbounded/cons (Dsbounded x d) (Dprecedes x d))
+	   ([x] [d] slookup/hit (Dsbounded x d))
+	   <- can-simpctx G Dsimpctx
+	   <- ({x} {d:isvar x I}
+		 bounded-simpctx Dsimpctx (Dbounded x d) (Dsbounded x d)).
+
+-	: context-append-simp-lookup ([x] append/cons (Dappend x)) ([x] [d] bounded/cons (Dbounded x d) (Dprecedes x d)) Dsimp
+	   ([x] simpctx/cons (Dsimp' x) (Dsimpctx x))
+	   ([x] [d] sbounded/cons (Dsbounded x d) (Dprecedes x d))
+	   ([x] [d] slookup/miss (Dlookup x d) (Dsbounded x d))
+	   <- ({x} can-simp _ (Dsimp' x : simp _ T))
+	   <- context-append-simp-lookup Dappend Dbounded Dsimp Dsimpctx Dsbounded Dlookup.
+
+%worlds (var | ovar) (context-append-simp-lookup _ _ _ _ _ _).
+%total D (context-append-simp-lookup D _ _ _ _ _).
+
+
+
+context-append-simp-lookup' : ({x} append (cons G1 x A) (G2 x) (G x))
+			       -> ({x} isvar x I -> ordered (G x))
+			       -> simp A T
+%%
+			       -> ({x} simpctx (G x) (G' x))
+			       -> ({x} isvar x I -> slookup (G' x) x T) -> type.
+%mode context-append-simp-lookup' +X1 +X2 +X3 -X4 -X5.
+
+-	: context-append-simp-lookup' ([x] append/nil) ([x] [d] ordered/cons (Dbounded x d)) Dsimp
+	   ([x] simpctx/cons Dsimp Dsimpctx)
+	   ([x] [d] slookup/hit (Dsbounded x d))
+	   <- can-simpctx G Dsimpctx
+	   <- ({x} {d:isvar x I}
+		 bounded-simpctx Dsimpctx (Dbounded x d) (Dsbounded x d)).
+
+-	: context-append-simp-lookup' ([x] append/cons (Dappend x)) ([x] [d] ordered/cons (Dbounded x d)) Dsimp
+	   ([x] simpctx/cons (Dsimp' x) (Dsimpctx x))
+	   ([x] [d] slookup/miss (Dlookup x d) (Dsbounded x d))
+	   <- ({x} can-simp _ (Dsimp' x : simp _ T))
+	   <- context-append-simp-lookup Dappend Dbounded Dsimp Dsimpctx Dsbounded Dlookup.
+
+%worlds (var | ovar) (context-append-simp-lookup' _ _ _ _ _).
+%total {} (context-append-simp-lookup' _ _ _ _ _).
+
+
+
+
+%%%%%  Head Variable Lemmas  %%%%%
+
+aosub-headvar : aosub R _ _ -> headvar R -> type.
+%mode aosub-headvar +X1 -X2.
+
+-var	: aosub-headvar aosub/var headvar/var.
+-app	: aosub-headvar (aosub/app _ _ D) (headvar/app D')
+	   <- aosub-headvar D D'.
+-pi1	: aosub-headvar (aosub/pi1 D) (headvar/pi1 D')
+	   <- aosub-headvar D D'.
+-pi2	: aosub-headvar (aosub/pi2 D) (headvar/pi2 D')
+	   <- aosub-headvar D D'.
+
+%worlds (var) (aosub-headvar _ _).
+%total D (aosub-headvar D _).
+
+
+
+headvar-closed : headvar ([x] R) -> false -> type.
+%mode headvar-closed +X1 -X2.
+
+-	: headvar-closed (headvar/app D) D'
+	   <- headvar-closed D D'.
+-	: headvar-closed (headvar/pi1 D) D'
+	   <- headvar-closed D D'.
+-	: headvar-closed (headvar/pi2 D) D'
+	   <- headvar-closed D D'.
+
+%worlds (var) (headvar-closed _ _).
+%total D (headvar-closed D _).
+
+
+
+
+%%%%%  Head Variable Size (Explicit Context)  %%%%%
+
+headvar-tp-size : ({x} append (cons G1 x A) (G2 x) (G x))
+		   -> ({x} isvar x I -> aofe (G x) (R x) (B x))
+		   -> simp A S
+		   -> headvar R
+%%
+		   -> ({x} simp (B x) T)
+		   -> stp-leq T S -> type.
+%mode headvar-tp-size +X1 +X2 +X3 +X4 -X5 -X6.
+
+-var	: headvar-tp-size 
+	   (Dapp : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d] aofe/var _ (Dlook x d : lookup (G x) x (A' x)))
+	   (Dsimp : simp A T)
+	   headvar/var
+	   Dsimp' stp-leq/eq
+	   <- ({x} {d}
+		 lookup-binder-fun (Dapp x) (Dlook x d) (Deq x : tp-eq A (A' x)))
+	   <- ({x} simp-resp (Deq x) stp-eq/i Dsimp (Dsimp' x : simp (A' x) T)).
+
+-closed	: headvar-tp-size
+	   _
+	   ([x] [d] aofe/closed (Dordered x d : ordered (G x)) (Daof x : aof (R x) (B x)))
+	   _
+	   (Dheadvar : headvar R)
+	   Dsimp stp-leq/eq
+	   <- aof-noassm Daof (Deq : {x} atom-eq (R x) R') _
+	   <- headvar-resp Deq Dheadvar (Dheadvar' : headvar ([x] R'))
+	   <- headvar-closed Dheadvar' Dfalse
+	   <- ({x} false-implies-simp Dfalse (Dsimp x)).
+
+-app	: headvar-tp-size
+	   (Dapp : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d] aofe/app
+	      _
+	      (Dtsub x : tsub ([y] C x y) (M x) (Cy x))
+	      _
+	      (Daof x d : aofe (G x) (R x) (pi (B x) ([y] C x y))))
+	   (Dsimp : simp A S)
+	   (headvar/app (Dheadvar : headvar R))
+	   DsimpCy Dleq'
+	   <- headvar-tp-size Dapp Daof Dsimp Dheadvar
+	      ([x] simp/pi 
+		 (DsimpC x : {y} simp (C x y) T2) 
+		 (DsimpB x : simp (B x) T1))
+	      (Dleq : stp-leq (spi T1 T2) S)
+	   <- ({x} tsub-preserves-simp (Dtsub x) (DsimpC x) (DsimpCy x : simp (Cy x) T2))
+	   <- stp-leq-trans (stp-leq/pi2 stp-leq/eq) Dleq (Dleq' : stp-leq T2 S).
+
+-appbad	: headvar-tp-size _ ([x] [d:isvar x I] aofe/var _ (Dlookup x d)) _ (headvar/app _)
+	   Dsimp Dleq
+	   <- ({x} {d:isvar x I}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (app _ _) J))
+	   <- ({x} isvar-app-contra (Disvar x) Dfalse)
+	   <- ({x}
+		 false-implies-simp Dfalse (Dsimp x : simp _ st))
+	   <- false-implies-stp-leq Dfalse Dleq.
+
+-pi1	: headvar-tp-size
+	   (Dapp : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d] aofe/pi1 (Daof x d : aofe (G x) (R x) (sigma (B x) ([y] C x y))))
+	   (Dsimp : simp A S)
+	   (headvar/pi1 (Dheadvar : headvar R))
+	   DsimpB Dleq'
+	   <- headvar-tp-size Dapp Daof Dsimp Dheadvar
+	      ([x] simp/sigma
+		 (DsimpC x : {y} simp (C x y) T2) 
+		 (DsimpB x : simp (B x) T1))
+	      (Dleq : stp-leq (ssigma T1 T2) S)
+	   <- stp-leq-trans (stp-leq/sigma1 stp-leq/eq) Dleq (Dleq' : stp-leq T1 S).
+
+-pi1bad	: headvar-tp-size _ ([x] [d:isvar x I] aofe/var _ (Dlookup x d)) _ (headvar/pi1 _)
+	   Dsimp Dleq
+	   <- ({x} {d:isvar x I}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (pi1 _) J))
+	   <- ({x} isvar-pi1-contra (Disvar x) Dfalse)
+	   <- ({x}
+		 false-implies-simp Dfalse (Dsimp x : simp _ st))
+	   <- false-implies-stp-leq Dfalse Dleq.
+
+-pi2	: headvar-tp-size
+	   (Dapp : {x} append (cons G1 x A) (G2 x) (G x))
+	   ([x] [d] aofe/pi2 (Daof x d : aofe (G x) (R x) (sigma (B x) ([y] C x y))))
+	   (Dsimp : simp A S)
+	   (headvar/pi2 (Dheadvar : headvar R))
+	   ([x] DsimpC x (pi1 (R x))) Dleq'
+	   <- headvar-tp-size Dapp Daof Dsimp Dheadvar
+	      ([x] simp/sigma
+		 (DsimpC x : {y} simp (C x y) T2) 
+		 (DsimpB x : simp (B x) T1))
+	      (Dleq : stp-leq (ssigma T1 T2) S)
+	   <- stp-leq-trans (stp-leq/sigma2 stp-leq/eq) Dleq (Dleq' : stp-leq T2 S).
+
+-pi2bad	: headvar-tp-size _ ([x] [d:isvar x I] aofe/var _ (Dlookup x d)) _ (headvar/pi2 _)
+	   Dsimp Dleq
+	   <- ({x} {d:isvar x I}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (pi2 _) J))
+	   <- ({x} isvar-pi2-contra (Disvar x) Dfalse)
+	   <- ({x}
+		 false-implies-simp Dfalse (Dsimp x : simp _ st))
+	   <- false-implies-stp-leq Dfalse Dleq.
+
+%worlds (bind | ovar | var) (headvar-tp-size _ _ _ _ _ _).
+%total D (headvar-tp-size _ _ _ D _ _).
+
+
+
+closed-headvar-contra : ({x} aof (R x) (A x)) -> headvar R -> false -> type.
+%mode closed-headvar-contra +X1 +X2 -X3.
+
+-	: closed-headvar-contra Daof headvar/var Dfalse
+	   <- aof-noassm-var Daof Dfalse.
+
+-	: closed-headvar-contra ([x] aof/app _ _ _ (D x)) (headvar/app Dheadvar) Dfalse
+	   <- closed-headvar-contra D Dheadvar Dfalse.
+
+-	: closed-headvar-contra ([x] aof/pi1 (D x)) (headvar/pi1 Dheadvar) Dfalse
+	   <- closed-headvar-contra D Dheadvar Dfalse.
+
+-	: closed-headvar-contra ([x] aof/pi2 (D x)) (headvar/pi2 Dheadvar) Dfalse
+	   <- closed-headvar-contra D Dheadvar Dfalse.
+
+%worlds (var | bind) (closed-headvar-contra _ _ _).
+%total D (closed-headvar-contra D _ _).
+
+
+
+headvar-stp-size : ({x} isvar x I -> slookup (G x) x S)
+		    -> ({x} isvar x I -> aofes (G x) (R x) T)
+		    -> headvar R
+%%
+		    -> stp-leq T S -> type.
+%mode headvar-stp-size +X1 +X2 +X3 -X4.
+
+-closed	: headvar-stp-size _ ([x] [d] aofes/closed _ (Dsimp x) (Daof x)) Dheadvar D
+	   <- closed-headvar-contra Daof Dheadvar Dfalse
+	   <- false-implies-stp-leq Dfalse D.
+
+-var	: headvar-stp-size Dlookup ([x] [d] aofes/var (Dlookup' x d)) headvar/var D
+	   <- ({x} {d}
+		 slookup-fun (Dlookup x d) (Dlookup' x d) Deq)
+	   <- stp-leq-resp Deq stp-eq/i stp-leq/eq D.
+
+-app	: headvar-stp-size Dlookup ([x] [d] aofes/app _ (Daof x d)) (headvar/app Dheadvar) Dleq'
+	   <- headvar-stp-size Dlookup Daof Dheadvar Dleq
+	   <- stp-leq-trans (stp-leq/pi2 stp-leq/eq) Dleq Dleq'.
+
+-appbad	: headvar-stp-size _ ([x] [d] aofes/var (Dlookup x d)) (headvar/app _) D
+	   <- ({x} {d} slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-app-contra (Disvar x d) Dfalse)
+	   <- false-implies-stp-leq Dfalse D.
+
+-pi1	: headvar-stp-size Dlookup ([x] [d] aofes/pi1 (Daof x d)) (headvar/pi1 Dheadvar) Dleq'
+	   <- headvar-stp-size Dlookup Daof Dheadvar Dleq
+	   <- stp-leq-trans (stp-leq/sigma1 stp-leq/eq) Dleq Dleq'.
+
+-pi1bad	: headvar-stp-size _ ([x] [d] aofes/var (Dlookup x d)) (headvar/pi1 _) D
+	   <- ({x} {d} slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-pi1-contra (Disvar x d) Dfalse)
+	   <- false-implies-stp-leq Dfalse D.
+
+-pi2	: headvar-stp-size Dlookup ([x] [d] aofes/pi2 (Daof x d)) (headvar/pi2 Dheadvar) Dleq'
+	   <- headvar-stp-size Dlookup Daof Dheadvar Dleq
+	   <- stp-leq-trans (stp-leq/sigma2 stp-leq/eq) Dleq Dleq'.
+
+-pi2bad	: headvar-stp-size _ ([x] [d] aofes/var (Dlookup x d)) (headvar/pi2 _) D
+	   <- ({x} {d} slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-pi2-contra (Disvar x d) Dfalse)
+	   <- false-implies-stp-leq Dfalse D.
+
+%worlds (bind | var | ovar) (headvar-stp-size _ _ _ _).
+%total D (headvar-stp-size _ D _ _).
+
+
+
+
+
+%%%%%  Substitution Lemma (Simply Typed, Explicit Context Version)  %%%%%
+
+sasubst-es	: ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> aofes (G x) R S)
+		   -> ({x} isvar x I -> aofes (G x) (Q x) T)
+%%
+		   -> ({x} isvar x I -> aofes (G x) (Q R) T) -> type.
+%mode sasubst-es +X1 +X2 +X3 -X4.
+
+ssubst-es	: ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> aofes (G x) R S)
+		   -> ({x} isvar x I -> ofes (G x) (M x) T)
+%%
+		   -> ({x} isvar x I -> ofes (G x) (M R) T) -> type.
+%mode ssubst-es +X1 +X2 +X3 -X4.
+
+stsubst-es	: ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> aofes (G x) R S)
+		   -> ({x} isvar x I -> wfes (G x) (A x))
+%%
+		   -> ({x} isvar x I -> wfes (G x) (A R)) -> type.
+%mode stsubst-es +X1 +X2 +X3 -X4.
+
+-	: sasubst-es Dlook DofR ([x] [d] aofes/closed (Dord x d) (Dsimp x) (Daof x : aof (Q x) _))
+	   ([x] [d] aofes/closed (Dord x d) (Dsimp R) (Daof R)).
+
+-	: sasubst-es Dlook (DofR : {x} _ -> aofes _ R _) ([x] [d] aofes/forall (Dsimp x) (D x d)) ([x] [d] aofes/forall (Dsimp R) (D' x d))
+	   <- stsubst-es Dlook DofR D D'.
+
+-	: sasubst-es _ _ ([x] [d] aofes/var (Dlook x d)) D
+	   <- ({x} {d}
+		 slookup-isvar (Dlook x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-forall-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-aofes Dfalse (D x d)).
+
+-	: sasubst-es Dlook DofR ([x] [d] aofes/var (Dlook' x d)) DofR'
+	   <- ({x} {d}
+		 slookup-fun (Dlook x d) (Dlook' x d) Deq)
+	   <- ({x} {d}
+		 aofes-resp sctx-eq/i atom-eq/i Deq (DofR x d)
+		 (DofR' x d)).
+
+-	: sasubst-es _ _ ([x] [d] aofes/var (Dlook x d : slookup _ Y _)) ([x] [d] aofes/var (Dlook x d)).
+
+-	: sasubst-es Dlook DofR ([x] [d] aofes/app (DofM x d) (DofQ x d)) ([x] [d] aofes/app (DofM' x d) (DofQ' x d))
+	   <- sasubst-es Dlook DofR DofQ DofQ'
+	   <- ssubst-es Dlook DofR DofM DofM'.
+
+-	: sasubst-es _ _ ([x] [d] aofes/var (Dlook x d)) D
+	   <- ({x} {d}
+		 slookup-isvar (Dlook x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-app-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-aofes Dfalse (D x d)).
+
+-	: sasubst-es Dlook DofR ([x] [d] aofes/pi1 (DofQ x d)) ([x] [d] aofes/pi1 (DofQ' x d)) 
+	   <- sasubst-es Dlook DofR DofQ DofQ'.
+
+-	: sasubst-es _ _ ([x] [d] aofes/var (Dlook x d)) D
+	   <- ({x} {d}
+		 slookup-isvar (Dlook x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-pi1-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-aofes Dfalse (D x d)).
+
+-	: sasubst-es Dlook DofR ([x] [d] aofes/pi2 (DofQ x d)) ([x] [d] aofes/pi2 (DofQ' x d)) 
+	   <- sasubst-es Dlook DofR DofQ DofQ'.
+
+-	: sasubst-es _ _ ([x] [d] aofes/var (Dlook x d)) D
+	   <- ({x} {d}
+		 slookup-isvar (Dlook x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-pi2-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-aofes Dfalse (D x d)).
+
+
+
+-	: ssubst-es Dlook DofR ([x] [d] ofes/at (D x d)) ([x] [d] ofes/at (D' x d))
+	   <- sasubst-es Dlook DofR D D'.
+
+-	: ssubst-es Dlook DofR ([x] [d] ofes/lam (D x d)) ([x] [d] ofes/lam (D' x d))
+	   <- ({x} {d} {y} {e}
+		 ofes-context (D x d y e)
+		 (sordered/cons (Dbound x d y e)))
+	   <- ({x} {d} {y} {e}
+		 weaken-slookup (Dbound x d y e) (Dlook x d) _ (Dlook' x d y e))
+	   <- ({x} {d} {y} {e}
+		 weaken-aofes (Dbound x d y e) (DofR x d) _ (DofR' x d y e))
+	   <- ({y} {e}
+		 ssubst-es ([x] [d] Dlook' x d y e) ([x] [d] DofR' x d y e) ([x] [d] D x d y e) ([x] [d] D' x d y e)).
+
+-	: ssubst-es Dlook DofR ([x] [d] ofes/pair (D2 x d) (D1 x d)) ([x] [d] ofes/pair (D2' x d) (D1' x d))
+	   <- ssubst-es Dlook DofR D1 D1'
+	   <- ssubst-es Dlook DofR D2 D2'.
+
+
+
+-	: stsubst-es _ _ ([x] [d] wfes/t (D x d)) ([x] [d] wfes/t (D x d)).
+
+-	: stsubst-es Dlook DofR ([x] [d] wfes/pi (D2 x d) (Dsimp x : simp _ T) (D1 x d : wfes _ (A x)))
+	   ([x] [d] wfes/pi (D2' x d) (Dsimp R) (D1' x d))
+	   <- stsubst-es Dlook DofR D1 D1'
+	   <- ({x} {d} {y} {e}
+		 wfes-context (D2 x d y e)
+		 (sordered/cons (Dbound x d y e)))
+	   <- ({x} {d} {y} {e}
+		 weaken-slookup (Dbound x d y e) (Dlook x d) _ (Dlook' x d y e))
+	   <- ({x} {d} {y} {e}
+		 weaken-aofes (Dbound x d y e) (DofR x d) _ (DofR' x d y e))
+	   <- ({y} {e}
+		 stsubst-es ([x] [d] Dlook' x d y e) ([x] [d] DofR' x d y e) ([x] [d] D2 x d y e) ([x] [d] D2' x d y e)).
+
+-	: stsubst-es Dlook DofR ([x] [d] wfes/sigma (D2 x d) (Dsimp x : simp _ T) (D1 x d : wfes _ (A x)))
+	   ([x] [d] wfes/sigma (D2' x d) (Dsimp R) (D1' x d))
+	   <- stsubst-es Dlook DofR D1 D1'
+	   <- ({x} {d} {y} {e}
+		 wfes-context (D2 x d y e)
+		 (sordered/cons (Dbound x d y e)))
+	   <- ({x} {d} {y} {e}
+		 weaken-slookup (Dbound x d y e) (Dlook x d) _ (Dlook' x d y e))
+	   <- ({x} {d} {y} {e}
+		 weaken-aofes (Dbound x d y e) (DofR x d) _ (DofR' x d y e))
+	   <- ({y} {e}
+		 stsubst-es ([x] [d] Dlook' x d y e) ([x] [d] DofR' x d y e) ([x] [d] D2 x d y e) ([x] [d] D2' x d y e)).
+
+-	: stsubst-es Dlook DofR ([x] [d] wfes/sing (D x d)) ([x] [d] wfes/sing (D' x d)) 
+	   <- sasubst-es Dlook DofR D D'.
+
+%worlds (var | bind | ovar) (sasubst-es _ _ _ _) (ssubst-es _ _ _ _) (stsubst-es _ _ _ _).
+%total (D1 D2 D3) (sasubst-es _ _ D1 _) (ssubst-es _ _ D2 _) (stsubst-es _ _ D3 _).
+
+
+
+strengthen-aofes : ({x} sappend (scons G1 x S) G2 (G x)) 
+		    -> sappend G1 G2 G'
+		    -> ({x} isvar x I -> aofes (G x) R T)
+		    -> aofes G' R T -> type.
+%mode strengthen-aofes +X1 +X2 +X3 -X4.
+
+strengthen-ofes : ({x} sappend (scons G1 x S) G2 (G x)) 
+		   -> sappend G1 G2 G'
+		   -> ({x} isvar x I -> ofes (G x) M T)
+		   -> ofes G' M T -> type.
+%mode strengthen-ofes +X1 +X2 +X3 -X4.
+
+strengthen-wfes : ({x} sappend (scons G1 x S) G2 (G x)) 
+		   -> sappend G1 G2 G'
+		   -> ({x} isvar x I -> wfes (G x) A)
+		   -> wfes G' A -> type.
+%mode strengthen-wfes +X1 +X2 +X3 -X4.
+
+-closed	: strengthen-aofes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      aofes/closed
+	      (Dord x d : sordered (G x))
+	      (Dsimp x : simp (A x) T)
+	      (Daof x : aof R (A x)))
+	   (aofes/closed Dord'' (Dsimp' aca) (Daof' aca))
+	   <- aof-noassm Daof
+	      _
+	      (Deq : {x} tp-eq (A x) A')
+	   <- ({x} {d}
+		 sordered-drop (Dappend x) Dappend' (Dord x d) (Dord' x d))
+	   <- strengthen-sordered Dord' Dord''
+	   <- ({x}
+		 aof-resp atom-eq/i (Deq x) (Daof x)
+		 (Daof' x : aof R A'))
+	   <- ({x}
+		 simp-resp (Deq x) stp-eq/i (Dsimp x)
+		 (Dsimp' x : simp A' T)).
+
+-forall	: strengthen-aofes 
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      aofes/forall
+	      (Dsimp x : simp A T)
+	      (DwfA x d : wfes (G x) A))
+	   (aofes/forall (Dsimp aca) DwfA')
+	   <- strengthen-wfes Dappend Dappend' DwfA DwfA'.
+
+-var	: strengthen-aofes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      aofes/var
+	      (Dlookup x d : slookup (G x) Y T))
+	   (aofes/var Dlookup')
+	   <- slookup-drop Dappend Dappend' Dlookup Dlookup'.
+
+-app	: strengthen-aofes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      aofes/app
+	      (DofM x d : ofes (G x) M T)
+	      (DofR x d : aofes (G x) R (spi T U)))
+	   (aofes/app DofM' DofR')
+	   <- strengthen-aofes Dappend Dappend' DofR DofR'
+	   <- strengthen-ofes Dappend Dappend' DofM DofM'.
+
+-pi1	: strengthen-aofes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      aofes/pi1
+	      (DofR x d : aofes (G x) R (ssigma T U)))
+	   (aofes/pi1 DofR')
+	   <- strengthen-aofes Dappend Dappend' DofR DofR'.
+
+-pi2	: strengthen-aofes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      aofes/pi2
+	      (DofR x d : aofes (G x) R (ssigma T U)))
+	   (aofes/pi2 DofR')
+	   <- strengthen-aofes Dappend Dappend' DofR DofR'.
+
+
+
+-at	: strengthen-ofes 
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      ofes/at
+	      (DofR x d : aofes (G x) R st))
+	   (ofes/at DofR')
+	   <- strengthen-aofes Dappend Dappend' DofR DofR'.
+
+-lam	: strengthen-ofes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      ofes/lam
+	      (DofM x d : {y} isvar y J -> ofes (scons (G x) y T) (M y) U))
+	   (ofes/lam DofM')
+	   <- ({y} {e}
+		 strengthen-ofes ([x] sappend/cons (Dappend x)) (sappend/cons Dappend') ([x] [d] DofM x d y e) (DofM' y e)).
+
+-pair	: strengthen-ofes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      ofes/pair
+	      (DofN x d : ofes (G x) N U)
+	      (DofM x d : ofes (G x) M T))
+	   (ofes/pair DofN' DofM')
+	   <- strengthen-ofes Dappend Dappend' DofM DofM'
+	   <- strengthen-ofes Dappend Dappend' DofN DofN'.
+	   
+
+
+-t	: strengthen-wfes 
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d]
+	      wfes/t
+	      (Dord x d : sordered (G x)))
+	   (wfes/t Dord'')
+	   <- ({x} {d}
+		 sordered-drop (Dappend x) Dappend' (Dord x d) (Dord' x d))
+	   <- strengthen-sordered Dord' Dord''.
+
+-pi	: strengthen-wfes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      wfes/pi
+	      (DwfB x d : {y} isvar y J -> wfes (scons (G x) y T) (B y))
+	      (Dsimp x : simp A T)
+	      (DwfA x d : wfes (G x) A))
+	   (wfes/pi DwfB' (Dsimp aca) DwfA')
+	   <- strengthen-wfes Dappend Dappend' DwfA DwfA'
+	   <- ({y} {e}
+		 strengthen-wfes ([x] sappend/cons (Dappend x)) (sappend/cons Dappend') ([x] [d] DwfB x d y e) (DwfB' y e)).
+
+-sigma	: strengthen-wfes
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      wfes/sigma
+	      (DwfB x d : {y} isvar y J -> wfes (scons (G x) y T) (B y))
+	      (Dsimp x : simp A T)
+	      (DwfA x d : wfes (G x) A))
+	   (wfes/sigma DwfB' (Dsimp aca) DwfA')
+	   <- strengthen-wfes Dappend Dappend' DwfA DwfA'
+	   <- ({y} {e}
+		 strengthen-wfes ([x] sappend/cons (Dappend x)) (sappend/cons Dappend') ([x] [d] DwfB x d y e) (DwfB' y e)).
+
+-sing	: strengthen-wfes 
+	   (Dappend : {x} sappend (scons G1 x S) G2 (G x))
+	   (Dappend' : sappend G1 G2 G')
+	   ([x] [d] 
+	      wfes/sing
+	      (DofR x d : aofes (G x) R st))
+	   (wfes/sing DofR')
+	   <- strengthen-aofes Dappend Dappend' DofR DofR'.
+
+%worlds (var | bind | ovar) (strengthen-aofes _ _ _ _) (strengthen-ofes _ _ _ _) (strengthen-wfes _ _ _ _).
+%total (D1 D2 D3) (strengthen-aofes _ _ D1 _) (strengthen-ofes _ _ D2 _) (strengthen-wfes _ _ D3 _).
+
+
+
+aasubst-es : ({x} isvar x I -> slookup (G x) x S)
+		-> ({x} isvar x I -> ofes (G x) M S)
+		-> ({x} isvar x I -> aofes (G x) (R x) T)
+		-> aasub R M R'
+%%
+		-> ({x} isvar x I -> aofes (G x) R' T) -> type.
+%mode aasubst-es +X1 +X2 +X3 +X4 -X5.
+
+aosubst-es : ({x} isvar x I -> slookup (G x) x S)
+		-> ({x} isvar x I -> ofes (G x) M S)
+		-> ({x} isvar x I -> aofes (G x) (R x) T)
+		-> aosub R M N
+%%
+		-> ({x} isvar x I -> ofes (G x) N T) -> type.
+%mode aosubst-es +X1 +X2 +X3 +X4 -X5.
+
+subst-es : ({x} isvar x I -> slookup (G x) x S)
+	      -> ({x} isvar x I -> ofes (G x) M S)
+	      -> ({x} isvar x I -> ofes (G x) (N x) T)
+	      -> sub N M N'
+%%
+	      -> ({x} isvar x I -> ofes (G x) N' T) -> type.
+%mode subst-es +X1 +X2 +X3 +X4 -X5.
+
+tsubst-es : ({x} isvar x I -> slookup (G x) x S)
+	     -> ({x} isvar x I -> ofes (G x) M S)
+	     -> ({x} isvar x I -> wfes (G x) (A x))
+	     -> tsub A M A'
+%%
+	     -> ({x} isvar x I -> wfes (G x) A') -> type.
+%mode tsubst-es +X1 +X2 +X3 +X4 -X5.
+
+-closed	: aasubst-es 
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (DofR : {x} isvar x I -> aofes (G x) R T)
+	   aasub/closed
+	   DofR.
+
+-closed	: aasubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/closed
+	      (Dord x d : sordered (G x))
+	      (Dsimp x : simp (A x) T)
+	      (Daof x : aof (R x) (A x)))
+	   (Dsub : aasub R M Rx)
+	   ([x] [d] aofes/closed (Dord x d) (Dsimp' aca) Daof'')
+	   <- aof-noassm Daof 
+	      (DeqR : {x} atom-eq (R x) R')
+	      (DeqA : {x} tp-eq (A x) A')
+	   <- aasub-resp DeqR term-eq/i atom-eq/i Dsub
+	      (Dsub' : aasub ([_] R') M Rx)
+	   <- aasub-absent-fun Dsub' 
+	      (DeqRx : atom-eq Rx R')
+	   <- atom-eq-symm DeqRx
+	      (DeqRx' : atom-eq R' Rx)
+	   <- ({x}
+		 aof-resp (DeqR x) (DeqA x) (Daof x)
+		 (Daof' x : aof R' A'))
+	   <- aof-resp DeqRx' tp-eq/i (Daof' aca)
+	      (Daof'' : aof Rx A')
+	   <- ({x}
+		 simp-resp (DeqA x) stp-eq/i (Dsimp x)
+		 (Dsimp' x : simp A' T)).
+
+-forall	: aasubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/forall
+	      (Dsimp x)
+	      (DwfA x d : wfes (G x) (A x))) 
+	   (aasub/forall DsubA)
+	   ([x] [d] aofes/forall Dsimp' (DwfA' x d))
+	   <- tsubst-es Dlookup DofM DwfA DsubA DwfA'
+	   <- tsub-preserves-simp DsubA Dsimp Dsimp'.
+
+-	: aasubst-es _ _ ([x] [d] aofes/var (Dlookup x d)) _ D
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-forall-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-aofes Dfalse (D x d)).
+
+-app	: aasubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/app
+	      (DofN x d : ofes (G x) (N x) T)
+	      (DofR x d : aofes (G x) (R x) (spi T U)))
+	   (aasub/app DsubN DsubR)
+	   ([x] [d] aofes/app (DofN' x d) (DofR' x d))
+	   <- aasubst-es Dlookup DofM DofR DsubR DofR'
+	   <- subst-es Dlookup DofM DofN DsubN DofN'.
+
+-	: aasubst-es _ _ ([x] [d] aofes/var (Dlookup x d)) _ D
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-app-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-aofes Dfalse (D x d)).
+
+-pi1	: aasubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/pi1
+	      (DofR x d : aofes (G x) (R x) (ssigma T U)))
+	   (aasub/pi1 DsubR)
+	   ([x] [d] aofes/pi1 (DofR' x d))
+	   <- aasubst-es Dlookup DofM DofR DsubR DofR'.
+
+-	: aasubst-es _ _ ([x] [d] aofes/var (Dlookup x d)) _ D
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-pi1-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-aofes Dfalse (D x d)).
+
+-pi2	: aasubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/pi2
+	      (DofR x d : aofes (G x) (R x) (ssigma T U)))
+	   (aasub/pi2 DsubR)
+	   ([x] [d] aofes/pi2 (DofR' x d))
+	   <- aasubst-es Dlookup DofM DofR DsubR DofR'.
+
+-	: aasubst-es _ _ ([x] [d] aofes/var (Dlookup x d)) _ D
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-pi2-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-aofes Dfalse (D x d)).
+
+
+%%%
+
+
+
+-closed	: aosubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/closed
+	      (Dord x d : sordered (G x))
+	      (Dsimp x : simp (A x) T)
+	      (Daof x : aof (R x) (A x)))
+	   (Dsub : aosub R M LRx)
+	   D
+	   <- aof-noassm Daof 
+	      (DeqR : {x} atom-eq (R x) R')
+	      (DeqA : {x} tp-eq (A x) A')
+	   <- aosub-resp DeqR term-eq/i term-eq/i Dsub
+	      (Dsub' : aosub ([_] R') M LRx)
+	   <- aosub-absent Dsub' Dfalse
+	   <- ({x} {d}
+		 false-implies-ofes Dfalse (D x d)).
+
+-var	: aosubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/var
+	      (Dlookup' x d : slookup (G x) x T))
+	   aosub/var
+	   DofM'
+	   <- ({x} {d}
+		 slookup-fun (Dlookup x d) (Dlookup' x d) (Deq : stp-eq S T))
+	   <- ({x} {d}
+		 ofes-resp sctx-eq/i term-eq/i Deq (DofM x d) 
+		 (DofM' x d : ofes (G x) M T)).
+
+-app	: aosubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/app
+	      (DofN x d : ofes (G x) (N x) T)
+	      (DofR x d : aofes (G x) (R x) (spi T U)))
+	   (aosub/app
+	      (DsubP : sub P Nx Py)
+	      (DsubN  : sub N M Nx)
+	      (DsubR : aosub R M (lam P)))
+	   DofP''
+	   <- aosubst-es Dlookup DofM DofR DsubR
+	      ([x] [d]
+		 ofes/lam
+		 (DofP x d : {y} isvar y J -> ofes (scons (G x) y T) (P y) U))
+	   <- subst-es Dlookup DofM DofN DsubN
+	      (DofN' : {x} isvar x I -> ofes (G x) Nx T)
+	   <- ({x} {d} {y} {e}
+		 ofes-context (DofP x d y e)
+		 (sordered/cons
+		    (Dbound x d y e : sbounded (G x) y)))
+	   <- ({x} {d} {y} {e}
+		 weaken-ofes (Dbound x d y e) (DofN' x d) _
+		 (DofN'' x d y e : ofes (scons (G x) y T) Nx T))
+	   <- ({x} {d}
+		 subst-es ([y] [e] slookup/hit (Dbound x d y e)) ([y] [e] DofN'' x d y e) ([y] [e] DofP x d y e) DsubP
+		 ([y] [e] DofP' x d y e : ofes (scons (G x) y T) Py U))
+	   <- ({x} {d}
+		 strengthen-ofes ([y] sappend/nil) sappend/nil ([y] [e] DofP' x d y e) (DofP'' x d)).
+
+-	: aosubst-es _ _ ([x] [d] aofes/var (Dlookup x d)) _ D
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-app-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-ofes Dfalse (D x d)).
+
+-pi1	: aosubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/pi1
+	      (DofR x d : aofes (G x) (R x) (ssigma T U)))
+	   (aosub/pi1
+	      (Dsub : aosub R M (pair P1 P2)))
+	   DofP1
+	   <- aosubst-es Dlookup DofM DofR Dsub
+	      ([x] [d]
+		 ofes/pair
+		 (DofP2 x d : ofes (G x) P2 U)
+		 (DofP1 x d : ofes (G x) P1 T)).
+
+-	: aosubst-es _ _ ([x] [d] aofes/var (Dlookup x d)) _ D
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-pi1-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-ofes Dfalse (D x d)).
+
+-pi2	: aosubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      aofes/pi2
+	      (DofR x d : aofes (G x) (R x) (ssigma T U)))
+	   (aosub/pi2
+	      (Dsub : aosub R M (pair P1 P2)))
+	   DofP2
+	   <- aosubst-es Dlookup DofM DofR Dsub
+	      ([x] [d]
+		 ofes/pair
+		 (DofP2 x d : ofes (G x) P2 U)
+		 (DofP1 x d : ofes (G x) P1 T)).
+
+-	: aosubst-es _ _ ([x] [d] aofes/var (Dlookup x d)) _ D
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-pi2-contra (Disvar x d) Dfalse)
+	   <- ({x} {d}
+		 false-implies-ofes Dfalse (D x d)).
+
+
+%%%
+
+
+-aa	: subst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      ofes/at
+	      (DofR x d : aofes (G x) (R x) st))
+	   (sub/aa Dsub)
+	   ([x] [d] ofes/at (DofR' x d))
+	   <- aasubst-es Dlookup DofM DofR Dsub DofR'.
+
+-ao	: subst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      ofes/at
+	      (DofR x d : aofes (G x) (R x) st))
+	   (sub/ao Dsub)
+	   D
+	   <- aosubst-es Dlookup DofM DofR Dsub D.
+
+-lam	: subst-es 
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      ofes/lam
+	      (DofN x d : {y} isvar y J -> ofes (scons (G x) y T) (N x y) U))
+	   (sub/lam 
+	      (Dsub : {y} sub ([x] N x y) M (Nx y)))
+	   ([x] [d] ofes/lam (DofN' x d))
+	   <- ({x} {d} {y} {e}
+		 ofes-context (DofN x d y e)
+		 (sordered/cons
+		    (Dbound x d y e : sbounded (G x) y)))
+	   <- ({x} {d} {y} {e}
+		 weaken-ofes (Dbound x d y e) (DofM x d) _
+		 (DofM' x d y e : ofes (scons (G x) y T) M S))
+	   <- ({y} {e}
+		 subst-es ([x] [d] slookup/miss (Dlookup x d) (Dbound x d y e)) ([x] [d] DofM' x d y e) ([x] [d] DofN x d y e) (Dsub y)
+		 ([x] [d] DofN' x d y e : ofes (scons (G x) y T) (Nx y) U)).
+
+-pair	: subst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      ofes/pair
+	      (DofO x d : ofes (G x) (O x) U)
+	      (DofN x d : ofes (G x) (N x) T))
+	   (sub/pair
+	      (DsubO : sub O M Ox)
+	      (DsubN : sub N M Nx))
+	   ([x] [d] ofes/pair (DofO' x d) (DofN' x d))
+	   <- subst-es Dlookup DofM DofN DsubN DofN'
+	   <- subst-es Dlookup DofM DofO DsubO DofO'.
+
+
+%%%
+
+
+-t	: tsubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d] 
+	      wfes/t (Dord x d))
+	   tsub/t
+	   ([x] [d] wfes/t (Dord x d)).
+
+-pi	: tsubst-es 
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      wfes/pi
+	      (DwfB x d : {y} isvar y J -> wfes (scons (G x) y T) (B x y))
+	      (Dsimp x : simp (A x) T)
+	      (DwfA x d : wfes (G x) (A x)))
+	   (tsub/pi
+	      (DsubB : {y} tsub ([x] B x y) M (Bx y))
+	      (DsubA : tsub A M Ax))
+	   ([x] [d] wfes/pi (DwfB' x d) Dsimp' (DwfA' x d))
+	   <- tsubst-es Dlookup DofM DwfA DsubA DwfA'
+	   <- ({x} {d} {y} {e}
+		 wfes-context (DwfB x d y e)
+		 (sordered/cons
+		    (Dbound x d y e : sbounded (G x) y)))
+	   <- ({x} {d} {y} {e}
+		 weaken-ofes (Dbound x d y e) (DofM x d) _
+		 (DofM' x d y e : ofes (scons (G x) y T) M S))
+	   <- ({y} {e}
+		 tsubst-es ([x] [d] slookup/miss (Dlookup x d) (Dbound x d y e)) ([x] [d] DofM' x d y e) ([x] [d] DwfB x d y e) (DsubB y)
+		 ([x] [d] DwfB' x d y e : wfes (scons (G x) y T) (Bx y)))
+	   <- tsub-preserves-simp DsubA Dsimp Dsimp'.
+
+-sigma	: tsubst-es 
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      wfes/sigma
+	      (DwfB x d : {y} isvar y J -> wfes (scons (G x) y T) (B x y))
+	      (Dsimp x : simp (A x) T)
+	      (DwfA x d : wfes (G x) (A x)))
+	   (tsub/sigma
+	      (DsubB : {y} tsub ([x] B x y) M (Bx y))
+	      (DsubA : tsub A M Ax))
+	   ([x] [d] wfes/sigma (DwfB' x d) Dsimp' (DwfA' x d))
+	   <- tsubst-es Dlookup DofM DwfA DsubA DwfA'
+	   <- ({x} {d} {y} {e}
+		 wfes-context (DwfB x d y e)
+		 (sordered/cons
+		    (Dbound x d y e : sbounded (G x) y)))
+	   <- ({x} {d} {y} {e}
+		 weaken-ofes (Dbound x d y e) (DofM x d) _
+		 (DofM' x d y e : ofes (scons (G x) y T) M S))
+	   <- ({y} {e}
+		 tsubst-es ([x] [d] slookup/miss (Dlookup x d) (Dbound x d y e)) ([x] [d] DofM' x d y e) ([x] [d] DwfB x d y e) (DsubB y)
+		 ([x] [d] DwfB' x d y e : wfes (scons (G x) y T) (Bx y)))
+	   <- tsub-preserves-simp DsubA Dsimp Dsimp'.
+
+-singa	: tsubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      wfes/sing
+	      (DofR x d : aofes (G x) (R x) st))
+	   (tsub/singa Dsub)
+	   ([x] [d] wfes/sing (DofR' x d))
+	   <- aasubst-es Dlookup DofM DofR Dsub DofR'.
+
+-singo	: tsubst-es
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   ([x] [d]
+	      wfes/sing
+	      (DofR x d : aofes (G x) (R x) st))
+	   (tsub/singo Dsub)
+	   ([x] [d] wfes/sing (D x d))
+	   <- aosubst-es Dlookup DofM DofR Dsub ([x] [d] ofes/at (D x d)).
+
+%worlds (var | ovar | bind) (aasubst-es _ _ _ _ _) (aosubst-es _ _ _ _ _) (subst-es _ _ _ _ _) (tsubst-es _ _ _ _ _).
+%total (D1 D2 D3 D4) (aasubst-es _ _ _ D1 _) (aosubst-es _ _ _ D2 _) (subst-es _ _ _ D3 _) (tsubst-es _ _ _ D4 _).
+
+
+
+
+%%%%%  Substitution Effectiveness (Simply Typed, Explicit Context Version)  %%%%%
+
+ofes-pi-invert-underbind : ({x} isvar x I -> ofes (G x) M (spi S T))
+			    -> term-eq M (lam P)
+			    -> ({x} isvar x I -> {y} isvar y J -> ofes (scons (G x) y S) (P y) T) -> type.
+%mode ofes-pi-invert-underbind +X1 -X2 -X3.
+
+-	: ofes-pi-invert-underbind ([x] [d] ofes/lam (D x d)) term-eq/i D.
+
+%worlds (var | bind | ovar) (ofes-pi-invert-underbind _ _ _).
+%total {} (ofes-pi-invert-underbind _ _ _).
+
+
+
+ofes-sigma-invert-underbind : ({x} isvar x I -> ofes (G x) M (ssigma S T))
+			       -> term-eq M (pair P1 P2)
+			       -> ({x} isvar x I -> ofes (G x) P1 S)
+			       -> ({x} isvar x I -> ofes (G x) P2 T) -> type.
+%mode ofes-sigma-invert-underbind +X1 -X2 -X3 -X4.
+
+-	: ofes-sigma-invert-underbind ([x] [d] ofes/pair (D2 x d) (D1 x d)) term-eq/i D1 D2.
+
+%worlds (var | bind | ovar) (ofes-sigma-invert-underbind _ _ _ _).
+%total {} (ofes-sigma-invert-underbind _ _ _ _).
+
+
+
+ofes-t-invert-underbind : ({x} isvar x I -> ofes (G x) M st)
+			   -> term-eq M (at R) -> type.
+%mode ofes-t-invert-underbind +X1 -X2.
+
+-	: ofes-t-invert-underbind ([x] [d] ofes/at _) term-eq/i.
+
+%worlds (var | bind | ovar) (ofes-t-invert-underbind _ _).
+%total {} (ofes-t-invert-underbind _ _).
+
+
+
+
+asub : (atom -> atom) -> term -> type.
+
+asub/aasub	: asub R M
+		   <- aasub R M _.
+
+asub/aosub	: asub R M
+		   <- aosub R M _.
+
+
+
+
+can-asub-pi1	: ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> aofes (G x) (R x) (ssigma T U))
+		   -> ({x} isvar x I -> ofes (G x) M S)
+		   -> asub R M
+		   -> asub ([x] (pi1 (R x))) M -> type.
+%mode can-asub-pi1 +X1 +X2 +X3 +X4 -X5.
+
+-aa	: can-asub-pi1 _ _ _ (asub/aasub Daasub) (asub/aasub (aasub/pi1 Daasub)).
+
+-ao	: can-asub-pi1 Dlookup DofR DofM (asub/aosub Daosub) (asub/aosub (aosub/pi1 Daosub'))
+	   <- aosubst-es Dlookup DofM DofR Daosub
+	      (DofLRx : {x} isvar x I -> ofes (G x) LRx (ssigma T U))
+	   <- ofes-sigma-invert-underbind DofLRx 
+	      (Deq : term-eq LRx (pair P1 P2)) _ _
+	   <- aosub-resp ([_] atom-eq/i) term-eq/i Deq Daosub
+	      (Daosub' : aosub R M (pair P1 P2)).
+
+%worlds (var | bind | ovar) (can-asub-pi1 _ _ _ _ _).
+%total {} (can-asub-pi1 _ _ _ _ _).
+
+
+
+can-asub-pi2	: ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> aofes (G x) (R x) (ssigma T U))
+		   -> ({x} isvar x I -> ofes (G x) M S)
+		   -> asub R M
+		   -> asub ([x] (pi2 (R x))) M -> type.
+%mode can-asub-pi2 +X1 +X2 +X3 +X4 -X5.
+
+-aa	: can-asub-pi2 _ _ _ (asub/aasub Daasub) (asub/aasub (aasub/pi2 Daasub)).
+
+-ao	: can-asub-pi2 Dlookup DofR DofM (asub/aosub Daosub) (asub/aosub (aosub/pi2 Daosub'))
+	   <- aosubst-es Dlookup DofM DofR Daosub
+	      (DofLRx : {x} isvar x I -> ofes (G x) LRx (ssigma T U))
+	   <- ofes-sigma-invert-underbind DofLRx 
+	      (Deq : term-eq LRx (pair P1 P2)) _ _
+	   <- aosub-resp ([_] atom-eq/i) term-eq/i Deq Daosub
+	      (Daosub' : aosub R M (pair P1 P2)).
+
+%worlds (var | bind | ovar) (can-asub-pi2 _ _ _ _ _).
+%total {} (can-asub-pi2 _ _ _ _ _).
+
+
+
+asub-sub-at	: asub R M -> sub ([x] at (R x)) M N -> type.
+%mode asub-sub-at +X1 -X2.
+
+-	: asub-sub-at (asub/aasub D) (sub/aa D).
+
+-	: asub-sub-at (asub/aosub D) (sub/ao D).
+
+%worlds (var) (asub-sub-at _ _).
+%total {} (asub-sub-at _ _).
+
+
+
+asub-tsub-sing	: ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> aofes (G x) (R x) st)
+		   -> ({x} isvar x I -> ofes (G x) M S)
+		   -> asub R M
+%%
+		   -> tsub ([x] sing (R x)) M A -> type.
+%mode asub-tsub-sing +X1 +X2 +X3 +X4 -X5.
+
+-	: asub-tsub-sing _ _ _ (asub/aasub D) (tsub/singa D).
+
+-	: asub-tsub-sing Dlookup DofR DofM (asub/aosub Daosub) (tsub/singo Daosub')
+	   <- aosubst-es Dlookup DofM DofR Daosub
+	      (DofLRx : {x} isvar x I -> ofes (G x) LRx st)
+	   <- ofes-t-invert-underbind DofLRx
+	      (Deq : term-eq LRx (at R'))
+	   <- aosub-resp ([_] atom-eq/i) term-eq/i Deq Daosub
+	      (Daosub' : aosub R M (at R')).
+
+%worlds (var | bind | ovar) (asub-tsub-sing _ _ _ _ _).
+%total {} (asub-tsub-sing _ _ _ _ _).
+
+
+
+
+can-asub-esm	: {S} 
+		   ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> aofes (G x) (R x) T)
+		   -> ({x} isvar x I -> ofes (G x) M S)
+%%
+		   -> asub R M -> type.
+%mode can-asub-esm +X1 +X2 +X3 +X4 -X5.
+
+can-sub-esm	: {S}
+		   ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> ofes (G x) (N x) T)
+		   -> ({x} isvar x I -> ofes (G x) M S)
+%%
+		   -> sub N M N' -> type.
+%mode can-sub-esm +X1 +X2 +X3 +X4 -X5.
+
+can-asub-app	: {S}
+		   ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> aofes (G x) (R x) (spi T U))
+		   -> ({x} isvar x I -> ofes (G x) (N x) T)
+		   -> ({x} isvar x I -> ofes (G x) M S)
+		   -> asub R M
+		   -> sub N M Nx
+%%
+		   -> asub ([x] app (R x) (N x)) M -> type.
+%mode can-asub-app +X1 +X2 +X3 +X4 +X5 +X6 +X7 -X8.
+
+can-tsub-esm	: {S}
+		   ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> wfes (G x) (A x))
+		   -> ({x} isvar x I -> ofes (G x) M S)
+%%
+		   -> tsub A M A' -> type.
+%mode can-tsub-esm +X1 +X2 +X3 +X4 -X5.
+
+
+-closed	: can-asub-esm S
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d] aofes/closed
+	      _
+	      (Dsimp x : simp (A x) T)
+	      (Daof x : aof (R x) (A x)))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (asub/aasub Daasub)
+	   <- aof-noassm Daof
+	      (Deq : {x} atom-eq (R x) R') _
+	   <- ({x}
+		 atom-eq-symm (Deq x)
+		 (Deq' x : atom-eq R' (R x)))
+	   <- aasub-resp Deq' term-eq/i atom-eq/i aasub/closed
+	      (Daasub : aasub R M R').
+
+-closed	: can-asub-esm _ _ _ _ (asub/aasub aasub/closed).
+
+-var	: can-asub-esm _ _ _ _ (asub/aosub aosub/var).
+
+-forall	: can-asub-esm S
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d] aofes/forall
+	      (Dsimp x : simp (A x) T)
+	      (DofA x d : wfes (G x) (A x)))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (asub/aasub (aasub/forall Dsub))
+	   <- can-tsub-esm S Dlookup DofA DofM
+	      (Dsub : tsub A M A').
+
+-allbad	: can-asub-esm _ _ ([x] [d] aofes/var (Dlookup x d)) _ (asub/aosub Daosub)
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-forall-contra (Disvar x d) Dfalse)
+	   <- false-implies-aosub Dfalse (Daosub : aosub _ _ (at aca)).
+
+-app	: can-asub-esm S 
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d] aofes/app 
+	      (DofN x d : ofes (G x) (N x) T)
+	      (DofR x d : aofes (G x) (R x) (spi T U)))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   Dasub'
+	   <- can-asub-esm S Dlookup DofR DofM Dasub
+	   <- can-sub-esm S Dlookup DofN DofM Dsub
+	   <- can-asub-app S Dlookup DofR DofN DofM Dasub Dsub Dasub'.
+
+-ap-aa	: can-asub-app S 
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofR : {x} isvar x I -> aofes (G x) (R x) (spi T U))
+	   (DofN : {x} isvar x I -> ofes (G x) (N x) T)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (asub/aasub
+	      (Daasub : aasub R M Rx))
+	   (Dsub : sub N M Nx)
+	   (asub/aasub (aasub/app Dsub Daasub)).
+
+-app-ao	: can-asub-app S 
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   (DofR : {x} isvar x I -> aofes (G x) (R x) (spi T U))
+	   (DofN : {x} isvar x I -> ofes (G x) (N x) T)
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (asub/aosub
+	      (Daosub : aosub R M LRx))
+	   (DsubNx : sub N M Nx)
+	   (asub/aosub
+	      (aosub/app
+		 (DsubPy_x aca)
+		 DsubNx
+		 Daosub'))
+	   <- aosub-headvar Daosub 
+	      (Dheadvar : headvar R)
+	   <- headvar-stp-size Dlookup DofR Dheadvar 
+	      (Dleq : stp-leq (spi T U) S)
+	   <- aosubst-es Dlookup DofM DofR Daosub
+	      (DofLRx : {x} isvar x I -> ofes (G x) LRx (spi T U))
+	   <- subst-es Dlookup DofM DofN DsubNx
+	      (DofNx : {x} isvar x I -> ofes (G x) Nx T)
+	   <- ofes-pi-invert-underbind DofLRx
+	      (DeqLRx : term-eq LRx (lam P))
+	      (DofP : {x} isvar x I -> {y} isvar y J -> ofes (scons (G x) y T) (P y) U)
+	   <- aosub-resp ([_] atom-eq/i) term-eq/i DeqLRx Daosub
+	      (Daosub' : aosub R M (lam P))
+	   <- ({x} {d} {y} {e}
+		 ofes-context (DofP x d y e)
+		 (sordered/cons
+		    (Dbound x d y e : sbounded (G x) y)))
+	   <- ({x} {d} {y} {e}
+		 weaken-ofes (Dbound x d y e) (DofNx x d) _
+		 (DofNx' x d y e : ofes (scons (G x) y T) Nx T))
+	   <- employ-stp-leq (spi T U) S Dleq
+	   <- ({x} {d}
+		 can-sub-esm T ([y] [e] slookup/hit (Dbound x d y e)) ([y] [e] DofP x d y e) ([y] [e] DofNx' x d y e)
+		 (DsubPy_x x : sub P Nx (Py_x x))).
+
+-appbad	: can-asub-esm _ _ ([x] [d] aofes/var (Dlookup x d)) _ (asub/aosub Daosub)
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-app-contra (Disvar x d) Dfalse)
+	   <- false-implies-aosub Dfalse (Daosub : aosub _ _ (at aca)).
+
+-pi1	: can-asub-esm S
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d] aofes/pi1
+	      (DofR x d : aofes (G x) (R x) (ssigma T U)))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   Dasub'
+	   <- can-asub-esm S Dlookup DofR DofM
+	      (Dasub : asub R M)
+	   <- can-asub-pi1 Dlookup DofR DofM Dasub 
+	      (Dasub' : asub ([x] pi1 (R x)) M).
+
+-pi1bad	: can-asub-esm _ _ ([x] [d] aofes/var (Dlookup x d)) _ (asub/aosub Daosub)
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-pi1-contra (Disvar x d) Dfalse)
+	   <- false-implies-aosub Dfalse (Daosub : aosub _ _ (at aca)).
+
+-pi2	: can-asub-esm S
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d] aofes/pi2
+	      (DofR x d : aofes (G x) (R x) (ssigma T U)))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   Dasub'
+	   <- can-asub-esm S Dlookup DofR DofM
+	      (Dasub : asub R M)
+	   <- can-asub-pi2 Dlookup DofR DofM Dasub 
+	      (Dasub' : asub ([x] pi2 (R x)) M).
+
+-pi2bad	: can-asub-esm _ _ ([x] [d] aofes/var (Dlookup x d)) _ (asub/aosub Daosub)
+	   <- ({x} {d}
+		 slookup-isvar (Dlookup x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d}
+		 isvar-pi2-contra (Disvar x d) Dfalse)
+	   <- false-implies-aosub Dfalse (Daosub : aosub _ _ (at aca)).
+
+
+%%%
+
+
+-at	: can-sub-esm S
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d:isvar x I]
+	      ofes/at
+	      (DofR x d : aofes (G x) (R x) st))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   Dsub
+	   <- can-asub-esm S Dlookup DofR DofM (Dasub : asub R M)
+	   <- asub-sub-at Dasub (Dsub : sub ([x] at (R x)) M _).
+
+-lam	: can-sub-esm S
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d:isvar x I]
+	      ofes/lam
+	      (DofN x d : {y} isvar y J -> ofes (scons (G x) y T) (N x y) U))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (sub/lam Dsub)
+	   <- ({x} {d} {y} {e}
+		 ofes-context (DofN x d y e)
+		 (sordered/cons
+		    (Dbound x d y e : sbounded (G x) y)))
+	   <- ({x} {d} {y} {e}
+		 weaken-slookup (Dbound x d y e) (Dlookup x d) _
+		 (Dlookup' x d y e : slookup (scons (G x) y T) x S))
+	   <- ({x} {d} {y} {e}
+		 weaken-ofes (Dbound x d y e) (DofM x d) _
+		 (DofM' x d y e : ofes (scons (G x) y T) M S))
+	   <- ({y} {e}
+		 can-sub-esm S ([x] [d] Dlookup' x d y e) ([x] [d] DofN x d y e) ([x] [d] DofM' x d y e)
+		 (Dsub y : sub ([x] N x y) M (Nx y))).
+
+-pair	: can-sub-esm S
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d:isvar x I]
+	      ofes/pair
+	      (DofO x d : ofes (G x) (O x) U)
+	      (DofN x d : ofes (G x) (N x) T))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (sub/pair DsubOx DsubNx)
+	   <- can-sub-esm S Dlookup DofN DofM (DsubNx : sub N M Nx)
+	   <- can-sub-esm S Dlookup DofO DofM (DsubOx : sub O M Ox).
+
+
+%%%
+
+
+-t	: can-tsub-esm _ _ ([x] [d] wfes/t _) _ tsub/t.
+
+-pi	: can-tsub-esm _
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d:isvar x I]
+	      wfes/pi
+	      (DwfB x d : {y} isvar y J -> wfes (scons (G x) y T) (B x y))
+	      (DsimpA x : simp (A x) T)
+	      (DwfA x d : wfes (G x) (A x)))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (tsub/pi DsubB DsubA)
+	   <- can-tsub-esm _ Dlookup DwfA DofM
+	      (DsubA : tsub A M Ax)
+	   <- ({x} {d} {y} {e}
+		 wfes-context (DwfB x d y e)
+		 (sordered/cons
+		    (Dbound x d y e : sbounded (G x) y)))
+	   <- ({x} {d} {y} {e}
+		 weaken-slookup (Dbound x d y e) (Dlookup x d) _
+		 (Dlookup' x d y e : slookup (scons (G x) y T) x S))
+	   <- ({x} {d} {y} {e}
+		 weaken-ofes (Dbound x d y e) (DofM x d) _
+		 (DofM' x d y e : ofes (scons (G x) y T) M S))
+	   <- ({y} {e}
+		 can-tsub-esm _ ([x] [d] Dlookup' x d y e) ([x] [d] DwfB x d y e) ([x] [d] DofM' x d y e)
+		 (DsubB y : tsub ([x] B x y) M (Bx y))).
+
+-sigma	: can-tsub-esm _
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d:isvar x I]
+	      wfes/sigma
+	      (DwfB x d : {y} isvar y J -> wfes (scons (G x) y T) (B x y))
+	      (DsimpA x : simp (A x) T)
+	      (DwfA x d : wfes (G x) (A x)))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   (tsub/sigma DsubB DsubA)
+	   <- can-tsub-esm _ Dlookup DwfA DofM
+	      (DsubA : tsub A M Ax)
+	   <- ({x} {d} {y} {e}
+		 wfes-context (DwfB x d y e)
+		 (sordered/cons
+		    (Dbound x d y e : sbounded (G x) y)))
+	   <- ({x} {d} {y} {e}
+		 weaken-slookup (Dbound x d y e) (Dlookup x d) _
+		 (Dlookup' x d y e : slookup (scons (G x) y T) x S))
+	   <- ({x} {d} {y} {e}
+		 weaken-ofes (Dbound x d y e) (DofM x d) _
+		 (DofM' x d y e : ofes (scons (G x) y T) M S))
+	   <- ({y} {e}
+		 can-tsub-esm _ ([x] [d] Dlookup' x d y e) ([x] [d] DwfB x d y e) ([x] [d] DofM' x d y e)
+		 (DsubB y : tsub ([x] B x y) M (Bx y))).
+
+-sing	: can-tsub-esm _
+	   (Dlookup : {x} isvar x I -> slookup (G x) x S)
+	   ([x] [d:isvar x I]
+	      wfes/sing
+	      (DofR x d : aofes (G x) (R x) st))
+	   (DofM : {x} isvar x I -> ofes (G x) M S)
+	   Dtsub
+	   <- can-asub-esm S Dlookup DofR DofM (Dasub : asub R M)
+	   <- asub-tsub-sing Dlookup DofR DofM Dasub
+	      (Dtsub : tsub ([x] sing (R x)) M A).
+
+%worlds (bind | ovar | var) (can-asub-esm _ _ _ _ _) (can-sub-esm _ _ _ _ _) (can-asub-app _ _ _ _ _ _ _ _) (can-tsub-esm _ _ _ _ _).
+%total {(S1 S2 S3 S4) (D1 D2 D3 D4)} (can-asub-esm S1 _ D1 _ _) (can-sub-esm S2 _ D2 _ _) (can-asub-app S3 _ D3 _ _ _ _ _) (can-tsub-esm S4 _ D4 _ _).
+
+
+
+can-sub-es	: ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> ofes (G x) (N x) T)
+		   -> ({x} isvar x I -> ofes (G x) M S)
+%%
+		   -> sub N M N' -> type.
+%mode can-sub-es +X1 +X2 +X3 -X4.
+
+-	: can-sub-es Dlookup DofN DofM Dsub
+	   <- can-sub-esm _ Dlookup DofN DofM Dsub.
+
+%worlds (var | bind | ovar) (can-sub-es _ _ _ _).
+%total {} (can-sub-es _ _ _ _).
+
+
+		   
+
+can-tsub-es	: ({x} isvar x I -> slookup (G x) x S)
+		   -> ({x} isvar x I -> wfes (G x) (A x))
+		   -> ({x} isvar x I -> ofes (G x) M S)
+%%
+		   -> tsub A M A' -> type.
+%mode can-tsub-es +X1 +X2 +X3 -X4.
+
+-	: can-tsub-es Dlookup Dwf Dof Dsub
+	   <- can-tsub-esm _ Dlookup Dwf Dof Dsub.
+
+%worlds (var | bind | ovar) (can-tsub-es _ _ _ _).
+%total D (can-tsub-es _ D _ _).
+
+
+
+
+%%%%%  Substitution Effectiveness (Explicit Context Version)  %%%%%
+
+can-sub-e : ({x} append (cons G1 x A) (G2 x) (G x))
+	      -> ({x} isvar x I -> ofe (G x) (N x) (B x)) 
+	      -> ofe G1 M A
+%%
+	      -> sub N M N' -> type.
+%mode can-sub-e +X1 +X2 +X3 -X4.
+
+-	: can-sub-e 
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (DofN : ({x} isvar x I -> ofe (G x) (N x) (B x)))
+	   (DofM : ofe G1 M A)
+	   Dsub
+	   <- ({x} {d}
+		 ofe-context (DofN x d)
+		 (Dordered x d : ordered (G x)))
+	   <- ({x} {d}
+		 append-ordered (Dappend x) (Dordered x d)
+		 (ordered/cons
+		    (Dbounded x d : bounded G1 x)))
+	   <- ({x} {d}
+		 weaken-ofe (Dbounded x d) DofM _
+		 (DofM' x d : ofe (cons G1 x A) M A))
+	   <- ({x} {d}
+		 weaken-ofe' (Dappend x) (Dordered x d) (DofM' x d)
+		 (DofM'' x d : ofe (G x) M A))
+	   <- can-simp A
+	      (DsimpA : simp A S)
+	   <- ({x} 
+		 can-simp (B x)
+		 (DsimpB x : simp (B x) T))
+	   <- context-append-simp-lookup' Dappend Dordered DsimpA
+	      (Dsimpctx : {x} simpctx (G x) (G' x))
+	      (Dlookup : {x} isvar x I -> slookup (G' x) x S)
+	   <- ({x} {d}
+		 ofe-simp (Dsimpctx x) DsimpA (DofM'' x d)
+		 (DofM''' x d : ofes (G' x) M S))
+	   <- ({x} {d}
+		 ofe-simp (Dsimpctx x) (DsimpB x) (DofN x d)
+		 (DofN' x d : ofes (G' x) (N x) T))
+	   <- can-sub-es Dlookup DofN' DofM'''
+	      (Dsub : sub N M Nx).
+
+%worlds (var | bind | ovar) (can-sub-e _ _ _ _).
+%total {} (can-sub-e _ _ _ _).
+
+
+
+can-tsub-e : ({x} append (cons G1 x A) (G2 x) (G x))
+	      -> ({x} isvar x I -> wfe (G x) (B x)) 
+	      -> ofe G1 M A
+%%
+	      -> tsub B M B' -> type.
+%mode can-tsub-e +X1 +X2 +X3 -X4.
+
+-	: can-tsub-e 
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (DwfB : ({x} isvar x I -> wfe (G x) (B x)))
+	   (DofM : ofe G1 M A)
+	   Dsub
+	   <- ({x} {d}
+		 wfe-context (DwfB x d)
+		 (Dordered x d : ordered (G x)))
+	   <- ({x} {d}
+		 append-ordered (Dappend x) (Dordered x d)
+		 (ordered/cons
+		    (Dbounded x d : bounded G1 x)))
+	   <- ({x} {d}
+		 weaken-ofe (Dbounded x d) DofM _
+		 (DofM' x d : ofe (cons G1 x A) M A))
+	   <- ({x} {d}
+		 weaken-ofe' (Dappend x) (Dordered x d) (DofM' x d)
+		 (DofM'' x d : ofe (G x) M A))
+	   <- can-simp A
+	      (DsimpA : simp A S)
+	   <- ({x} 
+		 can-simp (B x)
+		 (DsimpB x : simp (B x) T))
+	   <- context-append-simp-lookup' Dappend Dordered DsimpA
+	      (Dsimpctx : {x} simpctx (G x) (G' x))
+	      (Dlookup : {x} isvar x I -> slookup (G' x) x S)
+	   <- ({x} {d}
+		 ofe-simp (Dsimpctx x) DsimpA (DofM'' x d)
+		 (DofM''' x d : ofes (G' x) M S))
+	   <- ({x} {d}
+		 wfe-simp (Dsimpctx x) (DwfB x d)
+		 (DwfB' x d : wfes (G' x) (B x)))
+	   <- can-tsub-es Dlookup DwfB' DofM'''
+	      (Dsub : tsub B M Bx).
+
+%worlds (bind | ovar | var) (can-tsub-e _ _ _ _).
+%total {} (can-tsub-e _ _ _ _).
+
+
+
+
+%%%%%  Substitution Effectiveness  %%%%%
+
+can-sub : ({x} vof x A -> of (N x) (B x))
+	   -> of M A
+	   -> sub ([x] N x) M N' -> type.
+%mode can-sub +X1 +X2 -X3.
+
+-	: can-sub DofN DofM Dsub
+	   <- of1-to-ofe 0 DofN DofeN
+	   <- of-to-ofe DofM DofeM
+	   <- can-sub-e ([_] append/nil) DofeN DofeM Dsub.
+
+%worlds (bind | var) (can-sub _ _ _).
+%total {} (can-sub _ _ _).
+
+
+
+can-tsub : ({x} vof x A -> wf (B x))
+	    -> of M A
+	    -> tsub ([x] B x) M B' -> type.
+%mode can-tsub +X1 +X2 -X3.
+
+-	: can-tsub DwfB DofM Dsub
+	   <- wf1-to-wfe 0 DwfB DwfeB
+	   <- of-to-ofe DofM DofeM
+	   <- can-tsub-e ([_] append/nil) DwfeB DofeM Dsub.
+
+%worlds (bind | var | ovar) (can-tsub _ _ _).
+%total {} (can-tsub _ _ _).
+
+
+
+
+%%%%%  Corollaries  %%%%%
+
+can-sub-context-e : ({x} isvar x I -> ofe (cons G x A) (M x) B)
+		      -> ({y} isvar y J -> ofe (cons G y B) (N y) (C y))
+%%
+		      -> ({x} sub ([y] N y) (M x) (Ny x)) -> type.
+%mode can-sub-context-e +X1 +X2 -X3.
+
+-	: can-sub-context-e
+	   (Dof : {x} isvar x I -> ofe (cons G x A) (M x) B)
+	   (DofN : {y} isvar y J -> ofe (cons G y B) (N y) (C y))
+	   Dsub
+	   <- ({x} {d:isvar x I}
+		 ofe-context (Dof x d)
+		    (ordered/cons
+		       (DboundedGx x d : bounded G x)
+		       : ordered (cons G x A)))
+	   <- ({x} {d:isvar x I}
+		 following-var d
+		    ([y] [e:isvar y J']
+		       (Dprec x d y e : precedes x y)))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J'}
+		 bounded-increase-bound (DboundedGx x d) (Dprec x d y e)
+		    (DboundedGy x d y e : bounded G y))
+	   <- ({x} {d:isvar x I}
+		 bump-ofe DofN ([y] [e:isvar y J'] ordered/cons (DboundedGy x d y e))
+		    ([y] [e:isvar y J'] DofN' x d y e : ofe (cons G y B) (N y) (C y)))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J'}
+		 weakeng-ofe (append/cons append/nil) (append/cons append/nil) (ordered/cons (bounded/cons (DboundedGx x d) (Dprec x d y e))) (DofN' x d y e)
+		    (DofN'' x d y e : ofe (cons (cons G x A) y B) (N y) (C y)))
+	   <- ({x} {d:isvar x I}
+		 can-sub-e ([_] append/nil) ([y] [e] DofN'' x d y e) (Dof x d)
+		    (Dsub x : sub ([y] N y) (M x) (Ny x))).
+
+%worlds (bind | ovar | var) (can-sub-context-e _ _ _).
+%total {} (can-sub-context-e _ _ _).
+
+
+
+can-tsub-context-e : ({x} isvar x I -> ofe (cons G x A) (M x) B)
+		      -> ({y} isvar y J -> wfe (cons G y B) (C y))
+%%
+		      -> ({x} tsub ([y] C y) (M x) (Cy x)) -> type.
+%mode can-tsub-context-e +X1 +X2 -X3.
+
+-	: can-tsub-context-e
+	   (Dof : {x} isvar x I -> ofe (cons G x A) (M x) B)
+	   (Dwf : {y} isvar y J -> wfe (cons G y B) (C y))
+	   Dtsub
+	   <- ({x} {d:isvar x I}
+		 ofe-context (Dof x d)
+		    (ordered/cons
+		       (DboundedGx x d : bounded G x)
+		       : ordered (cons G x A)))
+	   <- ({x} {d:isvar x I}
+		 following-var d
+		    ([y] [e:isvar y J']
+		       (Dprec x d y e : precedes x y)))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J'}
+		 bounded-increase-bound (DboundedGx x d) (Dprec x d y e)
+		    (DboundedGy x d y e : bounded G y))
+	   <- ({x} {d:isvar x I}
+		 bump-wfe Dwf ([y] [e:isvar y J'] ordered/cons (DboundedGy x d y e))
+		    ([y] [e:isvar y J'] Dwf' x d y e : wfe (cons G y B) (C y)))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J'}
+		 weakeng-wfe (append/cons append/nil) (append/cons append/nil) (ordered/cons (bounded/cons (DboundedGx x d) (Dprec x d y e))) (Dwf' x d y e)
+		    (Dwf'' x d y e : wfe (cons (cons G x A) y B) (C y)))
+	   <- ({x} {d:isvar x I}
+		 can-tsub-e ([_] append/nil) ([y] [e] Dwf'' x d y e) (Dof x d)
+		    (Dtsub x : tsub ([y] C y) (M x) (Cy x))).
+
+%worlds (bind | var | ovar) (can-tsub-context-e _ _ _).
+%total {} (can-tsub-context-e _ _ _).
+
+
+
+can-tsub1 : tsub ([x] B x) M Bx
+	     -> ({x} vof x A -> {y} vof y (B x) -> wf (C x y))
+	     -> of M A
+%%
+	     -> ({y} tsub ([x] C x y) M (Cx y)) -> type.
+%mode can-tsub1 +X1 +X2 +X3 -X4.
+
+-	: can-tsub1
+	   (DsubBx : tsub ([x] B x) M Bx)
+	   (DwfC : {x} vof x A -> {y} vof y (B x) -> wf (C x y))
+	   (DofM : of M A)
+	   DsubCx
+	   <- wf2-to-wfe (lt/z : lt 0 (s 0)) DwfC
+	      (DwfeC : {x} isvar x 0 -> {y} isvar y (s 0) -> wfe (cons (cons nil x A) y (B x)) (C x y))
+	   <- of-to-ofe DofM
+	      (DofeM : ofe nil M A)
+	   <- ({y} {e:isvar y (s 0)}
+		 can-tsub-e ([_] append/cons append/nil) ([x] [d] DwfeC x d y e) DofeM
+		    (DsubCx y : tsub ([x] C x y) M (Cx y))).
+
+%worlds (bind | var) (can-tsub1 _ _ _ _).
+%total {} (can-tsub1 _ _ _ _).

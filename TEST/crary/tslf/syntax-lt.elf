@@ -1,0 +1,9 @@
+%%%% location typing for terms
+
+lt	: type. %name lt L.
+
+lt/nil	: lt.
+lt/cons	: lt -> loc -> cn -> lt.
+
+
+%worlds () (lt).

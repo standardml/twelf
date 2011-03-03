@@ -1,0 +1,1471 @@
+
+%%%%%  Conversion Commutes with Simple Substitution (Explicit Context)  %%%%%
+
+strengthen-vtrans : ({x} {ex} vtrans ex x -> vtrans (EX ex) X) -> ({ex} eterm-eq (EX ex) EX') -> vtrans EX' X -> type.
+%mode strengthen-vtrans +X1 -X2 -X3.
+
+-	: strengthen-vtrans ([x] [ex] [d] D) ([ex] eterm-eq/i) D.
+
+%worlds (bind | ovar | tbind | evar) (strengthen-vtrans _ _ _).
+%total {} (strengthen-vtrans _ _ _).
+
+
+
+convert-ssub-e		: ({x} append (cons G1 x A) (G2 x) (G x))
+			   -> append G1 (G2 R) G'
+			   -> ({x} isvar x I 
+				 -> {ex} vtrans ex x
+				 -> converte (G x) (N x) (B x) (EN ex))
+			   -> aconverte G1 R A EM
+%%
+			   -> converte G' (N R) (B R) (EN EM) -> type.
+%mode convert-ssub-e +X1 +X2 +X3 +X4 -X5.
+
+
+aconvert-ssub-e		: ({x} append (cons G1 x A) (G2 x) (G x))
+			   -> append G1 (G2 R) G'
+			   -> ({x} isvar x I
+				 -> {ex} vtrans ex x
+				 -> aconverte (G x) (Q x) (B x) (EN ex))
+			   -> aconverte G1 R A EM
+%%
+			   -> aconverte G' (Q R) (B R) (EN EM) -> type.
+%mode aconvert-ssub-e +X1 +X2 +X3 +X4 -X5.
+
+tconvert-ssub-e		: ({x} append (cons G1 x A) (G2 x) (G x))
+			   -> append G1 (G2 R) G'
+			   -> ({x} isvar x I
+				 -> {ex} vtrans ex x
+				 -> tconverte (G x) (B x) (EB ex))
+			   -> aconverte G1 R A EM
+%%
+			   -> tconverte G' (B R) (EB EM) -> type.
+%mode tconvert-ssub-e +X1 +X2 +X3 +X4 -X5.
+
+-const	: aconvert-ssub-e 
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   Dappend'
+	   ([x] [d] [ex] [xt] aconverte/const (DconvB x d ex xt) (Dwf x) (Dkof x : kof _ (A' x)))
+	   Dconv
+	   (aconverte/const DconvB' (Dwf _) (Dkof _))
+	   <- tconvert-ssub-e Dappend Dappend' DconvB Dconv DconvB'.
+
+-varsam	: aconvert-ssub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   Dappend'
+	   ([x] [d] [ex] [xt] aconverte/var xt (_ : tconverte _ _ (B ex)) (Dlookup x d))
+	   Dconv
+	   Dconv''
+	   <- ({x} {d}
+		 lookup-binder-fun (Dappend x) (Dlookup x d) (Deq x : tp-eq _ (A' x)))
+	   <- ({x} {d}
+		 lookup-context (Dlookup x d)
+		 (Dord x d))
+	   <- scsub-ordered Dappend Dappend' Dord Dord'
+	   <- weaken-aconverte' Dappend' Dord' Dconv Dconv'
+	   <- aconverte-resp ctx-eq/i atom-eq/i (Deq _) eterm-eq/i Dconv' Dconv''.
+
+-varoth	: aconvert-ssub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   Dappend'
+	   ([x] [d] [ex] [xt] aconverte/var Dvtrans (DconvB x d ex xt) (Dlookup x d))
+	   Dconv
+	   (aconverte/var Dvtrans DconvB' Dlookup')
+	   <- tconvert-ssub-e Dappend Dappend' DconvB Dconv DconvB'
+	   <- scsub-lookup Dappend Dappend' Dlookup Dlookup'.
+
+-vari	: aconvert-ssub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dappend' : append G1 (G2 R) G')
+	   ([x] [d] [ex] [xt]
+	      aconverte/vari
+	      (Dvtrans x ex xt : vtrans (EY ex) (Y x))
+	      (DconvB x d ex xt : tconverte (G x) (B x) (EB ex))
+	      (Dwf x : wf (B x))
+	      (Dvof x : vof (Y x) (B x)))
+	   (Dconv : aconverte G1 R _ EM)
+	   (aconverte/vari (Dvtrans''' R EM) DconvB' (Dwf R) (Dvof R))
+	   <- tconvert-ssub-e Dappend Dappend' DconvB Dconv
+	      (DconvB' : tconverte G' (B R) (EB EM))
+	   <- vof-noassm' Dvof 
+	      (DeqY : {x} atom-eq (Y x) Y')
+	      (DeqB : {x} tp-eq (B x) B')
+	   <- ({x}
+		 atom-eq-symm (DeqY x)
+		 (DeqY' x : atom-eq Y' (Y x)))
+	   <- ({x} {ex} {xt}
+		 vtrans-resp eterm-eq/i (DeqY x) (Dvtrans x ex xt)
+		 (Dvtrans' x ex xt : vtrans (EY ex) Y'))
+	   <- strengthen-vtrans Dvtrans'
+	      (DeqEY : {ex} eterm-eq (EY ex) EY')
+	      (Dvtrans'' : vtrans EY' Y')
+	   <- ({ex} 
+		 eterm-eq-symm (DeqEY ex) 
+		 (DeqEY' ex : eterm-eq EY' (EY ex)))
+	   <- ({x} {ex}
+		 vtrans-resp (DeqEY' ex) (DeqY' x) Dvtrans''
+		 (Dvtrans''' x ex : vtrans (EY ex) (Y x))).
+
+-app	: aconvert-ssub-e Dappend Dappend'
+	   ([x] [d] [ex] [xt] aconverte/app (Dsub x) (DconvM x d ex xt) (DconvR x d ex xt))
+	   (Dconv : aconverte _ R _ _)
+	   (aconverte/app (Dsub R) DconvM' DconvR')
+	   <- aconvert-ssub-e Dappend Dappend' DconvR Dconv DconvR'
+	   <- convert-ssub-e Dappend Dappend' DconvM Dconv DconvM'.
+
+-pi1	: aconvert-ssub-e Dappend Dappend'
+	   ([x] [d] [ex] [xt] aconverte/pi1 (DconvR x d ex xt))
+	   Dconv
+	   (aconverte/pi1 DconvR')
+	   <- aconvert-ssub-e Dappend Dappend' DconvR Dconv DconvR'.
+
+-pi2	: aconvert-ssub-e Dappend Dappend'
+	   ([x] [d] [ex] [xt] aconverte/pi2 (DconvR x d ex xt))
+	   Dconv
+	   (aconverte/pi2 DconvR')
+	   <- aconvert-ssub-e Dappend Dappend' DconvR Dconv DconvR'.
+
+
+
+-at	: convert-ssub-e Dappend Dappend' 
+	   ([x] [d] [ex] [xt] converte/at (D x d ex xt))
+	   Dconv
+	   (converte/at D')
+	   <- aconvert-ssub-e Dappend Dappend' D Dconv D'.
+
+-lam	: convert-ssub-e Dappend Dappend'
+	   ([x] [d] [ex] [xt] converte/lam (DconvM x d ex xt) (DconvA x d ex xt))
+	   Dconv
+	   (converte/lam DconvM' DconvA')
+	   <- tconvert-ssub-e Dappend Dappend' DconvA Dconv DconvA'
+	   <- ({y} {e} {ey} {yt}
+		 convert-ssub-e ([x] append/cons (Dappend x)) (append/cons Dappend')
+		 ([x] [d] [ex] [xt] DconvM x d ex xt y e ey yt)
+		 Dconv
+		 (DconvM' y e ey yt)).
+
+-pair	: convert-ssub-e Dappend Dappend'
+	   ([x] [d] [ex] [xt] converte/pair (Dwf x d) (Dconv2 x d ex xt) (Dsub x) (Dconv1 x d ex xt))
+	   (Dconv : aconverte _ R _ _)
+	   (converte/pair Dwf' Dconv2' (Dsub R) Dconv1')
+	   <- convert-ssub-e Dappend Dappend' Dconv1 Dconv Dconv1'
+	   <- convert-ssub-e Dappend Dappend' Dconv2 Dconv Dconv2'
+	   <- aconverte-reg-il Dconv Daof
+	   <- ({y} {e}
+		 stsubst-e ([x] append/cons (Dappend x)) (append/cons Dappend') ([x] [d] Dwf x d y e) Daof 
+		 (Dwf' y e)).
+	   
+-star	: convert-ssub-e (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   Dappend'
+	   ([x] [d] [ex] [xt] converte/star (Dord x d : ordered (G x))) 
+	   (_ : aconverte _ R _ _)
+	   (converte/star Dord')
+	   <- scsub-ordered Dappend Dappend' Dord Dord'.
+
+-sing	: convert-ssub-e Dappend Dappend' 
+	   ([x] [d] [ex] [xt] converte/sing (D x d ex xt))
+	   Dconv
+	   (converte/sing D')
+	   <- aconvert-ssub-e Dappend Dappend' D Dconv D'.
+
+
+
+-t	: tconvert-ssub-e (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   Dappend'
+	   ([x] [d] [ex] [xt] tconverte/t (Dord x d : ordered (G x))) 
+	   (_ : aconverte _ R _ _)
+	   (tconverte/t Dord')
+	   <- scsub-ordered Dappend Dappend' Dord Dord'.
+
+-pi	: tconvert-ssub-e Dappend Dappend'
+	   ([x] [d] [ex] [xt] tconverte/pi (DconvB x d ex xt) (DconvA x d ex xt))
+	   Dconv
+	   (tconverte/pi DconvB' DconvA')
+	   <- tconvert-ssub-e Dappend Dappend' DconvA Dconv DconvA'
+	   <- ({y} {e} {ey} {yt}
+		 tconvert-ssub-e ([x] append/cons (Dappend x)) (append/cons Dappend')
+		 ([x] [d] [ex] [xt] DconvB x d ex xt y e ey yt)
+		 Dconv
+		 (DconvB' y e ey yt)).
+
+-sigma	: tconvert-ssub-e Dappend Dappend'
+	   ([x] [d] [ex] [xt] tconverte/sigma (DconvB x d ex xt) (DconvA x d ex xt))
+	   Dconv
+	   (tconverte/sigma DconvB' DconvA')
+	   <- tconvert-ssub-e Dappend Dappend' DconvA Dconv DconvA'
+	   <- ({y} {e} {ey} {yt}
+		 tconvert-ssub-e ([x] append/cons (Dappend x)) (append/cons Dappend')
+		 ([x] [d] [ex] [xt] DconvB x d ex xt y e ey yt)
+		 Dconv
+		 (DconvB' y e ey yt)).
+
+-sing	: tconvert-ssub-e Dappend Dappend' 
+	   ([x] [d] [ex] [xt] tconverte/sing (D x d ex xt))
+	   Dconv
+	   (tconverte/sing D')
+	   <- aconvert-ssub-e Dappend Dappend' D Dconv D'.
+
+-one	: tconvert-ssub-e (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   Dappend'
+	   ([x] [d] [ex] [xt] tconverte/one (Dord x d : ordered (G x))) 
+	   (_ : aconverte _ R _ _)
+	   (tconverte/one Dord')
+	   <- scsub-ordered Dappend Dappend' Dord Dord'.
+
+%worlds (sbind | ovar | tbind) (convert-ssub-e _ _ _ _ _) (aconvert-ssub-e _ _ _ _ _) (tconvert-ssub-e _ _ _ _ _).
+%total (D1 D2 D3) (aconvert-ssub-e _ _ D1 _ _) (convert-ssub-e _ _ D2 _ _) (tconvert-ssub-e _ _ D3 _ _).
+
+
+
+
+%%%%%  Conversion Commutes with Substitution (Explicit Context)  %%%%%
+
+convert-sub-em	: {T}
+		   simp A T
+		   -> ({x} append (cons G1 x A) (G2 x) (G x))
+		   -> csub G N Gx
+		   -> ({x} isvar x I -> {ex} vtrans ex x -> converte (G x) (M x) (B x) (EM ex))
+		   -> converte G1 N A EN
+		   -> sub M N Mx
+		   -> tsub B N Bx
+%%
+		   -> converte Gx Mx Bx EO
+		   -> reduce (EM EN) EO -> type.
+%mode convert-sub-em +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 -X9 -X10.
+
+
+convert-aasub-em : {T}
+		    simp A T
+		    -> ({x} append (cons G1 x A) (G2 x) (G x))
+		    -> csub G N Gx
+		    -> ({x} isvar x I -> {ex} vtrans ex x -> aconverte (G x) (R x) (B x) (EM ex))
+		    -> converte G1 N A EN
+		    -> aasub R N Rx
+		    -> tsub B N Bx
+%%
+		    -> aconverte Gx Rx Bx EO
+		    -> reduce (EM EN) EO -> type.
+%mode convert-aasub-em +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 -X9 -X10.
+
+
+convert-aosub-em : {T}
+		    simp A T
+		    -> ({x} append (cons G1 x A) (G2 x) (G x))
+		    -> csub G N Gx
+		    -> ({x} isvar x I -> {ex} vtrans ex x -> aconverte (G x) (R x) (B x) (EM ex))
+		    -> converte G1 N A EN
+		    -> aosub R N LRx
+		    -> tsub B N Bx
+%%
+		    -> converte Gx LRx Bx EO
+		    -> reduce (EM EN) EO -> type.
+%mode convert-aosub-em +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 -X9 -X10.
+
+
+convert-tsub-em	: {T}
+		   simp A T
+		   -> ({x} append (cons G1 x A) (G2 x) (G x))
+		   -> csub G N Gx
+		   -> ({x} isvar x I -> {ex} vtrans ex x -> tconverte (G x) (B x) (EB ex))
+		   -> converte G1 N A EN
+		   -> tsub B N Bx
+%%
+		   -> tconverte Gx Bx EC
+		   -> treduce (EB EN) EC -> type.
+%mode convert-tsub-em +X1 +X2 +X3 +X4 +X5 +X6 +X7 -X8 -X9.
+
+-var	: convert-aosub-em _ _
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G N Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/var 
+	      xt
+	      (DconvertA x d ex xt : tconverte (G x) (A' x) (EA' ex))
+	      (Dlookup x d : lookup (G x) x (A' x)))
+	   (Dconvert : converte G1 N A EN)
+	   aosub/var
+	   (Dtsub : tsub A' N Ax)
+%%
+	   Dconvert''
+	   Dreduce
+	   <- converte-normal Dconvert
+	      (Dnorm : normal EN)
+	   <- normal-reduce-refl Dnorm
+	      (Dreduce : reduce EN EN)
+	   <- ({x} {d}
+		 lookup-binder-fun (Dappend x) (Dlookup x d)
+		 (DeqA x : tp-eq A (A' x)))
+	   <- tsub-absent A N
+	      (Dtsub' : tsub ([_] A) N A)
+	   <- tsub-resp DeqA term-eq/i tp-eq/i Dtsub'
+	      (Dtsub'' : tsub A' N A)
+	   <- tsub-fun Dtsub'' Dtsub
+	      (DeqAx : tp-eq A Ax)
+	   <- csub-append Dcsub Dappend
+	      (Dappend' : append G1 G2x Gx)
+	   <- ({x} {d}
+		 lookup-context (Dlookup x d)
+		 (Dordered x d : ordered (G x)))
+	   <- csub-ordered Dordered Dcsub
+	      (Dordered' : ordered Gx)
+	   <- weaken-converte' Dappend' Dordered' Dconvert
+	      (Dconvert' : converte Gx N A EN)
+	   <- converte-resp ctx-eq/i term-eq/i DeqAx eterm-eq/i Dconvert'
+	      (Dconvert'' : converte Gx N Ax EN).
+
+-app	: convert-aosub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/app
+	      (DsubCy x : tsub ([y] C x y) (N x) (Cy x))
+	      (DconvertN x d ex xt : converte (G x) (N x) (B x) (EN ex))
+	      (DconvertR x d ex xt : aconverte (G x) (R x) (pi (B x) ([y] C x y)) (EO ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (aosub/app
+	      (DsubPy : sub P Nx Py)
+	      (DsubNx : sub N M Nx)
+	      (DsubRx : aosub R M (lam P)))
+	   (DsubCyx : tsub Cy M Cyx)
+%%
+	   DconvertPy'
+	   (reduce/app
+	      (reduce-app/beta DreducePy)
+	      DreduceBx
+	      DreduceP)
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) (R x) (pi (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/pi
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ({y} {e:isvar y J}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- convert-aosub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx (tsub/pi DsubCx DsubBx)
+	      (converte/lam
+		 (DconvertP : {y} isvar y K
+			       -> {ey} vtrans ey y
+			       -> converte (cons Gx y Bx) (P y) (Cx y) (EP ey))
+		 (DconvertBx : tconverte Gx Bx EBx))
+	      (DreduceP : reduce (EO EM) (elam EBx EP))
+	   <- convert-sub-em _ Dsimp Dappend Dcsub DconvertN DconvertM DsubNx DsubBx
+	      (DconvertNx : converte Gx Nx Bx ENx)
+	      (DreduceBx : reduce (EN EM) ENx)
+	   <- ({y} {e:isvar y J}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) DofM (DsubCx y) ([x] [d] DwfC x d y e)
+		 (DwfCx y e : wfe (cons Gx y Bx) (Cx y)))
+	   <- ({x} {d} {ex} {xt}
+		 converte-reg-il (DconvertN x d ex xt)
+		 (DofN x d : ofe (G x) (N x) (B x)))
+	   <- subst-e Dappend Dcsub DofM DsubNx DsubBx DofN
+	      (DofNx : ofe Gx Nx Bx)
+	   <- can-tsub-e ([_] append/nil) DwfCx DofNx
+	      (DsubCxy : tsub ([y] Cx y) Nx Cxy)
+	   <- aosub-headvar DsubRx
+	      (Dheadvar : headvar R)
+	   <- headvar-tp-size Dappend DofR Dsimp Dheadvar
+	      ([x] simp/pi
+		 (DsimpC x : {y} simp (C x y) U2)
+		 (DsimpB x : simp (B x) U1))
+	      (Dleq : stp-leq (spi U1 U2) T)
+	   <- tsub-preserves-simp DsubBx DsimpB
+	      (DsimpBx : simp Bx U1)
+	   <- employ-stp-leq _ _ Dleq
+	   <- convert-sub-em _ DsimpBx ([_] append/nil) csub/base DconvertP DconvertNx DsubPy DsubCxy
+	      (DconvertPy : converte Gx Py Cxy EPy)
+	      (DreducePy : reduce (EP ENx) EPy)
+	   <- tsub-permute-e Dappend DofM DofN DwfC DsubCx DsubNx DsubCxy DsubCy DsubCyx
+	      (Deq : tp-eq Cxy Cyx)
+	   <- converte-resp ctx-eq/i term-eq/i Deq eterm-eq/i DconvertPy
+	      (DconvertPy' : converte Gx Py Cyx EPy).
+
+-appbad	: convert-aosub-em _ _ _ _
+	   ([x] [d] [ex] [xt] aconverte/var (Dvtrans x ex xt) (Dconvert x d ex xt : tconverte _ _ (EA ex)) (Dlookup x d))
+	   _ (aosub/app _ _ _) _
+	   D1 (D2 : reduce _ eaca)
+	   <- ({x} {d}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (app _ _) J))
+	   <- ({x} isvar-app-contra (Disvar x) Dfalse)
+	   <- false-implies-converte Dfalse D1
+	   <- false-implies-reduce Dfalse D2.
+
+-pi1	: convert-aosub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/pi1
+	      (DconvertR x d ex xt : aconverte (G x) (R x) (sigma (B x) ([y] C x y)) (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (aosub/pi1
+	      (DsubRx : aosub R M (pair O P)))
+	   (DsubBx : tsub B M Bx)
+%%
+	   DconvertO
+	   (reduce/pi1
+	      reduce-pi1/beta
+	      Dreduce)
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) (R x) (sigma (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/sigma
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- ({y} {e:isvar y J}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- convert-aosub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx (tsub/sigma DsubCx DsubBx)
+	      (converte/pair
+		 _
+		 (DconvertP : converte Gx P Cxy EP)
+		 (DsubCxy : tsub Cx O Cxy)
+		 (DconvertO : converte Gx O Bx EO))
+	      (Dreduce : reduce (EN EM) (epair EO EP)).
+
+-pi1bad	: convert-aosub-em _ _ _ _
+	   ([x] [d] [ex] [xt] aconverte/var (Dvtrans x ex xt) (Dconvert x d ex xt : tconverte _ _ (EA ex)) (Dlookup x d))
+	   _ (aosub/pi1 _) _
+	   D1 (D2 : reduce _ eaca)
+	   <- ({x} {d}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (pi1 _) J))
+	   <- ({x} isvar-pi1-contra (Disvar x) Dfalse)
+	   <- false-implies-converte Dfalse D1
+	   <- false-implies-reduce Dfalse D2.
+
+-pi2	: convert-aosub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/pi2
+	      (DconvertR x d ex xt : aconverte (G x) (R x) (sigma (B x) ([y] C x y)) (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (aosub/pi2
+	      (DsubRx : aosub R M (pair O P)))
+	   (DsubCyx : tsub ([x] C x (pi1 (R x))) M Cyx)
+%%
+	   DconvertP'
+	   (reduce/pi2
+	      reduce-pi2/beta
+	      Dreduce)
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) (R x) (sigma (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/sigma
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub ([x] B x) M Bx)
+	   <- ({y} {e:isvar y J}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- ({y} {e:isvar y J}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) DofM (DsubCx y) ([x] [d] DwfC x d y e)
+		 (DwfCx y e : wfe (cons Gx y Bx) (Cx y)))
+	   <- convert-aosub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx (tsub/sigma DsubCx DsubBx)
+	      (converte/pair
+		 _
+		 (DconvertP : converte Gx P Cxy EP)
+		 (DsubCxy : tsub Cx O Cxy)
+		 (DconvertO : converte Gx O Bx EO))
+	      (Dreduce : reduce (EN EM) (epair EO EP))
+	   <- stsub-ao-permute-e Dappend DofM ([x] [d] aofe/pi1 (DofR x d)) DwfC DsubCx (aosub/pi1 DsubRx) DsubCxy DsubCyx
+	      (Deq : tp-eq Cxy Cyx)
+	   <- converte-resp ctx-eq/i term-eq/i Deq eterm-eq/i DconvertP
+	      (DconvertP' : converte Gx P Cyx EP).
+
+-pi2bad	: convert-aosub-em _ _ _ _
+	   ([x] [d] [ex] [xt] aconverte/var (Dvtrans x ex xt) (Dconvert x d ex xt : tconverte _ _ (EA ex)) (Dlookup x d))
+	   _ (aosub/pi2 _) _
+	   D1 (D2 : reduce _ eaca)
+	   <- ({x} {d}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (pi2 _) J))
+	   <- ({x} isvar-pi2-contra (Disvar x) Dfalse)
+	   <- false-implies-converte Dfalse D1
+	   <- false-implies-reduce Dfalse D2.
+
+
+%%%
+
+-const	 : convert-aasub-em _
+	    (Dsimp : simp A T)
+	    (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	    (Dcsub : csub G N Gx)
+	    ([x] [d:isvar x I] [ex] [xt]
+	       aconverte/const
+	       (Dconv x d ex xt : tconverte (G x) (B x) (EB ex))
+	       (Dwf x : wf (B x))
+	       (Dkof x : kof C (B x)))
+	    (DconvertN : converte G1 N A EN)
+	    aasub/closed
+	    (DsubBx : tsub B N Bx)
+%%
+	    (aconverte/const DconvertBx Dwf'' Dkof')
+	    reduce/const
+	    <- subst-kof Dkof DsubBx
+	       (Dkof' : kof C Bx)
+	    <- wf-noassm Dwf (Deq : {x} tp-eq (B x) B')
+	    <- tsub-resp Deq term-eq/i tp-eq/i DsubBx
+	       (DsubBx' : tsub ([_] B') N Bx)
+	    <- tsub-absent-fun DsubBx' (DeqBx : tp-eq Bx B')
+	    <- tp-eq-symm DeqBx DeqBx'
+	    <- wf-resp (Deq aca) (Dwf aca) Dwf'
+	    <- wf-resp DeqBx' Dwf' Dwf''
+	    <- convert-tsub-em _ Dsimp Dappend Dcsub Dconv DconvertN DsubBx
+	       (DconvertBx : tconverte Gx Bx EBx)
+	       _.
+
+-var	: convert-aasub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G N Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/var
+	      (Dvtrans x ex xt : vtrans (EX ex) X)
+	      (DconvertB x d ex xt : tconverte (G x) (B x) (EB ex))
+	      (Dlookup x d : lookup (G x) X (B x)))
+	   (DconvertN : converte G1 N A EN)
+	   aasub/closed	
+	   (DsubBx : tsub B N Bx)
+%%
+	   (aconverte/var Dvtrans' DconvertBx Dlookup')
+	   Dreduce
+	   <- csub-lookup Dcsub Dlookup DsubBx
+	      (Dlookup' : lookup Gx X Bx)
+	   <- strengthen-vtrans Dvtrans
+	      (Deq : {ex} eterm-eq (EX ex) EX')
+	      (Dvtrans' : vtrans EX' X)
+	   <- convert-tsub-em _ Dsimp Dappend Dcsub DconvertB DconvertN DsubBx
+	      (DconvertBx : tconverte Gx Bx EBx)
+	      _
+	   <- ({ex}
+		 eterm-eq-symm (Deq ex)
+		 (Deq' ex : eterm-eq EX' (EX ex)))
+	   <- vtrans-variable Dvtrans' (Dvar : variable EX')
+	   <- reduce-resp (Deq' EN) eterm-eq/i (reduce/var Dvar)
+	      (Dreduce : reduce (EX EN) EX').
+
+-vari	: convert-aasub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G N Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/vari
+	      (Dvtrans x ex xt : vtrans (EX ex) X)
+	      (DconvertB x d ex xt : tconverte (G x) (B x) (EB ex))
+	      (Dwf x : wf (B x))
+	      (Dvof x : vof X (B x)))
+	   (DconvertN : converte G1 N A EN)
+	   aasub/closed	
+	   (DsubBx : tsub B N Bx)
+%%
+	   (aconverte/vari Dvtrans' DconvertBx Dwf'' Dvof'')
+	   Dreduce
+	   <- vof-noassm Dvof (DeqB : {x} tp-eq (B x) B')
+	   <- ({x}
+		 vof-resp atom-eq/i (DeqB x) (Dvof x)
+		 (Dvof' x : vof X B'))
+	   <- tsub-resp DeqB term-eq/i tp-eq/i DsubBx
+	      (DsubBx' : tsub ([_] B') N Bx)
+	   <- tsub-absent B' N
+	      (DsubBabs : tsub ([_] B') N B')
+	   <- tsub-fun DsubBx' DsubBabs
+	      (DeqBx : tp-eq Bx B')
+	   <- tp-eq-symm DeqBx
+	      (DeqBx' : tp-eq B' Bx)
+	   <- vof-resp atom-eq/i DeqBx' (Dvof' aca)
+	      (Dvof'' : vof X Bx)
+	   <- ({x} 
+		 wf-resp (DeqB x) (Dwf x)
+		 (Dwf' x : wf B'))
+	   <- wf-resp DeqBx' (Dwf' aca)
+	      (Dwf'' : wf Bx)
+	   <- convert-tsub-em _ Dsimp Dappend Dcsub DconvertB DconvertN DsubBx
+	      (DconvertBx : tconverte Gx Bx EBx)
+	      _
+	   <- strengthen-vtrans Dvtrans
+	      (DeqEX : {ex} eterm-eq (EX ex) EX')
+	      (Dvtrans' : vtrans EX' X)
+	   <- ({ex}
+		 eterm-eq-symm (DeqEX ex)
+		 (DeqEX' ex : eterm-eq EX' (EX ex)))
+	   <- vtrans-variable Dvtrans' (Dvar : variable EX')
+	   <- reduce-resp (DeqEX' EN) eterm-eq/i (reduce/var Dvar)
+	      (Dreduce : reduce (EX EN) EX').
+
+-app	: convert-aasub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/app
+	      (DsubCy x : tsub ([y] C x y) (N x) (Cy x))
+	      (DconvertN x d ex xt : converte (G x) (N x) (B x) (EN ex))
+	      (DconvertR x d ex xt : aconverte (G x) (R x) (pi (B x) ([y] C x y)) (EO ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (aasub/app
+	      (DsubNx : sub N M Nx)
+	      (DsubRx : aasub R M Rx))
+	   (DsubCyx : tsub Cy M Cyx)
+%%
+	   (aconverte/app DsubCxy' DconvertNx DconvertRx)
+	   (reduce/app
+	      (reduce-app/atom Doa)
+	      DreduceNx
+	      DreduceRx)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) (R x) (pi (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/pi
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ({y} {e}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx (tsub/pi DsubCx DsubBx)
+	      (DconvertRx : aconverte Gx Rx (pi Bx Cx) ERx)
+	      (DreduceRx : reduce (EO EM) ERx)
+	   <- convert-sub-em _ Dsimp Dappend Dcsub DconvertN DconvertM DsubNx DsubBx
+	      (DconvertNx : converte Gx Nx Bx ENx)
+	      (DreduceNx : reduce (EN EM) ENx)
+	   <- ({y} {e}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) DofM (DsubCx y) ([x] [d] DwfC x d y e)
+		 (DwfCx y e : wfe (cons Gx y Bx) (Cx y)))
+	   <- ({x} {d} {ex} {xt}
+		 converte-reg-il (DconvertN x d ex xt)
+		 (DofN x d : ofe (G x) (N x) (B x)))
+	   <- subst-e Dappend Dcsub DofM DsubNx DsubBx DofN 
+	      (DofNx : ofe Gx Nx Bx)
+	   <- can-tsub-e ([_] append/nil) DwfCx DofNx
+	      (DsubCxy : tsub Cx Nx Cxy)
+	   <- tsub-permute-e Dappend DofM DofN DwfC DsubCx DsubNx DsubCxy DsubCy DsubCyx
+	      (Deq : tp-eq Cxy Cyx)
+	   <- tsub-resp ([_] tp-eq/i) term-eq/i Deq DsubCxy
+	      (DsubCxy' : tsub Cx Nx Cyx)
+	   <- aconverte-atomic DconvertRx (Datom : atomic ERx)
+	   <- atomic-implies-oa Datom (Doa : oa ERx).
+
+-appclo	: convert-aasub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/app
+	      (DsubCy x : tsub ([y] C x y) N (Cy x))
+	      (DconvertN x d ex xt : converte (G x) N (B x) (EN ex))
+	      (DconvertR x d ex xt : aconverte (G x) R (pi (B x) ([y] C x y)) (EO ex)))
+	   (DconvertM : converte G1 M A EM)
+	   aasub/closed
+	   (DsubCyx : tsub Cy M Cyx)
+%%
+	   (aconverte/app DsubCxy' DconvertNx DconvertRx)
+	   (reduce/app
+	      (reduce-app/atom Doa)
+	      DreduceNx
+	      DreduceRx)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) R (pi (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/pi
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ({y} {e}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM aasub/closed (tsub/pi DsubCx DsubBx)
+	      (DconvertRx : aconverte Gx R (pi Bx Cx) ERx)
+	      (DreduceRx : reduce (EO EM) ERx)
+	   <- sub-absent N M
+	      (DsubNx : sub ([_] N) M N)
+	   <- convert-sub-em _ Dsimp Dappend Dcsub DconvertN DconvertM DsubNx DsubBx
+	      (DconvertNx : converte Gx N Bx ENx)
+	      (DreduceNx : reduce (EN EM) ENx)
+	   <- ({y} {e}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) DofM (DsubCx y) ([x] [d] DwfC x d y e)
+		 (DwfCx y e : wfe (cons Gx y Bx) (Cx y)))
+	   <- ({x} {d} {ex} {xt}
+		 converte-reg-il (DconvertN x d ex xt)
+		 (DofN x d : ofe (G x) N (B x)))
+	   <- subst-e Dappend Dcsub DofM DsubNx DsubBx DofN 
+	      (DofNx : ofe Gx N Bx)
+	   <- can-tsub-e ([_] append/nil) DwfCx DofNx
+	      (DsubCxy : tsub Cx N Cxy)
+	   <- tsub-permute-e Dappend DofM DofN DwfC DsubCx DsubNx DsubCxy DsubCy DsubCyx
+	      (Deq : tp-eq Cxy Cyx)
+	   <- tsub-resp ([_] tp-eq/i) term-eq/i Deq DsubCxy
+	      (DsubCxy' : tsub Cx N Cyx)
+	   <- aconverte-atomic DconvertRx (Datom : atomic ERx)
+	   <- atomic-implies-oa Datom (Doa : oa ERx).
+
+-appbad	: convert-aasub-em _ _ _ _
+	   ([x] [d] [ex] [xt] aconverte/var (Dvtrans x ex xt) (Dconvert x d ex xt : tconverte _ _ (EA ex)) (Dlookup x d))
+	   _ (aasub/app _ _) _
+	   D1 (D2 : reduce _ eaca)
+	   <- ({x} {d}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (app _ _) J))
+	   <- ({x} isvar-app-contra (Disvar x) Dfalse)
+	   <- false-implies-aconverte Dfalse D1
+	   <- false-implies-reduce Dfalse D2.
+
+-pi1	: convert-aasub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/pi1
+	      (DconvertR x d ex xt : aconverte (G x) (R x) (sigma (B x) ([y] C x y)) (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (aasub/pi1
+	      (DsubRx : aasub R M Rx))
+	   (DsubBx : tsub B M Bx)
+%%
+	   (aconverte/pi1 DconvertRx)
+	   (reduce/pi1 (reduce-pi1/atom Doa) Dreduce)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) (R x) (sigma (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/sigma
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- ({y} {e}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx (tsub/sigma DsubCx DsubBx)
+	      (DconvertRx : aconverte Gx Rx (sigma Bx Cx) ERx)
+	      (Dreduce : reduce (EN EM) ERx)
+	   <- aconverte-atomic DconvertRx (Datom : atomic ERx)
+	   <- atomic-implies-oa Datom (Doa : oa ERx).
+
+-pi1clo	: convert-aasub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/pi1
+	      (DconvertR x d ex xt : aconverte (G x) R (sigma (B x) ([y] C x y)) (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   aasub/closed
+	   (DsubBx : tsub B M Bx)
+%%
+	   (aconverte/pi1 DconvertRx)
+	   (reduce/pi1 (reduce-pi1/atom Doa) Dreduce)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) R (sigma (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/sigma
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- ({y} {e}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM aasub/closed (tsub/sigma DsubCx DsubBx)
+	      (DconvertRx : aconverte Gx R (sigma Bx Cx) ERx)
+	      (Dreduce : reduce (EN EM) ERx)
+	   <- aconverte-atomic DconvertRx (Datom : atomic ERx)
+	   <- atomic-implies-oa Datom (Doa : oa ERx).
+
+-pi1bad	: convert-aasub-em _ _ _ _
+	   ([x] [d] [ex] [xt] aconverte/var (Dvtrans x ex xt) (Dconvert x d ex xt : tconverte _ _ (EA ex)) (Dlookup x d))
+	   _ (aasub/pi1 _) _
+	   D1 (D2 : reduce _ eaca)
+	   <- ({x} {d}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (pi1 _) J))
+	   <- ({x} isvar-pi1-contra (Disvar x) Dfalse)
+	   <- false-implies-aconverte Dfalse D1
+	   <- false-implies-reduce Dfalse D2.
+
+-pi2	: convert-aasub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/pi2
+	      (DconvertR x d ex xt : aconverte (G x) (R x) (sigma (B x) ([y] C x y)) (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (aasub/pi2
+	      (DsubRx : aasub R M Rx))
+	   (DsubCyx : tsub ([x] C x (pi1 (R x))) M Cyx)
+%%
+	   Dconvert'
+	   (reduce/pi2 (reduce-pi2/atom Doa) Dreduce)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) (R x) (sigma (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/sigma
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ({y} {e}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx (tsub/sigma DsubCx DsubBx)
+	      (DconvertRx : aconverte Gx Rx (sigma Bx Cx) ERx)
+	      (Dreduce : reduce (EN EM) ERx)
+	   <- aconverte-reg-il DconvertRx
+	      (DofRx : aofe Gx Rx (sigma Bx Cx))
+	   <- stsub-aa-permute-e Dappend DofM ([x] [d] aofe/pi1 (DofR x d)) DwfC DsubCx (aasub/pi1 DsubRx) DsubCyx
+	      (Deq : tp-eq (Cx (pi1 Rx)) Cyx)
+	   <- aconverte-resp ctx-eq/i atom-eq/i Deq eterm-eq/i (aconverte/pi2 DconvertRx)
+	      (Dconvert' : aconverte Gx (pi2 Rx) Cyx (epi2 ERx))
+	   <- aconverte-atomic DconvertRx (Datom : atomic ERx)
+	   <- atomic-implies-oa Datom (Doa : oa ERx).
+
+-pi2clo	: convert-aasub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      aconverte/pi2
+	      (DconvertR x d ex xt : aconverte (G x) R (sigma (B x) ([y] C x y)) (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   aasub/closed
+	   (DsubCyx : tsub ([x] C x (pi1 R)) M Cyx)
+%%
+	   Dconvert'
+	   (reduce/pi2 (reduce-pi2/atom Doa) Dreduce)
+	   <- ({x} {d} {ex} {xt}
+		 aconverte-reg-il (DconvertR x d ex xt)
+		 (DofR x d : aofe (G x) R (sigma (B x) ([y] C x y))))
+	   <- ({x} {d}
+		 aofe-reg (DofR x d)
+		 (wfe/sigma
+		    (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+		    (DwfB x d : wfe (G x) (B x))))
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- can-tsub-e Dappend DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ({y} {e}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d] DwfC x d y e) DofM
+		 (DsubCx y : tsub ([x] C x y) M (Cx y)))
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM aasub/closed (tsub/sigma DsubCx DsubBx)
+	      (DconvertRx : aconverte Gx R (sigma Bx Cx) ERx)
+	      (Dreduce : reduce (EN EM) ERx)
+	   <- aconverte-reg-il DconvertRx
+	      (DofRx : aofe Gx R (sigma Bx Cx))
+	   <- stsub-aa-permute-e Dappend DofM ([x] [d] aofe/pi1 (DofR x d)) DwfC DsubCx aasub/closed DsubCyx
+	      (Deq : tp-eq (Cx (pi1 R)) Cyx)
+	   <- aconverte-resp ctx-eq/i atom-eq/i Deq eterm-eq/i (aconverte/pi2 DconvertRx)
+	      (Dconvert' : aconverte Gx (pi2 R) Cyx (epi2 ERx))
+	   <- aconverte-atomic DconvertRx (Datom : atomic ERx)
+	   <- atomic-implies-oa Datom (Doa : oa ERx).
+
+-pi2bad	: convert-aasub-em _ _ _ _
+	   ([x] [d] [ex] [xt] aconverte/var (Dvtrans x ex xt) (Dconvert x d ex xt : tconverte _ _ (EA ex)) (Dlookup x d))
+	   _ (aasub/pi2 _) _
+	   D1 (D2 : reduce _ eaca)
+	   <- ({x} {d}
+		 lookup-isvar (Dlookup x d) (Disvar x : isvar (pi2 _) J))
+	   <- ({x} isvar-pi2-contra (Disvar x) Dfalse)
+	   <- false-implies-aconverte Dfalse D1
+	   <- false-implies-reduce Dfalse D2.
+
+
+%%%
+
+
+-aa	: convert-sub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      converte/at
+	      (DconvertR x d ex xt : aconverte (G x) (R x) t (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (sub/aa
+	      (DsubRx : aasub R M Rx))
+	   tsub/t
+%%
+	   (converte/at DconvertRx)
+	   Dreduce
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx tsub/t
+	      (DconvertRx : aconverte Gx Rx t ENx)
+	      (Dreduce : reduce (EN EM) ENx).
+
+-ao	: convert-sub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      converte/at
+	      (DconvertR x d ex xt : aconverte (G x) (R x) t (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (sub/ao
+	      (DsubRx : aosub R M O))
+	   tsub/t
+%%
+	   DconvertO
+	   Dreduce
+	   <- convert-aosub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx tsub/t
+	      (DconvertO : converte Gx O t EO)
+	      (Dreduce : reduce (EN EM) EO).
+
+-lam	: convert-sub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      converte/lam
+	      (DconvertN x d ex xt : {y} {e:isvar y J}
+				      {ey} {yt:vtrans ey y}
+				      converte (cons (G x) y (B x)) (N x y) (C x y) (EN ex ey))
+	      (DconvertB x d ex xt : tconverte (G x) (B x) (EB ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (sub/lam
+	      (DsubNx : {y} sub ([x] N x y) M (Nx y)))
+	   (tsub/pi
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+%%
+	   (converte/lam DconvertNx DconvertBx)
+	   (reduce/lam DreduceNx DreduceBx)
+	   <- convert-tsub-em _ Dsimp Dappend Dcsub DconvertB DconvertM DsubBx
+	      (DconvertBx : tconverte Gx Bx EBx)
+	      (DreduceBx : treduce (EB EM) EBx)
+	   <- ({y} {e} {ey} {yt} {ev}
+		 vtrans-variable yt ev
+		 -> convert-sub-em _ Dsimp ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) 
+		    ([x] [d] [ex] [xt] DconvertN x d ex xt y e ey yt)
+		    DconvertM (DsubNx y) (DsubCx y)
+		    (DconvertNx y e ey yt : converte (cons Gx y Bx) (Nx y) (Cx y) (ENx ey))
+		    (DreduceNx ey ev : reduce (EN EM ey) (ENx ey))).
+
+-pair	: convert-sub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      converte/pair
+	      (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+	      (DconvertO x d ex xt : converte (G x) (O x) (Cy x) (EO ex))
+	      (DsubCy x : tsub ([y] C x y) (N x) (Cy x))
+	      (DconvertN x d ex xt : converte (G x) (N x) (B x) (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (sub/pair
+	      (DsubOx : sub O M Ox)
+	      (DsubNx : sub N M Nx))
+	   (tsub/sigma
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+%%
+	   (converte/pair DwfCx DconvertOx' DsubCxy DconvertNx)
+	   (reduce/pair DreduceOx DreduceNx)
+	   <- convert-sub-em _ Dsimp Dappend Dcsub DconvertN DconvertM DsubNx DsubBx
+	      (DconvertNx : converte Gx Nx Bx ENx)
+	      (DreduceNx : reduce (EN EM) ENx)
+	   <- ({x} {d} {ex} {xt}
+		 converte-reg-il (DconvertN x d ex xt)
+		 (DofN x d : ofe (G x) (N x) (B x)))
+	   <- ({x} {d}
+		 tsubst-e ([_] append/nil) csub/base (DofN x d) (DsubCy x) ([y] [e] DwfC x d y e)
+		 (DwfCy x d : wfe (G x) (Cy x)))
+	   <- converte-reg-il DconvertM
+	      (DofM : ofe G1 M A)
+	   <- can-tsub-e Dappend DwfCy DofM
+	      (DsubCyx : tsub Cy M Cyx)
+	   <- convert-sub-em _ Dsimp Dappend Dcsub DconvertO DconvertM DsubOx DsubCyx
+	      (DconvertOx : converte Gx Ox Cyx EOx)
+	      (DreduceOx : reduce (EO EM) EOx)
+	   <- subst-e Dappend Dcsub DofM DsubNx DsubBx DofN
+	      (DofNx : ofe Gx Nx Bx)
+	   <- ({y} {e}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) DofM (DsubCx y) ([x] [d] DwfC x d y e)
+		 (DwfCx y e : wfe (cons Gx y Bx) (Cx y)))
+	   <- can-tsub-e ([_] append/nil) DwfCx DofNx
+	      (DsubCxy : tsub Cx Nx Cxy)
+	   <- tsub-permute-e Dappend DofM DofN DwfC DsubCx DsubNx DsubCxy DsubCy DsubCyx
+	      (Deq : tp-eq Cxy Cyx)
+	   <- tp-eq-symm Deq
+	      (Deq' : tp-eq Cyx Cxy)
+	   <- converte-resp ctx-eq/i term-eq/i Deq' eterm-eq/i DconvertOx
+	      (DconvertOx' : converte Gx Ox Cxy EOx).
+
+-star	: convert-sub-em _ _ _
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt]
+	      converte/star
+	      (Dordered x d : ordered (G x)))
+	   _
+	   sub/star
+	   tsub/one
+	   (converte/star Dordered')
+	   reduce/star
+	   <- csub-ordered Dordered Dcsub Dordered'.
+
+-singa	: convert-sub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      converte/sing
+	      (DconvertR x d ex xt : aconverte (G x) (R x) t (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (sub/aa
+	      (DsubRx : aasub R M Rx))
+	   (tsub/singa
+	      (DsubRx' : aasub R M Rx'))
+%%
+	   DconvertRx'
+	   Dreduce
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx tsub/t
+	      (DconvertRx : aconverte Gx Rx t ENx)
+	      (Dreduce : reduce (EN EM) ENx)
+	   <- aasub-fun DsubRx DsubRx'
+	      (Deq : atom-eq Rx Rx')
+	   <- tp-resp-atom sing Deq
+	      (Deq' : tp-eq (sing Rx) (sing Rx'))
+	   <- converte-resp ctx-eq/i term-eq/i Deq' eterm-eq/i (converte/sing DconvertRx)
+	      (DconvertRx' : converte Gx (at Rx) (sing Rx') ENx).
+
+-singo	: convert-sub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      converte/sing
+	      (DconvertR x d ex xt : aconverte (G x) (R x) t (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (sub/ao
+	      (DsubO : aosub R M O))
+	   (tsub/singo
+	      (DsubRx : aosub R M (at Rx)))
+%%
+	   DconvertO'
+	   Dreduce
+	   <- convert-aosub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubO tsub/t
+	      (DconvertO : converte Gx O t EO)
+	      (Dreduce : reduce (EN EM) EO)
+	   <- aosub-fun DsubO DsubRx
+	      (Deq : term-eq O (at Rx))
+	   <- term-eq-symm Deq
+	      (Deq' : term-eq (at Rx) O)
+	   <- converte-resp ctx-eq/i Deq tp-eq/i eterm-eq/i DconvertO
+	      (converte/at
+		 (DconvertRx : aconverte Gx Rx t EO))
+	   <- converte-resp ctx-eq/i Deq' tp-eq/i eterm-eq/i (converte/sing DconvertRx)
+	      (DconvertO' : converte Gx O (sing Rx) EO).
+
+-aaao	: convert-sub-em _ _ _ _
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      converte/sing
+	      _)
+	   _
+	   (sub/aa
+	      (DsubRx : aasub R M Rx))
+	   (tsub/singo
+	      (DsubRx' : aosub R M (at Rx')))
+	   D1 D2
+	   <- aasub-aosub-contra DsubRx DsubRx' Dfalse
+	   <- false-implies-converte Dfalse (D1 : converte _ _ _ eaca)
+	   <- false-implies-reduce Dfalse D2.
+
+-aoaa	: convert-sub-em _ _ _ _
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      converte/sing
+	      _)
+	   _
+	   (sub/ao
+	      (DsubRx : aosub R M O))
+	   (tsub/singa
+	      (DsubRx' : aasub R M Rx))
+	   D1 D2
+	   <- aasub-aosub-contra DsubRx' DsubRx Dfalse
+	   <- false-implies-converte Dfalse (D1 : converte _ _ _ eaca)
+	   <- false-implies-reduce Dfalse D2.
+
+
+%%%
+
+
+-t	: convert-tsub-em _ _ _
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt]
+	      tconverte/t
+	      (Dordered x d : ordered (G x)))
+	   _
+	   tsub/t
+	   (tconverte/t Dordered')
+	   treduce/t
+	   <- csub-ordered Dordered Dcsub Dordered'.
+
+-pi	: convert-tsub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      tconverte/pi
+	      (DconvertC x d ex xt : {y} {e:isvar y J}
+				      {ey} {yt:vtrans ey y}
+				      tconverte (cons (G x) y (B x)) (C x y) (EC ex ey))
+	      (DconvertB x d ex xt : tconverte (G x) (B x) (EB ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (tsub/pi
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+%%
+	   (tconverte/pi DconvertCx DconvertBx)
+	   (treduce/pi DreduceCx DreduceBx)
+	   <- convert-tsub-em _ Dsimp Dappend Dcsub DconvertB DconvertM DsubBx
+	      (DconvertBx : tconverte Gx Bx EBx)
+	      (DreduceBx : treduce (EB EM) EBx)
+	   <- ({y} {e} {ey} {yt} {ev}
+		 vtrans-variable yt ev
+		 -> convert-tsub-em _ Dsimp ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) 
+		    ([x] [d] [ex] [xt] DconvertC x d ex xt y e ey yt)
+		    DconvertM (DsubCx y)
+		    (DconvertCx y e ey yt : tconverte (cons Gx y Bx) (Cx y) (ECx ey))
+		    (DreduceCx ey ev : treduce (EC EM ey) (ECx ey))).
+
+-sigma	: convert-tsub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      tconverte/sigma
+	      (DconvertC x d ex xt : {y} {e:isvar y J}
+				      {ey} {yt:vtrans ey y}
+				      tconverte (cons (G x) y (B x)) (C x y) (EC ex ey))
+	      (DconvertB x d ex xt : tconverte (G x) (B x) (EB ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (tsub/sigma
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+%%
+	   (tconverte/sigma DconvertCx DconvertBx)
+	   (treduce/sigma DreduceCx DreduceBx)
+	   <- convert-tsub-em _ Dsimp Dappend Dcsub DconvertB DconvertM DsubBx
+	      (DconvertBx : tconverte Gx Bx EBx)
+	      (DreduceBx : treduce (EB EM) EBx)
+	   <- ({y} {e} {ey} {yt} {ev}
+		 vtrans-variable yt ev
+		 -> convert-tsub-em _ Dsimp ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) 
+		    ([x] [d] [ex] [xt] DconvertC x d ex xt y e ey yt)
+		    DconvertM (DsubCx y)
+		    (DconvertCx y e ey yt : tconverte (cons Gx y Bx) (Cx y) (ECx ey))
+		    (DreduceCx ey ev : treduce (EC EM ey) (ECx ey))).
+
+-singa	: convert-tsub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      tconverte/sing
+	      (DconvertR x d ex xt : aconverte (G x) (R x) t (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (tsub/singa
+	      (DsubRx : aasub R M Rx))
+%%
+	   (tconverte/sing DconvertRx)
+	   (treduce/sing Dreduce)
+	   <- convert-aasub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx tsub/t
+	      (DconvertRx : aconverte Gx Rx t ENx)
+	      (Dreduce : reduce (EN EM) ENx).
+
+-singo	: convert-tsub-em _
+	   (Dsimp : simp A T)
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      tconverte/sing
+	      (DconvertR x d ex xt : aconverte (G x) (R x) t (EN ex)))
+	   (DconvertM : converte G1 M A EM)
+	   (tsub/singo
+	      (DsubRx : aosub R M (at Rx)))
+%%
+	   (tconverte/sing DconvertRx)
+	   (treduce/sing Dreduce)
+	   <- convert-aosub-em _ Dsimp Dappend Dcsub DconvertR DconvertM DsubRx tsub/t
+	      (converte/at
+		 (DconvertRx : aconverte Gx Rx t ENx))
+	      (Dreduce : reduce (EN EM) ENx).
+
+-one	: convert-tsub-em _ _ _
+	   (Dcsub : csub G M Gx)
+	   ([x] [d:isvar x I] [ex] [xt]
+	      tconverte/one
+	      (Dordered x d : ordered (G x)))
+	   _
+	   tsub/one
+	   (tconverte/one Dordered')
+	   treduce/one
+	   <- csub-ordered Dordered Dcsub Dordered'.
+
+%worlds (sbind | ovar | tvbind | evar) (convert-sub-em _ _ _ _ _ _ _ _ _ _) (convert-aasub-em _ _ _ _ _ _ _ _ _ _) (convert-aosub-em _ _ _ _ _ _ _ _ _ _) (convert-tsub-em _ _ _ _ _ _ _ _ _).
+%total {(T1 T2 T3 T4) (D1 D2 D3 D4)} (convert-aosub-em T1 _ _ _ D1 _ _ _ _ _) (convert-aasub-em T2 _ _ _ D2 _ _ _ _ _) (convert-sub-em T3 _ _ _ D3 _ _ _ _ _) (convert-tsub-em T4 _ _ _ D4 _ _ _ _).
+
+
+
+
+%%%%%  Conversion Commutes with Simple Substitution (Implicit Context)  %%%%%
+
+convert-ssub	: ({x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex))
+		   -> aconvert R A EN
+%%
+		   -> convert (M R) (B R) (EM EN) -> type.
+%mode convert-ssub +X1 +X2 -X3.
+
+-	: convert-ssub 
+	   (DconvM : {x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex))
+	   (DconvR : aconvert R A EN)
+	   DconvMR'
+	   <- convert1-to-converte 0 DconvM
+	      (DconveM : {x} isvar x 0 -> {ex} vtrans ex x -> converte (cons nil x A) (M x) (B x) (EM ex))
+	   <- aconvert-to-aconverte DconvR 
+	      (DconveR : aconverte nil R A EN)
+	   <- convert-ssub-e ([_] append/nil) append/nil DconveM DconveR
+	      (DconveMR : converte nil (M R) (B R) (EM EN))
+	   <- ({x} {d} {ex} {xt}
+		 convert-reg-il (DconvM x d ex xt)
+		 (DofM x d : of (M x) (B x)))
+	   <- aconvert-reg-il DconvR
+	      (DofR : aof R A)
+	   <- ssubst DofM DofR
+	      (DofMR : of (M R) (B R))
+	   <- can-convert DofMR
+	      (DconvMR : convert (M R) (B R) EM')
+	   <- convert-to-converte DconvMR
+	      (DconveMR' : converte nil (M R) (B R) EM')
+	   <- converte-fun DconveMR' DconveMR
+	      (Deq : eterm-eq EM' (EM EN))
+	   <- convert-resp term-eq/i tp-eq/i Deq DconvMR
+	      (DconvMR' : convert (M R) (B R) (EM EN)).
+
+-	: (vsound _ _ _ _ -> convert-ssub _ _ _) -> type.
+
+%worlds (sbind) (convert-ssub _ _ _).
+%total {} (convert-ssub _ _ _).
+
+
+
+convert-stsub	: ({x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+		   -> aconvert R A EN
+%%
+		   -> tconvert (B R) (EB EN) -> type.
+%mode convert-stsub +X1 +X2 -X3.
+
+-	: convert-stsub 
+	   (DconvB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+	   (DconvR : aconvert R A EN)
+	   DconvBR'
+	   <- tconvert1-to-tconverte 0 DconvB
+	      (DconveB : {x} isvar x 0 -> {ex} vtrans ex x -> tconverte (cons nil x A) (B x) (EB ex))
+	   <- aconvert-to-aconverte DconvR 
+	      (DconveR : aconverte nil R A EN)
+	   <- tconvert-ssub-e ([_] append/nil) append/nil DconveB DconveR
+	      (DconveBR : tconverte nil (B R) (EB EN))
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-reg-il (DconvB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- aconvert-reg-il DconvR
+	      (DofR : aof R A)
+	   <- stsubst DwfB DofR
+	      (DwfBR : wf (B R))
+	   <- can-tconvert DwfBR
+	      (DconvBR : tconvert (B R) EB')
+	   <- tconvert-to-tconverte DconvBR
+	      (DconveBR' : tconverte nil (B R) EB')
+	   <- tconverte-fun DconveBR' DconveBR
+	      (Deq : etp-eq EB' (EB EN))
+	   <- tconvert-resp tp-eq/i Deq DconvBR
+	      (DconvBR' : tconvert (B R) (EB EN)).
+
+-	: (vsound _ _ _ _ -> convert-stsub _ _ _) -> type.
+
+%worlds (sbind) (convert-stsub _ _ _).
+%total {} (convert-stsub _ _ _).
+
+
+
+convert-ssub1	: ({x} vof x A
+		     -> {ex} vtrans ex x
+		     -> {y} vof y (B x)
+		     -> {ey} vtrans ey y
+		     -> convert (M x y) (C x y) (EM ex ey))
+		   -> aconvert R A EN
+		   -> ({x} vof x A -> wf (B x))
+		   -> ({y} vof y (B R)
+			 -> {ey} vtrans ey y
+			 -> convert (M R y) (C R y) (EM EN ey)) -> type.
+%mode convert-ssub1 +X1 +X2 +X3 -X4.
+
+-	: convert-ssub1
+	   (DconvM : {x} vof x A -> {ex} vtrans ex x -> {y} vof y (B x) -> {ey} vtrans ey y -> convert (M x y) (C x y) (EM ex ey))
+	   (DconvR : aconvert R A EN)
+	   (DwfB : {x} vof x A -> wf (B x))
+	   DconvMR'
+	   <- convert2-to-converte (lt/z : lt 0 (s 0)) DconvM
+	      (DconveM : {x} isvar x 0 
+			  -> {ex} vtrans ex x
+			  -> {y} isvar y (s 0)
+			  -> {ey} vtrans ey y
+			  -> converte (cons (cons nil x A) y (B x)) (M x y) (C x y) (EM ex ey))
+	   <- aconvert-to-aconverte DconvR 
+	      (DconveR : aconverte nil R A EN)
+	   <- ({y} {e} {ey} {yt}
+		 convert-ssub-e ([_] append/cons append/nil) (append/cons append/nil) 
+		 ([x] [d] [ex] [xt] DconveM x d ex xt y e ey yt)
+		 DconveR
+		 (DconveMR y e ey yt : converte (cons nil y (B R)) (M R y) (C R y) (EM EN ey)))
+	   <- ({x} {d} {ex} {xt} {y} {e} {ey} {yt}
+		 convert-reg-il (DconvM x d ex xt y e ey yt)
+		 (DofM x d y e : of (M x y) (C x y)))
+	   <- aconvert-reg-il DconvR
+	      (DofR : aof R A)
+	   <- ssubst1 DofM DofR
+	      (DofMR : {y} vof y (B R) -> of (M R y) (C R y))
+	   <- stsubst DwfB DofR
+	      (DwfBR : wf (B R))
+	   <- can-tconvert DwfBR
+	      (DconvBR : tconvert (B R) EB')
+	   <- ({y} {e} {ey} {yt:vtrans ey y} {ee:evof ey EB'} {ev:variable ey}
+		 vtrans-variable yt ev
+		 -> vsound e yt DconvBR ee
+		 -> can-convert (DofMR y e)
+		    (DconvMR y e ey yt : convert (M R y) (C R y) (EM' ey)))
+	   <- convert1-to-converte (s 0) DconvMR
+	      (DconveMR' : {y} isvar y (s 0) -> {ey} vtrans ey y -> converte (cons nil y (B R)) (M R y) (C R y) (EM' ey))
+	   <- ({y} {e} {ey} {yt}
+		 converte-fun (DconveMR' y e ey yt) (DconveMR y e ey yt)
+		 (Deq ey : eterm-eq (EM' ey) (EM EN ey)))
+	   <- ({y} {e} {ey} {yt}
+		 convert-resp term-eq/i tp-eq/i (Deq ey) (DconvMR y e ey yt)
+		 (DconvMR' y e ey yt : convert (M R y) (C R y) (EM EN ey))).
+
+-	: (vsound _ _ _ _ -> convert-ssub1 _ _ _ _) -> type.
+
+%worlds (sbind) (convert-ssub1 _ _ _ _).
+%total {} (convert-ssub1 _ _ _ _).
+
+
+
+
+%%%%%  Conversion Commutes with Substitution (Implicit Context)  %%%%%
+
+convert-tsub-reduce	: ({x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+			   -> convert N A EN
+			   -> tsub B N Bx
+%%
+			   -> tconvert Bx EC
+			   -> treduce (EB EN) EC -> type.
+%mode convert-tsub-reduce +X1 +X2 +X3 -X4 -X5.
+
+-	: convert-tsub-reduce
+	   (DconvertB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+	   (DconvertN : convert N A EN)
+	   (DsubBx : tsub B N Bx)
+	   DconvertBx'
+	   Dreduce
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-reg-il (DconvertB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- convert-reg-il DconvertN
+	      (DofN : of N A)
+	   <- tsubst DsubBx DwfB DofN
+	      (DwfBx : wf Bx)
+	   <- can-tconvert DwfBx
+	      (DconvertBx : tconvert Bx EBx)
+	   <- tconvert1-to-tconverte 0 DconvertB
+	      (DconverteB : {x} isvar x 0 -> {ex} vtrans ex x -> tconverte (cons nil x A) (B x) (EB ex))
+	   <- convert-to-converte DconvertN
+	      (DconverteN : converte nil N A EN)
+	   <- tconvert-to-tconverte DconvertBx
+	      (DconverteBx : tconverte nil Bx EBx)
+	   <- can-simp A
+	      (Dsimp : simp A T)
+	   <- convert-tsub-em _ Dsimp ([_] append/nil) csub/base DconverteB DconverteN DsubBx
+	      (DconverteBx' : tconverte nil Bx EC)
+	      (Dreduce : treduce (EB EN) EC)
+	   <- tconverte-fun DconverteBx DconverteBx'
+	      (Deq : etp-eq EBx EC)
+	   <- tconvert-resp tp-eq/i Deq DconvertBx
+	      (DconvertBx' : tconvert Bx EC).
+
+%worlds (sbind) (convert-tsub-reduce _ _ _ _ _).
+%total {} (convert-tsub-reduce _ _ _ _ _).
+
+
+
+convert-sub-reduce	: ({x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex))
+			   -> convert N A EN
+			   -> sub M N Mx
+			   -> tsub B N Bx
+%%
+			   -> convert Mx Bx EO
+			   -> reduce (EM EN) EO -> type.
+%mode convert-sub-reduce +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: convert-sub-reduce
+	   (DconvertM : {x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex))
+	   (DconvertN : convert N A EN)
+	   (DsubMx : sub M N Mx)
+	   (DsubBx : tsub B N Bx)
+	   DconvertMx'
+	   Dreduce
+	   <- ({x} {d} {ex} {xt}
+		 convert-reg-il (DconvertM x d ex xt)
+		 (DofM x d : of (M x) (B x)))
+	   <- convert-reg-il DconvertN
+	      (DofN : of N A)
+	   <- subst DsubMx DsubBx DofM DofN
+	      (DofMx : of Mx Bx)
+	   <- can-convert DofMx
+	      (DconvertMx : convert Mx Bx EMx)
+	   <- convert1-to-converte 0 DconvertM
+	      (DconverteM : {x} isvar x 0 -> {ex} vtrans ex x -> converte (cons nil x A) (M x) (B x) (EM ex))
+	   <- convert-to-converte DconvertN
+	      (DconverteN : converte nil N A EN)
+	   <- convert-to-converte DconvertMx
+	      (DconverteMx : converte nil Mx Bx EMx)
+	   <- can-simp A
+	      (Dsimp : simp A T)
+	   <- convert-sub-em _ Dsimp ([_] append/nil) csub/base DconverteM DconverteN DsubMx DsubBx
+	      (DconverteMx' : converte nil Mx Bx EO)
+	      (Dreduce : reduce (EM EN) EO)
+	   <- converte-fun DconverteMx DconverteMx'
+	      (Deq : eterm-eq EMx EO)
+	   <- convert-resp term-eq/i tp-eq/i Deq DconvertMx
+	      (DconvertMx' : convert Mx Bx EO).
+
+%worlds (sbind) (convert-sub-reduce _ _ _ _ _ _).
+%total {} (convert-sub-reduce _ _ _ _ _ _).

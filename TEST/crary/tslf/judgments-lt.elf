@@ -1,0 +1,40 @@
+
+lt-look	: lt -> loc -> cn -> type.
+%mode lt-look *L *LC *C.
+
+lt-look/hit	: lt-look (lt/cons _ LC C) LC C.
+
+lt-look/miss	: lt-look (lt/cons L _ _) LC C
+		   <- lt-look L LC C.
+
+%worlds (cn-block) (lt-look _ _ _).
+
+
+lt-extend : lt -> cn -> lt -> loc -> type.
+%mode lt-extend *S *C *S' *L.
+
+lt-extend/nil	: lt-extend lt/nil C (lt/cons lt/nil loc/z C) loc/z.
+
+lt-extend/cons	: lt-extend (lt/cons LT LC C') C
+		   (lt/cons (lt/cons LT LC C') (loc/s LC) C) (loc/s LC). 
+
+
+
+lt-wf	: lt -> type.
+%mode lt-wf *L.
+
+lt-wf/nil	: lt-wf lt/nil.
+
+lt-wf/cons	: lt-wf (lt/cons L1 LC C)
+		   <- lt-extend L1 C (lt/cons L1 LC C) LC
+		   <- lt-wf L1.
+
+
+
+lt-sub : lt -> lt -> type.
+
+lt-sub/refl	: lt-sub L L.
+
+lt-sub/trans	: lt-sub L (lt/cons L' LC C')
+		   <- lt-extend L' C' (lt/cons L' LC C') LC
+		   <- lt-sub L L'.

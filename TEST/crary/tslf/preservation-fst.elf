@@ -1,0 +1,93 @@
+preserve/fst-md	: ofsg L T pty/p M S
+		   -> fst-md M C
+		   -> step/md M ST T M' ST' T'
+		   -> fst-md M' C'
+		   -> fst-sg S K
+		   -> cn-deq C C' K
+		   -> type.
+%mode preserve/fst-md +D1 +D2 +D4 -D5 -D6 -D7.
+
+-	: preserve/fst-md DE fst-md/tm (step/md/tm S)
+	   fst-md/tm DFS (cn-deq/refl DC)
+	   <- vdt/ofsg/p DE _ DFS fst-md/tm DC.
+
+-	: preserve/fst-md DE (fst-md/pair DM1 DM2) (step/md/pair-1 S)
+	   (fst-md/pair DM1' DM2)
+	   DFS
+	   (cn-deq/sub (cn-deq/cn/pair DCQ (cn-deq/refl DC2')) KS)
+	   <- vdt/ofsg/p DE _ DFS _ _
+	   <- inv/ofsg/md/pair DE D1 D2 DS
+	   <- preserve/fst-md D1 DM1 S DM1' DFS1 DCQ
+	   <- vdt/ofsg/p D2 _ DFS2 DM2' DC2
+	   <- fst-md-seq DM2' DM2 DQ2
+	   <- ofkd/seq-c DQ2 DC2 DC2'
+	   <- vdt/sg-sub DS (fst-sg/sgm DFS1 ([a] DFS2)) DFS _ _ KS.
+
+-	: preserve/fst-md DE (fst-md/pair DM1 DM2) (step/md/pair-2 _ S)
+	   (fst-md/pair DM1 DM2')
+	   DFS
+	   (cn-deq/sub (cn-deq/cn/pair (cn-deq/refl DC1') DCQ) KS)
+	   <- vdt/ofsg/p DE _ DFS _ _ 
+	   <- inv/ofsg/md/pair DE D1 D2 DS
+	   <- preserve/fst-md D2 DM2 S DM2' DFS2 DCQ
+	   <- vdt/ofsg/p D1 _ DFS1 DM1' DC1
+	   <- fst-md-seq DM1' DM1 DQ1
+	   <- ofkd/seq-c DQ1 DC1 DC1'
+	   <- vdt/sg-sub DS (fst-sg/sgm DFS1 ([a] DFS2)) DFS _ _ KS.
+
+-	: preserve/fst-md DE (fst-md/pj1 DM1) (step/md/pj1 S)
+	   (fst-md/pj1 DM1')
+	   DFS
+	   (cn-deq/sub (cn-deq/cn/pj1 DCQ) KS)
+	   <- vdt/ofsg/p DE _ DFS _ _
+	   <- inv/ofsg/md/pj1 DE D1 DS
+	   <- preserve/fst-md D1 DM1 S DM1' (fst-sg/sgm DFS1 _) DCQ
+	   <- vdt/sg-sub DS DFS1 DFS _ _ KS.
+
+
+-	: preserve/fst-md DE (fst-md/pj2 DM1) (step/md/pj2 S)
+	   (fst-md/pj2 DM1')
+	   DFS
+	   (cn-deq/sub (cn-deq/cn/pj2 DCQ) KS)
+	   <- inv/ofsg/md/pj2 DE D1 DMp 
+	      (DS: sg-sub (S1 (cn/pj1 Cp)) SG) _
+	   <- fst-md-seq DMp DM1 (DMQ: seq/cn Cp C1)
+	   <- seq/cn/pj1 DMQ DMQp
+	   <- preserve/fst-md D1 DM1 S DM1' 
+	      (fst-sg/sgm _ (DFS2: {a} fst-sg  (S1 a) (K a))) DCQ
+	   <- seq/cn/sg-sub-ol S1
+	      DMQp 
+	      (DS : sg-sub (S1 (cn/pj1 Cp)) SG)
+	      (DS': sg-sub (S1 (cn/pj1 C1)) SG)
+	   <- fst-sg-complete SG (DFS: fst-sg SG _)
+	   <- vdt/sg-sub DS' (DFS2 (cn/pj1 C1)) DFS _ _ KS.
+
+-	: preserve/fst-md DE (fst-md/pj1 (fst-md/pair DM1 DM2)) 
+	   (step/md/pj1-beta _ _)
+	   DM1
+	   DFS
+	   DCQ'
+	   <- vdt/ofsg/p DE _ DFS (fst-md/pj1 (fst-md/pair DM1' DM2')) DC
+	   <- cn-beta-pj1 psi-cn/eps DC DCQ
+	   <- fst-md-seq DM1' DM1 DQ1
+	   <- fst-md-seq DM2' DM2 DQ2
+	   <- seq/cn/beta-pj1 DQ1 DQ2 DCQ DCQ'.
+
+-	: preserve/fst-md DE (fst-md/pj2 (fst-md/pair DM1 DM2)) 
+	   (step/md/pj2-beta _ _)
+	   DM2
+	   DFS
+	   DCQ'
+	   <- vdt/ofsg/p DE _ DFS (fst-md/pj2 (fst-md/pair DM1' DM2')) DC
+	   <- cn-beta-pj2 psi-cn/eps DC DCQ
+	   <- fst-md-seq DM1' DM1 DQ1
+	   <- fst-md-seq DM2' DM2 DQ2
+	   <- seq/cn/beta-pj2 DQ2 DQ1 DCQ DCQ'.
+
+
+%worlds () 
+(preserve/fst-md _ _ _ _ _ _).
+%total (D3) 
+(preserve/fst-md _ _ D3 _ _ _).
+
+

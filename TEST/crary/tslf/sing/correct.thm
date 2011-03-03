@@ -1,0 +1,1675 @@
+
+%%%%%  Reduction  %%%%%
+
+reduce-fun : reduce M N -> reduce M N' -> eterm-eq N N' -> type.
+%mode reduce-fun +X1 +X2 -X3.
+
+treduce-fun : treduce A B -> treduce A B' -> etp-eq B B' -> type.
+%mode treduce-fun +X1 +X2 -X3.
+
+reduce-app-fun : reduce-app M N O -> reduce-app M N O' -> eterm-eq O O' -> type.
+%mode reduce-app-fun +X1 +X2 -X3.
+
+reduce-pi1-fun : reduce-pi1 M N -> reduce-pi1 M N' -> eterm-eq N N' -> type.
+%mode reduce-pi1-fun +X1 +X2 -X3.
+
+reduce-pi2-fun : reduce-pi2 M N -> reduce-pi2 M N' -> eterm-eq N N' -> type.
+%mode reduce-pi2-fun +X1 +X2 -X3.
+
+-	: reduce-fun reduce/const reduce/const eterm-eq/i.
+
+-	: reduce-fun (reduce/forall D) (reduce/forall D') Deq'
+	   <- treduce-fun D D' Deq
+	   <- eterm-resp-etp eforall Deq Deq'.
+
+-	: reduce-fun (reduce/var _) (reduce/var _) eterm-eq/i.
+
+-	: reduce-fun (reduce/lam D2 D1) (reduce/lam D2' D1') Deq
+	   <- treduce-fun D1 D1' Deq1
+	   <- ({x} {dv}
+		 reduce-fun (D2 x dv) (D2' x dv) (Deq2 x))
+	   <- elam-resp Deq1 Deq2 Deq.
+
+-	: reduce-fun (reduce/app D3 D2 D1) (reduce/app D3' D2' D1') Deq
+	   <- reduce-fun D1 D1' Deq1
+	   <- reduce-fun D2 D2' Deq2
+	   <- reduce-app-resp Deq1 Deq2 eterm-eq/i D3 D3''
+	   <- reduce-app-fun D3'' D3' Deq.
+
+-	: reduce-fun (reduce/pair D2 D1) (reduce/pair D2' D1') Deq
+	   <- reduce-fun D1 D1' Deq1
+	   <- reduce-fun D2 D2' Deq2
+	   <- epair-resp Deq1 Deq2 Deq.
+
+-	: reduce-fun (reduce/pi1 D2 D1) (reduce/pi1 D2' D1') Deq
+	   <- reduce-fun D1 D1' Deq1
+	   <- reduce-pi1-resp Deq1 eterm-eq/i D2 D2''
+	   <- reduce-pi1-fun D2'' D2' Deq.
+
+-	: reduce-fun (reduce/pi2 D2 D1) (reduce/pi2 D2' D1') Deq
+	   <- reduce-fun D1 D1' Deq1
+	   <- reduce-pi2-resp Deq1 eterm-eq/i D2 D2''
+	   <- reduce-pi2-fun D2'' D2' Deq.
+
+
+
+-	: treduce-fun treduce/t treduce/t etp-eq/i.
+
+-	: treduce-fun (treduce/pi D2 D1) (treduce/pi D2' D1') Deq
+	   <- treduce-fun D1 D1' Deq1
+	   <- ({x} {dv}
+		 treduce-fun (D2 x dv) (D2' x dv) (Deq2 x))
+	   <- epi-resp Deq1 Deq2 Deq.
+
+-	: treduce-fun (treduce/sigma D2 D1) (treduce/sigma D2' D1') Deq
+	   <- treduce-fun D1 D1' Deq1
+	   <- ({x} {dv}
+		 treduce-fun (D2 x dv) (D2' x dv) (Deq2 x))
+	   <- esigma-resp Deq1 Deq2 Deq.
+
+-	: treduce-fun (treduce/sing D1) (treduce/sing D1') Deq
+	   <- reduce-fun D1 D1' Deq1
+	   <- etp-resp-eterm esing Deq1 Deq.
+
+
+-	: reduce-app-fun (reduce-app/atom _) (reduce-app/atom _) eterm-eq/i.
+
+-	: reduce-app-fun (reduce-app/beta D1) (reduce-app/beta D2) Deq
+	   <- reduce-fun D1 D2 Deq.
+
+
+
+-	: reduce-pi1-fun (reduce-pi1/atom _) (reduce-pi1/atom _) eterm-eq/i.
+
+-	: reduce-pi1-fun reduce-pi1/beta reduce-pi1/beta eterm-eq/i.
+
+
+
+-	: reduce-pi2-fun (reduce-pi2/atom _) (reduce-pi2/atom _) eterm-eq/i.
+
+-	: reduce-pi2-fun reduce-pi2/beta reduce-pi2/beta eterm-eq/i.
+
+%worlds (evvar | evbind | sbind) (reduce-fun _ _ _) (treduce-fun _ _ _) (reduce-app-fun _ _ _) (reduce-pi1-fun _ _ _) (reduce-pi2-fun _ _ _).
+%total (D1 D2 D3 D4 D5) (reduce-fun _ D1 _) (treduce-fun _ D2 _) (reduce-app-fun _ D3 _) (reduce-pi1-fun _ D4 _) (reduce-pi2-fun _ D5 _).
+
+
+
+
+%%%%%  Selfification  %%%%%
+
+can-selfify : expand R A M
+	       -> self M A As
+	       -> tconvert A EA
+	       -> aconvert R A ER
+%%
+	       -> convert M A EM
+	       -> tconvert As EAs
+	       -> selfify ER EA EM EAs -> type.
+%mode can-selfify +X1 +X2 +X3 +X4 -X5 -X6 -X7.
+
+-t	: can-selfify
+	   expand/t
+	   self/t
+	   tconvert/t
+	   (Dconv : aconvert R t ER)
+%%
+	   (convert/at Dconv)
+	   (tconvert/sing Dconv)
+	   selfify/t.
+
+-sing	: can-selfify
+	   expand/sing
+	   self/sing
+	   (tconvert/sing
+	      (DconvR : aconvert R t ER))
+	   _
+%%
+	   (convert/sing DconvR)
+   (tconvert/sing DconvR)
+	   selfify/sing.
+
+-pi	: can-selfify
+	   (expand/pi
+	      (Dexpand2 : {x} expand (app R (X x)) (B x) (N x))
+	      (Dexpand1 : {x} expand x A (X x)))
+	   (self/pi
+	      (DselfB : {x} self (N x) (B x) (Bs x)))
+	   (tconvert/pi
+	      (DconvB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+	      (DconvA : tconvert A EA))
+	   (DconvR : aconvert R (pi A B) ER)
+%%
+	   (convert/lam DconvN DconvA)
+	   (tconvert/pi DconvBs DconvA)
+	   (selfify/pi Dselfify2 Dselfify1)
+	   <- aconvert-reg-il DconvR
+	      (DofR : aof R (pi A B))
+	   <- aof-reg DofR
+	      (wf/pi
+		 (DwfB : {x} vof x A -> wf (B x))
+		 (DwfA : wf A))
+	   <- ({x} {d}
+		 expand-reg (aof/var DwfA d) (Dexpand1 x)
+		 (DofX x d : of (X x) A))
+	   <- ({x} {d}
+		 can-self (DofX x d)
+		 (DselfA x : self (X x) A (As x)))
+	   <- ({x} {d} {ex} {xt:vtrans ex x} {ed} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> can-selfify (Dexpand1 x) (DselfA x) DconvA
+		    (aconvert/var xt DconvA DwfA d)
+		    (DconvX x d ex xt : convert (X x) A (EX ex))
+		    (DconvAs x d ex xt : tconvert (As x) (EAs ex))
+		    (Dselfify1 ex : selfify ex EA (EX ex) (EAs ex)))
+	   <- tsub-expand-var DwfA DwfB Dexpand1
+	      (DsubB : {x} tsub B (X x) (B x))
+	   <- ({x} {d} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> can-selfify (Dexpand2 x) (DselfB x) (DconvB x d ex xt)
+		    (aconvert/app (DsubB x) (DconvX x d ex xt) DconvR)
+		    (DconvN x d ex xt : convert (N x) (B x) (EN ex))
+		    (DconvBs x d ex xt : tconvert (Bs x) (EBs ex))
+		    (Dselfify2 ex : selfify (eapp ER (EX ex)) (EB ex) (EN ex) (EBs ex))).
+
+-sigma	: can-selfify
+	   (expand/sigma
+	      (Dexpand2 : expand (pi2 R) (B (pi1 R)) N)
+	      (Dexpand1 : expand (pi1 R) A M))
+	   (self/sigma
+	      (DselfB : self N Bx Bs)
+	      (DsubBx : tsub B M Bx)
+	      (DselfA : self M A As))
+	   (tconvert/sigma
+	      (DconvB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+	      (DconvA : tconvert A EA))
+	   (DconvR : aconvert R (sigma A B) ER)
+%%
+	   (convert/pair DwfB DconvN' DsubBx DconvM)
+	   (tconvert/sigma ([_] [_] [_] [_] DconvBs) DconvAs)
+	   (selfify/sigma Dselfify2 Dselfify1)
+	   <- aconvert-reg-il DconvR
+	      (DofR : aof R (sigma A B))
+	   <- aof-reg DofR
+	      (wf/sigma
+		 (DwfB : {x} vof x A -> wf (B x))
+		 (DwfA : wf A))
+	   <- can-selfify Dexpand1 DselfA DconvA
+	      (aconvert/pi1 DconvR)
+	      (DconvM : convert M A EM)
+	      (DconvAs : tconvert As EAs)
+	      (Dselfify1 : selfify (epi1 ER) EA EM EAs)
+	   <- tsub-expand (aof/pi1 DofR) DwfB Dexpand1 DsubBx
+	      (Deq : tp-eq Bx (B (pi1 R)))
+	   <- self-resp term-eq/i Deq tp-eq/i DselfB
+	      (DselfB' : self N (B (pi1 R)) Bs)
+	   <- convert-stsub DconvB (aconvert/pi1 DconvR)
+	      (DconvBx : tconvert (B (pi1 R)) (EB (epi1 ER)))
+	   <- can-selfify Dexpand2 DselfB' DconvBx
+	      (aconvert/pi2 DconvR)
+	      (DconvN : convert N (B (pi1 R)) EN)
+	      (DconvBs : tconvert Bs EBs)
+	      (Dselfify2 : selfify (epi2 ER) (EB (epi1 ER)) EN EBs)
+	   <- tp-eq-symm Deq
+	      (Deq' : tp-eq (B (pi1 R)) Bx)
+	   <- convert-resp term-eq/i Deq' eterm-eq/i DconvN
+	      (DconvN' : convert N Bx EN).
+
+%worlds (sbind) (can-selfify _ _ _ _ _ _ _).
+%total D (can-selfify D _ _ _ _ _ _).
+
+
+
+selfify-fun : selfify M A N B -> selfify M A N' B' -> eterm-eq N N' -> etp-eq B B' -> type.
+%mode selfify-fun +X1 +X2 -X3 -X4.
+
+-	: selfify-fun selfify/t selfify/t eterm-eq/i etp-eq/i.
+
+-	: selfify-fun (selfify/pi Dself2 Dself1) (selfify/pi Dself2' Dself1') DeqO' DeqB'
+	   <- ({x} 
+		 selfify-fun (Dself1 x) (Dself1' x) (DeqN x) _)
+	   <- ({x}
+		 eterm-resp-eterm ([m] eapp M m) (DeqN x)
+		 (DeqN' x))
+	   <- ({x}
+		 selfify-resp (DeqN' x) etp-eq/i eterm-eq/i etp-eq/i (Dself2 x)
+		 (Dself2'' x))
+	   <- ({x}
+		 selfify-fun (Dself2'' x) (Dself2' x) (DeqO x) (DeqB x))
+	   <- elam-resp etp-eq/i DeqO DeqO'
+	   <- epi-resp etp-eq/i DeqB DeqB'.
+
+-	: selfify-fun (selfify/sigma Dself2 Dself1) (selfify/sigma Dself2' Dself1') DeqN DeqB
+	   <- selfify-fun Dself1 Dself1' DeqN1 DeqB1
+	   <- selfify-fun Dself2 Dself2' DeqN2 DeqB2
+	   <- epair-resp DeqN1 DeqN2 DeqN
+	   <- esigma-resp DeqB1 ([_] DeqB2) DeqB.
+
+-	: selfify-fun selfify/sing selfify/sing eterm-eq/i etp-eq/i.
+
+%worlds (evar) (selfify-fun _ _ _ _).
+%total D (selfify-fun _ D _ _).
+
+
+
+
+%%%%%  Coercion  %%%%%
+
+can-coerce : tconvert A EA
+	      -> tconvert B EB
+	      -> subtype A B M
+	      -> ({x} vof x A -> {ex} vtrans ex x -> convert (M x) B (EM ex))
+	      -> coerce EA EB EM -> type.
+%mode can-coerce +X1 +X2 +X3 -X4 -X5.
+
+-t	: can-coerce tconvert/t tconvert/t subtype/t
+	   ([x] [d] [ex] [xt] convert/at (aconvert/var xt tconvert/t wf/t d))
+	   coerce/t.
+
+-pi	: can-coerce
+	   (tconvert/pi
+	      (DconvA2 : {x} vof x A1 -> {ex} vtrans ex x -> tconvert (A2 x) (EA2 ex))
+	      (DconvA1 : tconvert A1 EA1))
+	   (tconvert/pi
+	      (DconvB2 : {x} vof x B1 -> {ex} vtrans ex x -> tconvert (B2 x) (EB2 ex))
+	      (DconvB1 : tconvert B1 EB1))
+	   (subtype/pi
+	      (Dsubtype2 : {x} subtype (A2' x) (B2 x) ([y] M2 x y))
+	      (Dsub : {x} tsub A2 (M1 x) (A2' x))
+	      (Dsubtype1 : subtype B1 A1 M1))
+	   ([z] [f] [ez] [zt]
+	      convert/lam
+	      ([x] [d] [ex] [xt]
+		 Dconv z f ez zt x d ex xt)
+	      DconvB1)
+	   (coerce/pi
+	      Dcoerce2
+	      Dreduce
+	      Dcoerce1)
+	   <- can-coerce DconvB1 DconvA1 Dsubtype1
+	      (Dconv1 : {x} vof x B1 -> {ex} vtrans ex x -> convert (M1 x) A1 (EM1 ex))
+	      (Dcoerce1 : coerce EB1 EA1 EM1)
+	   <- ({x} {d:vof x B1} {ex} {xt} {ed:evof ex EB1} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvB1 ed
+		 -> convert-tsub-reduce DconvA2 (Dconv1 x d ex xt) (Dsub x)
+		    (DconvA2' x d ex xt : tconvert (A2' x) (EA2' ex))
+		    (Dreduce ex dv : treduce (EA2 (EM1 ex)) (EA2' ex)))
+	   <- ({x} {d:vof x B1} {ex} {xt} {ed:evof ex EB1} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvB1 ed
+		 -> can-coerce (DconvA2' x d ex xt) (DconvB2 x d ex xt) (Dsubtype2 x)
+		    (Dconv2 x d ex xt : {y} vof y (A2' x)
+					 -> {ey} vtrans ey y
+					 -> convert (M2 x y) (B2 x) (EM2 ex ey))
+		    (Dcoerce2 ex dv : coerce (EA2' ex) (EB2 ex) ([ey] EM2 ex ey)))
+	   <- tconvert-reg-il DconvA1
+	      (DwfA1 : wf A1)
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-reg-il (DconvA2 x d ex xt)
+		 (DwfA2 x d : wf (A2 x)))
+	   <- ({z} {f:vof z (pi A1 A2)} {ez} {zt} {ef:evof ez (epi EA1 EA2)} {fv}
+		 vtrans-variable zt fv
+		 -> vsound f zt (tconvert/pi DconvA2 DconvA1) ef
+		 -> {x} {d:vof x B1} {ex} {xt} {ed:evof ex EB1} {dv}
+		    vtrans-variable xt dv
+		 -> vsound d xt DconvB1 ed
+		 -> convert-ssub (Dconv2 x d ex xt)
+		    (aconvert/app
+		       (Dsub x)
+		       (Dconv1 x d ex xt)
+		       (aconvert/var zt (tconvert/pi DconvA2 DconvA1) (wf/pi DwfA2 DwfA1) f)
+		       : aconvert (app z (M1 x)) (A2' x) (eapp ez (EM1 ex)))
+		    (Dconv z f ez zt x d ex xt
+		       : convert (M2 x (app z (M1 x))) (B2 x) (EM2 ex (eapp ez (EM1 ex))))).
+
+-sigma	: can-coerce
+	   (tconvert/sigma
+	      (DconvA2 : {x} vof x A1 -> {ex} vtrans ex x -> tconvert (A2 x) (EA2 ex))
+	      (DconvA1 : tconvert A1 EA1))
+	   (tconvert/sigma
+	      (DconvB2 : {x} vof x B1 -> {ex} vtrans ex x -> tconvert (B2 x) (EB2 ex))
+	      (DconvB1 : tconvert B1 EB1))
+	   (subtype/sigma
+	      (Dsubtype2 : {x} subtype (A2 x) (B2' x) ([y] M2 x y))
+	      (Dsub : {x} tsub B2 (M1 x) (B2' x))
+	      (Dsubtype1 : subtype A1 B1 M1))
+	   ([z] [f] [ez] [zt]
+	      convert/pair
+	      DwfB2
+	      (Dconv2'' z f ez zt)
+	      (Dsub (pi1 z))
+	      (Dconv1' z f ez zt))
+	   (coerce/sigma
+	      Dcoerce2
+	      Dreduce
+	      Dcoerce1)
+	   <- can-coerce DconvA1 DconvB1 Dsubtype1
+	      (Dconv1 : {x} vof x A1 -> {ex} vtrans ex x -> convert (M1 x) B1 (EM1 ex))
+	      (Dcoerce1 : coerce EA1 EB1 EM1)
+	   <- tconvert-reg-il DconvA1
+	      (DwfA1 : wf A1)
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-reg-il (DconvA2 x d ex xt)
+		 (DwfA2 x d : wf (A2 x)))
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-reg-il (DconvB2 x d ex xt)
+		 (DwfB2 x d : wf (B2 x)))
+	   <- ({z} {f:vof z (sigma A1 A2)} {ez} {zt} {ef:evof ez (esigma EA1 EA2)} {fv}
+		 vtrans-variable zt fv
+		 -> vsound f zt (tconvert/sigma DconvA2 DconvA1) ef
+		 -> convert-ssub Dconv1
+		    (aconvert/pi1
+		       (aconvert/var zt (tconvert/sigma DconvA2 DconvA1) (wf/sigma DwfA2 DwfA1) f)
+		       : aconvert (pi1 z) A1 (epi1 ez))
+		    (Dconv1' z f ez zt : convert (M1 (pi1 z)) B1 (EM1 (epi1 ez))))
+	   <- ({x} {d:vof x A1} {ex} {xt} {ed:evof ex EA1} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA1 ed
+		 -> convert-tsub-reduce DconvB2 (Dconv1 x d ex xt) (Dsub x)
+		    (DconvB2' x d ex xt : tconvert (B2' x) (EB2' ex))
+		    (Dreduce ex dv : treduce (EB2 (EM1 ex)) (EB2' ex)))
+	   <- ({x} {d:vof x A1} {ex} {xt} {ed:evof ex EA1} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA1 ed
+		 -> can-coerce (DconvA2 x d ex xt) (DconvB2' x d ex xt) (Dsubtype2 x)
+		    (Dconv2 x d ex xt : {y} vof y (A2 x)
+					 -> {ey} vtrans ey y
+					 -> convert (M2 x y) (B2' x) (EM2 ex ey))
+		    (Dcoerce2 ex dv : coerce (EA2 ex) (EB2' ex) ([ey] EM2 ex ey)))
+	   <- ({z} {f:vof z (sigma A1 A2)} {ez} {zt} {ef:evof ez (esigma EA1 EA2)} {fv}
+		 vtrans-variable zt fv
+		 -> vsound f zt (tconvert/sigma DconvA2 DconvA1) ef
+		 -> convert-ssub1 Dconv2
+		    (aconvert/pi1
+		       (aconvert/var zt (tconvert/sigma DconvA2 DconvA1) (wf/sigma DwfA2 DwfA1) f)
+		       : aconvert (pi1 z) A1 (epi1 ez))
+		    DwfA2
+		    (Dconv2' z f ez zt : {y} vof y (A2 (pi1 z))
+					  -> {ey} vtrans ey y
+					  -> convert (M2 (pi1 z) y) (B2' (pi1 z)) (EM2 (epi1 ez) ey)))
+	   <- ({z} {f:vof z (sigma A1 A2)} {ez} {zt} {ef:evof ez (esigma EA1 EA2)} {fv}
+		 vtrans-variable zt fv
+		 -> vsound f zt (tconvert/sigma DconvA2 DconvA1) ef
+		 -> convert-ssub (Dconv2' z f ez zt)
+		    (aconvert/pi2
+		       (aconvert/var zt (tconvert/sigma DconvA2 DconvA1) (wf/sigma DwfA2 DwfA1) f)
+		       : aconvert (pi2 z) (A2 (pi1 z)) (epi2 ez))
+		    (Dconv2'' z f ez zt 
+		       : convert (M2 (pi1 z) (pi2 z)) (B2' (pi1 z)) (EM2 (epi1 ez) (epi2 ez)))).
+
+-sing_t	: can-coerce
+	   (tconvert/sing 
+	      (DconvR : aconvert R t ER))
+	   tconvert/t
+	   subtype/sing_t
+	   ([_] [_] [_] [_] convert/at DconvR)
+	   coerce/sing_t.
+
+-sing	: can-coerce
+	   (tconvert/sing
+	      (DconvR : aconvert R t ER))
+	   (tconvert/sing
+	      (DconvR' : aconvert R t ER'))
+	   subtype/sing
+	   ([_] [_] [_] [_] convert/sing DconvR)
+	   Dcoerce
+	   <- aconvert-fun DconvR DconvR' _
+	      (Deq : eterm-eq ER ER')
+	   <- etp-resp-eterm esing Deq
+	      (Deq' : etp-eq (esing ER) (esing ER'))
+	   <- coerce-resp etp-eq/i Deq' ([_] eterm-eq/i) coerce/sing
+	      Dcoerce.
+
+%worlds (sbind) (can-coerce _ _ _ _ _).
+%total D (can-coerce _ _ D _ _).
+
+
+
+can-coerce' : tconvert A EA
+	      -> tconvert B EB
+	      -> subtype A B M
+	      -> ({x} vof x A -> {ex} vtrans ex x -> convert (M x) B (EM ex))
+	      -> coerce EA EB EM -> type.
+%mode can-coerce' +X1 +X2 +X3 +X4 -X5.
+
+-	: can-coerce' DconvA DconvB Dsubtype DconvM Dcoerce'
+	   <- can-coerce DconvA DconvB Dsubtype DconvM' Dcoerce
+	   <- ({x} {d} {ex} {xt}
+		 convert-fun (DconvM' x d ex xt) (DconvM x d ex xt) (Deq ex))
+	   <- coerce-resp etp-eq/i etp-eq/i Deq Dcoerce Dcoerce'.
+
+%worlds (sbind) (can-coerce' _ _ _ _ _).
+%total {} (can-coerce' _ _ _ _ _).
+
+
+
+coerce-fun : coerce A B M -> coerce A B M' -> ({x} eterm-eq (M x) (M' x)) -> type.
+%mode coerce-fun +X1 +X2 -X3.
+
+-	: coerce-fun coerce/t coerce/t ([_] eterm-eq/i).
+
+-	: coerce-fun (coerce/pi D3 D2 D1 : coerce (epi A1 A2) _ _) (coerce/pi D3' D2' D1') Deq'
+	   <- coerce-fun D1 D1' Deq1
+	   <- ({x}
+		 etp-resp-eterm A2 (Deq1 x) (Deq1' x))
+	   <- ({x} {dv}
+		 treduce-resp (Deq1' x) etp-eq/i (D2 x dv)
+		 (D2'' x dv))
+	   <- ({x} {dv}
+		 treduce-fun (D2'' x dv) (D2' x dv) (Deq2 x))
+	   <- ({x} {dv}
+		 coerce-resp (Deq2 x) etp-eq/i ([_] eterm-eq/i) (D3 x dv)
+		 (D3'' x dv))
+	   <- ({x} {dv}
+		 coerce-fun (D3'' x dv) (D3' x dv) ([y] Deq3 x y))
+	   <- ({z} {x}
+		 eterm-resp-eterm ([m] eapp z m) (Deq1 x) (Deq1'' z x))
+	   <- ({z} {x}
+		 eterm-resp-eterm-fun ([y] Deq3 x y) (Deq1'' z x) (Deq z x))
+	   <- ({z}
+		 elam-resp etp-eq/i (Deq z) (Deq' z)).
+
+-	: coerce-fun (coerce/sigma D3 D2 D1 : coerce _ (esigma B1 B2) _) (coerce/sigma D3' D2' D1') Deq
+	   <- coerce-fun D1 D1' Deq1
+	   <- ({x}
+		 etp-resp-eterm B2 (Deq1 x) (Deq1' x))
+	   <- ({x} {dv}
+		 treduce-resp (Deq1' x) etp-eq/i (D2 x dv)
+		 (D2'' x dv))
+	   <- ({x} {dv}
+		 treduce-fun (D2'' x dv) (D2' x dv) (Deq2 x))
+	   <- ({x} {dv}
+		 coerce-resp etp-eq/i (Deq2 x) ([_] eterm-eq/i) (D3 x dv)
+		 (D3'' x dv))
+	   <- ({x} {dv}
+		 coerce-fun (D3'' x dv) (D3' x dv) ([y] Deq3 x y))
+	   <- ({z}
+		 epair-resp (Deq1 (epi1 z)) (Deq3 (epi1 z) (epi2 z)) (Deq z)).
+
+-	: coerce-fun coerce/sing_t coerce/sing_t ([_] eterm-eq/i).
+
+-	: coerce-fun coerce/sing coerce/sing ([_] eterm-eq/i).
+
+%worlds (evvar | evbind | sbind) (coerce-fun _ _ _).
+%total D (coerce-fun _ D _).
+
+
+
+
+coerce-convert : tconvert A EA
+		  -> tconvert B EB
+		  -> coerce EA EB EM
+%%
+		  -> subtype A B M -> type.
+%mode coerce-convert +X1 +X2 +X3 -X4.
+
+-t	: coerce-convert tconvert/t tconvert/t coerce/t subtype/t.
+
+-pi	: coerce-convert
+	   (tconvert/pi
+	      (DconvA2 : {x} vof x A1 -> {ex} vtrans ex x -> tconvert (A2 x) (EA2 ex))
+	      (DconvA1 : tconvert A1 EA1))
+	   (tconvert/pi
+	      (DconvB2 : {x} vof x B1 -> {ex} vtrans ex x -> tconvert (B2 x) (EB2 ex))
+	      (DconvB1 : tconvert B1 EB1))
+	   (coerce/pi
+	      (Dcoerce2 : {ex} variable ex -> coerce (EA2' ex) (EB2 ex) ([ey] EM2 ex ey))
+	      (Dreduce : {ex} variable ex -> treduce (EA2 (EM1 ex)) (EA2' ex))
+	      (Dcoerce1 : coerce EB1 EA1 EM1)
+	      : coerce (epi EA1 EA2) (epi EB1 EB2) _)
+	   (subtype/pi
+	      Dsubtype2 DsubA2' Dsubtype1)
+	   <- coerce-convert DconvB1 DconvA1 Dcoerce1
+	      (Dsubtype1 : subtype B1 A1 M1)
+	   <- can-coerce DconvB1 DconvA1 Dsubtype1 
+	      (DconvM1' : {x} vof x B1 -> {ex} vtrans ex x -> convert (M1 x) A1 (EM1' ex))
+	      (Dcoerce1' : coerce EB1 EA1 EM1')
+	   <- coerce-fun Dcoerce1' Dcoerce1
+	      (DeqEM1 : {ex} eterm-eq (EM1' ex) (EM1 ex))
+	   <- ({x} {d:vof x B1} {ex} {xt}
+		 convert-resp term-eq/i tp-eq/i (DeqEM1 ex) (DconvM1' x d ex xt)
+		 (DconvM1 x d ex xt : convert (M1 x) A1 (EM1 ex)))
+	   <- tconvert-reg-il DconvA1
+	      (DwfA1 : wf A1)
+	   <- tconvert-reg-il DconvB1
+	      (DwfB1 : wf B1)
+	   <- subtype-reg Dsubtype1 DwfB1 DwfA1
+	      (DofM1 : {x} vof x B1 -> of (M1 x) A1)
+	   <- ({x} {d:vof x A1} {ex} {xt}
+		 tconvert-reg-il (DconvA2 x d ex xt)
+		 (DwfA2 x d : wf (A2 x)))
+	   <- ({x} {d:vof x B1}
+		 can-tsub DwfA2 (DofM1 x d)
+		 (DsubA2' x : tsub A2 (M1 x) (A2' x)))
+	   <- ({x} {d:vof x B1} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv 
+		 -> vsound d xt DconvB1 ed
+		 -> convert-tsub-reduce DconvA2 (DconvM1 x d ex xt) (DsubA2' x)
+		    (DconvA2'' x d ex xt : tconvert (A2' x) (EA2'' ex))
+		    (Dreduce' ex dv : treduce (EA2 (EM1 ex)) (EA2'' ex)))
+	   <- ({ex} {dv}
+		 treduce-fun (Dreduce' ex dv) (Dreduce ex dv)
+		 (DeqEA2 ex : etp-eq (EA2'' ex) (EA2' ex)))
+	   <- ({x} {d:vof x B1} {ex} {xt}
+		 tconvert-resp tp-eq/i (DeqEA2 ex) (DconvA2'' x d ex xt)
+		 (DconvA2' x d ex xt : tconvert (A2' x) (EA2' ex)))
+	   <- ({x} {d:vof x B1} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv 
+		 -> vsound d xt DconvB1 ed
+		 -> coerce-convert (DconvA2' x d ex xt) (DconvB2 x d ex xt) (Dcoerce2 ex dv)
+		    (Dsubtype2 x : subtype (A2' x) (B2 x) (M2 x))).
+
+-sigma	: coerce-convert
+	   (tconvert/sigma
+	      (DconvA2 : {x} vof x A1 -> {ex} vtrans ex x -> tconvert (A2 x) (EA2 ex))
+	      (DconvA1 : tconvert A1 EA1))
+	   (tconvert/sigma
+	      (DconvB2 : {x} vof x B1 -> {ex} vtrans ex x -> tconvert (B2 x) (EB2 ex))
+	      (DconvB1 : tconvert B1 EB1))
+	   (coerce/sigma
+	      (Dcoerce2 : {ex} variable ex -> coerce (EA2 ex) (EB2' ex) ([ey] EM2 ex ey))
+	      (Dreduce : {ex} variable ex -> treduce (EB2 (EM1 ex)) (EB2' ex))
+	      (Dcoerce1 : coerce EA1 EB1 EM1)
+	      : coerce (esigma EA1 EA2) (esigma EB1 EB2) _)
+	   (subtype/sigma
+	      Dsubtype2 DsubB2' Dsubtype1)
+	   <- coerce-convert DconvA1 DconvB1 Dcoerce1 
+	      (Dsubtype1 : subtype A1 B1 M1)
+	   <- can-coerce DconvA1 DconvB1 Dsubtype1 
+	      (DconvM1' : {x} vof x A1 -> {ex} vtrans ex x -> convert (M1 x) B1 (EM1' ex))
+	      (Dcoerce1' : coerce EA1 EB1 EM1')
+	   <- coerce-fun Dcoerce1' Dcoerce1
+	      (DeqEM1 : {ex} eterm-eq (EM1' ex) (EM1 ex))
+	   <- ({x} {d:vof x A1} {ex} {xt}
+		 convert-resp term-eq/i tp-eq/i (DeqEM1 ex) (DconvM1' x d ex xt)
+		 (DconvM1 x d ex xt : convert (M1 x) B1 (EM1 ex)))
+	   <- tconvert-reg-il DconvA1
+	      (DwfA1 : wf A1)
+	   <- tconvert-reg-il DconvB1
+	      (DwfB1 : wf B1)
+	   <- subtype-reg Dsubtype1 DwfA1 DwfB1
+	      (DofM1 : {x} vof x A1 -> of (M1 x) B1)
+	   <- ({x} {d:vof x B1} {ex} {xt}
+		 tconvert-reg-il (DconvB2 x d ex xt)
+		 (DwfB2 x d : wf (B2 x)))
+	   <- ({x} {d:vof x A1}
+		 can-tsub DwfB2 (DofM1 x d)
+		 (DsubB2' x : tsub B2 (M1 x) (B2' x)))
+	   <- ({x} {d:vof x A1} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv 
+		 -> vsound d xt DconvA1 ed
+		 -> convert-tsub-reduce DconvB2 (DconvM1 x d ex xt) (DsubB2' x)
+		    (DconvB2'' x d ex xt : tconvert (B2' x) (EB2'' ex))
+		    (Dreduce' ex dv : treduce (EB2 (EM1 ex)) (EB2'' ex)))
+	   <- ({ex} {dv}
+		 treduce-fun (Dreduce' ex dv) (Dreduce ex dv)
+		 (DeqEB2 ex : etp-eq (EB2'' ex) (EB2' ex)))
+	   <- ({x} {d:vof x A1} {ex} {xt}
+		 tconvert-resp tp-eq/i (DeqEB2 ex) (DconvB2'' x d ex xt)
+		 (DconvB2' x d ex xt : tconvert (B2' x) (EB2' ex)))
+	   <- ({x} {d:vof x A1} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv 
+		 -> vsound d xt DconvA1 ed
+		 -> coerce-convert (DconvA2 x d ex xt) (DconvB2' x d ex xt) (Dcoerce2 ex dv)
+		    (Dsubtype2 x : subtype (A2 x) (B2' x) (M2 x))).
+
+-sing_t	: coerce-convert (tconvert/sing _) tconvert/t coerce/sing_t subtype/sing_t.
+
+-sing	: coerce-convert (tconvert/sing Dconv) (tconvert/sing Dconv') coerce/sing D
+	   <- aconvert-fun2 Dconv Dconv' Deq _
+	   <- tp-resp-atom sing Deq Deq'
+	   <- subtype-resp tp-eq/i Deq' ([_] term-eq/i) subtype/sing D.
+
+%worlds (sbind) (coerce-convert _ _ _ _).
+%total D (coerce-convert _ _ D _).
+
+
+
+coerce-convert' : tconvert A EA
+		   -> tconvert B EB
+		   -> coerce EA EB EM
+%%
+		   -> subtype A B M
+		   -> ({x} vof x A -> {ex} vtrans ex x -> convert (M x) B (EM ex)) -> type.
+%mode coerce-convert' +X1 +X2 +X3 -X4 -X5.
+
+-	: coerce-convert' DconvA DconvB Dcoerce Dsubtype DconvM'
+	   <- coerce-convert DconvA DconvB Dcoerce Dsubtype
+	   <- can-coerce DconvA DconvB Dsubtype DconvM Dcoerce'
+	   <- coerce-fun Dcoerce' Dcoerce Deq
+	   <- ({x} {d} {ex} {xt}
+		 convert-resp term-eq/i tp-eq/i (Deq ex) (DconvM x d ex xt)
+		 (DconvM' x d ex xt)).
+
+%worlds (sbind) (coerce-convert' _ _ _ _ _).
+%total {} (coerce-convert' _ _ _ _ _).
+
+
+
+
+%%%%%  Canonization  %%%%%
+
+canonize-comp : trans EM A -> tconvert A EA -> canonize EM EA -> type.
+%mode canonize-comp +X1 -X2 -X3.
+
+tcanonize-comp : ttrans EA A -> tconvert A EA' -> tcanonize EA EA' -> type.
+%mode tcanonize-comp +X1 -X2 -X3.
+
+-const	: canonize-comp
+	   (trans/const
+	      (Dself : self M A As)
+	      (Dexpand : expand (const C) A M)
+	      (DwfA : wf A)
+	      (Dkof : kof C A))
+	   DconvAs
+	   (canonize/const Dselfify Dekof)
+	   <- can-tconvert DwfA
+	      (DconvA : tconvert A EA)
+	   <- convert-kof Dkof DconvA
+	      (Dekof : ekof C EA)
+	   <- can-selfify Dexpand Dself DconvA
+	      (aconvert/const DconvA DwfA Dkof)
+	      (DconvM : convert M A EM)
+	      (DconvAs : tconvert As EAs)
+	      (Dselfify : selfify (econst C) EA EM EAs).
+
+-forall	: canonize-comp
+	   (trans/forall
+	      (Dself : self M (qtp A) B)
+	      (Dexpand : expand (forall A) (qtp A) M)
+	      (DtransA : ttrans EA A))
+	   DconvB
+	   (canonize/forall Dselfify Dcanon)
+	   <- tcanonize-comp DtransA
+	      (DconvA : tconvert A EA')
+	      (Dcanon : tcanonize EA EA')
+	   <- can-selfify Dexpand Dself
+	      (tconvert/pi ([_] [_] [_] [_] tconvert/t) (tconvert/pi ([_] [_] [_] [_] tconvert/t) DconvA))
+	      (aconvert/forall DconvA)
+	      (DconvM : convert M (qtp A) EM)
+	      (DconvB : tconvert B EB)
+	      (Dselfify : selfify (eforall EA') (qetp EA') EM EB).
+
+-var	: canonize-comp 
+	   (trans/var 
+	      (Dself : self M A As)
+	      (Dexpand : expand X A M)
+	      (Dwf : wf A)
+	      (Dvof : vof X A)
+	      (Dtrans : vtrans EX X))
+	   DconvAs
+	   (canonize/var Dselfify Devof)
+	   <- vsound' Dvof Dtrans
+	      (DconvA : tconvert A EA)
+	      (Devof : evof EX EA)
+	   <- can-selfify Dexpand Dself DconvA
+	      (aconvert/var Dtrans DconvA Dwf Dvof)
+	      (DconvM : convert M A EM)
+	      (DconvAs : tconvert As EAs)
+	      (Dselfify : selfify EX EA EM EAs).
+
+-app	: canonize-comp
+	   (trans/app
+	      (DsubBx : tsub B N Bx)
+	      (Dsubtype : subtype C A ([_] N))
+	      (DtransN : trans EN C)
+	      (DtransM : trans EM (pi A B)))
+	   DconvBx
+	   (canonize/app Dreduce Dcoerce DcanonN DcanonM)
+	   <- canonize-comp DtransM
+	      (tconvert/pi
+		 (DconvB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+		 (DconvA : tconvert A EA))
+	      (DcanonM : canonize EM (epi EA EB))
+	   <- canonize-comp DtransN
+	      (DconvC : tconvert C EC)
+	      (DcanonN : canonize EN EC)
+	   <- trans-reg DtransM
+	      (wf/pi
+		 (DwfB : {x} vof x A -> wf (B x))
+		 (DwfA : wf A))
+	   <- trans-reg DtransN
+	      (DwfC : wf C)
+	   <- subtype-reg' Dsubtype DwfC DwfA
+	      (DofN : of N A)
+	   <- can-convert DofN
+	      (DconvN : convert N A EN')
+	   <- can-coerce' DconvC DconvA Dsubtype ([_] [_] [_] [_] DconvN)
+	      (Dcoerce : coerce EC EA ([_] EN'))
+	   <- convert-tsub-reduce DconvB DconvN DsubBx
+	      (DconvBx : tconvert Bx EBx)
+	      (Dreduce : treduce (EB EN') EBx).
+
+-pi1	: canonize-comp
+	   (trans/pi1
+	      (Dtrans : trans EM (sigma A ([_] B))))
+	   DconvA
+	   (canonize/pi1 Dcanon')
+	   <- canonize-comp Dtrans
+	      (tconvert/sigma
+		 (DconvB' : {x} vof x A -> {ex} vtrans ex x -> tconvert B (EB' ex))
+		 (DconvA : tconvert A EA))
+	      (Dcanon : canonize EM (esigma EA EB'))
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-reg-il (DconvB' x d ex xt)
+		 (DwfB x d : wf B))
+	   <- strengthen-wf DwfB
+	      (DwfB' : wf B)
+	   <- can-tconvert DwfB'
+	      (DconvB : tconvert B EB)
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-fun (DconvB' x d ex xt) DconvB
+		 (DeqB ex : etp-eq (EB' ex) EB))
+	   <- esigma-resp etp-eq/i DeqB
+	      (Deq : etp-eq (esigma EA EB') (esigma EA ([_] EB)))
+	   <- canonize-resp eterm-eq/i Deq Dcanon
+	      (Dcanon' : canonize EM (esigma EA ([_] EB))).
+
+-pi2	: canonize-comp
+	   (trans/pi2
+	      (Dtrans : trans EM (sigma A ([_] B))))
+	   DconvB
+	   (canonize/pi2 Dcanon')
+	   <- canonize-comp Dtrans
+	      (tconvert/sigma
+		 (DconvB' : {x} vof x A -> {ex} vtrans ex x -> tconvert B (EB' ex))
+		 (DconvA : tconvert A EA))
+	      (Dcanon : canonize EM (esigma EA EB'))
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-reg-il (DconvB' x d ex xt)
+		 (DwfB x d : wf B))
+	   <- strengthen-wf DwfB
+	      (DwfB' : wf B)
+	   <- can-tconvert DwfB'
+	      (DconvB : tconvert B EB)
+	   <- ({x} {d} {ex} {xt}
+		 tconvert-fun (DconvB' x d ex xt) DconvB
+		 (DeqB ex : etp-eq (EB' ex) EB))
+	   <- esigma-resp etp-eq/i DeqB
+	      (Deq : etp-eq (esigma EA EB') (esigma EA ([_] EB)))
+	   <- canonize-resp eterm-eq/i Deq Dcanon
+	      (Dcanon' : canonize EM (esigma EA ([_] EB))).
+
+-lam	: canonize-comp
+	   (trans/lam
+	      (DtransM : {x} vof x A -> {ex} vtrans ex x -> trans (EM ex) (B x))
+	      (DtransA : ttrans EA A))
+	   (tconvert/pi DconvB DconvA)
+	   (canonize/lam DcanonM DcanonA)
+	   <- tcanonize-comp DtransA
+	      (DconvA : tconvert A EA')
+	      (DcanonA : tcanonize EA EA')
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> canonize-comp (DtransM x d ex xt)
+		    (DconvB x d ex xt : tconvert (B x) (EB ex))
+		    (DcanonM ex ed dv : canonize (EM ex) (EB ex))).
+
+-pair	: canonize-comp
+	   (trans/pair
+	      (DtransN : trans EN B)
+	      (DtransM : trans EM A))
+	   (tconvert/sigma ([_] [_] [_] [_] DconvB) DconvA)
+	   (canonize/pair DcanonN DcanonM)
+	   <- canonize-comp DtransM
+	      (DconvA : tconvert A EA)
+	      (DcanonM : canonize EM EA)
+	   <- canonize-comp DtransN
+	      (DconvB : tconvert B EB)
+	      (DcanonN : canonize EN EB).
+
+
+
+-t	: tcanonize-comp
+	   ttrans/t
+	   tconvert/t
+	   tcanonize/t.
+
+-pi	: tcanonize-comp
+	   (ttrans/pi
+	      (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+	      (DtransA : ttrans EA A))
+	   (tconvert/pi DconvB DconvA)
+	   (tcanonize/pi DcanonB DcanonA)
+	   <- tcanonize-comp DtransA
+	      (DconvA : tconvert A EA')
+	      (DcanonA : tcanonize EA EA')
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> tcanonize-comp (DtransB x d ex xt)
+		    (DconvB x d ex xt : tconvert (B x) (EB' ex))
+		    (DcanonB ex ed dv : tcanonize (EB ex) (EB' ex))).
+
+-sigma	: tcanonize-comp
+	   (ttrans/sigma
+	      (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+	      (DtransA : ttrans EA A))
+	   (tconvert/sigma DconvB DconvA)
+	   (tcanonize/sigma DcanonB DcanonA)
+	   <- tcanonize-comp DtransA
+	      (DconvA : tconvert A EA')
+	      (DcanonA : tcanonize EA EA')
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> tcanonize-comp (DtransB x d ex xt)
+		    (DconvB x d ex xt : tconvert (B x) (EB' ex))
+		    (DcanonB ex ed dv : tcanonize (EB ex) (EB' ex))).
+
+-sing	: tcanonize-comp
+	   (ttrans/sing
+	      (Dtrans : trans EM (sing R)))
+	   (tconvert/sing Dconv)
+	   (tcanonize/sing Dcanon)
+	   <- canonize-comp Dtrans
+	      (tconvert/sing
+		 (Dconv : aconvert R t ER))
+	      (Dcanon : canonize EM (esing ER)).
+
+%worlds (sbind) (canonize-comp _ _ _) (tcanonize-comp _ _ _).
+%total (D1 D2) (canonize-comp D1 _ _) (tcanonize-comp D2 _ _).
+
+
+
+canonize-comp' : trans EM A -> tconvert A EA -> canonize EM EA -> type.
+%mode canonize-comp' +X1 +X2 -X3.
+
+-	: canonize-comp' Dtrans Dconv Dcanon'
+	   <- canonize-comp Dtrans Dconv' Dcanon
+	   <- tconvert-fun Dconv' Dconv Deq
+	   <- canonize-resp eterm-eq/i Deq Dcanon Dcanon'.
+
+%worlds (sbind) (canonize-comp' _ _ _).
+%total {} (canonize-comp' _ _ _).
+
+
+
+tcanonize-comp' : ttrans EA A -> tconvert A EA' -> tcanonize EA EA' -> type.
+%mode tcanonize-comp' +X1 +X2 -X3.
+
+-	: tcanonize-comp' Dtrans Dconv Dcanon'
+	   <- tcanonize-comp Dtrans Dconv' Dcanon
+	   <- tconvert-fun Dconv' Dconv Deq
+	   <- tcanonize-resp etp-eq/i Deq Dcanon Dcanon'.
+
+%worlds (sbind) (tcanonize-comp' _ _ _).
+%total {} (tcanonize-comp' _ _ _).
+
+
+
+ekof-fun : ekof C A -> ekof C A' -> etp-eq A A' -> type.
+%mode ekof-fun +X1 +X2 -X3.
+
+-	: ekof-fun (ekof/i Detopen Dckof) (ekof/i Detopen' Dckof) Deq
+	   <- etopen-fun Detopen Detopen' Deq.
+
+%worlds (evbind | sbind) (ekof-fun _ _ _).
+%total {} (ekof-fun _ _ _).
+
+
+
+canonize-fun : canonize M A -> canonize M A' -> etp-eq A A' -> type.
+%mode canonize-fun +X1 +X2 -X3.
+
+tcanonize-fun : tcanonize B A -> tcanonize B A' -> etp-eq A A' -> type.
+%mode tcanonize-fun +X1 +X2 -X3.
+
+-	: canonize-fun (canonize/const D Dkof) (canonize/const D' Dkof') Deq'
+	   <- ekof-fun Dkof Dkof' Deq
+	   <- selfify-resp eterm-eq/i Deq eterm-eq/i etp-eq/i D D''
+	   <- selfify-fun D'' D' _ Deq'.
+
+-	: canonize-fun (canonize/forall D2 D1) (canonize/forall D2' D1') Deq
+	   <- tcanonize-fun D1 D1' Deq1
+	   <- eterm-resp-etp eforall Deq1 Deq1'
+	   <- etp-resp-etp qetp Deq1 Deq1''
+	   <- selfify-resp Deq1' Deq1'' eterm-eq/i etp-eq/i D2 D2''
+	   <- selfify-fun D2'' D2' _ Deq.
+
+-	: canonize-fun (canonize/var D Dvof) (canonize/var D' Dvof) Deq
+	   <- selfify-fun D D' _ Deq.
+
+-	: canonize-fun (canonize/app D4 D3 D2 D1) (canonize/app D4' D3' D2' D1') Deq
+	   <- canonize-fun D1 D1' Deq1
+	   <- etp-eq-cdr-epi Deq1 Deq1a Deq1b
+	   <- canonize-fun D2 D2' Deq2
+	   <- coerce-resp Deq2 Deq1a ([_] eterm-eq/i) D3 D3''
+	   <- coerce-fun D3'' D3' Deq3
+	   <- etp-resp-eterm-fun Deq1b (Deq3 eaca) Deq3'
+	   <- treduce-resp Deq3' etp-eq/i D4 D4''
+	   <- treduce-fun D4'' D4' Deq.
+
+-	: canonize-fun (canonize/pi1 D) (canonize/pi1 D') Deq1
+	   <- canonize-fun D D' Deq
+	   <- etp-eq-cdr-esigma Deq Deq1 Deq2.
+
+-	: canonize-fun (canonize/pi2 D) (canonize/pi2 D') (Deq2 eaca)
+	   <- canonize-fun D D' Deq
+	   <- etp-eq-cdr-esigma Deq Deq1 Deq2.
+
+-	: canonize-fun (canonize/lam D2 D1) (canonize/lam D2' D1') Deq
+	   <- tcanonize-fun D1 D1' Deq1
+	   <- canonize-resp-underbind Deq1 D2 D2''
+	   <- ({x} {d} {dv}
+		 canonize-fun (D2'' x d dv) (D2' x d dv) (Deq2 x))
+	   <- epi-resp Deq1 Deq2 Deq.
+
+-	: canonize-fun (canonize/pair D2 D1) (canonize/pair D2' D1') Deq
+	   <- canonize-fun D1 D1' Deq1
+	   <- canonize-fun D2 D2' Deq2
+	   <- esigma-resp Deq1 ([_] Deq2) Deq.
+
+
+
+-	: tcanonize-fun tcanonize/t tcanonize/t etp-eq/i.
+
+-	: tcanonize-fun (tcanonize/pi D2 D1) (tcanonize/pi D2' D1') Deq
+	   <- tcanonize-fun D1 D1' Deq1
+	   <- tcanonize-resp-underbind Deq1 D2 D2''
+	   <- ({x} {d} {dv}
+		 tcanonize-fun (D2'' x d dv) (D2' x d dv) (Deq2 x))
+	   <- epi-resp Deq1 Deq2 Deq.
+
+-	: tcanonize-fun (tcanonize/sigma D2 D1) (tcanonize/sigma D2' D1') Deq
+	   <- tcanonize-fun D1 D1' Deq1
+	   <- tcanonize-resp-underbind Deq1 D2 D2''
+	   <- ({x} {d} {dv}
+		 tcanonize-fun (D2'' x d dv) (D2' x d dv) (Deq2 x))
+	   <- esigma-resp Deq1 Deq2 Deq.
+
+-	: tcanonize-fun (tcanonize/sing D) (tcanonize/sing D') Deq
+	   <- canonize-fun D D' Deq.
+
+%worlds (evbind | sbind) (canonize-fun _ _ _) (tcanonize-fun _ _ _).
+%total (D1 D2) (canonize-fun _ D1 _) (tcanonize-fun _ D2 _).
+
+
+
+etopen-reg : etopen Ac A -> ewf A -> type.
+%mode etopen-reg +X1 -X2.
+
+-	: etopen-reg etopen/t ewf/t.
+
+-	: etopen-reg (etopen/pi D2 D1) (ewf/pi ([_] [_] D2') D1')
+	   <- etopen-reg D1 D1'
+	   <- etopen-reg D2 D2'.
+
+%worlds (scbind) (etopen-reg _ _).
+%total D (etopen-reg D _).
+
+
+
+ekof-reg : ekof K A -> ewf A -> type.
+%mode ekof-reg +X1 -X2.
+
+-	: ekof-reg (ekof/i Dopen _) Dwf
+	   <- etopen-reg Dopen Dwf.
+
+%worlds (scbind) (ekof-reg _ _).
+%total {} (ekof-reg _ _).
+
+
+
+canonize-trans : canonize EM EA -> trans EM A -> type.
+%mode canonize-trans +X1 -X2.
+
+canonize-trans' : canonize EM EA -> trans EM A -> tconvert A EA -> type.
+%mode canonize-trans' +X1 -X2 -X3.
+
+tcanonize-trans : tcanonize EA EA' -> ttrans EA A -> type.
+%mode tcanonize-trans +X1 -X2.
+
+tcanonize-trans' : tcanonize EA EA' -> ttrans EA A -> tconvert A EA' -> type.
+%mode tcanonize-trans' +X1 -X2 -X3.
+
+-const	: canonize-trans 
+	   (canonize/const
+	      _
+	      (Dekof : ekof C EA))
+	   (trans/const Dself Dexpand Dwf Dkof)
+	   <- ekof-reg Dekof Dewf
+	   <- wf-comp Dewf
+	      (Dtrans : ttrans EA A)
+	   <- kof-comp Dekof Dtrans 
+	      (Dkof : kof C A)
+	   <- ttrans-reg Dtrans
+	      (Dwf : wf A)
+	   <- can-expand (const C) A M
+	      (Dexpand : expand (const C) A M)
+	   <- expand-reg (aof/const Dwf Dkof) Dexpand
+	      (Dof : of M A)
+	   <- can-self Dof
+	      (Dself : self M A As).
+
+-forall	: canonize-trans
+	   (canonize/forall
+	      _
+	      (Dcanon : tcanonize EA EA'))
+	   (trans/forall
+	      Dself
+	      Dexpand
+	      Dtrans)
+	   <- tcanonize-trans Dcanon
+	      (Dtrans : ttrans EA A)
+	   <- ttrans-reg Dtrans
+	      (Dwf : wf A)
+	   <- can-expand (forall A) (qtp A) M
+	      (Dexpand : expand (forall A) (qtp A) M)
+	   <- expand-reg (aof/forall Dwf) Dexpand
+	      (Dof : of M (qtp A))
+	   <- can-self Dof
+	      (Dself : self M (qtp A) B).
+
+-var	: canonize-trans
+	   (canonize/var
+	      _
+	      (Devof : evof EX EA))
+	   (trans/var Dself Dexpand DwfA Dvof Dvtrans)
+	   <- vof-comp Devof
+	      (Dttrans : ttrans EA A)
+	      (Dvtrans : vtrans EX X)
+	      (Dvof : vof X A)
+	   <- ttrans-reg Dttrans
+	      (DwfA : wf A)
+	   <- can-expand X A M
+	      (Dexpand : expand X A M)
+	   <- expand-reg (aof/var DwfA Dvof) Dexpand
+	      (Dof : of M A)
+	   <- can-self Dof
+	      (Dself : self M A As).
+
+-app	: canonize-trans
+	   (canonize/app
+	      (Dreduce : treduce (EB EN') ED)
+	      (Dcoerce : coerce EC EA ([_] EN'))
+	      (DcanonN : canonize EN EC)
+	      (DcanonM : canonize EM (epi EA EB)))
+	   (trans/app DsubBx Dsubtype' DtransN DtransM)
+	   <- canonize-trans' DcanonM
+	      (DtransM : trans EM (pi A B))
+	      (tconvert/pi
+		 (DconvB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+		 (DconvA : tconvert A EA))
+	   <- canonize-trans' DcanonN
+	      (DtransN : trans EN C)
+	      (DconvC : tconvert C EC)
+	   <- coerce-convert' DconvC DconvA Dcoerce
+	      (Dsubtype : subtype C A N)
+	      (DconvN : {x} vof x C -> {ex} vtrans ex x -> convert (N x) A EN')
+	   <- trans-subtype DtransN Dsubtype
+	      (Dsubtype' : subtype C A ([_] N'))
+	      (DeqN : {x} term-eq (N x) N')
+	   <- trans-reg DtransM
+	      (wf/pi
+		 (DwfB : {x} vof x A -> wf (B x))
+		 (DwfA : wf A))
+	   <- trans-reg DtransN
+	      (DwfC : wf C)
+	   <- subtype-reg' Dsubtype' DwfC DwfA
+	      (DofN' : of N' A)
+	   <- can-tsub DwfB DofN'
+	      (DsubBx : tsub B N' Bx).
+
+-pi1	: canonize-trans
+	   (canonize/pi1
+	      (Dcanon : canonize EM (esigma EA ([_] EB))))
+	   (trans/pi1 Dtrans')
+	   <- canonize-trans' Dcanon
+	      (Dtrans : trans EM (sigma A B))
+	      (tconvert/sigma
+		 (DconvB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) EB)
+		 (DconvA : tconvert A EA))
+	   <- trans-principal Dtrans (Dprincipal : principal (sigma A B))
+	   <- principal-sigma-invert Dprincipal
+	      (DeqB : {x} tp-eq (B x) B')
+	   <- sigma-resp tp-eq/i DeqB
+	      (Deq : tp-eq (sigma A B) (sigma A ([_] B')))
+	   <- trans-resp eterm-eq/i Deq Dtrans
+	      (Dtrans' : trans EM (sigma A ([_] B'))).
+
+-pi2	: canonize-trans
+	   (canonize/pi2
+	      (Dcanon : canonize EM (esigma EA ([_] EB))))
+	   (trans/pi2 Dtrans')
+	   <- canonize-trans' Dcanon
+	      (Dtrans : trans EM (sigma A B))
+	      (tconvert/sigma
+		 (DconvB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) EB)
+		 (DconvA : tconvert A EA))
+	   <- trans-principal Dtrans (Dprincipal : principal (sigma A B))
+	   <- principal-sigma-invert Dprincipal
+	      (DeqB : {x} tp-eq (B x) B')
+	   <- sigma-resp tp-eq/i DeqB
+	      (Deq : tp-eq (sigma A B) (sigma A ([_] B')))
+	   <- trans-resp eterm-eq/i Deq Dtrans
+	      (Dtrans' : trans EM (sigma A ([_] B'))).
+
+-lam	: canonize-trans
+	   (canonize/lam
+	      (DcanonM : {ex} evof ex EA' -> variable ex -> canonize (EM ex) (EB ex))
+	      (DcanonA : tcanonize EA EA'))
+	   (trans/lam
+	       DtransM DtransA)
+	   <- tcanonize-trans' DcanonA
+	      (DtransA : ttrans EA A)
+	      (DconvA : tconvert A EA')
+	   <- ttrans-reg DtransA 
+	      (DwfA : wf A)
+	   <- invert-tconvert DconvA
+	      (DtransA' : ttrans EA' A)
+	   <- ({x} {d:vof x A} {ex} {xt} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> vof-comp ed DtransA' xt d
+		 -> canonize-trans (DcanonM ex ed dv)
+		    (DtransM x d ex xt : trans (EM ex) (B x))).
+
+-pair	: canonize-trans
+	   (canonize/pair
+	      (DcanonN : canonize EN EB)
+	      (DcanonM : canonize EM EA))
+	   (trans/pair DtransN DtransM)
+	   <- canonize-trans DcanonM DtransM
+	   <- canonize-trans DcanonN DtransN.
+
+
+
+-t	: tcanonize-trans tcanonize/t ttrans/t.
+
+-pi	: tcanonize-trans
+	   (tcanonize/pi
+	      (DcanonB : {ex} evof ex EA' -> variable ex -> tcanonize (EB ex) (EB' ex))
+	      (DcanonA : tcanonize EA EA'))
+	   (ttrans/pi
+	       DtransB DtransA)
+	   <- tcanonize-trans' DcanonA
+	      (DtransA : ttrans EA A)
+	      (DconvA : tconvert A EA')
+	   <- ttrans-reg DtransA 
+	      (DwfA : wf A)
+	   <- invert-tconvert DconvA
+	      (DtransA' : ttrans EA' A)
+	   <- ({x} {d:vof x A} {ex} {xt} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> vof-comp ed DtransA' xt d
+		 -> tcanonize-trans (DcanonB ex ed dv)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))).
+
+-sigma	: tcanonize-trans
+	   (tcanonize/sigma
+	      (DcanonB : {ex} evof ex EA' -> variable ex -> tcanonize (EB ex) (EB' ex))
+	      (DcanonA : tcanonize EA EA'))
+	   (ttrans/sigma
+	       DtransB DtransA)
+	   <- tcanonize-trans' DcanonA
+	      (DtransA : ttrans EA A)
+	      (DconvA : tconvert A EA')
+	   <- ttrans-reg DtransA 
+	      (DwfA : wf A)
+	   <- invert-tconvert DconvA
+	      (DtransA' : ttrans EA' A)
+	   <- ({x} {d:vof x A} {ex} {xt} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> vof-comp ed DtransA' xt d
+		 -> tcanonize-trans (DcanonB ex ed dv)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))).
+
+-sing	: tcanonize-trans
+	   (tcanonize/sing
+	      (Dcanon : canonize EM (esing EM')))
+	   (ttrans/sing Dtrans)
+	   <- canonize-trans' Dcanon
+	      (Dtrans : trans EM (sing R))
+	      (tconvert/sing
+		 (Dconv : aconvert R t EM')).
+
+
+
+-	: canonize-trans' Dcanon Dtrans Dconv'
+	   <- canonize-trans Dcanon Dtrans
+	   <- canonize-comp Dtrans Dconv Dcanon'
+	   <- canonize-fun Dcanon' Dcanon Deq
+	   <- tconvert-resp tp-eq/i Deq Dconv Dconv'.
+
+
+-	: tcanonize-trans' Dcanon Dtrans Dconv'
+	   <- tcanonize-trans Dcanon Dtrans
+	   <- tcanonize-comp Dtrans Dconv Dcanon'
+	   <- tcanonize-fun Dcanon' Dcanon Deq
+	   <- tconvert-resp tp-eq/i Deq Dconv Dconv'.
+
+%worlds (scbind) (canonize-trans _ _) (tcanonize-trans _ _) (canonize-trans' _ _ _) (tcanonize-trans' _ _ _).
+%total (D1 D2 D3 D4) (canonize-trans D1 _) (tcanonize-trans D2 _) (canonize-trans' D3 _ _) (tcanonize-trans' D4 _ _).
+
+
+
+canonize-sound : canonize EM EA -> eof EM EA -> type.
+%mode canonize-sound +X1 -X2.
+
+-	: canonize-sound (Dcanon : canonize EM EA) Dof
+	   <- canonize-trans' Dcanon
+	      (Dtrans : trans EM A)
+	      (Dconv : tconvert A EA)
+	   <- sound-trans' Dtrans Dconv
+	      (Dof : eof EM EA).
+
+%worlds (scbind) (canonize-sound _ _).
+%total {} (canonize-sound _ _).
+
+
+
+tcanonize-sound : tcanonize EA EB -> tequiv EA EB -> type.
+%mode tcanonize-sound +X1 -X2.
+
+-	: tcanonize-sound (Dcanon : tcanonize EA EB) Dequiv
+	   <- tcanonize-trans' Dcanon
+	      (Dtrans : ttrans EA B)
+	      (Dconv : tconvert B EB)
+	   <- sound-ttrans' Dtrans Dconv
+	      (Dequiv : tequiv EA EB).
+
+%worlds (scbind) (tcanonize-sound _ _).
+%total {} (tcanonize-sound _ _).
+
+
+
+canonize-idem : canonize EM EA -> tcanonize EA EA -> type.
+%mode canonize-idem +X1 -X2.
+
+-	: canonize-idem (Dcanon : canonize EM EA) Dcanon'
+	   <- canonize-trans' Dcanon _ (Dconv : tconvert A EA)
+	   <- invert-tconvert Dconv (Dtrans : ttrans EA A)
+	   <- tcanonize-comp' Dtrans Dconv (Dcanon' : tcanonize EA EA).
+
+%worlds (scbind) (canonize-idem _ _).
+%total {} (canonize-idem _ _).
+
+
+
+tcanonize-idem : tcanonize EA EB -> tcanonize EB EB -> type.
+%mode tcanonize-idem +X1 -X2.
+
+-	: tcanonize-idem Dcanon Dcanon'
+	   <- tcanonize-trans' Dcanon _ Dconv
+	   <- invert-tconvert Dconv Dtrans
+	   <- tcanonize-comp' Dtrans Dconv Dcanon'.
+
+%worlds (scbind) (tcanonize-idem _ _).
+%total {} (tcanonize-idem _ _).
+
+
+
+
+%%%%%  Check-Eof  %%%%%
+
+check-eof-comp : eof EM EA -> check-eof EM EA -> type.
+%mode check-eof-comp +X1 -X2.
+
+-	: check-eof-comp 
+	   (Deof : eof EM EA)
+	   (check-eof/i Dcoerce DcanonA DcanonM)
+	   <- of-comp Deof
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM B)
+	      (Dsubtype : subtype B A _)
+	   <- canonize-comp DtransM
+	      (DconvB : tconvert B EB)
+	      (DcanonM : canonize EM EB)
+	   <- tcanonize-comp DtransA
+	      (DconvA : tconvert A EA')
+	      (DcanonA : tcanonize EA EA')
+	   <- can-coerce DconvB DconvA Dsubtype
+	      _
+	      (Dcoerce : coerce EB EA' _).
+
+%worlds (scbind) (check-eof-comp _ _).
+%total {} (check-eof-comp _ _).
+
+
+
+check-eof-sound : check-eof EM EA -> eof EM EA -> type.
+%mode check-eof-sound +X1 -X2.
+
+-	: check-eof-sound
+	   (check-eof/i
+	      (Dcoerce : coerce EB EA' _)
+	      (DcanonA : tcanonize EA EA')
+	      (DcanonM : canonize EM EB))
+	   (eof/equiv
+	      (tequiv/symm Dequiv)
+	      (eof/subsume
+		 Dsubtp
+		 Deof))
+	   <- canonize-trans' DcanonM
+	      (DtransM : trans EM B)
+	      (DconvB : tconvert B EB)
+	   <- tcanonize-trans' DcanonA
+	      (DtransA : ttrans EA A)
+	      (DconvA : tconvert A EA')
+	   <- sound-trans' DtransM DconvB
+	      (Deof : eof EM EB)
+	   <- sound-ttrans' DtransA DconvA
+	      (Dequiv : tequiv EA EA')
+	   <- coerce-convert DconvB DconvA Dcoerce
+	      (Dsubtype : subtype B A M)
+	   <- convert-subtype Dsubtype DconvB DconvA
+	      (Dsubtp : subtp EB EA') _ _.
+
+%worlds (scbind) (check-eof-sound _ _).
+%total {} (check-eof-sound _ _).
+
+
+
+
+%%%%%  Check-Equiv  %%%%%
+
+check-equiv-comp : equiv EM EN EA -> check-equiv EM EN EA -> type.
+%mode check-equiv-comp +X1 -X2.
+
+-	: check-equiv-comp 
+	   (Dequiv : equiv EM EN EA)
+	   (check-equiv/i DcoerceCA DcoerceBA DcanonA DcanonN DcanonM)
+	   <- equiv-comp Dequiv
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM B)
+	      (DtransN : trans EN C)
+	      (DsubtypeBA : subtype B A O)
+	      (DsubtypeCA : subtype C A O)
+	   <- tcanonize-comp DtransA
+	      (DconvA : tconvert A EA')
+	      (DcanonA : tcanonize EA EA')
+	   <- canonize-comp DtransM
+	      (DconvB : tconvert B EB)
+	      (DcanonM : canonize EM EB)
+	   <- canonize-comp DtransN
+	      (DconvC : tconvert C EC)
+	      (DcanonN : canonize EN EC)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- trans-reg DtransM
+	      (DwfB : wf B)
+	   <- trans-subtype DtransM DsubtypeBA
+	      (DsubtypeBA' : subtype B A ([_] P))
+	      (DeqO : {x} term-eq (O x) P)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqO DsubtypeCA
+	      (DsubtypeCA' : subtype C A ([_] P))
+	   <- subtype-reg' DsubtypeBA' DwfB DwfA 
+	      (DofP : of P A)
+	   <- can-convert DofP
+	      (DconvertP : convert P A EP)
+	   <- can-coerce' DconvB DconvA DsubtypeBA' ([_] [_] [_] [_] DconvertP)
+	      (DcoerceBA : coerce EB EA' ([_] EP))
+	   <- can-coerce' DconvC DconvA DsubtypeCA' ([_] [_] [_] [_] DconvertP)
+	      (DcoerceCA : coerce EC EA' ([_] EP)).
+
+%worlds (scbind) (check-equiv-comp _ _).
+%total {} (check-equiv-comp _ _).
+
+
+
+canonize-coerce-equiv : eof EM EA 
+			 -> tcanonize EA EB
+			 -> canonize EM EC
+			 -> coerce EC EB ([_] EN)
+%%
+			 -> equiv EM EN EA -> type.
+%mode canonize-coerce-equiv +X1 +X2 +X3 +X4 -X5.
+
+-	: canonize-coerce-equiv
+	   (DeofM : eof EM EA)
+	   (DcanonA : tcanonize EA EB)
+	   (DcanonM : canonize EM EC)
+	   (Dcoerce : coerce EC EB ([_] EN))
+	   (equiv/equiv
+	      (tequiv/symm Dtequiv)
+	      Dequiv)
+	   <- of-comp' DeofM 
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM C)
+	      (Dsubtype : subtype C A ([_] N))
+	   <- canonize-comp DtransM
+	      (DconvC : tconvert C EC')
+	      (DcanonM' : canonize EM EC')
+	   <- canonize-fun DcanonM' DcanonM
+	      (DeqC' : etp-eq EC' EC)
+	   <- tconvert-resp tp-eq/i DeqC' DconvC
+	      (DconvC' : tconvert C EC)
+	   <- tcanonize-comp DtransA
+	      (DconvA : tconvert A EB')
+	      (DcanonA' : tcanonize EA EB')
+	   <- tcanonize-fun DcanonA' DcanonA
+	      (DeqB' : etp-eq EB' EB)
+	   <- tconvert-resp tp-eq/i DeqB' DconvA
+	      (DconvA' : tconvert A EB)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- trans-reg DtransM
+	      (DwfC : wf C)
+	   <- subtype-reg' Dsubtype DwfC DwfA
+	      (DofN : of N A)
+	   <- can-convert DofN
+	      (DconvN : convert N A EN')
+	   <- can-coerce' DconvC' DconvA' Dsubtype ([_] [_] [_] [_] DconvN)
+	      (Dcoerce' : coerce EC EB ([_] EN'))
+	   <- coerce-fun Dcoerce' Dcoerce
+	      (DeqN : eterm -> eterm-eq EN' EN)
+	   <- convert-resp term-eq/i tp-eq/i (DeqN eaca) DconvN
+	      (DconvN' : convert N A EN)
+	   <- sound-trans' DtransM DconvC'
+	      (DeofM' : eof EM EC)
+	   <- convert-subtype-equiv Dsubtype DconvC' DconvA' DconvN' DeofM'
+	      (Dequiv : equiv EM EN EB)
+	   <- sound-ttrans' DtransA DconvA'
+	      (Dtequiv : tequiv EA EB).
+
+%worlds (scbind) (canonize-coerce-equiv _ _ _ _ _).
+%total {} (canonize-coerce-equiv _ _ _ _ _).
+
+
+
+check-equiv-sound : check-equiv EM EN EA -> equiv EM EN EA -> type.
+%mode check-equiv-sound +X1 -X2.
+
+-	: check-equiv-sound
+	   (check-equiv/i
+	      (DcoerceCA : coerce EC EA' ([_] EO))
+	      (DcoerceBA : coerce EB EA' ([_] EO))
+	      (DcanonA : tcanonize EA EA')
+	      (DcanonN : canonize EN EC)
+	      (DcanonM : canonize EM EB))
+	   (equiv/trans (equiv/symm Dequiv') Dequiv)
+	   <- check-eof-sound (check-eof/i DcoerceBA DcanonA DcanonM)
+	      (DeofM : eof EM EA)
+	   <- check-eof-sound (check-eof/i DcoerceCA DcanonA DcanonN)
+	      (DeofN : eof EN EA)
+	   <- canonize-coerce-equiv DeofM DcanonA DcanonM DcoerceBA
+	      (Dequiv : equiv EM EO EA)
+	   <- canonize-coerce-equiv DeofN DcanonA DcanonN DcoerceCA
+	      (Dequiv' : equiv EN EO EA).
+
+%worlds (scbind) (check-equiv-sound _ _).
+%total {} (check-equiv-sound _ _).
+
+
+
+
+%%%%%  Check-Ewf  %%%%%
+
+check-ewf-comp : ewf EA -> check-ewf EA -> type.
+%mode check-ewf-comp +X1 -X2.
+
+-	: check-ewf-comp (Dewf : ewf EA) (check-ewf/i Dcanon)
+	   <- wf-comp Dewf 
+	      (Dtrans : ttrans EA A)
+	   <- tcanonize-comp Dtrans
+	      (Dconv : tconvert A EA')
+	      (Dcanon : tcanonize EA EA').
+
+%worlds (scbind) (check-ewf-comp _ _).
+%total {} (check-ewf-comp _ _).
+
+
+
+check-ewf-sound : check-ewf EA -> ewf EA -> type.
+%mode check-ewf-sound +X1 -X2.
+
+-	: check-ewf-sound
+	   (check-ewf/i
+	      (Dcanon : tcanonize EA EA'))
+	   Dwf
+	   <- tcanonize-trans Dcanon
+	      (Dtrans : ttrans EA A)
+	   <- sound-ttrans Dtrans
+	      (Dwf : ewf EA)
+	      _ _.
+
+%worlds (scbind) (check-ewf-sound _ _).
+%total {} (check-ewf-sound _ _).
+
+
+
+
+%%%%%  Check-Subtp  %%%%%
+
+check-subtp-comp : subtp A B -> check-subtp A B -> type.
+%mode check-subtp-comp +X1 -X2.
+
+-	: check-subtp-comp
+	   (Dsubtp : subtp EA EB)
+	   (check-subtp/i Dcoerce DcanonB DcanonA)
+	   <- subtp-comp Dsubtp
+	      (DtransA : ttrans EA A)
+	      (DtransB : ttrans EB B)
+	      (Dsubtype : subtype A B _)
+	   <- tcanonize-comp DtransA
+	      (DconvA : tconvert A EA')
+	      (DcanonA : tcanonize EA EA')
+	   <- tcanonize-comp DtransB
+	      (DconvB : tconvert B EB')
+	      (DcanonB : tcanonize EB EB')
+	   <- can-coerce DconvA DconvB Dsubtype
+	      _
+	      (Dcoerce : coerce EA' EB' _).
+
+%worlds (scbind) (check-subtp-comp _ _).
+%total {} (check-subtp-comp _ _).
+
+
+
+check-subtp-sound : check-subtp A B -> subtp A B -> type.
+%mode check-subtp-sound +X1 -X2.
+
+-	: check-subtp-sound
+	   (check-subtp/i
+	      (Dcoerce : coerce EA' EB' _)
+	      (DcanonB : tcanonize EB EB')
+	      (DcanonA : tcanonize EA EA'))
+	   (subtp/trans
+	      (subtp/trans
+		 (subtp/reflex (tequiv/symm DequivB'))
+		 Dsubtp)
+	      (subtp/reflex DequivA'))
+	   <- tcanonize-trans' DcanonA
+	      (DtransA : ttrans EA A)
+	      (DconvA : tconvert A EA')
+	   <- tcanonize-trans' DcanonB
+	      (DtransB : ttrans EB B)
+	      (DconvB : tconvert B EB')
+	   <- coerce-convert DconvA DconvB Dcoerce
+	      (Dsubtype : subtype A B _)
+	   <- convert-subtype Dsubtype DconvA DconvB
+	      (Dsubtp : subtp EA' EB')
+	      _
+	      _
+	   <- sound-ttrans DtransA
+	      _
+	      (DconvA' : tconvert A EA'')
+	      (DequivA : tequiv EA EA'')
+	   <- sound-ttrans DtransB
+	      _
+	      (DconvB' : tconvert B EB'')
+	      (DequivB : tequiv EB EB'')
+	   <- tconvert-fun DconvA' DconvA
+	      (DeqA : etp-eq EA'' EA')
+	   <- tconvert-fun DconvB' DconvB
+	      (DeqB : etp-eq EB'' EB')
+	   <- tequiv-resp etp-eq/i DeqA DequivA
+	      (DequivA' : tequiv EA EA')
+	   <- tequiv-resp etp-eq/i DeqB DequivB
+	      (DequivB' : tequiv EB EB').
+
+%worlds (scbind) (check-subtp-sound _ _).
+%total {} (check-subtp-sound _ _).
+
+
+
+
+%%%%%  Check-Tequiv  %%%%%
+
+check-tequiv-comp : tequiv A B -> check-tequiv A B -> type.
+%mode check-tequiv-comp +X1 -X2.
+
+-	: check-tequiv-comp
+	   (Dequiv : tequiv EA EB)
+	   (check-tequiv/i
+	      DcanonB' DcanonA)
+	   <- tequiv-comp Dequiv
+	      (DtransA : ttrans EA C)
+	      (DtransB : ttrans EB C)
+	   <- tcanonize-comp DtransA
+	      (Dconv : tconvert C EC)
+	      (DcanonA : tcanonize EA EC)
+	   <- tcanonize-comp DtransB
+	      (Dconv' : tconvert C EC')
+	      (DcanonB : tcanonize EB EC')
+	   <- tconvert-fun Dconv' Dconv
+	      (Deq : etp-eq EC' EC)
+	   <- tcanonize-resp etp-eq/i Deq DcanonB
+	      (DcanonB' : tcanonize EB EC).
+
+%worlds (scbind) (check-tequiv-comp _ _).
+%total {} (check-tequiv-comp _ _).
+
+
+
+check-tequiv-sound : check-tequiv A B -> tequiv A B -> type.
+%mode check-tequiv-sound +X1 -X2.
+
+-	: check-tequiv-sound
+	   (check-tequiv/i
+	      (DcanonB : tcanonize EB EC)
+	      (DcanonA : tcanonize EA EC))
+	   (tequiv/trans
+	      (tequiv/symm DequivB')
+	      DequivA')
+	   <- tcanonize-trans' DcanonA
+	      (DtransA : ttrans EA A)
+	      (DconvA : tconvert A EC)
+	   <- tcanonize-trans' DcanonB
+	      (DtransB : ttrans EB B)
+	      (DconvB : tconvert B EC)
+	   <- sound-ttrans DtransA
+	      _
+	      (DconvA' : tconvert A EA')
+	      (DequivA : tequiv EA EA')
+	   <- sound-ttrans DtransB
+	      _
+	      (DconvB' : tconvert B EB')
+	      (DequivB : tequiv EB EB')
+	   <- tconvert-fun DconvA' DconvA
+	      (DeqA : etp-eq EA' EC)
+	   <- tconvert-fun DconvB' DconvB
+	      (DeqB : etp-eq EB' EC)
+	   <- tequiv-resp etp-eq/i DeqA DequivA
+	      (DequivA' : tequiv EA EC)
+	   <- tequiv-resp etp-eq/i DeqB DequivB
+	      (DequivB' : tequiv EB EC).
+
+%worlds (scbind) (check-tequiv-sound _ _).
+%total {} (check-tequiv-sound _ _).

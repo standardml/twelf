@@ -1,0 +1,1027 @@
+
+%% NULL
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     spec-elab/null
+     sg-wf/one.
+
+
+%% VAL
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/val
+	(Delab : {a} cn-of a Karg
+		  -> {m} md-assm m Sarg
+		  -> md-fst m a
+		  -> ty-elab (md/pair Mec m) (sg/prod Sec Sarg) Te (T a))
+	(DfstSarg : sg-fst Sarg Karg)
+	(DelabTVLe : tyargs-elab TVLe Sarg))
+     %%
+     (sg-wf/named
+	(sg-wf/named
+	   (sg-wf/pi
+	      ([a] [da] sg-wf/datom (DofT a da))
+	      DfstSarg DwfSarg)))
+     <- tyargs-elab-reg DelabTVLe
+	(DwfSarg : sg-wf Sarg)
+     <- sg-fst-reg DwfSarg DfstSarg
+	(DwfKarg : kd-wf Karg)
+     <- ({a} {da:cn-of a Karg} {m} {dm:md-assm m Sarg} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfKarg
+	   -> md-assm-reg dm dfst DfstSarg da DwfSarg
+	   -> ty-elab-reg (md-of/pair (md-of/var dm) DofEC) (Delab a da m dm dfst)
+	      (DofT a da : cn-of (T a) t)).
+
+
+%% TYPE
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/type-none
+	(Dfst : sg-fst Sarg Karg)
+	(Delab : tyargs-elab TVLe Sarg))
+     (sg-wf/named
+	(sg-wf/satom
+	   (kd-wf/karrow kd-wf/t DwfKarg)))
+     <- tyargs-elab-reg Delab
+	(DwfSarg : sg-wf Sarg)
+     <- sg-fst-reg DwfSarg Dfst
+	(DwfKarg : kd-wf Karg).
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/type-some
+	(DelabT : {a} cn-of a Karg
+		   -> {m} md-assm m Sarg
+		   -> md-fst m a
+		   -> ty-elab (md/pair Mec m) (sg/prod Sec Sarg) Te (T a))
+	(Dfst : sg-fst Sarg Karg)
+	(Delab : tyargs-elab TVLe Sarg))
+     (sg-wf/named
+	(sg-wf/satom
+	   (kd-wf/pi
+	      ([a] [da] kd-wf/sing (DofT a da))
+	      DwfKarg)))
+     <- tyargs-elab-reg Delab
+	(DwfSarg : sg-wf Sarg)
+     <- sg-fst-reg DwfSarg Dfst
+	(DwfKarg : kd-wf Karg)
+     <- ({a} {da:cn-of a Karg} {m} {dm:md-assm m Sarg} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfKarg
+	   -> md-assm-reg dm dfst Dfst da DwfSarg
+	   -> ty-elab-reg (md-of/pair (md-of/var dm) DofEC) (DelabT a da m dm dfst)
+	      (DofT a da : cn-of (T a) t)).
+
+
+%% EXCEPTION
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     spec-elab/exn0
+     (sg-wf/named
+	(sg-wf/sigma
+	   ([_] [_] 
+	      sg-wf/named
+	      (sg-wf/named
+		 (sg-wf/pi
+		    ([_] [_] sg-wf/datom cn-of/tagged)
+		    sg-fst/one
+		    sg-wf/one)))
+	   sg-fst/datom
+	   (sg-wf/datom (cn-of/tag cn-of/unit)))).
+
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/exn1
+	(Delab : ty-elab Mec Sec Te T))
+     (sg-wf/named
+	(sg-wf/sigma
+	   ([_] [_] 
+	      sg-wf/named
+	      (sg-wf/named
+		 (sg-wf/pi
+		    ([_] [_] sg-wf/datom (cn-of/arrow cn-of/tagged DofT))
+		    sg-fst/one
+		    sg-wf/one)))
+	   sg-fst/datom
+	   (sg-wf/datom (cn-of/tag DofT))))
+     <- ty-elab-reg DofEC Delab
+	(DofT : cn-of T t).
+
+
+%% DATATYPE
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/datatype
+	(Delab : datbind-elab Mec Sec DBe Sfwd Sdt _ _))
+     (sg-wf/sigma DwfSdt DfstSfwd DwfSfwd)
+     <- datbind-elab-reg DofEC Delab
+	(DofMfwd : md-of pure st/nil Mfwd Sfwd)
+	(DfstSfwd : sg-fst Sfwd Kfwd)
+	(DfstMfwd : md-fst Mfwd Cfwd)
+	(DwfSdt : {b} cn-of b Kfwd -> sg-wf (Sdt b))
+	(DofMdt : md-of pure st/nil Mdt (Sdt Cfwd))
+     <- md-of-reg DofMfwd
+	(DwfSfwd : sg-wf Sfwd).
+
+
+%% DATATYPE COPYING
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/dtcopy
+	(Dfst : md-fst (md/pi1 M) C)
+	(Dsub : sg-sub S (sg/sigma (sg/satom (karrow K t)) ([_] _)))
+	(Dresolve : resolve-long Mec Sec name/dtc Iold M S))
+     %%
+     (sg-wf/sigma
+	([_] [_] sg-wf/named DwfS)
+	(sg-fst/named sg-fst/satom)
+	(sg-wf/named
+	   (sg-wf/satom
+	      (kd-wf/pi
+		 ([a] [da] kd-wf/sing (cn-of/app da DofC))
+		 DwfK))))
+     <- resolve-long-reg DofEC Dresolve
+	(DofM : md-of pure st/nil M S)
+     <- md-of-reg DofM
+	(DwfS : sg-wf S)
+     <- md-fst-reg (md-of/pi1 (md-of/subsume Dsub DofM)) Dfst sg-fst/satom
+	(DofC : cn-of C (karrow K t))
+     <- cn-of-reg DofC
+	(kd-wf/pi
+	   _
+	   (DwfK : kd-wf K)).
+
+
+%% STRUCTURE
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/structure
+	(Delab : sigexp-elab Mec Sec Se S))
+     (sg-wf/named DwfS)
+     <- sigexp-elab-reg DofEC Delab 
+	(DwfS : sg-wf S).
+
+
+%% FUNCTOR
+
+functorspec-elab-reg : md-of pure st/nil Mec Sec
+		    -> functorspec-elab Mec Sec Lfunc Larg Se1 Se2 S
+%%
+		    -> sg-wf S
+		    -> type.
+%mode functorspec-elab-reg +X1 +X2 -X3.
+
+- : functorspec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (functorspec-elab/i
+	(Delab2 : {a} cn-of a K1
+		   -> {m} md-assm m S1
+		   -> md-fst m a
+		   -> sigexp-elab (md/pair Mec (md/in Larg m)) (sg/prod Sec (sg/named Larg S1))
+		      Se2 (S2 a))
+	(DfstS1 : sg-fst S1 K1)
+	(Delab1 : sigexp-elab Mec Sec Se1 S1))
+     (sg-wf/named 
+	(sg-wf/pi
+	   DwfS2
+	   DfstS1
+	   DwfS1))
+     <- sigexp-elab-reg DofEC Delab1
+	(DwfS1 : sg-wf S1)
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst DfstS1 da DwfS1
+	   -> sigexp-elab-reg (md-of/pair (md-of/in (md-of/var dm)) DofEC) (Delab2 a da m dm dfst)
+	      (DwfS2 a da : sg-wf (S2 a))).
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/functor
+	(Delab : functorspec-elab Mec Sec (name/fun Ifunc) (name/mod Iarg) Se1 Se2 S))
+     DwfS
+     <- functorspec-elab-reg DofEC Delab (DwfS : sg-wf S).
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/functor-anon
+	(Delab : functorspec-elab Mec Sec (name/fun Ifunc) name/funcarg (sigexp/sig SPe1) Se2 S))
+     DwfS
+     <- functorspec-elab-reg DofEC Delab (DwfS : sg-wf S).
+
+
+%% INCLUDE
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/include
+	(Delab : sigexp-elab Mec Sec Se S))
+     DwfS
+     <- sigexp-elab-reg DofEC Delab
+	(DwfS : sg-wf S).
+			      
+
+%% SIGNATURE
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/signature
+	(Delab : sigexp-elab Mec Sec Se S))
+     (sg-wf/named (sg-wf/sgatom DwfS))
+     <- sigexp-elab-reg DofEC Delab
+	(DwfS : sg-wf S).
+			      
+
+%% SEQ
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/seq
+	_
+	(Delab2 : {a} cn-of a K1
+		   -> {m} md-assm m S1
+		   -> md-fst m a
+		   -> spec-elab (md/pair Mec m) (sg/prod Sec S1) Se2 (S2 a))
+	(Dfst : sg-fst S1 K1)
+	(Delab1 : spec-elab Mec Sec Se1 S1))
+     (sg-wf/sigma DwfS2 Dfst DwfS1)
+     <- spec-elab-reg DofEC Delab1
+	(DwfS1 : sg-wf S1)
+     <- sg-fst-reg DwfS1 Dfst
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst Dfst da DwfS1
+	   -> spec-elab-reg (md-of/pair (md-of/var dm) DofEC) (Delab2 a da m dm dfst)
+	      (DwfS2 a da : sg-wf (S2 a))).
+
+
+
+%% SHARING TYPE
+
+sg-proj-reg : sg-wf S
+	       -> sg-fst S K
+	       -> sg-proj P S ([a] S' a)
+%%
+	       -> ({a} cn-of a K -> sg-wf (S' a))
+	       -> type.
+%mode sg-proj-reg +X1 +X2 +X3 -X4.
+
+- : sg-proj-reg DwfS _ sg-proj/nil ([_] [_] DwfS).
+
+- : sg-proj-reg
+     (DwfSigma : sg-wf (sg/sigma S1 ([a] S2 a)))
+     (sg-fst/sigma
+	(DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	(DfstS1 : sg-fst S1 K1))
+     (sg-proj/pi1
+	(Dproj : sg-proj M S1 ([a] S a)))
+     ([c] [dc:cn-of c (sigma K1 K2)] DwfS (pi1 c) (cn-of/pi1 dc))
+     <- sg-wf-sigma-invert DwfSigma DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-proj-reg DwfS1 DfstS1 Dproj
+	(DwfS : {a} cn-of a K1 -> sg-wf (S a)).
+
+- : sg-proj-reg
+     (DwfSigma : sg-wf (sg/sigma S1 ([a] S2 a)))
+     (sg-fst/sigma
+	(DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	(DfstS1 : sg-fst S1 K1))
+     (sg-proj/pi2
+	(Dproj : {a} sg-proj M (S2 a) ([b] S a b)))
+     ([c] [dc:cn-of c (sigma K1 K2)] DwfS (pi1 c) (cn-of/pi1 dc) (pi2 c) (cn-of/pi2 dc))
+     <- sg-wf-sigma-invert DwfSigma DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> sg-proj-reg (DwfS2 a da) (DfstS2 a) (Dproj a)
+	      (DwfS a da : {b} cn-of b (K2 a) -> sg-wf (S a b))).
+
+- : sg-proj-reg
+     (sg-wf/named
+	(DwfS : sg-wf S))
+     (sg-fst/named
+	(DfstS : sg-fst S K))
+     (sg-proj/out
+	(Dproj : sg-proj M S ([a] S' a)))
+     DwfS'
+     <- sg-proj-reg DwfS DfstS Dproj
+	(DwfS' : {a} cn-of a K -> sg-wf (S' a)).
+
+%worlds (conbind-reg) (sg-proj-reg _ _ _ _).
+%total D (sg-proj-reg _ _ D _).
+
+
+
+apply-path-reg : md-of pure st/nil M S
+		  -> md-fst M C
+		  -> apply-path P M M'
+		  -> sg-proj P S ([a] S' a)
+%%
+		  -> md-of pure st/nil M' (S' C)
+		  -> type.
+%mode apply-path-reg +X1 +X2 +X3 +X4 -X5.
+
+- : apply-path-reg Dof _ apply-path/nil sg-proj/nil Dof.
+
+- : apply-path-reg Dof Dfst (apply-path/pi1 Dapply) (sg-proj/pi1 Dproj) Dof'
+     <- apply-path-reg (md-of/pi1 Dof) (md-fst/pi1 Dfst) Dapply Dproj Dof'.
+
+- : apply-path-reg Dof (Dfst : md-fst M C) (apply-path/pi2 Dapply) (sg-proj/pi2 Dproj) Dof'
+     <- apply-path-reg (md-of/pi2 Dfst Dof) (md-fst/pi2 Dfst) Dapply (Dproj (pi1 C)) Dof'.
+
+- : apply-path-reg Dof Dfst (apply-path/out Dapply) (sg-proj/out Dproj) Dof'
+     <- apply-path-reg (md-of/out Dof) (md-fst/out Dfst) Dapply Dproj Dof'.
+
+%worlds (conbind | modbind | termbind) (apply-path-reg _ _ _ _ _).
+%total D (apply-path-reg _ _ D _ _).
+
+
+
+patch-sg-reg : sg-wf S
+		-> sg-fst S K
+		-> sg-proj P S ([a] Sp a)
+		-> ({a} cn-of a K -> sg-sub Sp' (Sp a))
+		-> patch-sg P S Sp' S'
+%%
+		-> sg-sub S' S
+		-> type.
+%mode patch-sg-reg +X1 +X2 +X3 +X4 +X5 -X6.
+
+- : patch-sg-reg
+     (DwfSp : sg-wf Sp)
+     (Dfst : sg-fst Sp Kp)
+     sg-proj/nil
+     (Dsub : {a} cn-of a Kp -> sg-sub Sp' Sp)
+     patch-sg/nil
+     (Dsub Cinh DofCinh)
+     <- sg-fst-reg DwfSp Dfst (DwfKp : kd-wf Kp)
+     <- inhabitation DwfKp (DofCinh : cn-of Cinh Kp).
+
+- : patch-sg-reg
+     (DwfSigma : sg-wf (sg/sigma S1 ([a] S2 a)))
+     (sg-fst/sigma
+	(DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	(DfstS1 : sg-fst S1 K1))
+     (sg-proj/pi1
+	(Dproj : sg-proj M S1 ([a] Sp a)))
+     (DsubSp : {c} cn-of c (sigma K1 K2) -> sg-sub Sp' (Sp (pi1 c)))
+     (patch-sg/pi1
+	(Dpatch : patch-sg M S1 Sp' S1'))
+     %%
+     (sg-sub/sigma
+	DwfS2
+	DfstS1
+	([a] [da:cn-of a K1'] sg-sub/reflid (DwfS2 a (cn-of/subsume DsubK1 da)))
+	DfstS1'
+	DsubS1)
+     <- sg-wf-sigma-invert DwfSigma DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da:cn-of a K1}
+	   sg-fst-reg (DwfS2 a da) (DfstS2 a)
+	   (DwfK2 a da : kd-wf (K2 a)))
+     <- ({a} {da:cn-of a K1}
+	   inhabitation (DwfK2 a da)
+	   (DofC2 a da : cn-of (C2 a) (K2 a)))
+     <- sg-proj-reg DwfS1 DfstS1 Dproj
+	(DwfSp : {a} cn-of a K1 -> sg-wf (Sp a))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> functionality-sg DwfSp (cn-equiv/beta1 (DofC2 a da) da)
+	      (Dequiv a da : sg-equiv (Sp (pi1 (pair a (C2 a)))) (Sp a)))
+     <- patch-sg-reg DwfS1 DfstS1 Dproj
+	([a] [da:cn-of a K1] 
+	   sg-sub/trans 
+	   (sg-sub/refl (Dequiv a da)) 
+	   (DsubSp (pair a (C2 a)) (cn-of/pair DwfK2 (DofC2 a da) da)))
+	Dpatch
+	(DsubS1 : sg-sub S1' S1)
+     <- can-sg-fst S1'
+	(DfstS1' : sg-fst S1' K1')
+     <- sg-sub-fst DsubS1 DfstS1' DfstS1
+	(DsubK1 : kd-sub K1' K1).
+
+- : patch-sg-reg
+     (DwfSigma : sg-wf (sg/sigma S1 ([a] S2 a)))
+     (sg-fst/sigma
+	(DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	(DfstS1 : sg-fst S1 K1))
+     (sg-proj/pi2
+	(Dproj : {a} sg-proj M (S2 a) ([b] Sp a b)))
+     (DsubSp : {c} cn-of c (sigma K1 K2) -> sg-sub Sp' (Sp (pi1 c) (pi2 c)))
+     (patch-sg/pi2
+	(Dpatch : {a} patch-sg M (S2 a) Sp' (S2' a)))
+     %%
+     (sg-sub/sigma
+	DwfS2
+	DfstS1
+	DsubS2
+	DfstS1
+	(sg-sub/reflid DwfS1))
+     <- sg-wf-sigma-invert DwfSigma DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da:cn-of a K1}
+	   sg-fst-reg (DwfS2 a da) (DfstS2 a)
+	   (DwfK2 a da : kd-wf (K2 a)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> sg-proj-reg (DwfS2 a da) (DfstS2 a) (Dproj a)
+	      (DwfSp a da : {b} cn-of b (K2 a) -> sg-wf (Sp a b)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg2 DwfSp
+	      (cn-equiv/symm (cn-equiv/beta1 db da))
+	      (cn-equiv/symm (cn-equiv/beta2 db da))
+	      (Dequiv a da b db : sg-equiv (Sp a b) (Sp (pi1 (pair a b)) (pi2 (pair a b)))))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> patch-sg-reg (DwfS2 a da) (DfstS2 a) (Dproj a)
+	      ([b] [db:cn-of b (K2 a)]
+		 sg-sub/trans
+		 (sg-sub/refl (sg-equiv/symm (Dequiv a da b db)))
+		 (DsubSp (pair a b) (cn-of/pair DwfK2 db da)))
+	      (Dpatch a)
+	      (DsubS2 a da : sg-sub (S2' a) (S2 a))).
+
+- : patch-sg-reg
+     (sg-wf/named
+	(DwfS : sg-wf S))
+     (sg-fst/named
+	(DfstS : sg-fst S K))
+     (sg-proj/out
+	(Dproj : sg-proj M S ([a] Sp a)))
+     (DsubSp : {a} cn-of a K -> sg-sub Sp' (Sp a))
+     (patch-sg/out
+	(Dpatch : patch-sg M S Sp' S'))
+     %%
+     (sg-sub/named DsubS)
+     <- patch-sg-reg DwfS DfstS Dproj DsubSp Dpatch
+	(DsubS : sg-sub S' S).
+     
+%worlds (conbind-reg) (patch-sg-reg _ _ _ _ _ _).
+%total D (patch-sg-reg _ _ _ _ D _).
+
+
+
+share-reg : sg-wf S
+	     -> sg-fst S K
+	     -> sg-proj P1 S ([a] Sp1 a)
+	     -> sg-proj P2 S ([a] Sp2 a)
+	     -> ({a} cn-of a K -> sg-equiv Sp (Sp1 a))
+	     -> ({a} cn-of a K -> sg-equiv Sp (Sp2 a))
+	     -> share P1 P2 S Sp S' P'
+%%
+	     -> sg-sub S' S
+	     -> sg-proj P' S' ([a] Sp' a)
+	     -> ({a} cn-of a K -> sg-equiv Sp (Sp' a))
+	     -> type.
+%mode share-reg +X1 +X2 +X3 +X4 +X5 +X6 +X7 -X8 -X9 -X10.
+
+- : share-reg
+     DwfS
+     _
+     sg-proj/nil
+     sg-proj/nil
+     Dequiv
+     _
+     share/nil
+     %%
+     (sg-sub/reflid DwfS) 
+     sg-proj/nil
+     Dequiv.
+
+- : share-reg
+     (DwfSigma : sg-wf (sg/sigma S1 ([a] S2 a)))
+     (sg-fst/sigma
+	(DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	(DfstS1 : sg-fst S1 K1))
+     (sg-proj/pi1
+	(Dproj1 : sg-proj P1 S1 ([a] Sp1 a)))
+     (sg-proj/pi2
+	(Dproj2 : {a} sg-proj P2 (S2 a) ([b] Sp2 a b)))
+     (Dequiv1 : {a} cn-of a (sigma K1 K2) -> sg-equiv Sp (Sp1 (pi1 a)))
+     (Dequiv2 : {a} cn-of a (sigma K1 K2) -> sg-equiv Sp (Sp2 (pi1 a) (pi2 a)))
+     (share/branch1
+	(Dpatch : {a} patch-sg P2 (S2 a) (Ssing (C1 a)) (S2' a))
+	(Dsingle : single-sg Sp ([c] Ssing c))
+	(Dfst : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+	(Dapply : {m} apply-path P1 m (M1 m)))
+     %%
+     (sg-sub/sigma DwfS2 DfstS1 Dsub DfstS1 (sg-sub/reflid DwfS1))
+     (sg-proj/pi1 Dproj1)
+     Dequiv1
+     <- sg-wf-sigma-invert DwfSigma DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da}
+	   sg-fst-reg (DwfS2 a da) (DfstS2 a)
+	   (DwfK2 a da : kd-wf (K2 a)))
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   apply-path-reg (md-of/var dm) dfst (Dapply m) Dproj1
+	   (DofM1 a da m dm dfst : md-of pure st/nil (M1 m) (Sp1 a)))
+     <- ({a}
+	   can-sg-fst (Sp1 a)
+	   (DfstSp1 a : sg-fst (Sp1 a) (Kp1 a)))
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst DfstS1 da DwfS1
+	   -> md-fst-reg 
+	      (DofM1 a da m dm dfst)
+	      (Dfst a m dfst) 
+	      (DfstSp1 a)
+	      (DofC1 a da : cn-of (C1 a) (Kp1 a)))
+     <- sg-proj-reg DwfS1 DfstS1 Dproj1
+	(DwfSp1 : {a} cn-of a K1 -> sg-wf (Sp1 a))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg DwfSp1 (cn-equiv/symm (cn-equiv/beta1 db da))
+	      (DequivSp1 a da b db : sg-equiv (Sp1 a) (Sp1 (pi1 (pair a b)))))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> sg-proj-reg (DwfS2 a da) (DfstS2 a) (Dproj2 a)
+	      (DwfSp2 a da : {b} cn-of b (K2 a) -> sg-wf (Sp2 a b)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg2 DwfSp2 (cn-equiv/symm (cn-equiv/beta1 db da)) (cn-equiv/symm (cn-equiv/beta2 db da))
+	      (DequivSp2 a da b db : sg-equiv (Sp2 a b) (Sp2 (pi1 (pair a b)) (pi2 (pair a b)))))
+     <- ({c} {dc:cn-of c (sigma K1 K2)}
+	   {dcs:cn-assm dc}
+	   mcn-assm dc dcs
+	   -> cn-of-reg dc (kd-wf/sigma DwfK2 DwfK1)
+	   -> sg-equiv-reg (Dequiv1 c dc)
+	      (DwfSp c dc : sg-wf Sp)
+	      (DDD c dc))
+     <- inhabitation (kd-wf/sigma DwfK2 DwfK1) (DofCinh : cn-of Cinh (sigma K1 K2))
+     <- can-sg-fst Sp
+	(DfstSp : sg-fst Sp Kp)
+     <- single-sg-subsume Dsingle (DwfSp Cinh DofCinh) DfstSp
+	(DsubSsing : {c} cn-of c Kp -> sg-sub (Ssing c) Sp)
+     <- ({a} {da:cn-of a K1}
+	   inhabitation (DwfK2 a da) (DofCinh2 a da : cn-of (Cinh2 a) (K2 a)))
+     <- ({a} {da:cn-of a K1}
+	   sg-equiv-fst
+	   (sg-equiv/trans
+	      (sg-equiv/symm (DequivSp1 a da (Cinh2 a) (DofCinh2 a da)))
+	      (Dequiv1 (pair a (Cinh2 a)) (cn-of/pair DwfK2 (DofCinh2 a da) da)))
+	   DfstSp (DfstSp1 a)
+	   (DequivKp1 a da : kd-equiv Kp (Kp1 a)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> patch-sg-reg (DwfS2 a da) (DfstS2 a) (Dproj2 a)
+	      ([b] [db:cn-of b (K2 a)]
+		 sg-sub/trans
+		 (sg-sub/refl
+		    (sg-equiv/trans
+		       (sg-equiv/symm (DequivSp2 a da b db))
+		       (Dequiv2 (pair a b) (cn-of/pair DwfK2 db da))))
+		 (DsubSsing (C1 a) 
+		    (cn-of/equiv
+		       (kd-equiv/symm (DequivKp1 a da))
+		       (DofC1 a da))))
+	      (Dpatch a)
+	      %%
+	      (Dsub a da : sg-sub (S2' a) (S2 a))).
+
+- : share-reg
+     (DwfSigma : sg-wf (sg/sigma S1 ([a] S2 a)))
+     (sg-fst/sigma
+	(DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	(DfstS1 : sg-fst S1 K1))
+     (sg-proj/pi2
+	(Dproj2 : {a} sg-proj P2 (S2 a) ([b] Sp2 a b)))
+     (sg-proj/pi1
+	(Dproj1 : sg-proj P1 S1 ([a] Sp1 a)))
+     (Dequiv2 : {a} cn-of a (sigma K1 K2) -> sg-equiv Sp (Sp2 (pi1 a) (pi2 a)))
+     (Dequiv1 : {a} cn-of a (sigma K1 K2) -> sg-equiv Sp (Sp1 (pi1 a)))
+     (share/branch2
+	(Dpatch : {a} patch-sg P2 (S2 a) (Ssing (C1 a)) (S2' a))
+	(Dsingle : single-sg Sp ([c] Ssing c))
+	(Dfst : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+	(Dapply : {m} apply-path P1 m (M1 m)))
+     %%
+     (sg-sub/sigma DwfS2 DfstS1 Dsub DfstS1 (sg-sub/reflid DwfS1))
+     (sg-proj/pi1 Dproj1)
+     Dequiv1
+     <- sg-wf-sigma-invert DwfSigma DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da}
+	   sg-fst-reg (DwfS2 a da) (DfstS2 a)
+	   (DwfK2 a da : kd-wf (K2 a)))
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   apply-path-reg (md-of/var dm) dfst (Dapply m) Dproj1
+	   (DofM1 a da m dm dfst : md-of pure st/nil (M1 m) (Sp1 a)))
+     <- ({a}
+	   can-sg-fst (Sp1 a)
+	   (DfstSp1 a : sg-fst (Sp1 a) (Kp1 a)))
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst DfstS1 da DwfS1
+	   -> md-fst-reg 
+	      (DofM1 a da m dm dfst)
+	      (Dfst a m dfst) 
+	      (DfstSp1 a)
+	      (DofC1 a da : cn-of (C1 a) (Kp1 a)))
+     <- sg-proj-reg DwfS1 DfstS1 Dproj1
+	(DwfSp1 : {a} cn-of a K1 -> sg-wf (Sp1 a))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg DwfSp1 (cn-equiv/symm (cn-equiv/beta1 db da))
+	      (DequivSp1 a da b db : sg-equiv (Sp1 a) (Sp1 (pi1 (pair a b)))))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> sg-proj-reg (DwfS2 a da) (DfstS2 a) (Dproj2 a)
+	      (DwfSp2 a da : {b} cn-of b (K2 a) -> sg-wf (Sp2 a b)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg2 DwfSp2 (cn-equiv/symm (cn-equiv/beta1 db da)) (cn-equiv/symm (cn-equiv/beta2 db da))
+	      (DequivSp2 a da b db : sg-equiv (Sp2 a b) (Sp2 (pi1 (pair a b)) (pi2 (pair a b)))))
+     <- ({c} {dc:cn-of c (sigma K1 K2)}
+	   {dcs:cn-assm dc}
+	   mcn-assm dc dcs
+	   -> cn-of-reg dc (kd-wf/sigma DwfK2 DwfK1)
+	   -> sg-equiv-reg (Dequiv1 c dc)
+	      (DwfSp c dc : sg-wf Sp)
+	      (DDD c dc))
+     <- inhabitation (kd-wf/sigma DwfK2 DwfK1) (DofCinh : cn-of Cinh (sigma K1 K2))
+     <- can-sg-fst Sp
+	(DfstSp : sg-fst Sp Kp)
+     <- single-sg-subsume Dsingle (DwfSp Cinh DofCinh) DfstSp
+	(DsubSsing : {c} cn-of c Kp -> sg-sub (Ssing c) Sp)
+     <- ({a} {da:cn-of a K1}
+	   inhabitation (DwfK2 a da) (DofCinh2 a da : cn-of (Cinh2 a) (K2 a)))
+     <- ({a} {da:cn-of a K1}
+	   sg-equiv-fst
+	   (sg-equiv/trans
+	      (sg-equiv/symm (DequivSp1 a da (Cinh2 a) (DofCinh2 a da)))
+	      (Dequiv1 (pair a (Cinh2 a)) (cn-of/pair DwfK2 (DofCinh2 a da) da)))
+	   DfstSp (DfstSp1 a)
+	   (DequivKp1 a da : kd-equiv Kp (Kp1 a)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> patch-sg-reg (DwfS2 a da) (DfstS2 a) (Dproj2 a)
+	      ([b] [db:cn-of b (K2 a)]
+		 sg-sub/trans
+		 (sg-sub/refl
+		    (sg-equiv/trans
+		       (sg-equiv/symm (DequivSp2 a da b db))
+		       (Dequiv2 (pair a b) (cn-of/pair DwfK2 db da))))
+		 (DsubSsing (C1 a) 
+		    (cn-of/equiv
+		       (kd-equiv/symm (DequivKp1 a da))
+		       (DofC1 a da))))
+	      (Dpatch a)
+	      %%
+	      (Dsub a da : sg-sub (S2' a) (S2 a))).
+
+- : share-reg
+     (DwfSigma : sg-wf (sg/sigma S1 ([a] S2 a)))
+     (sg-fst/sigma
+	(DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	(DfstS1 : sg-fst S1 K1))
+     (sg-proj/pi1
+	(Dproj1 : sg-proj P1 S1 ([a] Sp1 a)))
+     (sg-proj/pi1
+	(Dproj2 : sg-proj P2 S1 ([a] Sp2 a)))
+     (Dequiv1 : {a} cn-of a (sigma K1 K2) -> sg-equiv Sp (Sp1 (pi1 a)))
+     (Dequiv2 : {a} cn-of a (sigma K1 K2) -> sg-equiv Sp (Sp2 (pi1 a)))
+     (share/pi1
+	(Dshare : share P1 P2 S1 Sp S1' P)) 
+     %%
+     (sg-sub/sigma DwfS2 DfstS1 ([a] [da:cn-of a K1'] sg-sub/reflid (DwfS2 a (cn-of/subsume DsubK da))) DfstS1' Dsub)
+     (sg-proj/pi1 Dproj)
+     ([a] [da:cn-of a (sigma K1 K2)] Dequiv (pi1 a) (cn-of/pi1 da))
+     <- sg-wf-sigma-invert DwfSigma DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da}
+	   sg-fst-reg (DwfS2 a da) (DfstS2 a)
+	   (DwfK2 a da : kd-wf (K2 a)))
+     <- sg-proj-reg DwfS1 DfstS1 Dproj1
+	(DwfSp1 : {a} cn-of a K1 -> sg-wf (Sp1 a))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg DwfSp1 (cn-equiv/symm (cn-equiv/beta1 db da))
+	      (DequivSp1 a da b db : sg-equiv (Sp1 a) (Sp1 (pi1 (pair a b)))))
+     <- sg-proj-reg DwfS1 DfstS1 Dproj2
+	(DwfSp2 : {a} cn-of a K1 -> sg-wf (Sp2 a))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg DwfSp2 (cn-equiv/symm (cn-equiv/beta1 db da))
+	      (DequivSp2 a da b db : sg-equiv (Sp2 a) (Sp2 (pi1 (pair a b)))))
+     <- ({a} {da:cn-of a K1}
+	   inhabitation (DwfK2 a da)
+	   (DofCinh a da : cn-of (Cinh a) (K2 a)))
+     <- share-reg DwfS1 DfstS1 Dproj1 Dproj2
+	([a] [da:cn-of a K1]
+	   sg-equiv/trans
+	   (sg-equiv/symm (DequivSp1 a da (Cinh a) (DofCinh a da)))
+	   (Dequiv1 (pair a (Cinh a)) (cn-of/pair DwfK2 (DofCinh a da) da)))
+	([a] [da:cn-of a K1]
+	   sg-equiv/trans
+	   (sg-equiv/symm (DequivSp2 a da (Cinh a) (DofCinh a da)))
+	   (Dequiv2 (pair a (Cinh a)) (cn-of/pair DwfK2 (DofCinh a da) da)))
+	Dshare
+        %%
+	(Dsub : sg-sub S1' S1)
+	(Dproj : sg-proj P S1' ([a] Sp' a))
+	(Dequiv : {a} cn-of a K1 -> sg-equiv Sp (Sp' a))
+     <- can-sg-fst S1'
+	(DfstS1' : sg-fst S1' K1')
+     <- sg-sub-fst Dsub DfstS1' DfstS1
+	(DsubK : kd-sub K1' K1).
+
+- : share-reg
+     (DwfSigma : sg-wf (sg/sigma S1 ([a] S2 a)))
+     (sg-fst/sigma
+	(DfstS2 : {a} sg-fst (S2 a) (K2 a))
+	(DfstS1 : sg-fst S1 K1))
+     (sg-proj/pi2
+	(Dproj1 : {a} sg-proj P1 (S2 a) ([b] Sp1 a b)))
+     (sg-proj/pi2
+	(Dproj2 : {a} sg-proj P2 (S2 a) ([b] Sp2 a b)))
+     (Dequiv1 : {a} cn-of a (sigma K1 K2) -> sg-equiv Sp (Sp1 (pi1 a) (pi2 a)))
+     (Dequiv2 : {a} cn-of a (sigma K1 K2) -> sg-equiv Sp (Sp2 (pi1 a) (pi2 a)))
+     (share/pi2
+	(Dshare : {a} share P1 P2 (S2 a) Sp (S2' a) P)) 
+     %%
+     (sg-sub/sigma DwfS2 DfstS1 Dsub DfstS1 (sg-sub/reflid DwfS1))
+     (sg-proj/pi2 Dproj)
+     ([a] [da:cn-of a (sigma K1 K2)] Dequiv (pi1 a) (cn-of/pi1 da) (pi2 a) (cn-of/pi2 da))
+     <- sg-wf-sigma-invert DwfSigma DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da}
+	   sg-fst-reg (DwfS2 a da) (DfstS2 a)
+	   (DwfK2 a da : kd-wf (K2 a)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> sg-proj-reg (DwfS2 a da) (DfstS2 a) (Dproj1 a)
+	      (DwfSp1 a da : {b} cn-of b (K2 a) -> sg-wf (Sp1 a b)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg2 DwfSp1 (cn-equiv/symm (cn-equiv/beta1 db da)) (cn-equiv/symm (cn-equiv/beta2 db da))
+	      (DequivSp1 a da b db : sg-equiv (Sp1 a b) (Sp1 (pi1 (pair a b)) (pi2 (pair a b)))))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> sg-proj-reg (DwfS2 a da) (DfstS2 a) (Dproj2 a)
+	      (DwfSp2 a da : {b} cn-of b (K2 a) -> sg-wf (Sp2 a b)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (K2 a)}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfK2 a da)
+	   -> functionality-sg2 DwfSp2 (cn-equiv/symm (cn-equiv/beta1 db da)) (cn-equiv/symm (cn-equiv/beta2 db da))
+	      (DequivSp2 a da b db : sg-equiv (Sp2 a b) (Sp2 (pi1 (pair a b)) (pi2 (pair a b)))))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> share-reg (DwfS2 a da) (DfstS2 a) (Dproj1 a) (Dproj2 a)
+	      ([b] [db:cn-of b (K2 a)]
+		 sg-equiv/trans
+		 (sg-equiv/symm (DequivSp1 a da b db))
+		 (Dequiv1 (pair a b) (cn-of/pair DwfK2 db da)))
+	      ([b] [db:cn-of b (K2 a)]
+		 sg-equiv/trans
+		 (sg-equiv/symm (DequivSp2 a da b db))
+		 (Dequiv2 (pair a b) (cn-of/pair DwfK2 db da)))
+	      (Dshare a)
+	      %%
+	      (Dsub a da : sg-sub (S2' a) (S2 a))
+	      (Dproj a : sg-proj P (S2' a) ([b] Sp' a b))
+	      (Dequiv a da : {b} cn-of b (K2 a) -> sg-equiv Sp (Sp' a b))).
+
+- : share-reg
+     (sg-wf/named
+	(DwfS : sg-wf S))
+     (sg-fst/named
+	(DfstS : sg-fst S K))
+     (sg-proj/out
+	(Dproj1 : sg-proj P1 S ([a] Sp1 a)))
+     (sg-proj/out
+	(Dproj2 : sg-proj P2 S ([a] Sp2 a)))
+     (Dequiv1 : {a} cn-of a K -> sg-equiv Sp (Sp1 a))
+     (Dequiv2 : {a} cn-of a K -> sg-equiv Sp (Sp2 a))
+     (share/out
+	(Dshare : share P1 P2 S Sp S' P))
+     %%
+     (sg-sub/named Dsub)
+     (sg-proj/out Dproj)
+     Dequiv
+     <- share-reg DwfS DfstS Dproj1 Dproj2 Dequiv1 Dequiv2 Dshare
+	(Dsub : sg-sub S' S)
+	(Dproj : sg-proj P S' ([a] Sp' a))
+	(Dequiv : {a} cn-of a K -> sg-equiv Sp (Sp' a)).
+
+%worlds (conbind-reg | modbind-reg | termbind-reg) (share-reg _ _ _ _ _ _ _ _ _ _).
+%total D (share-reg _ _ _ _ _ _ D _ _ _).
+
+
+
+multi-share-reg : sg-wf S
+		   -> multi-share F IL S S' P Sp
+%%
+		   -> sg-sub S' S
+		   -> sg-proj P S' ([a] Sp' a)
+		   -> sg-fst S' K'
+		   -> ({a} cn-of a K' -> sg-equiv Sp (Sp' a))
+		   -> type.
+%mode multi-share-reg +X1 +X2 -X3 -X4 -X5 -X6.
+
+- : multi-share-reg
+     (DwfS : sg-wf S)
+     (multi-share/last
+	(Dapply : {m} apply-path P m (M m))
+	(Dresolve : {a} {m} md-fst m a -> resolve-long m S F I (M m) Sp))
+     %%
+     (sg-sub/reflid DwfS)
+     Dproj
+     DfstS
+     ([a] [da] sg-equiv/refl (DwfSp a da))
+     <- can-sg-fst S (DfstS : sg-fst S K)
+     <- resolve-long-proj' Dresolve Dapply
+	(Dproj : sg-proj P S ([_] Sp))
+     <- sg-proj-reg DwfS DfstS Dproj
+	(DwfSp : {a} cn-of a K -> sg-wf Sp).
+
+- : multi-share-reg
+     (DwfS : sg-wf S)
+     (multi-share/cons
+	(Dshare : share P1 P2 S' Sp1 S'' P')
+	(Dequiv : sg-equiv Sp1 Sp2)
+	(Dapply : {m} apply-path P2 m (M2 m))
+	(Dresolve : {a} {m} md-fst m a -> resolve-long m S' F I (M2 m) Sp2)
+	(Dmshare : multi-share F IL S S' P1 Sp1))
+     %%
+     (sg-sub/trans Dsub Dsub')
+     Dproj
+     DfstS''
+     ([a] [da:cn-of a K''] Dequiv' a (cn-of/subsume DsubK da))
+     <- multi-share-reg DwfS Dmshare
+	(Dsub : sg-sub S' S)
+	(Dproj1 : sg-proj P1 S' ([a] Sp1' a))
+	(DfstS' : sg-fst S' K')
+	(Dequiv1 : {a} cn-of a K' -> sg-equiv Sp1 (Sp1' a))
+     <- resolve-long-proj' Dresolve Dapply
+	(Dproj2 : sg-proj P2 S' ([_] Sp2))
+     <- sg-sub-reg Dsub
+	(DwfS' : sg-wf S') _
+     <- share-reg DwfS' DfstS' Dproj1 Dproj2
+	([a] [da:cn-of a K'] Dequiv1 a da)
+	([_] [_] Dequiv)
+	Dshare
+	%%
+	(Dsub' : sg-sub S'' S')
+	(Dproj : sg-proj P' S'' ([a] Sp' a))
+	(Dequiv' : {a} cn-of a K' -> sg-equiv Sp1 (Sp' a))
+     <- can-sg-fst S'' (DfstS'' : sg-fst S'' K'')
+     <- sg-sub-fst Dsub' DfstS'' DfstS'
+	(DsubK : kd-sub K'' K').
+
+%worlds (conbind-reg | modbind-reg | termbind-reg) (multi-share-reg _ _ _ _ _ _).
+%total D (multi-share-reg _ D _ _ _ _).
+
+
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/sharing-type
+	(Dshare : multi-share name/con IL S S' _ _)
+	(Delab : spec-elab Mec Sec SPe S))
+     %%
+     DwfS'
+     <- spec-elab-reg DofEC Delab
+	(DwfS : sg-wf S)
+     <- multi-share-reg DwfS Dshare
+	(Dsub : sg-sub S' S)
+	_ _ _
+     <- sg-sub-reg Dsub
+	(DwfS' : sg-wf S') _.
+
+
+%% SHARING STRUCTURE
+
+- : spec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (spec-elab/sharing-structure
+	(Dshare : multi-share name/mod IL S S' _ _)
+	(Delab : spec-elab Mec Sec SPe S))
+     %%
+     DwfS'
+     <- spec-elab-reg DofEC Delab
+	(DwfS : sg-wf S)
+     <- multi-share-reg DwfS Dshare
+	(Dsub : sg-sub S' S)
+	_ _ _
+     <- sg-sub-reg Dsub
+	(DwfS' : sg-wf S') _.

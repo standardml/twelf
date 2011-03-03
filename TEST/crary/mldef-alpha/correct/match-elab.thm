@@ -1,0 +1,79 @@
+
+match-spine-elab-reg : md-of pure st/nil Mec Sec
+			-> tm-of st/nil Einnerfail (tag unit)
+			-> tm-of st/nil Eouterfail tagged
+			-> tm-of st/nil Edisc T1
+			-> match-spine-elab Mec Sec Me Einnerfail Eouterfail Edisc T1 E T2
+%%
+			-> tm-of st/nil E T2
+			-> type.
+%mode match-spine-elab-reg +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: match-spine-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofInnerfail : tm-of st/nil Einnerfail (tag unit))
+	   (DofOuterfail : tm-of st/nil Eouterfail tagged)
+	   (DofDisc : tm-of st/nil Edisc T1)
+	   (match-spine-elab/nil
+	      (Dof : cn-of Tcod t))
+	   %%
+	   (tm-of/raise Dof DofOuterfail).
+
+-	: match-spine-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofInnerfail : tm-of st/nil Einnerfail (tag unit))
+	   (DofOuterfail : tm-of st/nil Eouterfail tagged)
+	   (DofDisc : tm-of st/nil Edisc T1)
+	   (match-spine-elab/cons
+	      (DelabMe : match-spine-elab Mec Sec Me Einnerfail Eouterfail Edisc T1 Ematch T2)
+	      (DelabArm : {a} cn-of a Kbind
+			   -> {m} md-assm m Sbind
+			   -> md-fst m a 
+			   -> expr-elab (md/pair Mec m) (sg/sigma Sec ([_] Sbind)) Ee (Earm a m) T2)
+	      (DfstSbind : sg-fst Sbind Kbind)
+	      (DelabPe : pat-elab Mec Sec Pe (tm/tag Einnerfail tm/unit) Edisc T1 Mbind Sbind))
+	   %%
+	   (tm-of/try
+	      ([exn] [dexn:tm-assm exn tagged]
+		 tm-of/iftag
+		 (tm-of/raise DofT2 (tm-of/var dexn))
+		 ([_] [_] DofEmatch) 
+		 DofInnerfail 
+		 (tm-of/var dexn))
+	      (tm-of/letm
+		 DofEarm
+		 DfstSbind
+		 DofMbind))
+	   <- pat-elab-reg DofEC (tm-of/tag tm-of/unit DofInnerfail) DofDisc DelabPe
+	      (DofMbind : md-of pure st/nil Mbind Sbind)
+	   <- md-of-reg DofMbind
+	      (DwfSbind : sg-wf Sbind)
+	   <- sg-fst-reg DwfSbind DfstSbind
+	      (DwfKbind : kd-wf Kbind)
+	   <- ({a} {da:cn-of a Kbind} {m} {dm:md-assm m Sbind} {dfst:md-fst m a}
+		 {das:cn-assm da}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfKbind
+		 -> md-assm-reg dm dfst DfstSbind da DwfSbind
+		 -> expr-elab-reg (md-of/pair (md-of/var dm) DofEC) (DelabArm a da m dm dfst)
+		    (DofEarm a da m dm dfst : tm-of st/nil (Earm a m) T2))
+	   <- match-spine-elab-reg DofEC DofInnerfail DofOuterfail DofDisc DelabMe
+	      (DofEmatch : tm-of st/nil Ematch T2)
+	   <- tm-of-reg DofEmatch
+	      (DofT2 : cn-of T2 t).
+
+-	: match-elab-reg 
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofOuterfail : tm-of st/nil Eouterfail tagged)
+	   (DofDisc : tm-of st/nil Edisc T1)
+	   (match-elab/i
+	      (Delab : {innerfail} tm-assm innerfail (tag unit)
+			-> match-spine-elab Mec Sec Me innerfail Eouterfail Edisc T1 (Ematch innerfail) T2))
+	   %%
+	   (tm-of/lett 
+	      Dof
+	      (tm-of/newtag cn-of/unit))
+	   <- ({innerfail} {d:tm-assm innerfail (tag unit)}
+		 tm-assm-reg d (cn-of/tag cn-of/unit)
+		 -> match-spine-elab-reg DofEC (tm-of/var d) DofOuterfail DofDisc (Delab innerfail d)
+		    (Dof innerfail d : tm-of st/nil (Ematch innerfail) T2)).

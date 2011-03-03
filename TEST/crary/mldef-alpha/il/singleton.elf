@@ -1,0 +1,41 @@
+
+%%%%%  Higher-Order Singletons  %%%%%
+
+single : kind -> (con -> kind) -> type.
+
+single/t	: single t ([b] sing b).
+
+single/sing	: single (sing C) ([b] sing b).
+
+single/pi	: single (pi K1 ([a] K2 a)) ([b] pi K1 ([a] K2s a (app b a)))
+		   <- ({a} single (K2 a) ([b] K2s a b)).
+
+single/sigma	: single (sigma K1 ([a] K2 a)) ([b] sigma (K1s (pi1 b)) ([_] K2s (pi1 b) (pi2 b)))
+		   <- single K1 K1s
+		   <- ({a} single (K2 a) ([b] K2s a b)).
+
+single/one	: single one ([_] one).
+
+
+
+
+single-sg : sg -> (con -> sg) -> type.
+
+single-sg/satom	: single-sg (sg/satom K) ([b] sg/satom (Ks b))
+		   <- single K Ks.
+
+single-sg/datom : single-sg (sg/datom T) ([_] sg/datom T).
+
+single-sg/sgatom
+		: single-sg (sg/sgatom S) ([_] sg/sgatom S).
+
+single-sg/pi	: single-sg (sg/pi S1 S2) ([_] sg/pi S1 S2).
+
+single-sg/sigma	: single-sg (sg/sigma S1 S2) ([b] sg/sigma (S1s (pi1 b)) ([_] S2s (pi1 b) (pi2 b)))
+		   <- single-sg S1 S1s
+		   <- ({a} single-sg (S2 a) ([b] S2s a b)).
+
+single-sg/named	: single-sg (sg/named L S) ([b] sg/named L (Ss b))
+		   <- single-sg S Ss.
+
+single-sg/one	: single-sg sg/one ([_] sg/one).

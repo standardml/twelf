@@ -1,0 +1,1006 @@
+
+%%%%  This is not used any more, but it was too much work just to discard.
+
+
+%%%%%  Definitions  %%%%%
+
+%abbrev
+simplifier/pi
+   : etp                  % A
+      -> etp              % A'
+      -> eterm            % F
+      -> eterm            % F'
+      -> (eterm -> etp)   % B
+      -> etp              % B'
+      -> (eterm -> eterm) % G
+      -> (eterm -> eterm) % G'
+      -> eterm
+   = [A] [A'] [F] [F'] [B] [B'] [G] [G']
+      (elam 
+	 (epi A ([x] B x))
+	 ([h] elam A' ([x'] eapp (G (eapp F' x')) (eapp h (eapp F' x'))))).
+		 
+%abbrev
+desimplifier/pi 
+   : etp                  % A
+      -> etp              % A'
+      -> eterm            % F
+      -> eterm            % F'
+      -> (eterm -> etp)   % B
+      -> etp              % B'
+      -> (eterm -> eterm) % G
+      -> (eterm -> eterm) % G'
+      -> eterm
+   = [A] [A'] [F] [F'] [B] [B'] [G] [G']
+      (elam
+	 (epi A' ([_] B'))
+	 ([h] elam A ([x] eapp (G' x) (eapp h (eapp F x))))).
+
+%abbrev
+simplifier/sigma
+   : etp                  % A
+      -> etp              % A'
+      -> eterm            % F
+      -> eterm            % F'
+      -> (eterm -> etp)   % B
+      -> etp              % B'
+      -> (eterm -> eterm) % G
+      -> (eterm -> eterm) % G'
+      -> eterm
+   = [A] [A'] [F] [F'] [B] [B'] [G] [G']
+      (elam
+	 (esigma A ([x] B x))
+	 ([p] epair (eapp F (epi1 p)) (eapp (G (epi1 p)) (epi2 p)))).
+		 
+%abbrev
+desimplifier/sigma 
+   : etp                  % A
+      -> etp              % A'
+      -> eterm            % F
+      -> eterm            % F'
+      -> (eterm -> etp)   % B
+      -> etp              % B'
+      -> (eterm -> eterm) % G
+      -> (eterm -> eterm) % G'
+      -> eterm
+   = [A] [A'] [F] [F'] [B] [B'] [G] [G']
+      (elam
+	 (esigma A' ([_] B'))
+	 ([p] epair (eapp F' (epi1 p)) (eapp (G' (eapp F' (epi1 p))) (epi2 p)))).
+
+simplifier/t 
+   : eterm
+   = elam et ([x] x).
+
+
+
+simplify : etp -> etp -> eterm -> eterm -> type.
+
+simplify/t	: simplify et et simplifier/t simplifier/t.
+
+simplify/pi	: simplify (epi A ([x] B x)) (epi A' ([_] B'))
+		   (simplifier/pi A A' F F' B B' G G')
+		   (desimplifier/pi A A' F F' B B' G G')
+		   <- simplify A A' F F'
+		   <- ({x}
+			 simplify (B x) B' (G x) (G' x)).
+
+simplify/sigma	: simplify (esigma A ([x] B x)) (esigma A' ([_] B'))
+		   (simplifier/sigma A A' F F' B B' G G')
+		   (desimplifier/sigma A A' F F' B B' G G')
+		   <- simplify A A' F F'
+		   <- ({x}
+			 simplify (B x) B' (G x) (G' x)).
+
+simplify/sing	: simplify (esing M) eone (elam (esing M) ([_] estar)) (elam eone ([_] M)).
+
+simplify/one	: simplify eone eone (elam eone ([_] estar)) (elam eone ([_] estar)).
+
+
+
+%%%%%  Equality  %%%%%
+
+simplify-resp : etp-eq A A' -> etp-eq B B' -> eterm-eq F F' -> eterm-eq G G' -> simplify A B F G -> simplify A' B' F' G' -> type.
+%mode simplify-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: simplify-resp etp-eq/i etp-eq/i eterm-eq/i eterm-eq/i D D.
+
+%worlds (evar) (simplify-resp _ _ _ _ _ _).
+%total {} (simplify-resp _ _ _ _ _ _).
+
+
+
+
+%%%%%  Simplification Theorems  %%%%%
+
+simplify-sound-pi : ewf A
+		       -> ewf A'
+		       -> eof F (epi A ([_] A'))
+		       -> eof F' (epi A' ([_] A))
+		       -> ({x} evof x A -> equiv (eapp F' (eapp F x)) x A)
+		       -> ({x} evof x A' -> equiv (eapp F (eapp F' x)) x A')
+		       -> ({x} evof x A -> ewf (B x))
+		       -> ewf B'
+		       -> ({x} evof x A -> eof (G x) (epi (B x) ([_] B')))
+		       -> ({x} evof x A -> eof (G' x) (epi B' ([_] B x)))
+		       -> ({x} evof x A -> {y} evof y (B x) -> equiv (eapp (G' x) (eapp (G x) y)) y (B x))
+		       -> ({x} evof x A -> {y} evof y B' -> equiv (eapp (G x) (eapp (G' x) y)) y B')
+%%
+		       -> eof (simplifier/pi A A' F F' B B' G G') (epi (epi A B) ([_] epi A' ([_] B')))
+		       -> eof (desimplifier/pi A A' F F' B B' G G') (epi (epi A' ([_] B')) ([_] epi A B))
+		       -> ({h} evof h (epi A B)
+			     -> equiv (eapp (desimplifier/pi A A' F F' B B' G G') 
+					 (eapp (simplifier/pi A A' F F' B B' G G')
+					    h))
+				h (epi A B))
+		       -> ({h} evof h (epi A' ([_] B'))
+			     -> equiv (eapp (simplifier/pi A A' F F' B B' G G') 
+					 (eapp (desimplifier/pi A A' F F' B B' G G')
+					    h))
+				h (epi A' ([_] B'))) 
+		       -> type.
+%mode simplify-sound-pi +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 +X9 +X10 +X11 +X12 -X13 -X14 -X15 -X16.
+
+-	: simplify-sound-pi
+	   (DwfA : ewf A)
+	   (DwfA' : ewf A')
+	   (DofF : eof F (epi A ([_] A')))
+	   (DofF' : eof F' (epi A' ([_] A)))
+	   (DequivF : {x} evof x A -> equiv (eapp F' (eapp F x)) x A)
+	   (DequivF' : {x} evof x A' -> equiv (eapp F (eapp F' x)) x A')
+	   (DwfB : {x} evof x A -> ewf (B x))
+	   (DwfB' : ewf B')
+	   (DofG : {x} evof x A -> eof (G x) (epi (B x) ([_] B')))
+	   (DofG' : {x} evof x A -> eof (G' x) (epi B' ([_] B x)))
+	   (DequivG : {x} evof x A -> {y} evof y (B x) -> equiv (eapp (G' x) (eapp (G x) y)) y (B x))
+	   (DequivG' : {x} evof x A -> {y} evof y B' -> equiv (eapp (G x) (eapp (G' x) y)) y B')
+	   %%
+	   (eof/lam
+	      ([h] [dh:evof h (epi A B)]
+		 eof/lam
+		 ([x'] [dx':evof x' A']
+		    eof/app
+		    (eof/app
+		       (eof/app
+			  (eof/var DwfA' dx')
+			  DofF')
+		       (eof/var (ewf/pi DwfB DwfA) dh))
+		    (DofGx x' dx'))
+		 DwfA')
+	      (ewf/pi DwfB DwfA))
+	   %
+	   (eof/lam
+	      ([h] [dh:evof h (epi A' ([_] B'))]
+		 eof/lam
+		 ([x] [d:evof x A]
+		    eof/app
+		    (eof/app
+		       (eof/app
+			  (eof/var DwfA d)
+			  DofF)
+		       (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh))
+		    (DofG' x d))
+		 DwfA)
+	      (ewf/pi ([_] [_] DwfB') DwfA'))
+	   %
+	   ([h] [dh:evof h (epi A B)]
+	      equiv/trans
+	      (equiv/trans
+		 (equiv/extpi
+		    ([x] [d:evof x A]
+		       equiv/trans
+		       (equiv/trans
+			  (DequivG2 h dh x d)
+			  (equiv/app
+			     (equiv/app
+				(equiv/symm 
+				   (equiv/app
+				      (equiv/symm (DequivF x d))
+				      (equiv/reflex (eof/var (ewf/pi DwfB DwfA) dh))))
+				(equiv/symm (DequivG1 x d)))
+			     (equiv/reflex (DofG' x d))))
+		       (equiv/beta
+			  (eof/var DwfA d)
+			  ([x] [d:evof x A] 
+			     eof/app
+			     (eof/app
+				(eof/equiv
+				   (DequivBx x d)
+				   (eof/app
+				      (eof/app
+					 (eof/app
+					    (eof/var DwfA d)
+					    DofF)
+					 DofF')
+				      (eof/var (ewf/pi DwfB DwfA) dh)))
+				(DofG1 x d))
+			     (DofG' x d))))
+		    (eof/var (ewf/pi DwfB DwfA) dh)
+		    (eof/lam
+		       ([x] [d:evof x A]
+			  eof/app
+			  (eof/app
+			     (eof/equiv
+				(DequivBx x d)
+				(eof/app
+				   (eof/app
+				      (eof/app
+					 (eof/var DwfA d)
+					 DofF)
+				      DofF')
+				   (eof/var (ewf/pi DwfB DwfA) dh)))
+			     (DofG1 x d))
+			  (DofG' x d))
+		       DwfA))
+		 (equiv/lam
+		    ([x] [d:evof x A]
+		       equiv/app
+		       (equiv/trans
+			  (equiv/beta
+			     (eof/app
+				(eof/var DwfA d)
+				DofF)
+			     ([x'] [dx':evof x' A']
+				eof/app
+				(eof/app
+				   (eof/app (eof/var DwfA' dx') DofF')
+				   (eof/var (ewf/pi DwfB DwfA) dh))
+				(DofGx x' dx')))
+			  (equiv/app
+			     (equiv/reflex (eof/app (eof/var DwfA d) DofF))
+			     (equiv/beta
+				(eof/var (ewf/pi DwfB DwfA) dh)
+				([h] [dh:evof h (epi A B)]
+				   eof/lam
+				   ([x'] [dx':evof x' A']
+				      eof/app
+				      (eof/app
+					 (eof/app (eof/var DwfA' dx') DofF')
+					 (eof/var (ewf/pi DwfB DwfA) dh))
+				      (DofGx x' dx'))
+				   DwfA'))))
+		       (equiv/reflex (DofG' x d)))
+		    (tequiv/reflex DwfA)))
+	      (equiv/beta-nd
+		 (eof/app-nd
+		    (eof/var (ewf/pi DwfB DwfA) dh)
+		    (eof/lam
+		       ([h] [dh:evof h (epi A B)]
+			  eof/lam
+			  ([x'] [dx':evof x' A']
+			     eof/app
+			     (eof/app
+				(eof/app (eof/var DwfA' dx') DofF')
+				(eof/var (ewf/pi DwfB DwfA) dh))
+			     (DofGx x' dx'))
+			  DwfA')
+		       (ewf/pi DwfB DwfA)))
+		 ([h'] [dh':evof h' (epi A' ([_] B'))]
+		    eof/lam
+		    ([x] [d:evof x A]
+		       eof/app
+		       (eof/app
+			  (eof/app (eof/var DwfA d) DofF)
+			  (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh'))
+		       (DofG' x d))
+		    DwfA)))
+	   %
+	   ([h] [dh:evof h (epi A' ([_] B'))]
+	      equiv/trans
+	      (equiv/trans
+		 (equiv/extpi
+		    ([x'] [dx':evof x' A']
+		       equiv/trans
+		       (equiv/trans
+			  (equiv/app
+			     (DequivF' x' dx')
+			     (equiv/reflex (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh)))
+			  (DequivG2' h dh x' dx'))
+		       (equiv/beta-nd
+			  (eof/var DwfA' dx')
+			  ([x'] [dx':evof x' A']
+			     eof/app
+			     (eof/app
+				(eof/app
+				   (eof/app
+				      (eof/app
+					 (eof/var DwfA' dx')
+					 DofF')
+				      DofF)
+				   (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh))
+				(DofGx' x' dx'))
+			     (DofGx x' dx'))))
+		    (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh)
+		    (eof/lam
+		       ([x'] [dx':evof x' A']
+			  eof/app
+			  (eof/app
+			     (eof/app
+				(eof/app
+				   (eof/app
+				      (eof/var DwfA' dx')
+				      DofF')
+				   DofF)
+				(eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh))
+			     (DofGx' x' dx'))
+			  (DofGx x' dx'))
+		       DwfA'))
+		 (equiv/lam
+		    ([x'] [dx':evof x' A']
+		       equiv/app-nd
+		       (equiv/trans
+			  (equiv/beta
+			     (eof/app
+				(eof/var DwfA' dx')
+				DofF')
+			     ([x] [d:evof x A]
+				eof/app
+				(eof/app
+				   (eof/app
+				      (eof/var DwfA d)
+				      DofF)
+				   (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh))
+				(DofG' x d)))
+			  (equiv/app
+			     (equiv/reflex
+				(eof/app
+				   (eof/var DwfA' dx')
+				   DofF'))
+			     (equiv/beta-nd
+				(eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh)
+				([h] [dh:evof h (epi A' ([_] B'))]
+				   eof/lam
+				   ([x] [d:evof x A]
+				      eof/app
+				      (eof/app
+					 (eof/app
+					    (eof/var DwfA d)
+					    DofF)
+					 (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh))
+				      (DofG' x d))
+				   DwfA))))
+		       (equiv/reflex (DofGx x' dx')))
+		    (tequiv/reflex DwfA')))
+	      (equiv/beta-nd
+		 (eof/app-nd
+		    (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh)
+		    (eof/lam
+		       ([h] [dh:evof h (epi A' ([_] B'))]
+			  eof/lam
+			  ([x] [d:evof x A]
+			     eof/app
+			     (eof/app
+				(eof/app
+				   (eof/var DwfA d)
+				   DofF)
+				(eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh))
+			     (DofG' x d))
+			  DwfA)
+		       (ewf/pi ([_] [_] DwfB') DwfA')))
+		 ([h'] [dh':evof h' (epi A B)]
+		    eof/lam
+		    ([x'] [dx':evof x' A']
+		       eof/app
+		       (eof/app
+			  (eof/app
+			     (eof/var DwfA' dx')
+			     DofF')
+			  (eof/var (ewf/pi DwfB DwfA) dh'))
+		       (DofGx x' dx'))
+		    DwfA')))
+	   <- ({x'} {dx':evof x' A'}
+		 esubst DofG (eof/app (eof/var DwfA' dx') DofF')
+		 (DofGx x' dx' : eof (G (eapp F' x')) (epi (B (eapp F' x')) ([_] B'))))
+	   <- ({x} {d:evof x A}
+		 functionality DofG (equiv/symm (DequivF x d))
+		 (DequivG1 x d : equiv (G x) (G (eapp F' (eapp F x))) (epi (B x) ([_] B'))))
+	   <- ({h} {dh:evof h (epi A B)} {x} {d:evof x A}
+		 esubst-equiv (DequivG x d) (eof/app (eof/var DwfA d) (eof/var (ewf/pi DwfB DwfA) dh))
+		 (DequivG2 h dh x d : equiv (eapp (G' x) (eapp (G x) (eapp h x))) (eapp h x) (B x)))
+	   <- ({x} {d:evof x A}
+		 equiv-reg (DequivG1 x d)
+		 _
+		 (DofG1 x d : eof (G (eapp F' (eapp F x))) (epi (B x) ([_] B')))
+		 _)
+	   <- ({x} {d:evof x A}
+		 tfunctionality DwfB (DequivF x d)
+		 (DequivBx x d : tequiv (B (eapp F' (eapp F x))) (B x)))
+	   <- ({x'} {dx':evof x' A'} {y} {dy:evof y B'}
+		 esubst-equiv ([x] [d:evof x A] DequivG' x d y dy) (eof/app (eof/var DwfA' dx') DofF')
+		 (DequivG1' x' dx' y dy : equiv (eapp (G (eapp F' x')) (eapp (G' (eapp F' x')) y)) y B'))
+	   <- ({h} {dh:evof h (epi A' ([_] B'))} {x'} {dx':evof x' A'}
+		 esubst-equiv ([y] [dy] DequivG1' x' dx' y dy) 
+		 (eof/app 
+		    (eof/app
+		       (eof/app
+			  (eof/var DwfA' dx')
+			  DofF')
+		       DofF)
+		    (eof/var (ewf/pi ([_] [_] DwfB') DwfA') dh))
+		 (DequivG2' h dh x' dx' : equiv (eapp (G (eapp F' x')) (eapp (G' (eapp F' x')) (eapp h (eapp F (eapp F' x'))))) (eapp h (eapp F (eapp F' x'))) B'))
+	   <- ({x'} {dx':evof x' A'}
+		 esubst DofG' (eof/app (eof/var DwfA' dx') DofF')
+		 (DofGx' x' dx' : eof (G' (eapp F' x')) (epi B' ([_] B (eapp F' x'))))).
+
+%worlds (ebind) (simplify-sound-pi _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total {} (simplify-sound-pi _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+
+
+
+simplify-sound-sigma : ewf A
+			  -> ewf A'
+			  -> eof F (epi A ([_] A'))
+			  -> eof F' (epi A' ([_] A))
+			  -> ({x} evof x A -> equiv (eapp F' (eapp F x)) x A)
+			  -> ({x} evof x A' -> equiv (eapp F (eapp F' x)) x A')
+			  -> ({x} evof x A -> ewf (B x))
+			  -> ewf B'
+			  -> ({x} evof x A -> eof (G x) (epi (B x) ([_] B')))
+			  -> ({x} evof x A -> eof (G' x) (epi B' ([_] B x)))
+			  -> ({x} evof x A -> {y} evof y (B x) -> equiv (eapp (G' x) (eapp (G x) y)) y (B x))
+			  -> ({x} evof x A -> {y} evof y B' -> equiv (eapp (G x) (eapp (G' x) y)) y B')
+%%
+			  -> eof (simplifier/sigma A A' F F' B B' G G') (epi (esigma A B) ([_] esigma A' ([_] B')))
+			  -> eof (desimplifier/sigma A A' F F' B B' G G') (epi (esigma A' ([_] B')) ([_] esigma A B))
+			  -> ({h} evof h (esigma A B)
+				-> equiv (eapp (desimplifier/sigma A A' F F' B B' G G') 
+					    (eapp (simplifier/sigma A A' F F' B B' G G')
+					       h))
+				   h (esigma A B))
+			  -> ({h} evof h (esigma A' ([_] B'))
+				-> equiv (eapp (simplifier/sigma A A' F F' B B' G G') 
+					    (eapp (desimplifier/sigma A A' F F' B B' G G')
+					       h))
+				   h (esigma A' ([_] B'))) 
+			  -> type.
+%mode simplify-sound-sigma +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 +X9 +X10 +X11 +X12 -X13 -X14 -X15 -X16.
+
+-	: simplify-sound-sigma
+	   (DwfA : ewf A)
+	   (DwfA' : ewf A')
+	   (DofF : eof F (epi A ([_] A')))
+	   (DofF' : eof F' (epi A' ([_] A)))
+	   (DequivF : {x} evof x A -> equiv (eapp F' (eapp F x)) x A)
+	   (DequivF' : {x} evof x A' -> equiv (eapp F (eapp F' x)) x A')
+	   (DwfB : {x} evof x A -> ewf (B x))
+	   (DwfB' : ewf B')
+	   (DofG : {x} evof x A -> eof (G x) (epi (B x) ([_] B')))
+	   (DofG' : {x} evof x A -> eof (G' x) (epi B' ([_] B x)))
+	   (DequivG : {x} evof x A -> {y} evof y (B x) -> equiv (eapp (G' x) (eapp (G x) y)) y (B x))
+	   (DequivG' : {x} evof x A -> {y} evof y B' -> equiv (eapp (G x) (eapp (G' x) y)) y B')
+	   %%
+	   (eof/lam
+	      ([p] [dp:evof p (esigma A B)]
+		 eof/pair
+		 ([_] [_] DwfB')
+		 (eof/app
+		    (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp))
+		    (DofGx p dp))
+		 (eof/app
+		    (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+		    DofF))
+	      (ewf/sigma DwfB DwfA))
+	   %
+	   (eof/lam
+	      ([p] [dp:evof p (esigma A' ([_] B'))]
+		 eof/pair
+		 DwfB
+		 (eof/app
+		    (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+		    (DofGx' p dp))
+		 (eof/app
+		    (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+		    DofF'))
+	      (ewf/sigma ([_] [_] DwfB') DwfA'))
+	   %
+	   ([p] [dp:evof p (esigma A B)]
+	      equiv/trans
+	      (equiv/trans
+		 (equiv/symm
+		    (equiv/extsigma
+		       DwfB
+		       (equiv/symm
+			  (equiv/beta2
+			     (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp))
+			     (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))))
+		       (equiv/symm
+			  (equiv/beta1
+			     (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp))
+			     (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))))))
+		 (equiv/pair
+		    DwfB
+		    (equiv/trans
+		       (equiv/equiv
+			  (tequiv/symm (DequivBx p dp))
+			  (DequivG2 p dp))
+		       (equiv/app-nd
+			  (equiv/trans
+			     (equiv/beta2
+				(eof/app (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp)) (DofGx p dp))
+				(eof/app
+				   (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+				   DofF))
+			     (equiv/pi2
+				(equiv/beta-nd
+				   (eof/var (ewf/sigma DwfB DwfA) dp)
+				   ([p] [dp:evof p (esigma A B)]
+				      eof/pair
+				      ([_] [_] DwfB')
+				      (eof/app (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp)) (DofGx p dp))
+				      (eof/app (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp)) DofF)))))
+			  (DequivG1 p dp)))
+		    (equiv/trans
+		       (DequivFx p dp)
+		       (equiv/app-nd
+			  (equiv/trans
+			     (equiv/beta1
+				(eof/app (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp)) (DofGx p dp))
+				(eof/app
+				   (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+				   DofF))
+			     (equiv/pi1
+				(equiv/beta-nd
+				   (eof/var (ewf/sigma DwfB DwfA) dp)
+				   ([p] [dp:evof p (esigma A B)]
+				      eof/pair 
+				      ([_] [_] DwfB')
+				      (eof/app (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp)) (DofGx p dp))
+				      (eof/app
+					 (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+					 DofF)))))
+			  (equiv/reflex DofF')))
+))
+	      (equiv/beta-nd
+		 (eof/app-nd
+		    (eof/var (ewf/sigma DwfB DwfA) dp)
+		    (eof/lam
+		       ([p] [dp:evof p (esigma A B)]
+			  eof/pair
+			  ([_] [_] DwfB')
+			  (eof/app
+			     (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp))
+			     (DofGx p dp))
+			  (eof/app
+			     (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+			     DofF))
+		       (ewf/sigma DwfB DwfA)))
+		 ([p'] [dp':evof p' (esigma A' ([_] B'))]
+		    eof/pair
+		    DwfB
+		    (eof/app (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp')) (DofGx' p' dp'))
+		    (eof/app (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp')) DofF'))))
+	   %
+	   ([p] [dp:evof p (esigma A' ([_] B'))]
+	      equiv/trans
+	      (equiv/trans
+		 (equiv/extsigma
+		    ([_] [_] DwfB')
+		    (equiv/beta2
+		       (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+		       (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)))
+		    (equiv/beta1
+		       (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+		       (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))))
+		 (equiv/pair
+		    ([_] [_] DwfB')
+		    (equiv/trans
+		       (equiv/trans
+			  (DequivG2' p dp)
+			  (equiv/app-nd
+			     (equiv/reflex
+				(eof/equiv
+				   (tequiv/symm (DequivBx' p dp))
+				   (eof/app
+				      (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+				      (DofGx' p dp))))
+			     (DequivG1' p dp)))
+		       (equiv/app-nd
+			  (equiv/trans
+			     (equiv/beta2
+				(eof/equiv
+				   (tequiv/symm (DequivBx' p dp))
+				   (eof/app
+				      (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+				      (DofGx' p dp)))
+				(eof/app
+				   (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+				   DofF'))
+			     (equiv/pi2
+				(equiv/beta-nd
+				   (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)
+				   ([p] [dp:evof p (esigma A' ([_] B'))]
+				      eof/pair
+				      DwfB
+				      (eof/app
+					 (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+					 (DofGx' p dp))
+				      (eof/app
+					 (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+					 DofF')))))
+			  (equiv/reflex
+			     (DofG1 p dp))))
+		    (equiv/trans
+		       (DequivFx' p dp)
+		       (equiv/app-nd
+			  (equiv/trans
+			     (equiv/beta1
+				(eof/app
+				   (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+				   (DofGx' p dp))
+				(eof/app
+				   (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+				   DofF'))
+			     (equiv/pi1
+				(equiv/beta-nd
+				   (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)
+				   ([p] [dp:evof p (esigma A' ([_] B'))]
+				      eof/pair
+				      DwfB
+				      (eof/app
+					 (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+					 (DofGx' p dp))
+				      (eof/app
+					 (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+					 DofF')))))
+			  (equiv/reflex DofF)))))
+	      (equiv/beta-nd
+		 (eof/app
+		    (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)
+		    (eof/lam
+		       ([p] [dp:evof p (esigma A' ([_] B'))]
+			  eof/pair
+			  DwfB
+			  (eof/app
+			     (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+			     (DofGx' p dp))
+			  (eof/app
+			     (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+			     DofF'))
+		       (ewf/sigma ([_] [_] DwfB') DwfA')))
+		 ([p'] [dp':evof p' (esigma A B)]
+		    eof/pair
+		    ([_] [_] DwfB')
+		    (eof/app
+		       (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp'))
+		       (DofGx p' dp'))
+		    (eof/app
+		       (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp'))
+		       DofF))))
+	   <- ({p} {dp:evof p (esigma A B)}
+		 esubst DofG (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+		 (DofGx p dp : eof (G (epi1 p)) (epi (B (epi1 p)) ([_] B'))))
+	   <- ({p} {dp:evof p (esigma A' ([_] B'))}
+		 esubst DofG' (eof/app (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)) DofF')
+		 (DofGx' p dp : eof (G' (eapp F' (epi1 p))) (epi B' ([_] B (eapp F' (epi1 p))))))
+	   <- ({p} {dp:evof p (esigma A B)}
+		 esubst-equiv DequivF (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+		 (DequivFx p dp : equiv (eapp F' (eapp F (epi1 p))) (epi1 p) A))
+	   <- ({p} {dp:evof p (esigma A B)}
+		 functionality DofG'
+		 (equiv/trans
+		    (DequivFx p dp)
+		    (equiv/app-nd
+		       (equiv/trans
+			  (equiv/beta1
+			     (eof/app (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp)) (DofGx p dp))
+			     (eof/app
+				(eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+				DofF))
+			  (equiv/pi1
+			     (equiv/beta-nd
+				(eof/var (ewf/sigma DwfB DwfA) dp)
+				([p] [dp:evof p (esigma A B)]
+				   eof/pair 
+				   ([_] [_] DwfB')
+				   (eof/app (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp)) (DofGx p dp))
+				   (eof/app
+				      (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+				      DofF)))))
+		       (equiv/reflex DofF')))
+		 (DequivG1 p dp : equiv (G' _) (G' (epi1 p)) (epi B' ([_] B _))))
+	   <- ({p} {dp:evof p (esigma A B)}
+		 tfunctionality DwfB 
+		 (equiv/trans
+		    (DequivFx p dp)
+		    (equiv/app-nd
+		       (equiv/trans
+			  (equiv/beta1
+			     (eof/app (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp)) (DofGx p dp))
+			     (eof/app
+				(eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+				DofF))
+			  (equiv/pi1
+			     (equiv/beta-nd
+				(eof/var (ewf/sigma DwfB DwfA) dp)
+				([p] [dp:evof p (esigma A B)]
+				   eof/pair 
+				   ([_] [_] DwfB')
+				   (eof/app (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp)) (DofGx p dp))
+				   (eof/app
+				      (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+				      DofF)))))
+		       (equiv/reflex DofF')))
+		 (DequivBx p dp : tequiv 
+				   (B (eapp F'
+					 (epi1
+					    (eapp
+					       (elam (esigma A ([m:eterm] B m))
+						  ([m:eterm]
+						     epair (eapp F (epi1 m))
+						     (eapp (G (epi1 m)) (epi2 m)))) p)))) 
+				   (B (epi1 p))))
+	   <- ({p} {dp:evof p (esigma A B)}
+		 esubst2-equiv DequivG
+		 (eof/pi1 (eof/var (ewf/sigma DwfB DwfA) dp))
+		 (eof/pi2 (eof/var (ewf/sigma DwfB DwfA) dp))
+		 (DequivG2 p dp : equiv (eapp (G' (epi1 p)) (eapp (G (epi1 p)) (epi2 p))) (epi2 p) (B (epi1 p))))
+	   <- ({p} {dp:evof p (esigma A' ([_] B'))}
+		 esubst-equiv DequivF' (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+		 (DequivFx' p dp : equiv (eapp F (eapp F' (epi1 p))) (epi1 p) A'))
+	   <- ({p} {dp:evof p (esigma A' ([_] B'))}
+		 functionality DofG
+		 (equiv/trans
+		    (equiv/beta1
+		       (eof/app
+			  (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+			  (DofGx' p dp))
+		       (eof/app
+			  (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+			  DofF'))
+		    (equiv/pi1
+		       (equiv/beta-nd
+			  (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)
+			  ([p] [dp:evof p (esigma A' ([_] B'))]
+			     eof/pair
+			     DwfB
+			     (eof/app
+				(eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+				(DofGx' p dp))
+			     (eof/app (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)) DofF')))))
+		 (DequivG1' p dp 
+		    : equiv (G _) (G (eapp F' (epi1 p))) 
+		       (epi
+			  (B
+			     (epi1
+				(eapp
+				   (elam (esigma A' ([m:eterm] B'))
+				      ([p2:eterm]
+					 epair (eapp F' (epi1 p2))
+					 (eapp (G' (eapp F' (epi1 p2)))
+					    (epi2 p2)))) p)))
+			  ([_] B'))))
+	   <- ({p} {dp:evof p (esigma A' ([_] B'))}
+		 tfunctionality DwfB
+		 (equiv/trans
+		    (equiv/beta1
+		       (eof/app
+			  (eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+			  (DofGx' p dp))
+		       (eof/app
+			  (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+			  DofF'))
+		    (equiv/pi1
+		       (equiv/beta-nd
+			  (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)
+			  ([p] [dp:evof p (esigma A' ([_] B'))]
+			     eof/pair
+			     DwfB
+			     (eof/app
+				(eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+				(DofGx' p dp))
+			     (eof/app (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)) DofF')))))
+		 (DequivBx' p dp : tequiv (B (epi1
+						(eapp
+						   (elam (esigma A' ([m:eterm] B'))
+						      ([p2:eterm]
+							 epair (eapp F' (epi1 p2))
+							 (eapp (G' (eapp F' (epi1 p2)))
+							    (epi2 p2)))) 
+						   p))) (B (eapp F' (epi1 p)))))
+	   <- ({p} {dp:evof p (esigma A' ([_] B'))}
+		 esubst2-equiv DequivG'
+		 (eof/app
+		    (eof/pi1
+		       (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+		    DofF')
+		 (eof/pi2
+		    (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+		 (DequivG2' p dp : equiv (eapp (G (eapp F' (epi1 p))) (eapp (G' (eapp F' (epi1 p))) (epi2 p))) (epi2 p) B'))
+	   <- ({p} {dp:evof p (esigma A' ([_] B'))}
+		 esubst DofG
+		 (eof/pi1
+		    (eof/app-nd
+		       (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)
+		       (eof/lam
+			  ([p] [dp:evof p (esigma A' ([_] B'))]
+			     eof/pair
+			     DwfB
+			     (eof/app
+				(eof/pi2 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp))
+				(DofGx' p dp))
+			     (eof/app (eof/pi1 (eof/var (ewf/sigma ([_] [_] DwfB') DwfA') dp)) DofF'))
+			  (ewf/sigma ([_] [_] DwfB') DwfA'))))
+		 (DofG1 p dp : eof
+				(G (epi1
+				      (eapp
+					 (elam (esigma A' ([_] B'))
+					    ([m:eterm]
+					       epair (eapp F' (epi1 m))
+					       (eapp (G' (eapp F' (epi1 m)))
+						  (epi2 m)))) 
+					 p)))
+				(epi (B
+					(epi1
+					   (eapp
+					      (elam (esigma A' ([_] B'))
+						 ([p2:eterm]
+						    epair (eapp F' (epi1 p2))
+						    (eapp (G' (eapp F' (epi1 p2)))
+						       (epi2 p2))))
+					      p)))
+				   ([_] B')))).
+
+%worlds (ebind) (simplify-sound-sigma _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+%total {} (simplify-sound-sigma _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).
+
+
+
+simplify-sound-t : eof simplifier/t (epi et ([_] et))
+		      -> ({x} evof x et
+			    -> equiv (eapp simplifier/t (eapp simplifier/t x)) x et)
+		      -> type.
+%mode simplify-sound-t -X1 -X2.
+
+-	: simplify-sound-t
+	   (eof/lam ([x] [d] eof/var ewf/t d) ewf/t)
+	   ([x] [d]
+	      equiv/trans
+	      (equiv/beta (eof/var ewf/t d) ([x] [d] eof/var ewf/t d))
+	      (equiv/beta 
+		 (eof/app (eof/var ewf/t d) (eof/lam ([x] [d] eof/var ewf/t d) ewf/t)) 
+		 ([x] [d] eof/var ewf/t d))).
+
+%worlds (ebind) (simplify-sound-t _ _).
+%total {} (simplify-sound-t _ _).
+
+
+
+simplify-sound : simplify A A' M M'
+		  -> ewf A
+%%
+		  -> ewf A'
+		  -> eof M (epi A ([_] A'))
+		  -> eof M' (epi A' ([_] A))
+		  -> ({x} evof x A
+			-> equiv (eapp M' (eapp M x)) x A)
+		  -> ({x} evof x A'
+			-> equiv (eapp M (eapp M' x)) x A') -> type.
+%mode simplify-sound +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: simplify-sound simplify/t _
+	   ewf/t
+	   Dof Dof Dequiv Dequiv
+	   <- simplify-sound-t Dof Dequiv.
+
+-	: simplify-sound
+	   (simplify/pi
+	      (DsimpB : {x} simplify (B x) B' (G x) (G' x))
+	      (DsimpA : simplify A A' F F'))
+	   (ewf/pi
+	      (DwfB : {x} evof x A -> ewf (B x))
+	      (DwfA : ewf A))
+	   %%
+	   (ewf/pi
+	      ([_] [_] DwfB')
+	      DwfA')
+	   DofM DofM' DequivM DequivM'
+	   <- simplify-sound DsimpA DwfA
+	      (DwfA' : ewf A')
+	      (DofF : eof F (epi A ([_] A')))
+	      (DofF' : eof F' (epi A' ([_] A)))
+	      (DequivF : {x} evof x A -> equiv (eapp F' (eapp F x)) x A)
+	      (DequivF' : {x} evof x A' -> equiv (eapp F (eapp F' x)) x A')
+	   <- ({x} {d:evof x A}
+		 simplify-sound (DsimpB x) (DwfB x d)
+		 (DwfB'' x d : ewf B')
+		 (DofG x d : eof (G x) (epi (B x) ([_] B')))
+		 (DofG' x d : eof (G' x) (epi B' ([_] B x)))
+		 (DequivG x d : {y} evof y (B x) -> equiv (eapp (G' x) (eapp (G x) y)) y (B x))
+		 (DequivG' x d : {y} evof y B' -> equiv (eapp (G x) (eapp (G' x) y)) y B'))
+	   <- einhabitation DwfA
+	      (DofAinh : eof Ainh A)
+	   <- esubst-wf DwfB'' DofAinh
+	      (DwfB' : ewf B')
+	   <- simplify-sound-pi DwfA DwfA' DofF DofF' DequivF DequivF' DwfB DwfB' DofG DofG' DequivG DequivG'
+	      DofM DofM' DequivM DequivM'.
+
+-	: simplify-sound
+	   (simplify/sigma
+	      (DsimpB : {x} simplify (B x) B' (G x) (G' x))
+	      (DsimpA : simplify A A' F F'))
+	   (ewf/sigma
+	      (DwfB : {x} evof x A -> ewf (B x))
+	      (DwfA : ewf A))
+	   %%
+	   (ewf/sigma
+	      ([_] [_] DwfB')
+	      DwfA')
+	   DofM DofM' DequivM DequivM'
+	   <- simplify-sound DsimpA DwfA
+	      (DwfA' : ewf A')
+	      (DofF : eof F (epi A ([_] A')))
+	      (DofF' : eof F' (epi A' ([_] A)))
+	      (DequivF : {x} evof x A -> equiv (eapp F' (eapp F x)) x A)
+	      (DequivF' : {x} evof x A' -> equiv (eapp F (eapp F' x)) x A')
+	   <- ({x} {d:evof x A}
+		 simplify-sound (DsimpB x) (DwfB x d)
+		 (DwfB'' x d : ewf B')
+		 (DofG x d : eof (G x) (epi (B x) ([_] B')))
+		 (DofG' x d : eof (G' x) (epi B' ([_] B x)))
+		 (DequivG x d : {y} evof y (B x) -> equiv (eapp (G' x) (eapp (G x) y)) y (B x))
+		 (DequivG' x d : {y} evof y B' -> equiv (eapp (G x) (eapp (G' x) y)) y B'))
+	   <- einhabitation DwfA
+	      (DofAinh : eof Ainh A)
+	   <- esubst-wf DwfB'' DofAinh
+	      (DwfB' : ewf B')
+	   <- simplify-sound-sigma DwfA DwfA' DofF DofF' DequivF DequivF' DwfB DwfB' DofG DofG' DequivG DequivG'
+	      DofM DofM' DequivM DequivM'.
+
+-	: simplify-sound simplify/sing (ewf/sing Dof)
+	   ewf/one
+	   (eof/lam ([_] [_] eof/star) (ewf/sing Dof))
+	   (eof/lam ([_] [_] eof/sing Dof) ewf/one)
+	   ([x] [d]
+	      equiv/equiv
+	      (tequiv/sing
+		 (equiv/singelim
+		    (eof/var (ewf/sing Dof) d)))
+	      (equiv/symm
+		 (equiv/sing
+		    (equiv/symm
+		       (equiv/trans
+			  (equiv/symm
+			     (equiv/singelim
+				(eof/var (ewf/sing Dof) d)))
+			  (equiv/beta
+			     (eof/app
+				(eof/var (ewf/sing Dof) d)
+				(eof/lam
+				   ([_] [_] eof/star)
+				   (ewf/sing Dof)))
+			     ([_] [_] Dof)))))))
+	   ([x] [d]
+	      equiv/one
+	      (eof/var ewf/one d)
+	      (eof/app
+		 (eof/app
+		    (eof/var ewf/one d)
+		    (eof/lam
+		       ([_] [_] eof/sing Dof)
+		       ewf/one))
+		 (eof/lam
+		    ([_] [_] eof/star)
+		    (ewf/sing Dof)))).
+
+-	: simplify-sound simplify/one _ ewf/one
+	   (eof/lam ([_] [_] eof/star) ewf/one)
+	   (eof/lam ([_] [_] eof/star) ewf/one)
+	   ([x] [d]
+	      equiv/one
+	      (eof/var ewf/one d)
+	      (eof/app
+		 (eof/app-nd
+		    (eof/var ewf/one d)
+		    (eof/lam ([_] [_] eof/star) ewf/one))
+		 (eof/lam ([_] [_] eof/star) ewf/one)))
+	   ([x] [d]
+	      equiv/one
+	      (eof/var ewf/one d)
+	      (eof/app
+		 (eof/app-nd
+		    (eof/var ewf/one d)
+		    (eof/lam ([_] [_] eof/star) ewf/one))
+		 (eof/lam ([_] [_] eof/star) ewf/one))).
+
+%worlds (ebind) (simplify-sound _ _ _ _ _ _ _).
+%total D (simplify-sound D _ _ _ _ _ _).

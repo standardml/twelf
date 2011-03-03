@@ -1,0 +1,11 @@
+
+vdt/ofkd : ofkd C1 K -> kd-wf K -> type.
+
+%mode vdt/ofkd +D1 -D2.
+
+
+mofkd	: ofkd C K -> met -> type.
+%mode mofkd *D *M.
+
+can-mofkd	: {D: ofkd C K} mofkd D Cm -> type.
+%mode can-mofkd +D1 -D2.
