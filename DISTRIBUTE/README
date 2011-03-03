@@ -1,0 +1,21 @@
+Twelf Build Process
+Author: Robert J. Simmons
+
+There are several scripts that make up the build process; all are intended
+to be run from within the DISTRIBUTE directory. The simplest script is the
+./build.sh script, which does the following:
+
+ - Exports a fresh copy of twelf from Subversion
+ - Removes non-distribution files
+ - Creates the twelf-src.tar.gz source tarball
+ - Compiles twelf-server with mlton
+ - Removes source files
+ - Creates the twelf-compiled.tar.gz binary tarball
+
+The ./build.sh script can be used from any computer with mlton installed.
+
+The scripts controller-linux.sh and controller-osx.sh, which SHOULD ONLY BE
+RUN FROM THE RESPECTIVE OPERATING SYSTEMS, are intended only to be run in 
+environments where there is a password-free connection to the Twelf webspace,
+specified in the $REMOTE_DIR variable. The osx version of the controller uses 
+the files in osx to create a pretty disk image for Twelf.
