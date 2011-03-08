@@ -31,6 +31,7 @@ popd >& /dev/null
 
 # Run build script and make dmg
 ./build.sh $OUTPUT_DIR keep >& $OUTPUT_DIR/new-build-output-1
+cp /opt/local/lib/libgmp.a twelf/bin
 make -C osx >& $OUTPUT_DIR/new-build-output-2
 cat $OUTPUT_DIR/new-build-output-1 $OUTPUT_DIR/new-build-output-2 > $OUTPUT_DIR/new-build-output
 rm -f $OUTPUT_DIR/new-build-output-1
