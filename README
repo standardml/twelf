@@ -1,5 +1,5 @@
 Twelf
-Copyright (C) 1997-2002, Frank Pfenning and Carsten Schuermann
+Copyright (C) 1997-2011, Frank Pfenning and Carsten Schuermann
 
 Authors: Frank Pfenning
          Carsten Schuermann
@@ -8,7 +8,6 @@ With contributions by:
          Roberto Virga
          Kevin Watkins
          Jason Reed
-         Robert J. Simmons
 
 Twelf is an implementation of
 
