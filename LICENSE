@@ -20,3 +20,17 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+==============
+
+The compiled OS/X release of Twelf is linked with the GNU Multiple Precision 
+Arithmetic Library, which is provided with MacPorts and Fink but not available 
+by default on OS/X systems. 
+
+http://gmplib.org/
+
+The GNU Multiple Precision Arithmetic Library is available under the 
+GNU Lesser General Public License.
+
+http://www.gnu.org/copyleft/lesser.html
+
