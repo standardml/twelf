@@ -1,0 +1,6 @@
+structure BuildId =
+struct
+val revision = "1782:1804"
+val date = "03/03/11 at 12:14:47"
+val hostname = "cmu-407852.wv.cc.cmu.edu"
+end
