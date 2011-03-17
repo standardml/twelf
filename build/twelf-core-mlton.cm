@@ -275,8 +275,6 @@ Group is
 ../src/worldcheck/worldsyn.fun
 ../src/worldcheck/worldify.sig
 ../src/worldcheck/worldify.fun
-../src/worldcheck/worldprint.sig
-../src/worldcheck/worldprint.fun
 ../src/worldcheck/worldcheck.sml
 ../src/unique/unique.sig
 ../src/unique/unique.fun
