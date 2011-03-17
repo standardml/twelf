@@ -17,11 +17,18 @@ Twelf is an implementation of
  - a set of expansion modules to deal natively with numbers and strings
  - an Emacs interface
 
-For installation instructions, see http://twelf.org/
+Installing
+==========
+
+For complete installation instructions, see http://twelf.org/
 
 Twelf can be compiled and installed under Unix, either as a separate
 "Twelf Server" intended primarily as an inferior process to Emacs, or as
 a structure Twelf embedded in Standard ML.
+
+To build with SML of New Jersey type "make smlnj." To build with MLton type
+"make mlton." If you are building Twelf through SML of New Jersey, you may need
+to run "make buildid" first.
 
 Files
 =====
