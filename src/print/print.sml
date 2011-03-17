@@ -2,6 +2,16 @@ structure SymbolAscii = SymbolAscii ();
 
 structure SymbolTeX = SymbolTeX ();
 
+(*
+structure WorldPrint = WorldPrint 
+  (structure Global = Global
+   (*! structure IntSyn = IntSyn !*)
+   (*! structure Tomega' = Tomega !*)
+   structure WorldSyn' = WorldSyn
+   structure Names = Names
+   structure Formatter' = Formatter
+   structure Print = Print);
+*)
 structure Print =
   Print ((*! structure IntSyn' = IntSyn !*)
 	 structure Whnf = Whnf
@@ -60,3 +70,4 @@ structure PrintOMDoc =
 	      structure Constraints = Constraints
 	      structure Names = Names
 	      structure Formatter' = Formatter);
+

@@ -10,6 +10,7 @@ sig
   type condec				(* constant declaration *)
   val condec : string * ExtSyn.term -> condec	(* id : tm *)
   val blockdec : string * ExtSyn.dec list * ExtSyn.dec list -> condec
+  val blockdef : string *  (string list * string) list -> condec
   val condef : string option * ExtSyn.term * ExtSyn.term option -> condec
 					(* id : tm = tm | _ : tm = tm *)
 

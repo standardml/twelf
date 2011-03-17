@@ -41,6 +41,7 @@ struct
   datatype condec =
       condec of name * ExtSyn.term
     | condef of name option * ExtSyn.term * ExtSyn.term option
+    | blockdef of string *  (string list * string) list
     | blockdec of name * ExtSyn.dec list * ExtSyn.dec list
 
   (* condecToConDec (condec, r) = (SOME(cd), SOME(ocd))
@@ -171,6 +172,22 @@ struct
 		else ()
 
       in
+	(SOME bd, NONE)
+      end
+    | condecToConDec (blockdef (name, W), Paths.Loc (fileName, r), abbFlag) =
+      let
+	val W' = List.map Names.Qid W
+	val W'' = (List.map (fn qid => case Names.constLookup qid
+			            of NONE => raise Names.Error ("Undeclared label "
+                                         ^ Names.qidToString (valOf (Names.constUndef qid))
+                                         ^ ".")
+                                     | SOME cid => cid)
+	      W')
+	val bd = IntSyn.BlockDef (name, NONE, W'')
+        val _ = if !Global.chatter >= 3
+		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) bd ^ "\n")
+		else ()
+      in 
 	(SOME bd, NONE)
       end
 

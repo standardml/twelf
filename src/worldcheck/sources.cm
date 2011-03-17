@@ -3,8 +3,6 @@ Library
   structure WorldSyn
   signature WORLDIFY
   structure Worldify
-  signature WORLDPRINT
-  structure WorldPrint
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -24,8 +22,6 @@ is
   ../solvers/sources.cm
   worldsyn.sig
   worldsyn.fun
-  worldprint.sig
-  worldprint.fun
   worldify.sig
   worldify.fun
   worldcheck.sml

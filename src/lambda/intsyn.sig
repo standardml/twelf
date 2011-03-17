@@ -142,6 +142,8 @@ sig
               * Exp * Exp * Uni		(* d = M : A : type           *)
   | BlockDec of string * mid option     (* %block l : SOME G1 PI G2   *)
               * Dec Ctx * Dec list
+  | BlockDef of string * mid option * cid list
+                                        (* %block l = (l1 | ... | ln) *)
   | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 

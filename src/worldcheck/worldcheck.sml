@@ -39,12 +39,4 @@ structure Worldify = Worldify
   (*! structure Paths = Paths !*)
    structure Origins = Origins);
 
-structure WorldPrint = WorldPrint 
-  (structure Global = Global
-   (*! structure IntSyn = IntSyn !*)
-   (*! structure Tomega' = Tomega !*)
-   structure WorldSyn' = WorldSyn
-   structure Names = Names
-   structure Formatter' = Formatter
-   structure Print = Print);
 

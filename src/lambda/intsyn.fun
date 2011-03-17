@@ -156,6 +156,10 @@ struct
               * Exp * Exp * Uni		(* d = M : A : type           *)
   | BlockDec of string * mid option     (* %block l : SOME G1 PI G2   *)
               * Dec Ctx * Dec list
+
+  | BlockDef of string * mid option * cid list
+                                        (* %block l = (l1 | ... | ln) *)
+
   | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
@@ -227,12 +231,15 @@ struct
     | conDecName (AbbrevDef (name, _, _, _, _, _)) = name
     | conDecName (SkoDec (name, _, _, _, _)) = name
     | conDecName (BlockDec (name, _, _, _)) = name
+    | conDecName (BlockDef (name, _, _)) = name
 
   fun conDecParent (ConDec (_, parent, _, _, _, _)) = parent
     | conDecParent (ConDef (_, parent, _, _, _, _, _)) = parent
     | conDecParent (AbbrevDef (_, parent, _, _, _, _)) = parent
     | conDecParent (SkoDec (_, parent, _, _, _)) = parent
     | conDecParent (BlockDec (_, parent, _, _)) = parent
+    | conDecParent (BlockDef (_, parent, _)) = parent
+   
 
   (* conDecImp (CD) = k
 

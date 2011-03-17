@@ -67,7 +67,12 @@ struct
 
     fun parseBlockDec1 (name, LS.Cons ((L.COLON, r), s')) = 
           parseSome (name, LS.expose s')   
-      | parseBlockDec1 (name, LS.Cons ((t, r), s')) =
+      | parseBlockDec1 (name, LS.Cons ((L.EQUAL, r), s')) =
+          let val (g, f) = ParseTerm.parseQualIds' (LS.expose s')
+	  in (ExtConDec.blockdef (name, g), f)
+	  end
+      | parseBlockDec1 (name, LS.Cons ((t, r), s')) =   
+(* added as a feature request by Carl  -- Wed Mar 16 16:11:44 2011  cs *)
 	  Parsing.error (r, "`:' expected, found token " ^ L.toString t)
 
     fun parseBlockDec' (LS.Cons ((L.ID (idCase,name), r), s')) =

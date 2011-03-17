@@ -144,7 +144,7 @@ functor Twelf
    structure WorldSyn : WORLDSYN
    (*! sharing WorldSyn.IntSyn = IntSyn' !*)
    structure Worldify : WORLDIFY
-   structure WorldPrint : WORLDPRINT
+(*   structure WorldPrint : WORLDPRINT *)
    (*! sharing WorldPrint.Tomega = Tomega !*)
 
    structure ModSyn : MODSYN
@@ -389,6 +389,22 @@ struct
 	  cid
 	end
 
+    fun installBlockDef fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
+	let
+	  val cid = IntSyn.sgnAdd conDec
+	  val _ = (case (fromCS, !context)
+		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
+		        (* (Clause, _) should be impossible *)
+		      | _ => ())
+	           handle Names.Error msg =>
+		     raise Names.Error (Paths.wrap (r, msg))
+	  val _ = Names.installConstName cid
+	  (* val _ = Origins.installOrigin (cid, fileNameocOpt) *)
+	  val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
+	in 
+	  cid
+	end
+
 
     fun installStrDec (strdec, module, r, isDef) =
         let
@@ -451,6 +467,13 @@ struct
 	       let
 		 (* allocate new cid. *)
 		 val cid = installBlockDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
+	       in
+		 ()
+	       end
+             | icd (SOME (conDec as IntSyn.BlockDef _)) =
+	       let
+		 (* allocate new cid. *)
+		 val cid = installBlockDef IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
 	       in
 		 ()
 	       end
@@ -1082,13 +1105,19 @@ struct
 								^ Names.qidToString (Names.constQid a)))
 		    else ())
 	         (cpa, rs)
-	  val W = Tomega.Worlds
+	  fun flatten nil F = F
+  	    | flatten (cid :: L) F = 
+	        (case IntSyn.sgnLookup cid 
+		  of IntSyn.BlockDec _ => flatten L (cid :: F)
+		   | IntSyn.BlockDef (_, _, L') => flatten (L @ L') F)
+
+	  val W = Tomega.Worlds (flatten
 	      (List.map (fn qid => case Names.constLookup qid
 			            of NONE => raise Names.Error ("Undeclared label "
                                          ^ Names.qidToString (valOf (Names.constUndef qid))
                                          ^ ".")
                                      | SOME cid => cid)
-	      qids)
+	      qids) nil)
 	  val _ = List.app (fn (a, _) => WorldSyn.install (a, W)) cpa
 	          handle WorldSyn.Error (msg)
 		         (* error location inaccurate here *)
@@ -1097,7 +1126,7 @@ struct
 		    then (Subordinate.freeze (List.map (fn (a, _) => a) cpa) ; ())
 		  else ()
 	  val _ = if !Global.chatter >= 3 
-		    then msg ("%worlds " ^ WorldPrint.worldsToString W ^ " "
+		    then msg ("%worlds " ^ Print.worldsToString W ^ " "
 				^ ThmPrint.callpatsToString cp ^ ".\n")
 		  else ()
 	in

@@ -33,6 +33,9 @@ sig
   val evarInstToString : (IntSyn.Exp * string) list -> string
   val evarCnstrsToStringOpt : (IntSyn.Exp * string) list -> string option
 
+  val formatWorlds : Tomega.Worlds -> Formatter.format 
+  val worldsToString : Tomega.Worlds -> string
+
   val printSgn : unit -> unit
 
 end;  (* signature PRINT *)

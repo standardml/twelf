@@ -18,6 +18,7 @@ struct
 
   (*! structure IntSyn = IntSyn' !*)
 structure Formatter = Formatter'
+ structure Tomega = Tomega
 
 (* Externally visible parameters *)
 
@@ -33,6 +34,7 @@ local
   structure I = IntSyn
   structure FX = Names.Fixity
   structure F = Formatter
+  structure T = Tomega
 
   (* Disambiguation of block logic variable names *)
   val lvars : I.Block option ref list ref
@@ -241,6 +243,19 @@ local
       if !noShadow 
       then Names.conDecQid (I.sgnLookup cid)
       else Names.constQid cid
+
+    fun cidToFmt (cid) = F.String (Names.qidToString (Names.constQid cid))
+    fun formatCids (nil) = nil
+      | formatCids (cid::nil) = [cidToFmt cid]
+      | formatCids (cid::cids) = cidToFmt cid
+                                 :: F.Break :: F.String "|" :: F.Space
+                                 :: formatCids cids
+
+    fun formatWorlds (T.Worlds cids) =
+        F.Hbox [F.String "(", F.HVbox (formatCids cids), F.String ")"]
+    
+
+    fun worldsToString (W) = F.makestring_fmt (formatWorlds W)
 			       
   (* fmtCon (c) = "c" where the name is assigned according the the Name table
      maintained in the names module.
@@ -785,6 +800,14 @@ local
 	F.HVbox ([sym "%block", F.Break, fmtConstPath (Symbol.label, qid), F.Space,
 		 sym ":", F.Break] @ (fmtBlock (Gsome, Lblock))  @ [sym "."])
       end
+    | fmtConDec (hide, condec as I.BlockDef (_, _, W)) =
+      let 
+	val qid = Names.conDecQid condec
+	val _ = Names.varReset IntSyn.Null
+      in
+	F.HVbox ([sym "%block", F.Break, fmtConstPath (Symbol.label, qid), F.Space,
+		 sym "=", F.Break] @ ( formatWorlds (T.Worlds W) :: [sym "."]))
+      end
     | fmtConDec (hide, condec as I.ConDef (_, _, imp, U, V, L, _)) =
       (* reset variable names in between to align names of type V and definition U *)
       let
@@ -945,6 +968,10 @@ in
   fun printSgn () =
       IntSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDecI (IntSyn.sgnLookup cid)));
 				  print "\n"))
+
+    val formatWorlds = formatWorlds
+    val worldsToString = worldsToString
+
 
 end  (* local ... *)
 

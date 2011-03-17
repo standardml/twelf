@@ -18,6 +18,7 @@ is
 #endif
   ../lambda/sources.cm
   ../names/sources.cm
+(*  ../worldcheck/sources.cm *)
   ../formatter/sources.cm
   symbol.sig
   symbol.fun

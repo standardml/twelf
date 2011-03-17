@@ -238,7 +238,7 @@ structure Twelf =
 	 structure TabledSyn = TabledSyn
 
 	 structure WorldSyn = WorldSyn
-	 structure WorldPrint = WorldPrint
+(*	 structure WorldPrint = WorldPrint *)
 	 structure Worldify = Worldify
 
          structure ModSyn = ModSyn
