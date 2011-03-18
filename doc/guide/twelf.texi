@@ -306,7 +306,7 @@ ML in its 1997 revision.  As a result, it now supports Poly/ML
 and MLton in addition to Standard ML of New Jersey (SML/NJ).
 
 @item Module System (@pxref{Module System})
- A module system featuring signature, structure, and view declarations has been added.
+ A module system featuring structured signatures and signature morphisms has been added.
  The module system is conservative in the sense that a modular signature is internally elaborated into a non-modular one. However, the modular structure is remembered to allow for module level reasoning.
 @end table
 
@@ -398,7 +398,7 @@ The following table lists the reserved characters in Twelf.
     brackets, for lambda abstraction
 
 @item @samp{@{} @samp{@}}
-    braces, for quantification (dependent function types), and as begin/end delimiters in module system expressions
+    braces, for quantification (dependent function types), and as scope delimiters in modular declarations
 
 @item @var{whitespace}
     separates identifiers; one of space, newline, tab, carriage return,
@@ -477,7 +477,7 @@ and constants they are printed as @samp{'@var{id}} (backquote, followed
 by the identifer name) in error messages.
 
 Qualified names of the form s.c refer to the constant c of the structure s.
-Qualified names of the form S..c refer to the constant c of the included signature S.
+Qualified names of the form S.c refer to the constant c of the included signature S.
 Qualifed names referring to blocks or structures are formed accordingly.
 
 @node Syntax, Term Reconstruction, Lexical Conventions, Top
@@ -507,7 +507,7 @@ In explanations and examples we will use letters following the
 mathematical conventions above to clarify the roles of various terms.
 We also use @math{U} and @math{V} to stand for arbitrary terms.
 
-The Twelf module system uses three layers as well: modules, declarations/instantiations, expressions. Modules are signatures and views, they occur on toplevel. Signatures consist of declarations, views consist of instantiations. Finally, expressions are objects, types, and kinds, which are treated uniformly as far as the module system in concerned.
+The Twelf module system uses three layers as well: modules, declarations/instantiations, expressions. Modules are signatures and views, they occur on toplevel. A module declaration introduces a {}-delimited scope that further declarations; these are called simply declarations within signatures and instantiations within views. Declarations and instantiations contain expressions; these are objects, types, and kinds, and they are treated uniformly by the module system.
 
 @menu
 * Grammar::                     The grammar of Twelf
@@ -552,6 +552,7 @@ decl ::= id : term.            % @r{@math{a : K}  or  @math{c : A}}
        | %postfix pxdecl.      % @r{operator declaration}
        | %name namepref.       % @r{name preference declaration}
        | %struct strdecl       % @r{structure declaration}
+       | %include incldecl     % @r{include declaration}
        | %query qdecl.         % @r{query declaration}
        | %clause defn.         % @r{clause definition}
        | sdecl.                % @r{solve declaration}
@@ -1256,7 +1257,10 @@ the problem with reconstruction.
 
 The module system is based on the two primitive concepts of signatures and signature morphisms. Intuitively, a signature is a named list of declarations. Signature morphisms have a domain and a codomain signature and a signature morphism from S to T maps all declarations of S to expressions over T. Such a mapping induces mappings of all S-expressions to T-expressions by homomorphic extension.
 
-Signature morphisms can be composed in the obvious way. The atomic signature morphisms are called links, and we distinguish two kinds of links: views and structures. A view from @code{S} to @code{T} is declared on toplevel and must provide an instantiation for every declaration of @code{S}. Views encode translations and representations of signatures. A structure from @code{S} to @code{T} is declared within @code{T} and has the effect of copying the declarations of @code{S} into @code{T}. A structure may have instantiations for some declarations of @code{S}, in which case the @code{S}-declarations are not only copied but also translated. Structures encode inheritance and instantiation.
+Signature morphisms can be composed in the obvious way. There are three kinds of atomic signature morphisms: unnamed imports (inclusions), named imports (structures), and views.
+A view declaration explicitly gives domain and codomain and then includes instantiations that map each declaration of the domain to an expression of the codomain. An import declaration occurs within the codomain signature and only gives the domain signature explicitly.
+
+Named and unnamed imports differ in their behavior under sharing. Named imports may carry instantiations which lead to sharing constraints; unnamed imports may not. Multiple unnamed imports of the same signature (e.g., in the diamond situation) are implicitly shared, i.e., there may be at most unnamed import between two signatures. Multiple named imports of the same signature are distinguished, and their names are used to form qualified identifiers for the imported symbols.
 
 @menu
 * Signature Declaration::       Basic organization structure
@@ -1272,11 +1276,11 @@ Signature morphisms can be composed in the obvious way. The atomic signature mor
 
 @cindex signature
 
-Signatures are lists of declarations. Signature declarations introduce a name for a signature. Signatures may start with include declarations (see @pxref{Include Declaration}).
+Signatures are lists of declarations. Signature declarations introduce a name for a signature.
 
 @example
 @group
-sigdecl  ::= id = @{ includes decls @}.
+sigdecl  ::= id = @{ decls @}.
 
 decls    ::= 
            | decls decl
@@ -1312,6 +1316,7 @@ strdecl ::= id : id               open.
 insts   ::=
           | insts         id := term.
           | insts %struct id := morph.
+          | insts %include morph.
 @end group
 @end example
 
@@ -1413,7 +1418,7 @@ It is not necessary to instantiate structures; instead, the induced constants ca
 
 @cindex view
 
-The syntax for views is similar to that of structures. The main difference is that the codomain signature is given explicitly.
+The syntax for views is similar to that of structures.
 
 @example
 @group
@@ -1480,14 +1485,14 @@ A structure with domain @code{S} imports @code{S} in the sense that it creates a
 
 %sig Monoid = @{ 
   %include FOL.
-  comp : FOL..i -> FOL..i -> FOL..i. %% composition
-  unit : FOL..i.                     %% unit element
+  comp : FOL.i -> FOL.i -> FOL.i.    %% composition
+  unit : FOL.i.                      %% unit element
 @}.
 
 %sig CommutativeGroup = @{
   %include FOL.
   %struct mon : Monoid.
-  inv : FOL..i -> FOL..i.            %% inverse element
+  inv : FOL.i -> FOL.i.              %% inverse element
 @}.
 
 %sig Ring = @{
@@ -1500,7 +1505,7 @@ A structure with domain @code{S} imports @code{S} in the sense that it creates a
 
 Here the signature @code{Monoid} is imported into @code{Ring} in two different ways: via @code{add.mon} and via @code{mult}. This results for example in the constants @code{add.mon.comp} (addition) and @code{mult.comp} (multiplication). However, the signature @code{FOL}, which is also imported in multiple ways, should be the same in all signatures. This is the role of include declarations.
 
-An include declaration creates an unnamed inclusion morphism into the current signature. Inclusions are transitive, and if the same signature is included in multiple ways, multiply included constants are identified. (Here two signatures are equal iff they have the same name.) References to included symbols are formed by prefixing the symbol name with the signature name using the separator @code{..}.
+An include declaration creates an unnamed inclusion morphism into the current signature. Inclusions are transitive, and if the same signature is included in multiple ways, multiply included constants are identified. (Here two signatures are equal iff they have the same name.) References to included symbols are formed by prefixing the symbol name with the signature name using the separator @code{.}; the signature name may be omitted if the name can be resolved uniquely.
 
 An include declaration may contain an open declaration (see @pxref{Open Declaration}).
 
@@ -1511,14 +1516,14 @@ includes ::=
 @end group
 @end example
 
-Due to a restriction of the current implementation, links cannot contain instantiations of included constants. Rather, the codomain of every link must include (possibly indirectly) all signatures that are included in the domain signature. For example, if the inclusion from @code{FOL} to @code{Ring} were removed, then the structures @code{add} and @code{mult} would be ill-formed.
+At the moment, views and structures cannot contain instantiations of included constants yet. If there is an include declaration in the domain, the view/structure can include a morphism that translates from the included signature into the codomain on the view/structure. If omitted, the identity morphism is assumed.
 
 @node Morphisms, Open Declaration, Include Declaration, Module System
 @section Morphisms
 
 @cindex morphisms
 
-A morphism is a list of link identifiers. 
+A morphism is a list of identifiers of views or structures.
 
 @example
 @group
@@ -1532,9 +1537,9 @@ Iuxtaposition is composition of morphisms in diagram order, and with respect to 
 More formally, let < be the reflexive-transitive closure of the is-included-into relation. Then a morphism of the form @code{l_1 ... l_n} where each @code{l_i} is a view or a structure (where the structure name must be prefixed with the name of the containing signature) from @code{S_i} to @code{T_i} is well-formed with domain @code{S} and codomain @code{T} iff: @code{S}<@code{S_1}, @code{T_i}<@code{S_@{i+1@}} for i=1,...,n-1, and @code{T_n}<@code{T}.
 Morphisms translate included symbols to themselves.
 
-For example, we have that @code{IMPLICATION..J PL..I PL2PL'} is a morphism from @code{JUDGMENTS} to @code{PL'} in the logic example.
+For example, we have that @code{IMPLICATION.J PL.I PL2PL'} is a morphism from @code{JUDGMENTS} to @code{PL'} in the logic example.
 
-Two morphisms are equal if they are identical after expanding defined links. For example, @code{CommutativeGroup..mon Ring..add} and @code{Ring..add.mon} are two equal morphisms from @code{Monoid} to @code{Ring} in the algebra example.
+Two morphisms are equal if they are identical after expanding defined links. For example, @code{CommutativeGroup.mon Ring.add} and @code{Ring.add.mon} are two equal morphisms from @code{Monoid} to @code{Ring} in the algebra example.
 
 @node Open Declaration, , Morphisms, Module System
 @section Open Declaration
