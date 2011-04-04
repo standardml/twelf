@@ -45,6 +45,11 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      end
 
   (* auxiliary function that raises exceptions *)
+  fun morTypingError(d,c,dom,cod, msg) =
+        raise Error(msg ^ "\nmorphism: " ^ ModSyn.modFoldName d ^ " -> " ^ ModSyn.modFoldName c ^ 
+                          "\nexpected type: " ^ ModSyn.modFoldName dom ^ " -> " ^ ModSyn.modFoldName cod)
+
+   (* auxiliary function that raises exceptions *)
    fun defInstClash(defDom, defCod, defDomTrans, msg) =
       let
          val pdefDom = printExp defDom
@@ -111,7 +116,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   fun checkMorph(mor, dom, cod) =
      let
      	val (d,c, mor2) = reconMorph mor
-     	val inclBefore = M.sigIncluded(dom,d)
+     	  val inclBefore = M.sigIncluded(dom,d)
         val implBefore = if inclBefore then NONE else M.implicitLookup(dom, d)
         val inclAfter  = M.sigIncluded(c,cod)
         val implAfter  = if inclAfter then NONE else M.implicitLookup(c, cod)
@@ -121,7 +126,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      	   | (true, _, false, SOME m) => M.MorComp(mor2, m)
      	   | (false, SOME m, true, _) => M.MorComp(m, mor2)
      	   | (false, SOME m, false, SOME n) => M.MorComp(m, M.MorComp(mor2, n))
-           | _ => raise Error("morphism does not have expected type")
+         | _ => morTypingError(d,c,dom,cod,"morphism does not have expected type")
      end
 
   (* restricts a morphism to a domain, returns path in the signature graph, i.e., a list of links
