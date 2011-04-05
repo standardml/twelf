@@ -18,7 +18,7 @@
 @title Twelf User's Guide
 @subtitle Version @value{VERSION}
 @author Frank Pfenning and Carsten Schuermann
-@c atCS: Should I add myself as a nauthor somewhere?
+@c atCS: Should I add myself as an author somewhere?
 
 @page
 @vskip 0pt plus 1filll
@@ -1258,15 +1258,18 @@ the problem with reconstruction.
 The module system is based on the two primitive concepts of signatures and signature morphisms. Intuitively, a signature is a named list of declarations. Signature morphisms have a domain and a codomain signature and a signature morphism from S to T maps all declarations of S to expressions over T. Such a mapping induces mappings of all S-expressions to T-expressions by homomorphic extension.
 
 Signature morphisms can be composed in the obvious way. There are three kinds of atomic signature morphisms: unnamed imports (inclusions), named imports (structures), and views.
-A view declaration explicitly gives domain and codomain and then includes instantiations that map each declaration of the domain to an expression of the codomain. An import declaration occurs within the codomain signature and only gives the domain signature explicitly.
+A view declaration explicitly gives domain and codomain and then gives instantiations that map each declaration of the domain to an expression of the codomain.
+An import declaration occurs within the codomain signature and only gives the domain signature explicitly.
 
-Named and unnamed imports differ in their behavior under sharing. Named imports may carry instantiations which lead to sharing constraints; unnamed imports may not. Multiple unnamed imports of the same signature (e.g., in the diamond situation) are implicitly shared, i.e., there may be at most unnamed import between two signatures. Multiple named imports of the same signature are distinguished, and their names are used to form qualified identifiers for the imported symbols.
+Named and unnamed imports differ in their behavior under sharing. Named imports may carry instantiations which induce to sharing constraints; unnamed imports may not.
+Multiple unnamed imports of the same signature (e.g., in the diamond situation) are implicitly shared, i.e., there may be at most one unnamed import between two signatures.
+Multiple named imports of the same signature, on the other hand, are distinguished, and their names are used to form qualified identifiers for the imported symbols.
 
 @menu
 * Signature Declaration::       Basic organization structure
 * Structure Declaration::       Signature morphism that copies one signature into another
-* View Declaration::            Signature morphism that translates one signature to another
 * Include Declaration::         Signature morphism that is an inclusion
+* View Declaration::            Signature morphism that translates one signature to another
 * Morphisms::                   Composed signature morphisms
 * Open Declaration::            How to open imported constants to avoid qualified names
 @end menu
@@ -1284,6 +1287,10 @@ sigdecl  ::= id = @{ decls @}.
 
 decls    ::= 
            | decls decl
+           | decls %struct strdecl 
+           | decls %include incldecl.
+           | decls %sig sigdecl
+
 @end group
 @end example
 
@@ -1298,19 +1305,42 @@ The following is an example of a signature declaration for the basic judgments o
 @end group
 @end example
 
-@node Structure Declaration, View Declaration, Signature Declaration, Module System
+The current implementation permits nested signatures. This feature is somewhat experimental though. Consider the following example:
+@example
+@group
+%sig Outer = @{
+  a : type.
+  %sig Inner = @{
+    c: Outer.a.
+  @}
+  %include Inner.
+  d = Inner.c.
+@}.
+@end group
+@end example
+
+The inner signature has access to all previous declarations of the outer signature.
+Semantically, this is treated as an inclusion (see @pxref{Include Declaration}) from the respective prefix of the outer signature to the inner signature.
+The declarations of the inner signature are not automatically accessible to the following declarations of the outer signature -
+instead, the inner signature has to be imported explicitly as done in the example.
+
+@node Structure Declaration, Include Declaration, Signature Declaration, Module System
 @section Structure Declaration
 
 @cindex structure
 
-Structure declarations copy and translate the declarations of a signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations. A structure may be defined by a list of instantiations (If omitted, the empty list is assumed.) or by a morphism. An instantiation assigns an object to a constant identifier or a morphism to a structure identifier.
+Structure declarations declare named imports with sharing.
+They copy and translate the declarations of the imported signature into the current signature.
+The name of the structure is used to form a qualified name for the copied declarations.
+A structure may carry of list of instantiations (If omitted, the empty list is assumed.). An instantiation assigns an object of the importing to an identifier of the imported signature.
+Alternatively, a structure may be defined by an existing morphism, which amounts to given an instantiation for every declaration in the imported signature.
 
-A structure declaration may contain an open declaration (see @pxref{Open Declaration}).
+A structure declaration may contain an open declaration (see @pxref{Open Declaration}) in order to introduce unqualified aliases for the imported constants.
 
 @example
 @group
 strdecl ::= id : id               open.
-          | id : id = @{ insts @} open.
+          | id : id = @{ insts @}   open.
           | id : id = morph       open.
 
 insts   ::=
@@ -1413,7 +1443,57 @@ Two things should be noted here: Firstly, all induced constants of @code{NEGATIO
 It is not necessary to instantiate structures; instead, the induced constants can be instantiated directly. Consider the structure @code{N} of @code{PL}: If we write
 @code{J.o := I.J.o. J.nd := I.J.nd} instead of @code{J := I.J}, we obtain the same induced constant declarations as above.
 
-@node View Declaration, Include Declaration, Structure Declaration, Module System
+@node Include Declaration, View Declaration, Structure Declaration, Module System
+@section Include Declaration
+
+@cindex include
+
+@example
+@group
+incldecl ::= id open.
+@end group
+@end example
+
+A structure with domain @code{S} imports @code{S} in the sense that it creates a fresh copy of @code{S}. Multiple imports of the same signature are always distinguished, and the names of the structures are used to disambiguate them.
+This is not always the desired behavior. Consider the following signatures for the basic algebraic hierarchy (where we omit the axioms).
+
+@example
+@group
+%sig FOL = @{ 
+  i : type.        %% terms
+  o : type.        %% formulas
+  nd : o -> type. %% truth judgment
+@}.
+
+%sig Monoid = @{ 
+  %include FOL.
+  comp : FOL.i -> FOL.i -> FOL.i.    %% composition
+  unit : FOL.i.                      %% unit element
+@}.
+
+%sig CommutativeGroup = @{
+  %include FOL.
+  %struct mon : Monoid.
+  inv : FOL.i -> FOL.i.              %% inverse element
+@}.
+
+%sig Ring = @{
+  %include FOL.
+  %struct add : CommutativeGroupg.   %% additive operations
+  %struct mult : Ring                %% multiplicative operations
+@}.
+@end group
+@end example
+
+Here the signature @code{Monoid} is imported into @code{Ring} in two different ways: via @code{add.mon} and via @code{mult}. This results for example in the constants @code{add.mon.comp} (addition) and @code{mult.comp} (multiplication). However, the signature @code{FOL}, which is also imported in multiple ways, should be the same in all signatures. This is the role of include declarations.
+
+An include declaration creates an unnamed inclusion morphism into the current signature.
+Inclusions are transitive, and if the same signature is included in multiple ways, multiply included constants are identified. (Here two signatures are equal iff they have the same name.)
+Therefore, we can form unique qualified names for the included symbols by prefixing the symbol name with the signature name. Moreover, the signature name may be omitted if Twelf can infer the signature name uniquely.
+
+Like structures, an include declaration may contain an open declaration (see @pxref{Open Declaration}) to introduce unqualified aliases for the included symbols.
+
+@node View Declaration, Morphisms, Include Declaration, Module System
 @section View Declaration
 
 @cindex view
@@ -1447,12 +1527,14 @@ A view from @code{PL'} to @code{PL} expresses that negation can be represented i
   %struct I := I.
   N.not  := [A] A I.imp false.
   N.noti := [A] [D:I.J.nd A -> @{B@} I.J.nd B] I.impi D false.
-  N.note := [A] [D:I.J.nd (A I.imp false)] [E:I.J.nd A] [B] falseE (impe D E) B.
+  N.note := [A] [D:I.J.nd (A I.imp false)] [E:I.J.nd A] [B]
+                falseE (impe D E) B.
 @}.
 @end group
 @end example
 
-Note that implicit arguments, e.g., @code{A} of @code{N.noti} must be bound explicitly due to a restriction of the current implementation. They must be listed in the same order in which they occur in the declaration of the instantiated constant.
+Note that implicit arguments, e.g., @code{A} of @code{N.noti} must be bound explicitly and in the same order in which they occur in the declaration in the domain signature.
+This is due to a restriction of the current implementation, but also has the advantage that alpha-renaming in the domain signature does not require a change to the view.
 
 Above the instantiation @code{%struct I := I.} induces constant instantiations @code{I.c := I.c.} for all constants @code{c} of @code{IMPLICATION}, including its induced constants. Alternatively, these instantiations could have been given separately. For example, the following instantiations have the same semantics as @code{%struct I := I.}
 
@@ -1467,56 +1549,6 @@ Above the instantiation @code{%struct I := I.} induces constant instantiations @
 
 The view is only well-formed if all instantiations type-check against the translated type. In the above example, this means that @code{[A] [D:I.J.nd A -> @{B@} I.J.nd B] I.impi D false} must type check against the translation of @code{@{A@}@{B@}(N.J.nd A -> @{B@} N.J.nd B) -> N.J.nd (N.not A)} along @code{v}, which yields
 @code{@{A@}@{B@}(I.J.nd A -> @{B@} I.J.nd B) -> I.J.nd (A imp false)} after normalization. Note that this translation is only possible if the instantiation of @code{N.not} is already known. Therefore, the order of instantiations in a view must respect the dependency order of the declarations in the domain.
-
-@node Include Declaration, Morphisms, View Declaration, Module System
-@section Include Declaration
-
-@cindex include
-
-A structure with domain @code{S} imports @code{S} in the sense that it creates a fresh copy of @code{S}. Multiple imports of the same signature are always distinguished, and the names of the structures are used to disambiguate them. This is not always the desired behavior. Consider the following signatures for the basic algebraic hierarchy (where we omit the axioms).
-
-@example
-@group
-%sig FOL = @{ 
-  i : type.        %% terms
-  o : type.        %% formulas
-  nd : o -> type. %% truth judgment
-@}.
-
-%sig Monoid = @{ 
-  %include FOL.
-  comp : FOL.i -> FOL.i -> FOL.i.    %% composition
-  unit : FOL.i.                      %% unit element
-@}.
-
-%sig CommutativeGroup = @{
-  %include FOL.
-  %struct mon : Monoid.
-  inv : FOL.i -> FOL.i.              %% inverse element
-@}.
-
-%sig Ring = @{
-  %include FOL.
-  %struct add : CommutativeGroupg.   %% additive operations
-  %struct mult : Ring                %% multiplicative operations
-@}.
-@end group
-@end example
-
-Here the signature @code{Monoid} is imported into @code{Ring} in two different ways: via @code{add.mon} and via @code{mult}. This results for example in the constants @code{add.mon.comp} (addition) and @code{mult.comp} (multiplication). However, the signature @code{FOL}, which is also imported in multiple ways, should be the same in all signatures. This is the role of include declarations.
-
-An include declaration creates an unnamed inclusion morphism into the current signature. Inclusions are transitive, and if the same signature is included in multiple ways, multiply included constants are identified. (Here two signatures are equal iff they have the same name.) References to included symbols are formed by prefixing the symbol name with the signature name using the separator @code{.}; the signature name may be omitted if the name can be resolved uniquely.
-
-An include declaration may contain an open declaration (see @pxref{Open Declaration}).
-
-@example
-@group
-includes ::= 
-           | includes %include id open.
-@end group
-@end example
-
-At the moment, views and structures cannot contain instantiations of included constants yet. If there is an include declaration in the domain, the view/structure can include a morphism that translates from the included signature into the codomain on the view/structure. If omitted, the identity morphism is assumed.
 
 @node Morphisms, Open Declaration, Include Declaration, Module System
 @section Morphisms
@@ -1541,7 +1573,7 @@ For example, we have that @code{IMPLICATION.J PL.I PL2PL'} is a morphism from @c
 
 Two morphisms are equal if they are identical after expanding defined links. For example, @code{CommutativeGroup.mon Ring.add} and @code{Ring.add.mon} are two equal morphisms from @code{Monoid} to @code{Ring} in the algebra example.
 
-@node Open Declaration, , Morphisms, Module System
+@node Open Declaration, Namespaces, Morphisms, Module System
 @section Open Declaration
 
 @cindex open
@@ -1550,8 +1582,7 @@ Structure and include declarations may carry optional open declarations These pe
 
 @example
 @group
-open  ::= 
-       | %open opens.
+open  ::= %open opens.
 opens ::=
         | opens id
         | opens id %as id
@@ -1559,8 +1590,6 @@ opens ::=
 @end example
 
 The semantics of @code{%open i %as n} is that the identifier @code{i} is made accessible under the unqualified name @code{n}. More precisely, @code{i} is resolved in the domain signature of the structure or inclusion, and @code{n} is installed as a short-cut to the resolution. @code{n} must be an available name in the signature containing the open declaration. If @code{%as n} is omitted, @code{n} defaults to the unqualified name of @code{i}.
-
-If an include declaration has an empty open declaration, i.e., @code{%include S %open.}, the semantics is different: All identifiers of @code{S} become available without qualification unless their name is already declared in the including signature.
 
 For example, one could write the signatures @code{IMPLICATION} and @code{Monoid} from the examples above as
 
@@ -1572,16 +1601,77 @@ For example, one could write the signatures @code{IMPLICATION} and @code{Monoid}
   impi   : (ded A -> ded B) -> ded (A imp B).
   impe   : ded (A imp B) -> ded A -> ded B.
 @}.
-
-%sig Monoid = @{ 
-  %include FOL %open.
-  comp : i -> i -> i.
-  unit : i.
-@}.
 @end group
 @end example
 
+@node Namespaces, , Open Declaration, Module System
+@section Namespaces
 
+Module (i.e., signature or view) declarations may be grouped into namespaces.
+The difference between a namespace and a signature is that namespaces are transparent to the semantics:
+The grouping of declarations into namespaces is semantically inconsequential; in particular, the declarations of all namespaces are visible to each other.
+Signatures, on the other hand, have a precise semantics in that they encapsulate a list of declarations;
+in particular, the declarations of a signature are only visible if that signature has been imported into the current signature.
+
+@example
+@group
+nsdecl  ::= %namespace "URI".
+          | %namespace id = "URI".
+URI     ::= a URI according to RFC 3986
+@end group
+@end example
+
+Namespaces are URIs, which are introduced in RFC 3986.
+URIs are very flexible and include, for example, @code{http://twelf.plparty.org/example} or @code{myproject:/abc}.
+Note that, contrary to URLs, a URI is a logical identifier that may or may not correspond to a physical location.
+
+Twelf maintains a namespace context consisting a list of identifiers (called prefixes) that are defined as abbreviations for namespaces.
+A declaration @code{%namespace p = "N"} introduces a prefix that abbreviates @code{N}.
+The empty prefix has a special function; it is defined by the declaration @code{%namespace "URI"}.
+If the empty prefix is bound to a namespace, it is called the active namespace.
+
+When a module is declared, it receives a unique identifier that consists of the active namespace and the name given in the module declaration.
+If no active namespace is declared, the namespace defaults to @code{file:/}.
+A reference to a module with name @code{M} in the namespace @code{N}, must be of the form @code{p.M} where @code{p} is a prefix that abbreviates @code{N}.
+If no prefix is given, the active namespace is used; if no active namespace is declared, it defaults to @code{file:/}.
+This becomes clear in the following example:
+
+@example
+@group
+%namespace "project:/N1".
+%sig A = @{
+  a: type.
+@}.
+%sig B = @{
+  %include A.
+@}.
+
+%namespace "project:/N2".
+%namespace p = "project:/N1".
+%sig B = @{
+  %include p.A.
+  c: a.  %% equivalently: c: p.A.a
+@}
+@end group
+@end example
+
+The URIs given in a namespace declaration may be relative.
+A relative URI is interpreted relative to the active namespace, or -- if no active namespace has been declared -- relative to the containing file.
+For example, above, the second namespace declaration could be shortened to @code{%namespace "N2"}.
+
+Namespace declarations may occur anywhere on toplevel, but they are usually only used at the beginning of a file. 
+Namespace declarations made in one source file are only in effect within that file.
+
+The above rules for namepsaces permit a number of different behaviors. In particular, the file system can be transparent or opaque to namespaces, and namespaces can be local or global. For example
+
+@itemize        
+@item No namespace declarations at all. Then all modules are in the namespace @code{file:/}, and namespaces can be ignored.
+@item Only namespaces of the form @code{/PATH}. Then all modules have namespaces of the form @code{file:/PATH}. Thus, users can create a custom namespace hierarchy.
+@item Every file begins with @code{%namespace ""}. Then each source file defines a separate namespace. Namespace prefixes must be used to refer to declarations in other files. 
+@item Every file begins with @code{%namespace "."}. As before, but each directory defines a separate namespace.
+@item URIs with an authority, e.g., @code{%namespace "http://twelf.plparty.org/library"}.
+This yields globally unique identifiers for modules so that modules can be packaged into distributions that can be shared with other developers.
+@end itemize
 
 @node Logic Programming, Constraint Domains, Module System, Top
 @chapter Logic Programming
