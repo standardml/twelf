@@ -540,9 +540,10 @@ appropriate sections.
 @example
 @group
 sig   ::= 
-        | %sig sigdecl         % @r{signature declaration}
-        | %view viewdecl       % @r{view declaration}
-        | decl sig             % @r{declaration in the toplevel signature} 
+        | sig %sig sigdecl     % @r{signature declaration}
+        | sig %view viewdecl   % @r{view declaration}
+        | sig %namespace nsdecl% @r{namespace declaration}
+        | sig decl             % @r{core declaration in a signature} 
 
 decl ::= id : term.            % @r{@math{a : K}  or  @math{c : A}}
        | defn.                 % @r{definition, usually @math{d : A = M}}
@@ -1320,9 +1321,8 @@ The current implementation permits nested signatures. This feature is somewhat e
 @end example
 
 The inner signature has access to all previous declarations of the outer signature.
-Semantically, this is treated as an inclusion (see @pxref{Include Declaration}) from the respective prefix of the outer signature to the inner signature.
-The declarations of the inner signature are not automatically accessible to the following declarations of the outer signature -
-instead, the inner signature has to be imported explicitly as done in the example.
+Semantically, this is treated as an inclusion from the respective prefix of the outer signature to the inner signature (see @pxref{Include Declaration}, which also defines that @code{c} can be used instead of @code{Inner.c}).
+The declarations of the inner signature are not automatically accessible to the following declarations of the outer signature - instead, the inner signature has to be imported explicitly as done in the example.
 
 @node Structure Declaration, Include Declaration, Signature Declaration, Module System
 @section Structure Declaration
@@ -1332,6 +1332,7 @@ instead, the inner signature has to be imported explicitly as done in the exampl
 Structure declarations declare named imports with sharing.
 They copy and translate the declarations of the imported signature into the current signature.
 The name of the structure is used to form a qualified name for the copied declarations.
+
 A structure may carry of list of instantiations (If omitted, the empty list is assumed.). An instantiation assigns an object of the importing to an identifier of the imported signature.
 Alternatively, a structure may be defined by an existing morphism, which amounts to given an instantiation for every declaration in the imported signature.
 
@@ -1370,7 +1371,8 @@ The following signatures contain a structure that copies the signature JUDGMENTS
 @end group
 @end example
 
-Twelf mirrors the structure declaration as well as the induced constant declarations. The mirrored declarations give the semantics of structure declarations in terms of non-modular declarations. In the implication example, Twelf prints:
+Twelf processes a structure declaration by computing the translated declarations and adding them to the current signature (elaboration). The translated declarations give the structure declarations a semantics in terms of non-modular declarations.
+Twelf mirrors both the structure declaration and the translated declarations. In the implication example, Twelf prints:
 
 @example
 @group
@@ -1462,7 +1464,7 @@ This is not always the desired behavior. Consider the following signatures for t
 %sig FOL = @{ 
   i : type.        %% terms
   o : type.        %% formulas
-  nd : o -> type. %% truth judgment
+  nd : o -> type.  %% truth judgment
 @}.
 
 %sig Monoid = @{ 
@@ -1487,8 +1489,9 @@ This is not always the desired behavior. Consider the following signatures for t
 
 Here the signature @code{Monoid} is imported into @code{Ring} in two different ways: via @code{add.mon} and via @code{mult}. This results for example in the constants @code{add.mon.comp} (addition) and @code{mult.comp} (multiplication). However, the signature @code{FOL}, which is also imported in multiple ways, should be the same in all signatures. This is the role of include declarations.
 
-An include declaration creates an unnamed inclusion morphism into the current signature.
-Inclusions are transitive, and if the same signature is included in multiple ways, multiply included constants are identified. (Here two signatures are equal iff they have the same name.)
+An include declaration creates an unnamed inclusion morphism into the current signature. This means that all declarations of the included signature are available in the including signature. Since no translation takes place, Twelf does not elaborate inclusions; instead the inclusion-relation is maintained as a transitive relation between signatures.
+
+In particular (and contrary to structure declarations), if the same signature is included in multiple ways, the multiply included constants are identified. (Here two signatures are equal iff they have the same name.)
 Therefore, we can form unique qualified names for the included symbols by prefixing the symbol name with the signature name. Moreover, the signature name may be omitted if Twelf can infer the signature name uniquely.
 
 Like structures, an include declaration may contain an open declaration (see @pxref{Open Declaration}) to introduce unqualified aliases for the included symbols.
@@ -1519,7 +1522,7 @@ To give an example of a view, let us assume a variant of @code{PL} that uses fal
 @end group
 @end example
 
-A view from @code{PL'} to @code{PL} expresses that negation can be represented in terms of falsity. Such a view must provide instantiations for all constants of the domain.
+A view from @code{PL'} (the domain) to @code{PL} (the codomain) expresses that negation can be represented in terms of falsity. Such a view must provide instantiations for all constants of the domain.
 
 @example
 @group
@@ -1615,8 +1618,8 @@ in particular, the declarations of a signature are only visible if that signatur
 
 @example
 @group
-nsdecl  ::= %namespace "URI".
-          | %namespace id = "URI".
+nsdecl  ::= "URI".
+          | id = "URI".
 URI     ::= a URI according to RFC 3986
 @end group
 @end example
