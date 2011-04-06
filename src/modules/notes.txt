@@ -2,6 +2,8 @@ Carsten:
 paper
 
 to do
+omitted codomain defaults to current signature (nice to use toplevel views as realizations)
+permit shadowing of constant names on toplevel
 forbid *+- as module identifiers
 bug: it's possible to change the fixity of a constant in an included signature
 functions that may not use their argument (as Jason did); this can be checked after normal type-checking if an attribution is added in I.Pi; find out where to skip the corresponding equality check
@@ -13,7 +15,6 @@ conservative structure declarations: definiens of structure is checked but dropp
 partial views default to identity; _ as module name; then %view %implicit _ : A -> B = {} to check definitional extensions.
 make symbols with fixity parsable separately: look for corresponding error message in parse-term.fun; see if it can be done easily
 make sigRelLookup unique by throwing away every include if a sigRel already exists?
-try to remove argument of Included
 read assignments in structures separately
 %main c : A. in sig S; s : S used as constant defaults to s.c; same for included signatures
 print out with nicer names
@@ -50,17 +51,16 @@ logical relations
 includes and subsignatures reimplemented, includes can occur anywhere in a signature and include subsignatures
 unqualified names are looked up in all parents first, first match is used; then in all included signatures, fail if non-unique
 links can have multiple includes
-implicit links
 added twelf-save-reset-check-file to emacs mode (works together with empty sources.cfg)
 forbid instantiating defined constants
 shadowing on toplevel
 implement include in link, only one %include allowed in a link for now
-empty %open in include chains name lookups
+empty %open in include chains name lookups (obsoleted later)
 signatures may refer to symbols of ancestor signatures (qualified or - if not shadowed - directly)
 views are only legal if no ancestor relation between domain and codomain and if all ancestors of domain are ancestors of codomain
 %read reads a file; cfg files are deprecated, only elf file needed from now on
 OMDoc export prints
- - only modules of main file (if loaded by cfg file, then the first elf file in it)
+ - only modules of a certain file
  - main file name is relative to pwd
  - all references to other modules and files with proper MMT-URIs
  - to do: nested signatures, toplevel signature
