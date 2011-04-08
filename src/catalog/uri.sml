@@ -6,6 +6,7 @@ signature URISIG = sig
    exception Error of string
    val parseURI    : string -> uri
    val uriToString : uri -> string
+   val makeURI     : string option * authority option * bool * string list * string option * string option -> uri
    (* turns an OS-specific path into a file:/... URI; if the first argument is "true",
       an empty path segment is appended (needed to make it a directory URI) *)
    val makeFileURI : bool * string -> uri
@@ -26,7 +27,7 @@ structure URI : URISIG = struct
    	 val path = OS.Path.fromString (OS.Path.mkCanonical fileName)
    	 val volarcs = if #vol path = "" then #arcs path else (#vol path) :: (#arcs path)
       in
-	 {scheme = SOME "file", authority = SOME emptyAuth,
+	 {scheme = SOME "file", authority = NONE,
 	                    abs = #isAbs path,
 	                    path = if isDir then volarcs @ [""] else volarcs,
 	                    query = NONE, fragment = NONE}

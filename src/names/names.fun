@@ -140,17 +140,18 @@ struct
     (* nsContext is the type of namespace contexts: triples (ps, os, c) where
        - ps = [(p,ns),...] is a function from prefixes to namespaces (not necessarily injective),
        - os = [ns,...] is the list of open namespaces (accessible without qualification, searched in order)
-       - c is the current namespace (accessible without qualification)
+       - c is the current namespace if any (accessible without qualification)
     *)
-    type nsContext = (string * URI.uri) list * (URI.uri list) * URI.uri
+    type nsContext = (string * URI.uri) list * (URI.uri list) * (URI.uri option)
     (* the state: one nsContext for each currently open file *)
     val nscontext : nsContext list ref = ref nil
     fun currentContext() = List.hd (! nscontext)
+        handle Empty => raise Error("no current namespace context") (* should be impossible --fr *)
     fun prefixes()  = #1 (currentContext())
     (* temporarily making open namespaces global *)
     val openns : URI.uri list ref = ref nil
     fun openNS()    = (! openns) (* #2 (currentContext()) *)
-    fun currentNS() = #3 (currentContext())
+    val baseNS = URI.makeURI(NONE, NONE, true, nil, NONE, NONE) (* the URI "/" identifies the default/global namespace *)
 
     (* maps file names to their first namespace declaration, if any *)
     val docNSs : (string * URI.uri) list ref = ref nil
@@ -178,11 +179,15 @@ struct
   (*******************************************************)
   
    fun popContext()  = nscontext := List.tl (! nscontext)
-   (* whenever a new context is created, the current namespace defaults to the current working directory *)
-   fun pushContext() = nscontext := (nil,nil, URI.makeFileURI(true, OS.FileSys.getDir())) :: (! nscontext)
+   fun pushContext() = nscontext := (nil, nil, NONE) :: (! nscontext)
    fun pushContextIfNone() = if (! nscontext = nil) then pushContext() else ()
 
-   fun getCurrentNS() = currentNS() handle Empty => raise Error("no current namespace defined")
+   fun getCurrentNS(default) = case #3 (currentContext())
+     of SOME ns => ns
+      | NONE => (case default
+         of SOME ns => ns
+          | NONE => baseNS
+        )
    fun lookupPrefix p = case List.find (fn (p',_) => p' = p) (prefixes())
       of SOME (_,ns) => SOME ns
        | NONE => NONE
@@ -193,14 +198,14 @@ struct
       of SOME ns => raise Error("prefix " ^ p ^ " already bound to " ^ URI.uriToString ns)
        | NONE => let val (ps, os, c) :: tl = ! nscontext in nscontext := ((p,ns) :: ps, os, c) :: tl end
    fun openNamespace ns = openns := ns :: (! openns) (* let val (ps, os, c) :: tl = ! nscontext in nscontext := (ps, ns :: os, c) :: tl end *)
-   fun setCurrentNS ns  = let val (ps, os, _) :: tl = ! nscontext in nscontext := (ps, os, ns) :: tl end
+   fun setCurrentNS ns  = let val (ps, os, _) :: tl = ! nscontext in nscontext := (ps, os, SOME ns) :: tl end
 
    fun getDocNS fileName = case List.find (fn (f,_) => f = fileName) (! docNSs)
       of SOME (_, ns) => SOME ns
        | NONE => NONE
    fun setDocNS(fileName, ns) = case getDocNS fileName
       of SOME _ => ()
-       | NONE => docNSs := (fileName, ns) :: (! docNSs) 
+       | NONE => docNSs := (fileName, ns) :: (! docNSs)
    
    fun installName(m : mid, c : cid, origin : cid option, names : string list) =
      if List.last names = "_"
@@ -215,7 +220,7 @@ struct
                raise Error("name " ^ IDs.foldQName names ^ " already declared")
             )
     fun installNameC(c, origin, names) = 
-      let val names' = if ModSyn.onToplevel() then URI.uriToString (getCurrentNS()) :: names else names
+      let val names' = if ModSyn.onToplevel() then URI.uriToString (getCurrentNS(NONE)) :: names else names
       in installName(M.currentMod(), c, origin, names)
       end
     fun uninstallName(m, names) = let val c = MSH.lookup nameTable (m, names)
@@ -299,7 +304,7 @@ struct
    fun nameLookupS(m, names) = case nameLookup1(m, names)
        of SOME c => SOME c
         | NONE => if List.length names = 1
-                  then nameLookupNMS(m, names, getCurrentNS() :: (openNS())) (* optimization to skip inapplicable cases *)
+                  then nameLookupNMS(m, names, getCurrentNS(NONE) :: (openNS())) (* optimization to skip inapplicable cases *)
                   else nameLookupMS(m, names)
    (* if fail, try names = modname @ symname *)
    and nameLookupMS(m, hd::tl) = case nameLookup1(m,[hd])
@@ -316,7 +321,7 @@ struct
                            in raise MissingModule(ns, modname, msg)
                            end
              )
-        | NONE => nameLookupNMS(m, hd::tl, getCurrentNS() :: (openNS()))
+        | NONE => nameLookupNMS(m, hd::tl, getCurrentNS(NONE) :: (openNS()))
    (* try ns::names for a list of namespaces ns, return the first hit or fail eventually *)
    and nameLookupNMS(m, hd::tl, ns::nss) = (case nameLookup1(m, [URI.uriToString ns,hd])
        of SOME c => nameLookup2(m, [URI.uriToString ns,hd], c, tl)

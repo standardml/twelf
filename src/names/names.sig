@@ -58,8 +58,9 @@ sig
   (* we maintain a list of namespaces that are available without qualification,
      searched in inverse addition order (called on every file of a configuration) *)
   val openNamespace: URI.uri -> unit
-  (* get/set current namespace *)
-  val getCurrentNS : unit -> URI.uri
+  (* get current namespace, possibly providing default value; yields "/" if neither namespace nor default defined *)
+  val getCurrentNS : URI.uri option -> URI.uri
+  (* set current namespace *)
   val setCurrentNS : URI.uri -> unit
   (* get/set base namespace of a document (file name) *)
   val getDocNS : string -> URI.uri option

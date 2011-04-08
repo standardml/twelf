@@ -253,7 +253,7 @@ struct
     
    fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) =
        let val parname = M.modDecName (M.modLookup (M.currentMod()))
-       in  M.SigDec(Names.getCurrentNS(), parname @ [name]) (* was: OS.Path.mkCanonical fileName *)
+       in  M.SigDec(Names.getCurrentNS(NONE), parname @ [name]) (* was: OS.Path.mkCanonical fileName *)
        end
      | modbeginToModDec(viewbegin(name, (dom,rd), (cod,rc), implicit), Paths.Loc(fileName, _)) =
          let
@@ -262,7 +262,7 @@ struct
             val Cod = modNameLookup' Names.SIG (cur, cod, rc)
             val parname = M.modDecName (M.modLookup (M.currentMod()))
          in
-            M.ViewDec (Names.getCurrentNS(), parname @ [name], Dom, Cod, implicit)
+            M.ViewDec (Names.getCurrentNS(NONE), parname @ [name], Dom, Cod, implicit)
          end
      | modbeginToModDec(relbegin(name, mors, r), loc as Paths.Loc(fileName, _)) =
          let
@@ -280,7 +280,7 @@ struct
                     else ()
             val parname = M.modDecName (M.modLookup (M.currentMod()))
          in
-            M.RelDec (Names.getCurrentNS(), parname @ [name], dom, cod, Mors')
+            M.RelDec (Names.getCurrentNS(NONE), parname @ [name], dom, cod, Mors')
          end
 
    fun readToRead(readfile name, Paths.Loc(fileName, r)) =

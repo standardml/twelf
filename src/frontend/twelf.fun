@@ -1405,7 +1405,8 @@ struct
 
       | install1 (fileName, declr as (Parser.Namespace nsdec, r)) =
          let val ReconModule.namespace(pOpt, ns', _) = nsdec
-             val ns = URI.resolve(Names.getCurrentNS(), ns')
+             val defaultNS = URI.makeFileURI(false, fileName)
+             val ns = URI.resolve(Names.getCurrentNS(SOME defaultNS), ns')
          in case pOpt
             of SOME p => (Names.installPrefix(p,ns)
                          handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
