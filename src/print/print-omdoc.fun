@@ -144,7 +144,13 @@ struct
     | fmtCon (G, I.Const(cid), params) = relSymOMS (cid, params)
     | fmtCon (G, I.Def(cid), params) = relSymOMS (cid, params)
     | fmtCon (G, I.NSDef(cid), params) = relSymOMS (cid, params)
-    | fmtCon (G, I.FgnConst (csid, condec), _) = "FgnConst"  (* FIX -cs Fri Jan 28 17:45:35 2005*)
+    | fmtCon (G, I.FgnConst (csid, condec), _) =
+        let val name = I.conDecFoldName condec
+            fun fixSign(s) = String.map (fn x => if x = #"~" then #"-" else x) s 
+        in case Int.fromString name
+          of SOME(i) => "<OMI>" ^ fixSign (Int.toString i) ^ "</OMI>"
+           | NONE => "<OMSTR>" ^ escape name ^ "</OMSTR>" (* falsely escapes ? and /; what if a string happens to look like a number? --fr *) 
+        end
     (* I.Skonst, I.FVar cases should be impossible *)
 
   fun fmtUni (I.Type) = LFOMS(["type"])
@@ -228,7 +234,8 @@ struct
       in
       	fmtBinder(lam, name, fmtType, r, fmtBody)
       end
-    | fmtExpW (G, (I.FgnExp (csid, F), s), 0, _) = "FgnExp" (* FIX -cs Fri Jan 28 17:45:43 2005 *)
+    | fmtExpW (G, (I.FgnExp csfe, s), 0, params) =
+           fmtExp (G, (I.FgnExpStd.ToInternal.apply csfe (), s), 0, params)
 
     (* I.EClo, I.Redex, I.EVar not possible *)
 
@@ -475,7 +482,7 @@ struct
                     | SOME _ => ()
                 )
               | ModSyn.SymInclInst inst => (case ModSyn.symInstOrg inst
-                   of NONE => print (instToString(inst, params, md) ^ nl())
+                   of NONE => print (instToString(inst, params, md) ^ nl()) 
                     | SOME _ => ()
                 )
               | ModSyn.SymConCase cas => (case ModSyn.symRelOrg cas
@@ -492,9 +499,9 @@ struct
                 )
               | ModSyn.SymMod(m, mdec) => printModule file m params fileNameOpt
           end
+          handle ModSyn.UndefinedCid c => () (* in views not everything is defined *)
      in      
           ModSyn.sgnApp(m, doSym)
-          handle ModSyn.UndefinedCid c => () (* in views not everything is defined *)
      end
 
   and printModule file m params fileNameOpt =
