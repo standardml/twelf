@@ -141,7 +141,11 @@ struct
       in 
 	OMV(n)
       end
-    | fmtCon (G, I.Const(cid), params) = relSymOMS (cid, params)
+    | fmtCon (G, I.Const(cid), params) = ( 
+        case ModSyn.sgnLookup cid
+          of I.ConDec(name,_,_,I.Foreign _, _, _) => OMS3(baseLF, ["domain"], name) (* constants from constraint domain, e.g., +-~ *)
+           | _ => relSymOMS (cid, params)
+      )
     | fmtCon (G, I.Def(cid), params) = relSymOMS (cid, params)
     | fmtCon (G, I.NSDef(cid), params) = relSymOMS (cid, params)
     | fmtCon (G, I.FgnConst (csid, condec), _) =
