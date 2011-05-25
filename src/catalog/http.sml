@@ -1,14 +1,12 @@
 signature HTTP = sig
-  (* get the correct HTML data *)
+  (* send a GET request and return whole result as string *)
+  (* If the server returns an HTTP error (like 404 Page not found), it simply returns the empty string *)
   val get : URI.uri -> string
-  
-  (* get the text from the HTTP header with key = Mydata. Replace back the encoded characters: `r with \r, `n with \n, `o with ` *)
-  val getFromHeader : URI.uri -> string
+  (* send GET request and return the value of a specific header of the response. *)
+  val getFromHeader : URI.uri * string -> string
 end
 
-(* WARNING: this only sends the path part of the URI, and ignores the query and fragment. However, if the "path" actually contains the query and fragment, it uses them *)
-(* WARNING: if the server gives an HTTP error (like 404 Page not found), it simply returns the empty string *)
-(* WARNING: this doesn't support chunked HTTP. Everything must be in one TCP packet. This leads to many troubles. *)
+(* This doesn't seem to support chunked HTTP - everything must be in one TCP packet. This leads to many troubles. *)
 structure HTTP = struct
   exception Error of string
   fun get(uri : URI.uri) =
@@ -34,58 +32,20 @@ structure HTTP = struct
   in
      response
   end
-(* 
-  fun getContent(chars: char list) : char list = 
-            if (List.length(chars) >= 4) andalso (List.take(chars,4) = explode "\r\n\r\n")
-            then List.drop(chars,4)
-            else if (List.length(chars) >= 1) then getContent(tl chars) else nil
-     val responseContent = implode (getContent(explode response))
-*)
 
-  fun getFromHeader(uri : URI.uri) =
+  fun getFromHeader(header: string, uri : URI.uri) =
   let
      val response = get(uri)
-     val stream = TEXT_IO.openString response
+     val stream = TextIO.openString response
      fun getHeader(h, s) =
-       case TEXT_IO.inputLine stream
-         of NONE => NONE
-          | SOME s =>
-              if String.isPrefix(h,s)
-              then String.extract(s, String.size h, NONE)
+       case TextIO.inputLine s
+         of NONE => ""
+          | SOME line =>
+              if String.isPrefix h line
+              then String.extract(line, String.size h, NONE)
               else getHeader(h,s)
-     val myData = getHeader("MyData: ", stream)
-(*     val keySize = String.size("Mydata: ")
-     fun getContent(chars: char list) : char list = 
-            if (List.length(chars) >= keySize) andalso (List.take(chars,keySize) = explode "Mydata: ")
-            then let
-                     fun untilNewLine(chars: char list) : char list = 
-                        if (List.length(chars) >= 2) andalso (List.take(chars,2) = explode "\r\n")
-                        then nil
-                        else if (List.length(chars) >= 1) 
-                              then (hd chars)::untilNewLine(tl chars)
-                              else nil
-                  in
-                     untilNewLine(List.drop(chars,keySize))
-                  end
-            else if (List.length(chars) >= 1) then getContent(tl chars) else nil
-     (* incrementally replace all occurrences of patt in lst with repl *)
-     fun replaceAll(lst: char list, patt: char list, repl: char list) : char list = 
-         if (List.length(lst) >= List.length(patt)) andalso (List.take(lst, List.length(patt)) = patt)
-         then repl @ replaceAll(List.drop(lst, List.length(patt)), patt, repl)
-         else if (List.length(lst) >= 1)
-               then (hd lst)::replaceAll(tl lst, patt, repl)
-               else nil
-     val mydataContent = implode (replaceAll(replaceAll(replaceAll(getContent(explode response), explode "`r", explode "\r"), explode "`n", explode "\n"), explode "`o", explode "`"))
-*)
+     val myData = getHeader(header, stream)
   in
      myData
   end
 end
-
-(*
-fun printStackTrace e =
- let val ss = SMLofNJ.exnHistory e
- in
- print ("uncaught exception " ^ (exnMessage e) ^ "\n");
- app (fn s => print ("\t" ^ s ^ "\n")) ss
-end*)

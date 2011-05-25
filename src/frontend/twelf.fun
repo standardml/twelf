@@ -489,11 +489,13 @@ struct
          of SOME (n,m) => raise Names.Error("missing module " ^ m ^ " in namespace " ^ URI.uriToString n ^
                        " cannot be found (dependency cycle or faulty catalog entry)")
           | _ => let
+          val moduleText = "missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns
           (* no cycle *)
-          val _ = chmsg 3 (fn () => "%% loading missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns ^ "\n")
-          val dir = OS.Path.dir fileName (* base directory of current elf file *)
-          (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
-          val url = URI.toFilePath ns
+          val _ = chmsg 3 (fn () => "%% loading " ^ moduleText ^ "\n")
+          val url = Catalog.resolve(ns, modname) handle Catalog.Error(msg) => raise Names.Error("not found:" ^ moduleText ^ "\ncatalog returned: " ^ msg ^ "\n")
+          (* assume the URI resolves to a file:/ URL *)
+          val file = URI.toFilePath url
+          val _ = chmsg 3 (fn () => "%% loading from " ^ file ^ "\n")
           (* the currently open signatures, i.e., M1, M1.M2, ..., M1.....Mn depend
              on the missing module, so their name entries are removed temporarily and saved *)
           val cdec = ModSyn.modLookup(ModSyn.currentMod())
@@ -507,14 +509,13 @@ struct
           val _ = ModSyn.pushContext()
           (* save the current line info *)
           val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
-          (* load the missing module - for now: assume it's a file and load the whole file
+          (* load the missing module - it's redundant to load the whole file; more sophisticated solutions remain further work
              - all loaded modules are inserted into the toplevel signature right before M1 so that the mids are not in logical order anymore
              - the cid of M1 is increased accordingly so that the cids are still in logical order
           *)
-          val _ = chmsg 3 (fn () => "%% loading from " ^ url ^ "\n")
-          val stat = loadFile url
+          val stat = loadFile file
           val _ = if stat = ABORT
-                  then raise ModSyn.Error("Error in dynamically loaded module " ^ URI.uriToString ns) else ()
+                  then raise ModSyn.Error("Error in dynamically loaded " ^ moduleText) else ()
           (* restore previous file name and line info *)
           val _ = ReconTerm.resetErrors fileName;
           val _ = Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
@@ -531,7 +532,7 @@ struct
           val _ = (restoreEntries entries)
                   handle Names.Error(msg) => raise Names.Error(Paths.wrap(r,
                    "dynamically loaded modules were installed correctly, but one of them overwrote the name of a currently open module: " ^ msg))
-          val _ = chmsg 3 (fn () => "%% loaded missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns ^ "; retrying\n")
+          val _ = chmsg 3 (fn () => "%% loaded " ^ moduleText ^ "; retrying\n")
        in
           (* finally retry *)
           tryInstall1(fileName, decr, (ns,modname) :: missing)
