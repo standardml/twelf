@@ -7,6 +7,13 @@ BIN=`dirname $0`
 # if the first two arguments are -omdoc DIR, all files are converted to OMDoc and stored in directory DIR
 # otherwise the files are only checked
 
+if [ $1 = -catalog ]; then 
+  CATALOG="-catalog $2"; shift; shift
+else
+  CATALOG=""
+fi
+
+
 if [ $1 = -omdoc ]; then
   OMDOC="-omdoc $2"; shift; shift
 else
@@ -16,4 +23,4 @@ fi
 # "$@" expands to the list of command line parameters as a list of words
 # The working command should be exactly `find "$@"`
 FILES=`find "$@"`
-$BIN/check-some $OMDOC `echo $FILES`
+$BIN/check-some $CATALOG $OMDOC `echo $FILES`

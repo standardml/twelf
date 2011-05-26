@@ -15,4 +15,5 @@ sig
   val chMessage : int -> (unit -> string) -> (string -> unit) -> unit
   val timeLimit : (Time.time option) ref   (* in seconds *)
   val printFlat : bool ref (* -fr *)
+  val catalog : URI.uri option ref (* -fr *)
 end;  (* signature GLOBAL *)

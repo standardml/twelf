@@ -1,10 +1,10 @@
 Library
-structure URI
 structure Catalog
 is
 #if defined(NEW_CM)
   $/basis.cm
 #endif
-uri.sml
 http.sml
 catalog.sml
+../uri/sources.cm
+../global/sources.cm

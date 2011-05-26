@@ -3,9 +3,19 @@
 # the twelf directory, must contain sudirectory bin
 TWELFBIN=`dirname $0`
 
+# configuration commands that are passed to Twelf before loading a file
+CONFIG="set chatter 1\n"
+
 # takes a list of file name arguments and checks the files, prints a report at the end
+# if the first two arguments are -catalog URI, URI is used as the catalog server
 # if the first two arguments are -omdoc DIR, all files are converted to OMDoc and stored in directory DIR
 # otherwise the files are only checked
+
+if [ $1 = -catalog ]; then 
+  CONFIG="$CONFIG set catalog $2\n"; shift; shift
+else
+fi
+
 if [ $1 = -omdoc ]; then 
   TARGDIR="$2"; shift; shift
 else
@@ -20,7 +30,6 @@ ERRORFILE=""
 # iterate over all files (must be relative paths?) that are passed via the command line
 for file in $*
 do
- 
   # if requested, $COMMAND holds the command sent to Twelf for OMDoc conversion
   if [ "$TARGDIR" != '' ]; then
      # ".elf" is removed if present, ".omdoc" appended
@@ -41,7 +50,7 @@ do
   # Twelf is called on the file with small verbosity, the output is printed and stored in $OUTPUT
   echo -e "\n*******************************"
   echo Processing $file
-  OUTPUT=`echo -e "set chatter 1\n loadFile $file\n $COMMAND\n OS.exit" | $TWELFBIN/twelf-server`
+  OUTPUT=`echo -e "$CONFIG loadFile $file\n $COMMAND\n OS.exit" | $TWELFBIN/twelf-server`
   echo -e "$OUTPUT"
 
   # if there was an error ("ABORT" in the output), ...

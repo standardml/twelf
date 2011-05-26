@@ -1,7 +1,15 @@
 @echo off
-rem checks a list of files; prints to omdoc if -omdoc DIR is supplied
+rem checks a list of files; uses a catalog if -catalog is specified; prints to omdoc if -omdoc DIR is supplied
 SET SML=sml
 SET BIN=%~dp0
+
+if %1==-catalog (
+  SET CATALOG=set catalog %2
+  shift
+  shift
+) else (
+  SET CATALOG=
+)
 
 if %1==-omdoc (
   SET OMDOC=%2
@@ -31,6 +39,7 @@ SET COMMAND=Print.OMDoc.printDoc %1 %TARGET%.omdoc
 
 :twelf
 (
+   if not "%CATALOG%"=="" echo %CATALOG%
    echo loadFile %1
    if not "%COMMAND%"=="" echo %COMMAND%
 )  | %SML% @SMLload="%BIN%.heap\twelf-server"

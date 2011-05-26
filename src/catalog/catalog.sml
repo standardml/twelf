@@ -1,14 +1,14 @@
+(* a client of a catalog server that resolves URIs to URLs *)
+(* Florian Rabe, Alin Iacob *)
+
 signature CATALOG = sig
-  (* sets the URL of the catalog server, typically something like http://localhost:8080 *)
-  val setCatalogURL : URI.uri -> unit
-  (* takes a namespace URI and a module name and returns its URL *)
+  (* takes a catalog URL, a namespace URI, and a module name and returns its URL *)
   val resolve : URI.uri * string -> URI.uri
   (* raised by resolve if resolution fails *)
   exception Error of string
 end
 
 structure Catalog : CATALOG = struct
-  val catalogURL : URI.uri option ref = ref NONE
 
   exception Error of string
 
@@ -21,13 +21,12 @@ structure Catalog : CATALOG = struct
   (* returns the first index of c in l (starting at 0), -1 if none *) 
   fun indexOf(l: char list, c: char) = indexOfAux(l, c, 0)
   
-  fun setCatalogURL url = catalogURL := SOME url
-  fun resolve(uri, modname) =
+  fun resolve (uri, modname) =
 (*  if #scheme uri = SOME "file"
     then (* lookup in local file *)
        ("",0,0,0,0)
     else (* lookup in catalog *) *) 
-      case catalogURL
+      case Global.catalog
           of ref NONE => raise Error("URI " ^ URI.uriToString uri ^ " cannot be resolved because no catalog server is configured")
            | ref (SOME cat) =>
              let

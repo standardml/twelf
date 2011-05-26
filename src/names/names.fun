@@ -328,6 +328,7 @@ struct
         | NONE => nameLookupNMS(m, hd::tl, nss)
        )
      | nameLookupNMS(m, nil, _) = raise Error("namespace prefix must be followed by identifier")
+     | nameLookupNMS(m, hd :: nil, nil) = raise MissingModule(getCurrentNS(NONE), hd, "missing module " ^ hd)
      | nameLookupNMS(m, _, nil) = NONE
  
     (* level 3 lookup functions - visible to the outside *)

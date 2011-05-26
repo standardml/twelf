@@ -91,6 +91,10 @@ struct
     | getBool (t::nil) = error (quote t ^ " is not a boolean")
     | getBool (ts) = error "Extraneous arguments"
 
+  fun getURI(s :: nil) = ((URI.parseURI s) handle e => error("ill-formed URI"))
+    | getURI(nil) = error "Missing URI"
+    | getURI(ts) = error "Extraneous arguments"
+    
   (* Natural numbers *)
   fun getNat (t::nil) =
         (Lexer.stringToNat t
@@ -158,6 +162,7 @@ struct
     | setParm ("Prover.maxRecurse"::ts) = Twelf.Prover.maxRecurse := getNat ts
     | setParm ("Table.strategy"::ts) = Twelf.Table.strategy := getTableStrategy ts
     | setParm ("Table.strengthen"::ts) = Twelf.Table.strengthen := getBool ts
+    | setParm ("catalog"::ts) = Twelf.catalog := SOME (getURI ts)
     | setParm (t::ts) = error ("Unknown parameter " ^ quote t)
     | setParm (nil) = error ("Missing parameter")
 
@@ -178,7 +183,8 @@ struct
     | getParm ("Prover.strategy"::ts) = strategyToString (!Twelf.Prover.strategy)
     | getParm ("Prover.maxSplit"::ts) = Int.toString (!Twelf.Prover.maxSplit)
     | getParm ("Prover.maxRecurse"::ts) = Int.toString (!Twelf.Prover.maxRecurse)
-   | getParm ("Table.strategy"::ts) = tableStrategyToString (!Twelf.Table.strategy) 
+    | getParm ("Table.strategy"::ts) = tableStrategyToString (!Twelf.Table.strategy)
+    | getParm ("catalog"::ts) = (case ! Twelf.catalog of SOME uri => URI.uriToString uri | NONE => "undefined") 
     | getParm (t::ts) = error ("Unknown parameter " ^ quote t)
     | getParm (nil) = error ("Missing parameter")
 

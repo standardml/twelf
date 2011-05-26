@@ -1,3 +1,6 @@
+(* the datatype URI according to RFC 3986 *)
+(* Florian Rabe *)
+
 signature URISIG = sig
    type authority = {userinfo: string option, host: string, port: int option}
    type uri = {scheme: string option, authority: authority option, abs: bool, path: string list,

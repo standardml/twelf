@@ -21,7 +21,7 @@ is
   ../comments/sources.cm
   ../paths/sources.cm
   ../formatter/sources.cm
-  ../catalog/sources.cm
+  ../uri/sources.cm
   symbol.sig
   symbol.fun
   print.sig

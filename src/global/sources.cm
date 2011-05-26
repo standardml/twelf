@@ -7,3 +7,4 @@ is
 #endif
   global.sig
   global.sml
+  ../uri/sources.cm

@@ -10,7 +10,7 @@ is
   ../table/sources.cm
   ../global/sources.cm
   ../lambda/sources.cm
-  ../catalog/sources.cm
+  ../uri/sources.cm
   names.sig
   names.fun
   names.sml

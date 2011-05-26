@@ -492,7 +492,7 @@ struct
           val moduleText = "missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns
           (* no cycle *)
           val _ = chmsg 3 (fn () => "%% loading " ^ moduleText ^ "\n")
-          val url = Catalog.resolve(ns, modname) handle Catalog.Error(msg) => raise Names.Error("not found:" ^ moduleText ^ "\ncatalog returned: " ^ msg ^ "\n")
+          val url = Catalog.resolve (ns, modname) handle Catalog.Error(msg) => raise Names.Error("not found: " ^ moduleText ^ "\ncatalog returned: " ^ msg ^ "\n")
           (* assume the URI resolves to a file:/ URL *)
           val file = URI.toFilePath url
           val _ = chmsg 3 (fn () => "%% loading from " ^ file ^ "\n")
@@ -1911,6 +1911,7 @@ struct
     val autoFreeze : bool ref = Global.autoFreeze
     val timeLimit : (Time.time option) ref = Global.timeLimit
     val printFlat : bool ref = Global.printFlat (* -fr *)
+    val catalog : URI.uri option ref = Global.catalog (* -fr *)
 
     datatype Status = datatype Status
     val reset = reset

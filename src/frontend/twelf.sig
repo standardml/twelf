@@ -94,6 +94,7 @@ sig
   val autoFreeze : bool ref		(* false, freezes families in meta-theorems *)
   val timeLimit : (Time.time option) ref     (* NONEe, allows timeLimit in seconds *)
   val printFlat : bool ref             (* toggle whether signature is mirrored in modular or flat syntax -fr *)
+  val catalog : URI.uri option ref     (* the URL of the catalog to resolve namespace URIs -fr *)
 
   datatype Status = OK | ABORT	       (* return status *)
 

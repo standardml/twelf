@@ -14,6 +14,7 @@ struct
   val autoFreeze = ref true (* !!!reconsider later!!! Thu Mar 10 09:42:28 2005 *)
   val timeLimit = ref (NONE : (Time.time option))
   val printFlat = ref false (* -fr *)
+  val catalog : URI.uri option ref = ref NONE (* -fr *)
 
   fun chPrint n s = if !chatter >= n then print (s ()) else ()
   fun chMessage n s f = if !chatter >= n then f (s ()) else ()

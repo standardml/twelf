@@ -1,3 +1,6 @@
+(* HTTP client *)
+(* Alin Iacob, Florian Rabe *)
+
 signature HTTP = sig
   (* send a GET request and return whole result as string *)
   (* If the server returns an HTTP error (like 404 Page not found), it simply returns the empty string *)
