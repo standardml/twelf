@@ -1,0 +1,6 @@
+%namespace "http://test.org/test3".
+
+%sig A = {
+   a: type.
+}.
+

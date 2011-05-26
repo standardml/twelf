@@ -1,0 +1,17 @@
+%namespace "http://test.org/".
+
+%namespace t3 = "test3".
+
+%sig A = {
+   a: type.
+   c: a.
+
+   %include B.
+   d: B.a.
+
+   %include t3.A.
+   e: t3.A.a.
+}.
+
+
+
