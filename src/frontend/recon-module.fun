@@ -83,10 +83,10 @@ struct
      	val (link, nextHome) = let val s = nameLookup Names.STRUC (cod, names, r)
      	                       in (M.MorStr s, M.strDecDom (M.structLookup s))
      	                       end
-        handle Error _ => let val s = nameLookup Names.STRUC (M.currentMod(), names, r)
+        handle _ => let val s = nameLookup Names.STRUC (M.currentMod(), names, r)
      	                   in (M.MorStr s, M.strDecDom (M.structLookup s))
      	                   end
-        handle Error _ => let val m = modNameLookup Names.VIEW (M.currentMod(), names, r)
+        handle _ => let val m = modNameLookup Names.VIEW (M.currentMod(), names, r)
                               val M.ViewDec(_,_,dom,_,_) = M.modLookup m
                           in (M.MorView m, dom)
                           end

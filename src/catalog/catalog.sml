@@ -22,10 +22,9 @@ structure Catalog : CATALOG = struct
   fun indexOf(l: char list, c: char) = indexOfAux(l, c, 0)
   
   fun resolve (uri, modname) =
-(*  if #scheme uri = SOME "file"
-    then (* lookup in local file *)
-       ("",0,0,0,0)
-    else (* lookup in catalog *) *) 
+  if #scheme uri = SOME "file"
+    then uri
+    else (* lookup in catalog *)
       case Global.catalog
           of ref NONE => raise Error("URI " ^ URI.uriToString uri ^ " cannot be resolved because no catalog server is configured")
            | ref (SOME cat) =>

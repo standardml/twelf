@@ -375,7 +375,7 @@ struct
         )
 
     fun findConst fc (G, qid, r) =
-        (case Names.nameLookup' qid
+        (case Names.nameLookupC qid
            of NONE => fc (G, qid, r)
             | SOME cid =>
 	      (case ModSyn.symLookup cid

@@ -1016,7 +1016,7 @@ in
     | modBeginToString(M.ViewDec(base, name, dom, cod, impl)) =
       "%% " ^ URI.uriToString base ^ "?" ^ IDs.foldQName name ^ "\n" ^
       "%view " ^ (implicitToString impl) ^ (List.last name) ^ " : " ^
-      (fmtModName dom) ^ " -> " ^ (fmtModName cod) ^ " = {"
+      (M.modFoldName dom) ^ " -> " ^ (M.modFoldName cod) ^ " = {"
     | modBeginToString(M.RelDec(base, name, dom, cod, mors)) =
       "%% " ^ URI.uriToString base ^ "?" ^ IDs.foldQName name ^ "\n" ^
       "%rel " ^ (List.last name) ^ " : " ^

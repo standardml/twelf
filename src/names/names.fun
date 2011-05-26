@@ -304,32 +304,33 @@ struct
    fun nameLookupS(m, names) = case nameLookup1(m, names)
        of SOME c => SOME c
         | NONE => if List.length names = 1
-                  then nameLookupNMS(m, names, getCurrentNS(NONE) :: (openNS())) (* optimization to skip inapplicable cases *)
+                  then nameLookupNMS(m, names, getCurrentNS(NONE) :: (openNS()), (getCurrentNS(NONE), List.hd names)) (* optimization to skip inapplicable cases *)
                   else nameLookupMS(m, names)
    (* if fail, try names = modname @ symname *)
    and nameLookupMS(m, hd::tl) = case nameLookup1(m,[hd])
        of SOME c => nameLookup2(m, [hd], c, tl)
         | NONE => nameLookupPMS(m,hd::tl)
    (* try names = prefix :: modname @ symname, recover by trying current and open namespaces *)
-   and nameLookupPMS(m, hd::tl) = case lookupPrefix hd
-       of SOME ns => (
-             case nameLookupNMS(m, tl, [ns])
-                of SOME c => SOME c
-                 (* special exception raised if toplevel declaration not found to permit on-demand loading of modules *)
-                 | NONE => let val modname = List.hd tl
-                               val msg = "missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns
-                           in raise MissingModule(ns, modname, msg)
-                           end
-             )
-        | NONE => nameLookupNMS(m, hd::tl, getCurrentNS(NONE) :: (openNS()))
+   and nameLookupPMS(m, hd::tl) =
+   let
+      val pLup = lookupPrefix hd
+      (* continue by looking up modsym in nss, dynamically load (misns, mismod) upon failure *)
+      val (modsym, nss, (misns,mismod)) = case pLup
+          of SOME ns => (
+            case tl
+              of nil => raise Error("namespace prefix must be followed by identifier")
+               | m::_ => (tl, [ns], (ns, m))
+          )
+          | NONE => (hd::tl, getCurrentNS(NONE) :: (openNS()), (getCurrentNS(NONE), hd))
+   in
+      nameLookupNMS(m, modsym, nss, (misns, mismod))
+   end
    (* try ns::names for a list of namespaces ns, return the first hit or fail eventually *)
-   and nameLookupNMS(m, hd::tl, ns::nss) = (case nameLookup1(m, [URI.uriToString ns,hd])
+   and nameLookupNMS(m, hd::tl, ns::nss, (misns, mismod)) = (case nameLookup1(m, [URI.uriToString ns,hd])
        of SOME c => nameLookup2(m, [URI.uriToString ns,hd], c, tl)
-        | NONE => nameLookupNMS(m, hd::tl, nss)
+        | NONE => nameLookupNMS(m, hd::tl, nss, (misns, mismod))
        )
-     | nameLookupNMS(m, nil, _) = raise Error("namespace prefix must be followed by identifier")
-     | nameLookupNMS(m, hd :: nil, nil) = raise MissingModule(getCurrentNS(NONE), hd, "missing module " ^ hd)
-     | nameLookupNMS(m, _, nil) = NONE
+     | nameLookupNMS(m, _, nil, (misns, mismod)) = raise MissingModule(misns, mismod, "missing module " ^ mismod ^ " in namespace " ^ URI.uriToString misns)
  
     (* level 3 lookup functions - visible to the outside *)
     datatype Concept = SIG | VIEW | REL | CON | STRUC
