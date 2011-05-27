@@ -333,84 +333,81 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      we write applyRel(U, SOME C, rel) as rel^C(U)
      pre: rel is a well-formed relation between a list of morphisms m_1, ..., m_n with domain dom and codomain cod
      pre: U is well-formed expression over dom in context G
-     pre: if U is a kind, then tp is SOME C where C:U is the type family to which rel is applied
-     post: if G |- U:K:kind over dom, then rel(G) |- rel(U):rel^C(K):kind over cod
+     pre: if U is a kind, then COpt is SOME C where C:U is the type family to which rel is applied
+     post: if G |- C:K:kind over dom, then rel(G) |- rel(C):rel^C(K):kind over cod
      post: if G |- U:V:type over dom, then rel(G) |- rel(U):rel(V) m_1(V) ... m_n(V):type over cod
      contexts/spines over dom of length m go to contexts/spines of length m*(n+1) over cod
         by applying the n morphisms and the logical relation
+     The functions below take a parameter l, which counts the number of free variables in U.
    *)
   fun zipWithIndex l = ListPair.zip(l, (List.tabulate(List.length l, fn x => x))) (* [(l_0,0), ..., (l_{n-1}, n-1)] *)
   fun applyRel(U, COpt, rel) =
-     let
+  let
      	val (dom, cod, mors, _) = reconRel rel
      	val n = List.length mors
      	val morsWithIndex = zipWithIndex mors
-        (* counter for the number of variables in the context;
-     	   evil to use state here but it makes the code easier to read than with an additional argument in the recursive calls *)
-     	val l = ref 0
         (* morsub u = [m'_1(u), ..., m'_n(u)]
            m'_j(-) is application of m_j followed by the substitution from [l,...,1] to rel([l,...,1])
              which maps i to i*(n+1)-j *)
-        fun morsub u =
-          let val vars = List.tabulate(! l, fn x => ! l - x)   (* [l,...,1] *)
+      fun morsub u l =
+          let val vars = List.tabulate(l, fn x => l - x)   (* [l,...,1] *)
               fun subs j = List.foldl (fn (i,rest) => I.Dot(I.Idx (i * (n+1) - j), rest)) I.id vars
           in List.map (fn (m,j) => I.EClo(applyMorph(u, m), subs j)) morsWithIndex
           end
         (* similar to morsub u but returns the context m'_1(u), ..., m'_n(u) *)
-        fun MC u : I.Dec I.Ctx =
+      fun MC u l : I.Dec I.Ctx =
            let
               (* each m'_i(u) must be shifted i-1 times *)
-              val tps = List.map (fn (t,i) => I.EClo(t, I.Shift i)) (zipWithIndex (morsub u))
+              val tps = List.map (fn (t,i) => I.EClo(t, I.Shift i)) (zipWithIndex (morsub u l))
            in List.foldl (fn (e,rest) => I.Decl(rest,I.Dec(I.NoVarInfo, e))) I.Null tps
            end
         (* applying to an expression *)
-        fun A u = A'(u,NONE)
-     	and A'(I.Uni I.Kind, _) = I.Uni I.Kind
-     	  | A'(I.Uni I.Type, SOME C) = I.PPi((MC C, I.No), I.Uni I.Type)
+      fun A u l = A'(u,NONE, l)
+     	and A'(I.Uni I.Kind, _, _) = I.Uni I.Kind
+     	  | A'(I.Uni I.Type, SOME C, l) = I.PPi((MC C l, I.No), I.Uni I.Type)
      	       (* rel^C(type) = m_1(C) -> m_n(C) -> type *)
-     	  | A'(I.Pi((dec, dep), V), SOME C) = 
+     	  | A'(I.Pi((dec, dep), V), SOME C, l) = 
               (* rel^C(Pi dec. K) = Pi rel(dec).rel^{shift(C) 1}(K) *)
      	      let val newC = I.Redex(I.EClo(C, I.shift), I.App(BVar' 1, I.Nil))
-     	          val _ = l := ! l + 1
-     	      in I.PPi((ADec dec, I.Maybe), A'(V, SOME newC)) (* dep instead of I.Maybe? *)
+     	      in I.PPi((ADec dec l, I.Maybe), A'(V, SOME newC, l + 1)) (* dep instead of I.Maybe? *)
      	      end
-     	  | A'(P as I.Pi((dec, dep), V), _) =
+     	  | A'(P as I.Pi((dec, dep), V), _, l) =
      	      (* rel(Pi dec. V) = lam f_1:m_1(P). ... lam f_n:m_n(P). Pi rel(dec). (rel(V) (f_1 x_1) ... (f_n x_n)) *)
      	      let
      	      	 val inds = List.tabulate(n, fn x => n + 1 - x)                              (* [n+1,...,2] *)
      	      	 val fx = List.map (fn i => I.Root(I.BVar(n+i), I.App(BVar' i, I.Nil))) inds (* [f_1 x_1, ..., f_n x_n] *)
-     	      in I.LLam(MC P, I.PPi((ADec dec, I.Maybe), I.Redex(A V, List.foldr I.App I.Nil fx)))
+     	      in I.LLam(MC P l, I.PPi((ADec dec l, I.Maybe), I.Redex(A V (l+1), List.foldr I.App I.Nil fx)))
      	      end
-     	  | A'(I.Lam(dec, U), _) = (l := ! l + 1; I.LLam(ADec dec, A U))  (* both on type and on term level *)
-     	  | A'(I.Redex(U, S), _) = I.Redex(A U, ASpine S)
-     	  | A'(I.Root(H, S), _) = I.Redex(AHead H, ASpine S)
-          | A'(I.EClo(U,s), _) = raise UnimplementedCase
-          | A'(I.FgnExp(cs, F), _) = raise UnimplementedCase
-          | A'(I.NVar n, _) = raise UnimplementedCase
-(*        | A(I.AVar(I)) = impossible by precondition *)
-(*     	  | A'(I.EVar(E, C, U, Constr)) = impossible by precondition *)
+     	  | A'(I.Lam(dec, U), _, l) = I.LLam(ADec dec l, A U (l + 1))  (* both on type and on term level *)
+     	  | A'(I.Redex(U, S), _, l) = I.Redex(A U l, ASpine S l)
+     	  | A'(I.Root(H, S), _, l) = I.Redex(AHead H l, ASpine S l)
+        | A'(I.EClo(U,s), _, _) = raise UnimplementedCase
+        | A'(I.FgnExp(cs, F), _, _) = raise UnimplementedCase
+        | A'(I.NVar n, _, _) = raise UnimplementedCase
+(*      | A(I.AVar(I)) = impossible by precondition *)
+(*      | A'(I.EVar(E, C, U, Constr)) = impossible by precondition *)
         (* applying to a declaration, returns context of length n+1 *)
-        and ADec(I.Dec(x,V)) : I.Dec I.Ctx =
+        and ADec(I.Dec(x,V)) l : I.Dec I.Ctx =
             let val vars = List.tabulate(n, fn x => BVar' (n - x))  (* [n,...,1] *)
-            in I.Decl(MC V, I.Dec(x,I.Redex(A V, List.foldr I.App I.Nil vars)))
+            in I.Decl(MC V l, I.Dec(x,I.Redex(A V l, List.foldr I.App I.Nil vars)))
             end
             (* rel(x:A) =  x_1:m_1(A), ..., x_n:m_n(A), x:(rel(A) x_1 ... x_n) *)
 (*        | ADec(I.BDec(v,(l,s))) = impossible by precondition *)
-          | ADec(I.ADec(v,d)) = raise UnimplementedCase
-          | ADec(I.NDec v) = raise UnimplementedCase
+          | ADec(I.ADec(v,d)) _ = raise UnimplementedCase
+          | ADec(I.NDec v) _ = raise UnimplementedCase
         (* applying to a spine, returns spine of length m(n+1) *)
-        and ASpine(I.Nil) = I.Nil
-          | ASpine(I.App(U,S)) = List.foldr I.App (ASpine S) ((morsub U) @ [A U])
+        and ASpine(I.Nil) _ = I.Nil
+          | ASpine(I.App(U,S)) l = List.foldr I.App (ASpine S l) ((morsub U l) @ [A U l])
               (* rel(t_1 ... t_r) = m_1(t_1) ... m(t_1) rel(t_1)   ...   m_1(t_r) ... m(t_r) rel(t_r) *)
-          | ASpine(I.SClo(S,s)) = raise UnimplementedCase
-        and AHead(I.BVar k) = BVar' (k * (n+1) - n)
-          | AHead(I.Const c) = ACid c
-          | AHead(I.Skonst c) = ACid c
-          | AHead(I.Def d) = A (M.constDef d)
-          | AHead(I.NSDef d) = A (M.constDef d)
-          | AHead(I.Proj(b,k)) = raise UnimplementedCase
-          | AHead(I.FVar(x, U, s)) = raise UnimplementedCase
-          | AHead(I.FgnConst(cs, condec)) = raise UnimplementedCase
+          | ASpine(I.SClo(S,s)) _ = raise UnimplementedCase
+        and AHead(I.BVar k) _ = BVar' (k * (n+1) - n)
+          | AHead(I.Const c) _ = ACid c
+          | AHead(I.Skonst c) _ = ACid c
+          | AHead(I.Def d) l = A (M.constDef d) l
+          | AHead(I.NSDef d) l = A (M.constDef d) l
+          | AHead(I.Proj(b,k)) _ = raise UnimplementedCase
+          | AHead(I.FVar(x, U, s)) _ = raise UnimplementedCase
+          | AHead(I.FgnConst(cs, condec)) _ = raise UnimplementedCase
 (*      and ASub(I.Shift n) = I.Shift n
           | ASub(I.Dot(Ft,s)) = I.Dot(AFront Ft, ASub s)
         and AFront(I.Idx k) = I.Idx k
@@ -443,7 +440,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      (* symbol declared in included signature: restrict relation to obtain included relation *)
            end
      in
-        A'(U, COpt)
+        A'(U, COpt, 0)
      end
 
   (* computes the expected type of rel(U) for U:V *)
