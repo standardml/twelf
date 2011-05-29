@@ -363,22 +363,27 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            end
         (* applying to an expression *)
       fun A u l = A'(u,NONE, l)
-     	and A'(I.Uni I.Kind, _, _) = I.Uni I.Kind
+(*          let val r = A'(u,NONE, l) 
+               val _ = print("in  " ^ Print.expToString(IntSyn.Null, u) ^ "\n")
+               val _ = print("out " ^ Print.expToString(IntSyn.Null, r) ^ "\n")
+          in r
+          end *)
+      and A'(I.Uni I.Kind, _, _) = I.Uni I.Kind
      	  | A'(I.Uni I.Type, SOME C, l) = I.PPi((MC C l, I.No), I.Uni I.Type)
      	       (* rel^C(type) = m_1(C) -> m_n(C) -> type *)
      	  | A'(I.Pi((dec, dep), V), SOME C, l) = 
               (* rel^C(Pi dec. K) = Pi rel(dec).rel^{shift(C) 1}(K) *)
      	      let val newC = I.Redex(I.EClo(C, I.shift), I.App(BVar' 1, I.Nil))
-     	      in I.PPi((ADec dec l, I.Maybe), A'(V, SOME newC, l + 1)) (* dep instead of I.Maybe? *)
+     	      in I.PPi((ADec dec (l+1), I.Maybe), A'(V, SOME newC, l+1)) (* dep instead of I.Maybe? *)
      	      end
      	  | A'(P as I.Pi((dec, dep), V), _, l) =
      	      (* rel(Pi dec. V) = lam f_1:m_1(P). ... lam f_n:m_n(P). Pi rel(dec). (rel(V) (f_1 x_1) ... (f_n x_n)) *)
      	      let
      	      	 val inds = List.tabulate(n, fn x => n + 1 - x)                              (* [n+1,...,2] *)
      	      	 val fx = List.map (fn i => I.Root(I.BVar(n+i), I.App(BVar' i, I.Nil))) inds (* [f_1 x_1, ..., f_n x_n] *)
-     	      in I.LLam(MC P l, I.PPi((ADec dec l, I.Maybe), I.Redex(A V (l+1), List.foldr I.App I.Nil fx)))
+     	      in I.LLam(MC P l, I.PPi((ADec dec (l+1), I.Maybe), I.Redex(A V (l+1), List.foldr I.App I.Nil fx)))
      	      end
-     	  | A'(I.Lam(dec, U), _, l) = I.LLam(ADec dec l, A U (l + 1))  (* both on type and on term level *)
+     	  | A'(I.Lam(dec, U), _, l) = I.LLam(ADec dec l, A U (l+1))  (* both on type and on term level *)
      	  | A'(I.Redex(U, S), _, l) = I.Redex(A U l, ASpine S l)
      	  | A'(I.Root(H, S), _, l) = I.Redex(AHead H l, ASpine S l)
         | A'(I.EClo(U,s), _, _) = raise UnimplementedCase
@@ -441,6 +446,11 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            end
      in
         A'(U, COpt, 0)
+(*            let val r = A'(U, COpt, 0)
+                val _ = print("\n" ^ "in  : " ^ Print.expToString (IntSyn.Null, U) ^ "\n")
+                val _ = print("out : " ^ Print.expToString (IntSyn.Null, r) ^ "\n" )
+            in r
+            end *)
      end
 
   (* computes the expected type of rel(U) for U:V *)

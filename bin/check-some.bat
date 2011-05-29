@@ -8,7 +8,8 @@ if %1==-catalog (
   shift
   shift
 ) else (
-  SET CATALOG=
+  rem strange errors if this is empty
+  SET CATALOG=set chatter 5
 )
 
 if %1==-omdoc (
@@ -39,7 +40,8 @@ SET COMMAND=Print.OMDoc.printDoc %1 %TARGET%.omdoc
 
 :twelf
 (
-   if not "%CATALOG%"=="" echo %CATALOG%
+   echo set chatter 5
+   echo %CATALOG%
    echo loadFile %1
    if not "%COMMAND%"=="" echo %COMMAND%
 )  | %SML% @SMLload="%BIN%.heap\twelf-server"
