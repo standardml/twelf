@@ -33,6 +33,7 @@ sig
              * bool                   (* if true, the variable was introduced by eta-expansion, currently always false *)
              * bool                   (* if true, the binder was implicit *)
   val NoVarInfo : VarInfo
+  val VarName   : string -> VarInfo
     
   val ctxPop : 'a Ctx -> 'a Ctx
   val ctxLookup: 'a Ctx * int -> 'a

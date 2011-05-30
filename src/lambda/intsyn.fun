@@ -25,6 +25,7 @@ struct
              * bool                   (* true if the variable was not present and introduced by eta-expansion *)
              * bool                   (* true if the binding was implicit *)
   val NoVarInfo = VarInfo(NONE,false,false,false)
+  fun VarName s = VarInfo(SOME s, false, false, false)
   
   (* ctxPop (G) => G'
      Invariant: G = G',D

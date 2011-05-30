@@ -287,7 +287,7 @@ local
      in  
      	(pref, modname, SOME (I.conDecName (M.sgnLookup c)))
      end
-  fun fmtCon (G, I.BVar(n)) = Str0 (Symbol.bvar (Names.bvarName(G, n))) (* (Int.toString n)) *)
+  fun fmtCon (G, I.BVar(n)) = Str0 (Symbol.bvar (Names.bvarName(G, n)))
     | fmtCon (G, I.Const(cid)) = fmtPath (Symbol.const, relativeCidName cid)
     | fmtCon (G, I.Skonst(cid)) = fmtPath (Symbol.skonst, relativeCidName cid)
     | fmtCon (G, I.Def(cid)) = fmtPath (Symbol.def, relativeCidName cid)
