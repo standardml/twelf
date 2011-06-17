@@ -81,21 +81,37 @@ structure URI : URISIG = struct
       else parsePath(scheme, NONE, s)   
 
    (* parses a URI without scheme (given by scheme), authority (given by authority) *)
-   (* note: currently no check for [? query] [# fragment] *)
    and parsePath(scheme, authority, s) : uri =
-      let val (abs, path) = if s = "" then (false, nil) (* empty path *)
-          else if startsWith(s, "/") then (true, parseRelPath(aft(s, "/"))) (* / path *)
-          else (false, parseRelPath s) (* path *)
+      let val i = Int.min(pos'(s, "?"), pos'(s, "#"))
+	      val (p, rest) = (till(s, i-1), from(s,i))
+	      val (abs, path) = if p = "" then (false, nil) (* empty path *)
+          else if startsWith(p, "/") then (true, parseRelPath(aft(p, "/"))) (* / path *)
+          else (false, parseRelPath p) (* path *)
       in
-         {scheme = scheme, authority = authority, abs = abs, path = path, query = NONE, fragment = NONE}
+         parseQuery(scheme, authority, abs, path, rest)
       end
+  and parseQuery(scheme, authority, abs, path, s) = let 
+     val (query, rest) = if startsWith(s, "?") then 
+       let
+	      val s' = aft(s,"?")
+       in (SOME (bef(s', "#")), from(s', pos'(s',"#")))
+	   end
+	 else (NONE, s)
+	 in
+	    parseFragment(scheme, authority, abs, path, query, rest)
+     end
+  and parseFragment(scheme, authority, abs, path, query, s) = 
+     let
+       val fragment = if startsWith(s, "#") then SOME (from(s, 1)) else NONE 
+	 in {scheme = scheme, authority = authority, abs = abs, path = path, query = query, fragment = fragment}
+     end
+	 
   (* parses a /-separated path, no starting /, all segments may be empty *)
   and parseRelPath(s) : string list =
      (* segment *)
      if pos(s, "/") = ~1 then [s]
      (* segment / path *)
      else bef(s,"/") :: parseRelPath(aft(s, "/"))
-
   (* parses an authority component *)
    and parseAuthority(s) : authority =
       if pos(s, "@") = ~1

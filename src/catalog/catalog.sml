@@ -31,7 +31,7 @@ structure Catalog : CATALOG = struct
              let
                val modURI : URI.uri = setQuery(uri, modname)
                val requestURI : URI.uri = setQuery(cat, "uri=" ^ (encode (URI.uriToString modURI)))
-               val response : string = HTTP.getFromHeader("X-Twelf-Location", requestURI) handle e => raise Error("Cannot connect to catalog server at " ^ URI.uriToString(cat))
+               val response : string = HTTP.getFromHeader("X-Source-url", requestURI) handle e => raise Error("Cannot connect to catalog server at " ^ URI.uriToString(cat))
                val errSize = String.size("Unknown URI: ")
                (* check whether the server answered with Unknown URI: ... *)
                val _ = if (String.size(response) >= errSize) andalso (String.substring(response, 0, errSize) = "Unknown URI: ")
@@ -41,6 +41,6 @@ structure Catalog : CATALOG = struct
                val file = dropQueryFragment(url)
                (* FR: for now, we just return the file name, later improvements could also use the exact region *)
              in
-               file
+			   file
              end
 end
