@@ -19,13 +19,13 @@ struct
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorId of IDs.mid | MorComp of Morph * Morph
   datatype Rel = Rel of IDs.mid | RelComp of Morph * Rel
   datatype SymInst = ConInst of IDs.cid * (IDs.cid option) * I.Exp | StrInst of IDs.cid * (IDs.cid option) * Morph
-                   | InclInst of IDs.cid * (IDs.cid option) * Morph
+                   | InclInst of IDs.cid * (IDs.cid option) * IDs.mid * Morph
   datatype SymCase = ConCase of IDs.cid * (IDs.cid option) * I.Exp | StrCase of IDs.cid * (IDs.cid option) * Rel
                    | InclCase of IDs.cid * (IDs.cid option) * Rel
   datatype OpenDec = OpenDec of (IDs.cid * string) list
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list) * OpenDec * bool
                   | StrDef of string list * IDs.qid * IDs.mid * Morph * bool
-  datatype SigIncl = SigIncl of IDs.mid * OpenDec
+  datatype SigIncl = SigIncl of IDs.mid * OpenDec * bool
   datatype ModDec = SigDec of URI.uri * string list
                   | ViewDec of URI.uri * string list * IDs.mid * IDs.mid * bool
                   | RelDec of URI.uri * string list * IDs.mid * IDs.mid * (Morph list)
@@ -56,10 +56,10 @@ struct
 
   fun symInstCid(ConInst(c, _, _)) = c
     | symInstCid(StrInst(c, _, _)) = c
-    | symInstCid(InclInst(c, _, _)) = c
+    | symInstCid(InclInst(c, _, _, _)) = c
   fun symInstOrg(ConInst(_, O, _)) = O
     | symInstOrg(StrInst(_, O, _)) = O
-    | symInstOrg(InclInst(_, O, _)) = O
+    | symInstOrg(InclInst(_, O, _, _)) = O
   fun symRelCid(ConCase(c, _, _)) = c
     | symRelCid(StrCase(c, _, _)) = c
     | symRelCid(InclCase(c, _, _)) = c
@@ -122,8 +122,9 @@ struct
   (* declTable maps cids to symbol level declarations *)
   val declTable : Declaration CH.Table = CH.new(19999)
 
-  (* inclTable is an index giving all module level objects included into a module *)
-  datatype SigRelType = Self | Included of IDs.cid option | Ancestor of IDs.mid | AncIncluded
+  (* inclTable is an index giving all module level objects included into a module
+      order: first Self, then Ancestor/AncIncluded, then Included in dependency order; no duplicates *)
+  datatype SigRelType = Self | Included of IDs.cid | Ancestor of IDs.mid | AncIncluded
   datatype ModLevObject = ObjSig of IDs.mid * SigRelType | ObjMor of Morph | ObjRel of Rel
   val inclTable : ModLevObject list MH.Table = MH.new(299)
   
@@ -424,21 +425,28 @@ struct
       c
     end
 
-  fun inclAddC(incl as SigIncl(dom,_)) =
+  fun inclAddC(incl as SigIncl(dom,_,_)) =
      let
       val _ = if inSignature() then () else raise Error("inclusion only allowed in signature")
       val cod = currentMod()
-      val c = declAddC (SymIncl incl)
       val codincls = modInclLookup cod
-      val domincls = modInclLookup dom
-      fun rewrite(ObjSig(m,Self)) = SOME (ObjSig(m,Included(SOME c)))
-        | rewrite(ObjSig(m,Included _)) = SOME (ObjSig(m,Included NONE))
-        | rewrite(ObjSig(m,Ancestor _)) = NONE (* ancestors of dom must already be ancestors of cod *)
-        | rewrite(ObjSig(m,AncIncluded)) = NONE
+      val codinclsMids = List.map (fn ObjSig(m, _) => m) codincls
+      val _ = if List.exists (fn x => x = dom) codinclsMids then raise Error("redundant include") else ()
+      fun flatten(ObjSig(m,Included _)) =
+         if List.exists (fn x => x = m) codinclsMids
+         then NONE
+         else
+           let val c = declAddC (SymIncl (SigIncl(m, OpenDec nil, true)))
+           in SOME (ObjSig(m,Included c))
+           end
+        | flatten(ObjSig(m,Self)) = NONE
+        | flatten(ObjSig(m,Ancestor _)) = NONE (* ancestors of dom must already be ancestors of cod *)
+        | flatten(ObjSig(m,AncIncluded)) = NONE
         (* no other case possible in a signature *)
-      val incls = List.mapPartial rewrite domincls
-      val incls' = List.filter (fn x => List.all (fn y => not(x = y)) codincls) incls (* avoid duplicates *)
-      val _ = MH.insert inclTable (cod, codincls @ incls')
+      val domincls = modInclLookup dom
+      val flatincls = List.mapPartial flatten domincls
+      val c = declAddC (SymIncl incl)
+      val _ = MH.insert inclTable (cod, codincls @ flatincls @ [ObjSig(dom,Included c)])
       in
          c
       end
@@ -457,7 +465,7 @@ struct
       (case inst
         of ConInst _ => CH.insert declTable (c, SymConInst inst)
          | StrInst _ => CH.insert declTable (c, SymStrInst inst)
-         | InclInst(_,_,mor) => (
+         | InclInst(_,_,_, mor) => (
             CH.insert declTable (c, SymInclInst inst);
             MH.insert inclTable (m, (modInclLookup m) @ [ObjMor mor])
           )
@@ -466,6 +474,8 @@ struct
       c
     end
 
+  fun structMapAdd((s,i),s') = (CCH.insert structMapTable ((s,i),s'); ())
+  
   fun caseAddC(rel : SymCase) =
     let
       val _ = if inRelation() then () else raise Error("declaration only allowed in logical relation")

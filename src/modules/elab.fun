@@ -63,11 +63,11 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   (********************** type checking morphisms **********************)
 
   (* auxiliary methods to retrieve the list of morphisms included into a link *)
-  (* more elegant: inclMorphs : Morph -> Morph listM then no case-split needed in restrictMorph *)
+  (* more elegant: inclMorphs : Morph -> Morph list then no case-split needed in restrictMorph *)
   fun inclMorphsView(m : IDs.mid) =
       List.mapPartial (fn M.ObjMor mor => SOME mor | _ => NONE) (M.modInclLookup m)
   fun inclMorphsStr(insts) =
-      List.mapPartial (fn i => case i of M.InclInst(cid, _, mor) => SOME mor | _ => NONE) insts
+      List.mapPartial (fn i => case i of M.InclInst(cid, _, _, mor) => SOME mor | _ => NONE) insts
 
   (* computes domain of a morphism without type-checking it *)
   fun domain(mor : M.Morph) : IDs.mid = case mor
@@ -129,14 +129,14 @@ functor Elab (structure Print : PRINT) : ELAB = struct
          | _ => morTypingError(d,c,dom,cod,"morphism does not have expected type")
      end
 
-  (* restricts a morphism to a domain, returns path in the signature graph, i.e., a list of links
+  (* restricts a morphism to a domain
      pre: mor is well-formed, newdom is included into domain(mor) (case 1,2,3a)
      post: restrictMorph(mor, newdom)
-       is equal to mor and consists of only MorView _ or MorStr _ such that
+       is equal to mor and
        - definitions are expanded
        - the domain of the first link is newdom
-       - the domain of each link is the codomain of the predecessor (i.e., includes are expanded)
-       - in particular, result is nil if the restriction of mor is the identity 
+       - the domain of each link is the codomain of the predecessor
+       - in particular, result is MorId if the restriction of mor is the identity 
    *)
   fun restrictMorph(M.MorComp(mor1,mor2), newdom) =
       let val rmor1 = restrictMorph(mor1, newdom)
@@ -166,6 +166,20 @@ functor Elab (structure Print : PRINT) : ELAB = struct
       else restrictFirst(tl, newdom)
     | restrictFirst(nil, newdom) = M.MorId newdom
   
+  (* filters a list of instantiations,
+     pre: newdom is included into the domain of the structure with instantiations inst
+     post: returns the instantiations of symbols that are visible to newdom *)
+  fun restrictInsts(nil, newdom) = nil
+    | restrictInsts(inst :: insts, newdom) =
+      let val rest = restrictInsts(insts, newdom)
+      in case inst
+         of M.InclInst(i, _, from, mor) =>
+            (* @FR: technically, we need to update the cid in the inst to c where M.Included c is the SigRelType of the inclusion
+                    this is not done because we silently also permit M.Self *)
+            if M.sigIncluded(from, newdom) then inst :: rest else rest
+          | _ => if M.sigIncluded(IDs.midOf(M.symInstCid inst), newdom) then inst :: rest else rest
+      end
+    
   (* auxiliary methods *)
   fun headToExp h = I.Root(h, I.Nil)
   fun cidToExp c = (case (M.sgnLookup c)
@@ -223,9 +237,16 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            let val m = IDs.midOf c
            in
               case (mor, valOf (M.symVisible(c,dom))) (* if NONE, U would be ill-formed *)
-                (* structure applied to local symbol: apply morphism by applying structMapLookup *)
-                of (M.MorStr(s), M.Self) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
-                (* view applied to local symbol: apply morphism by looking up instantiation in view *)
+                of
+                 (* identity morphism *)
+                 (M.MorId _, _) => cidToExp c
+                 (* composed morphism: apply components separately *)
+                 | (M.MorComp(mor1, mor2), _) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
+                 (* symbol declared in ancestor: identity *)
+                 | (_, M.Ancestor _) => cidToExp c
+                 (* symbol included into ancestor: identity *)
+                 | (_, M.AncIncluded) => cidToExp c
+                 (* view applied to local symbol: apply morphism by looking up instantiation in view *)
                  | (M.MorView(v), M.Self) => (
                      let val M.SymConInst (M.ConInst(_, _, exp)) = M.symLookup(v, IDs.lidOf c)
                      in exp
@@ -233,15 +254,14 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      handle Bind => raise MissingCase(v,c)
                           | M.UndefinedCid _ => raise MissingCase(v,c)
                    )
-                 (* identity morphism *)
-                 | (M.MorId _, _) => cidToExp c
-                 (* composed morphism: apply components separately *)
-                 | (M.MorComp(mor1, mor2), _) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
-                 (* morphism applied to non-local symbol *)
-                 | (_, M.Ancestor _) => cidToExp c (* symbol declared in ancestor: identity *)
-                 | (_, M.AncIncluded) => cidToExp c (* symbol included into ancestor: identity *)
-                 | (mor, M.Included _) => applyMorph(cidToExp c, restrictMorph(mor, m))
-                     (* symbol declared in included signature: apply restricted morphism *)
+                 (* view applied to included symbol: apply restricted morphism *)
+                 | (M.MorView v, M.Included _) => applyMorph(cidToExp c, restrictMorph(M.MorView v, m))
+                 (* structure applied to local or included symbol: apply morphism by look up in M.structMap *)
+                 | (M.MorStr(s), M.Self) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
+                 | (M.MorStr(s), M.Included i) =>
+                    let val si = valOf(M.structMapLookup (s,i))    (* get the structure to which s maps the inclusion i *)
+                    in cidToExp(valOf(M.structMapLookup (si,c)))    (* get the cid to which si maps c *)
+                    end
            end
      in
      	A U
@@ -522,12 +542,11 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      in
      	M.StrInst(str, org, newmor)
      end
-    | checkSymInst(M.InclInst(cid, org, mor)) =
+    | checkSymInst(M.InclInst(cid, org, dom, mor)) =
       let
-      	 val M.SymIncl(M.SigIncl(expDom,_)) = M.symLookup cid
-         val newmor = checkMorph(mor, expDom, M.currentTargetSig())
+         val newmor = checkMorph(mor, dom, M.currentTargetSig())
       in
-         M.InclInst(cid, org, newmor)
+         M.InclInst(cid, org, dom, newmor)
       end
 
   fun checkSymCase(cc as M.ConCase(con, _, term)) =
@@ -550,7 +569,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
     | checkSymCase(M.InclCase(cid, org, rel)) =
       let
          val M.RelDec(_,_,dom, cod, mors) = M.modLookup (M.currentMod())
-      	 val M.SymIncl(M.SigIncl(expDom,_)) = M.symLookup cid
+      	 val M.SymIncl(M.SigIncl(expDom,_,_)) = M.symLookup cid
       	 (* expDom ins included into dom for cases that have passed through reconstruction *)
      	 val newrel = checkRel(rel, expDom, cod, List.map(fn m => restrictMorph(m, expDom)) mors)
       in
@@ -560,28 +579,31 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   (* auxiliary function of findClash
      if s is in forbiddenPrefixes, instantiations of s.c are forbidden
      if c is in forbiddenCids, instantiations of c are forbidden
+     if d is in inclInstDoms, instantiations of symbols included into d are forbidden
+     if d is in otherDoms, instantiations of a whole include from a signature that includes d are forbidden
   *)
-  fun findClash'(nil, _, _) = NONE
-    | findClash'(inst :: insts, forbiddenPrefixes, forbiddenCids) =
+  fun findClash'(nil, _, _,_,_) = NONE
+    | findClash'(inst :: insts, forbiddenPrefixes, forbiddenCids, inclInstDoms, otherDoms) =
         let
-           val c = M.symInstCid inst (* @FR: this is the only essential use of symInstCid; if abolished, InclInst would not need a cid thus making reconstruction a lot simpler *)
+           val c = M.symInstCid inst
+         	 (* get the list of proper prefixes of c *)
+           val prefixes = List.map #1 (M.symQid c)
+           val m = IDs.midOf c
+           val (inclInstDom, otherDom) = case inst
+              of M.InclInst(i, _, dom, _) => ([dom], nil)
+               | _ => (nil, [m])
         in
-           (* check whether c is in the list of cids of forbidden cids *)
-           if List.exists (fn x => x = c) forbiddenCids
-           then SOME(c)
+           if List.exists (fn x => x = c) forbiddenCids then
+              SOME(inst) (* there is already an instantiation for c or one of its prefixes *)
+           else if List.exists (fn p => List.exists (fn x => x = p) forbiddenPrefixes) prefixes then
+              SOME(inst) (* there is already an instantiation for something with prefix c *)
+           else if List.exists (fn d => M.sigIncluded(m,d)) inclInstDoms then
+              SOME(inst) (* there is already an InclInst with domain d that includes the domain m of c *)
+           else if List.exists (fn d => List.exists (fn e => M.sigIncluded(e, d)) otherDoms) inclInstDom then 
+              SOME(inst) (* there is already an instantiation for a symbol included from a signature e that is included into the domain d of this InclInst *)
            else
-              let
-              	 (* get the list of proper prefixes of c *)
-                 val prefixes = List.map #1 (M.symQid c)
-              in
-                 (* check whether a prefix of c is in the list of forbidden prefixes *)
-                 if List.exists (fn p => List.exists (fn x => x = p) forbiddenPrefixes) prefixes
-            	 then SOME(c)
-            	 (* forbid futher instantiations of
-            	    - anything that has c as a prefix
-            	    - c and any prefix of c *)
-                 else findClash'(insts, c :: forbiddenPrefixes, c :: prefixes @ forbiddenCids)
-              end
+              findClash'(insts, c :: forbiddenPrefixes, c :: prefixes @ forbiddenCids, 
+                          inclInstDom @ inclInstDoms, otherDom @ otherDoms)
         end
   (* checks whether two instantiations in insts clash
      - return NONE if no clash
@@ -590,16 +612,16 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      - c and c, or
      - s and s.c
   *)
-  fun findClash(insts) = findClash'(insts, nil, nil)
+  fun findClash(insts) = findClash'(insts, nil, nil, nil, nil)
 
   (* checks whether the ancestors of the domain of a link are covered by the link
      This applies to inclusions, structures, and views.
      Any link dom -> cod must translate all symbols declared in ancestors of dom.
-       By definition, morphism application is the identity for all symbols declared in ancestors of dom.
+     By definition, morphism application is the identity for all symbols declared in ancestors of dom.
      Therefore, all ancestors of dom must also be ancestor_or_selfs of cod,
      Equivalently, we can say that dom must be visible/accessible for cod.
      Note that ancestors are pairs of an mid and the smallest invisible lid.
-       Thus sister signatures with intermediate declarations do not have the same ancestors.
+     Thus sister signatures with intermediate declarations do not have the same ancestors.
    *)
   fun checkAncestors(dom, cod) =
     let
@@ -624,13 +646,13 @@ functor Elab (structure Print : PRINT) : ELAB = struct
        ()
     end
 
-  (* checks whether the signatures included into the domain of a link are covered by the link
-     Since include is transitive, this only applies to structures and views.
-     A structure or view dom -> cod must include a morphism m_i : d_i -> com
-       for every signature d_i directly included into dom.
-       If m_i is not given, the identity is assumed, in which case d_i must also be included into cod.
-     If there is a diamond situation with d included into d_1 and d_2, the morphisms m_1 and m_2 must agree on d. *)
-  fun checkIncludes(dom : IDs.mid, cod : IDs.mid, mors : M.Morph list) =
+  (* checks the morphisms included into a structure or view
+     A structure/view dom -> cod may include morphisms m_i : d_i -> com for signatures d_i included (M.Included _) into dom.
+     If m_i is not given
+      - in a view, applyMorph will assume the identity; therefore, we check that d_i is also be included into cod;
+      - in a structure, nothing has to be checked; flattenDec will generate a structure with domain d_i anyway. 
+     If there is a diamond situation with d included into d_1 and d_2, we check that the morphisms m_1 and m_2 agree on d. *)
+  fun checkIncludes(dom : IDs.mid, cod : IDs.mid, mors : M.Morph list, inStructure : bool) =
     let
     	val domIncls = M.modInclLookup dom
     	val domAncIncls = List.mapPartial (fn M.ObjSig(d, M.AncIncluded) => SOME d | _ => NONE) domIncls
@@ -650,8 +672,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
       	      of nil => (* check if identity path can be assumed, i.e., from included into cod *)
       	           if M.sigIncluded(from, cod)
       	           then ()
-      	           else raise Error("signature " ^ M.modFoldName from ^ " included into " ^ M.modFoldName dom ^
-                                          " but not into " ^ M.modFoldName cod)
+      	           else if inStructure then () else raise Error("signature " ^ M.modFoldName from ^ " included into " ^ M.modFoldName dom ^
+                                                               " but not into " ^ M.modFoldName cod)
                | hd :: tl => (* check equality of all paths (only path equality checked) *)
                    case List.find (fn x => not(x = hd)) tl
                	    of NONE => ()
@@ -673,14 +695,14 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   *)
   fun checkStrDec(M.StrDec(n, q, dom, insts, opens, impl)) =
        let
-       	  val cod = M.currentMod()
+       	 val cod = M.currentMod()
           val newinsts = List.map (fn ci as M.ConInst _ => ci | i => checkSymInst i) insts;
           val _ = checkAncestors(dom, cod)
           val _ = case findClash newinsts
-            of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
-                                      M.symFoldName c ^ " in structure declaration")
+            of SOME inst => raise Error("multiple (possibly induced) instantiations for the same symbol; caused by instantiation: " ^
+                                      Print.instToString inst)
              | NONE => ();
-          val _ = checkIncludes(dom, cod, inclMorphsStr insts)
+          val _ = checkIncludes(dom, cod, inclMorphsStr insts, true)
        in
           M.StrDec(n, q, dom, newinsts, opens, impl)
        end
@@ -693,7 +715,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
         end
 
   (* checks well-typedness condition for signature includes *)
-  fun checkSigIncl(si as M.SigIncl (m,_)) =
+  fun checkSigIncl(si as M.SigIncl (m,_,_)) =
        if M.inSignature()
        then checkAncestors(m, M.currentMod())
        else raise Error("including signatures only allowed in signatures")
@@ -704,7 +726,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
       | M.ViewDec(_, _, dom, cod, _) =>
         let
           val _ = checkAncestors(dom, cod)
-          val _ = checkIncludes(dom, cod, inclMorphsView m)
+          val _ = checkIncludes(dom, cod, inclMorphsView m, false)
           (* check totality of view: every undefined constant id of dom must have an instantiation in m *)
           (* what about block and skodec? *)
           fun checkDefined(c' : IDs.cid) = case M.symLookup c'
@@ -748,7 +770,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                    (* otherwise, try next instantiation *)
                    | NONE => getInst'(insts, c, q)
                 )
-            | M.InclInst _ => getInst'(insts, c, q)
+            (* return the morphism application if mor is applicable *) 
+            | M.InclInst(i, _, dom, mor) => if M.sigIncluded(IDs.midOf c, dom) then SOME (applyMorph(cidToExp c, mor)) else getInst'(insts, c, q)
       )
   (* finds an instantiation for cid c having qids q in a structure declaration
      this finds both explicit instantiations (c := e) and induced instantiations (s := mor in case c = s.c')
@@ -771,17 +794,22 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      - induced declaration in codomain: unprimed lower case
   *)
   fun flattenDec(S : IDs.cid, installConDec : IDs.cid * I.ConDec -> IDs.cid, installStrDec : IDs.cid * M.StrDec -> IDs.cid) =
+    flattenDec'(S, installConDec, installStrDec, NONE)
+  and flattenDec'(S, installConDec, installStrDec, inclMapOpt) =
      let
      	val Str = M.structLookup S
      	val Name = M.strDecName Str
      	val Q = M.strDecQid Str
      	val Dom = M.strDecDom Str
-     	(* holds the list of pairs (s',s) of original and induced structure ids *)
+     	(* holds the list of pairs (s',s) of original and induced inclusion/structure ids *)
      	val structMap : (IDs.cid * IDs.cid) list ref = ref nil
      	(* applies structMap to the first components of the pairs in q *)
      	fun applyStructMap(q: IDs.qid) = List.map (fn (x,y) => (#2 (valOf (List.find (fn z => #1 z = x) (!structMap))), 
      	                                                y)
      	                                          ) q
+     	(* holds the list of pairs (d',s) of original inclusion domains and induced structure ids *)
+     	val inclMap : (IDs.mid * IDs.cid) list ref = ref nil
+
      	(* auxiliary function used in translated ConDec to unify the cases of ConDef and AbbrevDef *)
      	fun translateDefOrAbbrev(c', name', q', imp', def', typ', uni', anc'Opt) =
               let
@@ -851,7 +879,41 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                 in
                    ()
                 end
-                | M.SymIncl _ => ()
+                | M.SymIncl(M.SigIncl(dom', _,_)) => (
+                   (* If no inclMap is passed, all includes i' from dom' into Dom are elaborated recursively:
+                      - a new structure s with domain dom' is created and flattened
+                      - name', the name of dom', is used as an identifier for s  (dot-separated, without prefix, one string)
+                      - inclMap maps each dom' to s
+                      Since includes are subject to the identify-semantics, the recurisve flattening should not happen again when flattening s.
+                      Instead, inclMap is passed so that the flattening of s can share the already-generated structures instead of generating new ones.
+                   *)
+                case inclMapOpt
+                  of NONE =>
+                   let
+                      val i' = c'
+                      val name' = M.modFoldName dom' 
+                      val q = [(S, i')]
+                      val s = case Str
+                        of M.StrDec(_,_,_,insts,_,_) =>
+                           let
+                             val restrInsts = restrictInsts(insts, dom')
+                           in
+                             installStrDec (i', M.StrDec(Name @ [name'], q, dom', restrInsts, M.OpenDec nil, false))
+                           end
+                         | M.StrDef(_,_,_,def,_) => installStrDec (i', M.StrDef(Name @ [name'], q, dom', def, false))
+                      val _ = structMap := (i',s) :: (! structMap)
+                      val _ = inclMap := (dom', s) :: (! inclMap)
+                      val _ = flattenDec'(s, installConDec, installStrDec, SOME (! inclMap))
+                   in
+                      ()
+                   end
+                 | SOME im =>
+                    (* recursive flattening of the generated structures; just add an to M.structMap to realize the sharing *)
+                    let val s = #2 (valOf (List.find (fn (x,_) => x = dom') im))
+                        val _ = M.structMapAdd((S,c'),s)
+                    in ()
+                    end
+                 )
                 | M.SymMod _ => ()
      in
      	(* calls flatten1 on all declarations of the instantiated signature (including generated ones) *)

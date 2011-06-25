@@ -109,8 +109,20 @@ a : type.
 %% include in a structure
 %sig Y = {
   a : type.
-  %struct r : R = {a := a.}.       %% R.a mapped to Y.a
-  %struct r' : R' = {%include r.}. %% r'(R'.c : R.a) = r(R'.c : R.a) = r'.c : r(R.a) = r'.c : a
+  %struct r : R = {a := a.}.        %% R.a mapped to Y.a
+  %struct r' : R' = {%include r.}. %% r'(R.c : R.a) = r(R.c : R.a) = r.c : a
+}.
+
+%% structures of signatures that have includes
+%sig QQQ = {
+   q : type.
+   %struct r : R.
+   %struct r'  : R' = {R.a := q. R'.a' := q.}.
+   %struct r'' : R'' = {%include r. R'.a' := q.}.
+   %% referring to symbols included into an instantiated signature
+   c : r''.R'.a'.
+   d : r''.R.a.
+   
 }.
 
 %% multiple includes: %% S12 includes S0 twice
@@ -195,7 +207,10 @@ a : type.
   c : t2.R2.a.
   d : r.a.
   e : r.r.a.
-  %include t3.ReadTwice.
+}.
+
+%sig R3' = {
+   %include t3.ReadTwice.
 }.
 
 %% testing logical relations

@@ -123,32 +123,39 @@ struct
              let
              	val rr = Paths.join(r,r')
              	val Con = nameLookup Names.CON (dom, names, r)
-             	val _ = if (IDs.midOf Con = dom) then () else error(r,
-             	   "instantiation of included or inherited constant " ^ M.symFoldName Con ^ " not allowed")
              	val _ = case M.constDefOpt Con
                           of NONE => ()
                            | _ => error(r,
                               "instantiation of defined constant " ^ M.symFoldName Con ^ " not allowed");
              	(* if inferrable, expType holds the expected type to guide the term reconstruction *)
+             	val _ = if M.inSignature() then
+             	    case valOf (M.symVisible(Con, dom)) (* NONE impossible due to name lookup above *)
+             	      of M.Self => ()
+             	       | M.Included _ => () (* instantiation of included symbols is permitted in a structure *)
+             	       | _ => error(r, "instantiation of inherited constant " ^ M.symFoldName Con ^ " not allowed")
+             	 else
+             	    if (IDs.midOf Con = dom) then () else error(r, "instantiation of included or inherited constant " ^ M.symFoldName Con ^ " not allowed in a view");
              	val expType =
              	  if M.inSignature()
-             	  then NONE                                                            (* instantiation in a structure *)
-             	  else SOME (Elab.applyMorph(M.constType Con,
+             	  then NONE                                                  (* instantiation in a structure *)
+             	  else (
+             	     SOME (Elab.applyMorph(M.constType Con,
              	                             M.MorView(M.currentMod())))     (* instantiation in a view *)
              	       handle Elab.MissingCase(m,c) =>
              	          error(rr, "instantiation for " ^ M.symFoldName Con ^
              	          " must occur after (possibly induced) instantiation for " ^ M.symFoldName c)
-             	val job = case expType
-             	  of NONE => ExtSyn.jterm term
-             	   | SOME V => ExtSyn.jof'(term, V)
-		val ExtSyn.JTerm((U, _), _, _) = ExtSyn.recon job
-                val _ = ExtSyn.checkErrors(rr)
-		val (impl, Term) = Abstract.abstractDecImp U
-		val _ = if impl > 0 then error(r', "implicit arguments not allowed in instantiation") else ()
-		(* val expImpl = M.constImp Con *)
+             	  )
+               val job = case expType
+                 of NONE => ExtSyn.jterm term
+                  | SOME V => ExtSyn.jof'(term, V)
+               val ExtSyn.JTerm((U, _), _, _) = ExtSyn.recon job
+               val _ = ExtSyn.checkErrors(rr)
+               val (impl, Term) = Abstract.abstractDecImp U
+               val _ = if impl > 0 then error(r', "implicit arguments not allowed in instantiation") else ()
+             (* val expImpl = M.constImp Con *)
              in
-		M.ConInst(Con, NONE, Term)
-		(* error(rr, "mismatch in number of implicit arguments: instantiation " ^ Int.toString impl ^
+               M.ConInst(Con, NONE, Term)
+		         (* error(rr, "mismatch in number of implicit arguments: instantiation " ^ Int.toString impl ^
 		                                                     ", declaration " ^ Int.toString expImpl) *)
              end
          | strinst((names, r), (mor,r')) =>
@@ -165,14 +172,16 @@ struct
              	val Mor = morphToMorph (cod, (mor, r))
              	val (d, _, Mor') = Elab.reconMorph Mor
          	                   handle Elab.Error(msg) => error(r, msg)
-             	val incl = List.find (fn M.ObjSig(m,M.Included (SOME _)) => m = d | _ => false)
+             	val incl = List.find (fn M.ObjSig(m,M.Included _) => m = d | _ => false)
              	                     (M.modInclLookup dom)
              	val cid = case incl
-             	          of SOME (M.ObjSig(_, M.Included (SOME c))) => c
+             	          of SOME (M.ObjSig(_, M.Included c)) => c
              	           | NONE => error(r, "included morphism has domain " ^ M.modFoldName d ^
-             	                          " which is not included directly into " ^ M.modFoldName dom)
+             	                          " which is not included into " ^ M.modFoldName dom)
+             	(* @FR: we could permit M.Self here as well. Then structure/view definitions would be obsolete;
+             	   the only problem is that the self-inclusion does not have a cid *)
              in
-             	M.InclInst(cid, NONE, Mor')
+             	M.InclInst(cid, NONE, d, Mor')
              end
   
   fun symcaseToSymCase(dom : IDs.mid, cod : IDs.mid, cas : symcase, l) =
@@ -216,11 +225,11 @@ struct
              	val (d, _, _, Rel') = Elab.reconRel Rel
              	                      handle Elab.Error(msg) => error(r, msg)
              	val cid = case List.find
-             	               (fn M.ObjSig(m,M.Included (SOME _)) => m = d | _ => false)
+             	               (fn M.ObjSig(m,M.Included _) => m = d | _ => false)
              	               (M.modInclLookup dom)
-             	          of SOME (M.ObjSig(_, M.Included (SOME c))) => c
+             	          of SOME (M.ObjSig(_, M.Included c)) => c
              	           | NONE => error(r, "included logical relation has domain " ^ M.modFoldName d ^
-             	                          " which is not included directly into " ^ M.modFoldName dom)
+             	                          " which is not included into " ^ M.modFoldName dom)
              in
              	M.InclCase(cid, NONE, Rel')
              end
@@ -230,7 +239,7 @@ struct
       	 val m = modNameLookup Names.SIG (M.currentMod(), name, r)
 	 val Opens = openToOpen (m,opens)
       in
-      	 M.SigIncl (m, Opens)
+      	 M.SigIncl (m, Opens, false)
       end
 
    fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),

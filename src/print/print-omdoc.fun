@@ -385,7 +385,7 @@ struct
     
   fun conDecToString (cid, params, md) = fmtConDec (ModSyn.sgnLookup cid, params, md) ^ nl() ^ fmtPresentation(cid)
 
-  fun sigInclToString(ModSyn.SigIncl(m,opendec), params, md) =
+  fun sigInclToString(ModSyn.SigIncl(m,opendec,_), params, md) =
         let val from = relModName(m, params)
         in ElemEmpty("include", [Attr("from", from)]) ^ (openToString (opendec, NONE, params)) ^ nl()
         end
@@ -413,7 +413,7 @@ struct
     | instToString(ModSyn.StrInst(c, _, mor), params, md) =
          ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^ metaDataToString md ^
          morphToStringTop(mor, params) ^ nl_unind() ^ "</strass>"
-    | instToString(ModSyn.InclInst(_,_,mor), params, md) =
+    | instToString(ModSyn.InclInst(_,_,_,mor), params, md) =
          ElemOpen("include", nil) ^ nl_ind() ^ metaDataToString md ^
          morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
 
@@ -475,8 +475,9 @@ struct
               | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
                                  then print (strDecToString(strdec, params, md) ^ nl())
                                  else ()
-              | ModSyn.SymIncl sigincl =>
-                                 print (sigInclToString(sigincl, params, md) ^ nl())
+              | ModSyn.SymIncl sigincl => (case sigincl of ModSyn.SigIncl(_,_,true) => print (sigInclToString(sigincl, params, md) ^ nl())
+                                                         | _ => ()
+                )
               | ModSyn.SymConInst inst => (case ModSyn.symInstOrg inst
                    of NONE => print (instToString(inst, params, md) ^ nl())
                     | SOME _ => ()

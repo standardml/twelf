@@ -1265,7 +1265,7 @@ struct
                let
                	  (* normalize, double check, and install generated declaration *)
                	  val dn = Whnf.normalizeConDec d
-		  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec dn else ()
+               	  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec dn else ()
                   val c = installConDec IntSyn.Ordinary (dn, (fileName, NONE), r)
                   (* copy fixity, name preferences, mode from the original to the new declaration *)
                   val _ = case Names.fixityLookup c'
@@ -1382,7 +1382,7 @@ struct
         )
       | install1 (fileName, declr as (Parser.Include incl, r)) =
          let
-            val Incl as ModSyn.SigIncl(from, opendec) = ReconModule.siginclToSigIncl(incl, Paths.Loc(fileName, r))
+            val Incl as ModSyn.SigIncl(from, opendec, _) = ReconModule.siginclToSigIncl(incl, Paths.Loc(fileName, r))
                        handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
                             | Names.MissingModule args => raise GetModule args
             val _ = Elab.checkSigIncl Incl

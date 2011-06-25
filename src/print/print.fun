@@ -991,7 +991,7 @@ in
          IntSyn.conDecFoldName (M.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
     | instToString(M.StrInst(c, _, mor)) =
         "%struct " ^ M.strDecFoldName (M.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
-    | instToString(M.InclInst (_, _, mor)) = "%include " ^ (morphToString mor) ^ "."
+    | instToString(M.InclInst (_, _, _, mor)) = "%include " ^ (morphToString mor) ^ "."
 
   fun caseToString(M.ConCase(c, _, U)) = 
          IntSyn.conDecFoldName (M.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
@@ -999,7 +999,7 @@ in
         "%struct " ^ M.strDecFoldName (M.structLookup c) ^ " := " ^ relToString(rel) ^ "."
     | caseToString(M.InclCase(_, _, rel)) = "%include " ^ (relToString rel) ^ "."
 
-  fun sigInclToString(M.SigIncl (m, opens)) = "%include " ^ (fmtModName m) ^ (openToString opens) ^ "."
+  fun sigInclToString(M.SigIncl (m, opens, _)) = "%include " ^ (fmtModName m) ^ (openToString opens) ^ "."
 
   fun strDecToString(M.StrDec(name, _, dom, insts, opendec, impl)) = (
      "%struct " ^ (implicitToString impl) ^ IDs.foldQName name ^ " : " ^ (fmtModName dom) ^ " = " ^
