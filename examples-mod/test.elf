@@ -18,6 +18,13 @@ comments *%
 %namespace "logical_ns/test.elf".
 %namespace t1 = "../test.elf".
 %sig R = {%include t1.R.}.
+
+%% testing includes of multiple signatures with the same name from different namespaces
+%sig R' = {%include t1.R.}.
+%sig S = {%include R. %include R'.}.
+%% this currently causes a name error because it tries to generate structures s.R: t1.R and s.R:R
+%% %sig T = {%struct s: S.}.
+
 %namespace "../test.elf".
 
 %% testing basic semantics, note why "test" is well-typed
