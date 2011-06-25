@@ -128,7 +128,10 @@ struct
   datatype ModLevObject = ObjSig of IDs.mid * SigRelType | ObjMor of Morph | ObjRel of Rel
   val inclTable : ModLevObject list MH.Table = MH.new(299)
   
-  (* structMapTable maps pairs ('s, 'c) to 's.c (where 'x is the cid of the name of x) - maintained for efficiency *)
+  (* structMapTable maps pairs ('s, 'c) to 's.c (where 'x is the cid of the name of x)
+     c may be local constant/structure/include or stem from a structure declaration
+     structMap(structMap(s,i), c) yields the map along s of of c included into the domain of s via i
+  *)
   val structMapTable : IDs.cid CCH.Table = CCH.new(1999)
     
   (* scope holds the list of the currently open modules and their next available lid (innermost to outermost) *)

@@ -980,6 +980,7 @@ in
          F.makestring_fmt (fmtPath (Symbol.const, (pref,modname,symname)))
       end
     | morphToString(M.MorView(m)) = fmtModName m
+    | morphToString(M.MorId(m)) = fmtModName m
     | morphToString(M.MorComp(mor1,mor2)) =
       morphToString(mor1) ^ " " ^ morphToString(mor2)
       

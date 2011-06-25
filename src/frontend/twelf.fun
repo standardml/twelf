@@ -382,14 +382,17 @@ struct
        	  c
        end
 
-    (* auxiliary method shared by install1(StrDec _) (then byStr = SOME s) and install1(ModIncl _) (then byStr = NONE) *)
+    (* auxiliary method shared by install1(StrDec _) and install1(ModIncl _); dom is the current signature, origin is the cid of the include/structure *)
     fun installOpen(dom : IDs.mid, opens : (IDs.cid * string) list, origin : IDs.cid, r) = (
        	  List.map (fn (c,new) =>
              let
+                val m = IDs.midOf c
                 val c' = case ModSyn.symLookup origin
-                  of ModSyn.SymStr _ => if IDs.midOf c = dom
-          	     then valOf (ModSyn.structMapLookup(origin,c))
-                     else raise Names.Error("cannot open included symbol " ^ ModSyn.symFoldName c)
+                  of ModSyn.SymStr _ => (case List.find (fn ModSyn.ObjSig(x,_) => x = m) (ModSyn.modInclLookup dom)
+                      of SOME (ModSyn.ObjSig(_, ModSyn.Self)) => valOf (ModSyn.structMapLookup(origin,c))
+                       | SOME (ModSyn.ObjSig(_, ModSyn.Included i)) => valOf (ModSyn.structMapLookup(valOf (ModSyn.structMapLookup(origin, i)), c))
+                       | _ => raise Names.Error("cannot open symbol " ^ ModSyn.symFoldName c)
+                    )
                    | _ => c
              in
                 Names.installNameC(c', SOME origin, [new])

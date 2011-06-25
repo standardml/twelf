@@ -86,8 +86,11 @@ struct
         handle _ => let val s = nameLookup Names.STRUC (M.currentMod(), names, r)
      	                   in (M.MorStr s, M.strDecDom (M.structLookup s))
      	                   end
+        handle _ => let val m = modNameLookup Names.SIG (M.currentMod(), names, r)
+                          in (M.MorId m, m)
+                          end
         handle _ => let val m = modNameLookup Names.VIEW (M.currentMod(), names, r)
-                              val M.ViewDec(_,_,dom,_,_) = M.modLookup m
+                         val M.ViewDec(_,_,dom,_,_) = M.modLookup m
                           in (M.MorView m, dom)
                           end
      in
