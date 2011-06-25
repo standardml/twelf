@@ -45,6 +45,8 @@ structure-includes
  - structures of signatures with includes do not have to include morphisms; the name of the signature is the identifier of a generated structure
  - includes are always flattened transitively, i.e., all includes are direct
  - redundant includes are an error
+ - opening included constants after a structure possible
+ - signature name as concrete syntax for identity morphism
 using URIs to identify namespaces and to abstract from file systems
 dynamic loading of modules (%read deprecated)
 eliminated .. qualifier, lookup now decides dynamically whether a name is a namespace prefix, a module name, or a list of symbol names
