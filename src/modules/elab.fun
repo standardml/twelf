@@ -173,10 +173,12 @@ functor Elab (structure Print : PRINT) : ELAB = struct
     | restrictInsts(inst :: insts, newdom) =
       let val rest = restrictInsts(insts, newdom)
       in case inst
-         of M.InclInst(i, _, from, mor) =>
+         of M.InclInst(i, O, from, mor) =>
             (* @FR: technically, we need to update the cid in the inst to c where M.Included c is the SigRelType of the inclusion
                     this is not done because we silently also permit M.Self *)
-            if M.sigIncluded(from, newdom) then inst :: rest else rest
+            if M.sigIncluded(from, newdom) then inst :: rest
+            else if M.sigIncluded(newdom, from) then (M.InclInst(i,O,newdom, restrictMorph(mor, newdom))) :: rest
+            else rest
           | _ => if M.sigIncluded(IDs.midOf(M.symInstCid inst), newdom) then inst :: rest else rest
       end
     
