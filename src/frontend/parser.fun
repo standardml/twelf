@@ -198,6 +198,7 @@ struct
       | parseStream' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInclude' (f, sc)(* -fr, module system *)
+      | parseStream' (f as LS.Cons ((L.META, r), s'), sc) = parseInclude' (f, sc)   (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.READ, r), s'), sc) = parseRead' (f, sc)      (* -fr *)
       | parseStream' (f as LS.Cons ((L.NAMESPACE, r), s'), sc) = parseNamespace' (f, sc) (* -fr *)
       | parseStream' (f as LS.Cons ((L.PCOMMENT com, r as Paths.Reg(i,j)), s'), sc) =

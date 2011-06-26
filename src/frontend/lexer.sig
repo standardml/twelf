@@ -60,6 +60,7 @@ sig
     | VIEW                              (* `%view' *)
     | REL                               (* `%rel' *)
     | INCLUDE                           (* `%include' *)
+    | META                              (* `%meta' *)
     | OPEN                              (* `%open' *)
     | AS                                (* `%as' -fr Jun 09*)
     | IMPLICIT                          (* `%implicit' -fr Aug 09*)

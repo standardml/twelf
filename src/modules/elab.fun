@@ -176,6 +176,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
          of M.InclInst(i, O, from, mor) =>
             (* @FR: technically, we need to update the cid in the inst to c where M.Included c is the SigRelType of the inclusion
                     this is not done because we silently also permit M.Self *)
+            (* @FR: actually, mor should be restricted to the intersection of from and newdom *)
             if M.sigIncluded(from, newdom) then inst :: rest
             else if M.sigIncluded(newdom, from) then (M.InclInst(i,O,newdom, restrictMorph(mor, newdom))) :: rest
             else rest
@@ -260,10 +261,12 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                  | (M.MorView v, M.Included _) => applyMorph(cidToExp c, restrictMorph(M.MorView v, m))
                  (* structure applied to local or included symbol: apply morphism by look up in M.structMap *)
                  | (M.MorStr(s), M.Self) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
-                 | (M.MorStr(s), M.Included i) =>
+                 | (M.MorStr(s), M.Included(i, NONE)) =>
                     let val si = valOf(M.structMapLookup (s,i))    (* get the structure to which s maps the inclusion i *)
                     in cidToExp(valOf(M.structMapLookup (si,c)))    (* get the cid to which si maps c *)
                     end
+                 (* structure applied to meta-theory symbol: a morphism must be included into the structure (default to identity) *)
+                 | (M.MorStr(s), M.Included(i, SOME _)) => applyMorph(cidToExp c, restrictMorph(M.MorStr s, m))
            end
      in
      	A U
@@ -571,7 +574,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
     | checkSymCase(M.InclCase(cid, org, rel)) =
       let
          val M.RelDec(_,_,dom, cod, mors) = M.modLookup (M.currentMod())
-      	 val M.SymIncl(M.SigIncl(expDom,_,_)) = M.symLookup cid
+      	 val M.SymIncl(M.SigIncl(expDom,_,_,_)) = M.symLookup cid
       	 (* expDom ins included into dom for cases that have passed through reconstruction *)
      	 val newrel = checkRel(rel, expDom, cod, List.map(fn m => restrictMorph(m, expDom)) mors)
       in
@@ -652,39 +655,43 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      A structure/view dom -> cod may include morphisms m_i : d_i -> com for signatures d_i included (M.Included _) into dom.
      If m_i is not given
       - in a view, applyMorph will assume the identity; therefore, we check that d_i is also be included into cod;
-      - in a structure, nothing has to be checked; flattenDec will generate a structure with domain d_i anyway. 
+      - in a structure, the meta-theory is treated as for views; for other signatures, nothing has to be checked because flattenDec will generate a structure with domain d_i anyway. 
      If there is a diamond situation with d included into d_1 and d_2, we check that the morphisms m_1 and m_2 agree on d. *)
   fun checkIncludes(dom : IDs.mid, cod : IDs.mid, mors : M.Morph list, inStructure : bool) =
     let
     	val domIncls = M.modInclLookup dom
-    	val domAncIncls = List.mapPartial (fn M.ObjSig(d, M.AncIncluded) => SOME d | _ => NONE) domIncls
-    	val domStrictIncls = List.mapPartial (fn M.ObjSig(d, M.Included _)  => SOME d | _ => NONE) domIncls
-        fun checkSig(from) =
-           let  (* paths among mors that are applicable to from *)
+    	(* prepare the input data of the checkSig
+    	   selectIncl(_) = SOME(d, permitNone): d is included into dom, and there may be included morphisms for it
+    	    we have to check that they agree on d
+    	    if there is no morphism
+    	      permitNone = true: OK
+    	      permitNone = false: assume identity, i.e., check if d is included into cod *)
+    	fun selectIncl(M.ObjSig(d, M.Included(_,NONE))) = SOME (d, inStructure)
+    	  | selectIncl(M.ObjSig(d, M.Included(_,SOME M.Meta))) = SOME (d, false)
+    	  | selectIncl(M.ObjSig(d, M.Included(_,SOME M.MetaIncluded))) = NONE (* covered by meta-theory *)
+    	  | selectIncl(_) = NONE (* Ancestor _ and AncIncluded must be ancestors of cod anyway *)
+      fun checkIncl(from, permitNone) =
+           let  (* select the morphisms that are applicable to from *)
            	val applMorphs = List.mapPartial
                                 (fn m => if M.sigIncluded(from, domain m)
                                          then SOME(restrictMorph(m, from))
                                          else NONE)
                                 mors
-                (* add the identity if from is also included via an ancestor *)
-                val applMorphs' = if List.exists (fn x => x = from) domAncIncls
-                                  then (M.MorId from) :: applMorphs
-                                  else applMorphs
-           in case applMorphs'
-      	      of nil => (* check if identity path can be assumed, i.e., from included into cod *)
-      	           if M.sigIncluded(from, cod)
+           in case applMorphs
+      	      of nil =>
+      	           if permitNone orelse M.sigIncluded(from, cod)
       	           then ()
-      	           else if inStructure then () else raise Error("signature " ^ M.modFoldName from ^ " included into " ^ M.modFoldName dom ^
-                                                               " but not into " ^ M.modFoldName cod)
-               | hd :: tl => (* check equality of all paths (only path equality checked) *)
+      	           else raise Error("signature " ^ M.modFoldName from ^ " included into " ^ M.modFoldName dom ^
+                                      " but not into " ^ M.modFoldName cod)
+               | hd :: tl => (* check equality of all morphisms (only literal equality is checked at the moment) *)
                    case List.find (fn x => not(x = hd)) tl
                	    of NONE => ()
                      | SOME _ => raise Error("conflicting translations for included signature " ^
                                   M.modFoldName from ^ " (implementation restriction: equality of morphisms only checked up to associativity and definition expansion)")
             end
     in
-    	 (* check all strictly included signatures for applicable morphisms *)
-         List.map checkSig domStrictIncls
+    	 (* select the relevant includes and check them *)
+       List.map checkIncl (List.mapPartial selectIncl domIncls)
     end
 
   (* checks structure declarations
@@ -717,7 +724,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
         end
 
   (* checks well-typedness condition for signature includes *)
-  fun checkSigIncl(si as M.SigIncl (m,_,_)) =
+  fun checkSigIncl(si as M.SigIncl (m,_,_,_)) =
        if M.inSignature()
        then checkAncestors(m, M.currentMod())
        else raise Error("including signatures only allowed in signatures")
@@ -881,15 +888,16 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                 in
                    ()
                 end
-                | M.SymIncl(M.SigIncl(dom', _,_)) => (
+                | M.SymIncl(M.SigIncl(dom', isMeta, _,_)) => (
                    (* If no inclMap is passed, all includes i' from dom' into Dom are elaborated recursively:
                       - a new structure s with domain dom' is created and flattened
                       - name', the name of dom', is used as an identifier for s  (dot-separated, without prefix, one string)
                       - inclMap maps each dom' to s
+                      - exception: the meta-theory and its includes are not flattened
                       Since includes are subject to the identify-semantics, the recurisve flattening should not happen again when flattening s.
                       Instead, inclMap is passed so that the flattening of s can share the already-generated structures instead of generating new ones.
                    *)
-                case inclMapOpt
+                if isMeta then () else case inclMapOpt
                   of NONE =>
                    let
                       val i' = c'

@@ -28,7 +28,7 @@ sig
    | inclcase of rel * Paths.region
 
   (* inclusion of signatures into signatures and morphisms into link *)  
-  datatype sigincl = sigincl of id * openids
+  datatype sigincl = sigincl of id * bool * openids
 
   (* structure declarations *)
   datatype strdec = strdec of string * id * (syminst list) * openids * bool

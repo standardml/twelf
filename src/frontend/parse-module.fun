@@ -121,14 +121,16 @@ struct
         end
     | parseOpen'(LS.Cons ((t, r), s')) = Parsing.error (r, "Expected `%open' or `.', found token " ^ L.toString t)
 
-  (* parses a %include declaration in a signature *)
-  fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) =
+  (* parses a %include declaration in a signature (special case: %meta) *)
+  fun parseIncludeOrMeta' (s', isMeta) = 
      let
         val (id, f') = parseQualId'(LS.expose s')
-	val (opdec, f') = parseOpen' f'
+	     val (opdec, f') = parseOpen' f'
      in
-       (E.sigincl (id, opdec), f')
+       (E.sigincl (id, isMeta, opdec), f')
      end 
+  fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) = parseIncludeOrMeta'(s', false)
+    | parseInclude' (LS.Cons ((L.META, r), s')) = parseIncludeOrMeta'(s', true)
 
   (* parses a %include declaration in a link *)
   fun parseInclInst' (LS.Cons ((L.INCLUDE, r), s')) =

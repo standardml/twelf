@@ -25,7 +25,7 @@ struct
   datatype OpenDec = OpenDec of (IDs.cid * string) list
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list) * OpenDec * bool
                   | StrDef of string list * IDs.qid * IDs.mid * Morph * bool
-  datatype SigIncl = SigIncl of IDs.mid * OpenDec * bool
+  datatype SigIncl = SigIncl of IDs.mid * bool * OpenDec * bool
   datatype ModDec = SigDec of URI.uri * string list
                   | ViewDec of URI.uri * string list * IDs.mid * IDs.mid * bool
                   | RelDec of URI.uri * string list * IDs.mid * IDs.mid * (Morph list)
@@ -122,9 +122,9 @@ struct
   (* declTable maps cids to symbol level declarations *)
   val declTable : Declaration CH.Table = CH.new(19999)
 
-  (* inclTable is an index giving all module level objects included into a module
-      order: first Self, then Ancestor/AncIncluded, then Included in dependency order; no duplicates *)
-  datatype SigRelType = Self | Included of IDs.cid | Ancestor of IDs.mid | AncIncluded
+  (* inclTable is an index giving all module level objects included into a module *)
+  datatype SigMetaRelType = Meta | MetaIncluded
+  datatype SigRelType = Self | Included of IDs.cid * (SigMetaRelType option)| Ancestor of IDs.mid | AncIncluded
   datatype ModLevObject = ObjSig of IDs.mid * SigRelType | ObjMor of Morph | ObjRel of Rel
   val inclTable : ModLevObject list MH.Table = MH.new(299)
   
@@ -192,14 +192,12 @@ struct
   fun modInclLookup(m) = valOf (MH.lookup inclTable m)
                                 handle Option => raise UndefinedMid(m)
   fun sigIncluded(dom, cod) = List.exists
-      (fn ObjSig(d, Self) => d = dom | ObjSig(d, Included _) => d = dom | ObjSig(d, AncIncluded) => d = dom | _ => false)
+      (fn ObjSig(d, Ancestor _) => false | ObjSig(d, _) => d = dom)
       (modInclLookup cod)
   fun sigRel(dom,cod) =
-    case List.filter (fn ObjSig(d, _) => dom = d | _ => false) (modInclLookup cod)
-      of nil => NONE
-       | ObjSig(_,rel) :: tl => if List.exists (fn ObjSig(_, r) => r = AncIncluded | _ => false) tl
-                                then SOME AncIncluded
-                                else SOME rel
+    case List.find (fn ObjSig(d, _) => dom = d) (modInclLookup cod)
+      of NONE => NONE
+       | SOME (ObjSig(_, rel)) => SOME rel
   fun symVisible(c, m) =
      case sigRel(IDs.midOf c, m)
         of SOME (Ancestor p) =>
@@ -428,9 +426,13 @@ struct
       c
     end
 
-  fun inclAddC(incl as SigIncl(dom,_,_)) =
+  fun inclAddC(incl as SigIncl(dom,isMeta,_,_)) =
      let
       val _ = if inSignature() then () else raise Error("inclusion only allowed in signature")
+      val _ = if isMeta then case ! scope
+                of (_,0) :: _ :: nil => ()
+                 | _ => raise Error("meta-theory declaration only allowed at beginning of signature")
+               else ()
       val cod = currentMod()
       val codincls = modInclLookup cod
       val codinclsMids = List.map (fn ObjSig(m, _) => m) codincls
@@ -438,9 +440,8 @@ struct
       fun flatten(ObjSig(m,Included _)) =
          if List.exists (fn x => x = m) codinclsMids
          then NONE
-         else
-           let val c = declAddC (SymIncl (SigIncl(m, OpenDec nil, true)))
-           in SOME (ObjSig(m,Included c))
+         else let val c = declAddC (SymIncl (SigIncl(m, isMeta, OpenDec nil, true)))
+           in SOME (ObjSig(m,Included (c, if isMeta then SOME MetaIncluded else NONE)))
            end
         | flatten(ObjSig(m,Self)) = NONE
         | flatten(ObjSig(m,Ancestor _)) = NONE (* ancestors of dom must already be ancestors of cod *)
@@ -449,7 +450,8 @@ struct
       val domincls = modInclLookup dom
       val flatincls = List.mapPartial flatten domincls
       val c = declAddC (SymIncl incl)
-      val _ = MH.insert inclTable (cod, codincls @ flatincls @ [ObjSig(dom,Included c)])
+      val objsig = ObjSig(dom,Included(c, if isMeta then SOME Meta else NONE))
+      val _ = MH.insert inclTable (cod, codincls @ flatincls @ [objsig])
       in
          c
       end

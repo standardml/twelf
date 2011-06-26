@@ -385,10 +385,10 @@ struct
     
   fun conDecToString (cid, params, md) = fmtConDec (ModSyn.sgnLookup cid, params, md) ^ nl() ^ fmtPresentation(cid)
 
-  fun sigInclToString(ModSyn.SigIncl(m,opendec,_), params, md) =
-        let val from = relModName(m, params)
-        in ElemEmpty("include", [Attr("from", from)]) ^ (openToString (opendec, NONE, params)) ^ nl()
-        end
+  fun sigInclToString(ModSyn.SigIncl(m, isMeta, opendec, generated), params, md) =
+     let val from = relModName(m, params)
+     in ElemEmpty("include", [Attr("from", from)]) ^ (openToString (opendec, NONE, params)) ^ nl()
+     end
   
   fun strDecToString(ModSyn.StrDec(name, _, dom, insts, opendec, _), params, md) =
      	ElemOpen("structure",
@@ -427,7 +427,9 @@ struct
          ElemOpen("include", nil) ^ nl_ind() ^ metaDataToString md ^
          relToStringTop(rel, params) ^ nl_unind() ^ "</include>"
 
-  fun modBeginToString(mb, params : Params, md) = let
+  fun mapFind(nil, _) = NONE
+    | mapFind(h::t, f) = case f h of SOME c => SOME c | NONE => mapFind(t, f)
+  fun modBeginToString(m, mb, params : Params, md) = let
     val base = ModSyn.modDecBase mb
     val nameattr = Attr("name", localPath (ModSyn.modDecName mb))
     val nbattr = if #baseNS params = base then [nameattr] else [nameattr, Attr("base", relDocName(base, #baseNS params))]
@@ -435,9 +437,15 @@ struct
     val headParams = {baseNS = base, current = #current params}
   in case mb
     of ModSyn.SigDec _ =>
-      let val meta = [Attr("meta", baseLF ^ "?" ^ localPath cdLF)]
+      let val meta = case mapFind(ModSyn.modInclLookup m,
+                         fn ModSyn.ObjSig(_, ModSyn.Included(c,_)) => (
+                              case ModSyn.symLookup c of ModSyn.SymIncl (ModSyn.SigIncl(dom, true, _, false)) => SOME dom
+                                                       | _ => NONE)
+                          | _ => NONE
+                        ) of SOME dom => relModName(dom, headParams)
+                           | NONE => baseLF ^ "?" ^ localPath cdLF 
       in
-         ElemOpen("theory", nbattr @ meta) ^ nl_ind() ^ metaDataToString md 
+         ElemOpen("theory", nbattr @ [Attr("meta", meta)]) ^ nl_ind() ^ metaDataToString md 
       end
     | ModSyn.ViewDec(_, _, dom, cod, _) =>
            ElemOpen("view", nbattr @ 
@@ -475,7 +483,7 @@ struct
               | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
                                  then print (strDecToString(strdec, params, md) ^ nl())
                                  else ()
-              | ModSyn.SymIncl sigincl => (case sigincl of ModSyn.SigIncl(_,_,true) => print (sigInclToString(sigincl, params, md) ^ nl())
+              | ModSyn.SymIncl sigincl => (case sigincl of ModSyn.SigIncl(_,false,_,true) => print (sigInclToString(sigincl, params, md) ^ nl())
                                                          | _ => ()
                 )
               | ModSyn.SymConInst inst => (case ModSyn.symInstOrg inst
@@ -525,7 +533,7 @@ struct
      in
      	if fileNameOpt = SOME fN (* only print modules declared in fileName *)
      	then (
-          print(modBeginToString(mdec, params, md));
+          print(modBeginToString(m, mdec, params, md));
           printModuleBody file m bodyParams NONE;
           print(modEndToString(mdec, params));
           print(nl() ^ nl());

@@ -390,7 +390,7 @@ struct
                 val c' = case ModSyn.symLookup origin
                   of ModSyn.SymStr _ => (case List.find (fn ModSyn.ObjSig(x,_) => x = m) (ModSyn.modInclLookup dom)
                       of SOME (ModSyn.ObjSig(_, ModSyn.Self)) => valOf (ModSyn.structMapLookup(origin,c))
-                       | SOME (ModSyn.ObjSig(_, ModSyn.Included i)) => valOf (ModSyn.structMapLookup(valOf (ModSyn.structMapLookup(origin, i)), c))
+                       | SOME (ModSyn.ObjSig(_, ModSyn.Included(i,_))) => valOf (ModSyn.structMapLookup(valOf (ModSyn.structMapLookup(origin, i)), c))
                        | _ => raise Names.Error("cannot open symbol " ^ ModSyn.symFoldName c)
                     )
                    | _ => c
@@ -1385,7 +1385,7 @@ struct
         )
       | install1 (fileName, declr as (Parser.Include incl, r)) =
          let
-            val Incl as ModSyn.SigIncl(from, opendec, _) = ReconModule.siginclToSigIncl(incl, Paths.Loc(fileName, r))
+            val Incl as ModSyn.SigIncl(from, _, opendec, _) = ReconModule.siginclToSigIncl(incl, Paths.Loc(fileName, r))
                        handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
                             | Names.MissingModule args => raise GetModule args
             val _ = Elab.checkSigIncl Incl

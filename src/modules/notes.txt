@@ -14,7 +14,6 @@ conservative structure declarations: definiens of structure is checked but dropp
   for declared structures this would also check totality
 partial views default to identity; _ as module name; then %view %implicit _ : A -> B = {} to check definitional extensions.
 make symbols with fixity parsable separately: look for corresponding error message in parse-term.fun; see if it can be done easily
-make sigRelLookup unique by throwing away every include if a sigRel already exists?
 read assignments in structures separately
 %main c : A. in sig S; s : S used as constant defaults to s.c; same for included signatures
 print out with nicer names
@@ -29,24 +28,23 @@ patterns
 pair types with proof irrelevance
 morphism equality check, isomorphism check
 
-KM
-library infrastructure
-- resolve MMT URIs in LF file (except for translations) without invoking Twelf
-- make this also resolve comments
-
 ideas
 designated arguments in modules to allow unqualified instantiation
 skolem constants
 
 --------
 done
-
+ - the meta-theories are not 
 structure-includes
- - structures of signatures with includes do not have to include morphisms; the name of the signature is the identifier of a generated structure
+ - structures of signatures with includes do not have to include morphisms
+   * instead another structure is generated
+   * the name of the signature is the identifier of a generated structure
+   * exception: no structure is generated for the meta-theory, instead a morphism must be provided by the structure (default to identity)
  - includes are always flattened transitively, i.e., all includes are direct
  - redundant includes are an error
  - opening included constants after a structure possible
- - signature name as concrete syntax for identity morphism
+the signature name is used as concrete syntax for the identity morphism
+meta-theories: the first include of a signature may be given as %meta S
 using URIs to identify namespaces and to abstract from file systems
 dynamic loading of modules (%read deprecated)
 eliminated .. qualifier, lookup now decides dynamically whether a name is a namespace prefix, a module name, or a list of symbol names

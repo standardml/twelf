@@ -1000,7 +1000,8 @@ in
         "%struct " ^ M.strDecFoldName (M.structLookup c) ^ " := " ^ relToString(rel) ^ "."
     | caseToString(M.InclCase(_, _, rel)) = "%include " ^ (relToString rel) ^ "."
 
-  fun sigInclToString(M.SigIncl (m, opens, _)) = "%include " ^ (fmtModName m) ^ (openToString opens) ^ "."
+  fun sigInclToString(M.SigIncl (m, isMeta, opens, _)) =
+     (if isMeta then "%meta " else "%include ") ^ (fmtModName m) ^ (openToString opens) ^ "."
 
   fun strDecToString(M.StrDec(name, _, dom, insts, opendec, impl)) = (
      "%struct " ^ (implicitToString impl) ^ IDs.foldQName name ^ " : " ^ (fmtModName dom) ^ " = " ^

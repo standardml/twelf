@@ -28,7 +28,7 @@ struct
    | strcase of id * (rel       * Paths.region)
    | inclcase of rel * Paths.region
 
-  datatype sigincl = sigincl of id * openids
+  datatype sigincl = sigincl of id * bool * openids
   
   datatype strdec = strdec of string * id * (syminst list) * openids * bool
                   | strdef of string * (morph * Paths.region) * bool
@@ -134,8 +134,8 @@ struct
              	val _ = if M.inSignature() then
              	    case valOf (M.symVisible(Con, dom)) (* NONE impossible due to name lookup above *)
              	      of M.Self => ()
-             	       | M.Included _ => () (* instantiation of included symbols is permitted in a structure *)
-             	       | _ => error(r, "instantiation of inherited constant " ^ M.symFoldName Con ^ " not allowed")
+             	       | M.Included(_, NONE) => () (* instantiation of included but not meta-theory symbols is permitted in a structure *)
+             	       | _ => error(r, "instantiation of inherited or meta-theory symbol " ^ M.symFoldName Con ^ " not allowed")
              	 else
              	    if (IDs.midOf Con = dom) then () else error(r, "instantiation of included or inherited constant " ^ M.symFoldName Con ^ " not allowed in a view");
              	val expType =
@@ -163,6 +163,7 @@ struct
              end
          | strinst((names, r), (mor,r')) =>
              let
+               (* @FR: check for visibility missing *)
              	val Str = nameLookup Names.STRUC (dom, names, r)
              	val Mor = morphToMorph (cod, (mor,r'))
              	val (_, _, Mor') = Elab.reconMorph Mor
@@ -178,7 +179,11 @@ struct
              	val incl = List.find (fn M.ObjSig(m,M.Included _) => m = d | _ => false)
              	                     (M.modInclLookup dom)
              	val cid = case incl
-             	          of SOME (M.ObjSig(_, M.Included c)) => c
+             	          of SOME (M.ObjSig(_, M.Included(c,NONE))) => c
+             	           | SOME (M.ObjSig(_, M.Included(c,SOME M.Meta))) => c
+             	           | SOME (M.ObjSig(_, M.Included(c,SOME M.MetaIncluded))) =>
+             	              error(r, "included morphism has domain " ^ M.modFoldName d ^
+             	                       ", which is included into the meta-theory, but only a single morphism for the whole meta-theory is allowed")
              	           | NONE => error(r, "included morphism has domain " ^ M.modFoldName d ^
              	                          " which is not included into " ^ M.modFoldName dom)
              	(* @FR: we could permit M.Self here as well. Then structure/view definitions would be obsolete;
@@ -230,19 +235,23 @@ struct
              	val cid = case List.find
              	               (fn M.ObjSig(m,M.Included _) => m = d | _ => false)
              	               (M.modInclLookup dom)
-             	          of SOME (M.ObjSig(_, M.Included c)) => c
+             	          of SOME (M.ObjSig(_, M.Included(c,NONE))) => c
+             	           | SOME (M.ObjSig(_, M.Included(c,SOME M.Meta))) => c
+             	           | SOME (M.ObjSig(_, M.Included(c,SOME M.MetaIncluded))) =>
+             	              error(r, "included logical relation has domain " ^ M.modFoldName d ^
+             	                       ", which is included into the meta-theory, but only a single logical relation for the whole meta-theory is allowed")
              	           | NONE => error(r, "included logical relation has domain " ^ M.modFoldName d ^
              	                          " which is not included into " ^ M.modFoldName dom)
              in
              	M.InclCase(cid, NONE, Rel')
              end
 
-   fun siginclToSigIncl(sigincl ((name,r), opens), _) =
+   fun siginclToSigIncl(sigincl ((name,r), isMeta, opens), _) =
       let
       	 val m = modNameLookup Names.SIG (M.currentMod(), name, r)
 	 val Opens = openToOpen (m,opens)
       in
-      	 M.SigIncl (m, Opens, false)
+      	 M.SigIncl (m, isMeta, Opens, false)
       end
 
    fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
