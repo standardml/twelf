@@ -64,7 +64,7 @@ sig
   val modbeginToModDec : modbegin * Paths.location -> ModSyn.ModDec
   (* raised by modbeginToModDec if the codomain of a view is a SignUnion that has to be materialized first
      returns a continuation that yields the desired ModDec *)
-  exception MaterializeSignUnion of ModSyn.Sign * (IDs.mid -> ModSyn.ModDec)
+  exception ElaborateSignUnion of ModSyn.Sign * (IDs.mid -> ModSyn.ModDec)
   (* reconstructs a signature inclusion *)
   val siginclToSigIncl : sigincl * Paths.location -> ModSyn.SigIncl
   (* reconstructs a read declaration *)

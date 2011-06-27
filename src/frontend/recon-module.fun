@@ -100,7 +100,7 @@ struct
                           in (M.MorId m, m)
                           end
         handle _ => let val m = modNameLookup Names.VIEW (M.currentMod(), names, r)
-                         val M.ViewDec(_,_,dom,_,_) = M.modLookup m
+                         val M.ViewDec(_,_,dom,_,_,_) = M.modLookup m
                           in (M.MorView m, dom)
                           end
      in
@@ -124,7 +124,7 @@ struct
 
   fun openToOpen(m,opens) = M.OpenDec (List.map
      (fn ((old,r),(new,_)) =>
-       let val c = nameLookup Names.CON (m,old,r)
+       let val c = nameLookup Names.CON (m,old,r) handle Names.MissingModule _ => raise Error("unknown identifier")
        in (c, new)
        end
      )
@@ -282,10 +282,10 @@ struct
        	  M.StrDef([name], nil, Dom, Mor', implicit)
        end
    
-   exception MaterializeSignUnion of M.Sign * (IDs.mid -> ModSyn.ModDec)
+   exception ElaborateSignUnion of M.Sign * (IDs.mid -> ModSyn.ModDec)
    fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) =
        let val parname = M.modDecName (M.modLookup (M.currentMod()))
-       in  M.SigDec(Names.getCurrentNS(NONE), parname @ [name])
+       in  M.SigDec(Names.getCurrentNS(NONE), parname @ [name], NONE)
        end
      | modbeginToModDec(viewbegin(name, (dom,rd), cod, implicit), Paths.Loc(fileName, _)) =
          let
@@ -293,11 +293,11 @@ struct
             val parname = M.modDecName (M.modLookup cur)
             val Dom = modNameLookup Names.SIG (cur, dom, rd)
             val Cod = signToSign(cod)
-            fun cont m = M.ViewDec (Names.getCurrentNS(NONE), parname @ [name], Dom, m, implicit) 
+            fun cont signOpt m = M.ViewDec (Names.getCurrentNS(NONE), parname @ [name], Dom, m, signOpt, implicit) (* builds a ViewDec from information about the codomain *)
          in
             case Cod
-              of M.Sign m => cont m
-               | M.SignUnion _ => raise MaterializeSignUnion(Cod, cont)
+              of M.Sign m => cont NONE m
+               | M.SignUnion _ => raise ElaborateSignUnion(Cod, cont (SOME Cod))
          end
      | modbeginToModDec(relbegin(name, mors, r), loc as Paths.Loc(fileName, _)) =
          let

@@ -32,6 +32,7 @@ structure Catalog : CATALOG = struct
                val modURI : URI.uri = setQuery(uri, modname)
                val requestURI : URI.uri = setQuery(cat, "uri=" ^ (encode (URI.uriToString modURI)))
                val response : string = HTTP.getFromHeader("X-Source-url", requestURI) handle e => raise Error("Cannot connect to catalog server at " ^ URI.uriToString(cat))
+               val _ = if response = "" then raise Error("catalog server did not return a source URL") else ()
                val errSize = String.size("Unknown URI: ")
                (* check whether the server answered with Unknown URI: ... *)
                val _ = if (String.size(response) >= errSize) andalso (String.substring(response, 0, errSize) = "Unknown URI: ")
@@ -39,6 +40,7 @@ structure Catalog : CATALOG = struct
                         else ()
                val url = URI.parseURI response
                val file = dropQueryFragment(url)
+               val _ = if #scheme file = SOME "file" then () else raise Error("catalog server did not return a file URL: " ^ URI.uriToString file)
                (* FR: for now, we just return the file name, later improvements could also use the exact region *)
              in
 			   file

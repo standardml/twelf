@@ -71,14 +71,14 @@ functor Elab (structure Print : PRINT) : ELAB = struct
 
   (* computes domain of a morphism without type-checking it *)
   fun domain(mor : M.Morph) : IDs.mid = case mor
-    of M.MorView m => let val M.ViewDec(_, _, dom, _, _) = M.modLookup m in dom end
+    of M.MorView m => let val M.ViewDec(_, _, dom, _, _, _) = M.modLookup m in dom end
      | M.MorStr s => M.strDecDom (M.structLookup s)
      | M.MorComp(m,_) => domain m
      | M.MorId m => m
   
   (* computes codomain of a morphism without type-checking it *)
   fun codomain(mor : M.Morph) : IDs.mid = case mor
-    of M.MorView m => let val M.ViewDec(_, _, _, cod, _) = M.modLookup m in cod end
+    of M.MorView m => let val M.ViewDec(_, _, _, cod, _, _) = M.modLookup m in cod end
      | M.MorStr s => IDs.midOf(s)
      | M.MorComp(_,m) => codomain m
      | M.MorId m => m
@@ -105,7 +105,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                               handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism "))
     | reconMorph(M.MorView m) =
         let
-           val M.ViewDec(_, _, dom, cod, _) = M.modLookup m
+           val M.ViewDec(_, _, dom, cod, _, _) = M.modLookup m
                                         handle M.UndefinedMid _ => raise Error("non-view module reference in morphism")
         in
            (dom, cod, M.MorView m)
@@ -154,7 +154,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
               else restrictFirst(inclMorphsStr insts, newdom)
       )
     | restrictMorph(M.MorView m, newdom) =
-       let val M.ViewDec(_, _, dom, _, _) = M.modLookup m
+       let val M.ViewDec(_, _, dom, _, _, _) = M.modLookup m
        in if dom = newdom
           then M.MorView m
           else restrictFirst(inclMorphsView m, newdom)
@@ -732,7 +732,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   (* checks well-typedness conditions for modules (called at the end of the module *)
   fun checkModEnd(m) = case M.modLookup m
      of M.SigDec _ => ()
-      | M.ViewDec(_, _, dom, cod, _) =>
+      | M.ViewDec(_, _, dom, cod, _, _) =>
         let
           val _ = checkAncestors(dom, cod)
           val _ = checkIncludes(dom, cod, inclMorphsView m, false)

@@ -58,9 +58,7 @@ struct
       end
     | parseIDList'(f') = (nil, f')
 
-  fun parseSign'(f' as LS.Cons ((t, r), _)) = case parseIDList' f'
-    of (nil, _) => Parsing.error (r, "Expected signature identifier, found token " ^ L.toString t)
-     | mf => mf
+  fun parseSign'(f' as LS.Cons ((t, r), _)) = parseIDList' f' (* empty list is allowed *)
 
   fun parseMorph'(f' as LS.Cons ((t, r), _)) = case parseIDList' f'
     of (nil, _) => Parsing.error (r, "Expected structure or view identifier, found token " ^ L.toString t)

@@ -972,6 +972,10 @@ in
              | doList((old,new) :: tl) = " " ^ (M.symFoldName old) ^ " %as " ^ new ^ (doList tl)
        in " %open" ^ (doList l)
        end
+
+  fun signToString(M.Sign s) = M.modFoldName s
+     | signToString(M.SignUnion(u,u')) = signToString u ^ " " ^ signToString u'
+
   fun morphToString(M.MorStr(c)) =
       let
          val (pref, modname) = relativeMidName (IDs.midOf c)
@@ -1012,20 +1016,23 @@ in
      morphToString def ^ "."
     )
 
-  fun modBeginToString(M.SigDec(base,name)) =
+  fun modBeginToString(M.SigDec(base,name,_)) =
       "%% " ^ URI.uriToString base ^ "?" ^ IDs.foldQName name ^ "\n" ^
       "%sig " ^ (List.last name) ^ " = {"
-    | modBeginToString(M.ViewDec(base, name, dom, cod, impl)) =
-      "%% " ^ URI.uriToString base ^ "?" ^ IDs.foldQName name ^ "\n" ^
-      "%view " ^ (implicitToString impl) ^ (List.last name) ^ " : " ^
-      (M.modFoldName dom) ^ " -> " ^ (M.modFoldName cod) ^ " = {"
+    | modBeginToString(M.ViewDec(base, name, dom, cod, orgCod, impl)) =
+      let val codString = case orgCod of NONE => M.modFoldName cod | SOME sign => signToString sign
+      in
+         "%% " ^ URI.uriToString base ^ "?" ^ IDs.foldQName name ^ "\n" ^
+         "%view " ^ (implicitToString impl) ^ (List.last name) ^ " : " ^
+         (M.modFoldName dom) ^ " -> " ^ codString ^ " = {"
+      end
     | modBeginToString(M.RelDec(base, name, dom, cod, mors)) =
       "%% " ^ URI.uriToString base ^ "?" ^ IDs.foldQName name ^ "\n" ^
       "%rel " ^ (List.last name) ^ " : " ^
       IDs.mkString(List.map morphToString mors, "", " -> ", "") ^ " : " ^
       (M.modFoldName dom) ^ " -> " ^ (M.modFoldName cod) ^ " = {"
-  fun modEndToString(M.SigDec(_,name)) = "}. % end signature " ^ (IDs.foldQName name)
-    | modEndToString(M.ViewDec(_,name, _, _, _)) = "}. % end view " ^ (IDs.foldQName name)
+  fun modEndToString(M.SigDec(_,name,_)) = "}. % end signature " ^ (IDs.foldQName name)
+    | modEndToString(M.ViewDec(_,name, _, _, _, _)) = "}. % end view " ^ (IDs.foldQName name)
     | modEndToString(M.RelDec(_,name, _, _, _)) = "}. % end logical relation " ^ (IDs.foldQName name)
 
   fun cnstrToString (Cnstr) = F.makestring_fmt (formatCnstr Cnstr)

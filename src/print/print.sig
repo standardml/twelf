@@ -25,6 +25,7 @@ sig
 
   val decToString : IntSyn.dctx * IntSyn.Dec -> string
   val expToString : IntSyn.dctx * IntSyn.Exp -> string
+  val signToString : ModSyn.Sign -> string
   val morphToString : ModSyn.Morph -> string
   val relToString : ModSyn.Rel -> string
   val modBeginToString : ModSyn.ModDec -> string

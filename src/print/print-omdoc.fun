@@ -278,15 +278,16 @@ struct
        OMBIND(LFOMS([binder]), OM1BVAR(OMV(name), MMTOMS(["type"]), typ'), scope)
     end
 
-  and sigToStringTop(m, params) = ElemOpen("OMTHY",nil) ^ (sigToString(m, params)) ^ "</OMTHY>"
-  and sigToString(m, params) = relModOMS (m, params)
+  and signToStringTop(m, params) = ElemOpen("OMTHY",nil) ^ (signToString(m, params)) ^ "</OMTHY>"
+  and signToString(ModSyn.Sign m, params) = relModOMS (m, params)
+    | signToString(ModSyn.SignUnion(u,u'), params) = OMA(MMTOMS(["theory-union"]), [signToString(u, params), signToString(u', params)])
   and morphToStringTop(m, params) = ElemOpen("OMMOR",nil) ^ (morphToString(m, params)) ^ "</OMMOR>"
   and morphToString(ModSyn.MorStr(c), params) = relSymOMS (c, params)
     | morphToString(ModSyn.MorView(m), params) = relModOMS (m, params)
     | morphToString(ModSyn.MorComp(mor1,mor2), params) =
       OMA(MMTOMS(["composition"]), [morphToString(mor1, params), morphToString(mor2, params)])
     | morphToString(ModSyn.MorId(m), params) =
-      OMA(MMTOMS(["identity"]), [sigToStringTop(m, params)])
+      OMA(MMTOMS(["identity"]), [signToString(ModSyn.Sign m, params)])
   and relToStringTop(rel, params) = ElemOpen("OMREL",nil) ^ (relToString(rel, params)) ^ "</OMREL>"
   and relToString(ModSyn.Rel(rel), params) = relModOMS (rel, params)
     | relToString(ModSyn.RelComp(mor,rel), params) =
@@ -447,11 +448,19 @@ struct
       in
          ElemOpen("theory", nbattr @ [Attr("meta", meta)]) ^ nl_ind() ^ metaDataToString md 
       end
-    | ModSyn.ViewDec(_, _, dom, cod, _) =>
-           ElemOpen("view", nbattr @ 
-                          [Attr("from", relModName(dom, headParams)),
-                          Attr("to", relModName(cod, headParams))]
-           ) ^ nl_ind() ^ metaDataToString md
+    | ModSyn.ViewDec(_, _, dom, cod, codOrg, _) => (
+        case codOrg
+          of NONE =>
+              ElemOpen("view", nbattr @
+                             [Attr("from", relModName(dom, headParams)),
+                             Attr("to", relModName(cod, headParams))]
+              ) ^ nl_ind() ^ metaDataToString md
+          | SOME sign => 
+              ElemOpen("view", nbattr @
+                             [Attr("from", relModName(dom, headParams))]
+              ) ^ nl_ind() ^ metaDataToString md ^ nl() ^
+              ElemOpen("to", nil) ^ nl_ind() ^ signToString(sign, headParams) ^ nl_unind() ^ ElemClose("to") ^ nl()
+      )
     | ModSyn.RelDec(_, _, dom, cod, mors) =>
            ElemOpen("rel", nbattr @
                           [Attr("from", relModName(dom, headParams)),
@@ -510,7 +519,10 @@ struct
                    of NONE => print (caseToString(cas, params, md) ^ nl())
                     | SOME _ => ()
                 )
-              | ModSyn.SymMod(m, mdec) => printModule file m params fileNameOpt
+              | ModSyn.SymMod(m, mdec) => (case ModSyn.modDecOrg mdec
+                   of NONE => printModule file m params fileNameOpt
+                    | SOME _ => ()
+                )
           end
           handle ModSyn.UndefinedCid c => () (* in views not everything is defined *)
      in      
@@ -522,9 +534,9 @@ struct
      	 fun print x = TextIO.output(file, x)
      	 val mdec = ModSyn.modLookup m
      	 val bodyParams : Params = case mdec
-     	   of ModSyn.SigDec(b,_) =>
+     	   of ModSyn.SigDec(b,_,_) =>
      	        {baseNS = b, current = m}
-     	    | ModSyn.ViewDec(_,_,_,cod,_) =>
+     	    | ModSyn.ViewDec(_,_,_,cod,_,_) =>
      	        {baseNS = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
      	    | ModSyn.RelDec(_,_,_,cod,_) =>
      	        {baseNS = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}

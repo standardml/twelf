@@ -27,8 +27,8 @@ struct
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list) * OpenDec * bool
                   | StrDef of string list * IDs.qid * IDs.mid * Morph * bool
   datatype SigIncl = SigIncl of IDs.mid * bool * OpenDec * bool
-  datatype ModDec = SigDec of URI.uri * string list
-                  | ViewDec of URI.uri * string list * IDs.mid * IDs.mid * bool
+  datatype ModDec = SigDec of URI.uri * string list * (IDs.mid list option)
+                  | ViewDec of URI.uri * string list * IDs.mid * IDs.mid * (Sign option) * bool
                   | RelDec of URI.uri * string list * IDs.mid * IDs.mid * (Morph list)
 
   datatype Read = ReadFile of string
@@ -39,12 +39,15 @@ struct
                        | SymConInst of SymInst | SymStrInst of SymInst | SymInclInst of SymInst
                        | SymConCase of SymCase | SymStrCase of SymCase | SymInclCase of SymCase
 
-  fun modDecBase (SigDec(b,_)) = b
-    | modDecBase (ViewDec(b,_,_,_,_)) = b
+  fun modDecBase (SigDec(b,_,_)) = b
+    | modDecBase (ViewDec(b,_,_,_,_,_)) = b
     | modDecBase (RelDec(b,_,_,_,_)) = b
-  fun modDecName (SigDec(_,n)) = n
-    | modDecName (ViewDec(_,n,_,_,_)) = n
+  fun modDecName (SigDec(_,n,_)) = n
+    | modDecName (ViewDec(_,n,_,_,_,_)) = n
     | modDecName (RelDec(_,n,_,_,_)) = n
+  fun modDecOrg (SigDec(_,_,O)) = O
+    | modDecOrg (ViewDec(_,_,_,_,_,_)) = NONE
+    | modDecOrg (RelDec(_,_,_,_,_)) = NONE
   fun strDecName (StrDec(n, _, _, _, _, _)) = n
     | strDecName (StrDef(n, _, _, _, _)) = n
   fun strDecFoldName s =  IDs.mkString(strDecName s,"",".","")
@@ -175,7 +178,7 @@ struct
                                handle Option => raise (UndefinedCid c)
 
   fun modLookup(m) =
-    if m = 0 then SigDec(URI.parseURI "", nil)
+    if m = 0 then SigDec(URI.parseURI "", nil, NONE)
              else case symLookup (midToCid m)
                     of SymMod (_,moddec) => moddec
                      | _ => raise UndefinedMid m
@@ -192,9 +195,13 @@ struct
 
   fun modInclLookup(m) = valOf (MH.lookup inclTable m)
                                 handle Option => raise UndefinedMid(m)
-  fun sigIncluded(dom, cod) = List.exists
-      (fn ObjSig(d, Ancestor _) => false | ObjSig(d, _) => d = dom)
-      (modInclLookup cod)
+  fun sigIncluded(dom, cod) =
+      (List.exists
+        (fn ObjSig(d, Ancestor _) => false | ObjSig(d, _) => d = dom)
+        (modInclLookup cod)
+      ) orelse case modDecOrg (modLookup dom)
+                  of SOME sigs => List.all (fn s => sigIncluded(s, cod)) sigs (* elaborated signature unions are included into cod iff all their components are *) 
+                   | NONE => false
   fun sigRel(dom,cod) =
     case List.find (fn ObjSig(d, _) => dom = d) (modInclLookup cod)
       of NONE => NONE
@@ -231,7 +238,7 @@ struct
      let val m = currentMod()
      in case modLookup m
        of SigDec _ => m
-        | ViewDec(_,_,_,cod,_) => cod
+        | ViewDec(_,_,_,cod,_,_) => cod
         | RelDec(_,_,_,cod,_) => cod
      end
   fun onToplevel() = currentMod() = 0
@@ -292,7 +299,7 @@ struct
        case lOpt of SOME l => l
                | NONE => case modLookup m
                  of SigDec _ => modSize m
-                  | ViewDec(_,_,dom,_,_) => modSize dom
+                  | ViewDec(_,_,dom,_,_,_) => modSize dom
                   | RelDec(_,_,dom,_,_) => modSize dom
       fun doRest(l) = if l = limit then () else (f(m,l); doRest(l+1))
     in
@@ -398,7 +405,7 @@ struct
         val _ = scope := tl
         val _ = MH.insert modTable (m, (midToCid m, l))
         val _ = case modLookup m
-                  of ViewDec(_,_,dom,cod,true) => implicitAdd(dom, cod, MorView m)
+                  of ViewDec(_,_,dom,cod,_,true) => implicitAdd(dom, cod, MorView m)
                    | _ => ()
       in
          ()

@@ -528,7 +528,7 @@ struct
 
     fun showOne m = MCTable.app (fn ((m', a), bs) => if m = m' then showFam (a, bs) else ()) soGraph;
     fun show () = ModSyn.modApp (fn m => (case ModSyn.modLookup m 
-				           of ModSyn.SigDec (_,name) =>
+				           of ModSyn.SigDec (_,name,_) =>
 					      (print("signature " ^ IDs.foldQName name ^ "\n");
 					      showOne m;
 					      print("\n"))

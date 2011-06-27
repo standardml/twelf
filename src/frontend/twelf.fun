@@ -376,11 +376,12 @@ struct
 	fun installUnionSign u =
 	  let fun toList(ModSyn.Sign s) = [s]
 	         | toList(ModSyn.SignUnion(u,v)) = toList(u) @ toList(v)
+	      val sigs = toList u
 	      val uri = URI.parseURI("http://cds.omdoc.org/mmt")
-	      val name = ["_"]
+	      val name = ["[" ^ Print.signToString u ^ "]"]
 	      fun addIncl(from) = ModSyn.inclAddC(ModSyn.SigIncl(from, false, ModSyn.OpenDec nil, true))
-	      val c = ModSyn.modOpen(ModSyn.SigDec(uri, name))
-	      val _ = List.map addIncl (toList u)
+	      val c = ModSyn.modOpen(ModSyn.SigDec(uri, name, SOME sigs))
+	      val _ = List.map addIncl sigs
 	      val _ = ModSyn.modClose()
 	  in 
 	     ModSyn.cidToMid c
@@ -511,6 +512,7 @@ struct
           val url = Catalog.resolve (ns, modname) handle Catalog.Error(msg) => raise Names.Error("not found: " ^ moduleText ^ "\ncatalog returned: " ^ msg ^ "\n")
           (* assume the URI resolves to a file:/ URL *)
           val file = URI.toFilePath url
+          val _ = case Origins.linesInfoLookup file of NONE => () | _ => raise Names.Error("cyclic dependency: catalog returned URL " ^ file ^ ", but file is already open")
           val _ = chmsg 3 (fn () => "%% loading from " ^ file ^ "\n")
           (* the currently open signatures, i.e., M1, M1.M2, ..., M1.....Mn depend
              on the missing module, so their name entries are removed temporarily and saved *)
@@ -1222,7 +1224,7 @@ struct
            let
                val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r))
                          handle Names.MissingModule(ns,m,s) => raise GetModule(ns,m,s)
-                               | ReconModule.MaterializeSignUnion(u, cont) =>
+                               | ReconModule.ElaborateSignUnion(u, cont) =>
                                   let val m = installUnionSign u
                                   in cont m
                                   end
@@ -1325,7 +1327,7 @@ struct
       | install1 (fileName, declr as (Parser.SymInst inst, r)) = (
            let
                val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
-                            of ModSyn.ViewDec(_, _, d, c, _) => (d,c)
+                            of ModSyn.ViewDec(_, _, d, c, _,_) => (d,c)
                              | _  => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
@@ -1533,7 +1535,7 @@ struct
                   val m = ModSyn.cidToMid c
                   val (dom, inSig) = case ModSyn.modLookup m
                      of ModSyn.SigDec _ => (m, true)
-                      | ModSyn.ViewDec(_,_,d,_,_) => (d, false)
+                      | ModSyn.ViewDec(_,_,d,_,_,_) => (d, false)
                       | ModSyn.RelDec(_,_,d,_,_) => (d, false)
                 in
                    case Names.nameLookup [Names.CON,Names.STRUC] (dom, names)
