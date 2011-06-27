@@ -16,6 +16,7 @@ struct
   exception UndefinedCid of IDs.cid
   exception UndefinedMid of IDs.mid
 
+  datatype Sign = Sign of IDs.mid | SignUnion of Sign * Sign
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorId of IDs.mid | MorComp of Morph * Morph
   datatype Rel = Rel of IDs.mid | RelComp of Morph * Rel
   datatype SymInst = ConInst of IDs.cid * (IDs.cid option) * I.Exp | StrInst of IDs.cid * (IDs.cid option) * Morph

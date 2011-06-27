@@ -58,6 +58,10 @@ struct
       end
     | parseIDList'(f') = (nil, f')
 
+  fun parseSign'(f' as LS.Cons ((t, r), _)) = case parseIDList' f'
+    of (nil, _) => Parsing.error (r, "Expected signature identifier, found token " ^ L.toString t)
+     | mf => mf
+
   fun parseMorph'(f' as LS.Cons ((t, r), _)) = case parseIDList' f'
     of (nil, _) => Parsing.error (r, "Expected structure or view identifier, found token " ^ L.toString t)
      | mf => mf
@@ -263,7 +267,7 @@ struct
              val (_, f') = parseColon' (f')
              val (dom, f') = parseQualId' (f')
              val (_, f') = parseArrow'(f')
-             val (cod, f') = parseQualId' (f')
+             val (cod, f') = parseSign' (f')
              val (_, f') = parseEqual' (f')
              val (_, f') = parseLBrace' (f')
           in

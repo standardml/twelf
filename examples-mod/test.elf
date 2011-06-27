@@ -54,6 +54,7 @@ comments *%
   f''' : a''' -> a'''.
   %struct t''' : T = {r''.c := f'''. a'' := a'''.}.
   %struct s''' = T.s'' t'''.
+  c''' : a'''.
 }.
 
 %% testing views
@@ -61,6 +62,14 @@ comments *%
   a := a -> a.
   c := [x] c.
 }.
+
+%% views with complex codomain
+
+%view VV : R -> S T U = {
+   a := a'''.
+   c := c'''.
+}.
+
 
 %% testing views with structure instantiations; not so easy to type-check by hand anymore
 %% note that type reconstruction works

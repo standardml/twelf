@@ -372,8 +372,21 @@ struct
 	in 
 	  cid
 	end
-    
-    fun installStrDec(strDec, r) =
+   
+	fun installUnionSign u =
+	  let fun toList(ModSyn.Sign s) = [s]
+	         | toList(ModSyn.SignUnion(u,v)) = toList(u) @ toList(v)
+	      val uri = URI.parseURI("http://cds.omdoc.org/mmt")
+	      val name = ["_"]
+	      fun addIncl(from) = ModSyn.inclAddC(ModSyn.SigIncl(from, false, ModSyn.OpenDec nil, true))
+	      val c = ModSyn.modOpen(ModSyn.SigDec(uri, name))
+	      val _ = List.map addIncl (toList u)
+	      val _ = ModSyn.modClose()
+	  in 
+	     ModSyn.cidToMid c
+	  end
+	
+   fun installStrDec(strDec, r) =                                                                       
        let
           val c : IDs.cid = ModSyn.structAddC(strDec)
           val _ = Names.installNameC(c, NONE, ModSyn.strDecName strDec)
@@ -1209,6 +1222,10 @@ struct
            let
                val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r))
                          handle Names.MissingModule(ns,m,s) => raise GetModule(ns,m,s)
+                               | ReconModule.MaterializeSignUnion(u, cont) =>
+                                  let val m = installUnionSign u
+                                  in cont m
+                                  end
                val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val ancmids = List.map #1 (ModSyn.getScope())

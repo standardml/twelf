@@ -17,6 +17,7 @@ struct
   type id = string list * Paths.region
   type openids = (id * (string * Paths.region)) list
   
+  type sign = id list
   type morph = id list
   datatype syminst =
      coninst of id * (ExtSyn.term * Paths.region)
@@ -34,7 +35,7 @@ struct
                   | strdef of string * (morph * Paths.region) * bool
 
   datatype modbegin = sigbegin of string
-                    | viewbegin of string * id * id * bool
+                    | viewbegin of string * id * sign * bool
                     | relbegin of string * morph list * Paths.region
   
   datatype read = readfile of string
@@ -75,7 +76,16 @@ struct
   fun init(hd:: nil) = nil
     | init(hd::tl) = hd :: (init tl)
   
-  
+  fun signToSign(nil) = M.Sign (M.currentMod())
+    | signToSign((names,r)::nil) =
+       let val s = modNameLookup Names.SIG (M.currentMod(), names, r)
+       in M.Sign s
+       end
+    | signToSign((names,r)::tl) =
+        let val s = modNameLookup Names.SIG (M.currentMod(), names, r)
+        in M.SignUnion(M.Sign s, signToSign tl)
+        end
+
   fun morphToMorph(cod : IDs.mid, (mor, r0)) =
      let
      	val (names, r) = List.last mor
@@ -271,19 +281,23 @@ struct
        in
        	  M.StrDef([name], nil, Dom, Mor', implicit)
        end
-    
+   
+   exception MaterializeSignUnion of M.Sign * (IDs.mid -> ModSyn.ModDec)
    fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) =
        let val parname = M.modDecName (M.modLookup (M.currentMod()))
-       in  M.SigDec(Names.getCurrentNS(NONE), parname @ [name]) (* was: OS.Path.mkCanonical fileName *)
+       in  M.SigDec(Names.getCurrentNS(NONE), parname @ [name])
        end
-     | modbeginToModDec(viewbegin(name, (dom,rd), (cod,rc), implicit), Paths.Loc(fileName, _)) =
+     | modbeginToModDec(viewbegin(name, (dom,rd), cod, implicit), Paths.Loc(fileName, _)) =
          let
             val cur = M.currentMod()
+            val parname = M.modDecName (M.modLookup cur)
             val Dom = modNameLookup Names.SIG (cur, dom, rd)
-            val Cod = modNameLookup' Names.SIG (cur, cod, rc)
-            val parname = M.modDecName (M.modLookup (M.currentMod()))
+            val Cod = signToSign(cod)
+            fun cont m = M.ViewDec (Names.getCurrentNS(NONE), parname @ [name], Dom, m, implicit) 
          in
-            M.ViewDec (Names.getCurrentNS(NONE), parname @ [name], Dom, Cod, implicit)
+            case Cod
+              of M.Sign m => cont m
+               | M.SignUnion _ => raise MaterializeSignUnion(Cod, cont)
          end
      | modbeginToModDec(relbegin(name, mors, r), loc as Paths.Loc(fileName, _)) =
          let
