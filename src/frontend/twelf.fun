@@ -1348,9 +1348,7 @@ struct
 	                         val c = ModSyn.instAddC(inst)
 	                                 handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
                                  val prefix = if (! Global.printFlat) then "" else "% induced: "
-                                 val _ = if !Global.chatter >= 3
-                                         then msg (prefix ^ Print.instToString(inst) ^ "\n")
-		                         else ()
+                                 val _ = chmsg 3 (fn () => prefix ^ Print.instToString(inst) ^ "\n")
 		               in
 		               	  c
                                end
@@ -1459,6 +1457,7 @@ struct
                    of NONE => (
                       chmsg 3 (fn () => "%read \"" ^ file ^ "\".\n");
                       Origins.installLinesInfo (fileName, Paths.getLinesInfo ());
+                      Comments.installDoc fileName;
                       if loadFile file = ABORT
                       then raise ModSyn.Error("Error in included file " ^ file)
                       else ReconTerm.resetErrors fileName; (* restore previous file name *)

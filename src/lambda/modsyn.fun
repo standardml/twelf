@@ -202,12 +202,12 @@ struct
       ) orelse case modDecOrg (modLookup dom)
                   of SOME sigs => List.all (fn s => sigIncluded(s, cod)) sigs (* elaborated signature unions are included into cod iff all their components are *) 
                    | NONE => false
-  fun sigRel(dom,cod) =
-    case List.find (fn ObjSig(d, _) => dom = d) (modInclLookup cod)
+  fun sigRel(dom,m) =
+    case List.find (fn ObjSig(d, _) => dom = d | _ => false) (modInclLookup m) (* if m is a view/relation, the result can only be Ancestor _ *)
       of NONE => NONE
        | SOME (ObjSig(_, rel)) => SOME rel
   fun symVisible(c, m) =
-     case sigRel(IDs.midOf c, m)
+      case sigRel(IDs.midOf c, m)
         of SOME (Ancestor p) =>
            if IDs.lidOf c < IDs.lidOf (midToCid p)
            then SOME (Ancestor p)

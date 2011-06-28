@@ -250,7 +250,8 @@ struct
              val (_, f') = parseLBrace' (f')
           in
              (E.sigbegin id, f')
-          end 
+          end
+          
         | LS.Cons ((t, r1), s') =>
 	  Parsing.error (r, "Expected new module identifier, found token " ^ L.toString t)
 

@@ -217,6 +217,8 @@ sig
   (* convenience methods based on the above *)
   (* sigIncluded(dom,cod) iff dom is included into cod (Self, Included_, or AncIncluded) *)
   val sigIncluded : IDs.mid * IDs.mid -> bool
+  (* sigRel(from, to) returns the include relation between two signatures *)
+  val sigRel : IDs.mid * IDs.mid -> SigRelType option
   (* isSome (symVisible(c, m)) iff c is visible to m, returns the relation between m and IDs.midOf(c)
      AncIncluded takes precedence over Included _ if both are present. *)
   val symVisible : IDs.cid * IDs.mid -> SigRelType option

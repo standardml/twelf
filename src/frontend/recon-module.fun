@@ -59,14 +59,8 @@ struct
             | NONE => error(r, "undeclared identifier: " ^ IDs.foldQName names)
      end
 
-  fun modNameLookup' expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
-      M.cidToMid (nameLookup expected (m,names,r))
-      (* no exception possible in cidToMid if "expected" is a module level concept *)
-
-  (* as modNameLookup' but also checks that the module is closed
-     this is called for all modules except for the codomain of views and relations, which may be open *)
   fun modNameLookup expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
-      let val m = modNameLookup' expected (m,names,r)
+      let val m = M.cidToMid (nameLookup expected (m,names,r)) (* no exception possible in cidToMid if "expected" is a module level concept *)
       in
         if List.exists (fn (m',_) => m' = m) (M.getScope())
         then error(r, "module " ^ M.modFoldName m ^ " can only be used when closed")
@@ -186,12 +180,10 @@ struct
              	val Mor = morphToMorph (cod, (mor, r))
              	val (d, _, Mor') = Elab.reconMorph Mor
          	                   handle Elab.Error(msg) => error(r, msg)
-             	val incl = List.find (fn M.ObjSig(m,M.Included _) => m = d | _ => false)
-             	                     (M.modInclLookup dom)
-             	val cid = case incl
-             	          of SOME (M.ObjSig(_, M.Included(c,NONE))) => c
-             	           | SOME (M.ObjSig(_, M.Included(c,SOME M.Meta))) => c
-             	           | SOME (M.ObjSig(_, M.Included(c,SOME M.MetaIncluded))) =>
+             	val cid = case M.sigRel(d,dom)
+             	          of SOME (M.Included(c,NONE)) => c
+             	           | SOME (M.Included(c,SOME M.Meta)) => c
+             	           | SOME (M.Included(c,SOME M.MetaIncluded)) =>
              	              error(r, "included morphism has domain " ^ M.modFoldName d ^
              	                       ", which is included into the meta-theory, but only a single morphism for the whole meta-theory is allowed")
              	           | NONE => error(r, "included morphism has domain " ^ M.modFoldName d ^
