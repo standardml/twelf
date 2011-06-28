@@ -34,7 +34,7 @@ skolem constants
 
 --------
 done
- - the meta-theories are not 
+morphisms out of signatures with ancestors are legal if the ancestors are included into the codomain already
 structure-includes
  - structures of signatures with includes do not have to include morphisms
    * instead another structure is generated
