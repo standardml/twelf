@@ -46,6 +46,8 @@ struct
 (* implementing the remaining declarations of RECON_MODULE *)
   exception Error of string
   
+  type ModExpElab = (ModSyn.Sign -> IDs.mid) * (ModSyn.Morph -> IDs.mid)
+  
   (* local functions to handle errors *)
   fun error (r, msg) = raise Error (Paths.wrap (r, msg))
         
@@ -275,23 +277,22 @@ struct
        end
    
    exception ElaborateSignUnion of M.Sign * (IDs.mid -> ModSyn.ModDec)
-   fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) =
+   fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _), (signExpElab, morExpElab)) =
        let val parname = M.modDecName (M.modLookup (M.currentMod()))
        in  M.SigDec(Names.getCurrentNS(NONE), parname @ [name], NONE)
        end
-     | modbeginToModDec(viewbegin(name, (dom,rd), cod, implicit), Paths.Loc(fileName, _)) =
+     | modbeginToModDec(viewbegin(name, (dom,rd), cod, implicit), Paths.Loc(fileName, _), (signExpElab, morExpElab)) =
          let
             val cur = M.currentMod()
             val parname = M.modDecName (M.modLookup cur)
             val Dom = modNameLookup Names.SIG (cur, dom, rd)
-            val Cod = signToSign(cod)
-            fun cont signOpt m = M.ViewDec (Names.getCurrentNS(NONE), parname @ [name], Dom, m, signOpt, implicit) (* builds a ViewDec from information about the codomain *)
+            val (CodId, Origin) = case signToSign cod
+               of M.Sign m => (m, NONE)
+                | sign => (signExpElab sign, SOME sign) 
          in
-            case Cod
-              of M.Sign m => cont NONE m
-               | M.SignUnion _ => raise ElaborateSignUnion(Cod, cont (SOME Cod))
+            M.ViewDec (Names.getCurrentNS(NONE), parname @ [name], Dom, CodId, Origin, implicit)
          end
-     | modbeginToModDec(relbegin(name, mors, r), loc as Paths.Loc(fileName, _)) =
+     | modbeginToModDec(relbegin(name, mors, r), loc as Paths.Loc(fileName, _), (signExpElab, morExpElab)) =
          let
             val _ = if mors = nil then error(r, "logical relation must have at least one morphism") else ()
             val Mors = List.map (fn x => morphToMorph(0, (x, loc))) mors

@@ -373,7 +373,8 @@ struct
 	  cid
 	end
    
-	fun installUnionSign u =
+   (* elaborates a signature expression, installs it, and returns the new signature id *)
+	fun signExpElab u =
 	  let fun toList(ModSyn.Sign s) = [s]
 	         | toList(ModSyn.SignUnion(u,v)) = toList(u) @ toList(v)
 	      val sigs = toList u
@@ -387,6 +388,12 @@ struct
 	     ModSyn.cidToMid c
 	  end
 	
+   (* elaborates a morphism expression, installs it, and returns the new view id *)	
+	fun morExpElab(m) = raise ReconModule.Error("implementation error: cannot elaborate morphism expression " ^ (Print.morphToString m))
+	
+	(* pairs the two elaboration functions, passed as a callback to reconstruction methods that may encouter module expressions *)
+	val modExpElab = (signExpElab, morExpElab)
+	  
    fun installStrDec(strDec, r) =                                                                       
        let
           val c : IDs.cid = ModSyn.structAddC(strDec)
@@ -1222,12 +1229,8 @@ struct
       (* cases for the module system *)
       | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) =
            let
-               val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r))
+               val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r), modExpElab)
                          handle Names.MissingModule(ns,m,s) => raise GetModule(ns,m,s)
-                               | ReconModule.ElaborateSignUnion(u, cont) =>
-                                  let val m = installUnionSign u
-                                  in cont m
-                                  end
                val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val ancmids = List.map #1 (ModSyn.getScope())
