@@ -188,6 +188,12 @@ struct
              	           | SOME (M.Included(c,SOME M.MetaIncluded)) =>
              	              error(r, "included morphism has domain " ^ M.modFoldName d ^
              	                       ", which is included into the meta-theory, but only a single morphism for the whole meta-theory is allowed")
+             	           | SOME M.Self =>
+             	              error(r, "included morphism has domain " ^ M.modFoldName d ^
+             	                       ", which is the same as the domain of the link")
+             	           | SOME _ =>
+             	              error(r, "included morphism has domain " ^ M.modFoldName d ^
+             	                       ", but instantiations for inclusions into the parent are not allowed")
              	           | NONE => error(r, "included morphism has domain " ^ M.modFoldName d ^
              	                          " which is not included into " ^ M.modFoldName dom)
              	(* @FR: we could permit M.Self here as well. Then structure/view definitions would be obsolete;
