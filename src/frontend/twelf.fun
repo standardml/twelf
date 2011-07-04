@@ -542,14 +542,15 @@ struct
           val _ = if stat = ABORT
                   then raise ModSyn.Error("Error in dynamically loaded " ^ moduleText) else ()
           (* restore previous file name and line info *)
-          val _ = ReconTerm.resetErrors fileName;
+          val _ = ReconTerm.resetErrors fileName
           val _ = Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
           (* restore the context of ModSyn and Names, the former returns the new cid of M1 *)
           val cnew = ModSyn.popContext()
           val _ = Names.popContext()
           (* restore the (updated) name entries for the modules M1.....Mi
              update: cnew replaces the old cid of M1 (nil-case) and the old origins of M1....Mi for i>1 (tl-cases) *)
-          fun restoreEntries((names, _)::nil) = Names.installName(0, cnew, NONE, names)
+          fun restoreEntries(nil) = ()
+            | restoreEntries((names, _)::nil) = Names.installName(0, cnew, NONE, names)
             | restoreEntries((names,(c,_))::tl) = (
                 Names.installName(0, c, SOME cnew, names);
                 restoreEntries tl
@@ -1480,7 +1481,7 @@ struct
 	  let
             val _ = ReconTerm.resetErrors fileName                             (* for error messages *)
             val _ = Names.pushContext()                                        (* new namespace context *)
-	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
+	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())      (* initialize origins -fr *)
 	    val res = install (fileName, Parser.parseStream instream)
 	              handle e => (Names.popContext(); raise e)
 	    val _ = Names.popContext()                                         (* remove the namespace context *)

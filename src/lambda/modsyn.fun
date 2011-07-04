@@ -355,17 +355,17 @@ struct
 
   fun popContext() = let
      val nextLid = case getScope() of (_,l) :: nil => l | _ => raise Error("can only pop context on toplevel")
-     val (savedMods, savedModDecl) :: tl = ! savedScopes
-     val _ = savedScopes := tl
-     val mid = #1 (List.hd savedMods)
      val newCid = (0,nextLid)
+     val (savedMods, savedModDecl) :: tl = ! savedScopes
      val _ = case savedModDecl
        of NONE => ()
-        | SOME dec => (
-            scope := List.rev ((0,nextLid + 1) :: savedMods);
-            MH.insert modTable (mid, (newCid, ~1));
-            CH.insert declTable (newCid, dec)
-          )
+        | SOME dec => let
+            val _ = savedScopes := tl
+            val mid = #1 (List.hd savedMods)
+            val _ = scope := List.rev ((0,nextLid + 1) :: savedMods)
+            val _ = MH.insert modTable (mid, (newCid, ~1))
+            val _ = CH.insert declTable (newCid, dec)
+          in () end
   in newCid end
 
   fun declAddC(dec : Declaration) : IDs.cid = let
