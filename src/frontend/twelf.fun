@@ -1267,11 +1267,12 @@ struct
              chmsg 3 (fn () => Print.modBeginToString(dec) ^ "\n")
            end
       | install1 (fileName, declr as (Parser.ModEnd, r)) =
-          let
+         let
              val m = ModSyn.currentMod()
              val _ = Elab.checkModEnd m
                      handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                           | Elab.MissingCase(m,c, msg) => recoveredError(fileName,r,msg)
+             val _ = ModSyn.modFoldName m
              val (fN,rb) = Origins.mOriginLookup m  (* fN = fileName *)
           in
              ModSyn.modClose()

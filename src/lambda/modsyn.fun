@@ -342,7 +342,8 @@ struct
   ) end
 
   fun pushContext() = let 
-     val (_,nextLid) :: saveMods = List.rev (getScope())
+     val (_,nextLid) :: saveMods = List.rev (getScope()) (* toplevel :: rest *)
+     (* saveModDecl = the toplevel module we are currently in, if any *)
      val saveModDecl = case saveMods
        of nil => NONE
         | (m,_) :: _ => (
@@ -357,10 +358,10 @@ struct
      val nextLid = case getScope() of (_,l) :: nil => l | _ => raise Error("can only pop context on toplevel")
      val newCid = (0,nextLid)
      val (savedMods, savedModDecl) :: tl = ! savedScopes
+     val _ = savedScopes := tl
      val _ = case savedModDecl
        of NONE => ()
         | SOME dec => let
-            val _ = savedScopes := tl
             val mid = #1 (List.hd savedMods)
             val _ = scope := List.rev ((0,nextLid + 1) :: savedMods)
             val _ = MH.insert modTable (mid, (newCid, ~1))
