@@ -31,6 +31,7 @@ struct
   structure ExtSyn = ReconTerm'
 
   exception Error of string
+  exception DefiniensError of string * IntSyn.ConDec option * Paths.occConDec option
 
   (* error (r, msg) raises a syntax error within region r with text msg *)
   fun error (r, msg) = raise Error (Paths.wrap (r, msg))
@@ -53,7 +54,8 @@ struct
      Only works properly when the declaration contains no EVars.
   *)
   (* should printing of result be moved to frontend? *)
-  (* Wed May 20 08:08:50 1998 -fp *)
+  (* Wed May 20 08:08:50 1998 -fp
+     I moved it, July 2011 -fr *)
   fun condecToConDec (condec(optName, tm), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset IntSyn.Null
@@ -68,9 +70,6 @@ struct
         (* omitted names default to _, which can never be referred to in external syntax *)
 	val cd = Names.nameConDec (IntSyn.ConDec ([name], nil, i, IntSyn.Normal, V', L))
 	val ocd = Paths.dec (i, oc)
-	val _ = if !Global.chatter >= 3
-		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
-		else ()
 	val _ = if !Global.doubleCheck
 		  then (Timers.time Timers.checking TypeCheck.check) (V', IntSyn.Uni L)
 		else ()
@@ -78,7 +77,7 @@ struct
 	(SOME(cd), SOME(ocd))
       end
     | condecToConDec (condef(optName, tm1, tm2Opt), Paths.Loc (fileName, r), abbFlag) =
-      let
+      (let
 	val _ = Names.varReset IntSyn.Null
 	val _ = ExtSyn.resetErrors fileName
         val f = (case tm2Opt
@@ -104,10 +103,6 @@ struct
 		       (* (case optName of NONE => () | _ => Strict.checkType ((i, V''), SOME(ocd))); *)
 		       (Names.nameConDec (IntSyn.ConDef ([name], nil, i, U'', V'', L,
 							 ModSyn.ancestor U''))))
-	           
-        val _ = if !Global.chatter >= 3
-		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
-		else ()
 	val _ = if !Global.doubleCheck
 		  then ((Timers.time Timers.checking TypeCheck.check) (V'', IntSyn.Uni L);
 			(Timers.time Timers.checking TypeCheck.check) (U'', V''))
@@ -116,6 +111,16 @@ struct
       in
 	(optConDec, SOME(ocd))
       end
+      (* see if we can recover from the error by omitting the definiens -fr *)
+      handle e as ExtSyn.Error(msg) => (case (optName, tm2Opt)
+         of (SOME n, SOME tp) => (
+            let val (optConDec, ocOpt) = (condecToConDec (condec(SOME n, tp), Paths.Loc (fileName, r), false))
+                                         handle _ => raise e
+            in raise DefiniensError(msg, optConDec, ocOpt)
+            end
+         ) | _ => raise e
+      )
+    )
     | condecToConDec (blockdec (name, Lsome, Lblock), Paths.Loc (fileName, r), abbFlag) =
       let
 	fun makectx nil = IntSyn.Null
@@ -168,10 +173,6 @@ struct
 		    ^ Print.cnstrsToString C))
 	val _ = checkFreevars (G0, (Gsome', Gblock'), r')
 	val bd = IntSyn.BlockDec ([name], nil, Gsome', ctxToList (Gblock', nil))
-        val _ = if !Global.chatter >= 3
-		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) bd ^ "\n")
-		else ()
-
       in
 	(SOME bd, NONE)
       end

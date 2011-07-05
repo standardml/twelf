@@ -294,6 +294,14 @@ a : type.
 %% if a partial view is used lateron, we get a real an unrecoverable error for now
 %% %sig QW''' = {%include QW'. %struct s = QW''.}. 
 
+%sig PQ = {
+   a : type.
+   c : a.
+   f : a -> a.
+   d : a = f.
+   e : a.
+}.
+
 %.
 %rel Rho' : m1' -> m2' = {
    %include Rho.

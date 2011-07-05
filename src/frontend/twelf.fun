@@ -260,7 +260,7 @@ struct
     fun abort chlev (msg) = (chmsg chlev (fn () => msg); ABORT)
     fun abortFileMsg chlev (fileName, msg) = abort chlev (fileName ^ ":" ^ msg ^ "\n")
     (* send error message without aborting -fr *)
-    fun recoveredError(fileName,r,msg) = chmsg 0 (fn () => fileName ^ ":" ^ Paths.wrap(r,msg) ^ "\n")
+    fun recoveredError(fileName,r,msg) = chmsg 0 (fn () => fileName ^ ":" ^ Paths.wrap(r,msg) ^ "\nrecovering\n")
     (* send warning message -fr *)
     fun warning(fileName,r,msg) = chmsg 1 (fn () => fileName ^ ":" ^ Paths.wrapWarning(r,msg) ^ "\n")
 
@@ -378,6 +378,12 @@ struct
 	  cid
 	end
    
+   (* moved printing from condecToConDec to here, July 2011 -fr *)
+   fun printConDec conDec =
+      if !Global.chatter >= 3
+      then Msg.message ((Timers.time Timers.printing Print.conDecToString) conDec ^ "\n")
+      else ()
+
    (* elaborates a signature expression, installs it, and returns the new signature id *)
 	fun signExpElab u =
 	  let fun toList(ModSyn.Sign s) = [s]
@@ -573,13 +579,18 @@ struct
     and install1 (fileName, (Parser.ConDec condec, r)) =
         (* Constant declarations c : V, c : V = U plus variations *)
         (let
-	   val (optConDec, ocOpt) = ReconConDec.condecToConDec (condec, Paths.Loc (fileName,r), false)
+	   val (optConDec, ocOpt) = (ReconConDec.condecToConDec (condec, Paths.Loc (fileName,r), false))
+	                            (* recover by omitting the definiens -fr July 2011 *)
+	                            handle ReconConDec.DefiniensError(msg, optConDec, ocOpt) => (
+	                              	recoveredError(fileName, r, msg);
+	                              	(optConDec, ocOpt)
+	                            )
 	   fun icd (SOME (conDec as IntSyn.BlockDec _)) = 
        let
         (* allocate new cid. *)
           val cid = installBlockDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
        in
-          ()
+          printConDec conDec
        end
       | icd (SOME (conDec)) =
         let
@@ -589,7 +600,7 @@ struct
 		 (* allocate new cid after checking modes! *)
           val cid = installConDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
        in
-          ()
+          printConDec conDec
        end
       | icd (NONE) = (* anonymous definition for type-checking *)
 	       ()
@@ -598,7 +609,6 @@ struct
 	 end
 	 handle Constraints.Error (eqns) =>
 	        raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
-
       | install1 (fileName, (Parser.AbbrevDec condec, r)) =
         (* Abbreviations %abbrev c = U and %abbrev c : V = U *)
         (let
@@ -611,12 +621,12 @@ struct
 		  (* allocate new cid after checking modes! *)
 		  val cid = installConDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
 	      in
-		()
+		printConDec conDec
 	      end
 	    | icd (NONE) = (* anonymous definition for type-checking *)
 	        ()
 	in
-	  icd optConDec
+           icd optConDec
 	end
         handle Constraints.Error (eqns) =>
 	       raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
@@ -631,7 +641,7 @@ struct
 	       let
 		 val cid = installConDec IntSyn.Clause (conDec, (fileName, ocOpt), r)
 	       in
-		 ()
+		 printConDec conDec
 	       end
 	     | icd NONE = (* anonymous definition for type-checking: ignore %clause *)
 	       ()
@@ -653,7 +663,6 @@ struct
 	     (* allocate new cid after checking modes! *)
 	     (* allocate cid after strictness has been checked! *)
 	     val cid = installConDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
-
 	   in
 	     ()
 	   end)
