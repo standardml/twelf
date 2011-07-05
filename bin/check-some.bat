@@ -12,6 +12,13 @@ if %1==-catalog (
   SET CATALOG=set chatter 5
 )
 
+if %1==-unsafe (
+   SET UNSAFE=set unsafe true
+   shift
+) else (
+   SET UNSAFE=set chatter 5
+)
+
 if %1==-omdoc (
   SET OMDOC=%2
   shift
@@ -41,6 +48,7 @@ SET COMMAND=Print.OMDoc.printDoc %1 %TARGET%.omdoc
 :twelf
 (
    echo set chatter 5
+   echo %UNSAFE%
    echo %CATALOG%
    echo loadFile %1
    if not "%COMMAND%"=="" echo %COMMAND%

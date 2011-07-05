@@ -16,6 +16,11 @@ if [ $1 = -catalog ]; then
 else
 fi
 
+if [ $1 = -unsafe ]; then 
+  CONFIG="$CONFIG set unsafe true\n"; shift
+else
+fi
+
 if [ $1 = -omdoc ]; then 
   TARGDIR="$2"; shift; shift
 else
