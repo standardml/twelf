@@ -22,10 +22,10 @@ sig
   include EXTCONDEC
 
   exception Error of string
-  (* DefiniensError(msg, cdOpt, occOpt) may be thrown by condecToConDec
-     - if a condec with definiens leads to an error with message msg, and
+  (* DefiniensError(msg, exn, cdOpt, occOpt) may be thrown by condecToConDec
+     - if a condec with definiens leads to an error exn with message msg, and
      - without the definiens, it succeeds returning (cdOpt, occOpt) -fr July 2011 *)
-  exception DefiniensError of string * IntSyn.ConDec option * Paths.occConDec option
+  exception DefiniensError of string * exn * IntSyn.ConDec option * Paths.occConDec option
 
   val condecToConDec : condec * Paths.location * bool -> IntSyn.ConDec option * Paths.occConDec option
                      (* optional ConDec is absent for anonymous definitions *)

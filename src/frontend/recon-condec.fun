@@ -31,7 +31,7 @@ struct
   structure ExtSyn = ReconTerm'
 
   exception Error of string
-  exception DefiniensError of string * IntSyn.ConDec option * Paths.occConDec option
+  exception DefiniensError of string * exn * IntSyn.ConDec option * Paths.occConDec option
 
   (* error (r, msg) raises a syntax error within region r with text msg *)
   fun error (r, msg) = raise Error (Paths.wrap (r, msg))
@@ -116,7 +116,7 @@ struct
          of (SOME n, SOME tp) => (
             let val (optConDec, ocOpt) = (condecToConDec (condec(SOME n, tp), Paths.Loc (fileName, r), false))
                                          handle _ => raise e
-            in raise DefiniensError(msg, optConDec, ocOpt)
+            in raise DefiniensError(msg, e, optConDec, ocOpt)
             end
          ) | _ => raise e
       )

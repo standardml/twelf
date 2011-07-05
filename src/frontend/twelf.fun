@@ -260,7 +260,10 @@ struct
     fun abort chlev (msg) = (chmsg chlev (fn () => msg); ABORT)
     fun abortFileMsg chlev (fileName, msg) = abort chlev (fileName ^ ":" ^ msg ^ "\n")
     (* send error message without aborting -fr *)
-    fun recoveredError(fileName,r,msg) = chmsg 0 (fn () => fileName ^ ":" ^ Paths.wrap(r,msg) ^ "\nrecovering\n")
+    fun recoverableError(fileName,r,msg, exn) =
+       if ! Global.unsafe
+       then chmsg 0 (fn () => fileName ^ ":" ^ Paths.wrap(r,msg) ^ "\nrecovering\n")
+       else raise exn
     (* send warning message -fr *)
     fun warning(fileName,r,msg) = chmsg 1 (fn () => fileName ^ ":" ^ Paths.wrapWarning(r,msg) ^ "\n")
 
@@ -496,7 +499,7 @@ struct
     (* like Names.MissingModule, used to load a module on demand
        may be raised only by a case of install1 that has not changed the global state yet *)
     exception GetModule of URI.uri * string * string
-    (* install goes through a stream and calls install1 on every declarations *)
+    (* install goes through a stream and calls install1 on every declaration *)
     fun install(fileName, stream) = 
       let fun inst s' = inst' ((Timers.time Timers.parsing S.expose) s')
           and inst'(S.Empty) = OK
@@ -581,8 +584,8 @@ struct
         (let
 	   val (optConDec, ocOpt) = (ReconConDec.condecToConDec (condec, Paths.Loc (fileName,r), false))
 	                            (* recover by omitting the definiens -fr July 2011 *)
-	                            handle ReconConDec.DefiniensError(msg, optConDec, ocOpt) => (
-	                              	recoveredError(fileName, r, msg);
+	                            handle ReconConDec.DefiniensError(msg, exn, optConDec, ocOpt) => (
+	                              	recoverableError(fileName, r, msg, exn);
 	                              	(optConDec, ocOpt)
 	                            )
 	   fun icd (SOME (conDec as IntSyn.BlockDec _)) = 
@@ -1280,7 +1283,7 @@ struct
              val m = ModSyn.currentMod()
              val _ = Elab.checkModEnd m
                      handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
-                          | Elab.MissingCase(m,c, msg) => recoveredError(fileName,r,msg)
+                          | Elab.MissingCase(m,c, msg) => recoverableError(fileName,r,msg, Elab.Error msg)
              val _ = ModSyn.modFoldName m
              val (fN,rb) = Origins.mOriginLookup m  (* fN = fileName *)
           in
