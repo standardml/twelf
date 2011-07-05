@@ -28,7 +28,7 @@ struct
   *)
   exception Unprintable
   exception MissingModule of URI.uri * string * string
-  
+  exception NameAmbiguous of string  
   (*******************************************************)
   (* General data structures for Fixities and Operator Precedence *)
   structure Fixity :> FIXITY =
@@ -274,7 +274,7 @@ struct
        	  case res
             of nil => NONE
        	     | hd :: tl => if List.exists (fn x => not(x = hd)) tl
-       	                   then raise Error("identifier included from multiple signatures: " ^ IDs.foldQName names)
+       	                   then raise NameAmbiguous("identifier included from multiple signatures: " ^ IDs.foldQName names)
        	                   else SOME hd
        end
     
@@ -291,7 +291,7 @@ struct
                 of NONE => raise Error("name " ^ IDs.foldQName symname ^ " not declared in module " ^ IDs.foldQName modname)
        	         | SOME c => if isSome (M.symVisible(c,m))
        	                     then SOME c
-       	                     else raise Error("name " ^ IDs.foldQName symname ^ " exists in module " ^ IDs.foldQName modname ^
+       	                     else raise NameAmbiguous("name " ^ IDs.foldQName symname ^ " exists in module " ^ IDs.foldQName modname ^
        	                                      " but is not visible from " ^ M.modFoldName m)
            end
          | SOME c => nameLookup2(m, modname @ [hd], c, tl)
@@ -341,7 +341,7 @@ struct
       | concToString CON = "constant"
       | concToString STRUC = "structure"
 
-    fun nameLookup expected (m: mid, names: string list) : cid option =
+    fun nameLookupMain expected (m: mid, names: string list) : cid option =
       case nameLookupS(m, names)
         of SOME c =>
            let val found = case M.symLookup c
@@ -359,10 +359,19 @@ struct
      	   end
      	| NONE => NONE
 
-    fun nameLookup'(names) = (nameLookup AnyConcept (M.currentTargetSig(), names))
+    (* the lookup functions that are visible to the outside *)
+    
+    fun nameLookup expected (m, names) =
+       (nameLookupMain expected (m, names))
+       handle NameAmbiguous(msg) => raise Error(msg)
+
+    fun nameLookup'(names) = (nameLookupMain AnyConcept (M.currentTargetSig(), names))
                              handle MissingModule(_,_,msg) => raise Error(msg)
-    fun nameLookupC(names) = (nameLookup [CON] (M.currentTargetSig(), names))
-                             handle Error _ => NONE | MissingModule _ => NONE
+                                  | NameAmbiguous(msg) => raise Error(msg)
+    fun nameLookupC(names) = (nameLookupMain [CON] (M.currentTargetSig(), names))
+                             handle Error _ => NONE
+                                  | NameAmbiguous(msg) => raise Error(msg)
+                                  | MissingModule _ => NONE
 
     fun isShadowed(c : cid) : bool = case CH.lookup shadowTable c of NONE => false | _ => true
     
