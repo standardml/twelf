@@ -51,6 +51,7 @@ struct
 
   (* wrap (r, msg) = msg' which contains region *)
   fun wrap (r, msg) = (toString r ^ " Error: \n" ^ msg)
+  fun wrapWarning (r, msg) = (toString r ^ " Warning: \n" ^ msg)
 
   (* wrapLoc ((loc, r), msg) = msg' which contains region and filename
      This should be used for locations retrieved from origins, where

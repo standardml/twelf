@@ -32,8 +32,9 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   fun printExp(U : I.Exp) : string = Print.expToString(I.Null, U)
   
   exception Error of string                       (* raised on type-checking errors *)
-  exception MissingCase of IDs.mid * IDs.cid      (* raised if partially defined module cannot be applied *)
-  exception UnimplementedCase                                 (* raised for unimplemented cases *)
+  exception MissingCase of IDs.mid * IDs.cid * string (* raised if apartially defined modules cannot be applied *)
+  fun missingCase(m,c) = MissingCase(m,c, "missing case for " ^ M.symFoldName c ^ " in " ^ M.modFoldName m)
+  exception UnimplementedCase                     (* raised for unimplemented cases *)
 
   (* auxiliary function that raises exceptions *)
   fun typingError(U, V, msg) =
@@ -260,8 +261,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      let val M.SymConInst (M.ConInst(_, _, exp)) = M.symLookup(v, IDs.lidOf c)
                      in exp
                      end
-                     handle Bind => raise MissingCase(v,c)
-                          | M.UndefinedCid _ => raise MissingCase(v,c)
+                     handle Bind => raise missingCase(v,c)
+                          | M.UndefinedCid _ => raise missingCase(v,c)
                    )
                  (* view applied to included symbol: apply restricted morphism *)
                  | (M.MorView v, M.Included _) => applyMorph(cidToExp c, restrictMorph(M.MorView v, m))
@@ -506,7 +507,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      let val M.SymConCase (M.ConCase(_, _, exp)) = M.symLookup(r, IDs.lidOf c)
                      in exp
                      end
-                     handle Bind => raise MissingCase(r,c) | UndefinedCid => raise MissingCase(r,c)
+                     handle Bind => raise missingCase(r,c)
+                          | UndefinedCid => raise missingCase(r,c)
                    )
                  | (M.RelComp(mor, r), M.Self) => applyRel(applyMorph(cidToExp c, mor), NONE, r)
                  (* relation applied to non-local symbol *)
@@ -748,7 +750,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
           (* what about block and skodec? *)
           fun checkDefined(c' : IDs.cid) = case M.symLookup c'
               of M.SymCon (I.ConDec _) => ((M.symLookup(m, IDs.lidOf c') ; ())
-                 handle M.UndefinedCid _ => raise Error("view not total: missing instatiation for " ^ M.symFoldName c'))
+                 handle M.UndefinedCid _ => raise MissingCase(m, c', "view not total: missing case for " ^ M.symFoldName c'))
                | _ => ()
         in
           M.sgnApp(dom, checkDefined)
@@ -758,7 +760,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
           (* check totality of relation: every undefined constant id of dom must have an instantiation in m *)
           fun checkDefined(c' : IDs.cid) = case M.symLookup c'
               of M.SymCon (I.ConDec _) => ((M.symLookup(m, IDs.lidOf c') ; ())
-                 handle M.UndefinedCid _ => raise Error("logical relation not total: missing case for " ^ M.symFoldName c'))
+                 handle M.UndefinedCid _ => raise MissingCase(m, c', "view not total: missing case for " ^ M.symFoldName c'))
                | _ => ()
         in
           M.sgnApp(dom, checkDefined)

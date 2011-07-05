@@ -17,6 +17,7 @@ sig
   val join : region * region -> region	(* join(r1,r2) = smallest region enclosing r1 and r2 *)
   val toString : region -> string	(* line1.col1-line2.col2, parsable by Emacs *)
   val wrap : region * string -> string  (* add region to error message, parsable by Emacs *)
+  val wrapWarning : region * string -> string  (* add region to warning message, parsable by Emacs *)
   val wrapLoc : location * string -> string  (* add location to error message, also parsable *)
   val wrapLoc' : location * linesInfo option * string -> string
 					(* add location to error message in line.col format *)

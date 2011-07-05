@@ -150,7 +150,7 @@ struct
              	  else (
              	     SOME (Elab.applyMorph(M.constType Con,
              	                             M.MorView(M.currentMod())))     (* instantiation in a view *)
-             	       handle Elab.MissingCase(m,c) =>
+             	       handle Elab.MissingCase(m,c,_) =>
              	          error(rr, "instantiation for " ^ M.symFoldName Con ^
              	          " must occur after (possibly induced) instantiation for " ^ M.symFoldName c)
              	  )
@@ -216,7 +216,7 @@ struct
                               "case for defined constant " ^ M.symFoldName Con ^ " not allowed");
              	(* expected type to guide the term reconstruction *)
              	val expType = Elab.expType(Con, M.Rel(M.currentMod()))
-             	              handle Elab.MissingCase(m,c) => error(rr, "case for " ^ M.symFoldName Con ^
+             	              handle Elab.MissingCase(m,c,_) => error(rr, "case for " ^ M.symFoldName Con ^
              	                 " must occur after (possibly induced) case for " ^ M.symFoldName c)
 		val ExtSyn.JTerm((U, _), _, _) = ExtSyn.recon (ExtSyn.jof'(term, expType))
                 val _ = ExtSyn.checkErrors(rr)

@@ -282,7 +282,19 @@ a : type.
    %struct ls := m2.
    q := u.
    c := *.
-}.%.
+}.
+
+%* testing warnings and error recovery *%
+
+%* two preserved in a row - warning *%
+%sig QW =  {a:type.}.
+%sig QW' = {a:type.}.
+%% a partial view
+%view QW'' : QW -> QW' = {}.
+%% if a partial view is used lateron, we get a real an unrecoverable error for now
+%% %sig QW''' = {%include QW'. %struct s = QW''.}. 
+
+%.
 %rel Rho' : m1' -> m2' = {
    %include Rho.
    %struct ls := Rho.  %% This would type-check if equality of morphisms were implemented better

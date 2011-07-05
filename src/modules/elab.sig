@@ -1,7 +1,11 @@
 signature ELAB =
 sig
   exception Error of string
-  exception MissingCase of IDs.mid * IDs.cid    (* raised if partially defined modules cannot be applied *)
+  (* raised if a partially defined view/relation cannot be applied
+      within the module: an expected type for a case cannot be computed because it depends on a missing case
+      at the end of a module: the module is not total
+      when the view is used: a previous MissingCase was recovered from by accepting a partial module *)
+  exception MissingCase of IDs.mid * IDs.cid * string
 
   (* type checking modular data types *)
   (* checks a ModDec *)

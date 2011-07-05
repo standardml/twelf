@@ -256,8 +256,13 @@ struct
     (* status ::= OK | ABORT  is the return status of various operations *)
     datatype Status = OK | ABORT
 
+    (* send message about unrecoverable error *)
     fun abort chlev (msg) = (chmsg chlev (fn () => msg); ABORT)
     fun abortFileMsg chlev (fileName, msg) = abort chlev (fileName ^ ":" ^ msg ^ "\n")
+    (* send error message without aborting -fr *)
+    fun recoveredError(fileName,r,msg) = chmsg 0 (fn () => fileName ^ ":" ^ Paths.wrap(r,msg) ^ "\n")
+    (* send warning message -fr *)
+    fun warning(fileName,r,msg) = chmsg 1 (fn () => fileName ^ ":" ^ Paths.wrapWarning(r,msg) ^ "\n")
 
     fun abortIO (fileName, {cause = OS.SysErr (m, _), function = f, name = n}) =
 	(msg ("IO Error on file " ^ fileName ^ ":\n" ^ m ^ "\n");
@@ -1266,6 +1271,7 @@ struct
              val m = ModSyn.currentMod()
              val _ = Elab.checkModEnd m
                      handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+                          | Elab.MissingCase(m,c, msg) => recoveredError(fileName,r,msg)
              val (fN,rb) = Origins.mOriginLookup m  (* fN = fileName *)
           in
              ModSyn.modClose()
@@ -1321,6 +1327,10 @@ struct
             (* flatten the structure, i.e., generate all induced declarations, full type-checking of structure declaration done in this function *)
             val _ = Elab.flattenDec(c, callbackInstallConDec, callbackInstallStrDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+                         | Elab.MissingCase(m,c,msg) => 
+	                     raise Elab.Error(Paths.wrap(r, msg ^ " (this is thrown when a partially defined view is used lateron)"))
+                    (* this exception occurs if we recovered from a partial module error and the module is used now *)
+                    
             val _ = case NewStrDec
 	       of ModSyn.StrDec(_,_,dom,_, ModSyn.OpenDec opens, _) => installOpen(dom, opens, c, r)
 	        | ModSyn.StrDef _ => ()
@@ -1336,6 +1346,7 @@ struct
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
                                | Names.MissingModule(ns,m,s) => raise GetModule(ns,m,s)
+                               
                val NewInst = Elab.checkSymInst(Inst)
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val c = ModSyn.instAddC(NewInst)
@@ -1359,6 +1370,9 @@ struct
 	                 in
 	                    Elab.flattenInst(c, callbackInstallInst)
 	                    handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+	                           (* this exception occurs if we recovered from a partial module error and the module is used now *)
+	                         | Elab.MissingCase(m,c,msg) => 
+	                           raise Elab.Error(Paths.wrap(r, msg ^ " (this is thrown when a partially defined view is used lateron)"))
 	                 end
 	            | ModSyn.InclInst _ => ()
            in
@@ -1398,6 +1412,9 @@ struct
 	                 in
 	                    Elab.flattenCase(c, callbackInstallCas)
 	                    handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+	                           (* this exception occurs if we recovered from a partial module error and the module is used now *)
+	                         | Elab.MissingCase(m,c,msg) =>
+	                           raise Elab.Error(Paths.wrap(r, msg ^ " (this is thrown when a partially defined relation is used lateron)"))
 	                 end
 	            | ModSyn.InclCase _ => ()
            in
@@ -1425,7 +1442,7 @@ struct
          val reg = Paths.toString r
          in
            (Comments.push (com,reg))
-           handle Comments.Error(msg) => raise Comments.Error(Paths.wrap(r', msg))
+           handle Comments.Error(msg) => warning (fileName,r', "comment ignored - " ^ msg)
          end
 
       | install1 (fileName, declr as (Parser.Namespace nsdec, r)) =
