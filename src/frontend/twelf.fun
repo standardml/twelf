@@ -359,7 +359,7 @@ struct
 	  val _ = installConst fromCS (cid, fileNameocOpt)
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
 	  val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
-	  val _ = Comments.install cid
+	  val _ = Comments.install (fileName,cid)
 	  val _ =  if !Global.style >= 1 then StyleCheck.checkConDec cid else ()
 	in 
 	  cid
@@ -1262,7 +1262,7 @@ struct
                  | doNames(nil,nil,c,nil) = ()
                val _ = doNames(rev ancmids, ModSyn.modDecName dec, c, rev origins)
                val _ = Origins.installMOrigin(ModSyn.cidToMid c, (fileName,r))
-               val _ = Comments.install c
+               val _ = Comments.install (fileName, c)
            in
              chmsg 3 (fn () => Print.modBeginToString(dec) ^ "\n")
            end
@@ -1334,7 +1334,7 @@ struct
             val _ = case NewStrDec
 	       of ModSyn.StrDec(_,_,dom,_, ModSyn.OpenDec opens, _) => installOpen(dom, opens, c, r)
 	        | ModSyn.StrDef _ => ()
-	         val _ = Comments.install c
+	         val _ = Comments.install(fileName, c)
          in
             ()
          end
@@ -1351,7 +1351,7 @@ struct
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val c = ModSyn.instAddC(NewInst)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
-	            val _ = Comments.install c
+	            val _ = Comments.install(fileName, c)
                val _ = chmsg 3 (fn () => Print.instToString(NewInst) ^ "\n")
 	       val _ = case NewInst
 	           of ModSyn.ConInst _ => ()
@@ -1391,7 +1391,7 @@ struct
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val c = ModSyn.caseAddC(NewCas)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
-	            val _ = Comments.install c
+	            val _ = Comments.install(fileName, c)
                val _ = chmsg 3 (fn () => Print.caseToString(NewCas) ^ "\n")
 	       val _ = case NewCas
 	           of ModSyn.ConCase _ => ()
@@ -1433,7 +1433,7 @@ struct
             val _ = (case opendec of ModSyn.OpenDec(opens) => installOpen(from, opens, c, r);
 		               Subordinate.installInclude from (* no exception should be possible *)
 		      )
-		      	val _ = Comments.install c
+		      	val _ = Comments.install(fileName, c)
          in
             chmsg 3 (fn () => Print.sigInclToString(Incl) ^ "\n")
          end
@@ -1441,7 +1441,7 @@ struct
       | install1 (fileName, (Parser.PComment(com, r), r')) = let
          val reg = Paths.toString r
          in
-           (Comments.push (com,reg))
+           (Comments.push (com,fileName,reg))
            handle Comments.Error(msg) => warning (fileName,r', "comment ignored - " ^ msg)
          end
 

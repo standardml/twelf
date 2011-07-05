@@ -296,7 +296,7 @@ struct
   (* Printing non-modular symbol level declarations *)
   
   fun metaDataToString(NONE) = ""
-    | metaDataToString(SOME (c,r)) = ElemOpen("metadata",nil) ^ nl_ind() ^
+    | metaDataToString(SOME (c,_,r)) = ElemOpen("metadata",nil) ^ nl_ind() ^
         (* ElemOpen("metadatum", [Attr("key", "origin")]) ^ r ^ ElemClose("metadatum") ^ nl() ^ *)
         ElemOpen("metadatum", [Attr("key","comment")]) ^ (escape c) ^ ElemClose("metadatum") ^ nl_unind() ^
         ElemClose("metadata") ^ nl()
