@@ -37,6 +37,7 @@ done
 warnings and recoverable errors
 - problems with preserved comments cause warning
 - partial views/relations cause recoverable errors (unrecoverable error, if they are applied at the undefined argument)
+- recover from error in definition by trying to omit the definiens
 morphisms out of signatures with ancestors are legal if the ancestors are included into the codomain already
 structure-includes
  - structures of signatures with includes do not have to include morphisms
