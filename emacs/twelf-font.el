@@ -71,25 +71,25 @@
 ;; currently we not using bold or italics---some font families
 ;; work poorly with that kind of face.
 (cond (twelf-font-dark-background
-       (twelf-font-create-face 'twelf-font-keyword-face 'default nil)
-       (twelf-font-create-face 'twelf-font-const-face 'default nil)
+       (twelf-font-create-face 'twelf-font-keyword-face 'font-lock-comment-face nil)
+       (twelf-font-create-face 'twelf-font-const-face 'font-lock-comment-face nil)
        (twelf-font-create-face 'twelf-font-comment-face 'font-lock-comment-face
 			     nil)
-       (twelf-font-create-face 'twelf-font-percent-key-face 'default "Plum")
-       (twelf-font-create-face 'twelf-font-decl-face 'default "Orange")
-       (twelf-font-create-face 'twelf-font-parm-face 'default "Orange")
-       (twelf-font-create-face 'twelf-font-fvar-face 'default "SpringGreen")
-       (twelf-font-create-face 'twelf-font-evar-face 'default "Aquamarine"))
+       (twelf-font-create-face 'twelf-font-percent-key-face 'font-lock-comment-face "Plum")
+       (twelf-font-create-face 'twelf-font-decl-face 'font-lock-comment-face "Orange")
+       (twelf-font-create-face 'twelf-font-parm-face 'font-lock-comment-face "Orange")
+       (twelf-font-create-face 'twelf-font-fvar-face 'font-lock-comment-face "SpringGreen")
+       (twelf-font-create-face 'twelf-font-evar-face 'font-lock-comment-face "Aquamarine"))
       (t 
-       (twelf-font-create-face 'twelf-font-keyword-face 'default nil)
-       (twelf-font-create-face 'twelf-font-const-face 'default nil)
+       (twelf-font-create-face 'twelf-font-keyword-face 'font-lock-comment-face nil)
+       (twelf-font-create-face 'twelf-font-const-face 'font-lock-comment-face nil)
        (twelf-font-create-face 'twelf-font-comment-face 'font-lock-comment-face
 			     nil)
-       (twelf-font-create-face 'twelf-font-percent-key-face 'default "MediumPurple")
-       (twelf-font-create-face 'twelf-font-decl-face 'default "FireBrick")
-       (twelf-font-create-face 'twelf-font-parm-face 'default "Green4")
-       (twelf-font-create-face 'twelf-font-fvar-face 'default "Blue1")
-       (twelf-font-create-face 'twelf-font-evar-face 'default "Blue4")))
+       (twelf-font-create-face 'twelf-font-percent-key-face 'font-lock-comment-face "MediumPurple")
+       (twelf-font-create-face 'twelf-font-decl-face 'font-lock-comment-face "FireBrick")
+       (twelf-font-create-face 'twelf-font-parm-face 'font-lock-comment-face "Green4")
+       (twelf-font-create-face 'twelf-font-fvar-face 'font-lock-comment-face "Blue1")
+       (twelf-font-create-face 'twelf-font-evar-face 'font-lock-comment-face "Blue4")))
 
 ;; Note that the order matters!
 
