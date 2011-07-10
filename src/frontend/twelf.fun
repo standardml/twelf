@@ -262,17 +262,16 @@ struct
     (* send error message without aborting -fr *)
     fun recoverableError(fileName,r,msg, exn) =
        if ! Global.unsafe
-       then chmsg 0 (fn () => fileName ^ ":" ^ Paths.wrap(r,msg) ^ "\nrecovering\n")
+       then chmsg 0 (fn () => fileName ^ ":" ^ Paths.wrap(r,msg) ^ "\n%% IGNORE %%\n")
        else raise exn
     (* send warning message -fr *)
-    fun warning(fileName,r,msg) = chmsg 1 (fn () => fileName ^ ":" ^ Paths.wrapWarning(r,msg) ^ "\n")
+    fun warning(fileName,r,msg) = chmsg 1 (fn () => fileName ^ ":" ^ Paths.wrapWarning(r,msg) ^ "\n%% IGNORE %%\n")
 
     fun abortIO (fileName, {cause = OS.SysErr (m, _), function = f, name = n}) =
-	(msg ("IO Error on file " ^ fileName ^ ":\n" ^ m ^ "\n");
+	(msg (fileName ^ ":0.0-0.0 Error: \n" ^ m ^ "\n");
 	 ABORT)
       | abortIO (fileName, {function = f, ...}) =
-	(msg ("IO Error on file " ^ fileName ^ " from function "
-		       ^ f ^ "\n");
+	(msg (fileName ^ ":0.0-0.0 Error: \nIO Error from function " ^ f ^ "\n");
 	 ABORT)
 
     (* should move to paths, or into the prover module... but not here! -cs *)
@@ -503,16 +502,17 @@ struct
        handle GetModule(ns,modname,err) =>
        case List.find (fn x => x = (ns,modname)) missing
          (* check for cycle *)
-         of SOME (n,m) => raise Names.Error("missing module " ^ m ^ " in namespace " ^ URI.uriToString n ^
-                       " cannot be found (dependency cycle or faulty catalog entry)")
+         of SOME (n,m) => raise Names.Error(Paths.wrap(r,"missing module " ^ m ^ " in namespace " ^ URI.uriToString n ^
+                       " cannot be found (dependency cycle or faulty catalog entry)"))
           | _ => let
+          fun error(msg) = raise Names.Error(Paths.wrap(r, msg))
           val moduleText = "missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns
           (* no cycle *)
           val _ = chmsg 3 (fn () => "%% loading " ^ moduleText ^ "\n")
-          val url = Catalog.resolve (ns, modname) handle Catalog.Error(msg) => raise Names.Error("not found: " ^ moduleText ^ "\ncatalog returned: " ^ msg ^ "\n")
+          val url = Catalog.resolve (ns, modname) handle Catalog.Error(msg) => error("not found: " ^ moduleText ^ "\ncatalog returned: " ^ msg ^ "\n")
           (* assume the URI resolves to a file:/ URL *)
-          val file = URI.toFilePath url
-          val _ = case Origins.linesInfoLookup file of NONE => () | _ => raise Names.Error("cyclic dependency: catalog returned URL " ^ file ^ ", but file is already open")
+          val file = (URI.toFilePath url) handle _ => error("catalog returned unknown URL " ^ URI.uriToString url)
+          val _ = case Origins.linesInfoLookup file of NONE => () | _ => error("cyclic dependency: catalog returned " ^ file ^ ", which is already open")
           val _ = chmsg 3 (fn () => "%% loading from " ^ file ^ "\n")
           (* the currently open signatures, i.e., M1, M1.M2, ..., M1.....Mn depend
              on the missing module, so their name entries are removed temporarily and saved *)
@@ -532,11 +532,11 @@ struct
              - the cid of M1 is increased accordingly so that the cids are still in logical order
           *)
           val stat = loadFile file
-          val _ = if stat = ABORT
-                  then raise ModSyn.Error("Error in dynamically loaded " ^ moduleText) else ()
           (* restore previous file name and line info *)
           val _ = ReconTerm.resetErrors fileName
           val _ = Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
+          val _ = if stat = ABORT
+                  then raise ModSyn.Error(Paths.wrap(r,"Error in dynamically loaded " ^ moduleText)) else ()
           (* restore the context of ModSyn and Names, the former returns the new cid of M1 *)
           val cnew = ModSyn.popContext()
           val _ = Names.popContext()
@@ -549,8 +549,7 @@ struct
                 restoreEntries tl
               )
           val _ = (restoreEntries entries)
-                  handle Names.Error(msg) => raise Names.Error(Paths.wrap(r,
-                   "dynamically loaded modules were installed correctly, but one of them overwrote the name of a currently open module: " ^ msg))
+                  handle Names.Error(msg) => error("dynamically loaded modules were installed correctly, but one of them overwrote the name of a currently open module: " ^ msg)
           val _ = chmsg 3 (fn () => "%% loaded " ^ moduleText ^ "; retrying\n")
        in
           (* finally retry *)
@@ -1472,7 +1471,7 @@ struct
                       Origins.installLinesInfo (fileName, Paths.getLinesInfo ());
                       Comments.installDoc fileName;
                       if loadFile file = ABORT
-                      then raise ModSyn.Error("Error in included file " ^ file)
+                      then raise ModSyn.Error(Paths.wrap(r, "Error in included file " ^ file))
                       else ReconTerm.resetErrors fileName; (* restore previous file name *)
                            Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
                    ) | SOME _ =>
