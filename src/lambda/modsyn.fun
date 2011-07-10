@@ -16,8 +16,8 @@ struct
   exception UndefinedCid of IDs.cid
   exception UndefinedMid of IDs.mid
 
-  datatype Sign = Sign of IDs.mid | SignUnion of Sign * Sign
-  datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorId of IDs.mid | MorComp of Morph * Morph
+  datatype Sign = Sign of IDs.mid | SignUnion of Sign * Sign | SignAlong of IDs.mid * Morph
+       and  Morph = MorStr of IDs.cid | MorView of IDs.mid | MorId of IDs.mid | MorComp of Morph * Morph
   datatype Rel = Rel of IDs.mid | RelComp of Morph * Rel
   datatype SymInst = ConInst of IDs.cid * (IDs.cid option) * I.Exp | StrInst of IDs.cid * (IDs.cid option) * Morph
                    | InclInst of IDs.cid * (IDs.cid option) * IDs.mid * Morph
@@ -27,7 +27,7 @@ struct
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list) * OpenDec * bool
                   | StrDef of string list * IDs.qid * IDs.mid * Morph * bool
   datatype SigIncl = SigIncl of IDs.mid * bool * OpenDec * bool
-  datatype ModDec = SigDec of URI.uri * string list * (IDs.mid list option)
+  datatype ModDec = SigDec of URI.uri * string list * (Sign option)
                   | ViewDec of URI.uri * string list * IDs.mid * IDs.mid * (Sign option) * bool
                   | RelDec of URI.uri * string list * IDs.mid * IDs.mid * (Morph list)
 
@@ -200,8 +200,11 @@ struct
         (fn ObjSig(d, Ancestor _) => false | ObjSig(d, _) => d = dom)
         (modInclLookup cod)
       ) orelse case modDecOrg (modLookup dom)
-                  of SOME sigs => List.all (fn s => sigIncluded(s, cod)) sigs (* elaborated signature unions are included into cod iff all their components are *) 
+                  of SOME sigExp => sigIncludedExp(sigExp, cod) 
                    | NONE => false
+  and sigIncludedExp(Sign m, cod) = sigIncluded(m,cod)
+    | sigIncludedExp(SignUnion(u,v),cod) = sigIncludedExp(u, cod) andalso sigIncludedExp(v, cod) (* elaborated signature unions are included into cod iff their components are *)
+
   fun sigRel(dom,m) =
     case List.find (fn ObjSig(d, _) => dom = d | _ => false) (modInclLookup m) (* if m is a view/relation, the result can only be Ancestor _ *)
       of NONE => NONE

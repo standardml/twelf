@@ -60,12 +60,8 @@ sig
   val symcaseToSymCase : IDs.mid * IDs.mid * symcase * Paths.location -> ModSyn.SymCase
   (* reconstructs a structure declaration *)
   val strdecToStrDec : strdec * Paths.location -> ModSyn.StrDec
-  type ModExpElab = (ModSyn.Sign -> IDs.mid) * (ModSyn.Morph -> IDs.mid)
   (* reconstructs the begin of a module declaration *)
-  val modbeginToModDec : modbegin * Paths.location * ModExpElab -> ModSyn.ModDec
-  (* raised by modbeginToModDec if the codomain of a view is a SignUnion that has to be materialized first
-     returns a continuation that yields the desired ModDec *)
-  exception ElaborateSignUnion of ModSyn.Sign * (IDs.mid -> ModSyn.ModDec)
+  val modbeginToModDec : modbegin * Paths.location -> ModSyn.ModDec
   (* reconstructs a signature inclusion *)
   val siginclToSigIncl : sigincl * Paths.location -> ModSyn.SigIncl
   (* reconstructs a read declaration *)

@@ -32,7 +32,7 @@ struct
      Among the printable non-whitespace ascii characters, the following are not URI pchars (RFC 3986): "#%&/<>?[\]^`{|}
      We have to escape "&<> for XML and ?/% for OMDoc. The others must only be encoded when transferring URIs.
      These are actually possible in Twelf names: "#&/<>?\^`| *)
-  fun escape s = let 
+  fun escape s = let                                                                                     
 	  fun escapelist nil = nil
 	    | escapelist (#"&" :: rest) = String.explode "&amp;" @ (escapelist rest)
 	    | escapelist (#"<" :: rest) = String.explode "&lt;" @ (escapelist rest) 
@@ -386,7 +386,7 @@ struct
     
   fun conDecToString (cid, params, md) = fmtConDec (ModSyn.sgnLookup cid, params, md) ^ nl() ^ fmtPresentation(cid)
 
-  fun sigInclToString(ModSyn.SigIncl(m, isMeta, opendec, generated), params, md) =
+  fun sigInclToString(ModSyn.SigIncl(m, _, opendec, _), params, md) =
      let val from = relModName(m, params)
      in ElemEmpty("include", [Attr("from", from)]) ^ (openToString (opendec, NONE, params)) ^ nl()
      end
@@ -492,7 +492,7 @@ struct
               | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
                                  then print (strDecToString(strdec, params, md) ^ nl())
                                  else ()
-              | ModSyn.SymIncl sigincl => (case sigincl of ModSyn.SigIncl(_,false,_,true) => print (sigInclToString(sigincl, params, md) ^ nl())
+              | ModSyn.SymIncl sigincl => (case sigincl of ModSyn.SigIncl(_,false,_,false) => print (sigInclToString(sigincl, params, md) ^ nl())
                                                          | _ => ()
                 )
               | ModSyn.SymConInst inst => (case ModSyn.symInstOrg inst

@@ -49,4 +49,6 @@ sig
   val flattenDec    : IDs.cid * (IDs.cid * IntSyn.ConDec -> IDs.cid) * (IDs.cid * ModSyn.StrDec -> IDs.cid) -> unit
   val flattenInst   : IDs.cid * (ModSyn.SymInst -> IDs.cid) -> unit
   val flattenCase   : IDs.cid * (ModSyn.SymCase -> IDs.cid) -> unit
+  
+  val signExpElab   : ModSyn.Sign -> IDs.mid
 end

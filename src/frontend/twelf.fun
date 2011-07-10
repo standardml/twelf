@@ -387,27 +387,6 @@ struct
       then Msg.message ((Timers.time Timers.printing Print.conDecToString) conDec ^ "\n")
       else ()
 
-   (* elaborates a signature expression, installs it, and returns the new signature id *)
-	fun signExpElab u =
-	  let fun toList(ModSyn.Sign s) = [s]
-	         | toList(ModSyn.SignUnion(u,v)) = toList(u) @ toList(v)
-	      val sigs = toList u
-	      val uri = URI.parseURI("http://cds.omdoc.org/mmt")
-	      val name = ["[" ^ Print.signToString u ^ "]"]
-	      fun addIncl(from) = ModSyn.inclAddC(ModSyn.SigIncl(from, false, ModSyn.OpenDec nil, true))
-	      val c = ModSyn.modOpen(ModSyn.SigDec(uri, name, SOME sigs))
-	      val _ = List.map addIncl sigs
-	      val _ = ModSyn.modClose()
-	  in 
-	     ModSyn.cidToMid c
-	  end
-	
-   (* elaborates a morphism expression, installs it, and returns the new view id *)	
-	fun morExpElab(m) = raise ReconModule.Error("implementation error: cannot elaborate morphism expression " ^ (Print.morphToString m))
-	
-	(* pairs the two elaboration functions, passed as a callback to reconstruction methods that may encouter module expressions *)
-	val modExpElab = (signExpElab, morExpElab)
-	  
    fun installStrDec(strDec, r) =                                                                       
        let
           val c : IDs.cid = ModSyn.structAddC(strDec)
@@ -1247,7 +1226,7 @@ struct
       (* cases for the module system *)
       | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) =
            let
-               val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r), modExpElab)
+               val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r))
                          handle Names.MissingModule(ns,m,s) => raise GetModule(ns,m,s)
                val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))

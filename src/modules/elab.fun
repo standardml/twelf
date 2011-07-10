@@ -770,7 +770,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   fun checkModBegin(_) = ()
 
 
- (********************** Flattening/elaboration **********************)
+ (********************** Flattening/elaboration of structures **********************)
 
   (* auxiliary function of getInst, its first argument is a list of instantiations *)
   fun getInst'(nil, c, q) = NONE
@@ -1036,4 +1036,35 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      in
         M.sgnApp(dom, flatten1)
      end
+     
+(********************** Flattening/elaboration of signature expressions **********************)
+
+   val signList : (M.Sign * IDs.mid) list ref = ref nil
+   
+   (* elaborates a signature expression, installs it, and returns the new signature id *)
+   fun signExpElab sign = case List.find (fn (x,_) => x = sign) (! signList)
+     of SOME (_, m) => m
+      | NONE =>
+         let val m = signExpElab' sign
+             val _ = signList := (sign,m) :: (! signList)
+         in m
+         end
+
+   and signExpElab'(M.Sign m) = m
+     | signExpElab'(s as M.SignUnion(u,v)) =
+        let
+            val uId = signExpElab' u
+            val vId = signExpElab' v
+            val name = ["[" ^ Print.signToString s ^ "]"]
+            fun addIncl(from) = M.inclAddC(ModSyn.SigIncl(from, false, ModSyn.OpenDec nil, true))
+            val c = ModSyn.modOpen(ModSyn.SigDec(IDs.mmtbase, name, SOME s))
+            val _ = addIncl uId
+            val _ = addIncl vId
+            val _ = ModSyn.modClose()
+        in 
+           ModSyn.cidToMid c
+        end
+     | signExpElab'(M.SignAlong(m,mor)) = raise Error("unimplemented")
+     
+
 end

@@ -81,6 +81,8 @@ structure IDs = struct
    fun foldFQName(m, l) = foldQName m ^ Sep ^ foldQName l
 
    type Qid = string list
+   
+   val mmtbase = URI.parseURI("http://cds.omdoc.org/mmt")
 end
 
 (* These tables should be moved to the others *) 
