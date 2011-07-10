@@ -427,8 +427,8 @@ struct
     | instToString(ModSyn.StrInst(c, _, mor), params, md) =
          ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^ metaDataToString md ^
          morphToStringTop(mor, params) ^ nl_unind() ^ "</strass>"
-    | instToString(ModSyn.InclInst(_,_,_,mor), params, md) =
-         ElemOpen("include", nil) ^ nl_ind() ^ metaDataToString md ^
+    | instToString(ModSyn.InclInst(_,_,from,mor), params, md) =
+         ElemOpen("include", [Attr("from", relModName(from, params))]) ^ nl_ind() ^ metaDataToString md ^
          morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
 
   fun caseToString(ModSyn.ConCase(c, _, U), params, md) = 
