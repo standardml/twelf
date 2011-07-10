@@ -30,27 +30,40 @@ struct
   
   (* XML and OMDoc escaping
      Among the printable non-whitespace ascii characters, the following are not URI pchars (RFC 3986): "#%&/<>?[\]^`{|}
-     We have to escape "&<> for XML and ?/% for OMDoc. The others must only be encoded when transferring URIs.
-     These are actually possible in Twelf names: "#&/<>?\^`| *)
-  fun escape s = let                                                                                     
+     We have to escape "&<> for XML, ?/ for MMT names, and #% in URIs. The others must only be encoded when transferring URIs. These are actually possible in Twelf names: "#&/<>?\^`| *)
+  fun escapeXML s = let                                                                                     
 	  fun escapelist nil = nil
 	    | escapelist (#"&" :: rest) = String.explode "&amp;" @ (escapelist rest)
 	    | escapelist (#"<" :: rest) = String.explode "&lt;" @ (escapelist rest) 
 	    | escapelist (#">" :: rest) = String.explode "&gt;" @ (escapelist rest)
 	    | escapelist (#"\"" :: rest) = String.explode "&quot;" @ (escapelist rest)
+	    | escapelist (c :: rest) = c :: (escapelist rest)
+  in
+    String.implode (escapelist (String.explode s))
+  end
+    
+  fun escapeName s = let                                                                                     
+	  fun escapelist nil = nil
+	    | escapelist (#"&" :: rest) = String.explode "&amp;" @ (escapelist rest)
+	    | escapelist (#"<" :: rest) = String.explode "&lt;" @ (escapelist rest) 
+	    | escapelist (#">" :: rest) = String.explode "&gt;" @ (escapelist rest)
+	    | escapelist (#"\"" :: rest) = String.explode "&quot;" @ (escapelist rest)
+	    | escapelist (#"%" :: rest) = String.explode "%25" @ (escapelist rest)
+	    | escapelist (#"#" :: rest) = String.explode "%23" @ (escapelist rest)
 	    | escapelist (#"?" :: rest) = String.explode "%3F" @ (escapelist rest)
 	    | escapelist (#"/" :: rest) = String.explode "%2F" @ (escapelist rest)
 	    | escapelist (c :: rest) = c :: (escapelist rest)
   in
     String.implode (escapelist (String.explode s))
   end
-  
+
   (* locations of meta theories *)
   val baseMMT = "http://cds.omdoc.org/omdoc/mmt.omdoc"
   val baseLF = "http://cds.omdoc.org/foundations/lf/lf.omdoc"
   val cdMMT = ["mmt"]
   val cdLF = ["lf"]
   val cdTwelf = "twelf"
+  val mdCommentKey = "http://purl.org/dc/terms/?_?description"
   
   (* XML and OMDoc constructors, return string *)
   fun ElemOpen'(label, attrs) = "<" ^ label ^ (if attrs = nil then "" else " ") ^ IDs.mkString(attrs, "", " ", "")
@@ -58,7 +71,7 @@ struct
   fun ElemClose(label) = "</" ^ label ^ ">"
   fun ElemEmpty(label, attrs) = ElemOpen'(label, attrs) ^ "/>"
   fun Attr(label, value) = label ^ "=\"" ^ value ^ "\""
-  fun localPath(comps) = IDs.mkString(List.map escape comps, "", "/", "")
+  fun localPath(comps) = IDs.mkString(List.map escapeName comps, "", "/", "")
   fun mpath(doc, module) = doc ^ "?" ^ (localPath module)
   fun OMS3(base, module, name) = let
      val baseA = if base = "" then nil else [Attr("base", base)]
@@ -69,7 +82,7 @@ struct
    end
   fun LFOMS(name) = OMS3(baseLF, cdLF,name)
   fun MMTOMS(name) = OMS3(baseMMT, cdMMT,name)
-  fun OMV(name) = ElemEmpty("om:OMV", [Attr("name", escape name)])
+  fun OMV(name) = ElemEmpty("om:OMV", [Attr("name", escapeName name)])
   fun OMA(func, args) = "<om:OMA>" ^ nl_ind() ^ func ^ nl() ^ IDs.mkString(args, "", nl(), "") ^ nl_unind() ^ "</om:OMA>"
   fun OMBIND(bind, vars, scope) = "<om:OMBIND>" ^ nl_ind() ^ bind ^ nl() ^ vars ^ nl() ^ scope ^ nl_unind() ^ "</om:OMBIND>"
   fun OM1ATTR(obj, key, value) = "<om:OMATTR><om:OMATP>" ^ nl_ind() ^ key ^ nl() ^ value ^ nl() ^ "</om:OMATP>" ^
@@ -153,7 +166,7 @@ struct
             fun fixSign(s) = String.map (fn x => if x = #"~" then #"-" else x) s 
         in case Int.fromString name
           of SOME(i) => "<OMI>" ^ fixSign (Int.toString i) ^ "</OMI>"
-           | NONE => "<OMSTR>" ^ escape name ^ "</OMSTR>" (* falsely escapes ? and /; what if a string happens to look like a number? --fr *) 
+           | NONE => "<OMSTR>" ^ escapeXML name ^ "</OMSTR>"
         end
     (* I.Skonst, I.FVar cases should be impossible *)
 
@@ -298,7 +311,7 @@ struct
   fun metaDataToString(NONE) = ""
     | metaDataToString(SOME (c,_,r)) = ElemOpen("metadata",nil) ^ nl_ind() ^
         (* ElemOpen("metadatum", [Attr("key", "origin")]) ^ r ^ ElemClose("metadatum") ^ nl() ^ *)
-        ElemOpen("metadatum", [Attr("key","comment")]) ^ (escape c) ^ ElemClose("metadatum") ^ nl_unind() ^
+        ElemOpen("meta", [Attr("property",mdCommentKey)]) ^ (escapeXML c) ^ ElemClose("meta") ^ nl_unind() ^
         ElemClose("metadata") ^ nl()
   
   fun fmtSymbol(name, V, Uopt, imp, params, md) =
