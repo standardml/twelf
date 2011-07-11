@@ -94,7 +94,7 @@ struct
   (* arguments of the recursion: baseNS, current identify the module relative to which addresses are given
      for theories the theory, for views (except for @from and @to) the codomain
    *)
-  type Params = {baseNS : URI.uri, current : IDs.mid}
+  type Params = {baseNS : URI.uri, current : IDs.mid, print : string -> unit}
   
   (* Printing references *)
   
@@ -448,7 +448,7 @@ struct
     val nameattr = Attr("name", localPath (ModSyn.modDecName mb))
     val nbattr = if #baseNS params = base then [nameattr] else [nameattr, Attr("base", relDocName(base, #baseNS params))]
     (* to print, e.g., from and to relative to base rather than codomain *)
-    val headParams = {baseNS = base, current = #current params}
+    val headParams = {baseNS = base, current = #current params, print = #print params}
   in case mb
     of ModSyn.SigDec _ =>
       let val meta = case mapFind(ModSyn.modInclLookup m,
@@ -493,9 +493,9 @@ struct
   
   (* Main interface methods *)
   
-  fun printModuleBody file m params fileNameOpt =
+  fun printModuleBody m params fileNameOpt =
      let
-     	 fun print x = (TextIO.flushOut file; TextIO.output(file, x))
+       val print = #print params
      	 fun doSym c =
      	    let val md = Comments.getCid c
           in case ModSyn.symLookup c
@@ -533,7 +533,7 @@ struct
                     | SOME _ => ()
                 )
               | ModSyn.SymMod(m, mdec) => (case ModSyn.modDecOrg mdec
-                   of NONE => printModule file m params fileNameOpt
+                   of NONE => printModule m params fileNameOpt
                     | SOME _ => ()
                 )
           end
@@ -542,27 +542,26 @@ struct
           ModSyn.sgnApp(m, doSym)
      end
 
-  and printModule file m params fileNameOpt =
+  and printModule m params fileNameOpt =
      let
-     	 fun print x = TextIO.output(file, x)
+     	 val print = #print params
      	 val mdec = ModSyn.modLookup m
      	 val bodyParams : Params = case mdec
      	   of ModSyn.SigDec(b,_,_) =>
-     	        {baseNS = b, current = m}
+     	        {baseNS = b, current = m, print = print}
      	    | ModSyn.ViewDec(_,_,_,cod,_,_) =>
-     	        {baseNS = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
+     	        {baseNS = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod, print = print}
      	    | ModSyn.RelDec(_,_,_,cod,_) =>
-     	        {baseNS = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
+     	        {baseNS = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod, print = print}
      	 val (fN, _) = Origins.mOriginLookup m
      	 val md = Comments.getMid m
      in
      	if fileNameOpt = SOME fN (* only print modules declared in fileName *)
      	then (
           print(modBeginToString(m, mdec, params, md));
-          printModuleBody file m bodyParams NONE;
+          printModuleBody m bodyParams NONE;
           print(modEndToString(mdec, params));
-          print(nl() ^ nl());
-          TextIO.flushOut file
+          print(nl() ^ nl())
       ) else ()
      end
           
@@ -571,15 +570,16 @@ struct
          val base = case fileNameOpt
              of NONE => URI.makeFileURI(true, OS.FileSys.getDir())
               | SOME fileName => Option.getOpt(Names.getDocNS fileName, URI.makeFileURI(false,fileName))
-         val params = {baseNS = base, current = 0}
+         val params = {baseNS = base, current = 0, print = fn x => TextIO.output(file, x)}
          val md = case fileNameOpt 
            of SOME fileName => Comments.getDoc fileName
             | _ => NONE
      in (
         ind_reset();
         TextIO.output(file, docBeginToString(base, md));
-        printModuleBody file 0 params fileNameOpt;
+        printModuleBody 0 params fileNameOpt;
         TextIO.output(file, docEndToString());
+        TextIO.flushOut file;
         TextIO.closeOut file
      )
      end
