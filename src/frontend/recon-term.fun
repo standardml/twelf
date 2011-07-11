@@ -387,7 +387,7 @@ struct
 		    (error (r, "Identifier " ^ IDs.foldQName qid
 			    ^ " is valid but not a constant, definition, or abbreviation");
 		     omitted (r))))
-          handle Names.Error(msg) => (error(r, msg); omitted r)
+          handle Names.Error(msg) => (error(r,msg); omitted r)
 
     fun findCSConst fc (G, qid, r) =
         (case qid

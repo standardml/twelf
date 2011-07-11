@@ -273,9 +273,10 @@ struct
        in
        	  case res
             of nil => NONE
-       	     | hd :: tl => if List.exists (fn x => not(x = hd)) tl
-       	                   then raise NameAmbiguous("identifier included from multiple signatures: " ^ IDs.foldQName names)
-       	                   else SOME hd
+       	     | hd :: tl => (case List.find (fn x => not(x = hd)) tl
+       	                   of SOME x => raise NameAmbiguous("identifier " ^ IDs.foldQName names ^ " included from both " ^ ModSyn.modFoldName (IDs.midOf hd) ^ " and " ^ ModSyn.modFoldName (IDs.midOf x))
+       	                    | NONE => SOME hd
+       	       )
        end
     
    (* level 1 lookup function: splits a name into the longest defined module name, then looks up the rest as a symbol name

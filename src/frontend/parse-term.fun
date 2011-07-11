@@ -305,7 +305,7 @@ struct
 
     (* looks up a name, then looks up its fixity; if the name is not declared, Nonfix is returned *)
     fun fixityLookup (qid : IDs.Qid) =
-      Option.getOpt( Option.map Names.fixityLookup (Names.nameLookupC qid) , FX.Nonfix)
+      (Names.fixityLookup (valOf (Names.nameLookupC qid))) handle Names.Error _ => FX.Nonfix | Option => FX.Nonfix 
     (* val parseExp : (L.token * L.region) LS.stream * <p>
                         -> ExtSyn.term * (L.token * L.region) LS.front *)
     fun parseExp (s, p) = parseExp' (LS.expose s, p)
