@@ -13,12 +13,10 @@ CONFIG="set chatter 1\n"
 
 if [ $1 = -catalog ]; then 
   CONFIG="$CONFIG set catalog $2\n"; shift; shift
-else
 fi
 
 if [ $1 = -unsafe ]; then 
   CONFIG="$CONFIG set unsafe true\n"; shift
-else
 fi
 
 if [ $1 = -omdoc ]; then 
