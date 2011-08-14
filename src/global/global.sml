@@ -15,6 +15,7 @@ struct
   val timeLimit = ref (NONE : (Time.time option))
   val printFlat = ref false (* -fr *)
   val catalog : URI.uri option ref = ref NONE (* -fr *)
+  val nsPrefixes : (string * URI.uri) list ref = ref nil (* -fr *)
 
   fun chPrint n s = if !chatter >= n then print (s ()) else ()
   fun chMessage n s f = if !chatter >= n then f (s ()) else ()

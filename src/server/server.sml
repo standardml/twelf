@@ -92,7 +92,7 @@ struct
     | getBool (ts) = error "Extraneous arguments"
 
   fun getURI(s :: nil) = ((URI.parseURI s) handle e => error("ill-formed URI"))
-    | getURI(nil) = error "Missing URI"
+    | getURI(nil) = URI.parseURI ""
     | getURI(ts) = error "Extraneous arguments"
     
   (* Natural numbers *)
@@ -163,6 +163,7 @@ struct
     | setParm ("Table.strategy"::ts) = Twelf.Table.strategy := getTableStrategy ts
     | setParm ("Table.strengthen"::ts) = Twelf.Table.strengthen := getBool ts
     | setParm ("catalog"::ts) = Twelf.catalog := SOME (getURI ts)
+    | setParm ("namespace"::p::ts) = Twelf.nsPrefixes := (p, getURI ts) :: (! Twelf.nsPrefixes)
     | setParm (t::ts) = error ("Unknown parameter " ^ quote t)
     | setParm (nil) = error ("Missing parameter")
 
@@ -184,7 +185,9 @@ struct
     | getParm ("Prover.maxSplit"::ts) = Int.toString (!Twelf.Prover.maxSplit)
     | getParm ("Prover.maxRecurse"::ts) = Int.toString (!Twelf.Prover.maxRecurse)
     | getParm ("Table.strategy"::ts) = tableStrategyToString (!Twelf.Table.strategy)
-    | getParm ("catalog"::ts) = (case ! Twelf.catalog of SOME uri => URI.uriToString uri | NONE => "undefined") 
+    | getParm ("catalog"::ts) = (case ! Twelf.catalog of SOME uri => URI.uriToString uri | NONE => "%undefined%")
+    | getParm ("namespace"::p::ts) = (case List.find (fn (x,_) => x = p) (! Twelf.nsPrefixes)
+        of SOME (_,uri) => URI.uriToString uri | NONE => "%undefined%")
     | getParm (t::ts) = error ("Unknown parameter " ^ quote t)
     | getParm (nil) = error ("Missing parameter")
 
@@ -386,6 +389,27 @@ struct
       (checkEmpty args;
        Twelf.Table.top ();
        serve (Twelf.OK))
+
+    | serve' ("file", args) =
+      let
+      	 val file = getFile' args
+      	 val instream = TextIO.openIn file
+      	 exception EOF
+      	 fun doLine() = let
+      	    val line = case TextIO.inputLine instream
+      	      of SOME l => l
+      	       | NONE => raise EOF
+            val _ = print line
+      	    val args = String.tokens (fn x => x = #" " orelse x = #"\n") line
+            val _ = setParm args
+         in
+            doLine()
+         end
+      in
+      	doLine()
+        handle EOF => (TextIO.closeIn instream; serve Twelf.OK)
+             | e => (TextIO.closeIn instream; raise e)
+      end
 
     | serve' ("version", args) =
       (print (Twelf.version ^ "\n");

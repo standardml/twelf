@@ -1945,6 +1945,7 @@ struct
     val timeLimit : (Time.time option) ref = Global.timeLimit
     val printFlat : bool ref = Global.printFlat (* -fr *)
     val catalog : URI.uri option ref = Global.catalog (* -fr *)
+    val nsPrefixes : (string * URI.uri) list ref = Global.nsPrefixes (* -fr *)
 
     datatype Status = datatype Status
     val reset = reset

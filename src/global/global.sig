@@ -16,4 +16,5 @@ sig
   val timeLimit : (Time.time option) ref   (* in seconds *)
   val printFlat : bool ref (* -fr *)
   val catalog : URI.uri option ref (* -fr *)
+  val nsPrefixes : (string * URI.uri) list ref
 end;  (* signature GLOBAL *)

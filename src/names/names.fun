@@ -179,7 +179,7 @@ struct
   (*******************************************************)
   
    fun popContext()  = nscontext := List.tl (! nscontext)
-   fun pushContext() = nscontext := (nil, nil, NONE) :: (! nscontext)
+   fun pushContext() = nscontext := (! Global.nsPrefixes, nil, NONE) :: (! nscontext)
    fun pushContextIfNone() = if (! nscontext = nil) then pushContext() else ()
 
    fun getCurrentNS(default) = case #3 (currentContext())

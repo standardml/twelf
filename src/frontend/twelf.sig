@@ -92,10 +92,11 @@ sig
   val doubleCheck : bool ref	             (* false, check after reconstruction *)
   val unsafe : bool ref		             (* false, allows %assert *)
   val autoFreeze : bool ref		(* false, freezes families in meta-theorems *)
-  val timeLimit : (Time.time option) ref     (* NONEe, allows timeLimit in seconds *)
+  val timeLimit : (Time.time option) ref     (* NONE, allows timeLimit in seconds *)
   val printFlat : bool ref             (* toggle whether signature is mirrored in modular or flat syntax -fr *)
   val catalog : URI.uri option ref     (* the URL of the catalog to resolve namespace URIs -fr *)
-
+  val nsPrefixes : (string * URI.uri) list ref (* nil, global namespace bindings *)
+  
   datatype Status = OK | ABORT	       (* return status *)
 
   val reset : unit -> unit	       (* reset global signature *)
