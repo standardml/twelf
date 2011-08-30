@@ -151,7 +151,7 @@ structure URI : URISIG = struct
                then if isSome rq then makeURI(bs, ba, babs, rem(bp, rabs), rq, rf)
                                  else makeURI(bs, ba, babs, rem(bp, babs), bq, rf)
                else if rabs      then makeURI(bs, ba, rabs, rem(rp, rabs), rq, rf)
-                                 else makeURI(bs, ba, babs, rem ((merge(bp, rp)), rabs), rq, rf)
+                                 else makeURI(bs, ba, babs orelse (isSome ba), rem ((merge(bp, rp)), rabs), rq, rf)
       end
 
    (* prints optional string with delimiters, "" if NONE *)
