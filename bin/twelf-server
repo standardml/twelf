@@ -1,2 +1,2 @@
 #! /bin/sh
-exec "sml" @SMLload="/Users/carsten/SVN/concert.cs.cmu.edu/branches/twelf-mod/bin/.heap/twelf-server" @SMLdebug=/dev/null
+exec "sml" @SMLload=".heap/twelf-server" @SMLdebug=/dev/null
