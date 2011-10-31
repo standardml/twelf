@@ -89,5 +89,6 @@ twelf-regression: buildid
 check : twelf-regression
 	$(make) -C TEST check
 
-smackage-install: 
-	cp bin/twelf-server ../../../bin/twelf-server
+install: 
+	cp bin/twelf-server $(DESTDIR)/bin/twelf-server.new
+	mv $(DESTDIR)/bin/twelf-server.new $(DESTDIR)/bin/twelf-server
