@@ -1,27 +1,40 @@
-syn clear
+" Vim syntax file
+" Language:        Twelf
+" Last Change:     January 19, 2012
+"
+" Version:         1.0
+" Original Author: unknown
+"
+" Modifications:   Ryan Pearl <rpearl@andrew.cmu.edu>
+
+" Remove any old syntax stuff hanging around
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Just about anything in Twelf is a keyword character
 set iskeyword+=@,!,#-',*-45,47-57,59-90,94-122,\|,^:
 
+" We'll define some color schemes up here--the actual tokens use these `Face'
+" definitions
+hi def link twelfDeclarationFace  Identifier
+hi def link twelfPercentKeyFace   Keyword
+hi def link twelfTypeFace         Constant
+hi def link twelfCommentFace      Comment
+hi def link twelfSymbolFace       Macro
+hi def link twelfPunctuationFace  Special
+hi def link twelfFreeVariableFace Number
+hi def link twelfCurlyFace        Delimiter
+hi def link twelfSquareFace       Delimiter
 
-if &background == "dark"
-else
-  hi twelfPercentKeyFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=MediumPurple guibg=NONE
-  hi twelfTypeFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=orange guibg=NONE
-  hi twelfCommentFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=ForestGreen guibg=NONE
-  hi twelfSymbolFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=DarkGrey guibg=NONE
-  hi twelfPunctuationFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=Blue guibg=NONE
-  hi twelfDeclarationFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=FireBrick guibg=NONE
-  hi twelfFreeVariableFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=Seagreen guibg=NONE
-  hi twelfCurlyFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=gold guibg=NONE
-  hi twelfSquareFace term=NONE cterm=NONE ctermfg=Green ctermbg=NONE gui=NONE guifg=purple guibg=NONE
-endif
 
 syn keyword twelfPercentKey %mode %infix %prefix %abbrev %postfix %name %freeze %clause %define %solve %querytabled %query %tabled %deterministic %unique %block %worlds %covers %total %terminates %reduces %theorem %prove %assert %establish %sig %struct %where %include %open %use
 
 syn keyword twelfType type
 syn match twelfPunct ":\|\.\|\<=\>"
-syn match twelfFVar "\<[A-Z_]\k*\>"  
+syn match twelfFVar "\<[A-Z_]\k*\>"
 syn keyword twelfSymbol -> <-
 syn match twelfDecl "^\s*[^A-Z_]\k*\s*:" contains=twelfPunct
 
