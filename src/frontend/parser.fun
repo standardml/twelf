@@ -2,35 +2,35 @@
 (* Author: Frank Pfenning *)
 
 functor Parser ((*! structure Parsing' : PARSING !*)
-		structure Stream' : STREAM (* result stream *)
-		structure ExtSyn' : EXTSYN
-		(*! sharing ExtSyn'.Paths = Parsing'.Lexer.Paths !*)
-		structure Names' : NAMES
+                structure Stream' : STREAM (* result stream *)
+                structure ExtSyn' : EXTSYN
+                (*! sharing ExtSyn'.Paths = Parsing'.Lexer.Paths !*)
+                structure Names' : NAMES
                 structure ExtConDec' : EXTCONDEC
                 structure ExtQuery' : EXTQUERY
-		structure ExtModes' : EXTMODES
-		structure ThmExtSyn' : THMEXTSYN
+                structure ExtModes' : EXTMODES
+                structure ThmExtSyn' : THMEXTSYN
                 structure ModExtSyn' : MODEXTSYN
-		structure ParseConDec : PARSE_CONDEC
-		(*! sharing ParseConDec.Lexer = Parsing'.Lexer !*)
-		  sharing ParseConDec.ExtConDec = ExtConDec'
-		structure ParseQuery : PARSE_QUERY
-		(*! sharing ParseQuery.Lexer = Parsing'.Lexer !*)
+                structure ParseConDec : PARSE_CONDEC
+                (*! sharing ParseConDec.Lexer = Parsing'.Lexer !*)
+                  sharing ParseConDec.ExtConDec = ExtConDec'
+                structure ParseQuery : PARSE_QUERY
+                (*! sharing ParseQuery.Lexer = Parsing'.Lexer !*)
                   sharing ParseQuery.ExtQuery = ExtQuery'
-		structure ParseFixity : PARSE_FIXITY
-		(*! sharing ParseFixity.Lexer = Parsing'.Lexer !*)
-		  sharing ParseFixity.Names = Names' 
+                structure ParseFixity : PARSE_FIXITY
+                (*! sharing ParseFixity.Lexer = Parsing'.Lexer !*)
+                  sharing ParseFixity.Names = Names'
                 structure ParseMode : PARSE_MODE
-		(*! sharing ParseMode.Lexer = Parsing'.Lexer !*)
-		  sharing ParseMode.ExtModes = ExtModes'
-	        structure ParseThm : PARSE_THM
-		(*! sharing ParseThm.Lexer = Parsing'.Lexer !*)
-		  sharing ParseThm.ThmExtSyn = ThmExtSyn'
+                (*! sharing ParseMode.Lexer = Parsing'.Lexer !*)
+                  sharing ParseMode.ExtModes = ExtModes'
+                structure ParseThm : PARSE_THM
+                (*! sharing ParseThm.Lexer = Parsing'.Lexer !*)
+                  sharing ParseThm.ThmExtSyn = ThmExtSyn'
                 structure ParseModule : PARSE_MODULE
-		(*! sharing ParseModule.Parsing = Parsing' !*)
+                (*! sharing ParseModule.Parsing = Parsing' !*)
                   sharing ParseModule.ModExtSyn = ModExtSyn'
-                structure ParseTerm : PARSE_TERM 
-		(*! sharing ParseTerm.Lexer = Parsing'.Lexer !*)
+                structure ParseTerm : PARSE_TERM
+                (*! sharing ParseTerm.Lexer = Parsing'.Lexer !*)
                   sharing ParseTerm.ExtSyn = ExtSyn')
   : PARSER =
 struct
@@ -56,8 +56,8 @@ struct
     | TerminatesDec of ThmExtSyn.tdecl
     | WorldDec of ThmExtSyn.wdecl
     | ReducesDec of ThmExtSyn.rdecl   (* -bp *)
-    | TabledDec of ThmExtSyn.tableddecl 
-    | KeepTableDec of ThmExtSyn.keepTabledecl 
+    | TabledDec of ThmExtSyn.tableddecl
+    | KeepTableDec of ThmExtSyn.keepTabledecl
     | TheoremDec of ThmExtSyn.theoremdec
     | ProveDec of ThmExtSyn.prove
     | EstablishDec of ThmExtSyn.establish
@@ -68,7 +68,7 @@ struct
     | Querytabled of int option * int option * ExtQuery.query        (* numSol, try, A *)
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
-    | TrustMe of fileParseResult * Paths.region (* -fp *)    
+    | TrustMe of fileParseResult * Paths.region (* -fp *)
     | SubordDec of (Names.Qid * Names.Qid) list (* -gaw *)
     | FreezeDec of Names.Qid list
     | ThawDec of Names.Qid list
@@ -84,21 +84,21 @@ struct
 
   local
     structure L = Lexer
-    structure LS = Lexer.Stream  
+    structure LS = Lexer.Stream
 
     fun stripDot (LS.Cons((L.DOT, r), s)) = s
       | stripDot (LS.Cons((L.RPAREN, r), s)) =
-	  Parsing.error (r, "Unexpected right parenthesis")
+          Parsing.error (r, "Unexpected right parenthesis")
       | stripDot (LS.Cons((L.RBRACE, r), s)) =
-	  Parsing.error (r, "Unexpected right brace")
+          Parsing.error (r, "Unexpected right brace")
       | stripDot (LS.Cons((L.RBRACKET, r), s)) =
-	  Parsing.error (r, "Unexpected right bracket")
+          Parsing.error (r, "Unexpected right bracket")
       | stripDot (LS.Cons ((L.EOF, r), s)) =
-	  Parsing.error (r, "Unexpected end of file")
+          Parsing.error (r, "Unexpected end of file")
       | stripDot (LS.Cons ((L.EQUAL, r), s)) =
-	  Parsing.error (r, "Unexpected `='")
+          Parsing.error (r, "Unexpected `='")
       | stripDot (LS.Cons ((t, r), s)) =
-	  Parsing.error (r, "Expected `.', found " ^ L.toString t)
+          Parsing.error (r, "Expected `.', found " ^ L.toString t)
       (* Everything else should be impossible *)
 
     (*
@@ -109,11 +109,11 @@ struct
     fun parseBound' (LS.Cons ((L.ID (_, "*"), r), s')) = (NONE, s')
       | parseBound' (LS.Cons ((L.ID (_, name), r), s')) =
         ((SOME (L.stringToNat (name)), s')
-	 handle Overflow => Parsing.error (r, "Bound too large")
-	      | L.NotDigit _ => Parsing.error (r, "Bound `" ^ name ^ "' neither `*' nor a natural number"))
+         handle Overflow => Parsing.error (r, "Bound too large")
+              | L.NotDigit _ => Parsing.error (r, "Bound `" ^ name ^ "' neither `*' nor a natural number"))
       | parseBound' (LS.Cons ((t,r), s')) =
-	  Parsing.error (r, "Expected bound `*' or natural number, found "
-			    ^ L.toString t)
+          Parsing.error (r, "Expected bound `*' or natural number, found "
+                            ^ L.toString t)
 
     (* pass parseStream as theSigParser in order to be able to use
        this function polymorphically in the definition of parseStream *)
@@ -131,7 +131,7 @@ struct
               in
                 Stream.Cons ((BeginSubsig, r1), theSigParser (s', finish))
               end
-            | (Parsing.Continuation _, LS.Cons ((t, r), _)) => 
+            | (Parsing.Continuation _, LS.Cons ((t, r), _)) =>
                 Parsing.error (r, "Expected `{', found " ^ L.toString t))
 
     fun parseStream (s, sc) =
@@ -146,42 +146,42 @@ struct
       | parseStream' (f as LS.Cons ((L.PREFIX, r), s'), sc) = parseFixity' (f, sc)
       | parseStream' (f as LS.Cons ((L.POSTFIX, r), s'), sc) = parseFixity' (f, sc)
       | parseStream' (f as LS.Cons ((L.NAME, r1), s'), sc) =
-	let
-	  val (namePref, f' as LS.Cons ((_, r2), _)) = ParseFixity.parseNamePref' f
+        let
+          val (namePref, f' as LS.Cons ((_, r2), _)) = ParseFixity.parseNamePref' f
           val r = Paths.join (r1, r2)
-	in
-	  Stream.Cons ((NamePref namePref, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((NamePref namePref, r), parseStream (stripDot f', sc))
+        end
       | parseStream' (f as LS.Cons((L.DEFINE, r), s'), sc) =
           parseSolve' (f, sc)
       | parseStream' (f as LS.Cons((L.SOLVE, r), s'), sc) =
           parseSolve' (f, sc)
       | parseStream' (LS.Cons((L.QUERY, r0), s'), sc) =
         let
-	  val (expected, s1) = parseBound' (LS.expose s')
-	  val (try, s2) = parseBound' (LS.expose s1)
+          val (expected, s1) = parseBound' (LS.expose s')
+          val (try, s2) = parseBound' (LS.expose s1)
           val (query, f3 as LS.Cons((_,r'),_)) = ParseQuery.parseQuery' (LS.expose s2)
-	  val r = Paths.join (r0, r')
-        in 
+          val r = Paths.join (r0, r')
+        in
           Stream.Cons ((Query (expected, try, query), r), parseStream (stripDot f3, sc))
         end
       | parseStream' (LS.Cons((L.FQUERY, r0), s'), sc) =
         let
           val (query, f3 as LS.Cons((_,r'),_)) = ParseQuery.parseQuery' (LS.expose s')
-	  val r = Paths.join (r0, r')
+          val r = Paths.join (r0, r')
         in
           Stream.Cons ((FQuery query, r), parseStream (stripDot f3, sc))
         end
 
       | parseStream' (LS.Cons((L.QUERYTABLED, r0), s'), sc) =
         let
-	  val (numSol, s1) = parseBound' (LS.expose s')
-	  val (try, s2) = parseBound' (LS.expose s1)
+          val (numSol, s1) = parseBound' (LS.expose s')
+          val (try, s2) = parseBound' (LS.expose s1)
           val (query, f3 as LS.Cons((_,r'),_)) = ParseQuery.parseQuery' (LS.expose s2)
-	  val r = Paths.join (r0, r')
-        in 
+          val r = Paths.join (r0, r')
+        in
           Stream.Cons ((Querytabled (numSol, try, query), r), parseStream (stripDot f3, sc))
-        end 
+        end
       | parseStream' (f as LS.Cons ((L.MODE, r), s'), sc) = parseMode' (f, sc)
       | parseStream' (f as LS.Cons ((L.UNIQUE, r), s'), sc) = parseUnique' (f, sc)
       | parseStream' (f as LS.Cons ((L.COVERS, r), s'), sc) = parseCovers' (f, sc)
@@ -211,40 +211,40 @@ struct
       | parseStream' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
       | parseStream' (f as LS.Cons ((L.RBRACE, _), _), sc) = sc f
       | parseStream' (LS.Cons ((t,r), s'), sc) =
-	  Parsing.error (r, "Expected constant name or pragma keyword, found "
-			    ^ L.toString t)
+          Parsing.error (r, "Expected constant name or pragma keyword, found "
+                            ^ L.toString t)
 
     and parseConDec' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (conDec, f' as LS.Cons((_,r'),_)) = ParseConDec.parseConDec' (f)
-	  val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((ConDec conDec, r), parseStream (stripDot f', sc))
-	end
+          val (conDec, f' as LS.Cons((_,r'),_)) = ParseConDec.parseConDec' (f)
+          val r = Paths.join (r0, r')
+        in
+          Stream.Cons ((ConDec conDec, r), parseStream (stripDot f', sc))
+        end
 
     and parseAbbrev' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (conDec, f' as LS.Cons ((_,r'),_)) = ParseConDec.parseAbbrev' (f)
+          val (conDec, f' as LS.Cons ((_,r'),_)) = ParseConDec.parseAbbrev' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((AbbrevDec conDec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((AbbrevDec conDec, r), parseStream (stripDot f', sc))
+        end
 
     and parseClause' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (conDec, f' as LS.Cons ((_,r'),_)) = ParseConDec.parseClause' (f)
-	  val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((ClauseDec conDec, r), parseStream (stripDot f', sc))
-	end
+          val (conDec, f' as LS.Cons ((_,r'),_)) = ParseConDec.parseClause' (f)
+          val r = Paths.join (r0, r')
+        in
+          Stream.Cons ((ClauseDec conDec, r), parseStream (stripDot f', sc))
+        end
 
     and parseFixity' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (fdec, f' as LS.Cons ((_,r'),_)) = ParseFixity.parseFixity' (f)
-          val r = Paths.join (r0, r')            
-	in
-	  Stream.Cons ((FixDec fdec, r), parseStream (stripDot f', sc))
-	end
+          val (fdec, f' as LS.Cons ((_,r'),_)) = ParseFixity.parseFixity' (f)
+          val r = Paths.join (r0, r')
+        in
+          Stream.Cons ((FixDec fdec, r), parseStream (stripDot f', sc))
+        end
 
     and parseSolve' (f as LS.Cons ((_, r0), _), sc) =
         let
@@ -256,117 +256,117 @@ struct
 
     and parseMode' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (mdecs, f' as LS.Cons ((_,r'),_)) = ParseMode.parseMode' (f)
+          val (mdecs, f' as LS.Cons ((_,r'),_)) = ParseMode.parseMode' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((ModeDec mdecs, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((ModeDec mdecs, r), parseStream (stripDot f', sc))
+        end
 
     and parseUnique' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (mdecs, f' as LS.Cons ((_,r'),_)) = ParseMode.parseMode' (f)
+          val (mdecs, f' as LS.Cons ((_,r'),_)) = ParseMode.parseMode' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((UniqueDec mdecs, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((UniqueDec mdecs, r), parseStream (stripDot f', sc))
+        end
 
     and parseCovers' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (mdecs, f' as LS.Cons ((_, r'), _)) = ParseMode.parseMode' (f)
+          val (mdecs, f' as LS.Cons ((_, r'), _)) = ParseMode.parseMode' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((CoversDec mdecs, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((CoversDec mdecs, r), parseStream (stripDot f', sc))
+        end
 
     and parseTotal' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTotal' (f)
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTotal' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((TotalDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((TotalDec ldec, r), parseStream (stripDot f', sc))
+        end
 
     and parseTerminates' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTerminates' (f)
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTerminates' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((TerminatesDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((TerminatesDec ldec, r), parseStream (stripDot f', sc))
+        end
 
-    and parseReduces' (f as LS.Cons ((_, r0), _), sc) = 
-	let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseReduces' (f)
+    and parseReduces' (f as LS.Cons ((_, r0), _), sc) =
+        let
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseReduces' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((ReducesDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((ReducesDec ldec, r), parseStream (stripDot f', sc))
+        end
 
-    and parseTabled' (f as LS.Cons ((_, r0), _), sc) = 
-	let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTabled' (f)
+    and parseTabled' (f as LS.Cons ((_, r0), _), sc) =
+        let
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTabled' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((TabledDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((TabledDec ldec, r), parseStream (stripDot f', sc))
+        end
 
-    and parseKeepTable' (f as LS.Cons ((_, r0), _), sc) = 
-	let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseKeepTable' (f)
+    and parseKeepTable' (f as LS.Cons ((_, r0), _), sc) =
+        let
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseKeepTable' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((KeepTableDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((KeepTableDec ldec, r), parseStream (stripDot f', sc))
+        end
 
     and parseWorlds' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseWorlds' (f)
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseWorlds' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((WorldDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((WorldDec ldec, r), parseStream (stripDot f', sc))
+        end
 
     and parseTheorem' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTheoremDec' (f)
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTheoremDec' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((TheoremDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((TheoremDec ldec, r), parseStream (stripDot f', sc))
+        end
 
     and parseProve' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseProve' (f)
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseProve' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((ProveDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((ProveDec ldec, r), parseStream (stripDot f', sc))
+        end
 
     and parseEstablish' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseEstablish' (f)
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseEstablish' (f)
           val r = Paths.join (r0, r')
-	in
-	  Stream.Cons ((EstablishDec ldec, r), parseStream (stripDot f', sc))
-	end
+        in
+          Stream.Cons ((EstablishDec ldec, r), parseStream (stripDot f', sc))
+        end
 
     and parseAssert' (f as LS.Cons ((_, r0), _), sc) =
         let
-	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseAssert' (f)
-          val r = Paths.join (r0, r')            
-	in
-	  Stream.Cons ((AssertDec ldec, r), parseStream (stripDot f', sc))
-	end
+          val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseAssert' (f)
+          val r = Paths.join (r0, r')
+        in
+          Stream.Cons ((AssertDec ldec, r), parseStream (stripDot f', sc))
+        end
 
     and parseTrustMe' (f as LS.Cons ((_, r0), s), sc) =
-	let 
-	  fun parseNextDec' (Stream.Cons((dec,r),s')) =
-	         Stream.Cons ((TrustMe(dec,r),r0),s')
+        let
+          fun parseNextDec' (Stream.Cons((dec,r),s')) =
+                 Stream.Cons ((TrustMe(dec,r),r0),s')
             | parseNextDec' (Stream.Empty) =
                  Parsing.error (r0, "No declaration after `%trustme'")
-	in 
-	  parseNextDec' (parseStream' (LS.expose s, sc))
-	end
+        in
+          parseNextDec' (parseStream' (LS.expose s, sc))
+        end
 
     and parseSubord' (f as LS.Cons ((_, r0), s), sc) =
         let
@@ -388,12 +388,12 @@ struct
 
     and parseThaw' (f as LS.Cons ((_, r0), s), sc) =
         let
-	  val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseThaw' (LS.expose s)
-	  val r = Paths.join (r0, r')
-	  val qids = map Names.Qid qids
-	in
-	  Stream.Cons ((ThawDec qids, r), parseStream (stripDot f', sc))
-	end
+          val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseThaw' (LS.expose s)
+          val r = Paths.join (r0, r')
+          val qids = map Names.Qid qids
+        in
+          Stream.Cons ((ThawDec qids, r), parseStream (stripDot f', sc))
+        end
 
     and parseDeterministic' (f as LS.Cons ((_, r0), s), sc) =
         let
@@ -464,10 +464,10 @@ struct
     fun parseQ (s) = Stream.delay (fn () => parseQ' (LS.expose s))
     and parseQ' (f) =
         let
-	  val (query, f') = ParseQuery.parseQuery' (f)
-	in
-	  Stream.Cons (query, parseQ (stripDot (f')))
-	end
+          val (query, f') = ParseQuery.parseQuery' (f)
+        in
+          Stream.Cons (query, parseQ (stripDot (f')))
+        end
 
     fun parseTLStream instream =
         let
@@ -483,7 +483,7 @@ struct
     val parseStream = parseTLStream
 
     fun parseTerminalQ prompts = parseQ (L.lexTerminal prompts)
-        
+
   end  (* local ... in *)
 
 end;  (* functor Parser *)

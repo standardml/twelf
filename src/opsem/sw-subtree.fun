@@ -1,10 +1,10 @@
 functor SwMemoTable ((* structure TableParam : TABLEPARAM *)
-		     structure MemoTable : MEMOTABLE
-		     structure MemoTableInst : MEMOTABLE
-		     (*! sharing MemoTableInst.IntSyn = MemoTable.IntSyn !*)
-		     (*! sharing MemoTableInst.CompSyn = MemoTable.CompSyn !*)
-		     (*! sharing MemoTableInst.TableParam = MemoTable.TableParam !*)
-		       ) : MEMOTABLE =
+                     structure MemoTable : MEMOTABLE
+                     structure MemoTableInst : MEMOTABLE
+                     (*! sharing MemoTableInst.IntSyn = MemoTable.IntSyn !*)
+                     (*! sharing MemoTableInst.CompSyn = MemoTable.CompSyn !*)
+                     (*! sharing MemoTableInst.TableParam = MemoTable.TableParam !*)
+                       ) : MEMOTABLE =
 struct
 
   (*! structure IntSyn = MemoTable.IntSyn !*)
@@ -45,7 +45,7 @@ struct
     | TableParam.Subsumption => MemoTableInst.tableSize ()
 
 
-  fun memberCtx args = 
+  fun memberCtx args =
     case (!TableParam.strategy) of
       TableParam.Subsumption => MemoTableInst.memberCtx args
     | TableParam.Variant => MemoTable.memberCtx args

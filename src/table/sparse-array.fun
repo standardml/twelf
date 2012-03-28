@@ -39,9 +39,9 @@ struct
         if (di >= 0)
         then
           VectorSlice.appi (fn (i, v) => unsafeUpdate (dst, i, v))
-			   (VectorSlice.slice (src, si, len))
+                           (VectorSlice.slice (src, si, len))
         else raise General.Subscript
-        
+
   fun app f (array, i, len) =
         if (i >= 0) andalso (len >= 0)
         then
@@ -94,7 +94,7 @@ struct
             val imax = i+len
             fun modify' i' =
                   if (i' < imax)
-                  then 
+                  then
                     (
                       unsafeUpdate (array, i', f(i', unsafeSub (array, i')));
                       modify' (i'+1)

@@ -28,7 +28,7 @@ struct
   val delphin     = Timing.newCenter ("Delphin       ")
 
   val centers = [parsing, recon, abstract, checking, modes, subordinate,
-		 terminate, printing, compiling, solving, coverage, worlds,
+                 terminate, printing, compiling, solving, coverage, worlds,
                  ptrecon, filling, filltabled,
                  splitting, recursion, inference, delphin]
 
@@ -43,6 +43,6 @@ struct
        print (Timing.sumToString total);
        print "Remember that the success continuation counts into Solving!\n")
 
-  fun show () = (check (); reset ()) 
+  fun show () = (check (); reset ())
 
 end;  (* functor Timers *)

@@ -33,7 +33,7 @@ struct
           fromInt' 0
         end
 
-  fun toInt (m, n) = 
+  fun toInt (m, n) =
         let
           val sum = m + n
         in

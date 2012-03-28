@@ -32,11 +32,11 @@ fun fparse fname =
            (fn _ => Compat.inputLine97 infile)
        val empty = !Interface.line
        val dummyEOF = Tokens.EOF(empty, empty)
-       fun loop lexer = 
+       fun loop lexer =
            let val (result, lexer) = invoke lexer
                val (nextToken, lexer) = Parserr.Streamm.get lexer
-           in 
-              if Parserr.sameToken(nextToken, dummyEOF) 
+           in
+              if Parserr.sameToken(nextToken, dummyEOF)
                  then ()
               else loop lexer;
               (* DextSyn.printAst result; *)
@@ -50,7 +50,7 @@ fun fparse fname =
 
 
 fun sparse () =
-  let 
+  let
     val _ = Interface.init_line ()
     val infile = TextIO.openString (TextIO.input TextIO.stdIn)
     val lexer = Parserr.makeLexer
@@ -60,8 +60,8 @@ fun sparse () =
     fun loop lexer =
       let val (result, lexer) = invoke lexer
           val (nextToken, lexer) = Parserr.Streamm.get lexer
-       in 
-              if Parserr.sameToken(nextToken, dummyEOF) 
+       in
+              if Parserr.sameToken(nextToken, dummyEOF)
                  then (* () *)
                     result
               else loop lexer
@@ -79,11 +79,11 @@ fun  gparse fname =
            (fn _ => Compat.inputLine97 infile)
        val empty = !Interface.line
        val dummyEOF = Tokens.EOF(empty, empty)
-       fun loop lexer = 
+       fun loop lexer =
            let val (result, lexer) = invoke lexer
                val (nextToken, lexer) = Parserr.Streamm.get lexer
-           in 
-              if Parserr.sameToken(nextToken, dummyEOF) 
+           in
+              if Parserr.sameToken(nextToken, dummyEOF)
                  then (* () *)
                     result
               else loop lexer

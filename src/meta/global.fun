@@ -1,7 +1,7 @@
 (* Meta Global parameters *)
 (* Author: Carsten Schuermann *)
 
-functor MTPGlobal 
+functor MTPGlobal
   (structure MetaGlobal : METAGLOBAL): MTPGLOBAL =
 struct
   datatype ProverType = New | Old

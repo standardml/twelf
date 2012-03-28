@@ -130,7 +130,7 @@ struct
               I.AbbrevDef (name, parent, i, U, V, L)
             end
           | I.ConDef (name, parent, i, U, V, L, Anc) =>
-	      I.AbbrevDef (name, parent, i, U, V, L)
+              I.AbbrevDef (name, parent, i, U, V, L)
           | I.AbbrevDef data => I.AbbrevDef data)
 
   (* In order to install a module, we walk through the mids in preorder,
@@ -211,7 +211,7 @@ struct
                           | _ => Names.installFixity (cid', fixity))
               val _ = (case namePrefOpt
                          of NONE => ()
-                          | SOME (n1, n2) => 
+                          | SOME (n1, n2) =>
                               Names.installNamePref (cid', (n1, n2)))
             in
               IntTree.insert constMap (cid, cid')

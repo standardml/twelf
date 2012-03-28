@@ -4,12 +4,12 @@
 functor CSEqIntegers (structure Integers : INTEGERS
                       (*! structure IntSyn : INTSYN !*)
                       structure Whnf : WHNF
-		      (*! sharing Whnf.IntSyn = IntSyn !*)
+                      (*! sharing Whnf.IntSyn = IntSyn !*)
                       structure Unify : UNIFY
-		      (*! sharing Unify.IntSyn = IntSyn !*)
+                      (*! sharing Unify.IntSyn = IntSyn !*)
                       (*! structure CSManager : CS_MANAGER !*)
-		      (*! sharing CSManager.IntSyn = IntSyn !*)
-			)
+                      (*! sharing CSManager.IntSyn = IntSyn !*)
+                        )
  : CS_EQ_INTEGERS =
 struct
   (*! structure CSManager = CSManager !*)
@@ -70,9 +70,9 @@ struct
     fun numberConDec (d) = ConDec (toString (d), NONE, 0, Normal, number (), Type)
     fun numberExp (d) = Root (FgnConst (!myID, numberConDec (d)), Nil)
 
-    (* parseNumber str = SOME(conDec) or NONE 
+    (* parseNumber str = SOME(conDec) or NONE
 
-       Invariant: 
+       Invariant:
        If str parses to the number n
        then conDec is the (foreign) constant declaration of n
     *)
@@ -83,7 +83,7 @@ struct
 
     (* solveNumber k = SOME(U)
 
-       Invariant: 
+       Invariant:
        U is the term obtained applying the foreign constant
        corresponding to the number k to an empty spine
     *)
@@ -116,7 +116,7 @@ struct
             in
               equalMSet'
             end
-      
+
     (* toExp sum = U
 
        Invariant:
@@ -145,7 +145,7 @@ struct
 
     (* toExpEClo (U,s) = U
 
-       Invariant: 
+       Invariant:
        G |- U : V and U is the Twelf syntax conversion of Us
     *)
     and toExpEClo (U, Shift (0)) = U
@@ -164,13 +164,13 @@ struct
     *)
     and sameExpW (Us1 as (Root (H1, S1), s1), Us2 as (Root (H2, S2), s2)) =
           (case (H1, H2) of
-	     (BVar(k1), BVar(k2)) => 
-	       (k1 = k2) andalso sameSpine ((S1, s1), (S2, s2))
-	   | (FVar (n1,_,_), FVar (n2,_,_)) =>
-	       (n1 = n2) andalso sameSpine ((S1, s1), (S2, s2))
+             (BVar(k1), BVar(k2)) =>
+               (k1 = k2) andalso sameSpine ((S1, s1), (S2, s2))
+           | (FVar (n1,_,_), FVar (n2,_,_)) =>
+               (n1 = n2) andalso sameSpine ((S1, s1), (S2, s2))
            | _ => false)
       | sameExpW (Us1 as (U1 as EVar(r1, G1, V1, cnstrs1), s1),
-		  Us2 as (U2 as EVar(r2, G2, V2, cnstrs2), s2)) =
+                  Us2 as (U2 as EVar(r2, G2, V2, cnstrs2), s2)) =
          (r1 = r2) andalso sameSub (s1, s2)
       | sameExpW _ = false
 
@@ -358,16 +358,16 @@ struct
     (* mapSum (f, m + M1 + ...) = m + mapMon(f,M1) + ... *)
     and mapSum (f, Sum (m, monL)) =
           Sum (m, List.map (fn mon => mapMon (f, mon)) monL)
-    
+
     (* mapMon (f, n * (U1,s1) + ...) = n * f(U1,s1) * ... *)
     and mapMon (f, Mon (n, UsL)) =
           Mon (n, List.map (fn Us => Whnf.whnf (f (EClo Us), id)) UsL)
 
     fun appSum (f, Sum (m, monL)) =
-	List.app (fn mon => appMon (f, mon)) monL
+        List.app (fn mon => appMon (f, mon)) monL
 
     and appMon (f, Mon (n, UsL)) =
-	List.app (fn Us => f (EClo Us)) UsL
+        List.app (fn Us => f (EClo Us)) UsL
 
     (* solvableSum (m + M1 + ....) =
          true iff the generalized gcd of the coefficients of the Mi
@@ -399,14 +399,14 @@ struct
             findMon' (monL, nil)
           end
 
-    (* divideSum (sum, k) = 
+    (* divideSum (sum, k) =
          SOME(sum') if sum is divisible by the scalar k, and sum' = sum/k
          NONE       if sum is not divisible by k
     *)
     fun divideSum (Sum(m, monL), k) =
           let
             exception Err
-            fun divide n = 
+            fun divide n =
                   if rem(n, k) = zero then quot(n, k)
                   else raise Err
             fun divideMon (Mon(n, UsL)) = Mon (divide n, UsL)
@@ -469,14 +469,14 @@ struct
                              val Z = newEVar (G', number())
                            in
                              Assign (G, X1, toFgn(plusSum (Sum (zero, [Mon(quot(n2, g), [(K, ss)])]),
-                                                           timesSum (Sum (x1, nil), 
+                                                           timesSum (Sum (x1, nil),
                                                                      Sum (zero, [Mon (one, [(Z, ss)])])))), ss1) ::
                              Assign (G, X2, toFgn(plusSum (Sum (zero, [Mon(~(quot(n1, g)), [(K, ss)])]),
                                                            timesSum (Sum (x2, nil),
                                                                      Sum (zero, [Mon (one, [(Z, ss)])])))), ss2) ::
                              solveSum (G, plusSum (Sum(zero, [Mon(g, [(Z, ss)])]), sum2))
                            end
-                       | NONE => 
+                       | NONE =>
                            (case divideSum (sum1, n1)
                               of SOME(sum1') => [Assign (G, X1, toFgn(unaryMinusSum (sum1')), ss1)]
                                | NONE => [delaySum (G, sum)]))
@@ -510,7 +510,7 @@ struct
               of Sum (m, nil) => if (m = zero) then Succeed nil else Fail
                | sum => if (solvableSum sum) then Succeed (solveSum (G, sum))
                         else Fail
-          end   
+          end
 
     (* toFgn sum = U
 
@@ -557,26 +557,26 @@ struct
     fun app (MyIntsynRep sum) f = appSum (f, sum)
       | app fe _ = raise (UnexpectedFgnExp fe)
 
-    fun equalTo (MyIntsynRep sum) U2 = 
-	(case minusSum (normalizeSum (sum),
-		       (fromExp (U2, id)))
-	 of Sum(m, nil) => (m = zero)
-	  | _ => false)
+    fun equalTo (MyIntsynRep sum) U2 =
+        (case minusSum (normalizeSum (sum),
+                       (fromExp (U2, id)))
+         of Sum(m, nil) => (m = zero)
+          | _ => false)
       | equalTo fe _ = raise (UnexpectedFgnExp fe)
 
     fun unifyWith (MyIntsynRep sum) (G, U2) =
-	unifySum (G, normalizeSum sum, (fromExp (U2, id)))
+        unifySum (G, normalizeSum sum, (fromExp (U2, id)))
       | unifyWith fe _ = raise (UnexpectedFgnExp fe)
 
     fun installFgnExpOps () = let
-	val csid = !myID
-	val _ = FgnExpStd.ToInternal.install (csid, toInternal)
-	val _ = FgnExpStd.Map.install (csid, map)
-	val _ = FgnExpStd.App.install (csid, app)
-	val _ = FgnExpStd.UnifyWith.install (csid, unifyWith)
-	val _ = FgnExpStd.EqualTo.install (csid, equalTo)
+        val csid = !myID
+        val _ = FgnExpStd.ToInternal.install (csid, toInternal)
+        val _ = FgnExpStd.Map.install (csid, map)
+        val _ = FgnExpStd.App.install (csid, app)
+        val _ = FgnExpStd.UnifyWith.install (csid, unifyWith)
+        val _ = FgnExpStd.EqualTo.install (csid, equalTo)
     in
-	()
+        ()
     end
 
     fun makeFgn (arity, opExp) (S) =
@@ -585,7 +585,7 @@ struct
               | makeParams n =
                   App (Root(BVar (n), Nil), makeParams (Int.-(n,1)))
             fun makeLam E 0 = E
-              | makeLam E n = 
+              | makeLam E n =
                   Lam (Dec (NONE, number()), makeLam E (Int.-(n,1)))
             fun expand ((Nil, s), arity) =
                   (makeParams arity, arity)
@@ -594,7 +594,7 @@ struct
                     val (S', arity') = expand ((S, s), (Int.-(arity,1)))
                   in
                     (App (EClo (U, comp (s, Shift (arity'))), S'), arity')
-                  end 
+                  end
               | expand ((SClo (S, s'), s), arity) =
                   expand ((S, comp (s', s)), arity)
             val (S', arity') = expand ((S, id), arity)
@@ -608,7 +608,7 @@ struct
                opSum (fromExp (U, id)))
 
     fun makeFgnBinary opSum =
-          makeFgn (2, 
+          makeFgn (2,
             fn (App (U1, App (U2, Nil))) =>
               opSum (fromExp (U1, id), fromExp (U2, id)))
 
@@ -622,7 +622,7 @@ struct
           (
             myID := cs;
 
-            numberID := 
+            numberID :=
               installF (ConDec ("integer", NONE, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
@@ -659,7 +659,7 @@ struct
                                   Type),
                         SOME(FX.Infix (FX.dec FX.maxPrec, FX.Left)),
                         nil);
-	    installFgnExpOps ();
+            installFgnExpOps ();
             ()
           )
   in
@@ -685,7 +685,7 @@ struct
     val compatibleMon = compatibleMon
 
     val number = number
-    
+
     fun unaryMinus U = toFgn (unaryMinusSum (fromExp (U, id)))
     fun plus (U, V) = toFgn (plusSum (fromExp (U ,id), fromExp (V, id)))
     fun minus (U, V) = toFgn (minusSum (fromExp (U, id), fromExp (V, id)))

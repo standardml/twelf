@@ -4,7 +4,7 @@
 
 functor Lexer (structure Stream' : STREAM
                (*! structure Paths' : PATHS !*)
-		 )
+                 )
   : LEXER =
 struct
 
@@ -16,52 +16,52 @@ struct
   in
 
   datatype IdCase =
-      Upper				(* [A-Z]<id> or _<id> *)
-    | Lower				(* any other <id> *)
-    | Quoted				(* '<id>', currently unused *)
+      Upper                             (* [A-Z]<id> or _<id> *)
+    | Lower                             (* any other <id> *)
+    | Quoted                            (* '<id>', currently unused *)
 
   datatype Token =
-      EOF				(* end of file or stream, also `%.' *)
-    | DOT				(* `.' *)
+      EOF                               (* end of file or stream, also `%.' *)
+    | DOT                               (* `.' *)
     | PATHSEP                           (* `.' between <id>s *)
-    | COLON				(* `:' *)
-    | LPAREN | RPAREN			(* `(' `)' *)
-    | LBRACKET | RBRACKET		(* `[' `]' *)
-    | LBRACE | RBRACE			(* `{' `}' *)
-    | BACKARROW | ARROW			(* `<-' `->' *)
-    | TYPE				(* `type' *)
-    | EQUAL				(* `=' *)
-    | ID of IdCase * string		(* identifer *)
-    | UNDERSCORE			(* `_' *)
-    | INFIX | PREFIX | POSTFIX		(* `%infix' `%prefix' `%postfix' *)
-    | NAME				(* `%name' *)
-    | DEFINE				(* `%define' *) (* -rv 8/27/01 *)
-    | SOLVE				(* `%solve' *)
-    | QUERY	  			(* `%query' *)
-    | FQUERY	  			(* `%fquery' *)
+    | COLON                             (* `:' *)
+    | LPAREN | RPAREN                   (* `(' `)' *)
+    | LBRACKET | RBRACKET               (* `[' `]' *)
+    | LBRACE | RBRACE                   (* `{' `}' *)
+    | BACKARROW | ARROW                 (* `<-' `->' *)
+    | TYPE                              (* `type' *)
+    | EQUAL                             (* `=' *)
+    | ID of IdCase * string             (* identifer *)
+    | UNDERSCORE                        (* `_' *)
+    | INFIX | PREFIX | POSTFIX          (* `%infix' `%prefix' `%postfix' *)
+    | NAME                              (* `%name' *)
+    | DEFINE                            (* `%define' *) (* -rv 8/27/01 *)
+    | SOLVE                             (* `%solve' *)
+    | QUERY                             (* `%query' *)
+    | FQUERY                            (* `%fquery' *)
     | COMPILE                           (* '%compile' *) (* -ABP 4/4/03 *)
-    | QUERYTABLED  			(* `%querytabled *)
-    | MODE				(* `%mode' *)
-    | UNIQUE				(* `%unique' *) (* -fp 8/17/03 *)
-    | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
-    | TOTAL				(* `%total' *) (* -fp 3/18/01 *)
-    | TERMINATES			(* `%terminates' *)
+    | QUERYTABLED                       (* `%querytabled *)
+    | MODE                              (* `%mode' *)
+    | UNIQUE                            (* `%unique' *) (* -fp 8/17/03 *)
+    | COVERS                            (* `%covers' *) (* -fp 3/7/01 *)
+    | TOTAL                             (* `%total' *) (* -fp 3/18/01 *)
+    | TERMINATES                        (* `%terminates' *)
     | REDUCES                           (* `%reduces' *) (* -bp  6/05/99 *)
     | TABLED                            (* `%tabled' *)     (* -bp 11/20/01 *)
     | KEEPTABLE                         (* `%keepTable' *)  (* -bp 11/20/01 *)
     | THEOREM                           (* `%theorem' *)
-    | BLOCK				(* `%block' *) (* -cs 5/29/01 *)
+    | BLOCK                             (* `%block' *) (* -cs 5/29/01 *)
     | WORLDS                            (* `%worlds' *)
     | PROVE                             (* `%prove' *)
-    | ESTABLISH				(* `%establish' *)
-    | ASSERT				(* `%assert' *)
-    | ABBREV				(* `%abbrev' *)
+    | ESTABLISH                         (* `%establish' *)
+    | ASSERT                            (* `%assert' *)
+    | ABBREV                            (* `%abbrev' *)
     | TRUSTME                           (* `%trustme' *) (* -fp 8/26/05 *)
     | FREEZE                            (* `%freeze' *)
-    | THAW				(* `%thaw' *)
-    | SUBORD				(* `%subord' *) (* -gaw 07/11/08 *)
+    | THAW                              (* `%thaw' *)
+    | SUBORD                            (* `%subord' *) (* -gaw 07/11/08 *)
     | DETERMINISTIC                     (* `%deterministic' *) (* -rv 11/27/01 *)
-    | CLAUSE				(* `%clause' *) (* -fp 8/9/02 *)
+    | CLAUSE                            (* `%clause' *) (* -fp 8/9/02 *)
     | SIG                               (* `%sig' *)
     | STRUCT                            (* `%struct' *)
     | WHERE                             (* `%where' *)
@@ -91,7 +91,7 @@ struct
   (* isIdChar (c) = B iff c is legal identifier constituent *)
   fun isIdChar (c) = Char.isLower(c) orelse Char.isUpper (c)
                      orelse Char.isDigit (c) orelse isSym(c)
-		     orelse isQuote (c) orelse isUTF8(c)
+                     orelse isQuote (c) orelse isUTF8(c)
 
   (* stringToToken (idCase, string, region) = (token, region)
      converts special identifiers into tokens, returns ID token otherwise
@@ -113,10 +113,10 @@ struct
   fun lex (inputFun:int -> string) =
   let
     local (* local state maintained by the lexer *)
-      val s = ref ""			(* current string (line) *)
-      and left = ref 0			(* position of first character in s *)
-      and right = ref 0			(* position after last character in s *)
-      val _ = P.resetLines ()   	(* initialize line counter *)
+      val s = ref ""                    (* current string (line) *)
+      and left = ref 0                  (* position of first character in s *)
+      and right = ref 0                 (* position after last character in s *)
+      val _ = P.resetLines ()           (* initialize line counter *)
 
       (* neither lexer nor parser should ever try to look beyond EOF *)
       val EOFString = String.str #"\^D"
@@ -128,32 +128,32 @@ struct
          spread across lines
       *)
       fun readNext () =
-	  let
-	    val nextLine = inputFun (!right)
-	    val nextSize = String.size (nextLine)
-	  in
-	    if nextSize = 0		(* end of file? *)
-	      then (s := EOFString;	(* fake EOF character string *)
-		    left := !right;
-		    right := !right + 1)
-	    else (s := nextLine;
-		  left := !right;
-		  right := !right + nextSize;
-		  P.newLine (!left)) (* remember new line position *)
-	  end
+          let
+            val nextLine = inputFun (!right)
+            val nextSize = String.size (nextLine)
+          in
+            if nextSize = 0             (* end of file? *)
+              then (s := EOFString;     (* fake EOF character string *)
+                    left := !right;
+                    right := !right + 1)
+            else (s := nextLine;
+                  left := !right;
+                  right := !right + nextSize;
+                  P.newLine (!left)) (* remember new line position *)
+          end
     in
       (* char (i) = character at position i
          Invariant: i >= !left
-	 Effects: will read input if i >= !right
+         Effects: will read input if i >= !right
       *)
       fun char (i) =
-	  if i >= !right then (readNext (); char (i))
-	  else String.sub (!s, i - !left)
+          if i >= !right then (readNext (); char (i))
+          else String.sub (!s, i - !left)
 
       (* string (i,j) = substring at region including i, excluding j
          Invariant: i >= !left and i < j and j < !right
                     Note that the relevant parts must already have been read!
-	 Effects: None
+         Effects: None
       *)
       fun string (i,j) = String.substring (!s, i - !left, j-i)
     end
@@ -191,40 +191,40 @@ struct
       | lexInitial (#"\^D", i) = (EOF, P.Reg (i-1,i-1))
       | lexInitial (#"\"", i) = lexString (P.Reg(i-1, i))
       | lexInitial (c, i) =
-	if Char.isSpace (c) then lexInitial (char (i),i+1)
-	else if Char.isUpper(c) then lexID (Upper, P.Reg (i-1,i))
-	else if Char.isDigit(c) then lexID (Lower, P.Reg (i-1,i))
-	else if Char.isLower(c) then lexID (Lower, P.Reg (i-1,i))
-	else if isSym(c) then lexID (Lower, P.Reg (i-1,i))
-	else if isUTF8(c) then lexID (Lower, P.Reg (i-1,i))
+        if Char.isSpace (c) then lexInitial (char (i),i+1)
+        else if Char.isUpper(c) then lexID (Upper, P.Reg (i-1,i))
+        else if Char.isDigit(c) then lexID (Lower, P.Reg (i-1,i))
+        else if Char.isLower(c) then lexID (Lower, P.Reg (i-1,i))
+        else if isSym(c) then lexID (Lower, P.Reg (i-1,i))
+        else if isUTF8(c) then lexID (Lower, P.Reg (i-1,i))
         else error (P.Reg (i-1,i), "Illegal character " ^ Char.toString (c))
         (* recover by ignoring: lexInitial (char(i), i+1) *)
 
     and lexID (idCase, P.Reg (i,j)) =
         let fun lexID' (j) =
-	        if isIdChar (char(j)) then lexID' (j+1)
-		else 
-		   idToToken (idCase, P.Reg (i,j))
-	in
-	  lexID' (j)
-	end
+                if isIdChar (char(j)) then lexID' (j+1)
+                else
+                   idToToken (idCase, P.Reg (i,j))
+        in
+          lexID' (j)
+        end
 
     (* lexQUID is currently not used --- no quoted identifiers *)
     and lexQUID (P.Reg (i,j)) =
         if Char.isSpace (char(j))
-	  then error (P.Reg (i,j+1), "Whitespace in quoted identifier")
-	       (* recover by adding implicit quote? *)
-	       (* qidToToken (i, j) *)
-	else if isQuote (char(j)) then qidToToken (P.Reg (i,j))
-	     else lexQUID (P.Reg (i, j+1)) 
+          then error (P.Reg (i,j+1), "Whitespace in quoted identifier")
+               (* recover by adding implicit quote? *)
+               (* qidToToken (i, j) *)
+        else if isQuote (char(j)) then qidToToken (P.Reg (i,j))
+             else lexQUID (P.Reg (i, j+1))
 
     and lexPercent (#".", i) = (EOF, P.Reg (i-2,i))
       | lexPercent (#"{", i) = lexPercentBrace (char(i), i+1)
       | lexPercent (#"%", i) = lexComment (#"%", i)
       | lexPercent (c, i) =
         if isIdChar(c) then lexPragmaKey (lexID (Quoted, P.Reg (i-1, i)))
-	else if Char.isSpace(c) then lexComment (c, i)
-	  else error (P.Reg (i-1, i), "Comment character `%' not followed by white space")
+        else if Char.isSpace(c) then lexComment (c, i)
+          else error (P.Reg (i-1, i), "Comment character `%' not followed by white space")
 
     and lexPragmaKey (ID(_, "infix"), r) = (INFIX, r)
       | lexPragmaKey (ID(_, "prefix"), r) = (PREFIX, r)
@@ -274,7 +274,7 @@ struct
       | lexComment (#"%", i) = lexCommentPercent (char(i), i+1)
       | lexComment (#"\^D", i) =
           error (P.Reg (i-1, i-1), "Unclosed single-line comment at end of file")
-	  (* recover: (EOF, (i-1,i-1)) *)
+          (* recover: (EOF, (i-1,i-1)) *)
       | lexComment (c, i) = lexComment (char(i), i+1)
 
     and lexCommentPercent (#".", i) = (EOF, P.Reg (i-2, i))
@@ -288,7 +288,7 @@ struct
       | lexDComment (#"\^D", l, i) =
           (* pass comment beginning for error message? *)
           error (P.Reg (i-1,i-1), "Unclosed delimited comment at end of file")
-	  (* recover: (EOF, (i-1,i-1)) *)
+          (* recover: (EOF, (i-1,i-1)) *)
       | lexDComment (c, l, i) = lexDComment (char(i), l, i+1)
 
     and lexDCommentPercent (#"{", l, i) = lexDComment (char(i), l+1, i+1)
@@ -306,7 +306,7 @@ struct
              of (#"\"") => (STRING (string (i, j+1)), P.Reg(i, j+1))
               | (#"\n") =>
                   error (P.Reg (i-1, i-1), "Unclosed string constant at end of line")
-	          (* recover: (EOL, (i-1,i-1)) *)
+                  (* recover: (EOL, (i-1,i-1)) *)
               | (#"\^D") =>
                   error (P.Reg (i-1, i-1), "Unclosed string constant at end of file")
                   (* recover: (EOF, (i-1,i-1)) *)
@@ -337,9 +337,9 @@ struct
 
   fun lexTerminal (prompt0, prompt1) =
         lex (fn 0 => (print (prompt0) ;
-		      Compat.inputLine97 (TextIO.stdIn))
-	      | i => (print (prompt1) ;
-		      Compat.inputLine97 (TextIO.stdIn)))
+                      Compat.inputLine97 (TextIO.stdIn))
+              | i => (print (prompt1) ;
+                      Compat.inputLine97 (TextIO.stdIn)))
 
   fun toString' (DOT) = "."
     | toString' (PATHSEP) = "."
@@ -370,7 +370,7 @@ struct
     | toString' (COVERS) = "%covers"
     | toString' (TOTAL) = "%total"
     | toString' (TERMINATES) = "%terminates"
-    | toString' (BLOCK) = "%block"	(* -cs 6/3/01. *)
+    | toString' (BLOCK) = "%block"      (* -cs 6/3/01. *)
     | toString' (WORLDS) = "%worlds"
     | toString' (REDUCES) = "%reduces"              (*  -bp 6/5/99. *)
     | toString' (TABLED) = "%tabled"                (*  -bp 20/11/01. *)
@@ -406,7 +406,7 @@ struct
      let val digit = Char.ord(c) - Char.ord(#"0")
      in
        if digit < 0 orelse digit > 9
-	 then raise NotDigit (c)
+         then raise NotDigit (c)
        else digit
      end
 
@@ -415,8 +415,8 @@ struct
  fun stringToNat (s) =
      let val l = String.size s
          fun stn (i, n) =
-	     if i = l then n
-	     else stn (i+1, 10 * n + charToNat (String.sub (s, i)))
+             if i = l then n
+             else stn (i+1, 10 * n + charToNat (String.sub (s, i)))
      in
        stn (0, 0)
      end
@@ -428,7 +428,7 @@ struct
     | isUpper (s) =
       let val c = String.sub (s, 0)
        in
-	 Char.isUpper c orelse c = #"_"
+         Char.isUpper c orelse c = #"_"
       end
 
   end  (* local ... *)
@@ -437,5 +437,5 @@ end;  (* functor Lexer *)
 
 structure Lexer =
   Lexer (structure Stream' = Stream
-	 (*! structure Paths' = Paths !*)
-	   );
+         (*! structure Paths' = Paths !*)
+           );

@@ -103,7 +103,7 @@ struct
               if (check_numerator (String.explode (numerator)))
               then
                 case (I.fromString (numerator))
-                  of SOME (n) => 
+                  of SOME (n) =>
                        SOME (Fract(I.sign(n),
                                    I.abs(n),
                                    I.fromInt(1)))

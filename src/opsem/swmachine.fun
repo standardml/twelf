@@ -1,9 +1,9 @@
 functor SwMachine (structure Trace : TRACE
-		   structure AbsMachine : ABSMACHINE
-		   structure TMachine : ABSMACHINE
-		   (*! sharing TMachine.IntSyn = AbsMachine.IntSyn !*)
-		   (*! sharing TMachine.CompSyn = AbsMachine.CompSyn !*)
-		     ) : ABSMACHINE =
+                   structure AbsMachine : ABSMACHINE
+                   structure TMachine : ABSMACHINE
+                   (*! sharing TMachine.IntSyn = AbsMachine.IntSyn !*)
+                   (*! sharing TMachine.CompSyn = AbsMachine.CompSyn !*)
+                     ) : ABSMACHINE =
 struct
 
   (*! structure IntSyn = AbsMachine.IntSyn !*)

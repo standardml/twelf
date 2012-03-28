@@ -25,7 +25,7 @@ struct
   *)
   fun evarInstToString (Xs) =
       if !Global.chatter >= 3
-	then Print.evarInstToString (Xs)
+        then Print.evarInstToString (Xs)
       else ""
 
   (* expToString (G, U) = msg
@@ -34,7 +34,7 @@ struct
   *)
   fun expToString GU =
       if !Global.chatter >= 3
-	then Print.expToString GU
+        then Print.expToString GU
       else ""
 
 
@@ -43,31 +43,31 @@ struct
 
   fun run (quy, Paths.Loc (fileName, r)) =
       let
-	(* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
-	val (V, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
-					(* times itself *)
-	val _ = if !Global.chatter >= 3
-		  then print ("%fquery")
-		else ()
-	val _ = if !Global.chatter >= 3
-		  then print (" ")
-		else ()
-	val _ = if !Global.chatter >= 3
-		  then print ((Timers.time Timers.printing expToString)
-			      (IntSyn.Null, V) ^ ".\n")
-		else ()
+        (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
+        val (V, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
+                                        (* times itself *)
+        val _ = if !Global.chatter >= 3
+                  then print ("%fquery")
+                else ()
+        val _ = if !Global.chatter >= 3
+                  then print (" ")
+                else ()
+        val _ = if !Global.chatter >= 3
+                  then print ((Timers.time Timers.printing expToString)
+                              (IntSyn.Null, V) ^ ".\n")
+                else ()
 
-	val (k, V1)  = Abstract.abstractDecImp V
-	val (G, V2) = lower (k, I.Null, V1)
-					(* G |- V'' : type *)
-	val a = I.targetFam V2
-	val W = W.lookup a
-	val V3 = Worldify.worldifyGoal (G, V2)
-	val _ = TypeCheck.typeCheck (G, (V3, I.Uni I.Type))
-	val P = Converter.convertGoal (T.embedCtx G, V3)
-	val V = (Timers.time Timers.delphin Opsem.evalPrg) P
+        val (k, V1)  = Abstract.abstractDecImp V
+        val (G, V2) = lower (k, I.Null, V1)
+                                        (* G |- V'' : type *)
+        val a = I.targetFam V2
+        val W = W.lookup a
+        val V3 = Worldify.worldifyGoal (G, V2)
+        val _ = TypeCheck.typeCheck (G, (V3, I.Uni I.Type))
+        val P = Converter.convertGoal (T.embedCtx G, V3)
+        val V = (Timers.time Timers.delphin Opsem.evalPrg) P
       in
-	print ("Delphin: " ^ TomegaPrint.prgToString (I.Null, V) ^ "\n")
+        print ("Delphin: " ^ TomegaPrint.prgToString (I.Null, V) ^ "\n")
       end
 
 end; (* functor Solve *)

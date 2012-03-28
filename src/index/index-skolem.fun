@@ -3,22 +3,22 @@
 (* Modified: Frank Pfenning *)
 
 functor IndexSkolem (structure Global : GLOBAL
-		     structure Queue : QUEUE
-		     (*! structure IntSyn' : INTSYN !*)
-		       )
+                     structure Queue : QUEUE
+                     (*! structure IntSyn' : INTSYN !*)
+                       )
   : INDEX =
 struct
   (*! structure IntSyn = IntSyn' !*)
- 
+
   local
     structure I = IntSyn
 
     fun cidFromHead (I.Const c) = c
       | cidFromHead (I.Def c) = c
 
-    (* Index array                             
+    (* Index array
 
-       Invariant: 
+       Invariant:
        For all type families  a
        indexArray (a) = c1,...,cn
        where c1,...,cn is a queue consisting of all constants with
@@ -31,14 +31,14 @@ struct
        Empties index array
     *)
     fun reset () = Array.modify (fn _ => Queue.empty) indexArray
-      
+
     (* update (a, c) = ()
        inserts c into the index queue for family a
        Invariant: a = target family of c
     *)
     fun update (a, c) =
         Array.update (indexArray, a,
-		      Queue.insert (c, Array.sub (indexArray, a)))
+                      Queue.insert (c, Array.sub (indexArray, a)))
 
     (* install (c) = ()
        installs c into the correct index queue
@@ -46,13 +46,13 @@ struct
     *)
     fun install fromCS (H as I.Const c) =
         (case (fromCS, I.sgnLookup (c))
-	  of (_, I.ConDec (_, _, _, _, A, I.Type)) => update (cidFromHead (I.targetHead A), H)
+          of (_, I.ConDec (_, _, _, _, A, I.Type)) => update (cidFromHead (I.targetHead A), H)
            | (I.Clause, I.ConDef (_, _, _, _, A, I.Type, _)) => update (cidFromHead (I.targetHead A), I.Def(c))
-	   | _ => ())
+           | _ => ())
       | install fromCS (H as I.Skonst c) =
         (case I.sgnLookup (c)
-	   of I.SkoDec (_, _, _, A, I.Type) => update (cidFromHead (I.targetHead A), H)
-	    | _ => ())
+           of I.SkoDec (_, _, _, A, I.Type) => update (cidFromHead (I.targetHead A), H)
+            | _ => ())
 
     fun remove (a, cid) =
         (case Queue.deleteEnd (Array.sub (indexArray, a))
@@ -90,11 +90,11 @@ struct
     *)
     fun lookup a =
         let fun lk (l, NONE) = l
-	      | lk (l, SOME(q')) =
-	        (Array.update (indexArray, a, q'); l)
-	in
-	  lk (Queue.toList (Array.sub (indexArray, a)))
-	end
+              | lk (l, SOME(q')) =
+                (Array.update (indexArray, a, q'); l)
+        in
+          lk (Queue.toList (Array.sub (indexArray, a)))
+        end
 
   in
 

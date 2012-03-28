@@ -35,26 +35,26 @@ local
   (* assumes NF *)
   fun fmtDQuants (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
       let
-	val D' = Names.decEName (G, D)
+        val D' = Names.decEName (G, D)
       in
-	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
-	:: fmtDQuants (I.Decl (G, D'), V2)
+        sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
+        :: fmtDQuants (I.Decl (G, D'), V2)
       end
     | fmtDQuants (G, I.Pi ((D as I.Dec (_, V1), I.Meta), V2)) =
       let
-	val D' = Names.decEName (G, D)
+        val D' = Names.decEName (G, D)
       in
-	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
-	:: fmtDQuants (I.Decl (G, D'), V2)
+        sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
+        :: fmtDQuants (I.Decl (G, D'), V2)
       end
     | fmtDQuants (G, V as I.Pi _) = (* P = I.No *)
         [F.HOVbox (fmtDSubGoals (G, V, nil))]
     | fmtDQuants (G, V) = (* V = Root _ *)
-	[Print.formatExp (G, V)]
+        [Print.formatExp (G, V)]
   and fmtDSubGoals (G, I.Pi ((D as I.Dec (_, V1), I.No), V2), acc) =
         fmtDSubGoals (I.Decl (G, D), V2,
-		      F.Break :: sym "<-" :: F.Space :: fmtGparens (G, V1)
-		      :: acc)
+                      F.Break :: sym "<-" :: F.Space :: fmtGparens (G, V1)
+                      :: acc)
     | fmtDSubGoals (G, V as I.Pi _, acc) = (* acc <> nil *)
         parens (F.HVbox (fmtDQuants (G, V))) :: acc
     | fmtDSubGoals (G, V, acc) = (* V = Root _ *)
@@ -67,24 +67,24 @@ local
         Print.formatExp (G, V)
   and fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
       let
-	val D' = Names.decLUName (G, D)
+        val D' = Names.decLUName (G, D)
       in
-	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
-	:: fmtGQuants (I.Decl (G, D'), V2)
+        sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
+        :: fmtGQuants (I.Decl (G, D'), V2)
       end
     | fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Meta), V2)) =
       let
-	val D' = Names.decLUName (G, D)
+        val D' = Names.decLUName (G, D)
       in
-	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
-	:: fmtGQuants (I.Decl (G, D'), V2)
+        sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
+        :: fmtGQuants (I.Decl (G, D'), V2)
       end
     | fmtGQuants (G, V) = (* P = I.No or V = Root _ *)
-	[F.HOVbox (fmtGHyps (G, V))]
+        [F.HOVbox (fmtGHyps (G, V))]
   and fmtGHyps (G, I.Pi ((D as I.Dec (_, V1), I.No), V2)) =
         fmtDparens (G, V1) :: F.Break :: sym "->" :: F.Space :: fmtGHyps (I.Decl (G, D), V2)
     | fmtGHyps (G, V as I.Pi _) = (* P = I.Maybe *)
-	[F.HVbox (fmtGQuants (G, V))]
+        [F.HVbox (fmtGQuants (G, V))]
     | fmtGHyps (G, V) = (* V = Root _ *)
         [Print.formatExp (G, V)]
 
@@ -96,16 +96,16 @@ local
 
   fun fmtConDec (I.ConDec (id, parent, i, _, V, I.Type)) =
       let
-	val _ = Names.varReset IntSyn.Null
-	val Vfmt = fmtClauseI (i, I.Null, V)
+        val _ = Names.varReset IntSyn.Null
+        val Vfmt = fmtClauseI (i, I.Null, V)
       in
-	F.HVbox [Str0 (Symbol.const (id)), F.Space, sym ":", F.Break,
-		 Vfmt, sym "."]
+        F.HVbox [Str0 (Symbol.const (id)), F.Space, sym ":", F.Break,
+                 Vfmt, sym "."]
       end
     | fmtConDec (condec) =
       (* type family declaration, definition, or Skolem constant *)
       Print.formatConDec (condec)
-  
+
 in
 
   fun formatClause (G, V) = fmtClause (G, V)
@@ -114,7 +114,7 @@ in
   fun clauseToString (G, V) = F.makestring_fmt (formatClause (G, V))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
 
-  fun printSgn () = 
+  fun printSgn () =
       IntSyn.sgnApp (fn (cid) => (print (conDecToString (IntSyn.sgnLookup cid)); print "\n"))
 end  (* local ... *)
 

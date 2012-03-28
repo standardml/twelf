@@ -31,21 +31,21 @@ struct
 
     fun print_table () =
           let
-	    fun print_table' nil = ()
-	      | print_table' [(name, addr)] =
-	          print ("(\"" ^ name ^ "\", " ^ Int.toString addr ^ ")\n")
-	      | print_table' ((name, addr) :: pairs) =
-	          (print ("(\"" ^ name ^ "\", " ^ Int.toString addr ^ "),\n");
-		   print_table' pairs)
+            fun print_table' nil = ()
+              | print_table' [(name, addr)] =
+                  print ("(\"" ^ name ^ "\", " ^ Int.toString addr ^ ")\n")
+              | print_table' ((name, addr) :: pairs) =
+                  (print ("(\"" ^ name ^ "\", " ^ Int.toString addr ^ "),\n");
+                   print_table' pairs)
           in
-	    (
-	      print "val tcb_table := [\n";
-	      print_table' (valOf (!tcb_table));
-	      print "];\n"
-	    )
-	  end
+            (
+              print "val tcb_table := [\n";
+              print_table' (valOf (!tcb_table));
+              print "];\n"
+            )
+          end
 
-    fun print_size () = 
+    fun print_size () =
          print ("val tcb_size = " ^ Int.toString (!tcb_size) ^ ";\n")
 
     fun init filename =
@@ -56,29 +56,29 @@ struct
         fun get_line () = (linecount := !linecount + 1; Compat.inputLine97 stream)
 
         fun error () = raise Error ("Error reading file '" ^ filename
-	                             ^ "', line " ^ (Int.toString (!linecount)))
+                                     ^ "', line " ^ (Int.toString (!linecount)))
 
         fun read_size () =
-	      case (Int.fromString (get_line ()))
-	        of SOME(tcb_size) => tcb_size
-		 | NONE => error ()
+              case (Int.fromString (get_line ()))
+                of SOME(tcb_size) => tcb_size
+                 | NONE => error ()
 
         val () = tcb_size := read_size ()
 
-	val () = if (!Global.chatter >= 3) then print_size () else ()
+        val () = if (!Global.chatter >= 3) then print_size () else ()
 
         fun read_table "" = nil
-	  | read_table line =
-	      case (String.tokens Char.isSpace line)
-	        of [id, addr] =>
+          | read_table line =
+              case (String.tokens Char.isSpace line)
+                of [id, addr] =>
                    (id, valOf (Int.fromString addr)) :: read_table (get_line ())
                  | _ => error ()
 
         val () = tcb_table := SOME (read_table (get_line ()))
 
-	val () = if (!Global.chatter >= 3) then print_table () else ()
+        val () = if (!Global.chatter >= 3) then print_table () else ()
 
-	val () = TextIO.closeIn stream
+        val () = TextIO.closeIn stream
       in
         ()
       end
@@ -116,7 +116,7 @@ struct
                   else clookup' (cid+1)
           in
             clookup' 0
-          end 
+          end
 
     fun print_once cid =
           case (Table.lookup printTable cid)
@@ -138,10 +138,10 @@ struct
             of SOME(stream) =>
                  (tuples := !tuples + 1;
                   BinIO.output (stream, Word8ArraySlice.vector
-					    (Word8ArraySlice.slice
-						 (array, 0, NONE))))
+                                            (Word8ArraySlice.slice
+                                                 (array, 0, NONE))))
              | NONE => ()
-          
+
     fun tuple (code, flags as (cld, prd, cls), arg1, arg2) =
           let
             val addr = W.fromInt (!tuples + !tcb_size)
@@ -149,14 +149,14 @@ struct
                                           Word8.fromInt 0)
             val opcode = ref (Word8.toLargeWord (Byte.charToByte code))
           in
-	    if(cld)
+            if(cld)
             then opcode := LargeWord.orb (!opcode, closedMask)
             else ();
             if(prd)
             then opcode := LargeWord.orb (!opcode, predicateMask)
             else ();
             if(cls)
-	    then opcode := LargeWord.orb (!opcode, clauseMask)
+            then opcode := LargeWord.orb (!opcode, clauseMask)
             else ();
 
             Pack.update (array, 0, !opcode);
@@ -164,9 +164,9 @@ struct
             Pack.update (array, 1, W.toLargeWord arg1);
             Pack.update (array, 2, W.toLargeWord arg2);
 
-	    if (!Global.chatter >= 4)
-	    then print_tuple (addr, code, flags, arg1, arg2)
-	    else ();
+            if (!Global.chatter >= 4)
+            then print_tuple (addr, code, flags, arg1, arg2)
+            else ();
 
             writeArray array;
 
@@ -179,10 +179,10 @@ struct
     fun const true ty =
           tuple (#"c", (true, true, true), W.fromInt 0, ty)
       | const false _ = W.fromInt 0
-       
+
     fun var true ty = tuple (#"v", (false, false, false), W.fromInt 0, ty)
       | var false _ = W.fromInt 0
-       
+
     fun pi true (flags, var, exp) = tuple (#"p", flags, var, exp)
       | pi false _ = W.fromInt 0
 
@@ -266,7 +266,7 @@ struct
                 end
               else false
              | _ => false
-          
+
     fun lookup cid =
           case (Table.lookup symTable cid)
             of SOME(idx) => idx
@@ -394,7 +394,7 @@ struct
                     val _ = BinIO.closeOut stream
                   in
                     idx
-                  end 
+                  end
            fun error msg =
                  let
                    fun closeOut () =
@@ -403,7 +403,7 @@ struct
                             | NONE => ()
                  in
                    (print ("Error: " ^ msg ^ "\n"); closeOut(); ~1)
-                 end 
+                 end
           in
             case (N.constLookup (valOf (N.stringToQid name)))
               of SOME(cid) =>
@@ -443,7 +443,7 @@ struct
                             | NONE => ()
                  in
                    (print ("Error: " ^ msg ^ "\n"); closeOut())
-                 end 
+                 end
           in
             case (!startClause)
               of SOME (cid) =>
@@ -486,134 +486,134 @@ struct
            end
 
      fun sort cmp l =
-	 let
-	     fun split l =
-		 let fun s a1 a2 nil = (a1, a2)
-		       | s a1 a2 (h::t) = s a2 (h::a1) t
+         let
+             fun split l =
+                 let fun s a1 a2 nil = (a1, a2)
+                       | s a1 a2 (h::t) = s a2 (h::a1) t
                 in s nil nil l
                 end
-	     fun merge a nil = a
-	       | merge nil b = b
-	       | merge (aa as (a::ta)) (bb as (b::tb)) =
-		 case cmp (a, b) of
-		     EQUAL => (a :: b :: merge ta tb)
-		   | LESS => (a :: merge ta bb)
-		   | GREATER => (b :: merge aa tb)
-			 
-	     fun ms nil = nil
-	       | ms [s] = [s]
-	       | ms [a,b] = merge [a] [b]
-	       | ms ll = 
-		 let val (a,b) = split ll
-		 in merge (ms a) (ms b)
-		 end
-	 in ms l
-	 end
-     
+             fun merge a nil = a
+               | merge nil b = b
+               | merge (aa as (a::ta)) (bb as (b::tb)) =
+                 case cmp (a, b) of
+                     EQUAL => (a :: b :: merge ta tb)
+                   | LESS => (a :: merge ta bb)
+                   | GREATER => (b :: merge aa tb)
+
+             fun ms nil = nil
+               | ms [s] = [s]
+               | ms [a,b] = merge [a] [b]
+               | ms ll =
+                 let val (a,b) = split ll
+                 in merge (ms a) (ms b)
+                 end
+         in ms l
+         end
+
      fun sortedKeys t =
-	 let
-	     val r = ref []
-	     val _ =  IHT.app (fn x => r := x :: !r) t
-	 in
-	     sort Int.compare (map #1 (!r)) 
-	 end
-     
+         let
+             val r = ref []
+             val _ =  IHT.app (fn x => r := x :: !r) t
+         in
+             sort Int.compare (map #1 (!r))
+         end
+
     exception noPriorEntry of string
     exception Error of string
-    
+
     fun valOfE e NONE = raise e
       | valOfE e (SOME x) = x
-	
+
     val counter = ref 0
 
     (* returns a tuple of the name of the cid and SOME of the shadowing cid if any *)
     fun isShadowedBy cid =
-	let 
-	    val name = I.conDecName(I.sgnLookup cid)
-	    val currentcid = valOfE (noPriorEntry name) (SHT.lookup shadowTable name)
-	in 
-	    (name, if currentcid <> cid then SOME currentcid else NONE)
-	end
+        let
+            val name = I.conDecName(I.sgnLookup cid)
+            val currentcid = valOfE (noPriorEntry name) (SHT.lookup shadowTable name)
+        in
+            (name, if currentcid <> cid then SOME currentcid else NONE)
+        end
 
     (* returns true if it changed any names *)
     fun isShadowing () =
-	let
-	    (* val _ = print "clearing table...\n" *)
-	    val _ = SHT.clear shadowTable
-	    val changes = ref false
-	    fun processDep rcid cid =
-		let
-		    fun handleProblem (currentcid, name) =
-			(case Table.lookup replaceTable cid of SOME _ => ()
-		      | _ =>
-			     let
-				 val replacement = (* Option.mapPartial
-						    (fn x => (case isShadowedBy x of 
-						    (_, SOME _) => NONE 
-                                  		      | (x, NONE) => SOME x)) *) (* XXX worrying - jcreed 7/05 *)
-				     Option.map (I.conDecName o I.sgnLookup) (Table.lookup imitatesTable cid)
-			     in
-				 case replacement of 
-				     NONE => 
-					 raise Error ("Error: " ^ name ^ " (" ^ Int.toString cid ^ ") used by cid " ^ Int.toString rcid ^
-						" but shadowed by " ^ Int.toString currentcid ^ ".\n")
-				   | SOME x => ((* print ("DX planning to subtly rename " ^ Int.toString cid ^ " to " ^ x ^ "\n");  *)
-						Table.insert replaceTable (cid, x))
-			     end)
-		    val (name, sb) = isShadowedBy cid
-		in
-		    case sb of 
-			SOME currentcid => 
-			    if (cid < valOf(!startSemant) orelse cid >= valOf(!startClause))
-				(* problematic shadowing *)
-			    then handleProblem(currentcid, name)
-			    (* nonproblematic shadowing - change its name *)
-			    else let
-				     val newname = "shadowed_" ^ Int.toString(!counter)
-				 in
-				     (* print ("DX renaming " ^ Int.toString cid ^ " to " ^ newname ^ "\n"); *)
-				     I.rename(cid, newname);
-				     SHT.insert shadowTable (newname, cid);
-				     counter := !counter + 1;
-				     changes := true
-				 end
-		      | NONE => ()
-		end
+        let
+            (* val _ = print "clearing table...\n" *)
+            val _ = SHT.clear shadowTable
+            val changes = ref false
+            fun processDep rcid cid =
+                let
+                    fun handleProblem (currentcid, name) =
+                        (case Table.lookup replaceTable cid of SOME _ => ()
+                      | _ =>
+                             let
+                                 val replacement = (* Option.mapPartial
+                                                    (fn x => (case isShadowedBy x of
+                                                    (_, SOME _) => NONE
+                                                      | (x, NONE) => SOME x)) *) (* XXX worrying - jcreed 7/05 *)
+                                     Option.map (I.conDecName o I.sgnLookup) (Table.lookup imitatesTable cid)
+                             in
+                                 case replacement of
+                                     NONE =>
+                                         raise Error ("Error: " ^ name ^ " (" ^ Int.toString cid ^ ") used by cid " ^ Int.toString rcid ^
+                                                " but shadowed by " ^ Int.toString currentcid ^ ".\n")
+                                   | SOME x => ((* print ("DX planning to subtly rename " ^ Int.toString cid ^ " to " ^ x ^ "\n");  *)
+                                                Table.insert replaceTable (cid, x))
+                             end)
+                    val (name, sb) = isShadowedBy cid
+                in
+                    case sb of
+                        SOME currentcid =>
+                            if (cid < valOf(!startSemant) orelse cid >= valOf(!startClause))
+                                (* problematic shadowing *)
+                            then handleProblem(currentcid, name)
+                            (* nonproblematic shadowing - change its name *)
+                            else let
+                                     val newname = "shadowed_" ^ Int.toString(!counter)
+                                 in
+                                     (* print ("DX renaming " ^ Int.toString cid ^ " to " ^ newname ^ "\n"); *)
+                                     I.rename(cid, newname);
+                                     SHT.insert shadowTable (newname, cid);
+                                     counter := !counter + 1;
+                                     changes := true
+                                 end
+                      | NONE => ()
+                end
 
-	    fun processCid cid =
-		let
-		    
-		    val name = I.conDecName(I.sgnLookup cid)
-		    (* val _ = print ("DX processing cid " ^ Int.toString cid ^ " which has name [" ^ name ^ "].\n") *)
-		in
-		    List.app (processDep cid) (sortedKeys(valOf(IHT.lookup depTable cid)))
-		    handle Option => ();
-		    SHT.insert shadowTable (name, cid)
-		end
-	in
-	    List.app processCid (sortedKeys recordTable) handle (e as noPriorEntry s) => (print ("Error: No Prior Entry: " ^ s ^ "\n"); raise e);
-	    !changes
-	end
+            fun processCid cid =
+                let
+
+                    val name = I.conDecName(I.sgnLookup cid)
+                    (* val _ = print ("DX processing cid " ^ Int.toString cid ^ " which has name [" ^ name ^ "].\n") *)
+                in
+                    List.app (processDep cid) (sortedKeys(valOf(IHT.lookup depTable cid)))
+                    handle Option => ();
+                    SHT.insert shadowTable (name, cid)
+                end
+        in
+            List.app processCid (sortedKeys recordTable) handle (e as noPriorEntry s) => (print ("Error: No Prior Entry: " ^ s ^ "\n"); raise e);
+            !changes
+        end
 
   fun is_def cid = ((I.constDef cid; true) handle Match => false)
 
   fun fixityDec cid =
       (case N.getFixity cid of
-	  (f as F.Infix _) => 
-	      F.toString f ^ " " ^ I.conDecName(I.sgnLookup cid) ^ ".\n"
-	      | _ => "")
+          (f as F.Infix _) =>
+              F.toString f ^ " " ^ I.conDecName(I.sgnLookup cid) ^ ".\n"
+              | _ => "")
 
   fun record_once k cid = (case IHT.insertShadow recordTable (cid,()) of
-			       NONE => ((* print("DX Recording " ^ Int.toString cid ^ ".\n") ; *)  k cid)
-			     | SOME _ => ())
+                               NONE => ((* print("DX Recording " ^ Int.toString cid ^ ".\n") ; *)  k cid)
+                             | SOME _ => ())
 
-  fun recordDependency (x, y) = 
+  fun recordDependency (x, y) =
       let
 (*        val msg = "DX dep " ^ Int.toString x ^ " on " ^ Int.toString y ^ "\n" *)
-	  val table = (case IHT.lookup depTable x of SOME y => y 
-	| NONE => let val t = IHT.new 32 in IHT.insert depTable (x,t); t end)
+          val table = (case IHT.lookup depTable x of SOME y => y
+        | NONE => let val t = IHT.new 32 in IHT.insert depTable (x,t); t end)
       in
-	  IHT.insert table (y,())
+          IHT.insert table (y,())
       end
 
   local open I in
@@ -622,17 +622,17 @@ struct
     | etaReduce n (Lam(_,t)) = etaReduce (n + 1) t
     | etaReduce _ _ = NONE
   and etaReduceSpine n (App(fst,sp)) = (case (etaReduce 0 fst) of
-					    SOME (BVar n') => n = n' andalso etaReduceSpine (n-1) sp
-					  | _ => false)
+                                            SOME (BVar n') => n = n' andalso etaReduceSpine (n-1) sp
+                                          | _ => false)
     | etaReduceSpine n Nil = true
     | etaReduceSpine n _ = false
-      
-  fun checkTrivial cid = (case sgnLookup cid of 
-			      (AbbrevDef (_,_,_,M,V,_)) =>
-				  (case etaReduce 0 M of SOME (Const cid') => 
-				       (print ("DX inserting " ^ Int.toString cid' ^ " = " ^ Int.toString cid ^ "\n");
-					Table.insert imitatesTable (cid', cid)) | _ => ())
-			    | _ => ())
+
+  fun checkTrivial cid = (case sgnLookup cid of
+                              (AbbrevDef (_,_,_,M,V,_)) =>
+                                  (case etaReduce 0 M of SOME (Const cid') =>
+                                       (print ("DX inserting " ^ Int.toString cid' ^ " = " ^ Int.toString cid ^ "\n");
+                                        Table.insert imitatesTable (cid', cid)) | _ => ())
+                            | _ => ())
 
   fun travExp cid (Uni _) = ()
     | travExp cid (Pi ((D,_),B)) = (travDec cid D; travExp cid B)
@@ -651,12 +651,12 @@ struct
     | traverseDescendants' cid (AbbrevDef (_,_,_,M,V,_)) = (travExp cid M; travExp cid V)
     | traverseDescendants' cid _ = ()
   and traverseDescendants cid = traverseDescendants' cid (I.sgnLookup cid)
-  and traverse cid  = 
+  and traverse cid  =
       let
-	  val name = conDecName(sgnLookup cid)
-	  (* val message = "DX Traversing cid = " ^ Int.toString cid ^ " name = " ^ name ^ "\n" *)
+          val name = conDecName(sgnLookup cid)
+          (* val message = "DX Traversing cid = " ^ Int.toString cid ^ " name = " ^ name ^ "\n" *)
       in
-	  record_once traverseDescendants cid
+          record_once traverseDescendants cid
       end
 
   end
@@ -664,8 +664,8 @@ struct
   fun initForText () =
       let
       in
-	  startClause := NONE;
-	  startSemant := NONE;
+          startClause := NONE;
+          startSemant := NONE;
           Table.clear depTable;
           Table.clear recordTable;
           Table.clear imitatesTable;
@@ -676,78 +676,78 @@ struct
 
   fun appRange f min max =
       if (min < max)
-	  then
-	      (f min;
-	       appRange f (min + 1) max)
+          then
+              (f min;
+               appRange f (min + 1) max)
       else ()
 
   fun dumpAll (max, first, outputSemant, outputChecker) =
-      let 
-	  val streamSemant = TextIO.openOut outputSemant
-	  val streamChecker = TextIO.openOut outputChecker
-	  val streamTcb = TextIO.openOut "dumptcb" (* DX *)
-	  fun waitUntilFalse f = if f() then waitUntilFalse f else ()
-	  fun outputCid cid = (* if cid < (valOf(!startSemant)) then () else *) (* DX *)
-	      let 
-		  val s = Print.conDecToString(I.sgnLookup cid) ^ "\n"
-		  val s' = if cid >= valOf(!startClause) andalso is_def cid 
-			   then if isClause cid 
-				then "%clause " ^ s
-				else s
-			   else s
-		  val stream = if cid < valOf(!startSemant) then streamTcb else (* DX *)
-		      if cid >= valOf(!startClause) then streamChecker else streamSemant
-	      in 
-		  TextIO.output (stream, s' ^ (fixityDec cid))
-	      end
+      let
+          val streamSemant = TextIO.openOut outputSemant
+          val streamChecker = TextIO.openOut outputChecker
+          val streamTcb = TextIO.openOut "dumptcb" (* DX *)
+          fun waitUntilFalse f = if f() then waitUntilFalse f else ()
+          fun outputCid cid = (* if cid < (valOf(!startSemant)) then () else *) (* DX *)
+              let
+                  val s = Print.conDecToString(I.sgnLookup cid) ^ "\n"
+                  val s' = if cid >= valOf(!startClause) andalso is_def cid
+                           then if isClause cid
+                                then "%clause " ^ s
+                                else s
+                           else s
+                  val stream = if cid < valOf(!startSemant) then streamTcb else (* DX *)
+                      if cid >= valOf(!startClause) then streamChecker else streamSemant
+              in
+                  TextIO.output (stream, s' ^ (fixityDec cid))
+              end
 
       in
-	  appRange checkTrivial 0 max;
-	  appRange traverse first max;
-	  appRange (fn cid => Table.insert recordTable (cid,())) 0 (valOf(!startSemant));
-	  waitUntilFalse isShadowing;
-	  Table.app IntSyn.rename replaceTable;
-	  List.app outputCid (sortedKeys recordTable);
-	  TextIO.closeOut (streamSemant);
-	  TextIO.closeOut (streamChecker);
-	  TextIO.closeOut (streamTcb) (* DX *)
+          appRange checkTrivial 0 max;
+          appRange traverse first max;
+          appRange (fn cid => Table.insert recordTable (cid,())) 0 (valOf(!startSemant));
+          waitUntilFalse isShadowing;
+          Table.app IntSyn.rename replaceTable;
+          List.app outputCid (sortedKeys recordTable);
+          TextIO.closeOut (streamSemant);
+          TextIO.closeOut (streamChecker);
+          TextIO.closeOut (streamTcb) (* DX *)
       end
 
-  fun dumpText (outputSemant, outputChecker) = 
+  fun dumpText (outputSemant, outputChecker) =
       let
           val max = #1 (I.sgnSize ())
 
-	  (* val _ = print ("DX startSemant = " ^ Int.toString(valOf(!startSemant)) ^ "\n") *)
-	  (* val _ = print ("DX startClause = " ^ Int.toString(valOf(!startClause)) ^ "\n") *)
+          (* val _ = print ("DX startSemant = " ^ Int.toString(valOf(!startSemant)) ^ "\n") *)
+          (* val _ = print ("DX startClause = " ^ Int.toString(valOf(!startClause)) ^ "\n") *)
 
-	  fun correctFixities cid =
-	      if (cid < max)
-		  then
-		      (let
-			   val fixity = N.getFixity cid
-			   val imp = I.constImp cid
-			   val name = I.conDecName (I.sgnLookup cid)
-			   (* val _ = case fixity of F.Infix _ => print ("DX Infix " ^ Int.toString cid ^ " " ^ name ^ " " ^ Int.toString imp ^ " \n") | _ => () *)
-			   val inSemant = cid >= valOf(!startSemant) andalso cid < valOf(!startClause)
-			   val makeNonfix = 
-			       case (fixity, imp, inSemant) of 
-				   (F.Infix _, _, true) => ((*print ("DX setting nonfix " ^ Int.toString cid ^ "\n"); *) true)
-				 | (F.Infix _, 0, false) => false 
-				 | (F.Infix _, _, false) => raise InfixWithImplicitArgs
-				 | (_, _, _) => false
-		       in
-			   if makeNonfix then N.installFixity (cid, F.Nonfix) else ()
-		       end;   correctFixities (cid + 1))
-	      else ()
-		  
-	  val _ = correctFixities 0
+          fun correctFixities cid =
+              if (cid < max)
+                  then
+                      (let
+                           val fixity = N.getFixity cid
+                           val imp = I.constImp cid
+                           val name = I.conDecName (I.sgnLookup cid)
+                           (* val _ = case fixity of F.Infix _ => print ("DX Infix " ^ Int.toString cid ^ " " ^ name ^ " " ^ Int.toString imp ^ " \n") | _ => () *)
+                           val inSemant = cid >= valOf(!startSemant) andalso cid < valOf(!startClause)
+                           val makeNonfix =
+                               case (fixity, imp, inSemant) of
+                                   (F.Infix _, _, true) => ((*print ("DX setting nonfix " ^ Int.toString cid ^ "\n"); *) true)
+                                 | (F.Infix _, 0, false) => false
+                                 | (F.Infix _, _, false) => raise InfixWithImplicitArgs
+                                 | (_, _, _) => false
+                       in
+                           if makeNonfix then N.installFixity (cid, F.Nonfix) else ()
+                       end;   correctFixities (cid + 1))
+              else ()
 
-          fun error msg = print ("Error: " ^ msg ^ "\n")		  
+          val _ = correctFixities 0
+
+          fun error msg = print ("Error: " ^ msg ^ "\n")
       in
           case (!startClause)
-	   of SOME (cid) =>
+           of SOME (cid) =>
               (dumpAll (max, cid, outputSemant, outputChecker) handle Error msg => error msg)
-	    | NONE => error ("setFlag() has not been called yet\n")
+            | NONE => error ("setFlag() has not been called yet\n")
       end
 
     in

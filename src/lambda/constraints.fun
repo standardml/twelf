@@ -30,18 +30,18 @@ struct
 
   local
     structure I = IntSyn
-  
+
     (* simplify cnstrs = cnstrs'
        Effects: simplifies the constraints in cnstrs by removing constraints
          of the form U = U' where G |- U == U' : V (mod beta/eta)
          Neither U nor U' needs to be a pattern
-	 *)
+         *)
     fun simplify nil = nil
       | simplify ((ref I.Solved) :: cnstrs) =
           simplify cnstrs
       | simplify ((Eqn as ref (I.Eqn (G, U1, U2))) :: cnstrs) =
         if Conv.conv ((U1, I.id), (U2, I.id))
-	  then simplify cnstrs
+          then simplify cnstrs
         else Eqn :: (simplify cnstrs)
       | simplify ((FgnCnstr as ref (I.FgnCnstr csfc)) :: cnstrs) =
         if I.FgnCnstrStd.Simplify.apply csfc ()

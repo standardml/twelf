@@ -14,42 +14,42 @@ struct
   (*! structure IntSyn = IntSyn' !*)
   exception Error of string
 
-  local 
+  local
     structure I = IntSyn
     structure M = ModeSyn
-      
+
     val modeSignature : (M.ModeSpine list) Table.Table = Table.new(0);
 
     (* reset () = ()
 
-       Effect: Resets mode array 
+       Effect: Resets mode array
     *)
 
     fun reset () = Table.clear modeSignature
-     
+
     (* modeLookup a = mSOpt
 
        Looks up the mode of a in the mode array (if they are multiple, returns the last one
        inserted.
     *)
     fun modeLookup a =
-	  case (Table.lookup modeSignature a)
-	    of SOME (mS :: _) => SOME(mS)
-	     | NONE => NONE
-	
+          case (Table.lookup modeSignature a)
+            of SOME (mS :: _) => SOME(mS)
+             | NONE => NONE
+
 
     (* mmodeLookup a = mSs
 
        Looks up the modes of a in the mode array.
     *)
     fun mmodeLookup a =
-	  case (Table.lookup modeSignature a)
-	    of SOME mSs => mSs
-	     | NONE => nil
-	
+          case (Table.lookup modeSignature a)
+            of SOME mSs => mSs
+             | NONE => nil
+
 
     (* installMode (a, mS) = ()
-        
+
        Effect: the ModeSpine mS is stored with the type family a; if there were previous
                modes stored with a, they are replaced by mS
     *)
@@ -61,20 +61,20 @@ struct
     *)
     fun uninstallMode a =
         case modeLookup a
-	  of NONE => false
+          of NONE => false
            | SOME _ => (Table.delete modeSignature a; true)
 
     (* installMmode (a, mS) = ()
-        
+
        Effect: the ModeSpine mS is stored with the type family a; if there were previous
                models stored with a, the new mode mS is added to them.
     *)
     fun installMmode (a, mS) =
           let
-	    val mSs = mmodeLookup a
-	  in
+            val mSs = mmodeLookup a
+          in
             Table.insert modeSignature (a, mS :: mSs)
-	  end
+          end
 
   in
     val reset = reset

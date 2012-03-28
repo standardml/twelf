@@ -5,7 +5,7 @@ functor Unique
   (structure Global : GLOBAL
    structure Whnf : WHNF
    structure Abstract : ABSTRACT
-   structure Unify : UNIFY		(* must be trailing! *)
+   structure Unify : UNIFY              (* must be trailing! *)
    structure Constraints : CONSTRAINTS
    structure UniqueTable : MODETABLE
    structure UniqueCheck : MODECHECK
@@ -33,8 +33,8 @@ struct
 
     fun chatter chlev f =
         if !Global.chatter >= chlev
-	  then print (f ())
-	else ()
+          then print (f ())
+        else ()
 
     fun cName (cid) = N.qidToString (N.constQid cid)
 
@@ -53,15 +53,15 @@ struct
     *)
     fun instEVars (G, (I.Pi ((I.Dec (_, V1), _), V2), s)) =
         let
-	  val X1 = I.newEVar (G, I.EClo (V1, s))
-	in
-	  instEVars (G, (V2, (I.Dot (I.Exp (X1), s))))
-	end
+          val X1 = I.newEVar (G, I.EClo (V1, s))
+        in
+          instEVars (G, (V2, (I.Dot (I.Exp (X1), s))))
+        end
       | instEVars (G, Vs as (I.Root _, _)) = Vs
 
     (* generalized from ../cover/cover.fun *)
     (* createEVarSub (G, G') = s
-     
+
        Invariant:
        If   G |- G' ctx
        then G |- s : G' and s instantiates each x:A with an EVar G |- X : A
@@ -69,12 +69,12 @@ struct
     fun createEVarSub (G, I.Null) = I.Shift (I.ctxLength G)
       | createEVarSub (G, I.Decl(G', D as I.Dec (_, V))) =
         let
-	  val s = createEVarSub (G, G')
-	  val V' = I.EClo (V, s)
-	  val X = I.newEVar (G, V')
-	in
-	  I.Dot (I.Exp X, s)
-	end
+          val s = createEVarSub (G, G')
+          val V' = I.EClo (V, s)
+          val X = I.newEVar (G, V')
+        in
+          I.Dot (I.Exp X, s)
+        end
 
     (* unifiable (G, (U, s), (U', s')) = true
        iff G |- U[s] = U'[s'] : V  (for some V)
@@ -89,29 +89,29 @@ struct
     *)
     fun unifiableSpines (G, (I.Nil, s), (I.Nil, s'), M.Mnil) = true
       | unifiableSpines (G, (I.App (U1, S2), s), (I.App (U1', S2'), s'),
-			 M.Mapp (M.Marg (M.Plus, _), ms2)) =
-	  unifiable (G, (U1, s), (U1', s'))
-	  andalso unifiableSpines (G, (S2, s), (S2', s'), ms2)
+                         M.Mapp (M.Marg (M.Plus, _), ms2)) =
+          unifiable (G, (U1, s), (U1', s'))
+          andalso unifiableSpines (G, (S2, s), (S2', s'), ms2)
       | unifiableSpines (G, (I.App (U1, S2), s), (I.App (U1', S2'), s'),
-			 M.Mapp (M.Marg (mode, _), ms2)) =
-	(* skip output ( - ) or ignore ( * ) arguments *)
-	  unifiableSpines (G, (S2, s), (S2', s'), ms2)
+                         M.Mapp (M.Marg (mode, _), ms2)) =
+        (* skip output ( - ) or ignore ( * ) arguments *)
+          unifiableSpines (G, (S2, s), (S2', s'), ms2)
 
     (* unifiableRoots (G, (a @ S, s), (a' @ S', s'), ms) = true
        iff G |- a@S[s] == a'@S'[s'] on input ( + ) arguments according to ms
        Effect: may instantiate EVars in all inputs
     *)
     fun unifiableRoots (G, (I.Root (I.Const (a), S), s),
-			   (I.Root (I.Const (a'), S'), s'), ms) =
+                           (I.Root (I.Const (a'), S'), s'), ms) =
         (a = a') andalso unifiableSpines (G, (S, s), (S', s'), ms)
 
     fun checkNotUnifiableTypes (G, Vs, Vs', ms, (bx, by)) =
         ( chatter 6 (fn () => "?- " ^ pName bx ^ " ~ " ^ pName by ^ "\n") ;
           CSManager.trail (fn () =>
-			   if unifiableRoots (G, Vs, Vs', ms)
-			     then raise Error ("Blocks " ^ pName bx ^ " and "
-					       ^ pName by ^ " overlap")
-			   else ()) )
+                           if unifiableRoots (G, Vs, Vs', ms)
+                             then raise Error ("Blocks " ^ pName bx ^ " and "
+                                               ^ pName by ^ " overlap")
+                           else ()) )
 
     (*----------------------------*)
     (* Constant/Constant overlaps *)
@@ -124,17 +124,17 @@ struct
     *)
     fun checkDiffConstConst (I.Const(cid), I.Const(cid'), ms) =
         let
-	  val _ = chatter 6 (fn () => "?- " ^ cName cid ^ " ~ " ^ cName cid' ^ "\n")
-	  val Vs = instEVars (I.Null, (I.constType cid, I.id))
-	  val Vs' = instEVars (I.Null, (I.constType cid', I.id))
-	  val _ = CSManager.trail (fn () =>
-				   if unifiableRoots (I.Null, Vs, Vs', ms)
-				     then raise Error ("Constants " ^ cName cid ^ " and "
-						       ^ cName cid' ^ " overlap\n")
-				   else ())
-	in
-	  ()
-	end
+          val _ = chatter 6 (fn () => "?- " ^ cName cid ^ " ~ " ^ cName cid' ^ "\n")
+          val Vs = instEVars (I.Null, (I.constType cid, I.id))
+          val Vs' = instEVars (I.Null, (I.constType cid', I.id))
+          val _ = CSManager.trail (fn () =>
+                                   if unifiableRoots (I.Null, Vs, Vs', ms)
+                                     then raise Error ("Constants " ^ cName cid ^ " and "
+                                                       ^ cName cid' ^ " overlap\n")
+                                   else ())
+        in
+          ()
+        end
 
     (* checkUniqueConstConsts (c, cs, ms) = ()
        checks if c:A overlaps with any c':A' in cs on input arguments ( + )
@@ -144,7 +144,7 @@ struct
     fun checkUniqueConstConsts (c, nil, ms) = ()
       | checkUniqueConstConsts (c, c'::cs', ms) =
         ( checkDiffConstConst (c, c', ms) ;
-	  checkUniqueConstConsts (c, cs', ms) )
+          checkUniqueConstConsts (c, cs', ms) )
 
     (* checkUniqueConsts (cs, ms) = ()
        checks if no two pairs of constant types in cs overlap on input arguments ( + )
@@ -154,7 +154,7 @@ struct
     fun checkUniqueConsts (nil, ms) = ()
       | checkUniqueConsts (c::cs, ms) =
         ( checkUniqueConstConsts (c, cs, ms);
-	  checkUniqueConsts (cs, ms) )
+          checkUniqueConsts (cs, ms) )
 
     (*-----------------------------------------*)
     (* Block/Block and Block/Constant overlaps *)
@@ -169,16 +169,16 @@ struct
     fun checkDiffBlocksInternal (G, Vs, (t, nil), (a, ms), bx) = ()
       | checkDiffBlocksInternal (G, (V, s), (t, (D as I.Dec(yOpt, V'))::piDecs), (a, ms), (b, xOpt)) =
         let
-	  val a' = I.targetFam V'
-	  val _ = if (a = a')
-		    then checkNotUnifiableTypes (G, (V, s), instEVars (G, (V', t)), ms, ((b, xOpt), (b, yOpt)))
-		  else ()
-	in
-	  checkDiffBlocksInternal (I.Decl (G, D), (V, I.comp (s, I.shift)),
-				   (I.dot1 t, piDecs),
-				   (a, ms),
-				   (b, xOpt))
-	end
+          val a' = I.targetFam V'
+          val _ = if (a = a')
+                    then checkNotUnifiableTypes (G, (V, s), instEVars (G, (V', t)), ms, ((b, xOpt), (b, yOpt)))
+                  else ()
+        in
+          checkDiffBlocksInternal (I.Decl (G, D), (V, I.comp (s, I.shift)),
+                                   (I.dot1 t, piDecs),
+                                   (a, ms),
+                                   (b, xOpt))
+        end
 
     (* checkUniqueBlockInternal' (G, (t, piDecs), (a, ms), b) = ()
        checks that no two declarations for family a in piDecs[t] overlap
@@ -189,28 +189,28 @@ struct
     fun checkUniqueBlockInternal' (G, (t, nil), (a, ms), b) = ()
       | checkUniqueBlockInternal' (G, (t, (D as I.Dec(xOpt, V))::piDecs), (a, ms), b) =
         let
-	  val a' = I.targetFam V
-	  val _ = if (a = a')
-		    then let val (V', s) = instEVars (G, (V, t))
-			 in
-			   checkDiffBlocksInternal (I.Decl (G, D), (V', I.comp (s, I.shift)),
-						    (I.dot1 t, piDecs), (a, ms), (b, xOpt))
-			 end
-		  else ()
-	in
-	  checkUniqueBlockInternal' (I.Decl (G, D), (I.dot1 t, piDecs), (a, ms), b)
-	end
+          val a' = I.targetFam V
+          val _ = if (a = a')
+                    then let val (V', s) = instEVars (G, (V, t))
+                         in
+                           checkDiffBlocksInternal (I.Decl (G, D), (V', I.comp (s, I.shift)),
+                                                    (I.dot1 t, piDecs), (a, ms), (b, xOpt))
+                         end
+                  else ()
+        in
+          checkUniqueBlockInternal' (I.Decl (G, D), (I.dot1 t, piDecs), (a, ms), b)
+        end
 
     (* checkUniqueBlockInternal ((Gsome, piDecs), (a, ms))
        see checkUniqueBlockInternal'
     *)
     fun checkUniqueBlockInternal ((Gsome, piDecs), (a, ms), b) =
         let
-	  val t = createEVarSub (I.Null, Gsome)
-	  (* . |- t : Gsome *)
-	in
-	   checkUniqueBlockInternal' (I.Null, (t, piDecs), (a, ms), b)
-	end
+          val t = createEVarSub (I.Null, Gsome)
+          (* . |- t : Gsome *)
+        in
+           checkUniqueBlockInternal' (I.Null, (t, piDecs), (a, ms), b)
+        end
 
     (* checkUniqueBlockConstants (G, (V, s), cs, ms, bx) = ()
        checks that V[s] = a@S[s] does not overlap with any constant in cs
@@ -221,16 +221,16 @@ struct
     fun checkUniqueBlockConsts (G, Vs, nil, ms, bx) = ()
       | checkUniqueBlockConsts (G, Vs, I.Const(cid)::cs, ms, bx) =
         let
-	  val _ = chatter 6 (fn () => "?- " ^ pName bx ^ " ~ " ^ cName cid ^ "\n")
-	  val Vs' = instEVars (G, (I.constType cid, I.id))
-	  val _ = CSManager.trail (fn () =>
-				   if unifiableRoots (G, Vs, Vs', ms)
-				     then raise Error ("Block " ^ pName bx ^ " and constant "
-						       ^ cName cid ^ " overlap")
-				   else ())
-	in
-	  checkUniqueBlockConsts (G, Vs, cs, ms, bx)
-	end
+          val _ = chatter 6 (fn () => "?- " ^ pName bx ^ " ~ " ^ cName cid ^ "\n")
+          val Vs' = instEVars (G, (I.constType cid, I.id))
+          val _ = CSManager.trail (fn () =>
+                                   if unifiableRoots (G, Vs, Vs', ms)
+                                     then raise Error ("Block " ^ pName bx ^ " and constant "
+                                                       ^ cName cid ^ " overlap")
+                                   else ())
+        in
+          checkUniqueBlockConsts (G, Vs, cs, ms, bx)
+        end
 
     (* checkUniqueBlockBlock (G, (V, s), (t, piDecs), (a, ms), (bx, b')) = ()
        checks that V[s] = a @ S[s] does not overlap with any declaration
@@ -242,13 +242,13 @@ struct
     fun checkUniqueBlockBlock (G, Vs, (t, nil), (a, ms), (bx, b')) = ()
       | checkUniqueBlockBlock (G, (V, s), (t, (D as I.Dec(yOpt, V'))::piDecs), (a, ms), (bx, b')) =
         let
-	  val a' = I.targetFam V'
-	  val _ = if (a = a')
-		    then checkNotUnifiableTypes (G, (V, s), instEVars (G, (V', t)), ms, (bx, (b', yOpt)))
-		  else ()
-	in
-	  checkUniqueBlockBlock (I.Decl(G, D), (V, I.comp (s, I.shift)), (I.dot1 t, piDecs), (a, ms), (bx, b'))
-	end
+          val a' = I.targetFam V'
+          val _ = if (a = a')
+                    then checkNotUnifiableTypes (G, (V, s), instEVars (G, (V', t)), ms, (bx, (b', yOpt)))
+                  else ()
+        in
+          checkUniqueBlockBlock (I.Decl(G, D), (V, I.comp (s, I.shift)), (I.dot1 t, piDecs), (a, ms), (bx, b'))
+        end
 
     (* checkUniqueBlockBlocks (G, (V, s), bs, (a, ms), bx) = ()
        checks that V[s] = a @ S[s] does not overlap with any declaration
@@ -258,12 +258,12 @@ struct
     fun checkUniqueBlockBlocks (G, Vs, nil, (a, ms), bx) = ()
       | checkUniqueBlockBlocks (G, Vs, b::bs, (a, ms), bx) =
         let
-	  val (Gsome, piDecs) = I.constBlock b
-	  val t = createEVarSub (G, Gsome)
-	  val _ = checkUniqueBlockBlock (G, Vs, (t, piDecs), (a, ms), (bx, b))
-	in
-	  checkUniqueBlockBlocks (G, Vs, bs, (a, ms), bx)
-	end
+          val (Gsome, piDecs) = I.constBlock b
+          val t = createEVarSub (G, Gsome)
+          val _ = checkUniqueBlockBlock (G, Vs, (t, piDecs), (a, ms), (bx, b))
+        in
+          checkUniqueBlockBlocks (G, Vs, bs, (a, ms), bx)
+        end
 
     (* checkUniqueBlock' (G, (t, piDecs), bs, cs, (a, ms), b) = ()
        check that no declaration for family a in piDecs[t]
@@ -274,29 +274,29 @@ struct
     fun checkUniqueBlock' (G, (t, nil), bs, cs, (a, ms), b) = ()
       | checkUniqueBlock' (G, (t, (D as I.Dec(xOpt, V))::piDecs), bs, cs, (a, ms), b) =
         let
-	  val a' = I.targetFam V
-	  val _ = if (a = a')
-		    then let 
-			   val (V', s) = instEVars (G, (V, t))
-			   val _ = checkUniqueBlockBlocks (G, (V', s), bs, (a, ms), (b, xOpt))
-			   val _ = checkUniqueBlockConsts (G, (V', s), cs, ms, (b, xOpt))
-			 in
-			   ()
-			 end
-		  else ()
-	in
-	  checkUniqueBlock' (I.Decl (G, D), (I.dot1 t, piDecs), bs, cs, (a, ms), b)
-	end
-	    
+          val a' = I.targetFam V
+          val _ = if (a = a')
+                    then let
+                           val (V', s) = instEVars (G, (V, t))
+                           val _ = checkUniqueBlockBlocks (G, (V', s), bs, (a, ms), (b, xOpt))
+                           val _ = checkUniqueBlockConsts (G, (V', s), cs, ms, (b, xOpt))
+                         in
+                           ()
+                         end
+                  else ()
+        in
+          checkUniqueBlock' (I.Decl (G, D), (I.dot1 t, piDecs), bs, cs, (a, ms), b)
+        end
+
     (* checkUniqueBlock ((Gsome, piDecs), bs, cs, (a, ms), b) = ()
        see checkUniqueBlock'
     *)
     fun checkUniqueBlock ((Gsome, piDecs), bs, cs, (a, ms), b) =
         let
-	  val t = createEVarSub (I.Null, Gsome)
-	in
-	  checkUniqueBlock' (I.Null, (t, piDecs), bs, cs, (a, ms), b)
-	end
+          val t = createEVarSub (I.Null, Gsome)
+        in
+          checkUniqueBlock' (I.Null, (t, piDecs), bs, cs, (a, ms), b)
+        end
 
     (* checkUniqueWorlds (bs, cs, (a, ms)) = ()
        checks if no declarations for a in bs overlap with other declarations
@@ -306,7 +306,7 @@ struct
     fun checkUniqueWorlds (nil, cs, (a, ms)) = ()
       | checkUniqueWorlds (b::bs, cs, (a, ms)) =
         ( checkUniqueBlockInternal (I.constBlock b, (a, ms), b) ;
-	  checkUniqueBlock (I.constBlock b, b::bs, cs, (a, ms), b) ;
+          checkUniqueBlock (I.constBlock b, b::bs, cs, (a, ms), b) ;
           checkUniqueWorlds (bs, cs, (a, ms)) )
 
   in
@@ -316,8 +316,8 @@ struct
     fun checkNoDef (a) =
         (case I.sgnLookup a
            of I.ConDef _ =>
-	        raise Error ("Uniqueness checking " ^ cName a
-			     ^ ":\ntype family must not be defined.")
+                raise Error ("Uniqueness checking " ^ cName a
+                             ^ ":\ntype family must not be defined.")
             | _ => ())
 
     (* checkUnique (a, ms) = ()
@@ -326,34 +326,34 @@ struct
     *)
     fun checkUnique (a, ms) =
         let
-	  val _ = chatter 4 (fn () => "Uniqueness checking family " ^ cName a
-			     ^ "\n")
-	  val _ = checkNoDef (a)
-	  val _ = Subordinate.checkNoDef (a)
-	          handle Subordinate.Error (msg) =>
-		    raise Error ("Coverage checking " ^ cName a ^ ":\n"
-				 ^ msg)
+          val _ = chatter 4 (fn () => "Uniqueness checking family " ^ cName a
+                             ^ "\n")
+          val _ = checkNoDef (a)
+          val _ = Subordinate.checkNoDef (a)
+                  handle Subordinate.Error (msg) =>
+                    raise Error ("Coverage checking " ^ cName a ^ ":\n"
+                                 ^ msg)
 
 
-          val cs = Index.lookup a	(* lookup constants defining a *)
-	  val T.Worlds (bs) = W.lookup a (* worlds declarations for a *)
-	                      handle W.Error (msg)
-			      => raise Error ("Uniqueness checking " ^ cName a
-					      ^ ":\nMissing world declaration for "
-					      ^ cName a)
+          val cs = Index.lookup a       (* lookup constants defining a *)
+          val T.Worlds (bs) = W.lookup a (* worlds declarations for a *)
+                              handle W.Error (msg)
+                              => raise Error ("Uniqueness checking " ^ cName a
+                                              ^ ":\nMissing world declaration for "
+                                              ^ cName a)
 
           val _ = checkUniqueConsts (cs, ms)
-	          handle Error (msg) => raise Error ("Uniqueness checking " ^ cName a ^ ":\n" ^ msg)
-	  val _ = checkUniqueWorlds (bs, cs, (a, ms))
-	          handle Error (msg) => raise Error ("Uniqueness checking " ^ cName a ^ ":\n" ^ msg)
+                  handle Error (msg) => raise Error ("Uniqueness checking " ^ cName a ^ ":\n" ^ msg)
+          val _ = checkUniqueWorlds (bs, cs, (a, ms))
+                  handle Error (msg) => raise Error ("Uniqueness checking " ^ cName a ^ ":\n" ^ msg)
 
           val _ = chatter 5 (fn () => "Checking uniqueness modes for family " ^ cName a ^ "\n")
           val _ = UniqueCheck.checkMode (a, ms)
-	          handle UniqueCheck.Error (msg) =>
-		         raise Error ("Uniqueness mode checking " ^ cName a ^ ":\n" ^ msg)
-	in
-	  ()
-	end
+                  handle UniqueCheck.Error (msg) =>
+                         raise Error ("Uniqueness mode checking " ^ cName a ^ ":\n" ^ msg)
+        in
+          ()
+        end
 
   end
 end;  (* functor Unique *)

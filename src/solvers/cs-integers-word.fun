@@ -3,10 +3,10 @@
 
 functor CSIntWord ((*! structure IntSyn : INTSYN !*)
                    structure Whnf : WHNF
-		   (*! sharing Whnf.IntSyn = IntSyn !*)
+                   (*! sharing Whnf.IntSyn = IntSyn !*)
                    structure Unify : UNIFY
                    (*! sharing Unify.IntSyn = IntSyn !*)
-		   (*! structure CSManager : CS_MANAGER !*)
+                   (*! structure CSManager : CS_MANAGER !*)
                    (*! sharing CSManager.IntSyn = IntSyn !*)
                    val wordSize : int)
  : CS =
@@ -77,7 +77,7 @@ struct
 
     (* constant ID's of the proof object generators and their proof objects *)
     (* (these are used as workaround for the lack of sigma types in Twelf)  *)
-    val provePlusID  = ref ~1 : cid ref (* prove+ : {U}{V}{W} + U V W -> type *) 
+    val provePlusID  = ref ~1 : cid ref (* prove+ : {U}{V}{W} + U V W -> type *)
     val proveTimesID = ref ~1 : cid ref (* prove* : {U}{V}{W} * U V W -> type *)
     val proveQuotID  = ref ~1 : cid ref (* prove/ : {U}{V}{W} / U V W -> type *)
     val proofPlusID  = ref ~1 : cid ref (* proof* : {U}{V}{W}{P} prove+ U V W P *)
@@ -124,9 +124,9 @@ struct
             else NONE
           end
 
-    (* parseNumber str = SOME(conDec) or NONE 
+    (* parseNumber str = SOME(conDec) or NONE
 
-       Invariant: 
+       Invariant:
        If str parses to the number n
        then conDec is the (foreign) constant declaration of n
     *)
@@ -138,8 +138,8 @@ struct
     fun plusPfConDec (d1, d2) =
           let
             val d3 = W.+ (d1, d2)
-          in 
-            ConDec (W.fmt StringCvt.DEC d1 
+          in
+            ConDec (W.fmt StringCvt.DEC d1
                     ^ "+"
                     ^ W.fmt StringCvt.DEC d2,
                     NONE, 0, Normal,
@@ -167,7 +167,7 @@ struct
           let
             val d3 = W.div (d1, d2)
           in
-            ConDec (W.fmt StringCvt.DEC d1 
+            ConDec (W.fmt StringCvt.DEC d1
                     ^ "/"
                     ^ W.fmt StringCvt.DEC d2,
                     NONE, 0, Normal,
@@ -190,9 +190,9 @@ struct
                | _ => NONE
           end
 
-    (* parseBinopPf operator string = SOME(conDec) or NONE 
+    (* parseBinopPf operator string = SOME(conDec) or NONE
 
-       Invariant: 
+       Invariant:
        If string parses to the proof object of n1<operator>n2
        then conDec is the (foreign) constant declaration of n1<operator>n2
     *)
@@ -213,7 +213,7 @@ struct
               | NONE =>
           (case (parsePlusPf (string))
              of SOME(conDec) => SOME(conDec)
-              | NONE => 
+              | NONE =>
           (case (parseTimesPf (string))
              of SOME(conDec) => SOME(conDec)
               | NONE => parseQuotPf (string))))
@@ -273,7 +273,7 @@ struct
       | toExp (TimesPf ds) = timesPfExp ds
       | toExp (QuotPf ds) = quotPfExp ds
       | toExp (Expr Us) = EClo Us
- 
+
     fun solveNumber (G, S, k) = SOME(numberExp (W.fromInt k))
 
     (* fst (S, s) = U1, the first argument in S[s] *)
@@ -297,8 +297,8 @@ struct
 
     and awakePlus (G, proof, U1, U2, U3) () =
           case (solvePlus (G, App(U1, App (U2, App (U3, Nil))), 0))
-	    of SOME(proof') => Unify.unifiable(G, (proof, id), (proof', id))
-	     | NONE => false
+            of SOME(proof') => Unify.unifiable(G, (proof, id), (proof', id))
+             | NONE => false
 
     (* constraint constructor *)
     and makeCnstrPlus (G, proof, U1, U2, U3) =
@@ -319,27 +319,27 @@ struct
                      then SOME(plusPfExp(d1, d2))
                      else NONE
                 | (Expr Us1, Num d2, Num d3) =>
-		     if (W.>=(d3, d2) 
+                     if (W.>=(d3, d2)
                          andalso Unify.unifiable (G, Us1, (numberExp (W.-(d3, d2)), id)))
-		     then SOME(plusPfExp(W.-(d3, d2), d2))
-		     else NONE
+                     then SOME(plusPfExp(W.-(d3, d2), d2))
+                     else NONE
                 | (Num d1, Expr Us2, Num d3) =>
-		     if (W.>=(d3, d1) 
+                     if (W.>=(d3, d1)
                          andalso Unify.unifiable (G, Us2, (numberExp (W.-(d3, d1)), id)))
-		     then SOME(plusPfExp(d1, W.-(d3, d1)))
-		     else NONE
+                     then SOME(plusPfExp(d1, W.-(d3, d1)))
+                     else NONE
                 | (Num d1, Num d2, Expr Us3) =>
-		     if (plusCheck (d1, d2)
+                     if (plusCheck (d1, d2)
                          andalso Unify.unifiable (G, Us3, (numberExp (W.+(d1, d2)), id)))
-		     then SOME(plusPfExp(d1, d2))
-		     else NONE
+                     then SOME(plusPfExp(d1, d2))
+                     else NONE
                 | _ => let
-		         val proof = newEVar (G, plusExp(EClo Us1, EClo Us2, EClo Us3))
+                         val proof = newEVar (G, plusExp(EClo Us1, EClo Us2, EClo Us3))
                          val cnstr = makeCnstrPlus (G, proof, EClo Us1, EClo Us2, EClo Us3)
-			 val _ = List.app (fn Us => Unify.delay (Us, ref cnstr))
+                         val _ = List.app (fn Us => Unify.delay (Us, ref cnstr))
                                           [Us1, Us2, Us3]
                        in
-		         SOME(proof)
+                         SOME(proof)
                        end)
           end
       | solvePlus (G, S, n) = NONE
@@ -349,8 +349,8 @@ struct
 
     and awakeTimes (G, proof, U1, U2, U3) () =
           case (solveTimes (G, App(U1, App (U2, App (U3, Nil))), 0))
-	    of SOME(proof') => Unify.unifiable(G, (proof, id), (proof', id))
-	     | NONE => false
+            of SOME(proof') => Unify.unifiable(G, (proof, id), (proof', id))
+             | NONE => false
 
     and makeCnstrTimes (G, proof, U1, U2, U3) =
           FgnCnstr (!myID, MyFgnCnstrRepTimes (G, proof, U1, U2, U3))
@@ -374,36 +374,36 @@ struct
                          andalso Unify.unifiable
                                    (G, Us1, (numberExp(zero), id)))
                      then SOME(timesPfExp (zero, d2))
-		     else if (W.>(d2, zero) andalso W.>(d3, zero)
+                     else if (W.>(d2, zero) andalso W.>(d3, zero)
                               andalso W.mod(d3, d2) = zero
-		              andalso
+                              andalso
                                 Unify.unifiable (G, Us1, (numberExp(W.div (d3, d2)), id)))
-		     then SOME(timesPfExp (W.div (d3, d2), d2))
-		     else NONE
+                     then SOME(timesPfExp (W.div (d3, d2), d2))
+                     else NONE
                 | (Num d1, Expr Us2, Num d3) =>
                      if (d3 = zero
                          andalso Unify.unifiable
                                    (G, Us2, (numberExp(zero), id)))
                        then SOME(timesPfExp (d1, zero))
-		     else if (W.>(d1, zero) andalso W.>(d3, zero)
+                     else if (W.>(d1, zero) andalso W.>(d3, zero)
                               andalso W.mod(d3, d1) = zero
-		              andalso
+                              andalso
                                 Unify.unifiable
                                   (G, Us2, (numberExp(W.div(d3, d1)), id)))
-		     then SOME(timesPfExp (d1, W.div (d3, d1)))
-		     else NONE
+                     then SOME(timesPfExp (d1, W.div (d3, d1)))
+                     else NONE
                 | (Num d1, Num d2, Expr Us3) =>
-		     if (timesCheck (d1, d2)
+                     if (timesCheck (d1, d2)
                          andalso Unify.unifiable (G, Us3, (numberExp(W.*(d1, d2)), id)))
-		     then SOME(timesPfExp (d1, d2))
-		     else NONE
+                     then SOME(timesPfExp (d1, d2))
+                     else NONE
                 | _ => let
-		         val proof = newEVar (G, timesExp(EClo Us1, EClo Us2, EClo Us3))
+                         val proof = newEVar (G, timesExp(EClo Us1, EClo Us2, EClo Us3))
                          val cnstr = makeCnstrTimes (G, proof, EClo Us1, EClo Us2, EClo Us3)
-			 val _ = List.app (fn Us => Unify.delay (Us, ref cnstr))
+                         val _ = List.app (fn Us => Unify.delay (Us, ref cnstr))
                                           [Us1, Us2, Us3]
                        in
-		         SOME(proof)
+                         SOME(proof)
                        end)
           end
       | solveTimes (G, S, n) = NONE
@@ -413,8 +413,8 @@ struct
 
     and awakeQuot (G, proof, U1, U2, U3) () =
           case (solveQuot (G, App(U1, App (U2, App (U3, Nil))), 0))
-	    of SOME(proof') => Unify.unifiable(G, (proof, id), (proof', id))
-	     | NONE => false
+            of SOME(proof') => Unify.unifiable(G, (proof, id), (proof', id))
+             | NONE => false
 
     (* constraint constructor *)
     and makeCnstrQuot (G, proof, U1, U2, U3) =
@@ -435,17 +435,17 @@ struct
                      then SOME(quotPfExp (d1, d2))
                      else NONE
                 | (Num d1, Num d2, Expr Us3) =>
-		     if (quotCheck (d1, d2)
+                     if (quotCheck (d1, d2)
                          andalso Unify.unifiable (G, Us3, (numberExp (W.div(d1, d2)), id)))
                      then SOME(quotPfExp (d1, d2))
-		     else NONE
+                     else NONE
                 | _ => let
-		         val proof = newEVar (G, quotExp (EClo Us1, EClo Us2, EClo Us3))
+                         val proof = newEVar (G, quotExp (EClo Us1, EClo Us2, EClo Us3))
                          val cnstr = makeCnstrQuot (G, proof, EClo Us1, EClo Us2, EClo Us3)
-			 val _ = List.app (fn Us => Unify.delay (Us, ref cnstr))
+                         val _ = List.app (fn Us => Unify.delay (Us, ref cnstr))
                                           [Us1, Us2, Us3]
                        in
-		         SOME(proof)
+                         SOME(proof)
                        end)
           end
       | solveQuot (G, S, n) = NONE
@@ -509,24 +509,24 @@ struct
     fun bvar n = Root (BVar n, Nil)
 
     fun installFgnCnstrOps () = let
-	val csid = !myID
-	val _ = FgnCnstrStd.ToInternal.install (csid,
-						(fn (MyFgnCnstrRepPlus (G, _, U1, U2, U3)) => toInternalPlus (G, U1, U2, U3)
-						  | (MyFgnCnstrRepTimes (G, _, U1, U2, U3)) => toInternalTimes (G, U1, U2, U3)
-						  | (MyFgnCnstrRepQuot (G, _, U1, U2, U3)) => toInternalQuot (G, U1, U2, U3)
-						  | fc => raise (UnexpectedFgnCnstr fc)))
-	val _ = FgnCnstrStd.Awake.install (csid,
-					   (fn (MyFgnCnstrRepPlus (G, proof, U1, U2, U3)) => awakePlus (G, proof, U1, U2, U3)
-					     | (MyFgnCnstrRepTimes (G, proof, U1, U2, U3)) => awakeTimes (G, proof, U1, U2, U3)
-					     | (MyFgnCnstrRepQuot (G, proof, U1, U2, U3)) => awakeQuot (G, proof, U1, U2, U3)
-					     | fc => raise (UnexpectedFgnCnstr fc)))
-	val _ = FgnCnstrStd.Simplify.install (csid,
-					      (fn (MyFgnCnstrRepPlus _) => (fn () => false)
-						| (MyFgnCnstrRepTimes _) => (fn () => false)
-						| (MyFgnCnstrRepQuot _) => (fn () => false)
-						| fc => raise (UnexpectedFgnCnstr fc)))
+        val csid = !myID
+        val _ = FgnCnstrStd.ToInternal.install (csid,
+                                                (fn (MyFgnCnstrRepPlus (G, _, U1, U2, U3)) => toInternalPlus (G, U1, U2, U3)
+                                                  | (MyFgnCnstrRepTimes (G, _, U1, U2, U3)) => toInternalTimes (G, U1, U2, U3)
+                                                  | (MyFgnCnstrRepQuot (G, _, U1, U2, U3)) => toInternalQuot (G, U1, U2, U3)
+                                                  | fc => raise (UnexpectedFgnCnstr fc)))
+        val _ = FgnCnstrStd.Awake.install (csid,
+                                           (fn (MyFgnCnstrRepPlus (G, proof, U1, U2, U3)) => awakePlus (G, proof, U1, U2, U3)
+                                             | (MyFgnCnstrRepTimes (G, proof, U1, U2, U3)) => awakeTimes (G, proof, U1, U2, U3)
+                                             | (MyFgnCnstrRepQuot (G, proof, U1, U2, U3)) => awakeQuot (G, proof, U1, U2, U3)
+                                             | fc => raise (UnexpectedFgnCnstr fc)))
+        val _ = FgnCnstrStd.Simplify.install (csid,
+                                              (fn (MyFgnCnstrRepPlus _) => (fn () => false)
+                                                | (MyFgnCnstrRepTimes _) => (fn () => false)
+                                                | (MyFgnCnstrRepQuot _) => (fn () => false)
+                                                | fc => raise (UnexpectedFgnCnstr fc)))
     in
-	()
+        ()
     end
 
     (* init (cs, installFunction) = ()
@@ -537,7 +537,7 @@ struct
           (
             myID := cs;
 
-            wordID := 
+            wordID :=
               installF (ConDec ("word" ^ Int.toString(wordSize'), NONE, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
@@ -606,7 +606,7 @@ struct
                                          MS.Mapp(MS.Marg(MS.Star, SOME "Z"),
                                                  MS.Mapp(MS.Marg(MS.Star, SOME "P"),
                                                          MS.Mnil))))]);
-            proofPlusID := 
+            proofPlusID :=
               installF (ConDec ("proof+", NONE, 0, Normal,
                                 pi ("X", word (),
                                   pi ("Y", word (),
@@ -615,7 +615,7 @@ struct
                                           provePlusExp (bvar 4, bvar 3, bvar 2, bvar 1))))),
                                 Type),
                         NONE, nil);
-            
+
             proveTimesID :=
               installF (ConDec ("prove*", NONE, 0,
                                 Constraint (!myID, solveProveTimes),
@@ -631,8 +631,8 @@ struct
                                          MS.Mapp(MS.Marg(MS.Star, SOME "Z"),
                                                  MS.Mapp(MS.Marg(MS.Star, SOME "P"),
                                                          MS.Mnil))))]);
- 
-            proofTimesID := 
+
+            proofTimesID :=
               installF (ConDec ("proof*", NONE, 0, Normal,
                                 pi ("X", word (),
                                   pi ("Y", word (),
@@ -641,7 +641,7 @@ struct
                                           proveTimesExp (bvar 4, bvar 3, bvar 2, bvar 1))))),
                                 Type),
                         NONE, nil);
-            
+
             proveQuotID :=
               installF (ConDec ("prove/", NONE, 0,
                                 Constraint (!myID, solveProveQuot),
@@ -658,7 +658,7 @@ struct
                                                  MS.Mapp(MS.Marg(MS.Star, SOME "P"),
                                                          MS.Mnil))))]);
 
-            proofQuotID := 
+            proofQuotID :=
               installF (ConDec ("proof/", NONE, 0, Normal,
                                 pi ("X", word (),
                                   pi ("Y", word (),
@@ -667,8 +667,8 @@ struct
                                           proveQuotExp (bvar 4, bvar 3, bvar 2, bvar 1))))),
                                 Type),
                         NONE, nil);
-            
-	    installFgnCnstrOps ();
+
+            installFgnCnstrOps ();
             ()
           )
   in

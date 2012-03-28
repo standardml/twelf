@@ -4,7 +4,7 @@
 functor CSManager (structure Global : GLOBAL
                    (*! structure IntSyn : INTSYN !*)
                    structure Unify : UNIFY
-		   (*! sharing Unify.IntSyn = IntSyn !*)
+                   (*! sharing Unify.IntSyn = IntSyn !*)
                    structure Fixity : FIXITY
                    (*! structure ModeSyn : MODESYN !*))
   : CS_MANAGER =
@@ -81,7 +81,7 @@ struct
     (* List of installed solvers *)
 
     datatype Solver = Solver of solver * bool ref
-    
+
     val maxCS = Global.maxCSid
     val csArray = Array.array (maxCS+1, Solver (emptySolver, ref false)) : Solver Array.array
     val _ = Array.update (csArray, 0, Solver (unifySolver, ref true))
@@ -94,10 +94,10 @@ struct
     (* install the specified solver *)
     fun installSolver (solver) =
           let
-	    (* val _ = print ("Installing constraint domain " ^ #name solver ^ "\n") *)
+            (* val _ = print ("Installing constraint domain " ^ #name solver ^ "\n") *)
             val cs = !nextCS
             val _ = if !nextCS > maxCS
-                    then raise Error "too many constraint solvers" 
+                    then raise Error "too many constraint solvers"
                     else ()
             val _ = Array.update (csArray, cs, Solver (solver, ref false));
             val _ = nextCS := !nextCS+1
@@ -114,13 +114,13 @@ struct
     fun resetSolvers () =
           (
             ArraySlice.appi (fn (cs, Solver (solver, active)) =>
-				if !active then
-				    (
+                                if !active then
+                                    (
                                      active := false;
-				     #reset(solver) ()
+                                     #reset(solver) ()
                                     )
-				else ())
-			    (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
+                                else ())
+                            (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
             activeKeywords := nil;
             useSolver "Unify"
           )
@@ -132,10 +132,10 @@ struct
             fun findSolver name =
                   (
                     ArraySlice.appi (fn (cs, Solver (solver, _)) =>
-					if (#name(solver) = name)
-					then raise Found cs
-					else ())
-				    (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
+                                        if (#name(solver) = name)
+                                        then raise Found cs
+                                        else ())
+                                    (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
                     NONE
                   ) handle Found cs => SOME(cs)
           in
@@ -147,9 +147,9 @@ struct
                      if !active then ()
                      else if List.exists (fn s => s = #keywords(solver))
                                          (!activeKeywords)
-                     then raise Error ("solver " ^ name ^ 
+                     then raise Error ("solver " ^ name ^
                                        " is incompatible with a currently active solver")
-                     else 
+                     else
                        (
                           active := true;
                           activeKeywords := #keywords(solver) :: (!activeKeywords);
@@ -174,8 +174,8 @@ struct
         in
           (
             ArraySlice.appi (fn (cs, Solver (solver, active)) =>
-				if !active then parse' (cs, solver) else ())
-			    (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
+                                if !active then parse' (cs, solver) else ())
+                            (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
             NONE
           ) handle Parsed info => SOME(info)
         end
@@ -188,26 +188,26 @@ struct
         ArraySlice.appi (fn (_, Solver (solver, active)) =>
                             if !active then (markCount := 0; #reset(solver) ())
                             else ())
-			(ArraySlice.slice (csArray, 0, SOME(!nextCS)));
-          
+                        (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
+
 
   (* mark all active solvers *)
   fun mark () =
         (markCount := !markCount + 1;
-	  ArraySlice.appi (fn (_, Solver (solver, active)) =>
-			      if !active then #mark(solver) () else ())
-			  (ArraySlice.slice (csArray, 0, SOME(!nextCS))))
+          ArraySlice.appi (fn (_, Solver (solver, active)) =>
+                              if !active then #mark(solver) () else ())
+                          (ArraySlice.slice (csArray, 0, SOME(!nextCS))))
 
   (* unwind all active solvers *)
   fun unwind targetCount =
     let
       fun unwind' 0 = (markCount := targetCount)
-	| unwind' k = 
+        | unwind' k =
           (ArraySlice.appi (fn (_, Solver (solver, active)) =>
-			       if !active then #unwind(solver) () else ())
-	   (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
-	   unwind' (k-1))
-    in 
+                               if !active then #unwind(solver) () else ())
+           (ArraySlice.slice (csArray, 0, SOME(!nextCS)));
+           unwind' (k-1))
+    in
       unwind' (!markCount - targetCount)
     end
 
@@ -215,7 +215,7 @@ struct
   (* trail the give function *)
   fun trail f =
         let
-	  val current = !markCount
+          val current = !markCount
           val _ = mark ()
           val r = f()
           val _ = unwind current

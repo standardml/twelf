@@ -56,5 +56,5 @@ struct
           then Integer.fromString str
           else NONE
         end
-  
+
 end;  (* structure Integers *)

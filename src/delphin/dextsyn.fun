@@ -2,8 +2,8 @@
 (* Author: Richard Fontana *)
 
 functor DextSyn ( (* structure Stream' : STREAM *)
-                  structure ExtSyn' : EXTSYN  
-                  structure Parsing' : PARSING 
+                  structure ExtSyn' : EXTSYN
+                  structure Parsing' : PARSING
 (*                    sharing Parsing'.Lexer.Paths = ExtSyn'.Paths  *)
 (*                  structure Lexer' : LEXER *)
 (*                    sharing Lexer' = Parsing'.Lexer *)
@@ -11,8 +11,8 @@ functor DextSyn ( (* structure Stream' : STREAM *)
 
 struct
 (*  structure Stream = Stream' *)
-  structure ExtSyn = ExtSyn'  
-  structure Parsing = Parsing' 
+  structure ExtSyn = ExtSyn'
+  structure Parsing = Parsing'
 (*  structure Paths = ExtSyn.Paths
   structure Lexer = Lexer' *)
   structure L = Lexer
@@ -23,7 +23,7 @@ struct
 
 datatype Ast =  Ast of Decs
 
-and Decs 
+and Decs
   = Empty
   | FunDecl of FunDecl * Decs
   | FormDecl of FormDecl * Decs
@@ -36,10 +36,10 @@ and CreateDecl
   = Create of Term * CreateDecl
   | Decs of Decs
 
-and FormDecl 
+and FormDecl
   = Form of string * Form
 
-and FunDecl 
+and FunDecl
   = Fun of Head * Prog
   | Bar of Head * Prog
   | FunAnd of Head * Prog
@@ -47,19 +47,19 @@ and FunDecl
 and ValDecl
   = Val of Pat * Prog * Form option
 
-and Cases 
+and Cases
   = First of Pat * Prog
   | Alt of Cases * Pat * Prog
 
 
-and World = 
+and World =
     WorldIdent of string
   | Plus of World * World
   | Concat of World * World
   | Times of World
 
 
-and Form 
+and Form
   = True
   | Forall of Dec * Form
   | ForallOmitted of Dec * Form
@@ -70,44 +70,44 @@ and Form
 (* | Arrow of Form * Form *)
 (* | WldDef of (string list) * Form *)
 
-and Prog 
-  = Unit 
+and Prog
+  = Unit
   | Pair of Prog * Prog
   | AppProg of Prog * Prog
   | AppTerm of Prog * Term
-  | Inx of Term * Prog 
+  | Inx of Term * Prog
   | Lam of Dec * Prog
   | Par of Prog * Prog
   | Const of string
   | Case of  (Pat list * Prog) list
-  | Let of Decs * Prog 
-  | New of Dec list * Prog 
-  | Choose of Dec * Prog 
+  | Let of Decs * Prog
+  | New of Dec list * Prog
+  | Choose of Dec * Prog
 (* | Rec of MDec * Prog *)
 
-and Head 
+and Head
   = Head of string
   | AppLF of Head * Term
   | AppMeta of Head * Pat
 
-and Pat 
+and Pat
   = PatInx of Term * Pat
   | PatPair of Pat * Pat
   | PatVar of MDec
-  | PatUnderscore 
-  | PatUnit 
+  | PatUnderscore
+  | PatUnit
 
-and MDec 
+and MDec
   = MDec of string * (Form option)
 
-and Block 
+and Block
   = Block of string list
 
 
-(* and Term 
+(* and Term
   = Term of string
 *)
-and Term 
+and Term
   = Rtarrow of Term * Term
   | Ltarrow of Term * Term
   | Type
@@ -120,7 +120,7 @@ and Term
   | Omit
   | Of of Term * Term
 
-and Dec 
+and Dec
   = Dec of string * Term
 
 
@@ -132,9 +132,9 @@ fun parseLFDecs (Ast dl) =
       val tos = TextIO.openOut tf
       fun parseLFDecs' [] = ()
        |  parseLFDecs' ((LFConDec ld) ::ds) =
-           (TextIO.output(tos, ld); 
+           (TextIO.output(tos, ld);
            parseLFDecs' ds)
-       |  parseLFDecs' (_ ::ds) = parseLFDecs' ds          
+       |  parseLFDecs' (_ ::ds) = parseLFDecs' ds
       val _ = parseLFDecs' dl
       val _ = TextIO.closeOut tos
       val _ = Twelf.loadFile tf
@@ -146,26 +146,26 @@ fun parseLFDecs (Ast dl) =
 (*
 
 fun rulesToCase (Ast decs) =
-   let 
+   let
       fun rulesToCase' [] = []
       |   rulesToCase' (ProgDec (Head (s,pts), prg) :: ds) =
             let val cds = rulesToCase' ds
-            in 
+            in
                case cds of
                   ProgDec (Head (s',_), Case ps) ::ds'' =>
-                     if s = s' 
+                     if s = s'
                      then ProgDec (Head (s, []), Case ((pts,prg)::ps))::ds''
-                     else 
+                     else
                          ProgDec (Head (s,[]), Case [(pts,prg)]):: cds
                 | _ => ProgDec (Head (s,[]), Case [(pts,prg)]):: cds
-             end           
+             end
       |   rulesToCase' (d::ds) =
              let val cds = rulesToCase' ds
              in
                 (d::cds)
              end
-             
-   in 
+
+   in
       Ast (rulesToCase' decs)
    end
 
@@ -178,16 +178,16 @@ fun rulesToCase (Ast decs) =
     | abstractProgs' (d::ds) = (d::(abstractProgs' ds))
 
 
- fun abstractProgs ast = 
-      let 
+ fun abstractProgs ast =
+      let
           val ast' = rulesToCase ast
           val (Ast decs) = ast'
           val decs' = abstractProgs' decs
       in (Ast decs')
-      end          
+      end
 
 *)
-in 
+in
 (*     val appendPats = appendPats
      val parseLFDecs = parseLFDecs
      val abstractProgs = abstractProgs

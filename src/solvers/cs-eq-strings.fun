@@ -3,12 +3,12 @@
 
 functor CSEqStrings ((*! structure IntSyn : INTSYN !*)
                      structure Whnf : WHNF
-		     (*! sharing Whnf.IntSyn = IntSyn !*)
+                     (*! sharing Whnf.IntSyn = IntSyn !*)
                      structure Unify : UNIFY
-		     (*! sharing Unify.IntSyn = IntSyn !*)
+                     (*! sharing Unify.IntSyn = IntSyn !*)
                      (*! structure CSManager : CS_MANAGER !*)
-		     (*! sharing CSManager.IntSyn = IntSyn !*)
-		       )
+                     (*! sharing CSManager.IntSyn = IntSyn !*)
+                       )
  : CS =
 struct
   (*! structure CSManager = CSManager !*)
@@ -31,14 +31,14 @@ struct
 
     fun toString s = ("\"" ^ s ^ "\"")
 
-    fun stringConDec (str) = ConDec (toString (str), NONE, 0, Normal, 
+    fun stringConDec (str) = ConDec (toString (str), NONE, 0, Normal,
                                      string (), Type)
 
     fun stringExp (str) = Root (FgnConst (!myID, stringConDec (str)), Nil)
 
     (* fromString string =
          SOME(str)  if string parses to the string str
-         NONE       otherwise 
+         NONE       otherwise
     *)
     fun fromString string =
           let
@@ -54,7 +54,7 @@ struct
 
     (* parseString string = SOME(conDec) or NONE
 
-       Invariant: 
+       Invariant:
        If str parses to the string str
        then conDec is the (foreign) constant declaration of str
     *)
@@ -65,7 +65,7 @@ struct
 
     (* solveString str = SOME(U)
 
-       Invariant: 
+       Invariant:
        U is the term obtained applying the foreign constant
        corresponding to the string str to an empty spine
     *)
@@ -73,11 +73,11 @@ struct
 
     datatype Concat =
       Concat of Atom list                  (* Concatenation:             *)
-                                           (* Concat::= A1 ++ A2 ++ ...  *) 
+                                           (* Concat::= A1 ++ A2 ++ ...  *)
 
     and Atom =                             (* Atoms:                     *)
       String of string                     (* Atom ::= "str"             *)
-    | Exp of IntSyn.eclo                   (*        | (U,s)             *)   
+    | Exp of IntSyn.eclo                   (*        | (U,s)             *)
 
     exception MyIntsynRep of Concat        (* Internal syntax representation of this module *)
 
@@ -170,16 +170,16 @@ struct
 
     (* appConcat (f, A1 + ... ) = ()  and f(Ui) for Ai = Exp Ui *)
     fun appConcat (f, Concat AL) =
-	let
-	    fun appAtom (Exp Us) = f (EClo Us)
-	      | appAtom (String _) = ()
-	in
-	    List.app appAtom AL
-	end
+        let
+            fun appAtom (Exp Us) = f (EClo Us)
+              | appAtom (String _) = ()
+        in
+            List.app appAtom AL
+        end
 
     (* Split:                                         *)
     (* Split ::= str1 ++ str2                         *)
-    datatype Split = Split of string * string   
+    datatype Split = Split of string * string
 
     (* Decomposition:                                 *)
     (* Decomp ::= toParse | [parsed1, ..., parsedn]   *)
@@ -315,11 +315,11 @@ struct
 
        Invariant:
        If   G |- concat1 : string    concat1 normal
-       and  G |- concat2 : string    concat2 normal 
-       then if there is an instantiation I :  
+       and  G |- concat2 : string    concat2 normal
+       then if there is an instantiation I :
                s.t. G |- concat1 <I> == concat2 <I>
             then stringUnify = MultAssign I
-	    else stringUnify = Failure
+            else stringUnify = Failure
     *)
     and unifyRigid (G, Concat AL1, Concat AL2) =
           let
@@ -370,11 +370,11 @@ struct
     (* unifyString (G, concat, str, cnstr) = stringUnify
 
        Invariant:
-       If   G |- concat : string    concat1 normal 
-       then if there is an instantiation I :  
+       If   G |- concat : string    concat1 normal
+       then if there is an instantiation I :
                s.t. G |- concat <I> == str
             then stringUnify = MultAssign I
-	    else if there cannot be any possible such instantiation
+            else if there cannot be any possible such instantiation
             then stringUnify = Failure
             else stringUnify = MultDelay [U1, ..., Un] cnstr
                    where U1, ..., Un are expression to be delayed on cnstr
@@ -441,7 +441,7 @@ struct
                           List.foldr op@ nil (List.map successors candidates)
                   in
                     unifyString' (nil, candidates')
-                  end                 
+                  end
               | unifyString' ((String str) :: AL, candidates) =
                   let
                     fun successors (Decomp (parse, parsedL)) =
@@ -464,11 +464,11 @@ struct
 
        Invariant:
        If   G |- concat1 : string    concat1 normal
-       and  G |- concat2 : string    concat2 normal 
-       then if there is an instantiation I :  
+       and  G |- concat2 : string    concat2 normal
+       then if there is an instantiation I :
                s.t. G |- concat1 <I> == concat2 <I>
             then stringUnify = MultAssign I
-	    else if there cannot be any possible such instantiation
+            else if there cannot be any possible such instantiation
             then stringUnify = Failure
             else stringUnify = MultDelay [U1, ..., Un] cnstr
                    where U1, ..., Un are expression to be delayed on cnstr
@@ -531,7 +531,7 @@ struct
     and toFgn (concat as (Concat [String str])) = stringExp (str)
       | toFgn (concat as (Concat [Exp (U, id)])) = U
       | toFgn (concat) =
-	FgnExp (!myID, MyIntsynRep concat)
+        FgnExp (!myID, MyIntsynRep concat)
 
     (* toInternal (fe) = U
 
@@ -562,32 +562,32 @@ struct
        if fe is (MyIntsynRep concat)     concat : normal
        and
           concat = A1 ++ ... ++ AN
-	  where some Ai are (Exp Usi)
+          where some Ai are (Exp Usi)
        then f is applied to each Usi
        (since concat : normal, each Usij is in whnf)
     *)
     fun app (MyIntsynRep concat) f = appConcat (f, concat)
       | app fe _ = raise (UnexpectedFgnExp fe)
 
-    fun equalTo (MyIntsynRep concat) U2 = 
-	sameConcat (normalize (concat),
-		    fromExp (U2, id))
+    fun equalTo (MyIntsynRep concat) U2 =
+        sameConcat (normalize (concat),
+                    fromExp (U2, id))
       | equalTo fe _ = raise (UnexpectedFgnExp fe)
 
     fun unifyWith (MyIntsynRep concat) (G, U2) =
-	toFgnUnify (unifyConcat (G, normalize (concat), 
-				 fromExp (U2, id)))
+        toFgnUnify (unifyConcat (G, normalize (concat),
+                                 fromExp (U2, id)))
       | unifyWith fe _ = raise (UnexpectedFgnExp fe)
 
     fun installFgnExpOps () = let
-	val csid = !myID
-	val _ = FgnExpStd.ToInternal.install (csid, toInternal)
-	val _ = FgnExpStd.Map.install (csid, map)
-	val _ = FgnExpStd.App.install (csid, app)
-	val _ = FgnExpStd.UnifyWith.install (csid, unifyWith)
-	val _ = FgnExpStd.EqualTo.install (csid, equalTo)
+        val csid = !myID
+        val _ = FgnExpStd.ToInternal.install (csid, toInternal)
+        val _ = FgnExpStd.Map.install (csid, map)
+        val _ = FgnExpStd.App.install (csid, app)
+        val _ = FgnExpStd.UnifyWith.install (csid, unifyWith)
+        val _ = FgnExpStd.EqualTo.install (csid, equalTo)
     in
-	()
+        ()
     end
 
     fun makeFgn (arity, opExp) (S) =
@@ -596,7 +596,7 @@ struct
               | makeParams n =
                   App (Root(BVar (n), Nil), makeParams (n-1))
             fun makeLam E 0 = E
-              | makeLam E n = 
+              | makeLam E n =
                   Lam (Dec (NONE, string()), makeLam E (n-1))
             fun expand ((Nil, s), arity) =
                   (makeParams arity, arity)
@@ -605,7 +605,7 @@ struct
                     val (S', arity') = expand ((S, s), arity-1)
                   in
                     (App (EClo (U, comp (s, Shift (arity'))), S'), arity')
-                  end 
+                  end
               | expand ((SClo (S, s'), s), arity) =
                   expand ((S, comp (s, s')), arity)
             val (S', arity') = expand ((S, id), arity)
@@ -614,7 +614,7 @@ struct
           end
 
     fun makeFgnBinary opConcat =
-          makeFgn (2, 
+          makeFgn (2,
             fn (App (U1, App (U2, Nil))) =>
               opConcat (fromExp (U1, id), fromExp (U2, id)))
 
@@ -628,7 +628,7 @@ struct
           (
             myID := cs;
 
-            stringID := 
+            stringID :=
               installF (ConDec ("string", NONE, 0, Constraint (!myID, solveString),
                                 Uni (Type), Kind),
                         NONE, [MS.Mnil]);
@@ -639,7 +639,7 @@ struct
                                 arrow (string (), arrow (string (), string ())),
                                 Type),
                         SOME(FX.Infix (FX.maxPrec, FX.Right)), nil);
-	    installFgnExpOps ();
+            installFgnExpOps ();
             ()
           )
   in

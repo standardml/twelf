@@ -25,14 +25,14 @@ functor TomegaUnify
    (*! sharing Subordinate.IntSyn = IntSyn' !*)
    structure Weaken : WEAKEN
    (*! sharing Weaken.IntSyn = IntSyn' !*)
-       ) : TOMEGAUNIFY = 
+       ) : TOMEGAUNIFY =
 struct
   (*! structure IntSyn = IntSyn' !*)
   (*! structure Tomega = Tomega' !*)
 
-  exception Unify of string 
-  
-  local 
+  exception Unify of string
+
+  local
     structure I = IntSyn
     structure T = Tomega
 
@@ -46,26 +46,26 @@ struct
        and  Psi[I] |- F1[I] = F2[I]
        then R = ()
        otherwise exception Unify is raised
-    *) 
+    *)
 
-    fun unifyFor (Psi, F1, F2) = 
-          unifyForN (Psi, 
-		     T.forSub (F1, T.id), 
-		     T.forSub (F2, T.id))
+    fun unifyFor (Psi, F1, F2) =
+          unifyForN (Psi,
+                     T.forSub (F1, T.id),
+                     T.forSub (F2, T.id))
     and unifyForN (Psi, T.True, T.True) = ()
-      | unifyForN (Psi, T.Ex ((D1, _), F1), T.Ex ((D2, _), F2)) = 
+      | unifyForN (Psi, T.Ex ((D1, _), F1), T.Ex ((D2, _), F2)) =
         (unifyDec (Psi, T.UDec D1, (T.UDec D2));
-	 unifyFor(I.Decl (Psi, T.UDec D1), F1, F2))
-      | unifyForN (Psi, T.All ((D1, _), F1), T.All ((D2, _), F2)) = 
-	(unifyDec (Psi, D1, D2);
-	 unifyFor(I.Decl (Psi, D1), F1, F2))
-      | unifyForN (Psi, T.FVar (_, r), F) = 
-	(r := SOME F)
-      | unifyForN (Psi, F, T.FVar (_, r)) = 
-	(r := SOME F)
+         unifyFor(I.Decl (Psi, T.UDec D1), F1, F2))
+      | unifyForN (Psi, T.All ((D1, _), F1), T.All ((D2, _), F2)) =
+        (unifyDec (Psi, D1, D2);
+         unifyFor(I.Decl (Psi, D1), F1, F2))
+      | unifyForN (Psi, T.FVar (_, r), F) =
+        (r := SOME F)
+      | unifyForN (Psi, F, T.FVar (_, r)) =
+        (r := SOME F)
       | unifyForN (Psi, _, _) = raise Unify "Formula mismatch"
 
-   
+
     (* unifyDec (Psi, D1, D2) = R
 
        Invariant:
@@ -76,16 +76,16 @@ struct
        and  Psi[I] |- D1[I] = D2[I]
        then R = ()
        otherwise exception Unify is raised
-    *) 
-    and unifyDec (Psi, T.UDec D1, T.UDec D2) = 
-          if Conv.convDec ((D1, I.id), (D2, I.id)) then () 
-	  else raise Unify "Declaration mismatch"
+    *)
+    and unifyDec (Psi, T.UDec D1, T.UDec D2) =
+          if Conv.convDec ((D1, I.id), (D2, I.id)) then ()
+          else raise Unify "Declaration mismatch"
       | unifyDec (Psi, T.PDec (_, F1), T.PDec (_, F2)) =
-	  unifyFor (Psi, F1, F2)
+          unifyFor (Psi, F1, F2)
 
 
 
   in
     val unifyFor = unifyFor
   end
-end	      
+end

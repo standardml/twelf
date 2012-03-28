@@ -4,20 +4,20 @@
 functor CSIneqIntegers (structure Integers : INTEGERS
                         structure Rationals : RATIONALS
                           sharing Rationals.Integers = Integers
-			  (*! structure IntSyn : INTSYN !*)
+                          (*! structure IntSyn : INTSYN !*)
                         structure Trail : TRAIL
                         structure Unify : UNIFY
-			(*! sharing Unify.IntSyn = IntSyn !*)
+                        (*! sharing Unify.IntSyn = IntSyn !*)
                         structure SparseArray  : SPARSE_ARRAY
                         structure SparseArray2 : SPARSE_ARRAY2
                         (*! structure CSManager : CS_MANAGER !*)
-			(*! sharing CSManager.IntSyn = IntSyn !*)
+                        (*! sharing CSManager.IntSyn = IntSyn !*)
                         structure CSEqIntegers : CS_EQ_INTEGERS
                           sharing CSEqIntegers.Integers = Integers
                           (*! sharing CSEqIntegers.IntSyn = IntSyn !*)
                           (*! sharing CSEqIntegers.CSManager = CSManager !*)
-			structure Compat : COMPAT
-			    )
+                        structure Compat : COMPAT
+                            )
   =
 struct
   (*! structure CSManager = CSManager !*)
@@ -86,7 +86,7 @@ struct
 
     datatype Position =                               (* Position of a tableau entry       *)
       Row of int
-    | Col of int       
+    | Col of int
 
     datatype Owner =                                  (* Owner of an entry:                *)
       Var of IntSyn.dctx * Mon                        (*   - monomial                      *)
@@ -94,8 +94,8 @@ struct
 
     datatype Restriction =                            (* Restriction: (proof object)       *)
       Restr of IntSyn.dctx * IntSyn.Exp               (*   Restr (G, U)                    *)
-   
-    type label = 
+
+    type label =
            {owner : Owner,                            (* owner of the row/column (if any)  *)
             tag   : int ref,                          (* tag: used to keep track of the    *)
                                                       (* position of a tableau entry       *)
@@ -109,7 +109,7 @@ struct
     | Kill of Position                                (* mark the given position solved    *)
     | Restrict of Position                            (* restrict the given position       *)
     | UpdateOwner of Position * Owner * int ref       (* change the owner                  *)
-       
+
     type tableau =                                    (* Tableau:                          *)
            {rlabels : label Array.array,              (* row labels                        *)
             clabels : label Array.array,              (* column labels                     *)
@@ -132,15 +132,15 @@ struct
           #restr(vacuous) = ref NONE
           #dead(vacuous) = ref true
     *)
-         
+
     (* little random generation routine taken from Paulson '91 *)
-    local 
+    local
       val a = 16807.0 and m = 2147483647.0
       val seed = ref 1999.0
     in
       fun rand (min, size) =
         let
-          fun nextrand ()= 
+          fun nextrand ()=
                 let
                   val t = Real.*(a, !seed)
                 in
@@ -273,7 +273,7 @@ struct
                     Array.update (#rlabels(tableau), i, new)
                 | Col(j) =>
                     Array.update (#clabels(tableau), j, new))
-          end                 
+          end
 
     (* return the context of a owner *)
     fun ownerContext (Var (G, mon)) = G
@@ -284,7 +284,7 @@ struct
       | ownerSum (Exp (G, sum)) = sum
 
     (* debugging code - REMOVE *)
-    fun displayPos (Row(row)) = 
+    fun displayPos (Row(row)) =
           print ("row " ^ Int.toString(row) ^ "\n")
       | displayPos (Col(col)) =
           print ("column " ^ Int.toString(col) ^ "\n")
@@ -454,7 +454,7 @@ struct
                              (#clabels(tableau), 0, nCols())
                     in
                       (case nonNull
-                         of [(j, value)] => 
+                         of [(j, value)] =>
                               if (value = one) then SOME(j)
                               else NONE
                           | _ => NONE)
@@ -469,7 +469,7 @@ struct
                              | NONE => NONE)
           end
 
-     (* find the coordinates of the pivot which gives the largest increase in 
+     (* find the coordinates of the pivot which gives the largest increase in
         const(row) *)
      fun findPivot (row) =
           let
@@ -595,7 +595,7 @@ struct
 
     (* unify a sum with a number *)
     fun unifySum (G, sum, d) =
-          if (Unify.unify (G, (toExp (sum), id), 
+          if (Unify.unify (G, (toExp (sum), id),
                                   (constant (floor (d)), id)); true)
           then ()
           else raise Error
@@ -641,7 +641,7 @@ struct
             (fromInteger (m), List.map monToWPos monL)
           end
 
-    (* maximize the given row by performing pivot operations. 
+    (* maximize the given row by performing pivot operations.
        Return a term of type MaximizeResult *)
     and maximizeRow (row) =
           let
@@ -874,7 +874,7 @@ struct
                                 in
                                   (
                                     (* recycle the current label *)
-                                    Trail.log (#trail(tableau), 
+                                    Trail.log (#trail(tableau),
                                                UpdateOwner (pos, #owner(l), #tag(l)));
                                     setOwnership (pos, Var (G, mon), tag);
                                     delayMon (mon, ref (makeCnstr (tag)))
@@ -908,9 +908,9 @@ struct
                   then reachable (candidates, tried, closure)
                   else
                     let
-                      val new_candidates = 
+                      val new_candidates =
                             Array.foldl
-                              (fn (col, _, candidates) => 
+                              (fn (col, _, candidates) =>
                                     if (coeff(row, col) <> zero)
                                     then (Col(col)) :: candidates
                                     else candidates)
@@ -928,9 +928,9 @@ struct
                   then reachable (candidates, tried, closure)
                   else
                     let
-                      val candidates' = 
+                      val candidates' =
                             Array.foldl
-                              (fn (row, _, candidates) => 
+                              (fn (row, _, candidates) =>
                                     if (coeff(row, col) <> zero)
                                     then (Row(row)) :: candidates
                                     else candidates)
@@ -953,17 +953,17 @@ struct
                   in
                     (G, geq0 (U))
                   end
-                  
+
           in
             List.map restrExp (reachable ([pos], nil, nil))
           end
-                
+
     (* returns the list of unsolved constraints associated with the given tag *)
     and toInternal (tag) () =
            (case findTag (tag)
               of NONE => nil
                | SOME(pos) => restrictions (pos))
-                  
+
     (* awake function for tableau constraints *)
     and awake (tag) () =
           (
@@ -1031,7 +1031,7 @@ struct
             (pos, Restr (G, proof))
           end
 
-    (* explore the relaxed solution space looking for integer solutions *) 
+    (* explore the relaxed solution space looking for integer solutions *)
     and exploreBB (pos, restr) =
           (let
              val result = restrict (pos, restr)
@@ -1046,9 +1046,9 @@ struct
                       val lower = fromInteger (floor (value))
                       val upper = fromInteger (ceiling (value))
 
-                      fun left () = 
+                      fun left () =
                             exploreBB (boundLower (G, decomp, lower))
-                      fun right () = 
+                      fun right () =
                             exploreBB (boundUpper (G, decomp, upper))
                     in
                       case (CSM.trail left, CSM.trail right)
@@ -1072,12 +1072,12 @@ struct
                     val lower = ~one
                     val upper = one
 
-                    fun left () = 
+                    fun left () =
                           exploreBB (boundLower (G, decomp, lower))
-                    fun right () = 
+                    fun right () =
                           exploreBB (boundUpper (G, decomp, upper))
                   in
-                    if restricted(l) 
+                    if restricted(l)
                     then (CSM.trail right = BranchFail)
                     else (CSM.trail left = BranchFail) andalso (CSM.trail right = BranchFail)
                   end
@@ -1216,13 +1216,13 @@ struct
                      restr = ref NONE, dead = ref true}
           in
             (
-               Array.modify 
+               Array.modify
                  (fn _ => l)
                  (#rlabels(tableau), 0, nRows());
-               Array.modify 
+               Array.modify
                  (fn _ => l)
                  (#clabels(tableau), 0, nCols());
-               Array.modify 
+               Array.modify
                  (fn _ => zero)
                  (#consts(tableau), 0, nRows());
                Array2.modify
@@ -1268,7 +1268,7 @@ struct
                   case isConstantExp (W)
                     of SOME(d) =>
                          if Integers.>=(d, zero_int)
-                         then geqNExp (d) 
+                         then geqNExp (d)
                          else raise Error
                      | NONE =>
                          let
@@ -1301,18 +1301,18 @@ struct
     fun arrow (U, V) = Pi ((Dec (NONE, U), No), V)
 
     fun installFgnCnstrOps () = let
-	val csid = !myID
-	val _ = FgnCnstrStd.ToInternal.install (csid,
-						(fn (MyFgnCnstrRep tag) => toInternal (tag)
-						  | fc => raise UnexpectedFgnCnstr fc))
-	val _ = FgnCnstrStd.Awake.install (csid,
-					   (fn (MyFgnCnstrRep tag) => awake (tag)
-					     | fc => raise UnexpectedFgnCnstr fc))
-	val _ = FgnCnstrStd.Simplify.install (csid,
-					      (fn (MyFgnCnstrRep tag) => simplify (tag)
-						| fc => raise UnexpectedFgnCnstr fc))
+        val csid = !myID
+        val _ = FgnCnstrStd.ToInternal.install (csid,
+                                                (fn (MyFgnCnstrRep tag) => toInternal (tag)
+                                                  | fc => raise UnexpectedFgnCnstr fc))
+        val _ = FgnCnstrStd.Awake.install (csid,
+                                           (fn (MyFgnCnstrRep tag) => awake (tag)
+                                             | fc => raise UnexpectedFgnCnstr fc))
+        val _ = FgnCnstrStd.Simplify.install (csid,
+                                              (fn (MyFgnCnstrRep tag) => simplify (tag)
+                                                | fc => raise UnexpectedFgnCnstr fc))
     in
-	()
+        ()
     end
 
     (* install the signature *)
@@ -1320,7 +1320,7 @@ struct
           (
             myID := cs;
 
-            geqID := 
+            geqID :=
               installF (ConDec (">=", NONE, 0,
                                 Constraint (!myID, solveGeq),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
@@ -1342,7 +1342,7 @@ struct
                                 Type),
                         NONE, nil);
 
-	    installFgnCnstrOps ();
+            installFgnCnstrOps ();
             ()
           )
   in

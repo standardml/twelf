@@ -24,9 +24,9 @@ struct
     | quoteChar #"_" = "\\_"
     | quoteChar #"$" = "\\$"
     | quoteChar #"#" = "\\#"
-    | quoteChar #"'" = "$'$"		(* not in math mode *)
-    | quoteChar #"<" = "$<$"		(* not in math mode *)
-    | quoteChar #">" = "$>$"		(* not in math mode *)
+    | quoteChar #"'" = "$'$"            (* not in math mode *)
+    | quoteChar #"<" = "$<$"            (* not in math mode *)
+    | quoteChar #">" = "$>$"            (* not in math mode *)
     | quoteChar #"^" = "\\^{\\ }"
     | quoteChar #"0" = "$_0$"
     | quoteChar #"1" = "$_1$"
@@ -82,9 +82,9 @@ struct
     | sym "kind" = ("{\\Kind}", 4)
     | sym "_" = ("\\_", 1)
     | sym "..." = ("$\\ldots$", 3)
-    | sym "%%" = ("%%", 2)		(* itself, for now *)
-    | sym "%skolem" = ("%skolem", 7)	(* itself, for now *)
-    | sym s = (s, String.size s)	(* ():.= *)
+    | sym "%%" = ("%%", 2)              (* itself, for now *)
+    | sym "%skolem" = ("%skolem", 7)    (* itself, for now *)
+    | sym s = (s, String.size s)        (* ():.= *)
 
 end;  (* functor SymbolTeX *)
 
@@ -153,8 +153,8 @@ struct
     | sym "kind" = ("{\\Kind}", 4)
     | sym "_" = ("\\_", 1)
     | sym "..." = ("$\\ldots$", 3)
-    | sym "%%" = ("%%", 2)		(* itself, for now *)
-    | sym "%skolem" = ("%skolem", 7)	(* itself, for now *)
-    | sym s = (s, String.size s)	(* ():.= *)
+    | sym "%%" = ("%%", 2)              (* itself, for now *)
+    | sym "%skolem" = ("%skolem", 7)    (* itself, for now *)
+    | sym s = (s, String.size s)        (* ():.= *)
 
 end;  (* functor SymbolTeXcd *)

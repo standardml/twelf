@@ -24,18 +24,18 @@ local
 
   (* inferCon (G, C) = V'
 
-     Invariant: 
-     If    G |- C : V  
+     Invariant:
+     If    G |- C : V
      and  (C  doesn't contain FVars)
-     then  G' |- V' : L      (for some level L) 
+     then  G' |- V' : L      (for some level L)
      and   G |- V = V' : L
-     else exception Error is raised. 
+     else exception Error is raised.
   *)
-  fun inferConW (G, I.BVar (k')) = 
-      let 
-	val I.Dec (_,V) = I.ctxDec (G, k')
+  fun inferConW (G, I.BVar (k')) =
+      let
+        val I.Dec (_,V) = I.ctxDec (G, k')
       in
-	Whnf.whnf (V, I.id)
+        Whnf.whnf (V, I.id)
       end
     | inferConW (G, I.Const(c)) = (I.constType (c), I.id)
     | inferConW (G, I.Def(d))  = (I.constType (d), I.id)
@@ -74,16 +74,16 @@ local
 
   fun fromTpW (G, (I.Root (C, S), s)) =
         T.atom (fromHead (G, C),
-		fromSpine (impCon C, G, (S, s), inferConW (G, C)))
+                fromSpine (impCon C, G, (S, s), inferConW (G, C)))
     | fromTpW (G, (I.Pi ((D as I.Dec(_,V1), I.No), V2), s)) =
-	T.arrow (fromTp (G, (V1, s)),
-		 fromTp (I.Decl (G, I.decSub (D, s)), (V2, I.dot1 s)))
+        T.arrow (fromTp (G, (V1, s)),
+                 fromTp (I.Decl (G, I.decSub (D, s)), (V2, I.dot1 s)))
     | fromTpW (G, (I.Pi ((D, I.Maybe), V2), s)) =
       let
-	val D' = Names.decUName (G, D)
+        val D' = Names.decUName (G, D)
       in
-	T.pi (fromDec (G, (D', s)),
-	      fromTp (I.Decl (G, I.decSub (D', s)), (V2, I.dot1 s)))
+        T.pi (fromDec (G, (D', s)),
+              fromTp (I.Decl (G, I.decSub (D', s)), (V2, I.dot1 s)))
       end
     | fromTpW _ = raise Error ("Type not recognized")
 
@@ -91,16 +91,16 @@ local
 
   and fromObjW (G, (I.Root (C, S), s), (V, t)) =
         T.root (fromHead (G, C),
-		fromSpine (impCon C, G, (S, s), inferConW (G, C)),
-		fromTp (G, (V, t)))
+                fromSpine (impCon C, G, (S, s), inferConW (G, C)),
+                fromTp (G, (V, t)))
     | fromObjW (G, (I.Lam (D, U), s), (I.Pi (_, V), t)) =
       let
-	val D' = Names.decUName (G, D)
+        val D' = Names.decUName (G, D)
       in
-	T.lam (fromDec (G, (D', s)),
-	       fromObj (I.Decl (G, I.decSub (D', s)),
-			(U, I.dot1 s),
-			(V, I.dot1 t)))
+        T.lam (fromDec (G, (D', s)),
+               fromObj (I.Decl (G, I.decSub (D', s)),
+                        (U, I.dot1 s),
+                        (V, I.dot1 t)))
       end
     (* note: no case for EVars right now *)
     | fromObjW _ = raise Error ("Object not recognized")
@@ -111,14 +111,14 @@ local
     | fromSpine (i, G, (I.SClo (S, s'), s), Vt) =
         fromSpine (i, G, (S, I.comp (s', s)), Vt)
     | fromSpine (i, G, (I.App (U, S), s),
-		 (I.Pi ((I.Dec (_, V1), _), V2), t)) =
-      if i > 0				(* drop implicit arg *)
-	then fromSpine (i-1, G, (S, s),
-			Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s)), t)))
-      else 
-	T.app (fromObj (G, (U, s), (V1, t)),
-	       fromSpine (i, G, (S, s),
-			  Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s)), t))))
+                 (I.Pi ((I.Dec (_, V1), _), V2), t)) =
+      if i > 0                          (* drop implicit arg *)
+        then fromSpine (i-1, G, (S, s),
+                        Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s)), t)))
+      else
+        T.app (fromObj (G, (U, s), (V1, t)),
+               fromSpine (i, G, (S, s),
+                          Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s)), t))))
 
   and fromDec (G, (I.Dec (SOME(x), V), s)) =
         T.dec (x, fromTp (G, (V, s)))
@@ -144,12 +144,12 @@ in
           val cidOpt = Names.constLookup qid
           fun getConDec (NONE) = raise Error ("Undeclared identifier " ^ Names.qidToString qid)
             | getConDec (SOME cid) = IntSyn.sgnLookup cid
-	  val conDec = getConDec cidOpt
-	  val _ = Names.varReset IntSyn.Null
-	  fun result (NONE) = raise Error ("Wrong kind of declaration")
-	    | result (SOME(r)) = r
-      in 
-	result (fromConDec conDec)
+          val conDec = getConDec cidOpt
+          val _ = Names.varReset IntSyn.Null
+          fun result (NONE) = raise Error ("Wrong kind of declaration")
+            | result (SOME(r)) = r
+      in
+        result (fromConDec conDec)
       end
 
 end  (* local ... *)

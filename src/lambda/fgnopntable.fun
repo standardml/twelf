@@ -2,14 +2,14 @@
 (* Author: Aleksey Kliger *)
 
 functor FgnOpnTable (type arg ; type result) :>
-	FGN_OPN where type arg = arg
+        FGN_OPN where type arg = arg
                 where type result = result = struct
   type csid = int
   type rep = exn
   type arg = arg
   type result = result
   type func = (rep -> arg -> result)
-  
+
   type table = func array
 
   fun initializeTable tbl = let
@@ -26,5 +26,5 @@ functor FgnOpnTable (type arg ; type result) :>
 
   fun apply (csid, rep) = Array.sub (table, csid) rep
 
-  
+
 end

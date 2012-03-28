@@ -17,7 +17,7 @@ struct
   structure ModExtSyn = ModExtSyn'
 
   structure L = Lexer
-  structure LS = Lexer.Stream  
+  structure LS = Lexer.Stream
   structure E = ModExtSyn
 
   fun parseStructExp' (f as LS.Cons ((L.ID _, r0), _)) =
@@ -133,7 +133,7 @@ struct
     | parseSgDef' (LS.Cons ((L.UNDERSCORE, r), s')) =
         parseSgEqual' (NONE, LS.expose s')
     | parseSgDef' (LS.Cons ((t, r), s')) =
-	Parsing.error (r, "Expected signature identifier, found token " ^ L.toString t)
+        Parsing.error (r, "Expected signature identifier, found token " ^ L.toString t)
 
   fun parseSigDef' (LS.Cons ((L.SIG, r), s')) =
         parseSgDef' (LS.expose s')

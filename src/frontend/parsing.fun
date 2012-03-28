@@ -31,5 +31,5 @@ end;  (* functor Parsing *)
 
 structure Parsing =
   Parsing (structure Stream' = Stream
-	   (*! structure Lexer' = Lexer !*)
-	     );
+           (*! structure Lexer' = Lexer !*)
+             );

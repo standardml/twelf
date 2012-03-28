@@ -1,4 +1,4 @@
-(* Parsing Queries *) 
+(* Parsing Queries *)
 (* Author: Frank Pfenning *)
 
 functor ParseQuery
@@ -39,11 +39,11 @@ struct
     fun parseQuery' (f as LS.Cons ((L.ID (L.Upper, name), r), s')) =
           parseQuery1 (name, f, LS.expose s')
       | parseQuery' (f) =
-	  returnQuery (NONE, ParseTerm.parseTerm' f)
+          returnQuery (NONE, ParseTerm.parseTerm' f)
 
     (* parseQuery --- currently not exported *)
     fun parseQuery (s) = parseQuery' (LS.expose s)
-      
+
     (* parseDefine4 parses the definition body *)
     (* "U" *)
     fun parseDefine4 (optName, optT, s) =
@@ -52,7 +52,7 @@ struct
         in
           (ExtQuery.define (optName, tm', optT), f')
         end
-    
+
     (* parseDefine3 parses the equal sign in a long form define *)
     (* "= U" *)
     fun parseDefine3 (optName, (tm, LS.Cons ((L.EQUAL, r), s'))) =
@@ -93,7 +93,7 @@ struct
           parseSolve3 (defns, SOME name, LS.expose s', r0)
       | parseSolve2 (_, LS.Cons ((t,r), s'), r0) =
           Parsing.error (r, "Expected identifier or `_', found " ^ L.toString t)
-                                                     
+
     and parseSolve1 (defns, LS.Cons ((L.SOLVE, r0), s')) =
           parseSolve2 (defns, LS.expose s', r0)
       | parseSolve1 (defns, LS.Cons ((L.DEFINE, r0), s')) =

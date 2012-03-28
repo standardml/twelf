@@ -3,10 +3,10 @@
 (* Modified: Jeff Polakow *)
 
 functor Names (structure Global : GLOBAL
-	       (*! structure IntSyn' : INTSYN !*)
+               (*! structure IntSyn' : INTSYN !*)
                structure Constraints : CONSTRAINTS
-	       (*! sharing Constraints.IntSyn = IntSyn' !*)
-	       structure HashTable : TABLE where type key = string
+               (*! sharing Constraints.IntSyn = IntSyn' !*)
+               structure HashTable : TABLE where type key = string
                structure StringTree : TABLE where type key = string)
   : NAMES =
 struct
@@ -77,7 +77,7 @@ struct
       | toString (Infix(Strength(p),None)) = "%infix none " ^ Int.toString p
       | toString (Prefix(Strength(p))) = "%prefix " ^ Int.toString p
       | toString (Postfix(Strength(p))) = "%postfix " ^ Int.toString p
-      | toString (Nonfix) = "%nonfix"	(* not legal input *)
+      | toString (Nonfix) = "%nonfix"   (* not legal input *)
 
   end  (* structure Fixity *)
 
@@ -96,7 +96,7 @@ struct
       (* allow extraneous arguments, Sat Oct 23 14:18:27 1999 -fp *)
       (* raise Error ("Constant " ^ name ^ " takes too many explicit arguments for given fixity") *)
     | checkAtomic (name, IntSyn.Pi (D, V), n) =
-	checkAtomic (name, V, n-1)
+        checkAtomic (name, V, n-1)
     | checkAtomic (_, IntSyn.Uni _, 0) = true
     | checkAtomic (_, IntSyn.Root _, 0) = true
     | checkAtomic (name, _, _) = false
@@ -106,13 +106,13 @@ struct
      raises Error (msg) otherwise
   *)
   fun checkArgNumber (IntSyn.ConDec (name, _, i, _, V, L), n) =
-	checkAtomic (name, V, i+n)
+        checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.SkoDec (name, _, i, V, L), n) =
-	checkAtomic (name, V, i+n)
+        checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.ConDef (name, _, i, _, V, L, _), n) =
-	checkAtomic (name, V, i+n)
+        checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.AbbrevDef (name, _, i, _, V, L), n) =
-	checkAtomic (name, V, i+n)
+        checkAtomic (name, V, i+n)
 
   (* checkFixity (name, cidOpt, n) = ()
      if n = 0 (no requirement on arguments)
@@ -151,7 +151,7 @@ struct
   *)
 
   datatype Qid = Qid of string list * string
-    
+
   fun qidToString (Qid (ids, name)) =
         List.foldr (fn (id, s) => id ^ "." ^ s) name ids
 
@@ -292,7 +292,7 @@ struct
                        else ()
              | SOME mid' => (topStructInsert (id, mid');
                              Array.update (structShadowArray, mid, NONE));
-	  Array.update (componentsArray, mid, dummyNamespace)
+          Array.update (componentsArray, mid, dummyNamespace)
         end
 
     fun resetFrom (mark, markStruct) =
@@ -410,7 +410,7 @@ struct
       | constUndef (Qid (ids, id)) =
         (case findTopUndefStruct ids
            of opt as SOME _ => opt
-            | NONE => 
+            | NONE =>
         (case StringTree.lookup (constComps (valOf (findTopStruct ids))) id
            of NONE => SOME (Qid (ids, id))
             | SOME _ => NONE))
@@ -422,7 +422,7 @@ struct
       | structUndef (Qid (ids, id)) =
         (case findTopUndefStruct ids
            of opt as SOME _ => opt
-            | NONE => 
+            | NONE =>
         (case StringTree.lookup (structComps (valOf (findTopStruct ids))) id
            of NONE => SOME (Qid (ids, id))
             | SOME _ => NONE))
@@ -480,7 +480,7 @@ struct
         let
           val name = qidToString (constQid cid)
         in
-	  checkFixity (name, cid, argNumber fixity);
+          checkFixity (name, cid, argNumber fixity);
           Array.update (fixityArray, cid, fixity)
         end
 
@@ -504,16 +504,16 @@ struct
 
     (* installNamePref' (cid, (ePref, uPref)) see installNamePref *)
     fun installNamePref' (cid, (ePref, uPref)) =
-	let
-	  val L = IntSyn.constUni (cid)
-	  val _ = case L
-	            of IntSyn.Type =>
-		       raise Error ("Object constant " ^ qidToString (constQid cid) ^ " cannot be given name preference\n"
-				    ^ "Name preferences can only be established for type families")
-		     | IntSyn.Kind => ()
-	in
-	  Array.update (namePrefArray, cid, SOME (ePref, uPref))
-	end
+        let
+          val L = IntSyn.constUni (cid)
+          val _ = case L
+                    of IntSyn.Type =>
+                       raise Error ("Object constant " ^ qidToString (constQid cid) ^ " cannot be given name preference\n"
+                                    ^ "Name preferences can only be established for type families")
+                     | IntSyn.Kind => ()
+        in
+          Array.update (namePrefArray, cid, SOME (ePref, uPref))
+        end
 
     (* installNamePref (cid, (ePref, uPrefOpt)) = ()
        Effect: install name preference for type family cid
@@ -523,14 +523,14 @@ struct
           installNamePref' (cid, (ePref, [String.map Char.toLower (hd ePref)]))
       | installNamePref (cid, (ePref, uPref)) =
           installNamePref' (cid, (ePref, uPref))
-      
+
     fun getNamePref cid = Array.sub (namePrefArray, cid)
 
     fun installComponents (mid, namespace) =
           Array.update (componentsArray, mid, namespace)
 
     fun getComponents mid =
-	  Array.sub (componentsArray, mid)
+          Array.sub (componentsArray, mid)
 
     (* local names are more easily re-used: they don't increment the
        counter associated with a name
@@ -631,15 +631,15 @@ struct
     fun evarReset () = (evarList := nil)
     fun evarLookup (X) =
         let fun evlk (r, nil) = NONE
-	      | evlk (r, (IntSyn.EVar(r',_,_,_), name)::l) =
-	        if r = r' then SOME(name) else evlk (r, l)
-	      | evlk (r, ((IntSyn.AVar(r'), name)::l)) =
-	        if r = r' then SOME(name) else evlk (r, l)
-	in
-	  case X of
-	    IntSyn.EVar(r,_,_,_) => evlk (r, (!evarList))
-	  | IntSyn.AVar(r) => evlk (r, (!evarList))
-	end
+              | evlk (r, (IntSyn.EVar(r',_,_,_), name)::l) =
+                if r = r' then SOME(name) else evlk (r, l)
+              | evlk (r, ((IntSyn.AVar(r'), name)::l)) =
+                if r = r' then SOME(name) else evlk (r, l)
+        in
+          case X of
+            IntSyn.EVar(r,_,_,_) => evlk (r, (!evarList))
+          | IntSyn.AVar(r) => evlk (r, (!evarList))
+        end
     fun evarInsert entry = (evarList := entry::(!evarList))
 
     fun namedEVars () = !evarList
@@ -690,35 +690,35 @@ struct
 
     fun getEVarOpt (name) =
         (case varLookup name
-	  of NONE => NONE
+          of NONE => NONE
            | SOME(EVAR(X)) => SOME(X))
 
     (* varDefined (name) = true iff `name' refers to a free variable, *)
     (* which could be an EVar for constant declarations or FVar for queries *)
     fun varDefined (name) =
         (case varLookup name
-	   of NONE => false
+           of NONE => false
             | SOME _ => true)
 
     (* conDefined (name) = true iff `name' refers to a constant *)
     fun conDefined (name) =
         (case constLookup (Qid (nil, name))
-	   of NONE => false
+           of NONE => false
             | SOME _ => true)
 
     (* ctxDefined (G, name) = true iff `name' is declared in context G *)
     fun ctxDefined (G, name) =
         let fun cdfd (IntSyn.Null) = false
-	      | cdfd (IntSyn.Decl(G', IntSyn.Dec(SOME(name'),_))) =
+              | cdfd (IntSyn.Decl(G', IntSyn.Dec(SOME(name'),_))) =
                   name = name' orelse cdfd G'
               | cdfd (IntSyn.Decl(G', IntSyn.BDec(SOME(name'),_))) =
-		  name = name' orelse cdfd G'
+                  name = name' orelse cdfd G'
               | cdfd (IntSyn.Decl(G', IntSyn.NDec(SOME(name')))) =
-		  name = name' orelse cdfd G'
-	      | cdfd (IntSyn.Decl(G', _)) = cdfd G'
-	in
-	  cdfd G
-	end
+                  name = name' orelse cdfd G'
+              | cdfd (IntSyn.Decl(G', _)) = cdfd G'
+        in
+          cdfd G
+        end
 
     (* tryNextName (G, base) = baseN
        where N is the next suffix such that baseN is unused in
@@ -726,26 +726,26 @@ struct
     *)
     fun tryNextName (G, base) =
         let
-	  val name = base ^ Int.toString (nextIndex (base))
-	in
-	  if varDefined name orelse conDefined name
-	     orelse ctxDefined (G,name)
-	    then tryNextName (G, base)
-	  else name
-	end
+          val name = base ^ Int.toString (nextIndex (base))
+        in
+          if varDefined name orelse conDefined name
+             orelse ctxDefined (G,name)
+            then tryNextName (G, base)
+          else name
+        end
 
     fun findNameLocal (G, base, i) =
         let val name = base ^ (if i = 0 then "" else Int.toString (i))
-	in
-	  if varDefined name orelse conDefined name
-	     orelse ctxDefined (G, name)
-	    then findNameLocal (G, base, i+1)
-	  else name
-	end
+        in
+          if varDefined name orelse conDefined name
+             orelse ctxDefined (G, name)
+            then findNameLocal (G, base, i+1)
+          else name
+        end
 
     fun findName (G, base, Local) = findNameLocal (G, base, 0)
       | findName (G, base, Global) = tryNextName (G, base)
-        
+
 
     val takeNonDigits = Substring.takel (not o Char.isDigit)
 
@@ -760,20 +760,20 @@ struct
     *)
     fun newEVarName (G, X as IntSyn.EVar(r, _, V, Cnstr)) =
         let
-	  (* use name preferences below *)
-	  val name = tryNextName (G, namePrefOf (Exist, V))
-	in
-	  (evarInsert (X, name);
-	   name)
-	end
+          (* use name preferences below *)
+          val name = tryNextName (G, namePrefOf (Exist, V))
+        in
+          (evarInsert (X, name);
+           name)
+        end
       | newEVarName (G, X as IntSyn.AVar(r)) =
         let
-	  (* use name preferences below *)
-	  val name = tryNextName (G, namePrefOf' (Exist, NONE))
-	in
-	  (evarInsert (X, name);
-	   name)
-	end          
+          (* use name preferences below *)
+          val name = tryNextName (G, namePrefOf' (Exist, NONE))
+        in
+          (evarInsert (X, name);
+           name)
+        end
 
     (* evarName (G, X) = name
        where `name' is the print name X.
@@ -782,12 +782,12 @@ struct
     *)
     fun evarName (G, X) =
         (case evarLookup X
-	   of NONE => let
-			val name = newEVarName (G, X)
-		      in
-			(varInsert (name, EVAR(X));
-			 name)
-		      end
+           of NONE => let
+                        val name = newEVarName (G, X)
+                      in
+                        (varInsert (name, EVAR(X));
+                         name)
+                      end
             | SOME (name) => name)
 
 
@@ -800,12 +800,12 @@ struct
     *)
     fun bvarName (G, k) =
         case IntSyn.ctxLookup (G, k)
-	  of IntSyn.Dec(SOME(name), _) => name
-	   | IntSyn.ADec(SOME(name), _) =>  name
-	   | IntSyn.NDec(SOME(name)) =>  name (* Evars can depend on NDec :-( *)
-	   | IntSyn.ADec(None, _) => "ADec_" 
-	   | IntSyn.Dec(None, _) => "Dec_" 
-	   | _ => raise Unprintable
+          of IntSyn.Dec(SOME(name), _) => name
+           | IntSyn.ADec(SOME(name), _) =>  name
+           | IntSyn.NDec(SOME(name)) =>  name (* Evars can depend on NDec :-( *)
+           | IntSyn.ADec(None, _) => "ADec_"
+           | IntSyn.Dec(None, _) => "Dec_"
+           | _ => raise Unprintable
 
     (* decName' role (G, D) = G,D'
        where D' is a possible renaming of the declaration D
@@ -815,52 +815,52 @@ struct
     *)
     fun decName' role (G, IntSyn.Dec (NONE, V)) =
         let
-	  val name = findName (G, namePrefOf (role, V), extent (role))
-	in
-	  IntSyn.Dec (SOME(name), V)
-	end
+          val name = findName (G, namePrefOf (role, V), extent (role))
+        in
+          IntSyn.Dec (SOME(name), V)
+        end
       | decName' role (G, D as IntSyn.Dec (SOME(name), V)) =
-	if varDefined name orelse conDefined name
-	  orelse ctxDefined (G, name)
-	  then IntSyn.Dec (SOME (tryNextName (G, baseOf name)), V)
-	else D
+        if varDefined name orelse conDefined name
+          orelse ctxDefined (G, name)
+          then IntSyn.Dec (SOME (tryNextName (G, baseOf name)), V)
+        else D
       | decName' role (G, D as IntSyn.BDec (NONE, b as (cid, t))) =
         (* use #l as base name preference for label l *)
-	let
-	  val name = findName (G, "#" ^ IntSyn.conDecName (IntSyn.sgnLookup cid), Local)
-	in
-	  IntSyn.BDec (SOME(name), b)
-	end
+        let
+          val name = findName (G, "#" ^ IntSyn.conDecName (IntSyn.sgnLookup cid), Local)
+        in
+          IntSyn.BDec (SOME(name), b)
+        end
       | decName' role (G, D as IntSyn.BDec (SOME(name), b as (cid, t))) =
-	if varDefined name orelse conDefined name
-	  orelse ctxDefined (G, name)
-	  then IntSyn.BDec (SOME (tryNextName (G, baseOf name)), b)
-	else D
+        if varDefined name orelse conDefined name
+          orelse ctxDefined (G, name)
+          then IntSyn.BDec (SOME (tryNextName (G, baseOf name)), b)
+        else D
       | decName' role (G, IntSyn.ADec (NONE, d)) =
         let
-	  val name = findName (G, namePrefOf' (role, NONE), extent (role))
-	in
-	  IntSyn.ADec (SOME(name), d)
-	end
+          val name = findName (G, namePrefOf' (role, NONE), extent (role))
+        in
+          IntSyn.ADec (SOME(name), d)
+        end
       | decName' role (G, D as IntSyn.ADec (SOME(name), d)) =
-(*	IntSyn.ADec(SOME(name), d) *)
-	if varDefined name orelse conDefined name
-	  orelse ctxDefined (G, name)
-	  then IntSyn.ADec (SOME (tryNextName (G, baseOf name)), d)
-	else D
-      | decName' role (G, D as IntSyn.NDec NONE) = 
-	let 
-	  val name = findName (G, "@x", Local)
-	    val _ = print name
-	     
-	in 
-	  IntSyn.NDec (SOME name)
-	end
-      | decName' role (G, D as IntSyn.NDec (SOME name)) = 
-	if varDefined name orelse conDefined name
-	  orelse ctxDefined (G, name)
-	  then IntSyn.NDec (SOME (tryNextName (G, baseOf name)))
-	else D
+(*      IntSyn.ADec(SOME(name), d) *)
+        if varDefined name orelse conDefined name
+          orelse ctxDefined (G, name)
+          then IntSyn.ADec (SOME (tryNextName (G, baseOf name)), d)
+        else D
+      | decName' role (G, D as IntSyn.NDec NONE) =
+        let
+          val name = findName (G, "@x", Local)
+            val _ = print name
+
+        in
+          IntSyn.NDec (SOME name)
+        end
+      | decName' role (G, D as IntSyn.NDec (SOME name)) =
+        if varDefined name orelse conDefined name
+          orelse ctxDefined (G, name)
+          then IntSyn.NDec (SOME (tryNextName (G, baseOf name)))
+        else D
 
     val decName = decName' Exist
     val decEName = decName' Exist
@@ -868,29 +868,29 @@ struct
     val decLUName = decName' (Univ (Local))
 
     (* ctxName G = G'
-       
+
         Invariant:
-	|- G == G' ctx
-	where some Declaration in G' have been named/renamed
+        |- G == G' ctx
+        where some Declaration in G' have been named/renamed
     *)
     fun ctxName (IntSyn.Null) = IntSyn.Null
-      | ctxName (IntSyn.Decl (G, D)) = 
+      | ctxName (IntSyn.Decl (G, D)) =
         let
-	  val G' = ctxName G
-	in
-	  IntSyn.Decl (G', decName (G', D))
-	end
+          val G' = ctxName G
+        in
+          IntSyn.Decl (G', decName (G', D))
+        end
 
     (* ctxLUName G = G'
        like ctxName, but names assigned are local universal names.
     *)
     fun ctxLUName (IntSyn.Null) = IntSyn.Null
-      | ctxLUName (IntSyn.Decl (G, D)) = 
+      | ctxLUName (IntSyn.Decl (G, D)) =
         let
-	  val G' = ctxLUName G
-	in
-	  IntSyn.Decl (G', decLUName (G', D))
-	end
+          val G' = ctxLUName G
+        in
+          IntSyn.Decl (G', decLUName (G', D))
+        end
 
     (* pisEName' (G, i, V) = V'
        Assigns names to dependent Pi prefix of V with i implicit abstractions
@@ -900,11 +900,11 @@ struct
       | pisEName' (G, i, IntSyn.Pi ((D, IntSyn.Maybe), V)) =
         (* i > 0 *)
         let
-	  val D' = decEName (G, D)
-	in
-	  IntSyn.Pi ((D', IntSyn.Maybe),
-		     pisEName' (IntSyn.Decl (G, D'), i-1, V))
-	end
+          val D' = decEName (G, D)
+        in
+          IntSyn.Pi ((D', IntSyn.Maybe),
+                     pisEName' (IntSyn.Decl (G, D'), i-1, V))
+        end
       (* | pisEName' (G, i, V) = V *)
 
     fun pisEName (i, V) = pisEName' (IntSyn.Null, i, V)
@@ -919,11 +919,11 @@ struct
       | defEName' (G, i, (IntSyn.Lam (D, U), IntSyn.Pi ((_ (* = D *), P), V))) =
         (* i > 0 *)
         let
-	  val D' = decEName (G, D)
-	  val (U', V') = defEName' (IntSyn.Decl (G, D'), i-1, (U, V))
-	in
-	  (IntSyn.Lam (D', U'), IntSyn.Pi ((D', P), V'))
-	end
+          val D' = decEName (G, D)
+          val (U', V') = defEName' (IntSyn.Decl (G, D'), i-1, (U, V))
+        in
+          (IntSyn.Lam (D', U'), IntSyn.Pi ((D', P), V'))
+        end
       (* | defEName' (G, i, (U, V)) = (U, V) *)
 
     fun defEName (imp, UV) = defEName' (IntSyn.Null, imp, UV)
@@ -931,24 +931,24 @@ struct
     fun nameConDec' (IntSyn.ConDec (name, parent, imp, status, V, L)) =
           IntSyn.ConDec (name, parent, imp, status, pisEName (imp, V), L)
       | nameConDec' (IntSyn.ConDef (name, parent, imp, U, V, L, Anc)) =
-	let 
-	  val (U', V') = defEName (imp, (U, V))
-	in
-	  IntSyn.ConDef (name, parent, imp, U', V', L, Anc)
-	end
+        let
+          val (U', V') = defEName (imp, (U, V))
+        in
+          IntSyn.ConDef (name, parent, imp, U', V', L, Anc)
+        end
       | nameConDec' (IntSyn.AbbrevDef (name, parent, imp, U, V, L)) =
-	let 
-	  val (U', V') = defEName (imp, (U, V))
-	in
-	  IntSyn.AbbrevDef (name, parent, imp, U', V', L)
-	end
+        let
+          val (U', V') = defEName (imp, (U, V))
+        in
+          IntSyn.AbbrevDef (name, parent, imp, U', V', L)
+        end
       | nameConDec' (skodec) = skodec (* fix ??? *)
 
     (* Assigns names to variables in a constant declaration *)
     (* The varReset (); is necessary so that explicitly named variables keep their name *)
     fun nameConDec (conDec) =
-        (varReset IntSyn.Null;			(* declaration is always closed *)
-	 nameConDec' conDec)
+        (varReset IntSyn.Null;                  (* declaration is always closed *)
+         nameConDec' conDec)
 
     fun skonstName (name) =
           tryNextName (IntSyn.Null, name)

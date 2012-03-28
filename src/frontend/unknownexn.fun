@@ -10,11 +10,11 @@ struct
     in
       concat (
         "Unrecognized exception "
-	:: (exnName exn)
-	:: "\n"
+        :: (exnName exn)
+        :: "\n"
         :: (case history
               of nil   => [""]
-	       | x::xs => (wrap1 x :: map wrapn xs))
+               | x::xs => (wrap1 x :: map wrapn xs))
       )
     end
 end;

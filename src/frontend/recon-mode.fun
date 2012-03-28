@@ -2,20 +2,20 @@
 (* Author: Carsten Schuermann *)
 
 functor ReconMode (structure Global : GLOBAL
-		   (*! structure ModeSyn' : MODESYN !*)
-		   structure Whnf : WHNF
-		   (*! sharing Whnf.IntSyn = ModeSyn'.IntSyn !*)
-		   (*! structure Paths' : PATHS !*)
+                   (*! structure ModeSyn' : MODESYN !*)
+                   structure Whnf : WHNF
+                   (*! sharing Whnf.IntSyn = ModeSyn'.IntSyn !*)
+                   (*! structure Paths' : PATHS !*)
                    structure Names : NAMES
-		   (*! sharing Names.IntSyn = ModeSyn'.IntSyn !*)
-		   structure ModePrint : MODEPRINT
-		   (*! sharing ModePrint.ModeSyn = ModeSyn' !*)
-		   structure ModeDec : MODEDEC
+                   (*! sharing Names.IntSyn = ModeSyn'.IntSyn !*)
+                   structure ModePrint : MODEPRINT
+                   (*! sharing ModePrint.ModeSyn = ModeSyn' !*)
+                   structure ModeDec : MODEDEC
 
-		   structure ReconTerm' : RECON_TERM
-		   (*! sharing ReconTerm'.IntSyn = ModeSyn'.IntSyn !*)
-		   (*! sharing ReconTerm'.Paths = Paths' !*)
-		       )
+                   structure ReconTerm' : RECON_TERM
+                   (*! sharing ReconTerm'.IntSyn = ModeSyn'.IntSyn !*)
+                   (*! sharing ReconTerm'.Paths = Paths' !*)
+                       )
   : RECON_MODE =
 struct
   (*! structure ModeSyn = ModeSyn' !*)
@@ -47,17 +47,17 @@ struct
 
       fun mnil r = (M.Mnil, r)
       fun mapp (((m, r1), name), (mS, r2)) = (M.Mapp (M.Marg (m, name), mS), P.join (r1, r2))
-      fun mroot (ids, id, r1, (mS, r2)) = 
+      fun mroot (ids, id, r1, (mS, r2)) =
           let
             val r = P.join (r1, r2)
             val qid = Names.Qid (ids, id)
-	  in
+          in
             case Names.constLookup qid
               of NONE => error (r, "Undeclared identifier "
                                 ^ Names.qidToString (valOf (Names.constUndef qid))
                                 ^ " in mode declaration")
                | SOME cid => ((cid, ModeDec.shortToFull (cid, mS, r)), r)
-	  end
+          end
 
       fun toModedec nmS = nmS
     end  (* structure Short *)
@@ -71,42 +71,42 @@ struct
             t (I.Decl (g, d), I.Decl (D, m))
 
       fun mroot (tm, r) (g, D) =
-	  let
+          let
             val T.JWithCtx (G, T.JOf ((V, _), _, _)) =
                   T.recon (T.jwithctx (g, T.jof (tm, T.typ (r))))
-	    val _ = T.checkErrors (r)
+            val _ = T.checkErrors (r)
 
             (* convert term spine to mode spine *)
-	    (* Each argument must be contractible to variable *)
-	    fun convertSpine (I.Nil) = M.Mnil
-	      | convertSpine (I.App (U, S)) = 
-		let 
-		  val k = Whnf.etaContract U
-		          handle Whnf.Eta => 
-			    error (r, "Argument " ^ 
-                                      (Print.expToString(G, U)) ^ 
-                                      " not a variable") 
+            (* Each argument must be contractible to variable *)
+            fun convertSpine (I.Nil) = M.Mnil
+              | convertSpine (I.App (U, S)) =
+                let
+                  val k = Whnf.etaContract U
+                          handle Whnf.Eta =>
+                            error (r, "Argument " ^
+                                      (Print.expToString(G, U)) ^
+                                      " not a variable")
                                       (* print U? -fp *) (* yes, print U. -gaw *)
-		  val I.Dec (name, _) = I.ctxLookup (G, k)
-		  val mode = I.ctxLookup (D, k)
-		in
-		  M.Mapp (M.Marg (mode, name), convertSpine S)
-		end
+                  val I.Dec (name, _) = I.ctxLookup (G, k)
+                  val mode = I.ctxLookup (D, k)
+                in
+                  M.Mapp (M.Marg (mode, name), convertSpine S)
+                end
 
             (* convert root expression to head constant and mode spine *)
-	    fun convertExp (I.Root (I.Const (a), S)) = 
-		  (a, convertSpine S)
-	      | convertExp (I.Root (I.Def (d), S))  = 
-		  (* error is signalled later in ModeDec.checkFull *)
-		  (d, convertSpine S)
-	      | convertExp _ =
-		  error (r, "Call pattern not an atomic type")
-	      (* convertExp (I.Root (I.Skonst _, S)) can't occur *)
+            fun convertExp (I.Root (I.Const (a), S)) =
+                  (a, convertSpine S)
+              | convertExp (I.Root (I.Def (d), S))  =
+                  (* error is signalled later in ModeDec.checkFull *)
+                  (d, convertSpine S)
+              | convertExp _ =
+                  error (r, "Call pattern not an atomic type")
+              (* convertExp (I.Root (I.Skonst _, S)) can't occur *)
 
-	    val (a, mS) = convertExp (Whnf.normalize (V, I.id))
-	  in
-	    (ModeDec.checkFull (a, mS, r);  ((a, mS), r))
-	  end
+            val (a, mS) = convertExp (Whnf.normalize (V, I.id))
+          in
+            (ModeDec.checkFull (a, mS, r);  ((a, mS), r))
+          end
 
       fun toModedec t =
           let

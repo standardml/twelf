@@ -8,21 +8,21 @@
 (* ------------------- *)
 
 functor ReconTerm ((*! structure IntSyn' : INTSYN !*)
-		   structure Names : NAMES
-		   (*! sharing Names.IntSyn = IntSyn' !*)
-		   (*! structure Paths' : PATHS !*)
+                   structure Names : NAMES
+                   (*! sharing Names.IntSyn = IntSyn' !*)
+                   (*! structure Paths' : PATHS !*)
                    structure Approx : APPROX
-		   (*! sharing Approx.IntSyn = IntSyn' !*)
-		   structure Whnf : WHNF
-		   (*! sharing Whnf.IntSyn = IntSyn' !*)
-		   structure Unify : UNIFY
-		   (*! sharing Unify.IntSyn = IntSyn' !*)
+                   (*! sharing Approx.IntSyn = IntSyn' !*)
+                   structure Whnf : WHNF
+                   (*! sharing Whnf.IntSyn = IntSyn' !*)
+                   structure Unify : UNIFY
+                   (*! sharing Unify.IntSyn = IntSyn' !*)
                    structure Abstract : ABSTRACT
-		   (*! sharing Abstract.IntSyn = IntSyn' !*)
-		   structure Print : PRINT
-		   (*! sharing Print.IntSyn = IntSyn' !*)
+                   (*! sharing Abstract.IntSyn = IntSyn' !*)
+                   structure Print : PRINT
+                   (*! sharing Print.IntSyn = IntSyn' !*)
                    (*! structure CSManager : CS_MANAGER !*)
-		   (*! sharing CSManager.IntSyn = IntSyn' !*)
+                   (*! sharing CSManager.IntSyn = IntSyn' !*)
                    structure StringTree : TABLE where type key = string
                    structure Msg : MSG)
   : RECON_TERM =
@@ -65,7 +65,7 @@ struct
                      " " ^ Int.toString (!errorCount)
                      ^ " error" ^ (if !errorCount > 1 then "s" else "")
                      ^ " found"))
-      
+
   fun checkErrors (r) =
        if !errorCount > 0 then die (r) else ()
 
@@ -85,8 +85,8 @@ struct
       (errorCount := !errorCount + 1;
        chatterOneNewline ();
        Msg.message (!errorFileName ^ ":" ^ Paths.wrap (r, msg) ^ "\n");
-       die (r))       
-      
+       die (r))
+
   fun error (r, msg) =
       (errorCount := !errorCount + 1;
        chatterOneNewline ();
@@ -105,7 +105,7 @@ struct
   local
     open IntSyn
   in
-  
+
   fun headConDec (Const c) = sgnLookup c
     | headConDec (Skonst c) = sgnLookup c
     | headConDec (Def d) = sgnLookup d
@@ -146,7 +146,7 @@ struct
     fun getEVarTypeApx name =
         (case StringTree.lookup evarApxTable name
            of SOME V => V
-            | NONE => 
+            | NONE =>
         (case Names.getEVarOpt name
            of SOME (IntSyn.EVar (_, _, V, _)) =>
               let
@@ -203,7 +203,7 @@ struct
   end
 
   (* External syntax of terms *)
-      
+
   datatype term =
       internal of IntSyn.Exp * IntSyn.Exp * Paths.region (* (U, V, r) *)
         (* G |- U : V nf where V : L or V == kind *)
@@ -237,12 +237,12 @@ struct
 
       (* Phase 3 only *)
     | omitexact of IntSyn.Exp * IntSyn.Exp * Paths.region
-                   
+
   and dec =
       dec of string option * term * Paths.region
 
   fun backarrow (tm1, tm2) = arrow (tm2, tm1)
-             
+
   (* for now *)
   fun dec0 (nameOpt, r) = dec (nameOpt, omitted (r), r)
 
@@ -290,13 +290,13 @@ struct
   and ctxRegion' (IntSyn.Null, r) = SOME r
     | ctxRegion' (IntSyn.Decl (g, tm), r) =
         ctxRegion' (g, Paths.join (r, decRegion tm))
-                              
+
   local
     open Apx
     datatype Ctx = datatype IntSyn.Ctx
     datatype Dec = Dec of string option * Exp | NDec of string option
   in
-  
+
     (* Phase 1:
        Try to determine an approximate type/kind and level for each subterm.
        In cases where there's a mismatch, it's generally better not to report
@@ -349,7 +349,7 @@ struct
                       " level")
           else ()
         end
-  
+
     fun findOmitted (G, qid, r) =
           (error (r, "Undeclared identifier "
                      ^ Names.qidToString (valOf (Names.constUndef qid)));
@@ -363,7 +363,7 @@ struct
       | findBVar' (Decl (G, Dec (SOME(name'), _)), name, k) =
           if name = name' then SOME (k)
           else findBVar' (G, name, k+1)
-  
+
     fun findBVar fc (G, qid, r) =
         (case Names.unqualified qid
            of NONE => fc (G, qid, r)
@@ -376,15 +376,15 @@ struct
         (case Names.constLookup qid
            of NONE => fc (G, qid, r)
             | SOME cid =>
-	      (case IntSyn.sgnLookup cid
-		 of IntSyn.ConDec _ => constant (IntSyn.Const cid, r)
-	          | IntSyn.ConDef _ => constant (IntSyn.Def cid, r)
-		  | IntSyn.AbbrevDef _ => constant (IntSyn.NSDef cid, r)
-		  | _ => 
-		    (error (r, "Invalid identifier\n"
-			    ^ "Identifier `" ^ Names.qidToString qid
-			    ^ "' is not a constant, definition or abbreviation");
-		     omitted (r))))
+              (case IntSyn.sgnLookup cid
+                 of IntSyn.ConDec _ => constant (IntSyn.Const cid, r)
+                  | IntSyn.ConDef _ => constant (IntSyn.Def cid, r)
+                  | IntSyn.AbbrevDef _ => constant (IntSyn.NSDef cid, r)
+                  | _ =>
+                    (error (r, "Invalid identifier\n"
+                            ^ "Identifier `" ^ Names.qidToString qid
+                            ^ "' is not a constant, definition or abbreviation");
+                     omitted (r))))
 
     fun findCSConst fc (G, qid, r) =
         (case Names.unqualified qid
@@ -603,7 +603,7 @@ struct
         let
           val _ = clearDelayed ()
           val L = newLVar ()
-	  val (V2, _) = Apx.classToApx V
+          val (V2, _) = Apx.classToApx V
           val (tm1', U1) = checkApx (G, tm1, V2, L,
                                      "Ascription in declaration did not hold")
           val _ = filterLevel (tm1', L, 2,
@@ -616,16 +616,16 @@ struct
     fun ctxToApx IntSyn.Null = IntSyn.Null
       | ctxToApx (IntSyn.Decl (G, IntSyn.NDec x)) =
           IntSyn.Decl (ctxToApx G, NDec x)
-      | ctxToApx (IntSyn.Decl (G, IntSyn.Dec (name, V))) = 
-          let 
-	    val (V', _) = Apx.classToApx V
-	  in
-	    IntSyn.Decl (ctxToApx G, Dec (name, V'))
-	  end
+      | ctxToApx (IntSyn.Decl (G, IntSyn.Dec (name, V))) =
+          let
+            val (V', _) = Apx.classToApx V
+          in
+            IntSyn.Decl (ctxToApx G, Dec (name, V'))
+          end
 
     fun inferApxJob' (G, t) =
         inferApxJob (ctxToApx G, t)
-          
+
   end (* open Apx *)
 
   local
@@ -641,7 +641,7 @@ struct
     | JTerm of (IntSyn.Exp * Paths.occExp) * IntSyn.Exp * IntSyn.Uni
     | JClass of (IntSyn.Exp * Paths.occExp) * IntSyn.Uni
     | JOf of (IntSyn.Exp * Paths.occExp) * (IntSyn.Exp * Paths.occExp) * IntSyn.Uni
-  
+
   (* This little datatype makes it easier to work with eta-expanded terms
      The idea is that Elim E represents a term U if
        E (s, S) = U[s] @ S *)
@@ -704,16 +704,16 @@ struct
   and addImplicit (G, E, Vs, 0) = (E, EClo Vs)
     | addImplicit (G, E, Vs, i) = addImplicit1W (G, E, Whnf.whnfExpandDef Vs, i)
 
-                                  
+
   (* Report mismatches after the entire process finishes -- yields better
      error messages *)
-                                  
+
   fun reportConstraints (Xnames) =
       (case Print.evarCnstrsToStringOpt (Xnames)
          of NONE => ()
           | SOME(constr) => print ("Constraints:\n" ^ constr ^ "\n"))
       handle Names.Unprintable => print "%_constraints unprintable_%\n"
-                                                  
+
   fun reportInst (Xnames) =
       (Msg.message (Print.evarInstToString (Xnames) ^ "\n"))
       handle Names.Unprintable => Msg.message "%_unifier unprintable_%\n"
@@ -721,9 +721,9 @@ struct
   fun delayMismatch (G, V1, V2, r2, location_msg, problem_msg) =
       addDelayed (fn () =>
       let
-	val Xs = Abstract.collectEVars (G, (V2, id),
+        val Xs = Abstract.collectEVars (G, (V2, id),
                  Abstract.collectEVars (G, (V1, id), nil))
-	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
+        val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
         val V1fmt = formatExp (G, V1)
         val V2fmt = formatExp (G, V2)
         val diff = F.Vbox0 0 1
@@ -763,7 +763,7 @@ struct
       in
         ()
       end
-        
+
   fun unifiableIdem x =
       let
         (* this reset should be unnecessary -- for safety only *)
@@ -786,27 +786,27 @@ struct
   fun reportMismatch (G, Vs1, Vs2, problem_msg) =
       report (fn () =>
       let
-	val Xs = Abstract.collectEVars (G, Vs2,
+        val Xs = Abstract.collectEVars (G, Vs2,
                  Abstract.collectEVars (G, Vs1, nil))
-	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
-	val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, EClo Vs1),
-			       F.Break, F.String "=", F.Space, formatExp (G, EClo Vs2)]
-	val _ = Msg.message (F.makestring_fmt eqnsFmt ^ "\n")
+        val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
+        val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, EClo Vs1),
+                               F.Break, F.String "=", F.Space, formatExp (G, EClo Vs2)]
+        val _ = Msg.message (F.makestring_fmt eqnsFmt ^ "\n")
         val _ = reportConstraints Xnames
         val _ = Msg.message ("Failed: " ^ problem_msg ^ "\n"
                        ^ "Continuing with subterm replaced by _\n")
       in
         ()
       end)
-                                  
+
   fun reportUnify' (G, Vs1, Vs2) =
       let
-	val Xs = Abstract.collectEVars (G, Vs2,
+        val Xs = Abstract.collectEVars (G, Vs2,
                  Abstract.collectEVars (G, Vs1, nil))
-	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
-	val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, EClo Vs1),
-			       F.Break, F.String "=", F.Space, formatExp (G, EClo Vs2)]
-	val _ = Msg.message (F.makestring_fmt eqnsFmt ^ "\n")
+        val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
+        val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, EClo Vs1),
+                               F.Break, F.String "=", F.Space, formatExp (G, EClo Vs2)]
+        val _ = Msg.message (F.makestring_fmt eqnsFmt ^ "\n")
         val _ = unifyIdem (G, Vs1, Vs2)
                 handle e as Unify.Unify msg =>
                        (Msg.message ("Failed: " ^ msg ^ "\n"
@@ -815,7 +815,7 @@ struct
         val _ = reportInst Xnames
         val _ = reportConstraints Xnames
       in
-	()
+        ()
       end
 
   fun reportUnify (G, Vs1, Vs2) =
@@ -829,9 +829,9 @@ struct
 
   fun reportInfer' (G, omitexact (_, _, r), U, V) =
       let
-	val Xs = Abstract.collectEVars (G, (U, id),
+        val Xs = Abstract.collectEVars (G, (U, id),
                  Abstract.collectEVars (G, (V, id), nil))
-	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
+        val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
         val omit = F.HVbox [F.String "|-", F.Space, F.String "_", F.Space,
                             F.String "==>", F.Space, formatExp (G, U), F.Break,
                             F.String ":", F.Space, formatExp (G, V)]
@@ -843,11 +843,11 @@ struct
     | reportInfer' (G, mismatch (tm1, tm2, _, _), U, V) =
         reportInfer' (G, tm2, U, V)
     | reportInfer' (G, hastype _, U, V) = ()
-    | reportInfer' (G, tm, U, V) = 
+    | reportInfer' (G, tm, U, V) =
       let
-	val Xs = Abstract.collectEVars (G, (U, id),
+        val Xs = Abstract.collectEVars (G, (U, id),
                  Abstract.collectEVars (G, (V, id), nil))
-	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
+        val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
         val judg = F.HVbox [F.String "|-", F.Space, formatExp (G, U), F.Break,
                             F.String ":", F.Space, formatExp (G, V)]
         val _ = Msg.message (F.makestring_fmt judg ^ "\n")
@@ -898,7 +898,7 @@ struct
         in
           (tm, Elim (elimSub (evarElim X, s)), EClo (V, s))
         end
-      | inferExactN (G, tm as fvar (name, r)) = 
+      | inferExactN (G, tm as fvar (name, r)) =
         let
           val V = getFVarType (name, false)
                   handle Apx.Ambiguous =>
@@ -1163,7 +1163,7 @@ struct
         in
           ((omitexact (V', L', r), Intro V', L'), true)
         end
-      | unifyExact (G, tm, Vhs) = 
+      | unifyExact (G, tm, Vhs) =
         let
           val (tm', B', L') = inferExact (G, tm)
           val V' = toIntro (B', (L', id))
@@ -1361,7 +1361,7 @@ struct
 
   fun internalInst x = raise Match
   fun externalInst x = raise Match
-        
+
   end (* open IntSyn *)
 
 end; (* functor ReconTerm *)

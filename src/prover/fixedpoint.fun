@@ -1,7 +1,7 @@
 (* Fixed Point *)
 (* Author: Carsten Schuermann *)
 
-functor FixedPoint 
+functor FixedPoint
   ((*! structure IntSyn' : INTSYN !*)
    (*! structure Tomega' : TOMEGA !*)
    (*! sharing Tomega'.IntSyn = IntSyn' !*)
@@ -14,7 +14,7 @@ struct
   (*! structure Tomega = Tomega' !*)
   structure State = State'
 
-  local 
+  local
   structure S = State'
   structure T = Tomega
   structure I = IntSyn
@@ -30,35 +30,35 @@ struct
        and  F does not start with an all quantifier
        then S' = (Psi, xx :: F |> F)
     *)
-    fun expand (S.Focus (T.EVar (Psi, r, F, _, TCs, _), W), O) =  
-        let 
-(*	  val D = T.PDec (SOME "IH" , F, SOME O, SOME O) *)
-	  val I.NDec x = Names.decName (T.coerceCtx Psi, I.NDec NONE)
-	  val D = T.PDec (x, F, NONE, NONE) 
-	  val X = T.newEVar (I.Decl (Psi, D), T.forSub (F, T.Shift 1))
-	in
-	  (r, T.Rec (D, X))
-	end
+    fun expand (S.Focus (T.EVar (Psi, r, F, _, TCs, _), W), O) =
+        let
+(*        val D = T.PDec (SOME "IH" , F, SOME O, SOME O) *)
+          val I.NDec x = Names.decName (T.coerceCtx Psi, I.NDec NONE)
+          val D = T.PDec (x, F, NONE, NONE)
+          val X = T.newEVar (I.Decl (Psi, D), T.forSub (F, T.Shift 1))
+        in
+          (r, T.Rec (D, X))
+        end
 
-    (* apply O = S 
-     
+    (* apply O = S
+
        Invariant:
-       O = S 
+       O = S
     *)
     fun apply (r, P) = (r := SOME P)   (* should be trailed -cs Thu Apr 22 11:20:32 2004 *)
 
-    (* menu O = s 
+    (* menu O = s
 
        Invariant:
        s = "Apply universal introduction rules"
     *)
     fun menu _ = "Recursion introduction"
-      
+
 
   in
     exception Error = Error
     type operator = operator
-      
+
     val expand = expand
     val apply = apply
     val menu =menu

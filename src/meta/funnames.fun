@@ -2,8 +2,8 @@
 (* Author: Carsten Schuermann *)
 
 functor FunNames (structure Global : GLOBAL
-		  (*! structure FunSyn' : FUNSYN !*)
-		  structure HashTable : TABLE where type key = string)
+                  (*! structure FunSyn' : FUNSYN !*)
+                  structure HashTable : TABLE where type key = string)
   : FUNNAMES =
 struct
 
@@ -60,7 +60,7 @@ struct
        for every constant as it is declared
     *)
     fun reset () = (hashClear ())
-    
+
     (* override (cid, nameInfo) = ()
        Effect: mark cid as shadowed --- it will henceforth print as %name%
     *)
@@ -78,11 +78,11 @@ struct
     *)
     fun installName (name, lemma) =
         let
-	  val shadowed = hashInsert (name, lemma)	(* returns optional shadowed entry *)
-	in
-	  (Array.update (nameArray, lemma, NameInfo (name));
-	   shadow shadowed)
-	end
+          val shadowed = hashInsert (name, lemma)       (* returns optional shadowed entry *)
+        in
+          (Array.update (nameArray, lemma, NameInfo (name));
+           shadow shadowed)
+        end
 
     (* nameLookup (name) = SOME(cid),  if cid has name and is not shadowed,
                          = NONE,   if there is no such constant
@@ -94,7 +94,7 @@ struct
     *)
     fun constName (cid) =
         (case Array.sub (nameArray, cid)
-	   of (NameInfo (name)) => name)
+           of (NameInfo (name)) => name)
 
   end  (* local ... *)
 end;  (* functor Names *)

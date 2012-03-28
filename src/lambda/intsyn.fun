@@ -5,23 +5,23 @@
 functor IntSyn (structure Global : GLOBAL) :> INTSYN =
 struct
 
-  type cid = int			(* Constant identifier        *)
-  type name = string			(* Variable name              *)
+  type cid = int                        (* Constant identifier        *)
+  type name = string                    (* Variable name              *)
   type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
 
 
   (* Contexts *)
-  datatype 'a Ctx =			(* Contexts                   *)
-    Null				(* G ::= .                    *)
-  | Decl of 'a Ctx * 'a			(*     | G, D                 *)
+  datatype 'a Ctx =                     (* Contexts                   *)
+    Null                                (* G ::= .                    *)
+  | Decl of 'a Ctx * 'a                 (*     | G, D                 *)
 
   (* ctxPop (G) => G'
      Invariant: G = G',D
   *)
   fun ctxPop (Decl (G, D)) = G
 
-  exception Error of string             (* raised if out of space     *) 
+  exception Error of string             (* raised if out of space     *)
   (* ctxLookup (G, k) = D, kth declaration in G from right to left
      Invariant: 1 <= k <= |G|, where |G| is length of G
   *)
@@ -33,17 +33,17 @@ struct
 
   (* ctxLength G = |G|, the number of declarations in G *)
   fun ctxLength G =
-      let 
-	fun ctxLength' (Null, n) = n
-	  | ctxLength' (Decl(G, _), n)= ctxLength' (G, n+1)
+      let
+        fun ctxLength' (Null, n) = n
+          | ctxLength' (Decl(G, _), n)= ctxLength' (G, n+1)
       in
-	ctxLength' (G, 0)
+        ctxLength' (G, 0)
       end
-    
+
   type FgnExp = exn                     (* foreign expression representation *)
   exception UnexpectedFgnExp of FgnExp
                                         (* raised by a constraint solver
-					   if passed an incorrect arg *)
+                                           if passed an incorrect arg *)
 
   type FgnCnstr = exn                   (* foreign unification constraint
                                            representation *)
@@ -54,74 +54,74 @@ struct
   datatype Depend =                     (* Dependency information     *)
     No                                  (* P ::= No                   *)
   | Maybe                               (*     | Maybe                *)
-  | Meta				(*     | Meta                 *)
+  | Meta                                (*     | Meta                 *)
 
   (* Expressions *)
 
-  datatype Uni =			(* Universes:                 *)
-    Kind				(* L ::= Kind                 *)
-  | Type				(*     | Type                 *)
+  datatype Uni =                        (* Universes:                 *)
+    Kind                                (* L ::= Kind                 *)
+  | Type                                (*     | Type                 *)
 
-  datatype Exp =			(* Expressions:               *)
-    Uni   of Uni			(* U ::= L                    *)
+  datatype Exp =                        (* Expressions:               *)
+    Uni   of Uni                        (* U ::= L                    *)
   | Pi    of (Dec * Depend) * Exp       (*     | bPi (D, P). V         *)
-  | Root  of Head * Spine		(*     | C @ S                *)
-  | Redex of Exp * Spine		(*     | U @ S                *)
-  | Lam   of Dec * Exp			(*     | lam D. U             *)
+  | Root  of Head * Spine               (*     | C @ S                *)
+  | Redex of Exp * Spine                (*     | U @ S                *)
+  | Lam   of Dec * Exp                  (*     | lam D. U             *)
   | EVar  of Exp option ref * Dec Ctx * Exp * (Cnstr ref) list ref
                                         (*     | X<I> : G|-V, Cnstr   *)
 
-  | EClo  of Exp * Sub			(*     | U[s]                 *)
-  | AVar  of Exp option ref             (*     | A<I>                 *)   
-  | NVar  of int			(*     | n (linear, fully applied) *)
+  | EClo  of Exp * Sub                  (*     | U[s]                 *)
+  | AVar  of Exp option ref             (*     | A<I>                 *)
+  | NVar  of int                        (*     | n (linear, fully applied) *)
                                         (* grafting variable *)
 
   | FgnExp of csid * FgnExp
                                         (*     | (foreign expression) *)
-    
-  and Head =				(* Heads:                     *)
-    BVar  of int			(* H ::= k                    *)
-  | Const of cid			(*     | c                    *)
-  | Proj  of Block * int		(*     | #k(b)                *)
-  | Skonst of cid			(*     | c#                   *)
-  | Def   of cid			(*     | d                    *)
-  | NSDef of cid			(*     | d (non strict)       *)
-  | FVar  of name * Exp * Sub		(*     | F[s]                 *)
+
+  and Head =                            (* Heads:                     *)
+    BVar  of int                        (* H ::= k                    *)
+  | Const of cid                        (*     | c                    *)
+  | Proj  of Block * int                (*     | #k(b)                *)
+  | Skonst of cid                       (*     | c#                   *)
+  | Def   of cid                        (*     | d                    *)
+  | NSDef of cid                        (*     | d (non strict)       *)
+  | FVar  of name * Exp * Sub           (*     | F[s]                 *)
   | FgnConst of csid * ConDec           (*     | (foreign constant)   *)
-    
-  and Spine =				(* Spines:                    *)
-    Nil					(* S ::= Nil                  *)
-  | App   of Exp * Spine		(*     | U ; S                *)
-  | SClo  of Spine * Sub		(*     | S[s]                 *)
 
-  and Sub =				(* Explicit substitutions:    *)
-    Shift of int			(* s ::= ^n                   *)
-  | Dot   of Front * Sub		(*     | Ft.s                 *)
+  and Spine =                           (* Spines:                    *)
+    Nil                                 (* S ::= Nil                  *)
+  | App   of Exp * Spine                (*     | U ; S                *)
+  | SClo  of Spine * Sub                (*     | S[s]                 *)
 
-  and Front =				(* Fronts:                    *)
-    Idx of int				(* Ft ::= k                   *)
-  | Exp of Exp				(*     | U                    *)
-  | Axp of Exp				(*     | U (assignable)       *)
-  | Block of Block			(*     | _x                   *)
-  | Undef				(*     | _                    *)
+  and Sub =                             (* Explicit substitutions:    *)
+    Shift of int                        (* s ::= ^n                   *)
+  | Dot   of Front * Sub                (*     | Ft.s                 *)
 
-  and Dec =				(* Declarations:              *)
-    Dec of name option * Exp		(* D ::= x:V                  *)
-  | BDec of name option * (cid * Sub)	(*     | v:l[s]               *)
-  | ADec of name option * int   	(*     | v[^-d]               *)
+  and Front =                           (* Fronts:                    *)
+    Idx of int                          (* Ft ::= k                   *)
+  | Exp of Exp                          (*     | U                    *)
+  | Axp of Exp                          (*     | U (assignable)       *)
+  | Block of Block                      (*     | _x                   *)
+  | Undef                               (*     | _                    *)
+
+  and Dec =                             (* Declarations:              *)
+    Dec of name option * Exp            (* D ::= x:V                  *)
+  | BDec of name option * (cid * Sub)   (*     | v:l[s]               *)
+  | ADec of name option * int           (*     | v[^-d]               *)
   | NDec of name option
 
-  and Block =				(* Blocks:                    *)
-    Bidx of int 			(* b ::= v                    *)
+  and Block =                           (* Blocks:                    *)
+    Bidx of int                         (* b ::= v                    *)
   | LVar of Block option ref * Sub * (cid * Sub)
                                         (*     | L(l[^k],t)           *)
-  | Inst of Exp list			(*     | u1, ..., Un          *)
+  | Inst of Exp list                    (*     | u1, ..., Un          *)
 
 
   (* Constraints *)
 
-  and Cnstr =				(* Constraint:                *)
-    Solved                      	(* Cnstr ::= solved           *)
+  and Cnstr =                           (* Constraint:                *)
+    Solved                              (* Cnstr ::= solved           *)
   | Eqn      of Dec Ctx * Exp * Exp     (*         | G|-(U1 == U2)    *)
   | FgnCnstr of csid * FgnCnstr         (*         | (foreign)        *)
 
@@ -144,26 +144,26 @@ struct
 
   (* Global signature *)
 
-  and ConDec =			        (* Constant declaration       *)
+  and ConDec =                          (* Constant declaration       *)
     ConDec of string * mid option * int * Status
                                         (* a : K : kind  or           *)
-              * Exp * Uni	        (* c : A : type               *)
-  | ConDef of string * mid option * int	(* a = A : K : kind  or       *)
-              * Exp * Exp * Uni		(* d = M : A : type           *)
+              * Exp * Uni               (* c : A : type               *)
+  | ConDef of string * mid option * int (* a = A : K : kind  or       *)
+              * Exp * Exp * Uni         (* d = M : A : type           *)
               * Ancestor                (* Ancestor info for d or a   *)
   | AbbrevDef of string * mid option * int
                                         (* a = A : K : kind  or       *)
-              * Exp * Exp * Uni		(* d = M : A : type           *)
+              * Exp * Exp * Uni         (* d = M : A : type           *)
   | BlockDec of string * mid option     (* %block l : SOME G1 PI G2   *)
               * Dec Ctx * Dec list
 
   | BlockDef of string * mid option * cid list
                                         (* %block l = (l1 | ... | ln) *)
 
-  | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
-              * Exp * Uni	        (* sc: A : type               *)
+  | SkoDec of string * mid option * int (* sa: K : kind  or           *)
+              * Exp * Uni               (* sc: A : type               *)
 
-  and Ancestor =			(* Ancestor of d or a         *)
+  and Ancestor =                        (* Ancestor of d or a         *)
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
                                         (* NONE means expands to {x:A}B *)
 
@@ -172,14 +172,14 @@ struct
 
   (* Form of constant declaration *)
   datatype ConDecForm =
-    FromCS				(* from constraint domain *)
-  | Ordinary				(* ordinary declaration *)
-  | Clause				(* %clause declaration *)
+    FromCS                              (* from constraint domain *)
+  | Ordinary                            (* ordinary declaration *)
+  | Clause                              (* %clause declaration *)
 
   (* Type abbreviations *)
-  type dctx = Dec Ctx			(* G = . | G,D                *)
-  type eclo = Exp * Sub   		(* Us = U[s]                  *)
-  type bclo = Block * Sub   		(* Bs = B[s]                  *)
+  type dctx = Dec Ctx                   (* G = . | G,D                *)
+  type eclo = Exp * Sub                 (* Us = U[s]                  *)
+  type bclo = Block * Sub               (* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
 (*  exception Error of string             (* raised if out of space     *) *)
@@ -188,27 +188,27 @@ struct
   structure FgnExpStd = struct
 
     structure ToInternal = FgnOpnTable (type arg = unit
-					type result = Exp)
+                                        type result = Exp)
 
     structure Map = FgnOpnTable (type arg = Exp -> Exp
-				 type result = Exp)
+                                 type result = Exp)
 
     structure App = FgnOpnTable (type arg = Exp -> unit
-				 type result = unit)
+                                 type result = unit)
 
     structure EqualTo = FgnOpnTable (type arg = Exp
-				     type result = bool)
+                                     type result = bool)
 
     structure UnifyWith = FgnOpnTable (type arg = Dec Ctx * Exp
-				       type result = FgnUnify)
+                                       type result = FgnUnify)
 
-			  
+
 
     fun fold csfe f b = let
-	val r = ref b
-	fun g U = r := f (U,!r)
+        val r = ref b
+        fun g U = r := f (U,!r)
     in
-	App.apply csfe g ; !r
+        App.apply csfe g ; !r
     end
 
   end
@@ -216,13 +216,13 @@ struct
   structure FgnCnstrStd = struct
 
     structure ToInternal = FgnOpnTable (type arg = unit
-					type result = (Dec Ctx * Exp) list)
+                                        type result = (Dec Ctx * Exp) list)
 
     structure Awake = FgnOpnTable (type arg = unit
-				   type result = bool)
+                                   type result = bool)
 
     structure Simplify = FgnOpnTable (type arg = unit
-				      type result = bool)
+                                      type result = bool)
 
   end
 
@@ -239,12 +239,12 @@ struct
     | conDecParent (SkoDec (_, parent, _, _, _)) = parent
     | conDecParent (BlockDec (_, parent, _, _)) = parent
     | conDecParent (BlockDef (_, parent, _)) = parent
-   
+
 
   (* conDecImp (CD) = k
 
      Invariant:
-     If   CD is either a declaration, definition, abbreviation, or 
+     If   CD is either a declaration, definition, abbreviation, or
           a Skolem constant
      then k stands for the number of implicit elements.
   *)
@@ -260,7 +260,7 @@ struct
   (* conDecType (CD) =  V
 
      Invariant:
-     If   CD is either a declaration, definition, abbreviation, or 
+     If   CD is either a declaration, definition, abbreviation, or
           a Skolem constant
      then V is the respective type
   *)
@@ -282,7 +282,7 @@ struct
   (* conDecUni (CD) =  L
 
      Invariant:
-     If   CD is either a declaration, definition, abbreviation, or 
+     If   CD is either a declaration, definition, abbreviation, or
           a Skolem constant
      then L is the respective universe
   *)
@@ -318,69 +318,69 @@ struct
 
     fun sgnClean (i) = if i >= !nextCid then ()
                        else (Array.update (sgnArray, i, dummyEntry);
-			     sgnClean (i+1))
+                             sgnClean (i+1))
 
     fun sgnReset () = ((* Fri Dec 20 12:04:24 2002 -fp *)
-		       (* this circumvents a space leak *)
-		       sgnClean (0);
-		       nextCid := 0; nextMid := 0)
+                       (* this circumvents a space leak *)
+                       sgnClean (0);
+                       nextCid := 0; nextMid := 0)
     fun sgnSize () = (!nextCid, !nextMid)
 
-    fun sgnAdd (conDec) = 
+    fun sgnAdd (conDec) =
         let
-	  val cid = !nextCid
-	in
-	  if cid > maxCid
-	    then raise Error ("Global signature size " ^ Int.toString (maxCid+1) ^ " exceeded")
-	  else (Array.update (sgnArray, cid, conDec) ;
-		nextCid := cid + 1;
-		cid)
-	end
+          val cid = !nextCid
+        in
+          if cid > maxCid
+            then raise Error ("Global signature size " ^ Int.toString (maxCid+1) ^ " exceeded")
+          else (Array.update (sgnArray, cid, conDec) ;
+                nextCid := cid + 1;
+                cid)
+        end
 
     (* 0 <= cid < !nextCid *)
     fun sgnLookup (cid) = Array.sub (sgnArray, cid)
 
     fun sgnApp (f) =
         let
-	  fun sgnApp' (cid) = 
-	      if cid = !nextCid then () else (f cid; sgnApp' (cid+1)) 
-	in
-	  sgnApp' (0)
-	end
+          fun sgnApp' (cid) =
+              if cid = !nextCid then () else (f cid; sgnApp' (cid+1))
+        in
+          sgnApp' (0)
+        end
 
-    fun sgnStructAdd (strDec) = 
+    fun sgnStructAdd (strDec) =
         let
-	  val mid = !nextMid
-	in
-	  if mid > maxMid
-	    then raise Error ("Global signature size " ^ Int.toString (maxMid+1) ^ " exceeded")
-	  else (Array.update (sgnStructArray, mid, strDec) ;
-		nextMid := mid + 1;
-		mid)
-	end
+          val mid = !nextMid
+        in
+          if mid > maxMid
+            then raise Error ("Global signature size " ^ Int.toString (maxMid+1) ^ " exceeded")
+          else (Array.update (sgnStructArray, mid, strDec) ;
+                nextMid := mid + 1;
+                mid)
+        end
 
     (* 0 <= mid < !nextMid *)
     fun sgnStructLookup (mid) = Array.sub (sgnStructArray, mid)
 
     (* A hack used in Flit - jcreed 6/05 *)
     fun rename (cid, new) =
-	let
-	    val newConDec = case sgnLookup cid of 
-		ConDec (n,m,i,s,e,u) => ConDec(new,m,i,s,e,u)
-	      | ConDef (n,m,i,e,e',u,a) => ConDef(new,m,i,e,e',u,a)
-	      | AbbrevDef (n,m,i,e,e',u) => AbbrevDef (new,m,i,e,e',u)
-	      | BlockDec (n,m,d,d') => BlockDec (new,m,d,d')
-	      | SkoDec (n,m,i,e,u) => SkoDec (new,m,i,e,u)
-	in
-	    Array.update (sgnArray, cid, newConDec)
-	end
+        let
+            val newConDec = case sgnLookup cid of
+                ConDec (n,m,i,s,e,u) => ConDec(new,m,i,s,e,u)
+              | ConDef (n,m,i,e,e',u,a) => ConDef(new,m,i,e,e',u,a)
+              | AbbrevDef (n,m,i,e,e',u) => AbbrevDef (new,m,i,e,e',u)
+              | BlockDec (n,m,d,d') => BlockDec (new,m,d,d')
+              | SkoDec (n,m,i,e,u) => SkoDec (new,m,i,e,u)
+        in
+            Array.update (sgnArray, cid, newConDec)
+        end
 
   end
 
   fun constDef (d) =
       (case sgnLookup (d)
-	 of ConDef(_, _, _, U,_, _, _) => U
-	  | AbbrevDef (_, _, _, U,_, _) => U)
+         of ConDef(_, _, _, U,_, _, _) => U
+          | AbbrevDef (_, _, _, U,_, _) => U)
 
   fun constType (c) = conDecType (sgnLookup c)
   fun constImp (c) = conDecImp (sgnLookup c)
@@ -389,21 +389,21 @@ struct
 
   fun constStatus (c) =
       (case sgnLookup (c)
-	 of ConDec (_, _, _, status, _, _) => status
+         of ConDec (_, _, _, status, _, _) => status
           | _ => Normal)
 
 
   (* Explicit Substitutions *)
 
-  (* id = ^0 
-  
+  (* id = ^0
+
      Invariant:
      G |- id : G        id is patsub
   *)
   val id = Shift(0)
 
   (* shift = ^1
-  
+
      Invariant:
      G, V |- ^ : G       ^ is patsub
   *)
@@ -419,7 +419,7 @@ struct
   (* comp (s1, s2) = s'
 
      Invariant:
-     If   G'  |- s1 : G 
+     If   G'  |- s1 : G
      and  G'' |- s2 : G'
      then s'  = s1 o s2
      and  G'' |- s1 o s2 : G
@@ -437,8 +437,8 @@ struct
     | comp (Dot (Ft, s), s') = Dot (frontSub (Ft, s'), comp (s, s'))
 
   (* bvarSub (n, s) = Ft'
-   
-      Invariant: 
+
+      Invariant:
      If    G |- s : G'    G' |- n : V
      then  Ft' = Ftn         if  s = Ft1 .. Ftn .. ^k
        or  Ft' = ^(n+k)     if  s = Ft1 .. Ftm ^k   and m<n
@@ -448,19 +448,19 @@ struct
     | bvarSub (n, Dot(Ft, s)) = bvarSub (n-1, s)
     | bvarSub (n, Shift(k))  = Idx (n+k)
 
-  (* blockSub (B, s) = B' 
-    
+  (* blockSub (B, s) = B'
+
      Invariant:
-     If   G |- s : G'   
+     If   G |- s : G'
      and  G' |- B block
      then G |- B' block
-     and  B [s] == B' 
+     and  B [s] == B'
   *)
   (* in front of substitutions, first case is irrelevant *)
   (* Sun Dec  2 11:56:41 2001 -fp *)
   and blockSub (Bidx k, s) =
       (case bvarSub (k, s)
-	 of Idx k' => Bidx k'
+         of Idx k' => Bidx k'
           | Block B => B)
     | blockSub (LVar (ref (SOME B), sk, _), s) =
         blockSub (B, comp (sk, s))
@@ -469,15 +469,15 @@ struct
     (* Since always . |- t : Gsome, discard s *)
     (* where is this needed? *)
     (* Thu Dec  6 20:30:26 2001 -fp !!! *)
-    | blockSub (LVar (r as ref NONE, sk, (l, t)), s) = 
+    | blockSub (LVar (r as ref NONE, sk, (l, t)), s) =
         LVar(r, comp(sk, s), (l, t))
       (* was:
-	LVar (r, comp(sk, s), (l, comp (t, s)))
-	July 22, 2010 -fp -cs
+        LVar (r, comp(sk, s), (l, comp (t, s)))
+        July 22, 2010 -fp -cs
        *)
-	(* comp(^k, s) = ^k' for some k' by invariant *)
+        (* comp(^k, s) = ^k' for some k' by invariant *)
     | blockSub (L as Inst ULs, s') = Inst (map (fn U => EClo (U, s')) ULs)
-    (* this should be right but somebody should verify *) 
+    (* this should be right but somebody should verify *)
 
   (* frontSub (Ft, s) = Ft'
 
@@ -521,7 +521,7 @@ struct
      If   G |- s : G'
      then s' = 1. (s o ^)
      and  for all V s.t.  G' |- V : L
-          G, V[s] |- s' : G', V 
+          G, V[s] |- s' : G', V
 
      If s patsub then s' patsub
   *)
@@ -545,24 +545,24 @@ struct
   (* Declaration Contexts *)
 
   (* ctxDec (G, k) = x:V
-     Invariant: 
+     Invariant:
      If      |G| >= k, where |G| is size of G,
      then    G |- k : V  and  G |- V : L
   *)
   fun ctxDec (G, k) =
       let (* ctxDec' (G'', k') = x:V
-	     where G |- ^(k-k') : G'', 1 <= k' <= k
+             where G |- ^(k-k') : G'', 1 <= k' <= k
            *)
-	fun ctxDec' (Decl (G', Dec (x, V')), 1) = Dec (x, EClo (V', Shift (k)))
-	  | ctxDec' (Decl (G', BDec (n, (l, s))), 1) = BDec (n, (l, comp (s, Shift (k))))
-	  | ctxDec' (Decl (G', _), k') = ctxDec' (G', k'-1)
-	 (* ctxDec' (Null, k')  should not occur by invariant *)
+        fun ctxDec' (Decl (G', Dec (x, V')), 1) = Dec (x, EClo (V', Shift (k)))
+          | ctxDec' (Decl (G', BDec (n, (l, s))), 1) = BDec (n, (l, comp (s, Shift (k))))
+          | ctxDec' (Decl (G', _), k') = ctxDec' (G', k'-1)
+         (* ctxDec' (Null, k')  should not occur by invariant *)
       in
-	ctxDec' (G, k)
+        ctxDec' (G, k)
       end
 
   (* blockDec (G, v, i) = V
-     
+
      Invariant:
      If   G (v) = l[s]
      and  Sigma (l) = SOME Gsome BLOCK Lblock
@@ -571,14 +571,14 @@ struct
   *)
 
   fun blockDec (G, v as (Bidx k), i) =
-    let 
-      val BDec (_, (l, s)) = ctxDec (G, k)  
+    let
+      val BDec (_, (l, s)) = ctxDec (G, k)
       (* G |- s : Gsome *)
       val (Gsome, Lblock) = conDecBlock (sgnLookup l)
       fun blockDec' (t, D :: L, 1, j) = decSub (D, t)
-	| blockDec' (t, _ :: L, n, j) =
-	    blockDec' (Dot (Exp (Root (Proj (v, j), Nil)), t),
-			  L, n-1, j+1)
+        | blockDec' (t, _ :: L, n, j) =
+            blockDec' (Dot (Exp (Root (Proj (v, j), Nil)), t),
+                          L, n-1, j+1)
     in
       blockDec' (s, Lblock, i, 1)
     end
@@ -611,7 +611,7 @@ struct
     | ancestor' (SOME(Const(c))) = Anc(SOME(c), 1, SOME(c))
     | ancestor' (SOME(Def(d))) =
       (case sgnLookup(d)
-	 of ConDef(_, _, _, _, _, _, Anc(_, height, cOpt))
+         of ConDef(_, _, _, _, _, _, Anc(_, height, cOpt))
             => Anc(SOME(d), height+1, cOpt))
     | ancestor' (SOME _) = (* FgnConst possible, BVar impossible by strictness *)
       Anc(NONE, 0, NONE)
@@ -621,7 +621,7 @@ struct
   (* defAncestor(d) = ancestor of d, d must be defined *)
   fun defAncestor (d) =
       (case sgnLookup(d)
-	 of ConDef(_, _, _, _, _, _, anc) => anc)
+         of ConDef(_, _, _, _, _, _, anc) => anc)
 
   (* Type related functions *)
 
@@ -646,7 +646,7 @@ struct
      as in targetHeadOpt, except V must be a valid type
   *)
   fun targetHead (A) = valOf (targetHeadOpt A)
-                      
+
   (* targetFamOpt (V) = SOME(cid) or NONE
      where cid is the type family of the atomic target type of V,
      NONE if V is a kind or object or have variable type.
@@ -668,7 +668,7 @@ struct
      as in targetFamOpt, except V must be a valid type
   *)
   fun targetFam (A) = valOf (targetFamOpt A)
-                      
+
 end;  (* functor IntSyn *)
 
 structure IntSyn :> INTSYN =
