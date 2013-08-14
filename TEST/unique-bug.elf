@@ -1,0 +1,42 @@
+%{
+Dear all,
+
+we ran into a surprising issue with %unique and we were wondering if this is somehow 
+expected behavior or maybe a bug in the implementation. Below is a minimal test case.
+
+Twelf accepts lookup-restrict as total, even though it's not covering the case when 
+G1 is not equal to G2. Without the %unique declaration, Twelf correctly detects that 
+lookup-restrict is not total.
+
+In our view it seems pretty clear that lookup-restrict should not hold, as confirmed 
+by the failed query at the bottom. 
+
+Any comments will be appreciated!
+}%
+
+tpe: type.
+int: tpe.
+bool: tpe.
+
+tlookup : tpe -> tpe -> type.
+tl/id : tlookup T T.
+
+%mode tlookup +G -T.
+%worlds () (tlookup _ _).
+%total (A) (tlookup A _).
+%unique tlookup +G -1T.
+
+lookup-restrict: tlookup G1 T1 -> tlookup G2 T2 -> tlookup G1 T2 -> tlookup G2 T1 -> type.
+%mode lookup-restrict +A +B -D -E.
+
+-: lookup-restrict L1 L2 L1 L2.
+
+%worlds () (lookup-restrict _ _ _ _).
+%total (A) (lookup-restrict _ A _ _).
+
+%query 1 2 tlookup int int.
+%query 1 2 tlookup bool bool.
+
+%. this query fails! so we really proved a wrong theorem.
+
+%query 1 2 lookup-restrict (L1: tlookup int int) (L2: tlookup bool bool) R1 R2.
