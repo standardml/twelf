@@ -46,9 +46,9 @@ twelf-server-announce:
 twelf-server-mlton:
 	mltonversion=`$(mlton) 2>&1 | awk 'NR==1 { print 0+$$2 }'`;	\
 	if   [ $$mltonversion -ge 20041109 ]; then			\
-		cmfileid="twelf-server-mlton.cm";			\
+		cmfileid="twelf-server-mlton.mlb";			\
 	elif [ $$mltonversion="MLTONVERSION" ]; then			\
-		cmfileid="twelf-server-mlton.cm";			\
+		cmfileid="twelf-server-mlton.mlb";			\
 	else								\
 		echo; echo "Error: MLton >= 20041109 required";	echo;	\
 		exit 1;							\
@@ -84,7 +84,7 @@ mlton : twelf-server-announce buildid twelf-server-mlton twelf-emacs
 
 .PHONY: twelf-regression check
 twelf-regression: buildid
-	$(mlton) -output bin/twelf-regression TEST/mlton-regression.cm
+	$(mlton) -output bin/twelf-regression TEST/mlton-regression.mlb
 
 check : twelf-regression
 	$(make) -C TEST check
