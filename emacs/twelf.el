@@ -2833,13 +2833,13 @@ Mode map
   "Menu for printing commands.")
 
 (defconst twelf-recon-menu
-  (` ("Reconstruction"
+    `("Reconstruction"
       (, (toggle "trace" '(twelf-toggle-recon-trace)
 		 '(string-equal twelf-recon-trace "true")))
-      ["traceMode" (twelf-set-parm "Recon.traceMode") t])))
+      ["traceMode" (twelf-set-parm "Recon.traceMode") t]))
 
 (defconst twelf-trace-menu
-  (` ("Trace"
+    `("Trace"
       ("trace"
        ["All" twelf-trace-trace-all t]
        ["None" twelf-trace-untrace t]
@@ -2852,7 +2852,7 @@ Mode map
       ("detail"
        (, (radio "0" '(twelf-set "Trace.detail" "0") '(equal twelf-trace-detail "0")))
        (, (radio "1*" '(twelf-set "Trace.detail" "1") '(equal twelf-trace-detail "1")))
-       (, (radio "2" '(twelf-set "Trace.detail" "2") '(equal twelf-trace-detail "2")))))))
+       (, (radio "2" '(twelf-set "Trace.detail" "2") '(equal twelf-trace-detail "2"))))))
 
 (defconst twelf-server-state-menu
   '("Server State"
