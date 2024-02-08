@@ -2833,13 +2833,13 @@ Mode map
   "Menu for printing commands.")
 
 (defconst twelf-recon-menu
-  (` ("Reconstruction"
+    `("Reconstruction"
       (, (toggle "trace" '(twelf-toggle-recon-trace)
 		 '(string-equal twelf-recon-trace "true")))
-      ["traceMode" (twelf-set-parm "Recon.traceMode") t])))
+      ["traceMode" (twelf-set-parm "Recon.traceMode") t]))
 
 (defconst twelf-trace-menu
-  (` ("Trace"
+    `("Trace"
       ("trace"
        ["All" twelf-trace-trace-all t]
        ["None" twelf-trace-untrace t]
@@ -2852,7 +2852,7 @@ Mode map
       ("detail"
        (, (radio "0" '(twelf-set "Trace.detail" "0") '(equal twelf-trace-detail "0")))
        (, (radio "1*" '(twelf-set "Trace.detail" "1") '(equal twelf-trace-detail "1")))
-       (, (radio "2" '(twelf-set "Trace.detail" "2") '(equal twelf-trace-detail "2")))))))
+       (, (radio "2" '(twelf-set "Trace.detail" "2") '(equal twelf-trace-detail "2"))))))
 
 (defconst twelf-server-state-menu
   '("Server State"
@@ -2884,7 +2884,7 @@ Mode map
   (setq twelf-server-display-commands (not twelf-server-display-commands)))
 
 (defconst twelf-options-menu
-  (` ("Options"
+    `("Options"
       (, (toggle "Display Commands" '(twelf-toggle-server-display-commands)
 		 'twelf-server-display-commands))
       ("chatter"
@@ -2922,7 +2922,7 @@ Mode map
       ("Table."
        ["strategy" (twelf-set-parm "Table.strategy") t]
        ["strengthen" (twelf-set-parm "Table.strengthen") t])
-      ["Reset Menubar" twelf-reset-menu t]))
+      ["Reset Menubar" twelf-reset-menu t])
   "Menu to change options in Twelf mode.")
 
 (defconst twelf-timers-menu
@@ -2939,12 +2939,12 @@ Mode map
   "Fontify current buffer using font-lock minor mode.")
 
 (defconst twelf-syntax-menu
-  (` ("Syntax Highlighting"
+    `("Syntax Highlighting"
       ["Highlight Declaration" twelf-font-fontify-decl t]
       ["Highlight Buffer" twelf-font-fontify-buffer t]
-      ;(, (toggle "Immediate Highlighting" 'toggle-twelf-font-immediate
-      ;'font-lock-mode))
-      ))
+      ;;(, (toggle "Immediate Highlighting" 'toggle-twelf-font-immediate
+      ;;'font-lock-mode))
+      )
   "Menu for syntax highlighting in Twelf mode.")
 
 (easy-menu-define twelf-menu (list twelf-mode-map)
