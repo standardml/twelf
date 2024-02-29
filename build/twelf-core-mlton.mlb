@@ -343,6 +343,3 @@ $(SML_LIB)/basis/sml-nj.mlb
 ../src/frontend/unknownexn.fun
 ../src/frontend/unknownexn-smlnj.sml
 ../src/frontend/frontend.sml
-../src/server/sigint.sig
-../src/server/sigint-mlton.sml
-../src/server/server.sml

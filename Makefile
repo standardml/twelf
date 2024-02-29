@@ -11,7 +11,7 @@
 polyml = poly
 smlnj = sml
 oldnj = sml
-mlton = mlton -default-ann 'nonexhaustiveMatch ignore'
+mlton ?= mlton -default-ann 'nonexhaustiveMatch ignore'
 make = make
 
 twelfdir = `pwd`
@@ -55,6 +55,14 @@ twelf-server-mlton:
 	fi;								\
 	$(mlton) -output bin/$(twelfserver) build/$${cmfileid}
 
+.PHONY: twelf-lib-mlton-wasi
+twelf-lib-mlton-wasi:
+	$(mlton) -target wasm32-unknown-wasi \
+		-format libexecutable \
+		-output bin/twelf.wasm \
+		-default-ann 'allowFFI true' \
+		build/twelf-lib-mlton-wasi.mlb
+
 .PHONY: twelf-server-smlnj
 twelf-server-smlnj:
 	$(smlnj) < build/twelf-server-smlnj.sml ;
@@ -81,6 +89,8 @@ polyml : ;
 smlnj : twelf-server-announce buildid twelf-server-smlnj twelf-emacs
 
 mlton : twelf-server-announce buildid twelf-server-mlton twelf-emacs 
+
+wasi : twelf-server-announce buildid twelf-lib-mlton-wasi
 
 .PHONY: twelf-regression check
 twelf-regression: buildid
