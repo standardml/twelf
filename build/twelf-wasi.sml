@@ -31,7 +31,14 @@ val _ = e (fn size =>
 					 bref := SOME b; b
 				  end)
 
-val e = _export "execute": (unit -> unit) -> unit;
-val _ = e (fn () => (case !bref of
-								 NONE => print "No input buffer allocated"
-							 | SOME b => (Twelf.loadString (CharArray.vector b); ())))
+val e = _export "execute": (unit -> int) -> unit;
+val _ = e (fn () =>
+				  let
+					 fun codeOfStatus Twelf.OK = 0
+						| codeOfStatus Twelf.ABORT = 1
+					 val status = case !bref of
+											NONE => (print "No input buffer allocated"; Twelf.ABORT)
+										 | SOME b => Twelf.loadString (CharArray.vector b)
+				  in
+					 codeOfStatus status
+				  end)
