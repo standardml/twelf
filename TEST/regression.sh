@@ -20,42 +20,62 @@ else
   TIME="/usr/bin/time -f%e\treal\n%U\tuser"
 fi
 
-echo "=== Compiling regression test package in MLton ==="
+startgroup() {
+    if [ -z "$GITHUB_WORKFLOW" ]; then
+        echo ""
+        echo "=== $1 ==="
+    else
+        echo "::group::$1"
+    fi
+}
+
+endgroup() {
+    if [ -z "$GITHUB_WORKFLOW" ]; then
+        :
+    else
+        echo "::endgroup::"
+    fi
+}
+
+startgroup "Compiling regression test package in MLton"
 make -C .. twelf-regression
+endgroup
 
-echo ""
-echo "=== Running regression test in MLton ==="
+startgroup "Running regression test in MLton"
 $TIME ../bin/twelf-regression regression.txt
+endgroup
 
-echo ""
-echo "=== Running Karl Crary's 'papers' page ==="
+startgroup "Running Karl Crary's 'papers' page"
 $TIME ../bin/twelf-regression regression-crary.txt
+endgroup
 
-echo ""
-echo "=== Running misc. public code ==="
+startgroup "Running misc. public code"
 $TIME ../bin/twelf-regression regression-public.txt
+endgroup
 
-echo ""
-echo "=== Running Twelf Wiki literate examples ==="
+startgroup "Running Twelf Wiki literate examples"
 $TIME ../bin/twelf-regression regression-wiki.txt
-
+endgroup
 
 ARG_ONE=$1
 if [ -z "$ARG_ONE" ]
 then
-  echo "==== Completed! ==="
+  echo "=== Completed! ==="
 else
-  echo ""
-  echo "=== Running TALT ==="
+  startgroup "Extra Tests"
+
+  startgroup "Running TALT"
   $TIME ../bin/twelf-regression regression-talt.txt
+  endgroup
 
-  echo ""
-  echo "=== Running TS-LF (Definition of Standard ML) ==="
+  startgroup "Running TS-LF (Definition of Standard ML)"
   $TIME ../bin/twelf-regression regression-tslf.txt
+  endgroup
 
-  echo ""
-  echo "=== Running Princeton Foundational PCC ==="
+  startgroup "Running Princeton Foundational PCC"
   $TIME ../bin/twelf-regression regression-fpcc.txt
+  endgroup
 
-  echo "==== Completed! ==="
+  endgroup # Extra Tests
+  echo "=== Completed! ==="
 fi
