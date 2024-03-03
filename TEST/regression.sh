@@ -1,19 +1,19 @@
 #!/bin/bash
 # TWELF REGRESSION TEST
 # Author: Robert J. Simmons
-# 
+#
 # TEST/regression.sh [ full ]
-# Tests the regression suite, provides timing information. 
+# Tests the regression suite, provides timing information.
 # Should stay largely silent if there are no problems.
 # If no second argument is given, just does the superficial regression suite;
-# if any second argument is given, the script also runs several plparty.org 
+# if any second argument is given, the script also runs several plparty.org
 # specific extra regression checks.
 
 MLTON="mlton"
 SML="sml"
 SML_FLAGS="-Ccm.verbose=false -Ccompiler-mc.warn-non-exhaustive-match=false sources.cm -Ccompiler-mc.warn-non-exhaustive-bind=false -Ccontrol.poly-eq-warn=false"
 POSTFIX=$( date +%y%m%d )
-if [ $TERM_PROGRAM = "Apple_Terminal" ] 
+if [[ $TERM_PROGRAM == "Apple_Terminal" ]]
 then ## Better OS X test? Really maybe don't care as much, run make check
   TIME="/usr/bin/time"
 else
@@ -41,7 +41,7 @@ $TIME ../bin/twelf-regression regression-wiki.txt
 
 
 ARG_ONE=$1
-if [ -z "$ARG_ONE" ] 
+if [ -z "$ARG_ONE" ]
 then
   echo "==== Completed! ==="
 else
@@ -59,6 +59,3 @@ else
 
   echo "==== Completed! ==="
 fi
-
-
- 

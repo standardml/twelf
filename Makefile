@@ -11,7 +11,8 @@
 polyml = poly
 smlnj = sml
 oldnj = sml
-mlton ?= mlton -default-ann 'nonexhaustiveMatch ignore'
+mlton ?= mlton -default-ann 'nonexhaustiveMatch ignore' \
+               -default-ann 'nonexhaustiveBind ignore'
 make = make
 
 twelfdir = `pwd`
@@ -69,17 +70,17 @@ twelf-server-smlnj:
 	bin/.mkexec "$(smlnj)" "$(twelfdir)" twelf-server "$(twelfserver)" ;
 
 .PHONY: twelf-emacs
-twelf-emacs: ; 
+twelf-emacs: ;
 	@echo "*************************************************"
 	@echo "Twelf Emacs Integration"
-	@echo "*************************************************"	 
+	@echo "*************************************************"
 	@echo "Add"
 	@echo ""
 	@echo "(setq twelf-root \"$(twelfdir)/\")"
 	@echo "(load (concat twelf-root \"emacs/twelf-init.el\"))"
 	@echo ""
 	@echo "to your .emacs file"
-	@echo "*************************************************"	
+	@echo "*************************************************"
 
 .PHONY: poylml smlnj oldnj mlton
 
@@ -88,7 +89,7 @@ polyml : ;
 
 smlnj : twelf-server-announce buildid twelf-server-smlnj twelf-emacs
 
-mlton : twelf-server-announce buildid twelf-server-mlton twelf-emacs 
+mlton : twelf-server-announce buildid twelf-server-mlton twelf-emacs
 
 wasi : twelf-server-announce buildid twelf-lib-mlton-wasi
 
@@ -99,6 +100,6 @@ twelf-regression: buildid
 check : twelf-regression
 	$(make) -C TEST check
 
-install: 
+install:
 	cp bin/twelf-server $(DESTDIR)/bin/twelf-server.new
 	mv $(DESTDIR)/bin/twelf-server.new $(DESTDIR)/bin/twelf-server

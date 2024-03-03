@@ -1,0 +1,20 @@
+# https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container
+
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: jcreed/mlton-twelf-ci:latest # built from https://github.com/jcreedcmu/docker-mlton
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run tests
+        run: cd TEST && ./regression.sh
