@@ -1,64 +1,81 @@
 #!/bin/bash
 # TWELF REGRESSION TEST
 # Author: Robert J. Simmons
-# 
+#
 # TEST/regression.sh [ full ]
-# Tests the regression suite, provides timing information. 
+# Tests the regression suite, provides timing information.
 # Should stay largely silent if there are no problems.
 # If no second argument is given, just does the superficial regression suite;
-# if any second argument is given, the script also runs several plparty.org 
+# if any second argument is given, the script also runs several plparty.org
 # specific extra regression checks.
 
 MLTON="mlton"
 SML="sml"
 SML_FLAGS="-Ccm.verbose=false -Ccompiler-mc.warn-non-exhaustive-match=false sources.cm -Ccompiler-mc.warn-non-exhaustive-bind=false -Ccontrol.poly-eq-warn=false"
 POSTFIX=$( date +%y%m%d )
-if [ $TERM_PROGRAM = "Apple_Terminal" ] 
+if [[ $TERM_PROGRAM == "Apple_Terminal" ]]
 then ## Better OS X test? Really maybe don't care as much, run make check
   TIME="/usr/bin/time"
 else
   TIME="/usr/bin/time -f%e\treal\n%U\tuser"
 fi
 
-echo "=== Compiling regression test package in MLton ==="
+startgroup() {
+    if [ -z "$GITHUB_WORKFLOW" ]; then
+        echo ""
+        echo "=== $1 ==="
+    else
+        echo "::group::$1"
+    fi
+}
+
+endgroup() {
+    if [ -z "$GITHUB_WORKFLOW" ]; then
+        :
+    else
+        echo "::endgroup::"
+    fi
+}
+
+startgroup "Compiling regression test package in MLton"
 make -C .. twelf-regression
+endgroup
 
-echo ""
-echo "=== Running regression test in MLton ==="
+startgroup "Running regression test in MLton"
 $TIME ../bin/twelf-regression regression.txt
+endgroup
 
-echo ""
-echo "=== Running Karl Crary's 'papers' page ==="
+startgroup "Running Karl Crary's 'papers' page"
 $TIME ../bin/twelf-regression regression-crary.txt
+endgroup
 
-echo ""
-echo "=== Running misc. public code ==="
+startgroup "Running misc. public code"
 $TIME ../bin/twelf-regression regression-public.txt
+endgroup
 
-echo ""
-echo "=== Running Twelf Wiki literate examples ==="
+startgroup "Running Twelf Wiki literate examples"
 $TIME ../bin/twelf-regression regression-wiki.txt
-
+endgroup
 
 ARG_ONE=$1
-if [ -z "$ARG_ONE" ] 
+if [ -z "$ARG_ONE" ]
 then
-  echo "==== Completed! ==="
+  echo "=== Completed! ==="
 else
-  echo ""
-  echo "=== Running TALT ==="
+  startgroup "Extra Tests"
+
+  startgroup "Running TALT"
   $TIME ../bin/twelf-regression regression-talt.txt
+  endgroup
 
-  echo ""
-  echo "=== Running TS-LF (Definition of Standard ML) ==="
+  startgroup "Running TS-LF (Definition of Standard ML)"
   $TIME ../bin/twelf-regression regression-tslf.txt
+  endgroup
 
-  echo ""
-  echo "=== Running Princeton Foundational PCC ==="
+  startgroup "Running Princeton Foundational PCC"
   $TIME ../bin/twelf-regression regression-fpcc.txt
+  endgroup
 
-  echo "==== Completed! ==="
+  endgroup # Extra Tests
+  echo "=== Completed! ==="
 fi
-
-
- 
