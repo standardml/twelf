@@ -1,20 +1,29 @@
-# https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container
-
-name: Run Tests
+name: Twelf Regression Suite
 
 on:
   push:
     branches:
       - master
   pull_request:
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
-    container:
-      image: jcreed/mlton-twelf-ci:latest # built from https://github.com/jcreedcmu/docker-mlton
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          mkdir mlton && cd mlton
+          curl -O -L https://github.com/MLton/mlton/releases/download/on-20210117-release/mlton-20210117-1.amd64-linux-glibc2.31.tgz
+          tar xzf mlton-20210117-1.amd64-linux-glibc2.31.tgz
+          cd mlton-20210117-1.amd64-linux-glibc2.31 && sudo make install
+          echo -e '#!/bin/bash\ngit rev-parse HEAD' > /tmp/svnversion
+          chmod +x /tmp/svnversion
+          sudo cp /tmp/svnversion /usr/local/bin
+
       - name: Run tests
         run: cd TEST && ./regression.sh
