@@ -1,6 +1,6 @@
 Twelf
 =====
-![run tests](https://github.com/standardml/twelf/actions/workflows/run-tests.yml/badge.svg?branch=main)
+[![run tests](https://github.com/standardml/twelf/actions/workflows/run-tests.yml/badge.svg?branch=main)](https://github.com/standardml/twelf/actions/workflows/run-tests.yml)
 
 Copyright (C) 1997-2011, Frank Pfenning and Carsten Schuermann
 
