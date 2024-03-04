@@ -1,4 +1,7 @@
 Twelf
+=====
+![run tests](https://github.com/standardml/twelf/actions/workflows/run-tests.yml/badge.svg)
+
 Copyright (C) 1997-2011, Frank Pfenning and Carsten Schuermann
 
 Authors: Frank Pfenning
@@ -33,17 +36,17 @@ to run "make buildid" first.
 Files
 =====
 
- README            --- this file
- Makefile          --- enables make
- server.cm         --- used to build Twelf Server
- sources.cm        --- used to build Twelf SML
- bin/              --- utility scripts, heaps, binaries
- build/            --- build files (type "make" to see options)
- doc/              --- (Outdated) Twelf user's guide
- emacs/            --- Emacs interface for Twelf
- examples/         --- various case studies
- examples-clp/     --- examples of use of the numbers and strings extensions
- src/              --- the SML sources for Twelf
- tex/              --- TeX macros and style files
- vim/              --- Vim interface for Twelf
+    README.md         --- this file
+    Makefile          --- enables make
+    server.cm         --- used to build Twelf Server
+    sources.cm        --- used to build Twelf SML
+    bin/              --- utility scripts, heaps, binaries
+    build/            --- build files (type "make" to see options)
+    doc/              --- (Outdated) Twelf user's guide
+    emacs/            --- Emacs interface for Twelf
+    examples/         --- various case studies
+    examples-clp/     --- examples of use of the numbers and strings extensions
+    src/              --- the SML sources for Twelf
+    tex/              --- TeX macros and style files
+    vim/              --- Vim interface for Twelf
 
