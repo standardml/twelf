@@ -9,6 +9,9 @@
 # if any second argument is given, the script also runs several plparty.org
 # specific extra regression checks.
 
+# Exit on error
+set -e
+
 MLTON="mlton"
 SML="sml"
 SML_FLAGS="-Ccm.verbose=false -Ccompiler-mc.warn-non-exhaustive-match=false sources.cm -Ccompiler-mc.warn-non-exhaustive-bind=false -Ccontrol.poly-eq-warn=false"

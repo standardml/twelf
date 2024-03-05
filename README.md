@@ -1,6 +1,6 @@
 Twelf
 =====
-![run tests](https://github.com/standardml/twelf/actions/workflows/run-tests.yml/badge.svg)
+[![run tests](https://github.com/standardml/twelf/actions/workflows/run-tests.yml/badge.svg?branch=main)](https://github.com/standardml/twelf/actions/workflows/run-tests.yml)
 
 Copyright (C) 1997-2011, Frank Pfenning and Carsten Schuermann
 
@@ -49,4 +49,3 @@ Files
     src/              --- the SML sources for Twelf
     tex/              --- TeX macros and style files
     vim/              --- Vim interface for Twelf
-
