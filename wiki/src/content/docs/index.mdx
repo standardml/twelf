@@ -1,0 +1,111 @@
+---
+title: Proving totality assertions about the natural numbers
+---
+
+import Latex from "../../components/Latex.astro";
+import Twelf from "../../components/Twelf.astro";
+
+In this section, we will use Twelf to mechanize proofs of [[metatheorems]], which are statements about an object language.
+First, we recap the signature we have defined to this point, using the conveniences afforded by Twelf:
+
+<Twelf code={`
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+even   : nat -> type.
+even-z : even z.
+even-s : even (s (s N))
+    <- even N.
+
+plus   : nat -> nat -> nat -> type.
+plus-z : plus z N2 N2.
+plus-s : plus (s N1) N2 (s N3)
+     <- plus N1 N2 N3.
+`}/>
+
+## Totality assertions
+
+A type family such as `plus` defines a relation among its indices, where indices are related iff their instance of the family is inhabited by an LF term.  For example, `plus` defines a relation between three terms of type `nat`.  The terms (`s (s z)`, `s z`, `s (s (s z))`) are related by this relation (because 2 + 1 = 3), but the terms (`z`, `s z`, `s (s (s z))`) are not.
+
+[[Totality assertions]] are one class of statements about LF type families. A totality assertion for a type family is specified by designating some index positions as inputs and others positions as outputs.  We call this specification the [[%mode|mode]] of the totality assertion.  Given a mode specification, the totality assertion asserts that for all inputs, there exist outputs that stand in the relation. Using `plus` as an example, if we designate the first two positions as inputs and the third position as an output, this specifies the following totality assertion:
+
+: For all `N1:nat` and `N2:nat`, there exist `N3:nat` and `D:plus N1 N2 N3`.
+
+That is, the sum of any two natural numbers exists.  Designating instead the first position as output and second and third positions as inputs defines the following totality assertion:
+
+: For all `N2:nat` and `N3:nat`, there exist `N1:nat` and `D:plus N1 N2 N3`.
+
+Of course, this totality assertion is false, as `N3 - N2` might not be a natural number.
+
+A totality assertion for an LF type family corresponds with the standard notion of totality for the relation defined by the family.  Proving a relation total is different from showing that the relation defines a function, as the outputs of a total relation are not necessarily unique&mdash;the relation may relate particular inputs to more than one collection of outputs.
+
+We may prove a totality assertion by induction on canonical forms.  For example, we can prove the first above totality assertion by induction on `N1:nat`.  The second totality assertion above is actually false&mdash;for example, there is no `N1` such that `plus N1 (s z) z` is inhabited. 
+
+Totality assertions for LF type families are actually more general than we have discussed so far.  The above examples consider only terms that are well-typed without mentioning LF variables. In general, it is useful to state totality assertions about all terms that are well-typed in any LF context in a particular [[world]], which is a set of LF contexts.  Thus, a totality assertion is specified by both a mode declaration and a world declaration.  For the time being, we will consider totality assertions that are stated for the world containing only the empty LF context (i.e., totality assertions about closed terms), so we defer further discussion of worlds.
+
+==Totality assertions in Twelf==
+
+You can use Twelf to verify totality assertions about LF type families.  For example, to verify the totality assertion
+
+: For all `N1:nat` and `N2:nat`, there exist `N3:nat` and `D:plus N1 N2 N3`. 
+
+you enter the following Twelf declarations:
+
+<twelf import="base" export="mwt">
+%% declare totality assertion
+%mode plus +N1 +N2 -N3.
+%worlds () (plus _ _ _).
+
+%% check totality assertion
+%total N1 (plus N1 _ _).
+</twelf>
+
+Let's break down what each of these declarations means:
+* The [`%mode`]() declaration specifies the mode of a type family&mdash;in this case, that `N1` and `N2` are universally quantified (`+`) and that `N3` is existentially quantified (`-`).  We will sometimes refer to the universally-quantified types as ''inputs'' and the existentially-quantified types as ''outputs''.  
+* The `[[%worlds]]` declaration states the totality assertion for LF terms in the empty context, which adequately represent natural numbers and the addition judgement.  
+* The `[[%total]]` declaration asks Twelf to prove the totality assertion by induction on the canonical forms `N1` of type `nat`.  Note that it is the position of the variable named in the `%total` that determines the induction index.
+
+In this case, Twelf succeeds in proving this assertion.
+
+==How Twelf checks assertions==
+
+Twelf proves a totality assertion for a type family such as `plus` by checking several properties.  These properties, taken together, constitute a proof by induction on canonical forms that the type family defines a total relation.  
+
+===Mode===
+
+Twelf checks that each constant inhabiting the type family is ''well-moded''.  Roughly, this means that the inputs to the conclusion of a constant determine the inputs of the first premise, and that these together with the outputs of the first premise determine the inputs of the second premise, and so on, until the outputs of all the premises determine the outputs of the conclusion.  
+
+For example, the constant
+<Twelf code={`
+plus-s : plus (s N1) N2 (s N3)
+	  <- plus N1 N2 N3.
+`} />
+has mode `+N1 +N2 -N3` because the input `N1` and `N2` in the conclusion determine the inputs of the premise, and the `N3` output by the premise determines the output of the conclusion.  On the other hand, a constant 
+<twelf import="mwt" export="badmode" check="decl">
+plus-bad-mode : plus N1 N2 N3.
+</twelf>
+is not well-moded&mdash;the output `N3` is not determined by the inputs.  Similarly, 
+<Twelf code={`
+plus-bad-mode2 : plus N1 N2 N3
+               <- plus N4 N2 N3.
+`}/>
+is not well-moded&mdash;the first input to the premise is not determined by the inputs of the conclusion.
+
+===Worlds===
+
+Twelf checks that each constant inhabiting the type family obeys the worlds declaration.  Because we are only proving theorems about closed terms in this section, we will not run across any problems with world checks.  Consequently, we defer discussion of world checking until [later](http://twelf.org/wiki/Proving_metatheorems:Proving_totality_assertions_in_non-empty_contexts).
+
+### Termination
+{/* so that the later total, etc. don't complain */}
+<Twelf code={`
+%mode plus +X1 +X2 -X3.
+%worlds () (plus _ _ _).
+`}/>
+Twelf checks that each constant inhabiting the type family obeys the induction order specified in the `%total` declaration.  In each inductive premise of a constant, the specified induction position must be a strict subterm of the corresponding argument in the conclusion.  For example, the constant
+<Twelf code={`
+plus-s : plus (s N1) N2 (s N3)
+	  <- plus N1 N2 N3.
+`}/>
+obeys the induction order `N1` specified in the above totality assertion because the term `N1` is a strict subterm of the term `(s N1)`.  On the other hand, Twelf would not accept the totality of `plus` if `N2` were used as the induction order&mdash;the same term `N2` in the conclusion of this constant appears in the premise:
+
