@@ -1,0 +1,5 @@
+%%! title: "The Twelf Project:Syntax highlighting"
+
+%{!
+Syntax highlighting on this website is enabled by metawikipedia:GeSHiCodeTag Extension | GeSHiCodeTag]] running on the [http://qbnz.com/highlighter/ General Syntax Highlighter]. A prototype [The Twelf Project:GeSHi Twelf extension](/wiki/the-twelf-project-geshi-twelf-extension/) has been written for the Twelf Wiki that can be enabled by using the ``&lt;code twelf&gt;&lt;/code&gt;``, but this is depreciated; the syntax highlighter called when using the ``&lt;twelf&gt;`` tag of 
+!}%

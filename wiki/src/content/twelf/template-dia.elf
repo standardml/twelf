@@ -1,0 +1,9 @@
+%%! title: "Template:Dia"
+
+%{!
+&lt;font face="Lucida Sans Unicode"&gt;⋄&lt;/font&gt;&lt;noinclude&gt;
+
+This template renders the diamond (latex \dia) symbol from modal logic, with workarounds for Internet Explorer. Use it by typing &lt;nowiki&gt;\{\{dia\}\}&lt;/nowiki&gt; in an article.
+
+&lt;/noinclude&gt;
+!}%

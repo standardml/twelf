@@ -1,0 +1,9 @@
+%%! title: "Template:License-by-nc"
+
+%{!
+\{| style="width:100%; margin-bottom:5px; border: 1px solid; background-color: #FF9999; text-align:center; font-size:0.9em;"
+|-
+| style="width:100%; text-align:center; font-size:1.1em;" | **The content on this page is released under the Project:BY-NC | Creative Commons Attribution-Noncommercial License]]**
+|-
+| style="width:100%; text-align:center; font-size:0.9em;" | If you edit this page, your edits are covered by the same license. **This tag must not be removed!** See the 
+!}%

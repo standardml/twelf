@@ -1,0 +1,33 @@
+%%! title: "Talk:Reformulating languages to use hypothetical judgements"
+
+%{!
+Thanks Dan, very useful.
+
+Here's two other inductive properties of complete development:  
+
+First, ==&gt; is not only deterministic, but total: for every M there is some X s.t. M ==&gt; X.
+
+Second, ==&gt; completes any =&gt;:
+
+  cd_pr_triangle: (M ==&gt; N) -&gt; (M =&gt; L) -&gt; (L =&gt; N).
+
+These two properties give an easy proof that =&gt; has the diamond property: put two of these triangles together along their ==&gt; side.
+
+[User:Drl](/wiki/user-drl/) 16:08, 3 March 2008 (EST)
+
+:: Done, but not commented yet: [Church-Rosser via Complete Development](/wiki/church-rosser-via-complete-development/).
+[User:Drl](/wiki/user-drl/) 10:34, 4 March 2008 (EST)
+
+---------
+How about improving the rule ==&gt;/beta to:
+
+  ==&gt;/beta : (app (lam M) N) ==&gt; M' N'
+            &lt;- (lam M) ==&gt; (lam M')
+            &lt;- N ==&gt; N'.
+
+This simplifies the proof of "sound" too.
+
+[User:Drl](/wiki/user-drl/) 16:08, 3 March 2008 (EST)
+
+:: Actually, there's one downside to this reformulation: in the original version, Twelf can prove =&gt; total automatically, but in the new version, it gets tripped up by the inversion that if (lam M) =&gt; N then N is (lam N1).  I changed the definition back because I want to let Twelf prove this totality for me in [Church-Rosser via Complete Development](/wiki/church-rosser-via-complete-development/), and I want the code here to stay synchronized with that.  [User:Drl](/wiki/user-drl/) 10:34, 4 March 2008 (EST)
+!}%

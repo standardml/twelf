@@ -1,0 +1,24 @@
+%%! title: "User:Tom7/test.elf"
+
+%{!
+AJALF test!
+
+&lt;nowiki&gt;&lt;twelf&gt;this is no-wikied&lt;/twelf&gt;
+
+&lt;/nowiki&gt;
+
+&lt;twelf&gt;% Here's some twelf.
+
+theorem : type.
+yes : theorem.
+%mode theorem.
+&lt;/twelf&gt;
+
+
+some "literate twelf" here...
+
+&lt;twelf&gt;
+%worlds () (theorem).
+%total \{\} (theorem).
+&lt;/twelf&gt;
+!}%

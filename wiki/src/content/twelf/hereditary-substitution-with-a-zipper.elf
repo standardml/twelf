@@ -1,0 +1,171 @@
+%%! title: "Hereditary substitution with a zipper"
+
+%{! This article represents a (partially unsuccessful) attempt to remove the "ugly" portion from the global soundness proof in the [verifications and uses](/wiki/verifications-and-uses/) article.
+The language of propositions and rules (and, as a result, the argument for global completeness) is unchanged from the [verifications and uses](/wiki/verifications-and-uses/), and so we omit
+it here. 
+
+This article is an intermediate point between the [verifications and uses](/wiki/verifications-and-uses/) article and the [verifications and uses with zippers](/wiki/verifications-and-uses-with-zippers/) article. | hidden = true !}%
+
+prop : type.
+atom : type.
+%block bl_atom : block {qp : atom}.
+
+a : atom -> prop.
+⊃ : prop -> prop -> prop. %infix right 9 ⊃.
+∧ : prop -> prop -> prop. %infix right 8 ∧.
+
+hyp   : prop -> type.
+verif : prop -> type.
+use   : prop -> type.
+%block bl_hyp : some {A : prop} block {x : hyp A}.
+
+var : hyp A -> use A.
+atm : use (a Q) -> verif (a Q).
+⊃I  : (hyp A -> verif B) -> verif (A ⊃ B).
+⊃E  : use (A ⊃ B) -> verif A -> use B.
+∧I  : verif A -> verif B -> verif (A ∧ B).
+∧E₁ : use (A ∧ B) -> use A.
+∧E₂ : use (A ∧ B) -> use B.
+
+%{! Rather than the (somewhat ugly) process used to find the main variable
+in the [verifications and uses](/wiki/verifications-and-uses/) example, in this example we will create
+a sort-of zipper data structure that allows us to "pull out" the
+head variable from the inside of a term. !}%
+
+%%## Defining pseudo-zippers
+
+%{! A w:zipper|zipper data structure]] is a way of describing paths into
+complex structures. A "real" zipper over an atomic term has the structure of a 
+_spine_ in a spine form]] presentation of logic; what we present
+here isn't "really" a spine (or a zipper). !}%
+
+zip : prop -> prop -> type.
+end : zip A A.
+⊃Z  : zip A (B₁ ⊃ B₂) -> verif B₁ -> zip A B₂.
+∧Z₁ : zip A (B₁ ∧ B₂) -> zip A B₁.
+∧Z₂ : zip A (B₁ ∧ B₂) -> zip A B₂.
+
+use' : prop -> type.
+· : hyp A -> zip A B -> use' B. %infix none 10 ·.
+
+%{! For instance, the ``use'``
+corresponding to ``(⊃E (⊃E (⊃E (var x) N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;)
+N&lt;sub&gt;3&lt;/sub&gt;)`` is 
+``x · (⊃Z (⊃Z (⊃Z end N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;) N&lt;sub&gt;3&lt;/sub&gt;)`` --- 
+the head variable ``x`` has been brought out to the top of the term, but
+the subterm ``N&lt;sub&gt;1&lt;/sub&gt;`` is still nested more deeply
+than the subterms ``N&lt;sub&gt;2&lt;/sub&gt;`` and
+``N&lt;sub&gt;3&lt;/sub&gt;``. In a conversion to spine form,
+we would not only expose the head variable ``x`` but would make 
+``N&lt;sub&gt;1&lt;/sub&gt;`` the "least deeply nested" subterm and make
+``N&lt;sub&gt;3&lt;/sub&gt;`` the "most deeply nested" subterm. !}%
+
+%%## Zipping and unzipping
+
+%{! We need to both show that we can zip and unzip a ``use`` into
+a ``use'``, and vice versa. These two proofs are essentially the
+same logic program run in opposite directions, but Twelf only allows
+us to assign a single mode to a metatheorem, so rather than just
+copying and pasted we have "cleaned up" both the ``unzip``
+and ``rezip`` functions a bit. !}%
+
+unzip : use B -> use' B -> type.
+- : unzip (⊃E R N) (X · ⊃Z Z N) <- unzip R (X · Z).
+- : unzip (∧E₁ R)  (X · ∧Z₁ Z)  <- unzip R (X · Z).
+- : unzip (∧E₂ R)  (X · ∧Z₂ Z)  <- unzip R (X · Z).
+- : unzip (var X)  (X · end).
+
+%mode unzip +R -R'.
+%worlds (bl_atom | bl_hyp) (unzip _ _).
+%total R (unzip R _).
+
+rezip : hyp A -> zip A B -> use B -> type.
+- : rezip X (⊃Z Z N) (⊃E R N) <- rezip X Z R.
+- : rezip X (∧Z₁ Z)  (∧E₁ R)  <- rezip X Z R.
+- : rezip X (∧Z₂ Z)  (∧E₂ R)  <- rezip X Z R.
+- : rezip X end (var X).
+
+%mode rezip +X +Z -R.
+%worlds (bl_atom | bl_hyp) (rezip _ _ _).
+%total Z (rezip _ Z _).
+
+%%## Global soundness
+
+hsubst_n  : {A}    verif A -> (hyp A -> verif B)    -> verif B -> type.
+hsubst_r  : {A}    verif A -> (hyp A -> use' (a Q)) -> verif (a Q) -> type.
+hsubst_rr : {A}    verif A -> (hyp A -> zip C B)    -> zip C B' -> type.
+hsubst_rn : {A}{B} verif A -> (hyp A -> zip A B)    -> verif B -> type.
+%mode hsubst_n  +A    +M₀ +M -N.
+%mode hsubst_r  +A    +M₀ +R -N.
+%mode hsubst_rr +A    +M₀ +R -R'.
+%mode hsubst_rn +A +B +M₀ +R -N.
+
+- : hsubst_n A M₀ ([x] ⊃I [y] M x y) (⊃I [y] N y)
+     <- {y : hyp B₁} hsubst_n A M₀ ([x] M x y) (N y : verif B₂).
+- : hsubst_n A M₀ ([x] ∧I (M₁ x) (M₂ x)) (∧I N₁ N₂)
+     <- hsubst_n A M₀ ([x] M₁ x) (N₁ : verif B₁)
+     <- hsubst_n A M₀ ([x] M₂ x) (N₂ : verif B₂).
+- : hsubst_n A M₀ ([x] atm (R x)) N
+     <- ({x : hyp A} unzip (R x) (R' x))
+     <- hsubst_r A M₀ ([x] (R' x)) N.
+
+- : hsubst_r A M₀ ([x] x · Z x) N
+     <- hsubst_rn A _ M₀ ([x] Z x) N.
+- : hsubst_r A M₀ ([x] Y · Z x) (atm R)
+     <- hsubst_rr A M₀ ([x] Z x) Z'
+     <- rezip Y Z' R.
+
+- : hsubst_rr A M₀ ([x] ⊃Z (Z x) (M x)) (⊃Z Z' N)
+     <- hsubst_rr A M₀ ([x] Z x) Z' 
+     <- hsubst_n A M₀ ([x] M x) N.
+- : hsubst_rr A M₀ ([x] ∧Z₁ (Z x)) (∧Z₁ Z')
+     <- hsubst_rr A M₀ ([x] Z x) Z'.
+- : hsubst_rr A M₀ ([x] ∧Z₂ (Z x)) (∧Z₂ Z')
+     <- hsubst_rr A M₀ ([x] Z x) Z'.
+- : hsubst_rr A M₀ ([x] end) end.
+
+- : hsubst_rn A _ M₀ ([x] ⊃Z (Z x) (M x)) N'
+     <- hsubst_rn A _ M₀ ([x] Z x) ((⊃I [y] N y) : verif (B₁ ⊃ B₂))
+     <- hsubst_n A M₀ ([x] M x) (M' : verif B₁)
+     <- hsubst_n B₁ M' ([y] N y) (N' : verif B₂).
+- : hsubst_rn A _ M₀ ([x] ∧Z₁ (Z x)) N₁
+     <- hsubst_rn A _ M₀ ([x] Z x) (∧I N₁ N₂ : verif (B₁ ∧ B₂)).
+- : hsubst_rn A _ M₀ ([x] ∧Z₂ (Z x)) N₂
+     <- hsubst_rn A _ M₀ ([x] Z x) (∧I N₁ N₂ : verif (B₁ ∧ B₂)).
+- : hsubst_rn A _ M₀ ([x] end) M₀.
+
+%worlds (bl_atom | bl_hyp)
+(hsubst_n _ _ _ _)
+(hsubst_rr _ _ _ _) 
+(hsubst_rn _ _ _ _ _)
+(hsubst_r _ _ _ _) .
+
+%reduces B <= A (hsubst_rn A B _ _ _).
+
+%%## Failure of termination checking
+
+%{! The fact that our representation uses both proofs ``use A`` and
+proofs ``use' A`` means that we will run afowl of Twelf's termination
+checker --- an unzipped term has a different size than the corresponding 
+zipped term. We could certainly convince Twelf that zipping and unzipping
+preserved size by using the same tree-like [structural metric](/wiki/structural-metrics/) used in the
+[concrete representation](/wiki/concrete-representation/) case study, but that would be notationally
+heavy and unenlightening.
+
+Another option is to ask Twelf to trust us: !}%
+
+%trustme %reduces R' = R (unzip R R').
+%.
+
+However, for some reason
+(possibly because the types of the two terms is different) this does not 
+work. and we still get an error message from the final <tt>%total</tt> 
+declaration.
+
+<twelf check=decl>
+%total {(A B C D) (M R S T)}
+(hsubst_n A _ M _)
+(hsubst_rr C _ S _) 
+(hsubst_rn D _ _ T _)
+(hsubst_r B _ R _).
+</twelf>

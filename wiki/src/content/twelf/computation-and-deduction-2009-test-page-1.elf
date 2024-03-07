@@ -1,0 +1,13 @@
+%%! title: "Computation and Deduction 2009/Test Page 1"
+
+%{!
+
+
+%\{ Notes \}%
+
+nat : type.
+z: nat.
+s: nat -&gt; nat.
+
+plus : nat -&gt; type.
+!}%

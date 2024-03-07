@@ -31,10 +31,16 @@ let state = { type: "twelf", accum: [] };
 
 // Precondition: state.type === "twelf"
 function reduceTwelfAccum() {
-  if (
-    state.accum.length === 0 ||
-    state.accum.every((line) => line.trim() === "")
+  while (state.accum.length > 0 && state.accum[0].trim() === "") {
+    state.accum.shift();
+  }
+  while (
+    state.accum.length > 0 &&
+    state.accum[state.accum.length - 1].trim() === ""
   ) {
+    state.accum.pop();
+  }
+  if (state.accum.length === 0) {
     // Do nothing
   } else {
     body.push(

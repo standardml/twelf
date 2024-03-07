@@ -1,0 +1,58 @@
+%%! title: "Coverage checking"
+
+%{!
+**Coverage checking** is used to describe two analyses that Twelf needs to perform in order to verify [totality assertions](/wiki/totality-assertion/). 
+
+The first analysis, for **input coverage**, is performed by both ``[%total](/wiki/percent-total/)`` and ``[%covers](/wiki/percent-covers/)`` declarations and resembles exhaustiveness checking in a language like ML. 
+
+The second analysis, **output coverage**, is performed only by ``[%total](/wiki/percent-total/)`` to ensure that the outputs of subgoals are sufficiently general.  Output coverage consists of a check for incorrect constant pattern-matching and a check for [output freeness](/wiki/output-freeness/) violations.  
+
+We will use the common example of [natural numbers](/wiki/natural-numbers/) for this example:
+
+&lt;twelf import="nat"&gt;
+nat: type.
+
+z: nat.
+s: nat -&gt; nat.
+
+&lt;/twelf&gt;
+
+#
+# Input coverage
+
+Input coverage is similar to exhaustiveness checking in ML, in that it ensures that your relation is prepared to accept any input that is thrown at it. We would run afoul of the input coverage checker if we tried to run a ``%covers`` or ``%total`` declaration on the relation ``half`` that halves a natural number but is undefined on odd numbers. Another example of input coverage checking can be seen at the page on ``[%covers](/wiki/percent-covers/)``.
+
+&lt;twelf import="nat" export="one"&gt;
+half : nat -&gt; nat -&gt; type.
+%mode half +N1 -N2. 
+
+half/z : half z z.
+half/s : half (s (s N)) (s M)
+          &lt;- half N M.
+
+%worlds () (half _ _).
+&lt;/twelf&gt;
+
+&lt;twelf import="one" check=decl discard=true&gt;
+%total N (half N _).
+&lt;/twelf&gt;
+
+#
+# Output coverage
+
+Output coverage ensures that your relation is prepared to deal with any possible term that it might be output by a [output factoring](/wiki/output-factoring/) can deal with the problem.
+
+#
+#
+# Output freeness
+
+The other part of output coverage checking is [output freeness](/wiki/output-freeness/) checking; see its page for a definition and examples.
+
+#
+# See also
+
+* \{\{guide|section=52|chapter=9|title=Coverage\}\}
+* [Output freeness](/wiki/output-freeness/)
+* [Debugging coverage errors](/wiki/debugging-coverage-errors/)
+* [Output factoring](/wiki/output-factoring/)
+!}%

@@ -1,0 +1,31 @@
+%%! title: "Fixity declaration"
+
+%{!
+The **``%infix``**, **``%prefix``** and **``%postfix``** declarations assign **fixity** and precedence to constants for the purpose of parsing (they have no meaning in the logic). 
+
+\{\{needs|a description of the syntax\}\}
+
+**_Higher**_ numbers bind **_tighter,**_ and the pretty printer only prints out necessary information. Hence the following example:
+&lt;twelf&gt;
+a : type.
+b : a.
+c : a.
+d : a.
+
++ : a -&gt; a -&gt; a. %infix left 1 +.
+* : a -&gt; a -&gt; a. %infix left 2 *.
+&lt;/twelf&gt;
+&lt;twelf check=decl&gt;
+x : a = (b + c) * d. %% The parenthesis are necessary here
+y : a = b + (c * d). %% This means the same thing as b + c * d.
+&lt;/twelf&gt;
+
+
+#
+# See also
+* \{\{guide|chapter=3|section=11|title=Operator Declaration\}\}
+
+\{\{keyword|key=Fixity declaration\}\}
+
+\{\{stub\}\}
+!}%

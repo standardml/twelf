@@ -1,0 +1,93 @@
+%%! title: "Iterated inductive definitions and defunctionalization"
+
+%{!
+(The code in this article relies on autoFreeze being set false.)
+&lt;twelf&gt;
+%%%%%%%%%%%%
+% RUN-TIME %
+%%%%%%%%%%%%
+
+i : type.
+z : i.
+s : i -&gt; i.  %prefix 10 s.
+
+add : i -&gt; i -&gt; i -&gt; type.
+add/z : add z N N.
+add/s : add (s M) N (s P) &lt;- add M N P.
+%mode add +M +N -P.
+
+%worlds () (add M _ _).
+%total (M) (add M _ _).
+%unique add +M +N -P.
+
+mult : i -&gt; i -&gt; i -&gt; type.
+mult/z : mult z N z.
+mult/s : mult (s M) N P' &lt;- mult M N P &lt;- add P N P'.
+%mode mult +M +N -P.
+
+%worlds () (mult M _ _).
+%total (M) (mult M _ _).
+%unique mult +M +N -P.
+
+%%%%%%%%%%%%
+%  SYNTAX  %
+%%%%%%%%%%%%
+
+tm : type.
+binop : type.
+
+n : i -&gt; tm.
+let : tm -&gt; (tm -&gt; tm) -&gt; tm.
+@ : binop -&gt; tm -&gt; tm -&gt; tm.
+
+apply : binop -&gt; i -&gt; i -&gt; i -&gt; type.
+%mode apply +F +M1 +M2 -N.
+
+%worlds () (apply F M1 M2 _).
+%total \{F M1 M2\} (apply F M1 M2 _).
+%unique apply +F +M1 +M2 -N.
+
+%%%%%%%%%%%%%
+% SEMANTICS %
+%%%%%%%%%%%%%
+
+eval : tm -&gt; i -&gt; type.
+%mode eval +E -N.
+
+eval/n : eval (n N) N.
+eval/let : eval (let E E*) N
+        &lt;- eval (E* E) N.
+eval/@ : eval (@ F E1 E2) N
+      &lt;- eval E1 M1
+      &lt;- eval E2 M2
+      &lt;- apply F M1 M2 N.
+
+%worlds () (eval E _).
+%covers eval +E -N.
+%unique eval +E -N.
+
+%%%%%%%%%%%%
+% EXAMPLES %
+%%%%%%%%%%%%
+
+plus : binop.
+plus/_ : apply plus M N P &lt;- add M N P.
+
+times : binop.
+times/_ : apply times M N P &lt;- mult M N P.
+
+%total (M1) (apply F M1 M2 _).
+%unique apply +F +M1 +M2 -N.
+
+%worlds () (eval E _).
+%covers eval +E -N.
+%unique eval +E -N.
+
+%query 1 * eval (let (n (s s z)) [two]
+		 let (n (s s s z)) [three]
+		 @ plus two (@ times two three)) N.
+
+&lt;/twelf&gt;
+
+&lt;twelflink&gt;All code from this tutorial&lt;/twelflink&gt;. &lt;twelflink check="true"&gt;Twelf's output from this tutorial&lt;/twelflink&gt;.
+!}%

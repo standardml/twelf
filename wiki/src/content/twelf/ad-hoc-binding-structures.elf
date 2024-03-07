@@ -1,0 +1,10 @@
+%%! title: "Ad hoc binding structures"
+
+%{!
+Many of the Twelf [tutorials](/wiki/tutorials/) and [case studies](/wiki/case-studies/) use very simple binding structures (e.g. lambdas that take a single argument). However, calculi and programming languages of interest often have more complex binding structures. **Ad hoc binding structures** such as pattern matching and mutual recursion can be encoded quite naturally in LF. Here are some examples:
+
+* [Pattern matching](/wiki/pattern-matching/): A case study on pattern matching with disjunctive patterns.
+* [letrec](/wiki/letrec/): A case study on letrec (let binding a bundle of mutually recursive expressions). 
+
+NOTE: There is actually a lot of overlap between the two examples, in terms of special machinery to do the "real-world binding structures". The two case studies could easily be combined.
+!}%

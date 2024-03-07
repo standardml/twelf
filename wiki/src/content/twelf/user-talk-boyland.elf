@@ -1,0 +1,29 @@
+%%! title: "User talk:Boyland"
+
+%{!
+Welcome! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 09:44, 21 February 2007 (EST)
+
+
+I don't see a place where known bugs, problems are posted.  So I'll put them here.
+
+: It might not be a bad idea to collect such things. Perhaps known bugs]] or known issues]] is a good place for this - it would be good to collect things like this and issues such as the warning about [constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/).
+
+:: it would be a very good idea.  I'll let you do it.  Feel free to take any content you find useful. [User:Boyland](/wiki/user-boyland/) 02:48, 15 May 2007 (EDT)
+
+::: I've moved the contents to my user page. [User:Boyland](/wiki/user-boyland/) 10:49, 22 August 2007 (EDT)
+
+The coverage checker sometimes fails to terminate. [...]
+
+: This is a known bug - it can occur when coverage checking is done on a lambda expression (here, the guilty party is the ``(expr -&gt; expr)`` part of ``expr-in-expr : (expr -&gt; expr) -&gt; type``, and non-termination will usually happen on theorems that are not true, like this one.
+
+The prover sometimes fails to terminate.
+
+: The bug here, as much as anything, is that Twelf accepcts the theorem proving (``%prove``) syntax at all. I don't like it either, but it is actually not difficult or even unexpected to get the theorem prover to nonterminate. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:11, 14 May 2007 (EDT)
+
+#
+# Hoas/Natural Numbers
+
+Thanks for the great page! Is it in a state where you're comfortable with me listing it from the front page? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:04, 30 January 2008 (EST)
+
+It's OK with me to post it, but best would be to fix all the %% %%% and %%%% section marks to be Wiki sections: %\{ ==== \}% %\{ === \}% and %\{ == \}% I think.  Perhaps you have an easy way to do this??? [User:Boyland](/wiki/user-boyland/) 10:17, 7 February 2008 (EST)
+!}%

@@ -1,0 +1,760 @@
+%%! title: "Classical S5"
+
+%{!
+This [case studies](/wiki/case-studies/) concerns the formalization of the [modal logic](/wiki/modal-logic/) **Classical S5** in the particular way it is done in _[http://www.cs.cmu.edu/~tom7/papers/csl05-19-distributed.pdf Distributed Control Flow with Classical Modal Logic]_ (Murphy, Harper, Crary; CSL 2005). The natural deduction calculus **C5** is a nonstandard variation on the "obvious" classical S5 natural deduction which we chose for its operational interpretation, so that it can be used as a programming language. In the Twelf code below we prove that that C5 is equivalent to the "obvious" S5 by proving it equivalent to a standard [admissibility of cut](/wiki/admissibility-of-cut/) sequent calculus for classical S5.
+
+Twelf excels for this kind of proof. The only difficulty is that the most natural definition of falsehood assumptions leads to a third-order relation, which Twelf's termination checker did not support at the time this code was developed. Instead, we have an explicit substitution theorem for such assumptions.
+
+#
+# Natural deduction
+
+&lt;twelf&gt;
+%% Classical Judgmental S5
+%% Tom Murphy VII
+%% Thanks: Frank Pfenning and Jason Reed
+%%  8 Apr 2004
+
+world : type.                           %name world W w.
+prop : type.                            %name prop A.
+
+
+%%% Natural deduction
+
+% truth assumptions and conclusions
+@ : prop -&gt; world -&gt; type.              %name @ N.
+%infix none 1 @.
+% falsehood (continuation) assumptions
+* : prop -&gt; world -&gt; type.              %name * X.
+%infix none 1 *.
+&lt;/twelf&gt;
+
+We have two judgments: _A true @ W_ and _A false * W_. We abbreviate these to ``A @ W`` and ``A * W``.
+
+&lt;twelf&gt;
+% Implication
+# &gt; : prop -&gt; prop -&gt; prop.
+%infix right 8 =&gt;.
+# &gt;I : (A @ W -&gt; B @ W) -&gt; (A =&gt; B @ W).
+# &gt;E : (A =&gt; B @ W) -&gt; A @ W -&gt; B @ W.
+&lt;/twelf&gt;
+
+This is an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/): Derivations of well-formedness play the role of proof terms in the logic.
+
+&lt;twelf&gt;
+% Necessity
+! : prop -&gt; prop.
+%prefix 9 !.
+!I : (\{o:world\} A @ o) -&gt; ! A @ W.
+!E : ! A @ W -&gt; A @ W.
+!G : ! A @ W' -&gt; ! A @ W.
+
+% Possibility
+? : prop -&gt; prop.
+%prefix 9 ?.
+?I : A @ W -&gt; ? A @ W.
+?E : ? A @ W -&gt; (\{o:world\} A @ o -&gt; C @ W) -&gt; C @ W.
+?G : ? A @ W' -&gt; ? A @ W.
+&lt;/twelf&gt;
+
+There are two modal connectives: &lt;math&gt;\Box A&lt;/math&gt;, written ``!A`` and &lt;math&gt;\Diamond A&lt;/math&gt;, written ``?A``. These two connectives are expressed in a non-standard way. The introduction and elimination forms all take place at the same world, and we give mobility forms ``!G`` and ``?G`` that allow us to move modal terms from world to world.
+
+&lt;twelf&gt;
+% Conjunction
+& : prop -&gt; prop -&gt; prop.
+%infix none 9 &.
+&I : A @ W -&gt; B @ W -&gt; (A & B @ W).
+&E1 : (A & B @ W) -&gt; A @ W.
+&E2 : (A & B @ W) -&gt; B @ W.
+
+% Falsehood
+_|_ : prop.
+_|_E : _|_ @ W -&gt; C @ W'.
+
+% Structural Rules
+
+letcc : (A * W -&gt; A @ W) -&gt; 
+             A @ W.
+
+throw :     A @ W -&gt;
+        (A * W -&gt; C @ W').
+
+&lt;/twelf&gt;
+
+The calculus is classical, which we achieve by including ``letcc`` (which binds the current continuation) and ``throw`` (which throws an expression, perhaps remotely, to a continuation). There are no terms of falsehood type, except for variables ``u`` bound by ``letcc``. Those are not represented explicitly because we use [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
+
+&lt;twelf&gt;
+% here : world.
+&lt;/twelf&gt;
+
+In order for some propositions to exist, we may wish to declare some world constant. Otherwise, our metatheorems may be vacuously true due to empty quantification. Alternatively, we choose to prove our metatheorems with respect to a (LF level) [regular world](/wiki/percent-worlds/) where (object language) hypothetical worlds may occur in the context. See the declaration of ``blockw`` below.
+
+#
+# Sequent calculus
+
+&lt;twelf&gt;
+%%% Sequent calculus
+
+true  : prop -&gt; world -&gt; type.       %name true T t.
+false : prop -&gt; world -&gt; type.       %name false F f.
+
+- : type.
+&lt;/twelf&gt;
+
+Sequents in the sequent calculus are represented by the judgment ``#``, read as "contradiction." Sequents are derived in a context with ``true`` and ``false`` assumptions. For instance, the initial sequent says that if A is both true and false at the same world, then a contradiction arises:
+
+&lt;twelf&gt;
+% initial sequent
+contra : true A W -&gt; false A W -&gt; #.
+
+% arrow
+# &gt;T :
+      (false A W -&gt; #)    -&gt;    (true B W -&gt; #)    -&gt;
+            (true (A =&gt; B) W -&gt; #).
+# &gt;F :
+      (true A W -&gt; false B W -&gt; #) -&gt;
+        (false (A =&gt; B) W -&gt; #).
+
+
+% box
+!T :
+      (true A W' -&gt; #) -&gt;
+      (true (! A) W -&gt; #).
+!F :
+      (\{w:world\} false A w -&gt; #) -&gt;
+      (false (! A) W -&gt; #).
+
+% dia
+?T :
+      (\{w:world\} true A w -&gt; #) -&gt;
+      (true (? A) W -&gt; #).
+?F :
+      (false A W' -&gt; #) -&gt;
+      (false (? A) W -&gt; #).
+&lt;/twelf&gt;
+
+Unlike the natural deduction, this presentation of the \{\{box\}\} and \{\{dia\}\} connectives is completely standard.
+
+&lt;twelf&gt;
+% conjunction
+&T :
+      (true A W -&gt; true B W -&gt; #) -&gt;
+        (true (A & B) W -&gt; #).
+&F :
+      (false A W -&gt; #)   -&gt;   (false B W -&gt; #) -&gt;
+             (false (A & B) W -&gt; #).                                 
+
+% falsehood
+
+_|_T : true _|_ W -&gt; #.
+&lt;/twelf&gt;
+
+#
+# Cut elimination
+
+&lt;twelf&gt;
+% admissibility of excluded middle (cut)
+
+xm : \{A:prop\} \{W:world\} (true A W -&gt; #) -&gt; (false A W -&gt; #) -&gt; # -&gt; type.
+%mode xm +A +W +D +E -F.
+
+&lt;/twelf&gt;
+
+Cut elimination for a classical sequent calculus is the law of the excluded middle: If in some ambient context, the assumption that ``A`` is true is contradictory, and the assumption that ``A`` is false is also contradictory, then the ambient context is also contradictory. The proof proceeds mostly like [cut elimination](/wiki/admissibility-of-cut/).
+
+&lt;twelf&gt;
+% initial cuts
+xt_init : xm A W ([xt] contra xt D) ([xf] E xf) (E D).
+xf_init : xm A W ([xt] D xt) ([xf] contra E xf) (D E).
+
+% unused assumptions
+xt_unused : xm A W ([x1] contra DT DF) E (contra DT DF).
+xf_unused : xm A W D ([x1] contra ET EF) (contra ET EF).
+
+% falsehood. actually falsehood is trivial because a principal
+% cut is impossible, and the "commutative" cases aren't even inductive.
+xd_ct_|_ : xm A W ([at] _|_T DD) _ (_|_T DD).
+xe_ct_|_ : xm A W _ ([af] _|_T EE) (_|_T EE).
+
+% commutative cases.
+% note that we need to consider each rule in both D and E, so
+% there are four cases for each connective.
+
+% implication
+xd_ct=&gt; : xm A W ([at : true A W] =&gt;T 
+                  ([cf : false C W'] D1 at cf) 
+                  ([dt : true D W'] D2 at dt) DD) ([af] E af)
+               (=&gt;T ([cf : false C W'] F1 cf) ([dt : true D W'] F2 dt) DD)
+           &lt;- (\{cf : false C W'\} xm A W ([at] D1 at cf) E (F1 cf))
+           &lt;- (\{dt : true D W'\}  xm A W ([at] D2 at dt) E (F2 dt)).
+
+xe_ct=&gt; : xm A W ([at] DD at) ([af : false A W] =&gt;T 
+                               ([cf : false C W'] E1 af cf)
+                               ([dt : true D W'] E2 af dt) EE)
+               (=&gt;T ([cf] F1 cf) ([dt] F2 dt) EE)
+           &lt;- (\{cf : false C W'\} xm A W DD ([af] E1 af cf) (F1 cf))
+           &lt;- (\{dt : true D W'\}  xm A W DD ([af] E2 af dt) (F2 dt)).
+
+xd_cf=&gt; : xm A W ([at : true A W] =&gt;F
+                  ([ct : true C W'] [df : false D W'] D' at ct df) DD)
+               ([af : false A W] E af)
+               (=&gt;F ([ct : true C W'][df : false D W'] F ct df) DD)
+           &lt;- (\{ct : true C W'\} \{df : false D W'\}
+                 xm A W ([at] D' at ct df) E (F ct df)).
+
+xe_cf=&gt; : xm A W ([at : true A W] DD at)
+               ([af : false A W] =&gt;F
+                  ([ct : true C W'] [df : false D W'] E' af ct df) EE)
+               (=&gt;F ([ct : true C W'][df : false D W'] F ct df) EE)
+           &lt;- (\{ct : true C W'\} \{df : false D W'\}
+                 xm A W DD ([af] E' af ct df) (F ct df)).
+
+% box
+xd_ct! : xm A W ([at : true A W] !T ([bt : true B W'] D1 at bt) DD)
+                ([af] E af)
+                (!T ([bt : true B W'] F1 bt) DD)
+          &lt;- (\{bt : true B W'\} xm A W ([at] D1 at bt) E (F1 bt)).
+
+xe_ct! : xm A W ([at] D at) 
+                ([af : false A W] !T ([bt : true B W'] E1 af bt) EE)
+                (!T ([bt : true B W'] F1 bt) EE)
+          &lt;- (\{bt : true B W'\} xm A W D ([af] E1 af bt) (F1 bt)).
+
+xd_cf! : xm A W ([at : true A W] !F ([w][bf : false B w] D1 at w bf) DD)
+                ([af] E af)
+                (!F ([w][bf] F1 w bf) DD)
+          &lt;- (\{w : world\}\{bf : false B w\}
+                xm A W ([at] D1 at w bf) E (F1 w bf)).
+
+xe_cf! : xm A W ([at] D at)
+                ([af] !F ([w][bf : false B w] E1 af w bf) EE)
+                (!F ([w][bf] F1 w bf) EE)
+          &lt;- (\{w\}\{bf\} xm A W D ([af] E1 af w bf) (F1 w bf)).
+
+% dia
+xd_ct? : xm A W ([at : true A W] ?T ([w][bt] D1 at w bt) DD)
+                ([af] E af)
+                (?T ([w][bt] F1 w bt) DD)
+          &lt;- (\{w\}\{bt\} xm A W ([at] D1 at w bt) ([af] E af) (F1 w bt)).
+
+xe_ct? : xm A W ([at] D at)
+                ([af] ?T ([w][bt] E1 af w bt) EE)
+                (?T ([w][bt] F1 w bt) EE)
+          &lt;- (\{w\}\{bt\} xm A W ([at] D at) ([af] E1 af w bt) (F1 w bt)).
+
+xd_cf? : xm A W ([at] ?F ([bf : false B W'] D1 at bf) DD)
+                ([af] E af)
+                (?F ([bf] F1 bf) DD)
+          &lt;- (\{bf\} xm A W ([at] D1 at bf) ([af] E af) (F1 bf)).
+
+xe_cf? : xm A W ([at] D at)
+                ([af] ?F ([bf : false B W'] E1 af bf) EE)
+                (?F ([bf] F1 bf) EE)
+          &lt;- (\{bf\} xm A W ([at] D at) ([af] E1 af bf) (F1 bf)).
+
+% conjunction
+xd_ct& : xm A W ([at] &T ([ct][dt] D1 at ct dt) DD)
+                ([af] E af)
+                (&T ([ct][dt] F1 ct dt) DD)
+          &lt;- (\{ct\}\{dt\} xm A W ([at] D1 at ct dt) ([af] E af) (F1 ct dt)).
+
+xe_ct& : xm A W ([at] D at)
+                ([af] &T ([ct][dt] E1 af ct dt) EE)
+                (&T ([ct][dt] F1 ct dt) EE)
+          &lt;- (\{ct\}\{dt\} xm A W ([at] D at) ([af] E1 af ct dt) (F1 ct dt)).
+
+xd_cf& : xm A W ([at] &F ([cf] D1 at cf) ([df] D2 at df) DD)
+                ([af] E af)
+                (&F ([cf] F1 cf) ([df] F2 df) DD)
+          &lt;- (\{cf\} xm A W ([at] D1 at cf) ([af] E af) (F1 cf))
+          &lt;- (\{df\} xm A W ([at] D2 at df) ([af] E af) (F2 df)).
+
+xe_cf& : xm A W ([at] D at)
+                ([af] &F ([cf] E1 af cf) ([df] E2 af df) EE)
+                (&F ([cf] F1 cf) ([df] F2 df) EE)
+          &lt;- (\{cf\} xm A W ([at] D at) ([af] E1 af cf) (F1 cf))
+          &lt;- (\{df\} xm A W ([at] D at) ([af] E2 af df) (F2 df)).
+
+
+% principal cuts. there is one case for each connective;
+% a use of the true  rule on A in D, and
+% a use of the false rule on A in E.
+
+% implication
+x_=&gt; : xm (A =&gt; B) W
+          ([it : true  (A =&gt; B) W] =&gt;T ([af : false A W] D1 it af)
+                                       ([bt : true  B W] D2 it bt) it)
+          ([if : false (A =&gt; B) W] =&gt;F ([at : true  A W]
+                                        [bf : false B W] E1 if at bf) if)
+          F
+        &lt;- (\{at : true A W\} \{bf : false B W\}
+            xm (A =&gt; B) W ([it] =&gt;T ([af : false A W] D1 it af) 
+                                    ([bt] D2 it bt) it)
+                          ([if] E1 if at bf) (E1' at bf))
+        &lt;- (\{af : false A W\}
+            xm (A =&gt; B) W ([it] D1 it af)
+                          ([if] =&gt;F ([at][bf] E1 if at bf) if) (D1' af))
+        &lt;- (\{bt : true B W\}
+            xm (A =&gt; B) W ([it] D2 it bt)
+                          ([if] =&gt;F ([at][bf] E1 if at bf) if) (D2' bt))
+        &lt;- (\{bf : false B W\}
+            xm A W ([at : true A W] E1' at bf) 
+	           ([af : false A W] D1' af) (F' bf))
+        &lt;- xm B W ([bt] D2' bt) ([bf] F' bf) F.
+
+% box
+x_! : xm (! A) W ([nt] !T ([at : true A W'] D1 nt at) nt)
+                 ([nf] !F ([w][af : false A w] E1 nf w af) nf)
+                 F
+       &lt;- (\{w : world\}\{af : false A w\}
+           xm (! A) W ([nt] !T ([at] D1 nt at) nt) 
+	              ([nf] E1 nf w af) (E1' w af))
+       &lt;- (\{at : true A W'\}
+           xm (! A) W ([nt] D1 nt at) 
+	              ([nf] !F ([w][af] E1 nf w af) nf) (D1' at))
+       &lt;- xm A W' ([at : true A W'] D1' at) 
+	          ([af : false A W'] E1' W' af) F.
+
+% dia
+
+x_? : xm (? A) W ([nt] ?T ([w][at] D1 nt w at) nt)
+                 ([nf] ?F ([af] E1 nf af) nf)
+                 F
+       &lt;- (\{w : world\}\{at : true A w\}
+           xm (? A) W ([nt] D1 nt w at) 
+	              ([nf] ?F ([af] E1 nf af) nf) (D1' w at))
+       &lt;- (\{af : false A W'\}
+           xm (? A) W ([nt] ?T ([w][at] D1 nt w at) nt) 
+	              ([nf] E1 nf af) (E1' af))
+       &lt;- xm A W' ([at : true A W'] D1' W' at) ([af] E1' af) F.
+
+% conjunction
+
+x_& : xm (A & B) W ([&t] &T ([at][bt] D1 &t at bt) &t)
+                   ([&f] &F ([af] E1 &f af) ([bf] E2 &f bf) &f)
+                   F
+       &lt;- (\{at\}\{bt\} xm (A & B) W ([&t] D1 &t at bt) 
+                                 ([&f] &F ([af] E1 &f af) 
+				          ([bf] E2 &f bf) &f)
+                                 (D1' at bt))
+       &lt;- (\{af\} xm (A & B) W ([&t] &T ([at][bt] D1 &t at bt) &t)
+                             ([&f] E1 &f af)
+                             (E1' af))
+       &lt;- (\{bf\} xm (A & B) W ([&t] &T ([at][bt] D1 &t at bt) &t)
+                             ([&f] E2 &f bf)
+                             (E2' bf))
+       &lt;- (\{bt\} xm A W ([at] D1' at bt) ([af] E1' af) (D1_ bt))
+       &lt;- (xm B W ([bt] D1_ bt) ([bf] E2' bf) F).
+
+
+%block blockw : block \{w : world\}.
+%block blockt : some \{A : prop\} \{W : world\} block \{tt : true  A W\}.
+%block blockf : some \{A : prop\} \{W : world\} block \{ff : false A W\}.
+
+%worlds (blockw | blockt | blockf) (xm A W D E F).
+
+%total \{A [D E]\} (xm A W D E F).
+&lt;/twelf&gt;
+
+#
+# Natural deduction to sequent calculus
+
+The admissibility of excluded middle allows us to straightforwardly translate natural deduction proofs to sequent calculus proofs. The theorem we prove is that if Γ;Δ \{\{vdash\}\} A @ W then Γ # A * W, Δ. Operationally, we can think of this as follows: if we have a program of type _A_, then we can pass the result of that program to a continuation expecting _A_ to get a contradiction.
+
+&lt;twelf&gt;
+%%% Translation from natural deduction to sequent calculus.
+
+% G;D |- A @ W    then   G # D,A * W
+ndseq : A @ W -&gt; (false A W -&gt; #) -&gt; type.
+%mode ndseq +D -F.
+
+% conjunction 
+
+ns-&I : ndseq (&I D1 D2) (&F F1 F2)
+         &lt;- ndseq D1 F1
+         &lt;- ndseq D2 F2.
+
+ns-&E1 : ndseq (&E1 (D1 : A & B @ W))
+          ([af] F af)
+          &lt;- ndseq D1 ([&f] F2 &f)
+          &lt;- (\{af\} xm (A & B) W ([&t] &T ([at][bt] contra at af) &t) 
+		                ([&f] F2 &f) (F af)).
+
+ns-&E2 : ndseq (&E2 (D1 : A & B @ W))
+          ([bf] F bf)
+          &lt;- ndseq D1 ([&f] F2 &f)
+          &lt;- (\{bf\} xm (A & B) W ([&t] &T ([at][bt] contra bt bf) &t) 
+		                ([&f] F2 &f) (F bf)).
+
+
+% falsehood
+
+ns-_|_E : ndseq (_|_E (D1 : _|_ @ W))
+	        ([af] F af)
+	        &lt;- ndseq D1 ([_|_f] F2 _|_f)
+		&lt;- (\{af\} xm (_|_) W ([_|_t] _|_T _|_t)
+		                    ([_|_f] F2 _|_f) (F af)).
+
+% implication
+
+ns-=&gt;I : ndseq (=&gt;I ([a : A @ W] D a))
+               ([=&gt;f : false (A =&gt; B) W] 
+		=&gt;F ([at : true A W][bf : false B W] F at bf) =&gt;f)
+          &lt;- (\{a : A @ W\}\{at : true A W\}
+              ndseq a ([af] contra at af) -&gt; 
+
+              ndseq (D a) ([bf] F at bf)).
+
+ns-=&gt;E : ndseq (=&gt;E D1 D2)
+               ([bf] F bf)
+          &lt;- ndseq D1 ([if] F1 if)
+          &lt;- ndseq D2 ([af] F2 af)
+          &lt;- (\{bf\} xm (A =&gt; B) W 
+                ([it] =&gt;T ([af] F2 af) ([bt] contra bt bf) it)
+                ([if] F1 if) (F bf)).
+
+% box
+
+ns-!I : ndseq (!I [w] D1 w) (!F [w][af : false A w] F w af)
+         &lt;- (\{w\} ndseq (D1 w) (F w)).
+
+ns-!E : ndseq (!E D1) ([af] F af)
+         &lt;- ndseq D1 ([!f] F1 !f)
+         &lt;- (\{af\} xm (! A) W ([!t] !T ([at] contra at af) !t) 
+                             ([!f] F1 !f) (F af)).
+
+ns-!G : ndseq (!G D1) ([!f] F !f)
+         &lt;- ndseq D1 ([!f'] F1 !f')
+         &lt;- (\{!f\} xm (! A) W' 
+               ([!t' : true (! A) W'] 
+                  !F ([w_ : world][af_ : false A w_] 
+                      (!T ([at_ : true A w_] contra at_ af_) !t')) !f)
+               ([!f' : false (! A) W'] F1 !f')
+               (F !f)).
+
+% dia
+
+ns-?I : ndseq (?I D) ([?f] ?F ([af] F af) ?f)
+         &lt;- ndseq D ([af] F af).
+
+ns-?E : ndseq (?E D1 ([w : world][a : A @ w] D2 w a)) 
+	      ([cf : false C W] F cf)
+         &lt;- ndseq D1 ([?f] F1 ?f)
+         &lt;- (\{w' : world\}\{a : A @ w'\}\{at : true A w'\} 
+               % another use of our block
+               ndseq a ([af] contra at af) -&gt;
+               ndseq (D2 w' a) ([cf] F2 w' at cf))
+         &lt;- (\{cf : false C W\} 
+               xm (? A) W ([?t] ?T ([w][a] F2 w a cf) ?t)
+                          ([?f] F1 ?f) (F cf)).
+
+ns-?G : ndseq (?G D) ([?f : false (? A) W] F ?f)
+         &lt;- ndseq D ([?f' : false (? A) W'] F1 ?f')
+         &lt;- (\{?f : false (? A) W\}
+               xm (? A) W'
+               ([?t'] ?T ([w_][at_] ?F ([af_] contra at_ af_) ?f) ?t')
+               ([?f'] F1 ?f')
+               (F ?f)).
+
+% we need a way of connecting nd continuation assumptions 
+% with sequent false assumptions 
+contfalse : A * W -&gt; false A W -&gt; type.
+%mode contfalse +D -F.
+
+% note contraction: F in output uses af twice
+ns-letcc : ndseq (letcc ([ac] D ac)) ([af] F af af)
+            &lt;- (\{ac : A * W\} \{af : false A W\}
+                  contfalse ac af -&gt;
+                  ndseq (D ac) (F af)).
+
+% note weakening: [cf'] is unused.
+ns-throw : ndseq (throw D K) ([cf'] F AF)
+            &lt;- ndseq D ([af] F af)
+            &lt;- contfalse K AF.
+
+%block blockh : some \{A:prop\} \{W:world\}
+               block \{a : A @ W\} \{at : true A W\} 
+		     \{_ : ndseq a ([af] contra at af)\}.
+
+%block block* : some \{A:prop\} \{W:world\}
+               block \{ac : A * W\} \{af : false A W\} \{_ : contfalse ac af\}.
+
+%worlds (blockw | blockh | block*) (contfalse D F).
+%worlds (blockw | blockh | block*) (ndseq D F).
+
+%total D (contfalse D F).
+%total D (ndseq D F).
+&lt;/twelf&gt;
+
+#
+# Continuation substitution
+
+We must prove a substitution theorem for falsehood assumptions, because we did not use the most [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) encoding for them. Nonetheless, the theorem is interesting. It says that if we have a term _M_ with a hypothesis for a (true) term of type _A_, and we have a term _N_ with a hypothesis for a (false) continuation expecting type _A_, then our substitution operation can substitute M into N to satisfy the hypothesis. _M_ must be well-typed at all types and all worlds.
+&lt;!-- explanation could be better, but it is pretty subtle... --&gt;
+
+&lt;twelf&gt;
+%% Continuation Substitution (excluded middle) for natural deduction
+
+% if   G,x:A@W; D |- M : *
+% and  G; D,u:A@W |- N : B
+% then G; D       |-  x.M/u ]] N : B
+
+xs : (\{c\}\{w\} A @ W -&gt; c @ w) -&gt;
+     (A * W -&gt; B @ W') -&gt;
+         (B @ W') -&gt; type.                %name xs U.
+%mode xs +D +E -F.
+
+% trick: for any term closed wrt the continuation assumption,
+%   substitution is the identity. This keeps us from having to
+%   treat the case of @ variables, since they are always closed
+%   wrt * variables. Without this trick, world subsumption forces
+%   cases of xs to infect any later theorem that uses it!
+
+xs-closed : xs D ([a*] E) E.
+
+% falsehood
+
+xs-_|_E : xs D ([u] _|_E (EE u)) (_|_E EE')
+	   &lt;- xs D EE EE'.
+
+% conjunction
+
+xs-&I : xs D ([u] &I (EA u) (EB u)) (&I F1 F2)
+         &lt;- xs D EA F1
+         &lt;- xs D EB F2.
+
+xs-&E1 : xs D ([u] &E1 (E u)) (&E1 F)
+	  &lt;- xs D E F.
+
+xs-&E2 : xs D ([u] &E2 (E u)) (&E2 F)
+	  &lt;- xs D E F.
+
+% implication
+
+xs-=&gt;I : xs D ([u] =&gt;I ([aw : A @ W] E aw u)) (=&gt;I ([aw] F aw))
+	  &lt;- (\{aw : A @ W\} xs D (E aw) (F aw)).
+
+xs-=&gt;E : xs D ([u] =&gt;E (DF u) (DA u)) (=&gt;E FF FA)
+	  &lt;- xs D DF FF
+	  &lt;- xs D DA FA.
+
+% box
+
+
+xs-!I : xs D ([u : A * W] !I ([w] E u w)) (!I ([w] F w))
+	 &lt;- (\{w : world\} xs D ([u] E u w) (F w)).
+
+
+xs-!G : xs D ([u] !G (E u)) (!G F)
+	 &lt;- xs D E F.
+
+xs-!E : xs D ([u] !E (E u)) (!E F)
+	 &lt;- xs D E F.
+
+% possibility
+
+xs-?E : xs D ([u] (?E (E1 u) ([w][a] E2 w a u))) (?E F1 ([w][a] F2 w a))
+	 &lt;- xs D E1 F1
+	 &lt;- (\{w:world\}\{aw: A @ w\} 
+	       xs D (E2 w aw) (F2 w aw)).
+
+xs-?I : xs D ([u] ?I (E u)) (?I F)
+	 &lt;- xs D E F.
+
+xs-?G : xs D ([u] ?G (E u)) (?G F)
+	 &lt;- xs D E F.
+
+xs-letcc : xs D ([u] letcc ([v] E v u)) (letcc ([v] F v))
+	 &lt;- (\{v : B * W'\} xs D (E v) (F v)).
+
+% throw to different cont
+xs-throwmiss : xs D ([u] throw (E u) V) (throw F V)
+	 &lt;- xs D E F.
+
+% when reaching the throw, pass the term we're throwing
+% to D instead.
+xs-throwhit  : xs D ([u] throw (E u) u) (D B W' F)
+		&lt;- xs D E F.
+
+% world and totality decls come after seqnd, which uses xs.
+% they infect each other somewhat, but the worlds decls for
+% xs are not substantially different than if it is checked
+% alone (there are just some extra unrelated additions)
+&lt;/twelf&gt;
+
+#
+# Sequent calculus to natural deduction
+
+With substitution defined, we can now translate sequent calculus proofs back into C5 natural deduction. The theorem we prove is that if Γ # Δ then ∀C. ∀ω. Γ; Δ \{\{vdash\}\} C @ ω. 
+
+&lt;twelf&gt;
+%%% Translation from Sequent Calculus to Natural Deduction
+
+%       G # D     then   G ; D |- M : * 
+seqnd :   #         -&gt; (\{a\}\{w\} a @ w) -&gt; type.  %name seqnd S.
+truend :  true A W  -&gt; A @ W -&gt; type.           %name truend T t.
+falsend : false A W -&gt; A * W -&gt; type.           %name falsend F f.
+%mode seqnd +D -F.
+%mode truend +D -F.
+%mode falsend +D -F.
+
+
+sn-contra : seqnd (contra AT AF) ([c : prop][w : world] throw A AC)
+             &lt;- truend AT A
+             &lt;- falsend AF AC.
+
+% For each connective, the T side is easy -- it just corresponds to
+% the elimination rule. The F side requires the "excluded substitution"
+% theorem above, and is often quite tricky.
+
+% falsehood
+
+sn-_|_T : seqnd (_|_T FT) ([c][w] _|_E FT') &lt;- truend FT FT'.
+
+% conjunction
+
+sn-&T : seqnd (&T ([at][bt] D at bt) T&) ([c][w] F (&E1 N&) (&E2 N&) c w)
+         &lt;- (\{at\}\{a\} 
+		truend at a -&gt;
+             \{bt\}\{b\} 
+		truend bt b -&gt;
+             seqnd (D at bt) ([c][w] F a b c w))
+         &lt;- truend T& N&.
+
+sn-&F : seqnd (&F ([af] D1 af) ([bf] D2 bf) (F& : false (A & B) W))
+	      FF
+	 &lt;- falsend F& N&
+	 &lt;- (\{af\}\{a*\} falsend af a* -&gt;
+             seqnd (D1 af) ([c][w] F1 a* c w))
+         &lt;- (\{bf\}\{b*\} falsend bf b* -&gt;
+             seqnd (D2 bf) ([c][w] F2 b* c w))
+         &lt;- (\{cc\}\{ww\}\{b : B @ W\}
+	     xs ([c][w] [a] throw (&I a b) N&)
+	        ([a*] F1 a* cc ww)
+	        (F1' b cc ww))
+	 &lt;- (\{cc : prop\}\{ww\}
+	     xs ([c][w] [b] F1' b c w)
+	        ([b*] F2 b* cc ww)
+	        (FF cc ww)).
+
+% implication
+
+% actually, implication is not just the elim rule, because
+% classical implication is phrased differently.
+
+sn-=&gt;T : seqnd (=&gt;T ([af : false A W] D1 af) ([bt] D2 bt) 
+		    (T=&gt; : true (A =&gt; B) W))
+	       FF
+	  &lt;- truend T=&gt; N=&gt;
+	  &lt;- (\{af\}\{a*\} falsend af a* -&gt;
+	      seqnd (D1 af) ([c][w] F1 a* c w))
+	  &lt;- (\{bt\}\{b\} 
+		truend bt b -&gt;
+              seqnd (D2 bt) ([c][w] F2 b c w))
+	  &lt;- (\{cc\}\{ww\}
+		xs ([c][w] [a] (F2 (=&gt;E N=&gt; a) c w))
+		   ([a*] F1 a* cc ww)
+		   (FF cc ww)).
+&lt;/twelf&gt;
+
+There are two ways to translate the ``=&gt;F`` rule; we can avoid using ``letcc`` if we like. We give both, taking advantage of the fact that LF relations need not be deterministic functions.
+&lt;twelf&gt;
+% letcc-free version
+% u : A=&gt;B |- throw \x:A .  c:B. throw \unused:A.c to u / ... ]](IH) to u
+sn-=&gt;F : seqnd (=&gt;F ([at : true A W][bf : false B W] D at bf) F=&gt;)
+	       ([c][w] throw (=&gt;I [a] FZ a B W) N=&gt; )
+	  &lt;- falsend F=&gt; N=&gt;
+	  &lt;- (\{at\}\{a\}  
+		truend  at a  -&gt;
+              \{bf\}\{b*\} falsend bf b* -&gt;
+	      seqnd (D at bf) ([c][w] F1 a b* c w))
+	  &lt;- (\{a : A @ W\}
+	      \{cc\}\{ww\}
+		xs ([c][w] [b] throw (=&gt;I [a-unused : A @ W] b) N=&gt;)
+		   ([b*] F1 a b* cc ww)
+		   (FZ a cc ww)).
+		
+
+% also include simpler letcc version
+% u : A=&gt;B |- throw (\x:A . letcc v : b* in (IH) end) to u
+sn-=&gt;F-letcc : 
+        seqnd (=&gt;F ([at : true A W][bf : false B W] D at bf) F=&gt;)
+	      ([c][w] throw (=&gt;I [a] letcc [b*] F1 a b* B W) N=&gt;)
+	  &lt;- falsend F=&gt; N=&gt;
+	  &lt;- (\{at\}\{a\}  
+		truend  at a  -&gt;
+              \{bf\}\{b*\} falsend bf b* -&gt;
+	      seqnd (D at bf) ([c][w] F1 a b* c w)).
+
+% box
+
+sn-!T : seqnd (!T ([at' : true A W'] D at') T!) ([c][w] F (!E (!G N!)) c w)
+	 &lt;- (\{at'\}\{a'\} 
+	       truend at' a' -&gt;
+	     seqnd (D at') ([c][w] F a' c w))
+	 &lt;- truend T! N!.
+
+% this is the only necessary letcc in the proof
+% u : []A * w |- throw (box w'. letcc v:A*w' in (IH) end) to u
+sn-!F : seqnd (!F ([w' : world][af : false A w'] D w' af) F!)
+	      ([c][w] (throw (!I [w'] letcc ([a*'] F w' a*' A w')) N!))
+	 &lt;- falsend F! N!
+	 &lt;- (\{w' : world\}\{af' : false A w'\}\{a*' : A * w'\} 
+	       falsend af' a*' -&gt;
+             seqnd (D w' af') ([c][w] F w' a*' c w)).
+
+% dia
+
+% x : ?A@w |- let dia &lt;y,w'&gt; = get&lt;w&gt;x in IH end
+sn-?T : seqnd (?T ([w'][at] D w' at) T?)
+	 ([c][w] ?E (?G N?) ([w'][a'] F w' a' c w))
+	 &lt;- truend T? N?
+	 &lt;- (\{w'\}\{at : true A w'\}\{a' : A @ w'\}
+	       truend at a' -&gt;
+             seqnd (D w' at) ([c][w] F w' a' c w)).
+
+sn-?F : seqnd (?F ([af'] D af') F?)
+	 FF
+	 &lt;- falsend F? N?
+	 &lt;- (\{af' : false A W'\}\{a*' : A * W'\}
+	       falsend af' a*' -&gt;
+             seqnd (D af') ([c][w] F1 a*' c w))
+	 &lt;- (\{cc\}\{ww\}
+	       xs ([c][w] [a'] (throw (?G (?I a')) N?))
+	          ([a*'] F1 a*' cc ww)
+	          (FF cc ww)).
+&lt;/twelf&gt;
+
+Finally, we can declare the [%worlds](/wiki/percent-worlds/) for our metatheorems and ask Twelf to check them:
+
+&lt;twelf&gt;
+
+% for xs
+%block blocku : some \{A : prop\} \{W : world\}
+		block \{u : A * W\}.
+
+%block blocka : some \{A : prop\} \{W : world\}
+		block \{u : A @ W\}.
+
+
+% for seqnd
+%block blocknt : some \{A:prop\} \{W:world\}
+                 block \{at:true A W\} \{a:A @ W\} 
+		  \{t:truend at a\}.
+%block blocknf : some \{A:prop\} \{W:world\}
+                 block \{af:false A W\} \{a:A * W\} \{t:falsend af a\}.
+
+%block blockp : block \{a:prop\}.
+
+%worlds (blockw | blocka | blocknt | blocknf | blocku | blockp) 
+     (xs D E F) (seqnd D F) (truend D F) (falsend D F).
+
+%total E (xs D E F).
+
+%total (D T F) (seqnd D FF) (truend T N) (falsend F M).
+&lt;/twelf&gt;
+
+&lt;twelflink&gt;All code from this case study&lt;/twelflink&gt;. &lt;twelflink check="true"&gt;Twelf's output from this case study&lt;/twelflink&gt;.
+
+[Category:Twelf code](/wiki/category-twelf-code/)
+\{\{case study\}\}
+!}%

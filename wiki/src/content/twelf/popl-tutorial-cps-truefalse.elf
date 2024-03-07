@@ -1,0 +1,53 @@
+%%! title: "POPL Tutorial/cps-truefalse"
+
+%{!
+#
+# CPS Conversion
+
+
+&lt;twelf&gt;
+tp : type.
+o  : tp.
+# &gt; : tp -&gt; tp -&gt; tp.           %infix right 3 =&gt;.
+
+exp   : tp -&gt; type.
+value : tp -&gt; type.
+app   : exp (A =&gt; B) -&gt; exp A -&gt; exp B.
+lam   : (value A -&gt; exp B) -&gt; value (A =&gt; B).
+ret   : value A -&gt; exp A.
+%block sourceb : some \{A : tp\} block \{x : value A\}.
+%worlds (sourceb) (exp _) (value _).
+
+contra  : type.
+cvalue  : tp -&gt; type.
+ccont   : tp -&gt; type.
+capp    : cvalue (A =&gt; B) -&gt; cvalue A -&gt; ccont B -&gt; contra.
+clam    : (cvalue A -&gt; ccont B -&gt; contra) -&gt; cvalue (A =&gt; B).
+cfalsei : (cvalue A -&gt; contra) -&gt; ccont A.
+cthrow : ccont A -&gt; cvalue A -&gt; contra.
+%block targetb1 : some \{A : tp\} block \{x : cvalue A\}.
+%block targetb2 : some \{A : tp\} block \{x : ccont A\}.
+%worlds (targetb1 | targetb2) (contra) (cvalue _) (ccont _).
+
+cps : value A -&gt; cvalue A -&gt; type.
+%mode cps +X1 -X2.
+
+cpse : exp A -&gt; (ccont A -&gt; contra) -&gt; type.
+%mode cpse +X1 -X2.
+
+cps/lam : cps (lam (E:value A -&gt; exp B))
+              (clam (E':cvalue A -&gt; ccont B -&gt; contra))
+           &lt;- (\{x:value A\}\{x':cvalue A\} cps x x' -&gt; cpse (E x) (E' x')).
+cpse/app : cpse (app (E1:exp (B =&gt; A)) (E2:exp B))
+                ([c:ccont A] E1' (cfalsei ([f:cvalue (B =&gt; A)]
+                                             E2' (cfalsei([x:cvalue B]
+                                                            capp f x c)))))
+            &lt;- cpse E1 (E1':ccont (B =&gt; A) -&gt; contra)
+            &lt;- cpse E2 (E2':ccont B -&gt; contra).
+cpse/ret : cpse (ret (V:value A)) ([c:ccont A] cthrow c V')
+            &lt;- cps V (V':cvalue A).
+
+%block cpsb : some \{A : tp\} block \{x : value A\} \{x' : cvalue A\} \{d : cps x x'\}.
+%worlds (cpsb) (cps _ _) (cpse _ _).
+%total (E V) (cps E _) (cpse V _).&lt;/twelf&gt;
+!}%

@@ -1,0 +1,25 @@
+%%! title: "Congruence relation"
+
+%{!
+A congruence relation on a language is an [equivalence relation](/wiki/equivalence-relation/) that is compatible with the term constructors of that language.
+
+Consider the untyped lambda-calculus:
+
+&lt;math&gt;e ::= x \mid \lambda x.\, e \mid e_1\ e_2&lt;/math&gt;
+
+A congruence relation &lt;math&gt;\texttt\{\}e_1 = e_2&lt;/math&gt; must be closed under the equivalence rules,
+
+&lt;math&gt;
+  \{\; \over e = e\} \mbox\{refl\} \qquad
+  \{ e_1 = e_2 \over e_2 = e_1 \} \mbox\{symm\} \qquad
+  \{ e_1 = e_2 \qquad e_2 = e_3 \over e_1 = e_3 \} \mbox\{trans\},
+&lt;/math&gt;
+
+and the compatibility rules,
+
+&lt;math&gt;
+  \{\; \over x = x\} \qquad
+  \{ e_1 = e_2 \over \lambda x.\, e_1 = \lambda x.\, e_2 \} \qquad
+  \{ e_1 = e_1' \qquad e_2 = e_2' \over e_1\ e_2 = e_1'\ e_2' \}.
+&lt;/math&gt;
+!}%

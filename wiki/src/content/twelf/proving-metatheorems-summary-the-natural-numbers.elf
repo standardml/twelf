@@ -1,0 +1,52 @@
+%%! title: "Proving metatheorems:Summary: the natural numbers"
+
+%{!
+\{\{proving metatheorems
+  | prev = Proving metatheorems about the natural numbers
+  | prevname = Proving metatheorems
+  | next = Representing the syntax of the STLC
+  | nextname = Higher-order representation of syntax\}\}
+
+#
+# Take-aways
+
+The three things to remember from this section are:
+
+- Object-language syntax and judgements are represented as LF terms of corresponding types.  These representations are adequate iff they are isomorphic to the original description of the object language.  
+- An LF type family defines a relation on its indices.  Twelf has the ability to verify that a type family represents a total relation.  
+- Proofs of &lt;math&gt;\forall\exists&lt;/math&gt;-statements can be mechanized and verified in Twelf by representing them as LF type families.  
+
+At a high level, that's all there is to know about proving metatheorems with Twelf.  
+
+#
+# What's next?
+
+So far, we have used only first-order LF representations (we haven't used LF variables or lambdas for anything yet).  That's reasonable, since the natural numbers and the judgements we defined about them are first-order things.  
+
+However, one of the main benefits of LF is that the above methodology scales gracefully to programming languages with binding structure.  This is the subject of the next section.
+
+#
+# Test yourself
+
+_This section is under development. If you try other examples at this point, please add them here.  If you try more advanced examples, add them to the [Proving metatheorems:Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/)._
+
+Before going on to the next section, you may wish to test yourself with the following exercises.  Then see the [Proving metatheorems: Natural numbers: Answers to exercises](/wiki/proving-metatheorems-natural-numbers-answers-to-exercises/).
+
+- State and prove a metatheorem showing that ``plus`` is commutative.
+- Define the odd numbers with a judgement analogous to the ``even`` judgement defined above. 
+- Prove a simple relation between odd and even numbers: 
+-# State and prove a theorem ``succ-even`` that shows that the successor of an even number is an odd number.
+-# After that, state and prove a Theorem ``succ-odd`` that shows that the successor of an odd number is an even number.
+- Prove how even/oddness interacts with addition:
+-# State and prove the theorem sum-even-odd that shows that the sum of an even and an odd number results in an odd number
+-# State and prove a theorem sum-odd-even that shows that the sum of an odd plus an even number produces an odd number
+-# Finally, state and prove a theorem sum-odds that shows that the sum of two odd numbers produces an even number
+- _Add your exercises here!_
+
+
+\{\{proving metatheorems
+  | prev = Proving metatheorems about the natural numbers
+  | prevname = Proving metatheorems
+  | next = Representing the syntax of the STLC
+  | nextname = Higher-order representation of syntax\}\}
+!}%

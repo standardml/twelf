@@ -1,0 +1,675 @@
+%%! title: "POPL Tutorial/Properties of Typing and Reduction"
+
+%{!
+This problem (or problems) involves proving three properties of typing and reduction for the language L\{num str\}
+from Bob Harper's book,  [http://www.cs.cmu.edu/~rwh/plbook/book.pdf Practical Foundations for Programming Languages].
+
+#
+# The System L\{num str\}
+
+&lt;twelf&gt;
+% Natural numbers
+
+nat : type.
+
+0 : nat.
+s : nat -&gt; nat.
+
+
+% Addition for natural numbers
+
+plus_op : nat -&gt; nat -&gt; nat -&gt; type.
+
+plus_op/0 : plus_op 0 N N.
+plus_op/s : plus_op N M L -&gt; plus_op (s N) M (s L).
+
+
+% Multiplication for natural numbers
+
+times_op : nat -&gt; nat -&gt; nat -&gt; type.
+
+times_op/0 : times_op 0 N 0.
+times_op/s : times_op (s N) M P
+              &lt;- times_op N M L
+              &lt;- plus_op L M P.
+
+
+%%%%%%%%%%%%%%%% L\{num str\}: Syntax %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Types
+
+typ : type.
+
+num : typ.
+str : typ.
+
+
+% Expressions.  For simplicity, strings are just natural numbers,
+% concatenation is addition, and len is the identity.
+
+exp : type.
+
+nume  : nat -&gt; exp.
+stre  : nat -&gt; exp.
+plus  : exp -&gt; exp -&gt; exp.
+times : exp -&gt; exp -&gt; exp.
+cat   : exp -&gt; exp -&gt; exp.
+len   : exp -&gt; exp.
+let   : exp -&gt; (exp -&gt; exp) -&gt; exp.
+
+
+%%%%%%%%%%%%%%%% L\{num str\}: Static semantics (typing judgment) %%%%%%%%%%%%%%%
+
+of : exp -&gt; typ -&gt; type.
+
+of/stre  : of (stre S) str.
+
+of/nume  : of (nume N) num.
+
+of/plus  : of E1 num -&gt; of E2 num
+            -&gt; of (plus E1 E2) num.
+
+of/times : of E1 num -&gt; of E2 num
+            -&gt; of (times E1 E2) num.
+
+of/cat   : of E1 str -&gt; of E2 str
+            -&gt; of (cat E1 E2) str.
+
+of/len   : of E1 str
+            -&gt; of (len E1) num.
+
+of/let   : of E1 T1 -&gt; (\{x\} of x T1 -&gt; of (E2 x) T2)
+            -&gt; of (let E1 ([x] E2 x)) T2.
+
+
+% Assumption block for typing judgment (coming from of/let)
+
+%block of_bind : some \{T:typ\}
+               block \{x:exp\}\{ofx:of x T\}.
+
+
+
+%%%%%%%%%%%%%%%% L\{num str\}: Dynamic Semantics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Values
+
+val : exp -&gt; type.
+
+val/stre : val (stre N).
+val/nume : val (nume N).
+
+
+% Reduction
+
+red : exp -&gt; exp -&gt; type.
+
+red/plus/num  : plus_op N1 N2 N
+                 -&gt; red (plus (nume N1) (nume N2)) (nume N).
+
+red/plus1     : red E1 E1'
+                 -&gt; red (plus E1 E2) (plus E1' E2).
+
+red/plus2     : val E1 -&gt; red E2 E2'
+                 -&gt; red (plus E1 E2) (plus E1 E2').
+
+red/times/num : times_op N1 N2 N
+                 -&gt; red (times (nume N1) (nume N2)) (nume N).
+
+red/times1    : red E1 E1'
+                 -&gt; red (times E1 E2) (times E1' E2).
+
+red/times2    : val E1 -&gt; red E2 E2'
+		 -&gt; red (times E1 E2) (times E1 E2').
+
+red/cat/str   : plus_op S1 S2 S
+                 -&gt; red (cat (stre S1) (stre S2)) (stre S).
+
+red/cat1      : red E1 E1'
+                 -&gt; red (cat E1 E2) (cat E1' E2).
+
+red/cat2      : val E1 -&gt; red E2 E2'
+		 -&gt; red (cat E1 E2) (cat E1 E2').
+
+red/len/str   : red (len (stre S)) (nume S).
+
+red/len       : red E1 E1'
+		 -&gt; red (len E1) (len E1').
+
+red/let/val   : val E1
+		 -&gt; red (let E1 ([x] E2 x)) (E2 E1).
+
+red/let       : red E1 E1'
+		 -&gt; red (let E1 ([x] E2 x)) (let E1' ([x] E2 x)).
+&lt;/twelf&gt;
+
+#
+# Problem 1: Unicity of Typing
+
+&lt;twelf&gt;
+%%%%%%%%%%%%%%%% Lemma 9.1 (Unicity of typing) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% If G |- E : T1 and G |- E : T2, then T1 = T2.
+
+% Equality of types
+
+eqtyp : typ -&gt; typ -&gt; type.
+
+refl_t : eqtyp T T.
+
+
+% Congruence for typing assumptions.  Although the proof doesn't
+% introduce any parameters or hypotheses, it is used by a theorem that
+% does, and so we need to check it in the extended worlds.
+
+cong_of : eqtyp A1 A2 -&gt; (\{x\} of x A1 -&gt; of (E x) T)
+           -&gt; (\{x\} of x A2 -&gt; of (E x) T) -&gt; type.
+%mode cong_of +EA +OE1 -OE2.
+
+- : cong_of refl_t OE1 OE1.
+
+%worlds (of_bind) (cong_of _ _ _).
+%total OE1 (cong_of _ OE1 _).
+
+
+% Statement and proof of Lemma.  Notice that the worlds in this proof
+% are an extension (technically, they subsume) the worlds in the
+% congruence lemma above.
+
+lemma9-1 : of E T1 -&gt; of E T2 -&gt; eqtyp T1 T2 -&gt; type.
+%mode lemma9-1 +OjE1 +OjE2 -Ej.
+
+- : lemma9-1 of/stre of/stre refl_t.
+
+- : lemma9-1 of/nume of/nume refl_t.
+
+- : lemma9-1 (of/plus OjE11 OjE12) (of/plus OjE21 OjE22) refl_t.
+
+- : lemma9-1 (of/times OjE11 OjE12) (of/times OjE21 OjE22) refl_t.
+
+- : lemma9-1 (of/cat OjE11 OjE12) (of/cat OjE21 OjE22) refl_t.
+
+- : lemma9-1 (of/len OjE1) (of/len OjE2) refl_t.
+
+- : lemma9-1 (of/let OjE11 ([x][ofx1] OjE12 x ofx1))
+     (of/let OjE21 ([x][ofx2] OjE22 x ofx2)) Q
+      &lt;- lemma9-1 OjE11 OjE21 E1
+      &lt;- cong_of E1 OjE12 OjE12'
+      &lt;- \{x\}\{ofx2\} lemma9-1 ofx2 ofx2 refl_t
+         -&gt; lemma9-1 (OjE12' x ofx2) (OjE22 x ofx2) Q.
+
+%block lemma_block
+   : some \{T:typ\}
+      block \{x:exp\}\{ofx:of x T\}\{u:lemma9-1 ofx ofx refl_t\}.
+
+%worlds (lemma_block) (lemma9-1 _ _ _).
+%total OjT2 (lemma9-1 _ OjT2 _).
+&lt;/twelf&gt;
+
+#
+# Problem 2: Determinacy of Reduction
+
+&lt;twelf&gt;
+%%%%%%%%%%%%%%%% Lemma 10.1 (Determinacy of Reduction) %%%%%%%%%%%%%%%%%%%%%%%
+%
+% If E |-&gt; E' and E |-&gt; E_, then E' = E_.
+
+% Equality and congruence for nats
+
+eqnat  : nat -&gt; nat -&gt; type.
+
+refl_n : eqnat N N.
+
+cong_s : eqnat N M -&gt; eqnat (s N) (s M) -&gt; type.
+%mode cong_s +E -ES.
+
+- : cong_s refl_n refl_n.
+
+%worlds () (cong_s _ _).
+%total \{\} (cong_s _ _).
+
+
+% Equality for expressions
+
+eqexp : exp -&gt; exp -&gt; type.
+
+refl_e : eqexp E E.
+
+
+% Congruences for expressions
+
+cong_nume   : eqnat N1 N2 -&gt; eqexp (nume N1) (nume N2) -&gt; type.
+%mode cong_nume +E -E'.
+
+- : cong_nume   refl_n refl_e.
+
+%worlds () (cong_nume _ _).
+%total E (cong_nume E _).
+
+
+cong_stre   : eqnat S1 S2 -&gt; eqexp (stre S1) (stre S2) -&gt; type.
+%mode cong_stre +E -E'.
+
+- : cong_stre   refl_n refl_e.
+
+%worlds () (cong_stre _ _).
+%total E (cong_stre E _).
+
+
+cong_plus1  : eqexp E1 E2 -&gt; eqexp (plus E1 F) (plus E2 F) -&gt; type.
+%mode +\{E1:exp\} +\{E2:exp\} +\{F:exp\} +\{E:eqexp E1 E2\}
+   -\{E':eqexp (plus E1 F) (plus E2 F)\} (cong_plus1 E E').
+
+- : cong_plus1  refl_e refl_e.
+
+%worlds () (cong_plus1 _ _).
+%total E (cong_plus1 E _).
+
+
+cong_plus2  : eqexp F1 F2 -&gt; eqexp (plus E F1) (plus E F2) -&gt; type.
+%mode +\{F1:exp\} +\{F2:exp\} +\{E:exp\} +\{E1:eqexp F1 F2\}
+   -\{E':eqexp (plus E F1) (plus E F2)\} (cong_plus2 E1 E').
+
+- : cong_plus2  refl_e refl_e.
+
+%worlds () (cong_plus2 _ _).
+%total E (cong_plus2 E _).
+
+
+cong_times1 : eqexp E1 E2 -&gt; eqexp (times E1 F) (times E2 F) -&gt; type.
+%mode +\{E1:exp\} +\{E2:exp\} +\{F:exp\} +\{E:eqexp E1 E2\}
+   -\{E':eqexp (times E1 F) (times E2 F)\} (cong_times1 E E').
+
+- : cong_times1 refl_e refl_e.
+
+%worlds () (cong_times1 _ _).
+%total E (cong_times1 E _).
+
+
+cong_times2 : eqexp F1 F2 -&gt; eqexp (times E F1) (times E F2) -&gt; type.
+%mode +\{F1:exp\} +\{F2:exp\} +\{E:exp\} +\{E2:eqexp F1 F2\}
+   -\{E':eqexp (times E F1) (times E F2)\} (cong_times2 E2 E').
+
+- : cong_times2 refl_e refl_e.
+
+%worlds () (cong_times2 _ _).
+%total E (cong_times2 E _).
+
+
+cong_cat1   : eqexp E1 E2 -&gt; eqexp (cat E1 F) (cat E2 F) -&gt; type.
+%mode +\{E1:exp\} +\{E2:exp\} +\{F:exp\} +\{E:eqexp E1 E2\}
+   -\{E':eqexp (cat E1 F) (cat E2 F)\} (cong_cat1 E E').
+
+- : cong_cat1   refl_e refl_e.
+
+%worlds () (cong_cat1 _ _).
+%total E (cong_cat1 E _).
+
+
+cong_cat2   : eqexp F1 F2 -&gt; eqexp (cat E F1) (cat E F2) -&gt; type.
+%mode +\{F1:exp\} +\{F2:exp\} +\{E:exp\} +\{E3:eqexp F1 F2\}
+   -\{E':eqexp (cat E F1) (cat E F2)\} (cong_cat2 E3 E').
+
+- : cong_cat2   refl_e refl_e.
+
+%worlds () (cong_cat2 _ _).
+%total E (cong_cat2 E _).
+
+
+cong_len    : eqexp E1 E2 -&gt; eqexp (len E1) (len E2) -&gt; type.
+%mode cong_len +E -E'.
+
+- : cong_len    refl_e refl_e.
+
+%worlds () (cong_len _ _).
+%total E (cong_len E _).
+
+
+cong_let    : eqexp E1 E2 -&gt; eqexp (let E1 F) (let E2 F) -&gt; type.
+%mode +\{E1:exp\} +\{E2:exp\} +\{F:exp -&gt; exp\} +\{E:eqexp E1 E2\}
+   -\{E':eqexp (let E1 ([x:exp] F x)) (let E2 ([x:exp] F x))\} (cong_let E E').
+
+- : cong_let    refl_e refl_e.
+
+%worlds () (cong_let _ _).
+%total E (cong_let E _).
+
+
+% Uniqueness of plus
+
+plus! : plus_op N M L1 -&gt; plus_op N M L2 -&gt; eqnat L1 L2 -&gt; type.
+%mode plus! +Pj1 +Pj2 -EL.
+
+- : plus! plus_op/0 plus_op/0 refl_n.
+
+- : plus! (plus_op/s Pj1) (plus_op/s Pj2) ES
+     &lt;- plus! Pj1 Pj2 EL
+     &lt;- cong_s EL ES.
+
+%worlds () (plus! _ _ _).
+%total Pj1 (plus! Pj1 _ _).
+
+
+% Congruence of plus
+
+plus_cong : eqnat N1 N2 -&gt; plus_op N1 M L1 -&gt; plus_op N2 M L2
+             -&gt; eqnat L1 L2 -&gt; type.
+%mode plus_cong +EN +Pj1 +Pj2 -EL.
+
+- : plus_cong refl_n plus_op/0 plus_op/0 refl_n.
+
+- : plus_cong refl_n (plus_op/s Pj1) (plus_op/s Pj2) ES
+     &lt;- plus_cong refl_n Pj1 Pj2 EL
+     &lt;- cong_s EL ES.
+
+%worlds () (plus_cong _ _ _ _).
+%total PjL (plus_cong _ PjL _ _).
+
+
+% Uniqueness of times
+
+times! : times_op N M L1 -&gt; times_op N M L2 -&gt; eqnat L1 L2 -&gt; type.
+%mode times! +Tj1 +Tj2 -EL.
+
+- : times! times_op/0 times_op/0 refl_n.
+
+- : times! (times_op/s Pj1 Tj1) (times_op/s Pj2 Tj2) ES
+     &lt;- times! Tj1 Tj2 EL
+     &lt;- plus_cong EL Pj1 Pj2 ES.
+
+%worlds () (times! _ _ _).
+%total Tj1 (times! Tj1 _ _).
+
+
+
+% Proof of Lemma 10.1
+
+lemma10-1 : red E E1 -&gt; red E E2 -&gt; eqexp E1 E2 -&gt; type.
+%mode lemma10-1 +RjE1 +RjE2 -EE.
+
+- : lemma10-1 (red/plus/num PjN1) (red/plus/num PjN2) EE'
+     &lt;- plus! PjN1 PjN2 EL
+     &lt;- cong_nume EL EE'.
+
+- : lemma10-1 (red/plus1 RjE1) (red/plus1 RjE2) EE'
+     &lt;- lemma10-1 RjE1 RjE2 EE
+     &lt;- cong_plus1 EE EE'.
+
+- : lemma10-1 (red/plus2 _ RjF1) (red/plus2 _ RjF2) EE'
+     &lt;- lemma10-1 RjF1 RjF2 EF
+     &lt;- cong_plus2 EF EE'.
+
+- : lemma10-1 (red/times/num TjN1) (red/times/num TjN2) EE'
+     &lt;- times! TjN1 TjN2 EE
+     &lt;- cong_nume EE EE'.
+
+- : lemma10-1 (red/times1 RjE1) (red/times1 RjE2) EE'
+     &lt;- lemma10-1 RjE1 RjE2 EE
+     &lt;- cong_times1 EE EE'.
+
+- : lemma10-1 (red/times2 _ RjF1) (red/times2 _ RjF2) EE'
+     &lt;- lemma10-1 RjF1 RjF2 EF
+     &lt;- cong_times2 EF EE'.
+
+- : lemma10-1 (red/cat/str PjN1) (red/cat/str PjN2) EE'
+     &lt;- plus! PjN1 PjN2 EE
+     &lt;- cong_stre EE EE'.
+
+- : lemma10-1 (red/cat1 RjE1) (red/cat1 RjE2) EE'
+     &lt;- lemma10-1 RjE1 RjE2 EE
+     &lt;- cong_cat1 EE EE'.
+
+- : lemma10-1 (red/cat2 _ RjF1) (red/cat2 _ RjF2) EE'
+     &lt;- lemma10-1 RjF1 RjF2 EF
+     &lt;- cong_cat2 EF EE'.
+
+- : lemma10-1 (red/len/str:red (len (stre S)) (nume S)) red/len/str EE'
+     &lt;- cong_nume refl_n EE'.
+
+- : lemma10-1 (red/len RjE1) (red/len RjE2) EE'
+     &lt;- lemma10-1 RjE1 RjE2 EE
+     &lt;- cong_len EE EE'.
+
+- : lemma10-1 (red/let/val VjE11) (red/let/val VjE12) refl_e.
+
+- : lemma10-1 (red/let RjE1) (red/let RjE2) EE'
+     &lt;- lemma10-1 RjE1 RjE2 EE
+     &lt;- cong_let EE EE'.
+
+
+%worlds () (lemma10-1 _ _ _).
+%total RjE (lemma10-1 RjE _ _).
+&lt;/twelf&gt;
+
+#
+# Problem 3: Contextual Semantics
+
+In this problem, we define the contextual semantics for L\{num str\} and proof that it is equivalent to (defines the same relation as) the given dynamic semantics (reduction).
+
+&lt;twelf&gt;
+
+%%%%%%%%%%%%%%%% L\{num str\}: Contextual Semantics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Instructions:  E0 ~&gt; E0'
+
+instr : exp -&gt; exp -&gt; type.
+
+instr/plus  : plus_op N1 N2 N
+               -&gt; instr (plus (nume N1) (nume N2)) (nume N).
+
+instr/times : times_op N1 N2 N
+               -&gt; instr (times (nume N1) (nume N2)) (nume N).
+
+instr/cat   : plus_op S1 S2 S
+               -&gt; instr (cat (stre S1) (stre S2)) (stre S).
+
+instr/len   : instr (len (stre S)) (nume S).
+
+instr/let   : val E1
+               -&gt; instr (let E1 ([x] E2 x)) (E2 E1).
+
+
+% Expression contexts, represented as "expressions with holes", i.e.,
+% functions on expressions.
+
+ectxt : (exp -&gt; exp) -&gt; type.
+
+ectxt/hole   : ectxt ([x] x).
+
+ectxt/plus1  : ectxt ([x] C1 x)
+                -&gt; ectxt ([x] plus (C1 x) E2).
+
+ectxt/plus2  : val E1 -&gt; ectxt ([x] C2 x)
+                -&gt; ectxt ([x] plus E1 (C2 x)).
+
+ectxt/times1 : ectxt ([x] C1 x)
+                -&gt; ectxt ([x] times (C1 x) E2).
+
+ectxt/times2 : val E1 -&gt; ectxt ([x] C2 x)
+                -&gt; ectxt ([x] times  E1 (C2 x)).
+
+ectxt/cat1   : ectxt ([x] C1 x)
+                -&gt; ectxt ([x] cat (C1 x) E2).
+
+ectxt/cat2   : val E1 -&gt; ectxt ([x] C2 x)
+                -&gt; ectxt ([x] cat E1 (C2 x)).
+
+ectxt/len    : ectxt ([x] C x)
+                -&gt; ectxt ([x] len (C x)).
+
+ectxt/let    : ectxt ([x] C1 x)
+                -&gt; ectxt ([x] let (C1 x) ([y] E2 y)).
+
+
+% Filling the hole of an expression context with an expression
+
+fill : ectxt ([x] C x) -&gt; exp -&gt; exp -&gt; type.
+
+fill/hole   : fill ectxt/hole E E.
+
+fill/plus1  : fill ECC1 E C1@E
+               -&gt; fill (ectxt/plus1 ECC1:ectxt ([x] plus (C1 x) E2)) E
+                  (plus C1@E E2).
+
+fill/plus2  : \{VjE1:val E1\} fill ECC2 E C2@E
+               -&gt; fill (ectxt/plus2 VjE1 ECC2) E (plus E1 C2@E).
+
+fill/times1 : fill ECC1 E C1@E
+               -&gt; fill (ectxt/times1 ECC1:ectxt ([x] times (C1 x) E2)) E
+                 (times C1@E E2).
+
+fill/times2 : \{VjE1:val E1\} fill ECC2 E C2@E
+               -&gt; fill (ectxt/times2 VjE1 ECC2) E (times E1 C2@E).
+
+fill/cat1   : fill ECC1 E C1@E
+               -&gt; fill (ectxt/cat1 ECC1:ectxt ([x] cat (C1 x) E2)) E
+                  (cat C1@E E2).
+
+fill/cat2   : \{VjE1:val E1\} fill ECC2 E C2@E
+               -&gt; fill (ectxt/cat2 VjE1 ECC2) E (cat E1 C2@E).
+
+fill/len    : fill ECC1 E C1@E
+               -&gt; fill (ectxt/len ECC1) E (len C1@E).
+
+fill/let    : fill ECC1 E C1@E
+               -&gt; fill (ectxt/let ECC1:ectxt ([x] let (C1 x) [y] E2 y)) E
+                  (let C1@E ([y] E2 y)).
+
+
+% Contextual reduction rule
+
+cred : exp -&gt; exp -&gt; type.
+
+cred/step : fill EC E0 C@E0 -&gt; instr E0 E0' -&gt; fill EC E0' C@E0'
+             -&gt; cred C@E0 C@E0'.
+
+
+
+%%%%%%%%%%%%%%%% Theorem 10.2.1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% If E |-&gt; E', then E |-&gt;c E'.
+
+thm10-2-1 : red E E' -&gt; cred E E' -&gt; type.
+%mode thm10-2-1 +RjE -CjE.
+
+- : thm10-2-1 (red/plus/num PjN)
+     (cred/step fill/hole (instr/plus PjN) fill/hole).
+
+- : thm10-2-1 (red/plus1 RjE1)
+     (cred/step (fill/plus1 FjC1@E0) I (fill/plus1 FjC1@E0'))
+     &lt;- thm10-2-1 RjE1 (cred/step FjC1@E0 I FjC1@E0').
+
+- : thm10-2-1 (red/plus2 VjE1 RjE2)
+     (cred/step (fill/plus2 VjE1 FjC2@E0) I (fill/plus2 VjE1 FjC2@E0'))
+     &lt;- thm10-2-1 RjE2 (cred/step FjC2@E0 I FjC2@E0').
+
+- : thm10-2-1 (red/times/num TjN)
+     (cred/step fill/hole (instr/times TjN) fill/hole).
+
+- : thm10-2-1 (red/times1 RjE1)
+     (cred/step (fill/times1 FjC1@E0) I (fill/times1 FjC1@E0'))
+     &lt;- thm10-2-1 RjE1 (cred/step FjC1@E0 I FjC1@E0').
+
+- : thm10-2-1 (red/times2 VjE1 RjE2)
+     (cred/step (fill/times2 VjE1 FjC2@E0) I (fill/times2 VjE1 FjC2@E0'))
+     &lt;- thm10-2-1 RjE2 (cred/step FjC2@E0 I FjC2@E0').
+
+- : thm10-2-1 (red/cat/str PjN)
+     (cred/step fill/hole (instr/cat PjN) fill/hole).
+
+- : thm10-2-1 (red/cat1 RjE1)
+     (cred/step (fill/cat1 FjC1@E0) I (fill/cat1 FjC1@E0'))
+     &lt;- thm10-2-1 RjE1 (cred/step FjC1@E0 I FjC1@E0').
+
+- : thm10-2-1 (red/cat2 VjE1 RjE2)
+     (cred/step (fill/cat2 VjE1 FjC2@E0) I (fill/cat2 VjE1 FjC2@E0'))
+     &lt;- thm10-2-1 RjE2 (cred/step FjC2@E0 I FjC2@E0').
+
+- : thm10-2-1 red/len/str
+     (cred/step fill/hole instr/len fill/hole).
+
+- : thm10-2-1 (red/len RjE1)
+     (cred/step (fill/len FjC1@E0) I (fill/len FjC1@E0'))
+     &lt;- thm10-2-1 RjE1 (cred/step FjC1@E0 I FjC1@E0').
+
+- : thm10-2-1 (red/let/val VjE1)
+     (cred/step fill/hole (instr/let VjE1) fill/hole).
+
+- : thm10-2-1 (red/let RjE1)
+     (cred/step (fill/let FjC1@E0) I (fill/let FjC1@E0'))
+     &lt;- thm10-2-1 RjE1 (cred/step FjC1@E0 I FjC1@E0').
+
+%worlds () (thm10-2-1 _ _).
+%total RjE (thm10-2-1 RjE _).
+
+
+
+%%%%%%%%%%%%%%%% Theorem 10.2.2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% If E |-&gt;c E', then E |-&gt; E'.
+
+thm10-2-2 : cred E E' -&gt; red E E' -&gt; type.
+%mode thm10-2-2 +CjE -RjE.
+
+
+% Lemma.  If C\{E0\} = E, E0 ~&gt; E0', and C\{E0'\} = E', then E |-&gt; E'.
+
+lem10-2-2 : fill EC E0 E -&gt; instr E0 E0' -&gt; fill EC E0' E'
+             -&gt; red E E' -&gt; type.
+%mode lem10-2-2 +FjE +I +FjE' -RjE.
+
+- : lem10-2-2 fill/hole (instr/plus PjN) fill/hole (red/plus/num PjN).
+
+- : lem10-2-2 fill/hole (instr/times TjN) fill/hole (red/times/num TjN).
+
+- : lem10-2-2 fill/hole (instr/cat PjN) fill/hole (red/cat/str PjN).
+
+- : lem10-2-2 fill/hole instr/len fill/hole red/len/str.
+
+- : lem10-2-2 fill/hole (instr/let VjE1) fill/hole (red/let/val VjE1).
+
+- : lem10-2-2 (fill/plus1 FjC1@E0) I (fill/plus1 FjC1@E0') (red/plus1 RjE)
+     &lt;- lem10-2-2 FjC1@E0 I FjC1@E0' RjE.
+
+- : lem10-2-2 (fill/plus2 VjE1 FjC2@E0) I (fill/plus2 VjE1 FjC2@E0')
+     (red/plus2 VjE1 RjE)
+     &lt;- lem10-2-2 FjC2@E0 I FjC2@E0' RjE.
+
+- : lem10-2-2 (fill/times1 FjC1@E0) I (fill/times1 FjC1@E0') (red/times1 RjE)
+     &lt;- lem10-2-2 FjC1@E0 I FjC1@E0' RjE.
+
+- : lem10-2-2 (fill/times2 VjE1 FjC2@E0) I (fill/times2 VjE1 FjC2@E0')
+     (red/times2 VjE1 RjE)
+     &lt;- lem10-2-2 FjC2@E0 I FjC2@E0' RjE.
+
+- : lem10-2-2 (fill/cat1 FjC1@E0) I (fill/cat1 FjC1@E0') (red/cat1 RjE)
+     &lt;- lem10-2-2 FjC1@E0 I FjC1@E0' RjE.
+
+- : lem10-2-2 (fill/cat2 VjE1 FjC2@E0) I (fill/cat2 VjE1 FjC2@E0')
+     (red/cat2 VjE1 RjE)
+     &lt;- lem10-2-2 FjC2@E0 I FjC2@E0' RjE.
+
+- : lem10-2-2 (fill/len FjC1@E0) I (fill/len FjC1@E0') (red/len RjE)
+     &lt;- lem10-2-2 FjC1@E0 I FjC1@E0' RjE.
+
+- : lem10-2-2 (fill/let FjC2@E0) I (fill/let FjC2@E0')
+     (red/let RjE)
+     &lt;- lem10-2-2 FjC2@E0 I FjC2@E0' RjE.
+
+%worlds () (lem10-2-2 _ _ _ _).
+%total FjE (lem10-2-2 FjE _ _ _).
+
+
+% Proof of main theorem
+
+- : thm10-2-2 (cred/step FjC@E0 I FjC@E0') RjE
+     &lt;- lem10-2-2 FjC@E0 I FjC@E0' RjE.
+
+%worlds () (thm10-2-2 _ _).
+%total \{\} (thm10-2-2 _ _).
+&lt;/twelf&gt;
+
+#
+# Twelf Output
+
+The &lt;twelflink check="true"&gt;output&lt;/twelflink&gt; for the above.
+!}%

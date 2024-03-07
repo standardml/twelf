@@ -1,0 +1,2261 @@
+%%! title: "Hereditary substitution for the STLC (part 2)"
+
+%{!
+This is part 2 of the case study [Hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/).  
+
+&lt;twelf hidden="true"&gt;
+tp : type.
+
+b : tp.
+arrow : tp -&gt; tp -&gt; tp.
+prod : tp -&gt; tp -&gt; tp.
+
+rtm : type.
+mtm : type.
+
+app : rtm -&gt; mtm -&gt; rtm.
+c : rtm.
+fst : rtm -&gt; rtm.
+snd : rtm -&gt; rtm.
+
+asm : rtm -&gt; mtm.
+lam : (rtm -&gt; mtm) -&gt; mtm.
+pair : mtm -&gt; mtm -&gt; mtm.
+
+%block rtm_block : block \{x : rtm\}.
+%worlds (rtm_block) (tp) (rtm) (mtm).
+
+atom : rtm -&gt; tp -&gt; type.
+%mode atom +X1 -X2.
+
+canon : mtm -&gt; tp -&gt; type.
+%mode canon +X1 +X2.
+
+% atomic 
+
+atom_c : atom c b.
+
+atom_app : atom (app R1 M2) A
+            &lt;- atom R1 (arrow A2 A)
+            &lt;- canon M2 A2.
+
+atom_fst : atom (fst R) A1
+            &lt;- atom R (prod A1 A2).
+
+atom_snd : atom (snd R) A2
+            &lt;- atom R (prod A1 A2).
+
+%% canonical 
+
+canon_asm : canon (asm R) b
+             &lt;- atom R b.
+
+canon_lam : canon (lam M) (arrow A2 A)
+             &lt;- \{x : rtm\} (atom x A2) -&gt;  canon (M x) A.
+
+canon_pair : canon (pair M1 M2) (prod A1 A2)
+              &lt;- canon M1 A1
+              &lt;- canon M2 A2.
+
+%block atom_block : some \{A:tp\}
+                     block \{x:rtm\} \{dx : atom x A\}. 
+%worlds (atom_block) (atom _ _) (canon _ _).
+%terminates (R M) (atom R _) (canon M _).
+
+hsubst_m : mtm -&gt; tp -&gt; (rtm -&gt; mtm) -&gt; mtm -&gt; type.
+%mode hsubst_m +X1 +X2 +X3 -X4.
+
+hsubst_r : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; rtm -&gt; type.
+%mode hsubst_r +X1 +X2 +X3 -X4.
+
+hsubst_rr : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; mtm -&gt; tp -&gt; type.
+%mode hsubst_rr +X1 +X2 +X3 -X4 -X5.
+
+%% Ms
+
+hsubst_m_r : hsubst_m M0 A0 ([x] asm (R x)) (asm R')
+              &lt;- hsubst_r M0 A0 R R'.
+
+hsubst_m_rr : hsubst_m M0 A0 ([x] asm (R x)) M'
+               &lt;- hsubst_rr M0 A0 R M' _.
+
+hsubst_m_lam : hsubst_m M0 A0 ([x] (lam ([y] M x y))) (lam M')
+                &lt;- (\{y:rtm\} 
+                      hsubst_m M0 A0 ([x] M x y) (M' y)).
+
+hsubst_m_pair : hsubst_m M0 A0 ([x] (pair (M1 x) (M2 x))) (pair M1' M2')
+                 &lt;- hsubst_m M0 A0 M1 M1'
+                 &lt;- hsubst_m M0 A0 M2 M2'.
+
+%% R not head
+
+hsubst_r_closed : hsubst_r M0 A0 ([x] E) E.
+
+hsubst_r_app : hsubst_r M0 A0 ([x] (app (R x) (M x))) (app R' M')
+                &lt;- hsubst_r M0 A0 R R'
+                &lt;- hsubst_m M0 A0 M M'.
+
+hsubst_r_fst : hsubst_r M0 A0 ([x] (fst (R x))) (fst R')
+                &lt;- hsubst_r M0 A0 R R'.
+
+hsubst_r_snd : hsubst_r M0 A0 ([x] (snd (R x))) (snd R')
+                &lt;- hsubst_r M0 A0 R R'.
+
+%% r head
+
+hsubst_rr_var : hsubst_rr M0 A0 ([x] x) M0 A0.
+
+hsubst_rr_app : hsubst_rr M0 A0 ([x] app (R1 x) (M2 x)) M_ A
+                 &lt;- hsubst_rr M0 A0 R1 (lam M') (arrow A2 A)
+                 &lt;- hsubst_m M0 A0 M2 M2'
+                 &lt;- hsubst_m M2' A2 M' M_.
+
+hsubst_rr_fst : hsubst_rr M0 A0 ([x] (fst (R x))) M1' A1'
+                 &lt;- hsubst_rr M0 A0 R (pair M1' M2') (prod A1' A2').
+
+hsubst_rr_snd : hsubst_rr M0 A0 ([x] (snd (R x))) M2' A2'
+                 &lt;- hsubst_rr M0 A0 R (pair M1' M2') (prod A1' A2').
+
+%worlds (rtm_block) (hsubst_m _ _ _ _) (hsubst_r _ _ _ _) (hsubst_rr _ _ _ _ _).
+%reduces A' &lt;= A0 (hsubst_rr _ A0 _ _ A').
+%terminates \{(A0 A0' A0_) (M R R')\} (hsubst_m _ A0 M _) (hsubst_r _ A0' R _) (hsubst_rr _ A0_ R' _ _).
+
+expand : tp -&gt; rtm -&gt; mtm -&gt; type.
+%mode expand +X1 +X2 -X3.
+
+expand_b : expand b R (asm R).
+
+expand_arrow : expand (arrow A2 A) R (lam M)
+                &lt;- (\{x : rtm\} expand A2 x (M2 x))
+                &lt;- (\{x : rtm\} expand A (app R (M2 x)) (M x)).
+
+expand_prod : expand (prod A1 A2) R (pair M1 M2)
+               &lt;- expand A1 (fst R) M1
+               &lt;- expand A2 (snd R) M2.
+
+%worlds (rtm_block) (expand _ _ _).
+%total A (expand A _ _).
+
+hsubst_rr_size : \{A2\} \{A'\} hsubst_rr M2 A2 R M' A'
+                    -&gt; type.
+%mode hsubst_rr_size +X1 +X2 +X3.
+
+- : hsubst_rr_size 
+     A2 A2 hsubst_rr_var.
+
+- : hsubst_rr_size
+     A2 A4 (hsubst_rr_app _ _ Drr)
+     &lt;- hsubst_rr_size A2 (arrow A3 A4) Drr.
+
+- : hsubst_rr_size
+     A2 Al (hsubst_rr_fst Drr)
+     &lt;- hsubst_rr_size A2 (prod Al Ar) Drr.
+
+- : hsubst_rr_size
+     A2 Ar (hsubst_rr_snd Drr)
+     &lt;- hsubst_rr_size A2 (prod Al Ar) Drr.
+
+%worlds (rtm_block) (hsubst_rr_size _ _ _).
+%total D (hsubst_rr_size _ _ D).
+%reduces A' &lt;= A2 (hsubst_rr_size A2 A' _).
+ 
+hsubst_r_exists_sum : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; tp -&gt; type.
+hsubst_r_exists_sum_r : hsubst_r_exists_sum M2 A2 R A
+                         &lt;- hsubst_r M2 A2 R R'
+                         &lt;- atom R' A.
+hsubst_r_exists_sum_rr : hsubst_r_exists_sum M2 A2 R A'
+                          &lt;- hsubst_rr M2 A2 R M' A'
+                          &lt;- canon M' A'.
+
+hsubst_m_exists_asm :  hsubst_r_exists_sum M2 A2 R b
+                       -&gt; hsubst_m M2 A2 ([x] (asm (R x))) M'
+                       -&gt; canon M' b
+                       -&gt; type.
+%mode hsubst_m_exists_asm +X1 -X2 -X3.
+
+- : hsubst_m_exists_asm 
+     (hsubst_r_exists_sum_r DaR' DsR)
+     (hsubst_m_r DsR)
+     (canon_asm DaR').
+
+- : hsubst_m_exists_asm 
+     (hsubst_r_exists_sum_rr DcM' DsR)
+     (hsubst_m_rr DsR)
+     DcM'.
+
+%worlds (atom_block) (hsubst_m_exists_asm _ _ _).
+%total \{\} (hsubst_m_exists_asm _ _ _).
+
+
+hsubst_r_exists_fst : hsubst_r_exists_sum M2 A2 R (prod Al Ar)
+                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (fst (R x))) Al
+                       -&gt; type.
+%mode hsubst_r_exists_fst +X1 -X2.
+
+- : hsubst_r_exists_fst 
+     (hsubst_r_exists_sum_r DaR' DsR)
+     (hsubst_r_exists_sum_r (atom_fst DaR') (hsubst_r_fst DsR)).
+
+- : hsubst_r_exists_fst 
+     (hsubst_r_exists_sum_rr (canon_pair _ DcMl') DsR)
+     (hsubst_r_exists_sum_rr DcMl' (hsubst_rr_fst DsR)).
+
+%worlds (atom_block) (hsubst_r_exists_fst _ _).
+%total \{\} (hsubst_r_exists_fst _ _).
+
+
+hsubst_r_exists_snd : hsubst_r_exists_sum M2 A2 R (prod Al Ar)
+                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (snd (R x))) Ar
+                       -&gt; type.
+%mode hsubst_r_exists_snd +X1 -X2.
+
+- : hsubst_r_exists_snd 
+     (hsubst_r_exists_sum_r DaR' DsR)
+     (hsubst_r_exists_sum_r (atom_snd DaR') (hsubst_r_snd DsR)).
+
+- : hsubst_r_exists_snd 
+     (hsubst_r_exists_sum_rr (canon_pair DcMr' _) DsR)
+     (hsubst_r_exists_sum_rr DcMr' (hsubst_rr_snd DsR)).
+
+%worlds (atom_block) (hsubst_r_exists_snd _ _).
+%total \{\} (hsubst_r_exists_snd _ _).
+
+hsubst_m_exists : \{A2\}
+                   (\{y : rtm\} \{dy : atom y A2\} canon (M y) A)
+                   -&gt; canon M2 A2
+                   -&gt; hsubst_m M2 A2 M M'
+                   -&gt; canon M' A
+                   -&gt; type.
+%mode hsubst_m_exists +X0 +X1 +X2 -X3 -X4.
+
+hsubst_r_exists : \{A2\}
+                   (\{y : rtm\} \{dx : atom y A2\} atom (R y) A)
+                   -&gt; canon M2 A2
+                   -&gt; hsubst_r_exists_sum M2 A2 R A
+                   -&gt; type.
+%mode hsubst_r_exists +X0 +X1 +X2 -X3.
+
+hsubst_m_exists_app : \{A2\}
+                       %% this next argument is makes the termination argument work
+                       (\{y : rtm\} \{dx : atom y A2\} atom (R1 y) (arrow A3 A4)) 
+                       -&gt; hsubst_r_exists_sum M2 A2 R1 (arrow A3 A4)
+                       -&gt; hsubst_m M2 A2 M3 M3'
+                       -&gt; canon M3' A3
+                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (app (R1 x) (M3 x))) A4
+                       -&gt; type.
+%mode hsubst_m_exists_app +X-1 +X0 +X1 +X2 +X3 -X4.
+
+%% canonical terms
+
+- : hsubst_m_exists 
+     A2
+     ([x] [dx] canon_asm (DaR x dx))
+     DcM2
+     DsR
+     DcM'
+     &lt;- hsubst_r_exists A2 DaR DcM2 Dsum
+     &lt;- hsubst_m_exists_asm Dsum DsR DcM'.
+
+- : hsubst_m_exists 
+     A2
+     ([x] [dx] (canon_lam ([y] [dy] DcM x dx y dy)) : canon (lam (M x)) (arrow Af At))
+     (DcM2 : canon M2 A2)
+     (hsubst_m_lam DsM)
+     (canon_lam DcM')
+     &lt;- (\{y\} 
+           \{dy : atom y Af\}
+           hsubst_m_exists A2 ([x] [dx] (DcM x dx y dy)) DcM2 (DsM y) (DcM' y dy)).
+
+- : hsubst_m_exists
+     A2
+     ([x] [dx] (canon_pair (DcMr x dx) (DcMl x dx)))
+     DcM2
+     (hsubst_m_pair DsMr DsMl)
+     (canon_pair DcMr' DcMl')
+     &lt;- hsubst_m_exists A2 DcMl DcM2 DsMl DcMl'
+     &lt;- hsubst_m_exists A2 DcMr DcM2 DsMr DcMr'.
+
+%% atomic terms
+
+- : hsubst_r_exists 
+     A2
+     ([x] [dx] D)
+     _
+     (hsubst_r_exists_sum_r D hsubst_r_closed).
+
+- : hsubst_r_exists
+     A2
+     ([x] [dx] dx)
+     DcM2
+     (hsubst_r_exists_sum_rr DcM2 hsubst_rr_var).
+
+- : hsubst_r_exists
+     A2
+     ([x] [dx] (atom_app (DcM x dx) (DaR x dx)))
+     DcM2
+     DsumApp
+     &lt;- hsubst_m_exists A2 DcM DcM2 DsM' DcM'
+     &lt;- hsubst_r_exists A2 DaR DcM2 DsumR'
+     &lt;- hsubst_m_exists_app A2 DaR DsumR' DsM' DcM' DsumApp.
+
+- : hsubst_r_exists
+     A2
+     ([x] [dx] (atom_fst (DcR x dx)))
+     DcM2
+     DsumFst
+     &lt;- hsubst_r_exists A2 DcR DcM2 DsumR
+     &lt;- hsubst_r_exists_fst DsumR DsumFst.
+
+- : hsubst_r_exists
+     A2
+     ([x] [dx] (atom_snd (DcR x dx)))
+     DcM2
+     DsumSnd
+     &lt;- hsubst_r_exists A2 DcR DcM2 DsumR
+     &lt;- hsubst_r_exists_snd DsumR DsumSnd.
+
+%% app factoring lemma
+
+- : hsubst_m_exists_app 
+     A2 
+     _
+     (hsubst_r_exists_sum_r DaR1 DsR1)
+     DsM3
+     DcM3
+     (hsubst_r_exists_sum_r (atom_app DcM3 DaR1) (hsubst_r_app DsM3 DsR1)).
+
+- : hsubst_m_exists_app 
+     A2
+     _
+     (hsubst_r_exists_sum_rr (canon_lam DcM4') DsR1)
+     DsM3
+     DcM3
+     (hsubst_r_exists_sum_rr DcM4_ (hsubst_rr_app DsM4' DsM3 DsR1))
+     &lt;- hsubst_rr_size A2 (arrow A3 A4) DsR1
+     &lt;- hsubst_m_exists A3 DcM4' DcM3 DsM4' DcM4_.
+
+%worlds (atom_block) 
+(hsubst_m_exists_app _ _ _ _ _ _)
+(hsubst_r_exists _ _ _ _)
+(hsubst_m_exists _ _ _ _ _).
+
+%total \{(A2 A2' A2_) (D  D' D_)\}
+(hsubst_m_exists A2' D' _ _ _)
+(hsubst_m_exists_app A2_ D_ _ _ _ _)
+(hsubst_r_exists A2 D _ _).
+
+id/mtm : mtm -&gt; mtm -&gt; type.
+id/mtm_refl : id/mtm M M.
+
+id/rtm : rtm -&gt; rtm -&gt; type.
+id/rtm_refl : id/rtm R R.
+
+id/tp : tp -&gt; tp -&gt; type.
+id/tp_refl : id/tp A A.
+
+id/rtm_sym : id/rtm R R'
+	      -&gt; id/rtm R' R
+	      -&gt; type.
+%mode id/rtm_sym +X1 -X2.
+
+- : id/rtm_sym id/rtm_refl id/rtm_refl.
+
+%worlds (rtm_block) (id/rtm_sym _ _).
+%total \{\} (id/rtm_sym _ _).
+
+id/tp_arrow_inv : id/tp (arrow A1 A2) (arrow A1' A2')
+		   -&gt; id/tp A1 A1'
+		   -&gt; id/tp A2 A2'
+		   -&gt; type.
+%mode id/tp_arrow_inv +X1 -X2 -X3.
+
+- : id/tp_arrow_inv _ id/tp_refl id/tp_refl.
+
+%worlds (rtm_block) (id/tp_arrow_inv _ _ _).
+%total \{\} (id/tp_arrow_inv _ _ _).
+
+id/tp_prod_inv : id/tp (prod A1 A2) (prod A1' A2')
+		   -&gt; id/tp A1 A1'
+		   -&gt; id/tp A2 A2'
+		   -&gt; type.
+%mode id/tp_prod_inv +X1 -X2 -X3.
+
+- : id/tp_prod_inv _ id/tp_refl id/tp_refl.
+
+%worlds (rtm_block) (id/tp_prod_inv _ _ _).
+%total \{\} (id/tp_prod_inv _ _ _).
+
+id/rtm_app_cong : id/rtm R R'
+		   -&gt; id/mtm M M'
+		   -&gt; id/rtm (app R M) (app R' M')
+		   -&gt; type.
+%mode id/rtm_app_cong +X1 +X2 -X3.
+
+- : id/rtm_app_cong _ _ id/rtm_refl.
+
+%worlds (rtm_block) (id/rtm_app_cong _ _ _).
+%total \{\} (id/rtm_app_cong _ _ _).
+
+id/rtm_fst_cong : id/rtm R R'
+		   -&gt; id/rtm (fst R) (fst R')
+		   -&gt; type.
+%mode id/rtm_fst_cong +X1  -X3.
+
+- : id/rtm_fst_cong _ id/rtm_refl.
+
+%worlds (rtm_block) (id/rtm_fst_cong _ _).
+%total \{\} (id/rtm_fst_cong _ _).
+
+id/rtm_snd_cong : id/rtm R R'
+		   -&gt; id/rtm (snd R) (snd R')
+		   -&gt; type.
+%mode id/rtm_snd_cong +X1  -X3.
+
+- : id/rtm_snd_cong _ id/rtm_refl.
+
+%worlds (rtm_block) (id/rtm_snd_cong _ _).
+%total \{\} (id/rtm_snd_cong _ _).
+
+id/mtm_lam_cong :  (\{x:rtm\} id/mtm (M x) (M' x))
+		   -&gt; id/mtm (lam M) (lam M')
+		   -&gt; type.
+%mode id/mtm_lam_cong +X1 -X3.
+
+- : id/mtm_lam_cong _ id/mtm_refl.
+
+%worlds (rtm_block) (id/mtm_lam_cong _ _).
+%total \{\} (id/mtm_lam_cong _ _).
+
+id/mtm_lam_inv :  id/mtm (lam M) (lam M')
+		  -&gt; (\{x:rtm\} id/mtm (M x) (M' x))
+		  -&gt; type.
+%mode id/mtm_lam_inv +X1 -X3.
+
+- : id/mtm_lam_inv _ ([_] id/mtm_refl).
+
+%worlds (rtm_block) (id/mtm_lam_inv _ _).
+%total \{\} (id/mtm_lam_inv _ _).
+
+id/mtm_pair_cong : id/mtm M1 M1'
+		   -&gt; id/mtm M2 M2'
+		   -&gt; id/mtm (pair M1 M2) (pair M1' M2')
+		   -&gt; type.
+%mode id/mtm_pair_cong +X1 +X2 -X3.
+
+- : id/mtm_pair_cong _ _ id/mtm_refl.
+
+%worlds (rtm_block) (id/mtm_pair_cong _ _ _).
+%total \{\} (id/mtm_pair_cong _ _ _).
+
+id/mtm_pair_inv : id/mtm (pair M1 M2) (pair M1' M2')
+		   -&gt; id/mtm M1 M1'
+		   -&gt; id/mtm M2 M2'
+		   -&gt; type.
+%mode id/mtm_pair_inv +X1 -X2 -X3.
+
+- : id/mtm_pair_inv _ id/mtm_refl id/mtm_refl.
+
+%worlds (rtm_block) (id/mtm_pair_inv _ _ _).
+%total \{\} (id/mtm_pair_inv _ _ _).
+
+expand_respects_id : id/rtm R R'
+		      -&gt; id/mtm M M'
+		      -&gt; expand A R M
+		      -&gt; expand A R' M'
+		      -&gt; type.
+%mode expand_respects_id +X1 +X2 +X3 -X4.
+
+- : expand_respects_id _ _ D D.
+
+%worlds (rtm_block) (expand_respects_id _ _ _ _).
+%total \{\} (expand_respects_id _ _ _ _).
+%reduces D1 = D2 (expand_respects_id _ _ D2 D1).
+
+canon_respects_id :  id/mtm M M'
+		     -&gt; id/tp A A'
+		     -&gt; canon M A
+		     -&gt; canon M' A'
+		     -&gt; type.
+%mode canon_respects_id +X1 +X2 +X3 -X4.
+
+- : canon_respects_id _ _ D D.
+
+%worlds (atom_block) (canon_respects_id _ _ _ _).
+%total \{\} (canon_respects_id _ _ _ _).
+%reduces D1 = D2 (canon_respects_id _ _ D2 D1).
+
+hsubst_m_respects_id : id/mtm M2 M2'
+			-&gt; id/tp A2 A2'
+			-&gt; (\{x\} id/mtm (M x) (M' x))
+			-&gt; hsubst_m M2 A2 M Ms
+			-&gt; hsubst_m M2' A2' M' Ms
+			-&gt; type.
+%mode hsubst_m_respects_id +X1 +X2 +X3 +X4 -X5.
+
+- : hsubst_m_respects_id _ _ _ D D.
+
+%worlds (rtm_block) (hsubst_m_respects_id _ _ _ _ _).
+%total \{\} (hsubst_m_respects_id _ _ _ _ _).
+%reduces D1 = D2 (hsubst_m_respects_id _ _ _ D2 D1).
+
+id/mtm_asm_cong : id/rtm R R'
+		   -&gt; id/mtm (asm R) (asm R')
+		   -&gt; type.
+%mode id/mtm_asm_cong +X1  -X3.
+
+- : id/mtm_asm_cong _ id/mtm_refl.
+
+%worlds (rtm_block) (id/mtm_asm_cong _ _).
+%total \{\} (id/mtm_asm_cong _ _).
+
+false : type.
+%freeze false.
+
+hsubst_rr_closed_contra : hsubst_rr M2 A2 ([_] R) M' A'
+                           -&gt; false
+                           -&gt; type.
+%mode hsubst_rr_closed_contra +X1 -X2.
+
+- : hsubst_rr_closed_contra 
+     (hsubst_rr_app _ _ Dr)
+     X
+     &lt;- hsubst_rr_closed_contra Dr X.
+
+- : hsubst_rr_closed_contra 
+     (hsubst_rr_fst D)
+     X
+     &lt;- hsubst_rr_closed_contra D X.
+
+- : hsubst_rr_closed_contra 
+     (hsubst_rr_snd D)
+     X
+     &lt;- hsubst_rr_closed_contra D X.
+
+%worlds (rtm_block) (hsubst_rr_closed_contra _ _).
+%total D (hsubst_rr_closed_contra D _).
+
+%% contradiction of root and non-root
+
+hsubst_r_rr_contra : hsubst_r M2 A2 R R'
+                      -&gt; hsubst_rr M2 A2 R M' A'
+                      -&gt; false
+                      -&gt; type.
+%mode hsubst_r_rr_contra +X1 +X2 -X3.
+
+- : hsubst_r_rr_contra
+     hsubst_r_closed
+     Drr
+     X
+     &lt;- hsubst_rr_closed_contra Drr X.
+
+- : hsubst_r_rr_contra 
+     (hsubst_r_app _ DsrR)
+     (hsubst_rr_app _ _ DsrrR)
+     X
+     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+
+- : hsubst_r_rr_contra 
+     (hsubst_r_fst DsrR)
+     (hsubst_rr_fst DsrrR)
+     X
+     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+
+- : hsubst_r_rr_contra 
+     (hsubst_r_snd DsrR)
+     (hsubst_rr_snd DsrrR)
+     X
+     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+
+%worlds (rtm_block) (hsubst_r_rr_contra _ _ _). %% bar in extra block for lemma below's future use
+%total (D) (hsubst_r_rr_contra D _ _).
+
+%% false implies id
+false_implies_id/mtm : \{M\} \{M'\}
+                        false 
+                        -&gt; id/mtm M M'
+                        -&gt; type.
+%mode false_implies_id/mtm +X1 +X2 +X3 -X4.
+%worlds (rtm_block) (false_implies_id/mtm _ _ _ _). %% bar in extra block for lemma below's future use
+%total \{\} (false_implies_id/mtm _ _ _ _).
+
+hsubst_r_vacuous_id : hsubst_r M2 A2 ([_] R) R'
+                     -&gt; id/rtm R' R
+                     -&gt; type.
+%mode hsubst_r_vacuous_id +X1 -X2.
+
+hsubst_m_vacuous_id : hsubst_m M2 A2 ([_] M) M'
+                     -&gt; id/mtm M' M
+                     -&gt; type.
+%mode hsubst_m_vacuous_id +X1 -X2.
+
+%% R
+
+- : hsubst_r_vacuous_id hsubst_r_closed id/rtm_refl.
+
+- : hsubst_r_vacuous_id (hsubst_r_app Dm Dr) Did'
+     &lt;- hsubst_r_vacuous_id Dr DidR
+     &lt;- hsubst_m_vacuous_id Dm DidM
+     &lt;- id/rtm_app_cong DidR DidM Did'.
+
+- : hsubst_r_vacuous_id (hsubst_r_fst D) Did'
+     &lt;- hsubst_r_vacuous_id D Did
+     &lt;- id/rtm_fst_cong Did Did'.
+
+- : hsubst_r_vacuous_id (hsubst_r_snd D) Did'
+     &lt;- hsubst_r_vacuous_id D Did
+     &lt;- id/rtm_snd_cong Did Did'.
+
+%% M
+
+- : hsubst_m_vacuous_id
+     (hsubst_m_r Dr)
+     Did'
+     &lt;- hsubst_r_vacuous_id Dr Did
+     &lt;- id/mtm_asm_cong Did Did'.
+
+- : hsubst_m_vacuous_id
+     (hsubst_m_rr D)
+     Did
+     &lt;- hsubst_rr_closed_contra D X
+     &lt;- false_implies_id/mtm _ _ X Did.
+
+- : hsubst_m_vacuous_id
+     (hsubst_m_lam D)
+     Did'
+     &lt;- (\{x\} 
+           hsubst_m_vacuous_id (D x) (Did x))
+     &lt;- id/mtm_lam_cong Did Did'.
+
+- : hsubst_m_vacuous_id
+     (hsubst_m_pair D2 D1)
+     Did'
+     &lt;- hsubst_m_vacuous_id D1 Did1
+     &lt;- hsubst_m_vacuous_id D2 Did2
+     &lt;- id/mtm_pair_cong Did1 Did2 Did'.
+
+%worlds (rtm_block) (hsubst_r_vacuous_id _ _) (hsubst_m_vacuous_id _ _).
+%total (D1 D2) 
+(hsubst_r_vacuous_id D1 _)
+(hsubst_m_vacuous_id D2 _).
+
+hsubst_m_unique : hsubst_m M2 A2 M M'
+                   -&gt; hsubst_m M2 A2 M M_
+                   -&gt; id/mtm M' M_
+                   -&gt; type.
+%mode hsubst_m_unique +X1 +X2 -X3.
+
+hsubst_r_unique : hsubst_r M2 A2 R R'
+                   -&gt; hsubst_r M2 A2 R R_
+                   -&gt; id/rtm R' R_
+                   -&gt; type.
+%mode hsubst_r_unique +X1 +X2 -X3.
+
+hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
+                    -&gt; hsubst_rr M2 A2 R M_ A_
+                    -&gt; id/mtm M' M_
+                    -&gt; id/tp A' A_
+                    -&gt; type.
+%mode hsubst_rr_unique +X1 +X2 -X3 -X4.
+
+%% M
+
+- : hsubst_m_unique
+     (hsubst_m_r Dsr)
+     (hsubst_m_r Dsr')
+     DidAsm
+     &lt;- hsubst_r_unique Dsr Dsr' DidR
+     &lt;- id/mtm_asm_cong DidR DidAsm.
+
+- : hsubst_m_unique
+     (hsubst_m_rr Dsr)
+     (hsubst_m_rr Dsr')
+     Did
+     &lt;- hsubst_rr_unique Dsr Dsr' Did _.
+
+%% contradict mismatch
+- : hsubst_m_unique
+     (hsubst_m_r Dsr)
+     (hsubst_m_rr Dsrr)
+     Did
+     &lt;- hsubst_r_rr_contra Dsr Dsrr X
+     &lt;- false_implies_id/mtm _ _ X Did.
+
+%% contradict mismatch
+- : hsubst_m_unique
+     (hsubst_m_rr Dsrr)
+     (hsubst_m_r Dsr)
+     Did
+     &lt;- hsubst_r_rr_contra Dsr Dsrr X
+     &lt;- false_implies_id/mtm _ _ X Did.
+
+- : hsubst_m_unique
+     (hsubst_m_pair DsRight DsLeft)
+     (hsubst_m_pair DsRight' DsLeft')
+     DidPair
+     &lt;- hsubst_m_unique DsLeft DsLeft' DidLeft
+     &lt;- hsubst_m_unique DsRight DsRight' DidRight
+     &lt;- id/mtm_pair_cong DidLeft DidRight DidPair.
+
+- : hsubst_m_unique
+     (hsubst_m_lam Ds)
+     (hsubst_m_lam Ds')
+     DidLam
+     &lt;- (\{y:rtm\} hsubst_m_unique (Ds y) (Ds' y) (Did y))
+     &lt;- id/mtm_lam_cong Did DidLam.
+     
+%% R non-root
+
+- : hsubst_r_unique D D id/rtm_refl.
+
+- : hsubst_r_unique 
+     (hsubst_r_closed : hsubst_r M2 A2 ([_] R) R)
+     (D : hsubst_r M2 A2 ([_] R) R')
+     Did'
+     &lt;- hsubst_r_vacuous_id D Did
+     &lt;- id/rtm_sym Did Did'.
+
+- : hsubst_r_unique 
+     (D : hsubst_r M2 A2 ([_] R) R')
+     (hsubst_r_closed : hsubst_r M2 A2 ([_] R) R)
+     Did
+     &lt;- hsubst_r_vacuous_id D Did.
+
+- : hsubst_r_unique 
+     (hsubst_r_app DsM' DsR') 
+     (hsubst_r_app DsM_ DsR_)
+     DidApp
+     &lt;- hsubst_r_unique DsR' DsR_ DidR
+     &lt;- hsubst_m_unique DsM' DsM_ DidM
+     &lt;- id/rtm_app_cong DidR DidM DidApp.
+
+- : hsubst_r_unique
+     (hsubst_r_fst DsR')
+     (hsubst_r_fst DsR_)
+     DidFst
+     &lt;- hsubst_r_unique DsR' DsR_ DidR
+     &lt;- id/rtm_fst_cong DidR DidFst.
+- : hsubst_r_unique
+     (hsubst_r_snd DsR')
+     (hsubst_r_snd DsR_)
+     DidSnd
+     &lt;- hsubst_r_unique DsR' DsR_ DidR
+     &lt;- id/rtm_snd_cong DidR DidSnd.
+
+%% R root
+
+- : hsubst_rr_unique 
+     hsubst_rr_var
+     hsubst_rr_var
+     id/mtm_refl
+     id/tp_refl.
+
+- : hsubst_rr_unique
+     (hsubst_rr_app DsM4' DsM3 DsR1)
+     (hsubst_rr_app DsM4'-2 DsM3-2 DsR1-2)
+     DidM4_
+     DidA4
+     &lt;- hsubst_rr_unique DsR1 DsR1-2 DidLam DidArrow
+     &lt;- hsubst_m_unique DsM3 DsM3-2 DidM3'
+     &lt;- id/tp_arrow_inv DidArrow DidA3 DidA4
+     &lt;- id/mtm_lam_inv DidLam DidM4'
+     &lt;- hsubst_m_respects_id DidM3' DidA3 DidM4' DsM4' DsM4'-1
+     &lt;- hsubst_m_unique DsM4'-1 DsM4'-2 DidM4_.
+
+- : hsubst_rr_unique 
+     (hsubst_rr_fst DsR')
+     (hsubst_rr_fst DsR_)
+     DidMl
+     DidAl
+     &lt;- hsubst_rr_unique DsR' DsR_ DidPair DidProd
+     &lt;- id/tp_prod_inv DidProd DidAl _
+     &lt;- id/mtm_pair_inv DidPair DidMl _.
+
+- : hsubst_rr_unique 
+     (hsubst_rr_snd DsR')
+     (hsubst_rr_snd DsR_)
+     DidMr
+     DidAr
+     &lt;- hsubst_rr_unique DsR' DsR_ DidPair DidProd
+     &lt;- id/tp_prod_inv DidProd _ DidAr
+     &lt;- id/mtm_pair_inv DidPair _ DidMr.
+
+%worlds (rtm_block) 
+(hsubst_m_unique _ _ _)
+(hsubst_r_unique _ _ _)
+(hsubst_rr_unique _ _ _ _).
+
+%total (D1 D2 D3) 
+(hsubst_r_unique D2 _ _)
+(hsubst_rr_unique D3 _ _ _)
+(hsubst_m_unique D1 _ _).
+
+expand_exists : \{A\}
+                 atom R A
+                 -&gt; expand A R M
+                 -&gt; canon M A
+                 -&gt; type.
+%mode expand_exists +X0 +X1 -X2 -X3.
+
+- : expand_exists 
+     b
+     D
+     expand_b
+     (canon_asm D).
+
+- : expand_exists
+     (arrow A2 A)
+     DaR
+     (expand_arrow DeApp DeX)
+     (canon_lam DcApp)
+     &lt;- (\{x : rtm\}
+           \{dx : atom x A2\}
+           expand_exists A2 dx (DeX x) (DcM x dx))
+     &lt;- (\{x : rtm\}
+           \{dx : atom x A2\}
+           expand_exists A (atom_app (DcM x dx) DaR) (DeApp x) (DcApp x dx)).
+
+- : expand_exists
+     (prod A1 A2)
+     DaR
+     (expand_prod DeS DeF)
+     (canon_pair DcS DcF)
+     &lt;- expand_exists A1 (atom_fst DaR) DeF DcF
+     &lt;- expand_exists A2 (atom_snd DaR) DeS DcS.
+
+%worlds (atom_block) (expand_exists _ _ _ _). 
+%total D (expand_exists D _ _ _).
+
+expand_unique : expand A R M 
+                 -&gt; expand A R M'
+                 -&gt; id/mtm M M'
+                 -&gt; type.
+%mode expand_unique +X1 +X2 -X3.
+
+- : expand_unique
+     expand_b
+     expand_b
+     id/mtm_refl.
+
+- : expand_unique 
+     (expand_arrow 
+        (DeApp : \{x : rtm\} expand A (app R (Mx x)) (MApp x))
+        (DeX : \{x : rtm\} expand A2 x (Mx x)))
+      (expand_arrow 
+         (DeApp' : \{x : rtm\} expand A (app R (Mx' x)) (MApp' x))
+         (DeX' : \{x : rtm\} expand A2 x (Mx' x)))
+     DidLam
+     &lt;- (\{x : rtm\}
+           expand_unique (DeX x) (DeX' x) (DidX x))
+     &lt;- (\{x : rtm\}
+           id/rtm_app_cong (id/rtm_refl : id/rtm R R) (DidX x) (DidApp x))
+     &lt;- (\{x : rtm\}
+           expand_respects_id (DidApp x) id/mtm_refl (DeApp x) (DeApp-2 x))
+     &lt;- (\{x : rtm\} 
+           expand_unique (DeApp-2 x) (DeApp' x) (DidAppExp x))
+     &lt;- id/mtm_lam_cong DidAppExp DidLam.
+
+- : expand_unique
+     (expand_prod DeS DeF)
+     (expand_prod DeS' DeF')
+     DidPair
+     &lt;- expand_unique DeF DeF' DidF
+     &lt;- expand_unique DeS DeS' DidS
+     &lt;- id/mtm_pair_cong DidF DidS DidPair.
+     
+%worlds (rtm_block) (expand_unique _ _ _).
+%total D (expand_unique _ D _).
+
+tp : type.
+
+b : tp.
+arrow : tp -&gt; tp -&gt; tp.
+prod : tp -&gt; tp -&gt; tp.
+
+rtm : type.
+mtm : type.
+
+app : rtm -&gt; mtm -&gt; rtm.
+c : rtm.
+fst : rtm -&gt; rtm.
+snd : rtm -&gt; rtm.
+
+asm : rtm -&gt; mtm.
+lam : (rtm -&gt; mtm) -&gt; mtm.
+pair : mtm -&gt; mtm -&gt; mtm.
+
+%block rtm_block : block \{x : rtm\}.
+%worlds (rtm_block) (tp) (rtm) (mtm).
+
+atom : rtm -&gt; tp -&gt; type.
+%mode atom +X1 -X2.
+
+canon : mtm -&gt; tp -&gt; type.
+%mode canon +X1 +X2.
+
+% atomic 
+
+atom_c : atom c b.
+
+atom_app : atom (app R1 M2) A
+            &lt;- atom R1 (arrow A2 A)
+            &lt;- canon M2 A2.
+
+atom_fst : atom (fst R) A1
+            &lt;- atom R (prod A1 A2).
+
+atom_snd : atom (snd R) A2
+            &lt;- atom R (prod A1 A2).
+
+%% canonical 
+
+canon_asm : canon (asm R) b
+             &lt;- atom R b.
+
+canon_lam : canon (lam M) (arrow A2 A)
+             &lt;- \{x : rtm\} (atom x A2) -&gt;  canon (M x) A.
+
+canon_pair : canon (pair M1 M2) (prod A1 A2)
+              &lt;- canon M1 A1
+              &lt;- canon M2 A2.
+
+%block atom_block : some \{A:tp\}
+                     block \{x:rtm\} \{dx : atom x A\}. 
+%worlds (atom_block) (atom _ _) (canon _ _).
+%terminates (R M) (atom R _) (canon M _).
+
+hsubst_m : mtm -&gt; tp -&gt; (rtm -&gt; mtm) -&gt; mtm -&gt; type.
+%mode hsubst_m +X1 +X2 +X3 -X4.
+
+hsubst_r : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; rtm -&gt; type.
+%mode hsubst_r +X1 +X2 +X3 -X4.
+
+hsubst_rr : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; mtm -&gt; tp -&gt; type.
+%mode hsubst_rr +X1 +X2 +X3 -X4 -X5.
+
+%% Ms
+
+hsubst_m_r : hsubst_m M0 A0 ([x] asm (R x)) (asm R')
+              &lt;- hsubst_r M0 A0 R R'.
+
+hsubst_m_rr : hsubst_m M0 A0 ([x] asm (R x)) M'
+               &lt;- hsubst_rr M0 A0 R M' _.
+
+hsubst_m_lam : hsubst_m M0 A0 ([x] (lam ([y] M x y))) (lam M')
+                &lt;- (\{y:rtm\} 
+                      hsubst_m M0 A0 ([x] M x y) (M' y)).
+
+hsubst_m_pair : hsubst_m M0 A0 ([x] (pair (M1 x) (M2 x))) (pair M1' M2')
+                 &lt;- hsubst_m M0 A0 M1 M1'
+                 &lt;- hsubst_m M0 A0 M2 M2'.
+
+%% R not head
+
+hsubst_r_closed : hsubst_r M0 A0 ([x] E) E.
+
+hsubst_r_app : hsubst_r M0 A0 ([x] (app (R x) (M x))) (app R' M')
+                &lt;- hsubst_r M0 A0 R R'
+                &lt;- hsubst_m M0 A0 M M'.
+
+hsubst_r_fst : hsubst_r M0 A0 ([x] (fst (R x))) (fst R')
+                &lt;- hsubst_r M0 A0 R R'.
+
+hsubst_r_snd : hsubst_r M0 A0 ([x] (snd (R x))) (snd R')
+                &lt;- hsubst_r M0 A0 R R'.
+
+%% r head
+
+hsubst_rr_var : hsubst_rr M0 A0 ([x] x) M0 A0.
+
+hsubst_rr_app : hsubst_rr M0 A0 ([x] app (R1 x) (M2 x)) M_ A
+                 &lt;- hsubst_rr M0 A0 R1 (lam M') (arrow A2 A)
+                 &lt;- hsubst_m M0 A0 M2 M2'
+                 &lt;- hsubst_m M2' A2 M' M_.
+
+hsubst_rr_fst : hsubst_rr M0 A0 ([x] (fst (R x))) M1' A1'
+                 &lt;- hsubst_rr M0 A0 R (pair M1' M2') (prod A1' A2').
+
+hsubst_rr_snd : hsubst_rr M0 A0 ([x] (snd (R x))) M2' A2'
+                 &lt;- hsubst_rr M0 A0 R (pair M1' M2') (prod A1' A2').
+
+%worlds (rtm_block) (hsubst_m _ _ _ _) (hsubst_r _ _ _ _) (hsubst_rr _ _ _ _ _).
+%reduces A' &lt;= A0 (hsubst_rr _ A0 _ _ A').
+%terminates \{(A0 A0' A0_) (M R R')\} (hsubst_m _ A0 M _) (hsubst_r _ A0' R _) (hsubst_rr _ A0_ R' _ _).
+
+expand : tp -&gt; rtm -&gt; mtm -&gt; type.
+%mode expand +X1 +X2 -X3.
+
+expand_b : expand b R (asm R).
+
+expand_arrow : expand (arrow A2 A) R (lam M)
+                &lt;- (\{x : rtm\} expand A2 x (M2 x))
+                &lt;- (\{x : rtm\} expand A (app R (M2 x)) (M x)).
+
+expand_prod : expand (prod A1 A2) R (pair M1 M2)
+               &lt;- expand A1 (fst R) M1
+               &lt;- expand A2 (snd R) M2.
+
+%worlds (rtm_block) (expand _ _ _).
+%total A (expand A _ _).
+
+hsubst_rr_size : \{A2\} \{A'\} hsubst_rr M2 A2 R M' A'
+                    -&gt; type.
+%mode hsubst_rr_size +X1 +X2 +X3.
+
+- : hsubst_rr_size 
+     A2 A2 hsubst_rr_var.
+
+- : hsubst_rr_size
+     A2 A4 (hsubst_rr_app _ _ Drr)
+     &lt;- hsubst_rr_size A2 (arrow A3 A4) Drr.
+
+- : hsubst_rr_size
+     A2 Al (hsubst_rr_fst Drr)
+     &lt;- hsubst_rr_size A2 (prod Al Ar) Drr.
+
+- : hsubst_rr_size
+     A2 Ar (hsubst_rr_snd Drr)
+     &lt;- hsubst_rr_size A2 (prod Al Ar) Drr.
+
+%worlds (rtm_block) (hsubst_rr_size _ _ _).
+%total D (hsubst_rr_size _ _ D).
+%reduces A' &lt;= A2 (hsubst_rr_size A2 A' _).
+ 
+hsubst_r_exists_sum : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; tp -&gt; type.
+hsubst_r_exists_sum_r : hsubst_r_exists_sum M2 A2 R A
+                         &lt;- hsubst_r M2 A2 R R'
+                         &lt;- atom R' A.
+hsubst_r_exists_sum_rr : hsubst_r_exists_sum M2 A2 R A'
+                          &lt;- hsubst_rr M2 A2 R M' A'
+                          &lt;- canon M' A'.
+
+hsubst_m_exists_asm :  hsubst_r_exists_sum M2 A2 R b
+                       -&gt; hsubst_m M2 A2 ([x] (asm (R x))) M'
+                       -&gt; canon M' b
+                       -&gt; type.
+%mode hsubst_m_exists_asm +X1 -X2 -X3.
+
+- : hsubst_m_exists_asm 
+     (hsubst_r_exists_sum_r DaR' DsR)
+     (hsubst_m_r DsR)
+     (canon_asm DaR').
+
+- : hsubst_m_exists_asm 
+     (hsubst_r_exists_sum_rr DcM' DsR)
+     (hsubst_m_rr DsR)
+     DcM'.
+
+%worlds (atom_block) (hsubst_m_exists_asm _ _ _).
+%total \{\} (hsubst_m_exists_asm _ _ _).
+
+
+hsubst_r_exists_fst : hsubst_r_exists_sum M2 A2 R (prod Al Ar)
+                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (fst (R x))) Al
+                       -&gt; type.
+%mode hsubst_r_exists_fst +X1 -X2.
+
+- : hsubst_r_exists_fst 
+     (hsubst_r_exists_sum_r DaR' DsR)
+     (hsubst_r_exists_sum_r (atom_fst DaR') (hsubst_r_fst DsR)).
+
+- : hsubst_r_exists_fst 
+     (hsubst_r_exists_sum_rr (canon_pair _ DcMl') DsR)
+     (hsubst_r_exists_sum_rr DcMl' (hsubst_rr_fst DsR)).
+
+%worlds (atom_block) (hsubst_r_exists_fst _ _).
+%total \{\} (hsubst_r_exists_fst _ _).
+
+
+hsubst_r_exists_snd : hsubst_r_exists_sum M2 A2 R (prod Al Ar)
+                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (snd (R x))) Ar
+                       -&gt; type.
+%mode hsubst_r_exists_snd +X1 -X2.
+
+- : hsubst_r_exists_snd 
+     (hsubst_r_exists_sum_r DaR' DsR)
+     (hsubst_r_exists_sum_r (atom_snd DaR') (hsubst_r_snd DsR)).
+
+- : hsubst_r_exists_snd 
+     (hsubst_r_exists_sum_rr (canon_pair DcMr' _) DsR)
+     (hsubst_r_exists_sum_rr DcMr' (hsubst_rr_snd DsR)).
+
+%worlds (atom_block) (hsubst_r_exists_snd _ _).
+%total \{\} (hsubst_r_exists_snd _ _).
+
+hsubst_m_exists : \{A2\}
+                   (\{y : rtm\} \{dy : atom y A2\} canon (M y) A)
+                   -&gt; canon M2 A2
+                   -&gt; hsubst_m M2 A2 M M'
+                   -&gt; canon M' A
+                   -&gt; type.
+%mode hsubst_m_exists +X0 +X1 +X2 -X3 -X4.
+
+hsubst_r_exists : \{A2\}
+                   (\{y : rtm\} \{dx : atom y A2\} atom (R y) A)
+                   -&gt; canon M2 A2
+                   -&gt; hsubst_r_exists_sum M2 A2 R A
+                   -&gt; type.
+%mode hsubst_r_exists +X0 +X1 +X2 -X3.
+
+hsubst_m_exists_app : \{A2\}
+                       %% this next argument is makes the termination argument work
+                       (\{y : rtm\} \{dx : atom y A2\} atom (R1 y) (arrow A3 A4)) 
+                       -&gt; hsubst_r_exists_sum M2 A2 R1 (arrow A3 A4)
+                       -&gt; hsubst_m M2 A2 M3 M3'
+                       -&gt; canon M3' A3
+                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (app (R1 x) (M3 x))) A4
+                       -&gt; type.
+%mode hsubst_m_exists_app +X-1 +X0 +X1 +X2 +X3 -X4.
+
+%% canonical terms
+
+- : hsubst_m_exists 
+     A2
+     ([x] [dx] canon_asm (DaR x dx))
+     DcM2
+     DsR
+     DcM'
+     &lt;- hsubst_r_exists A2 DaR DcM2 Dsum
+     &lt;- hsubst_m_exists_asm Dsum DsR DcM'.
+
+- : hsubst_m_exists 
+     A2
+     ([x] [dx] (canon_lam ([y] [dy] DcM x dx y dy)) : canon (lam (M x)) (arrow Af At))
+     (DcM2 : canon M2 A2)
+     (hsubst_m_lam DsM)
+     (canon_lam DcM')
+     &lt;- (\{y\} 
+           \{dy : atom y Af\}
+           hsubst_m_exists A2 ([x] [dx] (DcM x dx y dy)) DcM2 (DsM y) (DcM' y dy)).
+
+- : hsubst_m_exists
+     A2
+     ([x] [dx] (canon_pair (DcMr x dx) (DcMl x dx)))
+     DcM2
+     (hsubst_m_pair DsMr DsMl)
+     (canon_pair DcMr' DcMl')
+     &lt;- hsubst_m_exists A2 DcMl DcM2 DsMl DcMl'
+     &lt;- hsubst_m_exists A2 DcMr DcM2 DsMr DcMr'.
+
+%% atomic terms
+
+- : hsubst_r_exists 
+     A2
+     ([x] [dx] D)
+     _
+     (hsubst_r_exists_sum_r D hsubst_r_closed).
+
+- : hsubst_r_exists
+     A2
+     ([x] [dx] dx)
+     DcM2
+     (hsubst_r_exists_sum_rr DcM2 hsubst_rr_var).
+
+- : hsubst_r_exists
+     A2
+     ([x] [dx] (atom_app (DcM x dx) (DaR x dx)))
+     DcM2
+     DsumApp
+     &lt;- hsubst_m_exists A2 DcM DcM2 DsM' DcM'
+     &lt;- hsubst_r_exists A2 DaR DcM2 DsumR'
+     &lt;- hsubst_m_exists_app A2 DaR DsumR' DsM' DcM' DsumApp.
+
+- : hsubst_r_exists
+     A2
+     ([x] [dx] (atom_fst (DcR x dx)))
+     DcM2
+     DsumFst
+     &lt;- hsubst_r_exists A2 DcR DcM2 DsumR
+     &lt;- hsubst_r_exists_fst DsumR DsumFst.
+
+- : hsubst_r_exists
+     A2
+     ([x] [dx] (atom_snd (DcR x dx)))
+     DcM2
+     DsumSnd
+     &lt;- hsubst_r_exists A2 DcR DcM2 DsumR
+     &lt;- hsubst_r_exists_snd DsumR DsumSnd.
+
+%% app factoring lemma
+
+- : hsubst_m_exists_app 
+     A2 
+     _
+     (hsubst_r_exists_sum_r DaR1 DsR1)
+     DsM3
+     DcM3
+     (hsubst_r_exists_sum_r (atom_app DcM3 DaR1) (hsubst_r_app DsM3 DsR1)).
+
+- : hsubst_m_exists_app 
+     A2
+     _
+     (hsubst_r_exists_sum_rr (canon_lam DcM4') DsR1)
+     DsM3
+     DcM3
+     (hsubst_r_exists_sum_rr DcM4_ (hsubst_rr_app DsM4' DsM3 DsR1))
+     &lt;- hsubst_rr_size A2 (arrow A3 A4) DsR1
+     &lt;- hsubst_m_exists A3 DcM4' DcM3 DsM4' DcM4_.
+
+%worlds (atom_block) 
+(hsubst_m_exists_app _ _ _ _ _ _)
+(hsubst_r_exists _ _ _ _)
+(hsubst_m_exists _ _ _ _ _).
+
+%total \{(A2 A2' A2_) (D  D' D_)\}
+(hsubst_m_exists A2' D' _ _ _)
+(hsubst_m_exists_app A2_ D_ _ _ _ _)
+(hsubst_r_exists A2 D _ _).
+
+id/mtm : mtm -&gt; mtm -&gt; type.
+id/mtm_refl : id/mtm M M.
+
+id/rtm : rtm -&gt; rtm -&gt; type.
+id/rtm_refl : id/rtm R R.
+
+id/tp : tp -&gt; tp -&gt; type.
+id/tp_refl : id/tp A A.
+
+id/rtm_sym : id/rtm R R'
+	      -&gt; id/rtm R' R
+	      -&gt; type.
+%mode id/rtm_sym +X1 -X2.
+
+- : id/rtm_sym id/rtm_refl id/rtm_refl.
+
+%worlds (rtm_block) (id/rtm_sym _ _).
+%total \{\} (id/rtm_sym _ _).
+
+id/tp_arrow_inv : id/tp (arrow A1 A2) (arrow A1' A2')
+		   -&gt; id/tp A1 A1'
+		   -&gt; id/tp A2 A2'
+		   -&gt; type.
+%mode id/tp_arrow_inv +X1 -X2 -X3.
+
+- : id/tp_arrow_inv _ id/tp_refl id/tp_refl.
+
+%worlds (rtm_block) (id/tp_arrow_inv _ _ _).
+%total \{\} (id/tp_arrow_inv _ _ _).
+
+id/tp_prod_inv : id/tp (prod A1 A2) (prod A1' A2')
+		   -&gt; id/tp A1 A1'
+		   -&gt; id/tp A2 A2'
+		   -&gt; type.
+%mode id/tp_prod_inv +X1 -X2 -X3.
+
+- : id/tp_prod_inv _ id/tp_refl id/tp_refl.
+
+%worlds (rtm_block) (id/tp_prod_inv _ _ _).
+%total \{\} (id/tp_prod_inv _ _ _).
+
+id/rtm_app_cong : id/rtm R R'
+		   -&gt; id/mtm M M'
+		   -&gt; id/rtm (app R M) (app R' M')
+		   -&gt; type.
+%mode id/rtm_app_cong +X1 +X2 -X3.
+
+- : id/rtm_app_cong _ _ id/rtm_refl.
+
+%worlds (rtm_block) (id/rtm_app_cong _ _ _).
+%total \{\} (id/rtm_app_cong _ _ _).
+
+id/rtm_fst_cong : id/rtm R R'
+		   -&gt; id/rtm (fst R) (fst R')
+		   -&gt; type.
+%mode id/rtm_fst_cong +X1  -X3.
+
+- : id/rtm_fst_cong _ id/rtm_refl.
+
+%worlds (rtm_block) (id/rtm_fst_cong _ _).
+%total \{\} (id/rtm_fst_cong _ _).
+
+id/rtm_snd_cong : id/rtm R R'
+		   -&gt; id/rtm (snd R) (snd R')
+		   -&gt; type.
+%mode id/rtm_snd_cong +X1  -X3.
+
+- : id/rtm_snd_cong _ id/rtm_refl.
+
+%worlds (rtm_block) (id/rtm_snd_cong _ _).
+%total \{\} (id/rtm_snd_cong _ _).
+
+id/mtm_lam_cong :  (\{x:rtm\} id/mtm (M x) (M' x))
+		   -&gt; id/mtm (lam M) (lam M')
+		   -&gt; type.
+%mode id/mtm_lam_cong +X1 -X3.
+
+- : id/mtm_lam_cong _ id/mtm_refl.
+
+%worlds (rtm_block) (id/mtm_lam_cong _ _).
+%total \{\} (id/mtm_lam_cong _ _).
+
+id/mtm_lam_inv :  id/mtm (lam M) (lam M')
+		  -&gt; (\{x:rtm\} id/mtm (M x) (M' x))
+		  -&gt; type.
+%mode id/mtm_lam_inv +X1 -X3.
+
+- : id/mtm_lam_inv _ ([_] id/mtm_refl).
+
+%worlds (rtm_block) (id/mtm_lam_inv _ _).
+%total \{\} (id/mtm_lam_inv _ _).
+
+id/mtm_pair_cong : id/mtm M1 M1'
+		   -&gt; id/mtm M2 M2'
+		   -&gt; id/mtm (pair M1 M2) (pair M1' M2')
+		   -&gt; type.
+%mode id/mtm_pair_cong +X1 +X2 -X3.
+
+- : id/mtm_pair_cong _ _ id/mtm_refl.
+
+%worlds (rtm_block) (id/mtm_pair_cong _ _ _).
+%total \{\} (id/mtm_pair_cong _ _ _).
+
+id/mtm_pair_inv : id/mtm (pair M1 M2) (pair M1' M2')
+		   -&gt; id/mtm M1 M1'
+		   -&gt; id/mtm M2 M2'
+		   -&gt; type.
+%mode id/mtm_pair_inv +X1 -X2 -X3.
+
+- : id/mtm_pair_inv _ id/mtm_refl id/mtm_refl.
+
+%worlds (rtm_block) (id/mtm_pair_inv _ _ _).
+%total \{\} (id/mtm_pair_inv _ _ _).
+
+expand_respects_id : id/rtm R R'
+		      -&gt; id/mtm M M'
+		      -&gt; expand A R M
+		      -&gt; expand A R' M'
+		      -&gt; type.
+%mode expand_respects_id +X1 +X2 +X3 -X4.
+
+- : expand_respects_id _ _ D D.
+
+%worlds (rtm_block) (expand_respects_id _ _ _ _).
+%total \{\} (expand_respects_id _ _ _ _).
+%reduces D1 = D2 (expand_respects_id _ _ D2 D1).
+
+canon_respects_id :  id/mtm M M'
+		     -&gt; id/tp A A'
+		     -&gt; canon M A
+		     -&gt; canon M' A'
+		     -&gt; type.
+%mode canon_respects_id +X1 +X2 +X3 -X4.
+
+- : canon_respects_id _ _ D D.
+
+%worlds (atom_block) (canon_respects_id _ _ _ _).
+%total \{\} (canon_respects_id _ _ _ _).
+%reduces D1 = D2 (canon_respects_id _ _ D2 D1).
+
+hsubst_m_respects_id : id/mtm M2 M2'
+			-&gt; id/tp A2 A2'
+			-&gt; (\{x\} id/mtm (M x) (M' x))
+			-&gt; hsubst_m M2 A2 M Ms
+			-&gt; hsubst_m M2' A2' M' Ms
+			-&gt; type.
+%mode hsubst_m_respects_id +X1 +X2 +X3 +X4 -X5.
+
+- : hsubst_m_respects_id _ _ _ D D.
+
+%worlds (rtm_block) (hsubst_m_respects_id _ _ _ _ _).
+%total \{\} (hsubst_m_respects_id _ _ _ _ _).
+%reduces D1 = D2 (hsubst_m_respects_id _ _ _ D2 D1).
+
+id/mtm_asm_cong : id/rtm R R'
+		   -&gt; id/mtm (asm R) (asm R')
+		   -&gt; type.
+%mode id/mtm_asm_cong +X1  -X3.
+
+- : id/mtm_asm_cong _ id/mtm_refl.
+
+%worlds (rtm_block) (id/mtm_asm_cong _ _).
+%total \{\} (id/mtm_asm_cong _ _).
+
+false : type.
+%freeze false.
+
+hsubst_rr_closed_contra : hsubst_rr M2 A2 ([_] R) M' A'
+                           -&gt; false
+                           -&gt; type.
+%mode hsubst_rr_closed_contra +X1 -X2.
+
+- : hsubst_rr_closed_contra 
+     (hsubst_rr_app _ _ Dr)
+     X
+     &lt;- hsubst_rr_closed_contra Dr X.
+
+- : hsubst_rr_closed_contra 
+     (hsubst_rr_fst D)
+     X
+     &lt;- hsubst_rr_closed_contra D X.
+
+- : hsubst_rr_closed_contra 
+     (hsubst_rr_snd D)
+     X
+     &lt;- hsubst_rr_closed_contra D X.
+
+%worlds (rtm_block) (hsubst_rr_closed_contra _ _).
+%total D (hsubst_rr_closed_contra D _).
+
+%% contradiction of root and non-root
+
+hsubst_r_rr_contra : hsubst_r M2 A2 R R'
+                      -&gt; hsubst_rr M2 A2 R M' A'
+                      -&gt; false
+                      -&gt; type.
+%mode hsubst_r_rr_contra +X1 +X2 -X3.
+
+- : hsubst_r_rr_contra
+     hsubst_r_closed
+     Drr
+     X
+     &lt;- hsubst_rr_closed_contra Drr X.
+
+- : hsubst_r_rr_contra 
+     (hsubst_r_app _ DsrR)
+     (hsubst_rr_app _ _ DsrrR)
+     X
+     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+
+- : hsubst_r_rr_contra 
+     (hsubst_r_fst DsrR)
+     (hsubst_rr_fst DsrrR)
+     X
+     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+
+- : hsubst_r_rr_contra 
+     (hsubst_r_snd DsrR)
+     (hsubst_rr_snd DsrrR)
+     X
+     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+
+%worlds (rtm_block) (hsubst_r_rr_contra _ _ _). %% bar in extra block for lemma below's future use
+%total (D) (hsubst_r_rr_contra D _ _).
+
+%% false implies id
+false_implies_id/mtm : \{M\} \{M'\}
+                        false 
+                        -&gt; id/mtm M M'
+                        -&gt; type.
+%mode false_implies_id/mtm +X1 +X2 +X3 -X4.
+%worlds (rtm_block) (false_implies_id/mtm _ _ _ _). %% bar in extra block for lemma below's future use
+%total \{\} (false_implies_id/mtm _ _ _ _).
+
+hsubst_r_vacuous_id : hsubst_r M2 A2 ([_] R) R'
+                     -&gt; id/rtm R' R
+                     -&gt; type.
+%mode hsubst_r_vacuous_id +X1 -X2.
+
+hsubst_m_vacuous_id : hsubst_m M2 A2 ([_] M) M'
+                     -&gt; id/mtm M' M
+                     -&gt; type.
+%mode hsubst_m_vacuous_id +X1 -X2.
+
+%% R
+
+- : hsubst_r_vacuous_id hsubst_r_closed id/rtm_refl.
+
+- : hsubst_r_vacuous_id (hsubst_r_app Dm Dr) Did'
+     &lt;- hsubst_r_vacuous_id Dr DidR
+     &lt;- hsubst_m_vacuous_id Dm DidM
+     &lt;- id/rtm_app_cong DidR DidM Did'.
+
+- : hsubst_r_vacuous_id (hsubst_r_fst D) Did'
+     &lt;- hsubst_r_vacuous_id D Did
+     &lt;- id/rtm_fst_cong Did Did'.
+
+- : hsubst_r_vacuous_id (hsubst_r_snd D) Did'
+     &lt;- hsubst_r_vacuous_id D Did
+     &lt;- id/rtm_snd_cong Did Did'.
+
+%% M
+
+- : hsubst_m_vacuous_id
+     (hsubst_m_r Dr)
+     Did'
+     &lt;- hsubst_r_vacuous_id Dr Did
+     &lt;- id/mtm_asm_cong Did Did'.
+
+- : hsubst_m_vacuous_id
+     (hsubst_m_rr D)
+     Did
+     &lt;- hsubst_rr_closed_contra D X
+     &lt;- false_implies_id/mtm _ _ X Did.
+
+- : hsubst_m_vacuous_id
+     (hsubst_m_lam D)
+     Did'
+     &lt;- (\{x\} 
+           hsubst_m_vacuous_id (D x) (Did x))
+     &lt;- id/mtm_lam_cong Did Did'.
+
+- : hsubst_m_vacuous_id
+     (hsubst_m_pair D2 D1)
+     Did'
+     &lt;- hsubst_m_vacuous_id D1 Did1
+     &lt;- hsubst_m_vacuous_id D2 Did2
+     &lt;- id/mtm_pair_cong Did1 Did2 Did'.
+
+%worlds (rtm_block) (hsubst_r_vacuous_id _ _) (hsubst_m_vacuous_id _ _).
+%total (D1 D2) 
+(hsubst_r_vacuous_id D1 _)
+(hsubst_m_vacuous_id D2 _).
+
+hsubst_m_unique : hsubst_m M2 A2 M M'
+                   -&gt; hsubst_m M2 A2 M M_
+                   -&gt; id/mtm M' M_
+                   -&gt; type.
+%mode hsubst_m_unique +X1 +X2 -X3.
+
+hsubst_r_unique : hsubst_r M2 A2 R R'
+                   -&gt; hsubst_r M2 A2 R R_
+                   -&gt; id/rtm R' R_
+                   -&gt; type.
+%mode hsubst_r_unique +X1 +X2 -X3.
+
+hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
+                    -&gt; hsubst_rr M2 A2 R M_ A_
+                    -&gt; id/mtm M' M_
+                    -&gt; id/tp A' A_
+                    -&gt; type.
+%mode hsubst_rr_unique +X1 +X2 -X3 -X4.
+
+%% M
+
+- : hsubst_m_unique
+     (hsubst_m_r Dsr)
+     (hsubst_m_r Dsr')
+     DidAsm
+     &lt;- hsubst_r_unique Dsr Dsr' DidR
+     &lt;- id/mtm_asm_cong DidR DidAsm.
+
+- : hsubst_m_unique
+     (hsubst_m_rr Dsr)
+     (hsubst_m_rr Dsr')
+     Did
+     &lt;- hsubst_rr_unique Dsr Dsr' Did _.
+
+%% contradict mismatch
+- : hsubst_m_unique
+     (hsubst_m_r Dsr)
+     (hsubst_m_rr Dsrr)
+     Did
+     &lt;- hsubst_r_rr_contra Dsr Dsrr X
+     &lt;- false_implies_id/mtm _ _ X Did.
+
+%% contradict mismatch
+- : hsubst_m_unique
+     (hsubst_m_rr Dsrr)
+     (hsubst_m_r Dsr)
+     Did
+     &lt;- hsubst_r_rr_contra Dsr Dsrr X
+     &lt;- false_implies_id/mtm _ _ X Did.
+
+- : hsubst_m_unique
+     (hsubst_m_pair DsRight DsLeft)
+     (hsubst_m_pair DsRight' DsLeft')
+     DidPair
+     &lt;- hsubst_m_unique DsLeft DsLeft' DidLeft
+     &lt;- hsubst_m_unique DsRight DsRight' DidRight
+     &lt;- id/mtm_pair_cong DidLeft DidRight DidPair.
+
+- : hsubst_m_unique
+     (hsubst_m_lam Ds)
+     (hsubst_m_lam Ds')
+     DidLam
+     &lt;- (\{y:rtm\} hsubst_m_unique (Ds y) (Ds' y) (Did y))
+     &lt;- id/mtm_lam_cong Did DidLam.
+     
+%% R non-root
+
+- : hsubst_r_unique D D id/rtm_refl.
+
+- : hsubst_r_unique 
+     (hsubst_r_closed : hsubst_r M2 A2 ([_] R) R)
+     (D : hsubst_r M2 A2 ([_] R) R')
+     Did'
+     &lt;- hsubst_r_vacuous_id D Did
+     &lt;- id/rtm_sym Did Did'.
+
+- : hsubst_r_unique 
+     (D : hsubst_r M2 A2 ([_] R) R')
+     (hsubst_r_closed : hsubst_r M2 A2 ([_] R) R)
+     Did
+     &lt;- hsubst_r_vacuous_id D Did.
+
+- : hsubst_r_unique 
+     (hsubst_r_app DsM' DsR') 
+     (hsubst_r_app DsM_ DsR_)
+     DidApp
+     &lt;- hsubst_r_unique DsR' DsR_ DidR
+     &lt;- hsubst_m_unique DsM' DsM_ DidM
+     &lt;- id/rtm_app_cong DidR DidM DidApp.
+
+- : hsubst_r_unique
+     (hsubst_r_fst DsR')
+     (hsubst_r_fst DsR_)
+     DidFst
+     &lt;- hsubst_r_unique DsR' DsR_ DidR
+     &lt;- id/rtm_fst_cong DidR DidFst.
+- : hsubst_r_unique
+     (hsubst_r_snd DsR')
+     (hsubst_r_snd DsR_)
+     DidSnd
+     &lt;- hsubst_r_unique DsR' DsR_ DidR
+     &lt;- id/rtm_snd_cong DidR DidSnd.
+
+%% R root
+
+- : hsubst_rr_unique 
+     hsubst_rr_var
+     hsubst_rr_var
+     id/mtm_refl
+     id/tp_refl.
+
+- : hsubst_rr_unique
+     (hsubst_rr_app DsM4' DsM3 DsR1)
+     (hsubst_rr_app DsM4'-2 DsM3-2 DsR1-2)
+     DidM4_
+     DidA4
+     &lt;- hsubst_rr_unique DsR1 DsR1-2 DidLam DidArrow
+     &lt;- hsubst_m_unique DsM3 DsM3-2 DidM3'
+     &lt;- id/tp_arrow_inv DidArrow DidA3 DidA4
+     &lt;- id/mtm_lam_inv DidLam DidM4'
+     &lt;- hsubst_m_respects_id DidM3' DidA3 DidM4' DsM4' DsM4'-1
+     &lt;- hsubst_m_unique DsM4'-1 DsM4'-2 DidM4_.
+
+- : hsubst_rr_unique 
+     (hsubst_rr_fst DsR')
+     (hsubst_rr_fst DsR_)
+     DidMl
+     DidAl
+     &lt;- hsubst_rr_unique DsR' DsR_ DidPair DidProd
+     &lt;- id/tp_prod_inv DidProd DidAl _
+     &lt;- id/mtm_pair_inv DidPair DidMl _.
+
+- : hsubst_rr_unique 
+     (hsubst_rr_snd DsR')
+     (hsubst_rr_snd DsR_)
+     DidMr
+     DidAr
+     &lt;- hsubst_rr_unique DsR' DsR_ DidPair DidProd
+     &lt;- id/tp_prod_inv DidProd _ DidAr
+     &lt;- id/mtm_pair_inv DidPair _ DidMr.
+
+%worlds (rtm_block) 
+(hsubst_m_unique _ _ _)
+(hsubst_r_unique _ _ _)
+(hsubst_rr_unique _ _ _ _).
+
+%total (D1 D2 D3) 
+(hsubst_r_unique D2 _ _)
+(hsubst_rr_unique D3 _ _ _)
+(hsubst_m_unique D1 _ _).
+
+expand_exists : \{A\}
+                 atom R A
+                 -&gt; expand A R M
+                 -&gt; canon M A
+                 -&gt; type.
+%mode expand_exists +X0 +X1 -X2 -X3.
+
+- : expand_exists 
+     b
+     D
+     expand_b
+     (canon_asm D).
+
+- : expand_exists
+     (arrow A2 A)
+     DaR
+     (expand_arrow DeApp DeX)
+     (canon_lam DcApp)
+     &lt;- (\{x : rtm\}
+           \{dx : atom x A2\}
+           expand_exists A2 dx (DeX x) (DcM x dx))
+     &lt;- (\{x : rtm\}
+           \{dx : atom x A2\}
+           expand_exists A (atom_app (DcM x dx) DaR) (DeApp x) (DcApp x dx)).
+
+- : expand_exists
+     (prod A1 A2)
+     DaR
+     (expand_prod DeS DeF)
+     (canon_pair DcS DcF)
+     &lt;- expand_exists A1 (atom_fst DaR) DeF DcF
+     &lt;- expand_exists A2 (atom_snd DaR) DeS DcS.
+
+%worlds (atom_block) (expand_exists _ _ _ _). 
+%total D (expand_exists D _ _ _).
+
+expand_unique : expand A R M 
+                 -&gt; expand A R M'
+                 -&gt; id/mtm M M'
+                 -&gt; type.
+%mode expand_unique +X1 +X2 -X3.
+
+- : expand_unique
+     expand_b
+     expand_b
+     id/mtm_refl.
+
+- : expand_unique 
+     (expand_arrow 
+        (DeApp : \{x : rtm\} expand A (app R (Mx x)) (MApp x))
+        (DeX : \{x : rtm\} expand A2 x (Mx x)))
+      (expand_arrow 
+         (DeApp' : \{x : rtm\} expand A (app R (Mx' x)) (MApp' x))
+         (DeX' : \{x : rtm\} expand A2 x (Mx' x)))
+     DidLam
+     &lt;- (\{x : rtm\}
+           expand_unique (DeX x) (DeX' x) (DidX x))
+     &lt;- (\{x : rtm\}
+           id/rtm_app_cong (id/rtm_refl : id/rtm R R) (DidX x) (DidApp x))
+     &lt;- (\{x : rtm\}
+           expand_respects_id (DidApp x) id/mtm_refl (DeApp x) (DeApp-2 x))
+     &lt;- (\{x : rtm\} 
+           expand_unique (DeApp-2 x) (DeApp' x) (DidAppExp x))
+     &lt;- id/mtm_lam_cong DidAppExp DidLam.
+
+- : expand_unique
+     (expand_prod DeS DeF)
+     (expand_prod DeS' DeF')
+     DidPair
+     &lt;- expand_unique DeF DeF' DidF
+     &lt;- expand_unique DeS DeS' DidS
+     &lt;- id/mtm_pair_cong DidF DidS DidPair.
+     
+%worlds (rtm_block) (expand_unique _ _ _).
+%total D (expand_unique _ D _).
+&lt;/twelf&gt;
+
+#
+# External language: syntax and judgements
+
+#
+#
+# Syntax
+
+The external language syntax is a copy of the internal language, where we additionally include canonincal terms ``M`` into atomic terms ``R``.  To preserve the modes of the typing judgements, these canonical terms are annotated with the type that they should be checked against.  
+
+&lt;twelf&gt;
+el_rtm : type.
+el_mtm : type.
+
+el_app : el_rtm -&gt; el_mtm -&gt; el_rtm.
+el_c : el_rtm.
+el_fst : el_rtm -&gt; el_rtm.
+el_snd : el_rtm -&gt; el_rtm.
+el_annot : el_mtm -&gt; tp -&gt; el_rtm.
+
+el_asm : el_rtm -&gt; el_mtm.
+el_lam : (el_rtm -&gt; el_mtm) -&gt; el_mtm.
+el_pair : el_mtm -&gt; el_mtm -&gt; el_mtm.
+
+%block el_rtm_block : block \{x : el_rtm\}.
+&lt;/twelf&gt;
+
+Modulo the placement of type annotations, this grammar lets you write any term that you can write without the syntactic stratification.  
+
+#
+#
+# Typing judgements
+
+The typing judgements for the external language extand the judgements for canonical forms with a rule ``synth_annot`` for synthesizing the type of an annotated term.  Additionally, the rules do not force terms to be η-long.  
+
+&lt;twelf&gt;
+synth : el_rtm -&gt; tp -&gt; type.
+%mode synth +X1 -X2.
+check : el_mtm -&gt; tp -&gt; type.
+%mode check +X1 +X2.
+
+% synthesize
+
+synth_c : synth el_c b.
+
+synth_app : synth (el_app R1 M2) A
+             &lt;- synth R1 (arrow A2 A)
+             &lt;- check M2 A2.
+
+synth_fst : synth (el_fst R) A1
+             &lt;- synth R (prod A1 A2).
+
+synth_snd : synth (el_snd R) A2
+             &lt;- synth R (prod A1 A2).
+
+%% admit non-canonical forms with an annotation
+synth_annot : synth (el_annot M A) A
+               &lt;- check M A.
+
+%% check
+
+%% in the EL anything that synths also checks, no matter the type
+check_asm : check (el_asm R) A
+             &lt;- synth R A.
+
+check_lam : check (el_lam M) (arrow A2 A)
+             &lt;- (\{x : el_rtm\} (synth x A2) -&gt; check (M x) A).
+
+check_pair : check (el_pair M1 M2) (prod A1 A2)
+              &lt;- check M1 A1
+              &lt;- check M2 A2.
+
+%block synth_block : some \{A:tp\} block \{x : el_rtm\} \{dx : synth x A\}.
+%worlds (synth_block) (synth _ _) (check _ _).
+&lt;/twelf&gt;
+
+It is possible to show that any well-typed term in a standard presentation of the λ-calculus can be translated into a term in this syntax that is well-typed by these rules.  However, we have not formulated this step here, choosing instead to take these rules as the definition of the external language.  
+
+#
+#
+# Elaboration
+
+We now define elaboration.  We define three mutually recursive elaboration judgements, one for checked terms, and two for synthesizing terms.  The two judgements for synthesizing terms differ in whether the elaboration of the synthesizing term is an atomic term or a canonical term.  
+
+&lt;twelf&gt;
+elab_m : el_mtm -&gt; mtm -&gt; tp -&gt; type.
+%mode elab_m +X1 -X2 +X3.
+
+elab_r_to_r : el_rtm -&gt; rtm -&gt; tp -&gt; type.
+%mode elab_r_to_r +X1 -X2 -X3.
+
+elab_r_to_m : el_rtm -&gt; mtm -&gt; tp -&gt; type.
+%mode elab_r_to_m +X1 -X2 -X3.
+
+% M
+
+elab_m_asm_r2r : elab_m (el_asm ER) M A
+                  &lt;- elab_r_to_r ER R A
+                  &lt;- expand A R M.
+
+elab_m_asm_r2m : elab_m (el_asm ER) M A
+                  &lt;- elab_r_to_m ER M A.
+
+elab_m_lam : elab_m (el_lam EM) (lam M) (arrow A2 A)
+              &lt;- (\{el_x : el_rtm\} \{x : rtm\} 
+                    (elab_r_to_r el_x x A2) 
+                    -&gt; elab_m (EM el_x) (M x) A).
+
+elab_m_pair : elab_m (el_pair EM1 EM2) (pair M1 M2) (prod A1 A2)
+               &lt;- elab_m EM1 M1 A1
+               &lt;- elab_m EM2 M2 A2.
+
+% R to R
+
+elab_r_to_r_c : elab_r_to_r el_c c b.
+
+elab_r_to_r_app : elab_r_to_r (el_app ER1 EM2) (app R1 M2) A
+                   &lt;- elab_r_to_r ER1 R1 (arrow A2 A)
+                   &lt;- elab_m EM2 M2 A2.
+
+elab_r_to_r_fst : elab_r_to_r (el_fst ER) (fst R) A1
+                   &lt;- elab_r_to_r ER R (prod A1 A2).
+
+elab_r_to_r_snd : elab_r_to_r (el_snd ER) (snd R) A2
+                   &lt;- elab_r_to_r ER R (prod A1 A2).
+
+% R root
+
+elab_r_to_m_annot : elab_r_to_m (el_annot EM A) M A
+                     &lt;- elab_m EM M A.
+
+elab_r_to_m_app : elab_r_to_m (el_app ER1 EM2) M' A
+                   &lt;- elab_r_to_m ER1 (lam M) (arrow A2 A)
+                   &lt;- elab_m EM2 M2 A2
+                   &lt;- hsubst_m M2 A2 M M'.
+
+elab_r_to_m_fst : elab_r_to_m (el_fst ER) M1 A1
+                   &lt;- elab_r_to_m ER (pair M1 M2) (prod A1 A2).
+
+elab_r_to_m_snd : elab_r_to_m (el_snd ER) M2 A2
+                   &lt;- elab_r_to_m ER (pair M1 M2) (prod A1 A2).
+
+%block elab_block : some \{A:tp\}
+                     block 
+                     \{el_x : el_rtm\} 
+                     \{x : rtm\} 
+                     \{dex : elab_r_to_r el_x x A\}.
+&lt;/twelf&gt;
+
+The inductive structure of the elaboration judgements is similar to the structure of hereditary substitution.  Elaboration uses hereditary substitution in the key rule ``elab_r_to_m_app`` to compute the canonical result of a function application.  Elaboration also uses expansion to expand atomic terms into canonical ones.
+
+#
+# External Language: Metatheory
+
+#
+#
+# Static Correctness of Elaboration
+
+First, we prove that the elaboration of a well-typed term is well-typed.
+
+&lt;twelf&gt;
+elab_m_reg : elab_m EM M A
+	      -&gt; check EM A
+	      -&gt; canon M A
+	      -&gt; type.
+%mode elab_m_reg +X1 -X2 -X3.
+
+elab_r2r_reg : elab_r_to_r ER R A
+ 		-&gt; synth ER A
+ 		-&gt; atom R A
+ 		-&gt; type.
+%mode elab_r2r_reg +X1 -X2 -X3.
+
+elab_r2m_reg : elab_r_to_m ER M A
+		-&gt; synth ER A
+		-&gt; canon M A
+		-&gt; type.
+%mode elab_r2m_reg +X1 -X2 -X3.
+
+%% M to M
+
+- : elab_m_reg
+     (elab_m_asm_r2r Dex Del)
+     (check_asm DsynER)
+     DcanM
+     &lt;- elab_r2r_reg Del DsynER DaR
+     &lt;- expand_exists _ DaR Dex-2 DcanM-2
+     &lt;- expand_unique Dex-2 Dex Did
+     &lt;- canon_respects_id Did id/tp_refl DcanM-2 DcanM.
+
+- : elab_m_reg
+     (elab_m_asm_r2m Del)
+     (check_asm DsynER)
+     DcanM
+     &lt;- elab_r2m_reg Del DsynER DcanM.
+
+- : elab_m_reg
+     (elab_m_lam Del)
+     (check_lam Dcheck)
+     (canon_lam Dcanon)
+     &lt;- (\{el_x : el_rtm\} 
+	   \{delx : synth el_x A\}
+	   \{x : rtm\}
+	   \{dx : atom x A\}
+	   \{delabx : elab_r_to_r el_x x A\}
+	   \{_ : elab_r2r_reg delabx delx dx\}
+	   elab_m_reg (Del el_x x delabx) (Dcheck el_x delx) (Dcanon x dx)).
+
+- : elab_m_reg
+     (elab_m_pair De2 De1)
+     (check_pair Dcheck2 Dcheck1)
+     (canon_pair Dcanon2 Dcanon1)
+     &lt;- elab_m_reg De2 Dcheck2 Dcanon2 
+     &lt;- elab_m_reg De1 Dcheck1 Dcanon1.
+
+%% R to R
+
+- : elab_r2r_reg
+     elab_r_to_r_c 
+     synth_c
+     atom_c.
+
+- : elab_r2r_reg
+     (elab_r_to_r_app De2 De1)
+     (synth_app Dcheck2 Dsynth1)
+     (atom_app Dcanon2 Datom1)
+     &lt;- elab_m_reg De2 Dcheck2 Dcanon2 
+     &lt;- elab_r2r_reg De1 Dsynth1 Datom1.
+
+- : elab_r2r_reg
+     (elab_r_to_r_fst De1)
+     (synth_fst Dsynth1)
+     (atom_fst Datom1)
+     &lt;- elab_r2r_reg De1 Dsynth1 Datom1.
+
+- : elab_r2r_reg
+     (elab_r_to_r_snd De1)
+     (synth_snd Dsynth1)
+     (atom_snd Datom1)
+     &lt;- elab_r2r_reg De1 Dsynth1 Datom1.
+
+%% R to M
+
+- : elab_r2m_reg
+     (elab_r_to_m_annot De)
+     (synth_annot DcheckM)
+     DcanonM
+     &lt;- elab_m_reg De DcheckM DcanonM.
+     
+- : elab_r2m_reg
+     (elab_r_to_m_app DsubstM2 DeM2 DeR1)
+     (synth_app DcheckM2 DsynthR1)
+     DcanonM'
+     &lt;- elab_r2m_reg DeR1 DsynthR1 (canon_lam DcanonM)
+     &lt;- elab_m_reg DeM2 DcheckM2 DcanonM2
+     &lt;- hsubst_m_exists _ DcanonM DcanonM2 DsubstM2-2 DcanonM'-2
+     &lt;- hsubst_m_unique DsubstM2-2 DsubstM2 Did
+     &lt;- canon_respects_id Did id/tp_refl DcanonM'-2 DcanonM'.
+
+- : elab_r2m_reg
+     (elab_r_to_m_fst DeR)
+     (synth_fst DsynthR)
+     DcM1
+     &lt;- elab_r2m_reg DeR DsynthR (canon_pair DcM2 DcM1).
+
+- : elab_r2m_reg
+     (elab_r_to_m_snd DeR)
+     (synth_snd DsynthR)
+     DcM2
+     &lt;- elab_r2m_reg DeR DsynthR (canon_pair DcM2 DcM1).
+
+
+%% because world subsumption doesn't do exchange,
+%% you can't get this block to match both
+%% atom_block/synth_block and elab_block.
+%%
+%% this order matches atom_block/synth_block but not elab_block.
+%block elab_reg_block : some \{A:tp\}
+                         block 
+                         \{el_x : el_rtm\} 
+                         \{delx : synth el_x A\}
+                         \{x : rtm\}
+                         \{dx : atom x A\}
+                         \{delabx : elab_r_to_r el_x x A\}
+                         \{_ : elab_r2r_reg delabx delx dx\}.
+
+
+%worlds (elab_reg_block) 
+(elab_m_reg _ _ _)
+(elab_r2r_reg _ _ _)
+(elab_r2m_reg _ _ _).
+
+%total (D1 D2 D3)
+(elab_m_reg D1 _ _)
+(elab_r2r_reg D2 _ _)
+(elab_r2m_reg D3 _ _).
+&lt;/twelf&gt;
+
+The proof is a straightforward induction, using ``hsubst_m_exists`` and ``expand_exists``.  Because these two lemmas _output_ a hereditary substitution or expansion, along with the typing derivation for the result of the operation, we use uniqueness here to show well-typedness of the outputs of the hereditary substitution and expansion derivations given by elaboration.  In retrospect, we should have factored this reasoning into separate lemmas that are like ``hsubst_m_exists`` and ``expand_exists`` but take the the hereditary substitution or expansion as an input.
+
+#
+#
+# Existence of elaboration
+
+We require one addtional [respects lemma](/wiki/respects-lemma/).  
+
+&lt;twelf&gt;
+elab_r2m_respects_id :  id/mtm M M'
+			-&gt; id/tp A A'
+			-&gt; elab_r_to_m R M A
+			-&gt; elab_r_to_m R M' A'
+			-&gt; type.
+%mode elab_r2m_respects_id +X1 +X2 +X3 -X4.
+
+- : elab_r2m_respects_id _ _ D D.
+
+%worlds (elab_block | elab_reg_block) (elab_r2m_respects_id _ _ _ _).  %% bar in other block
+%total \{\} (elab_r2m_respects_id _ _ _ _).
+%reduces D1 = D2 (elab_r2m_respects_id _ _ D2 D1).
+&lt;/twelf&gt;
+
+The worlds of this lemma require a little explanation.  ``elab_reg_block`` should equal ``elab_block`` for this type family.  However, [world subsumption](/wiki/world-subsumption/) does not notice this relationship because doing so would require permutation.  Consequently, we prove the theorem for both blocks directly.
+
+Next, we prove that all well-typed terms elaborate.  Analogously to hereditary substitution, the theorem for synthesizing terms computes a sum of the two ways it could elaborate:
+&lt;twelf&gt;
+elab_r_exists_sum : el_rtm -&gt; tp -&gt; type.
+elab_r_exists_sum_r2r : elab_r_exists_sum ER A
+                         &lt;- elab_r_to_r ER R A.
+elab_r_exists_sum_r2m : elab_r_exists_sum ER A
+                         &lt;- elab_r_to_m ER M A.
+&lt;/twelf&gt;
+
+We begin with some [output factoring](/wiki/output-factoring/) and [canonical forms](/wiki/canonical-form/) lemmas:
+
+&lt;twelf&gt;
+elab_m_exists_asm : elab_r_exists_sum ER A
+		     -&gt; elab_m (el_asm ER) M' A
+		     -&gt; type.
+%mode elab_m_exists_asm +X1 -X2.
+
+- : elab_m_exists_asm 
+     (elab_r_exists_sum_r2m DeR)
+     (elab_m_asm_r2m DeR).
+
+- : elab_m_exists_asm 
+     (elab_r_exists_sum_r2r DeR)
+     (elab_m_asm_r2r Dex DeR)
+     &lt;- elab_r2r_reg DeR _ DaR
+     &lt;- expand_exists _ DaR Dex _.
+
+%worlds (elab_reg_block) (elab_m_exists_asm _ _).
+%total \{\} (elab_m_exists_asm _ _).
+
+
+canon_prod_is_pair : canon M (prod A1 A2)
+		      -&gt; id/mtm M (pair M1 M2)
+		      -&gt; type.
+%mode canon_prod_is_pair +X1 -X2.
+
+- : canon_prod_is_pair _ id/mtm_refl.
+
+%worlds (elab_reg_block) (canon_prod_is_pair _ _).
+%total \{\} (canon_prod_is_pair _ _).
+
+elab_r_exists_fst : elab_r_exists_sum R (prod A1 A2)
+		     -&gt; elab_r_exists_sum (el_fst R) A1
+		     -&gt; type.
+%mode elab_r_exists_fst +X1 -X2.
+
+- : elab_r_exists_fst
+     (elab_r_exists_sum_r2r DeR)
+     (elab_r_exists_sum_r2r (elab_r_to_r_fst DeR)).
+
+- : elab_r_exists_fst
+     (elab_r_exists_sum_r2m DeR)
+     (elab_r_exists_sum_r2m (elab_r_to_m_fst DeR-2))
+     &lt;- elab_r2m_reg DeR _ DcM
+     &lt;- canon_prod_is_pair DcM Did
+     &lt;- elab_r2m_respects_id Did id/tp_refl DeR DeR-2.
+     
+%worlds (elab_reg_block) (elab_r_exists_fst _ _).
+%total \{\} (elab_r_exists_fst _ _).
+
+elab_r_exists_snd : elab_r_exists_sum R (prod A1 A2)
+		     -&gt; elab_r_exists_sum (el_snd R) A2
+		     -&gt; type.
+%mode elab_r_exists_snd +X1 -X2.
+
+- : elab_r_exists_snd
+     (elab_r_exists_sum_r2r DeR)
+     (elab_r_exists_sum_r2r (elab_r_to_r_snd DeR)).
+
+- : elab_r_exists_snd
+     (elab_r_exists_sum_r2m DeR)
+     (elab_r_exists_sum_r2m (elab_r_to_m_snd DeR-2))
+     &lt;- elab_r2m_reg DeR _ DcM
+     &lt;- canon_prod_is_pair DcM Did
+     &lt;- elab_r2m_respects_id Did id/tp_refl DeR DeR-2.
+     
+%worlds (elab_reg_block) (elab_r_exists_snd _ _).
+%total \{\} (elab_r_exists_snd _ _).
+
+
+canon_arrow_is_lam : canon M (arrow A2 A)
+		      -&gt; id/mtm M (lam M')
+		      -&gt; type.
+%mode canon_arrow_is_lam +X1 -X2.
+
+- : canon_arrow_is_lam _ id/mtm_refl.
+
+%worlds (elab_reg_block) (canon_arrow_is_lam _ _).
+%total \{\} (canon_arrow_is_lam _ _).
+
+elab_r_exists_app : elab_r_exists_sum ER1 (arrow A2 A)
+		     -&gt; elab_m EM2 M2 A2
+		     -&gt; elab_r_exists_sum (el_app ER1 EM2) A
+		     -&gt; type.
+%mode elab_r_exists_app +X1 +X2 -X3.
+
+- : elab_r_exists_app
+     (elab_r_exists_sum_r2r DeR1)
+     DeM2
+     (elab_r_exists_sum_r2r (elab_r_to_r_app DeM2 DeR1)).
+
+- : elab_r_exists_app
+     (elab_r_exists_sum_r2m DeR1)
+     DeM2
+     (elab_r_exists_sum_r2m (elab_r_to_m_app Ds DeM2 DeR1-2))
+     &lt;- elab_r2m_reg DeR1 _ DcM1
+     &lt;- elab_m_reg DeM2 _ DcM2
+     &lt;- canon_arrow_is_lam DcM1 Did
+     &lt;- canon_respects_id Did id/tp_refl DcM1 (canon_lam DcBody)
+     &lt;- elab_r2m_respects_id Did id/tp_refl DeR1 DeR1-2
+     &lt;- hsubst_m_exists _ DcBody DcM2 Ds _.
+
+%worlds (elab_reg_block) (elab_r_exists_app _ _ _).
+%total \{\} (elab_r_exists_app _ _ _).
+&lt;/twelf&gt;
+
+Finally, we prove the main results:
+
+&lt;twelf&gt;
+elab_m_exists : check EM A
+		 -&gt; elab_m EM M A
+		 -&gt; type.
+%mode elab_m_exists +X1 -X2.
+
+elab_r_exists : synth ER A
+ 		 -&gt; elab_r_exists_sum ER A
+ 		 -&gt; type.
+%mode elab_r_exists +X1 -X2.
+
+%% M
+
+- : elab_m_exists
+     (check_asm Dsyn)
+     DeRes
+     &lt;- elab_r_exists Dsyn Dsum
+     &lt;- elab_m_exists_asm Dsum DeRes.
+
+- : elab_m_exists 
+     (check_lam DcM)
+     (elab_m_lam DelabM)
+     &lt;- (\{el_x : el_rtm\} 
+	   \{delx : synth el_x A\}
+	   \{x : rtm\}
+	   \{dx : atom x A\}
+	   \{delabx : elab_r_to_r el_x x A\}
+	   \{_ : elab_r2r_reg delabx delx dx\}
+	   \{_ : elab_r_exists delx (elab_r_exists_sum_r2r delabx)\}
+	   elab_m_exists (DcM el_x delx) (DelabM el_x x delabx)).
+	
+- : elab_m_exists 
+     (check_pair Dc2 Dc1)
+     (elab_m_pair De2 De1)
+     &lt;- elab_m_exists Dc1 De1 
+     &lt;- elab_m_exists Dc2 De2.
+
+%% R 
+
+- : elab_r_exists
+     synth_c 
+     (elab_r_exists_sum_r2r elab_r_to_r_c).
+
+- : elab_r_exists 
+     (synth_app DchM DsynR)
+     DsumApp
+     &lt;- elab_r_exists DsynR DsumR
+     &lt;- elab_m_exists DchM DeM
+     &lt;- elab_r_exists_app DsumR DeM DsumApp.
+
+
+- : elab_r_exists
+     (synth_fst Dsyn)
+     Dsum'
+     &lt;- elab_r_exists Dsyn Dsum
+     &lt;- elab_r_exists_fst Dsum Dsum'.
+
+- : elab_r_exists
+     (synth_snd Dsyn)
+     Dsum'
+     &lt;- elab_r_exists Dsyn Dsum
+     &lt;- elab_r_exists_snd Dsum Dsum'.
+
+- : elab_r_exists
+     (synth_annot DcM)
+     (elab_r_exists_sum_r2m (elab_r_to_m_annot DeM))
+     &lt;- elab_m_exists DcM DeM.
+     
+% maintains all the invariants from elab_reg_block because the above lemmas use call regularity
+%block elab_exists_block : some \{A:tp\}
+                            block 
+                            \{el_x : el_rtm\} 
+                            \{delx : synth el_x A\}
+                            \{x : rtm\}
+                            \{dx : atom x A\}
+                            \{delabx : elab_r_to_r el_x x A\}
+                            \{_ : elab_r2r_reg delabx delx dx\}
+                            \{_ : elab_r_exists delx (elab_r_exists_sum_r2r delabx)\}.
+%worlds (elab_exists_block) 
+(elab_m_exists _ _)
+(elab_r_exists _ _).
+
+%total (D1 D2) 
+(elab_m_exists D1 _)
+(elab_r_exists D2 _).
+&lt;/twelf&gt;
+
+&lt;twelflink&gt;All Twelf code for this tutorial.&lt;/twelflink&gt;
+&lt;twelflink check="true"&gt;See Twelf's output.&lt;/twelflink&gt;
+
+\{\{case study\}\}
+!}%

@@ -1,0 +1,259 @@
+%%! title: "POPL Tutorial/Sequent vs Natural Deduction"
+
+%{! 
+
+In this exercise, we will present rules for natural deduction and for a sequent calculus presentation of intuitionistic logic, and give an two incomplete proofs. The first establishes that derivability in natural deduction implies derivability in the sequent calculus, the second establishes the converse.
+
+There are two tasks:
+* Complete the three cases of the natural deduction -&gt; sequent calculus proof relating to conjunction.
+* Complete the three cases of the sequent calculus -&gt; natural deduction proof relating to implication and cut.
+
+The solution is [POPL Tutorial/Sequent vs Natural Deduction: Solution](/wiki/popl-tutorial-sequent-vs-natural-deduction-solution/).
+
+#
+# Syntax for Propositions
+
+ !}%
+
+prop : type.  %name prop A.
+
+top : prop.
+and : prop -> prop -> prop.
+imp : prop -> prop -> prop.
+
+%{! 
+
+#
+# Natural Deduction Inference Rules
+
+Natural deduction deals with a single judgment, &lt;math&gt;\texttt\{true\}~A&lt;/math&gt;.
+
+ !}%
+
+true : prop -> type.
+
+%{! 
+
+Six rules describe a natural deduction system for the language considered here.
+
+ !}%
+
+topI  : true top.
+
+andI  : true (and A B)
+             <- true B
+             <- true A.
+
+andE1 : true A
+         <- true (and A B).
+
+andE2 : true B
+         <- true (and A B).
+
+impI  : true (imp A B)
+         <- (true A -> true B).
+
+impE  : true B
+         <- true (imp A B)
+         <- true A.
+
+%{! 
+
+#
+# Sequent Calculus
+
+With the same grammar of propositions, we can define a sequent
+calculus with different judgments for the left and the right of
+the sequent (&lt;math&gt;\texttt\{hyp\}~A&lt;/math&gt; for the left and &lt;math&gt;\texttt\{conc\}~A&lt;/math&gt; for the right).
+
+ !}%
+
+hyp : prop -> type.
+
+conc : prop -> type.
+
+%{! 
+
+This particular sequent calculus includes the cut rule. We can show
+separately that it is possible to eliminate all uses of cut by proving
+the [admissibility of cut](/wiki/admissibility-of-cut/).
+
+ !}%
+
+init : conc A
+        <- hyp A.
+
+topR : conc top.
+
+andL : (hyp (and A B) -> conc C)
+        <- (hyp A -> hyp B -> conc C).
+
+andR : conc (and A B)
+        <- conc B
+        <- conc A.
+
+impL : (hyp (imp A B) -> conc C)
+        <- conc A
+        <- (hyp B -> conc C).
+
+impR : conc (imp A B)
+        <- (hyp A -> conc B).
+
+cut  : conc B
+        <- conc A
+        <- (hyp A -> conc B).
+
+%{! 
+
+The natural deduction system exists in a world with arbitrary assumptions &lt;math&gt;\texttt\{hyp\}~A&lt;/math&gt;.
+
+ !}%
+
+%block bhyp : some {A : prop} block {H : hyp A}.
+
+%{! 
+
+#
+# Translation: Natural Deduction to Sequent Calculus
+
+The following (incomplete) proof establishes that whenever a proposition is true in the natural deduction system, it is derivable as a conclusion in the sequent calculus.
+
+The cases for top and implication are filled in for you; all that remains is
+the cases for conjunction.
+
+The -impI case provides and example of using a theorem case. You will need
+something similar in the translation for the other direction.
+
+#
+#
+#
+# TASK 1: Fill in the three missing cases for conjunction
+
+ !}%
+
+nd-to-seq : true A 
+             -> conc A
+             -> type.
+%mode nd-to-seq +X1 -X2.
+
+-top : nd-to-seq topI topR.
+
+% fill in here.
+-andI : nd-to-seq 
+         (andI (DtrueA : true A) (DtrueB : true B)) %% true (and A B)
+         XXX. 
+
+% fill in here.
+-andE1 : nd-to-seq
+          (andE1 (DtrueAB : true (and A B))) %% true A
+          XXX.
+
+% fill in here.
+-andE2 : nd-to-seq
+          (andE2 (DtrueAB : true (and A B))) %% true B
+          XXX.
+
+-impI : nd-to-seq 
+         (impI ([dA : true A] Dimp dA : true B)) %% true (imp A B)
+         (impR [hA : hyp A] (DconcB hA))
+      <- ({dA : true A}
+             {hA : hyp A}
+             {dtrans : nd-to-seq dA (init hA)}
+             nd-to-seq (Dimp dA) (DconcB hA : conc B)).
+
+-impE : nd-to-seq 
+         (impE (DtrueA : true A) (DtrueAB : true (imp A B))) %% true B
+         (cut (impL ([hB : hyp B] init hB) DconcA) DconcAB)
+      <- nd-to-seq DtrueA (DconcA : conc A)
+      <- nd-to-seq DtrueAB (DconcAB : conc (imp A B)).
+
+
+
+%block truetohyp : some {A : prop} block 
+            {DA : true A} {HA : hyp A} {Dtrans : nd-to-seq DA (init HA)}.
+
+%worlds (truetohyp) (nd-to-seq _ _).
+%trustme %total D (nd-to-seq D _).
+
+
+%{! 
+
+#
+# Translation: Sequent Calculus to Natural Deduction
+
+
+The following (incomplete) proof establishes that whenever a proposition is derivable as a conclusion in the sequent calculus, it is true in the natural deduction system.
+
+#
+#
+#
+# TASK 2: Complete the theorem with cases for implication and cut
+
+ !}%
+
+hyp-to-true : hyp A -> true A -> type.
+%mode hyp-to-true +X1 -X2.
+
+%block hyptotrue : some {A : prop}
+           block {HA : hyp A} {DA : true A} {Dtrans : hyp-to-true HA DA}.
+%worlds (hyptotrue) (hyp-to-true _ _).
+%total {} (hyp-to-true _ _).
+
+
+seq-to-nd : conc A -> true A -> type.
+%mode seq-to-nd +X1 -X2.
+
+-init   : seq-to-nd (init (DhypA : hyp A)) DtrueA
+           <- hyp-to-true DhypA (DtrueA : true A).
+
+-top    : seq-to-nd (topR : conc top) topI.
+
+-andR   : seq-to-nd 
+              (andR
+                  (DconcA : conc A)
+                  (DconcB : conc B) : conc (and A B))
+              (andI
+                  DtrueA
+                  DtrueB)
+           <- seq-to-nd DconcA (DtrueA : true A)
+           <- seq-to-nd DconcB (DtrueB : true B).
+
+-andL   : seq-to-nd 
+              (andL 
+                  ([hA : hyp A] [hB : hyp B] DconcC hA hB : conc C)
+                  (Hab : hyp (and A B))
+                : conc C)
+              (DtrueC (andE1 DtrueAB) (andE2 DtrueAB))
+           <- ({hA} {dA : true A} {dtransA : hyp-to-true hA dA}
+                  {hB} {dB : true B} {dtransB : hyp-to-true hB dB}
+                      seq-to-nd (DconcC hA hB)
+                      (DtrueC dA dB : true C))
+           <- hyp-to-true Hab (DtrueAB : true (and A B)).
+
+%% fill in here
+-impR   : seq-to-nd
+              (impR
+                  ([hA] DconcB hA : conc B) : conc (imp A B))
+              XXX.
+
+%% fill in here
+-impL   : seq-to-nd
+              (impL
+                  ([hB : hyp B] DconcC hB : conc C)
+                  (DconcA : conc A)
+                  (Hab : hyp (imp A B)))
+              XXX.
+
+%% fill in here
+-cut    : seq-to-nd
+              (cut
+                  ([hA : hyp A] DconcB hA : conc B)
+                  (DconcA : conc A))
+              XXX.
+
+%worlds (hyptotrue) (seq-to-nd _ _).
+%total D (seq-to-nd D _).
+
+%{! 
+[POPL Tutorial/Sequent vs Natural Deduction: Solution](/wiki/popl-tutorial-sequent-vs-natural-deduction-solution/)
+ !}%

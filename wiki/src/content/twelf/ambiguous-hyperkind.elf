@@ -1,0 +1,13 @@
+%%! title: "Ambiguous hyperkind"
+
+%{!
+An **ambiguous hyperkind** occurs in pathological cases like this:
+
+&lt;twelf check="decl"&gt;
+
+a : type.
+
+b = a : _ _ .
+
+&lt;/twelf&gt;
+!}%

@@ -1,0 +1,23 @@
+%%! title: "The Twelf Project:TwelfTag"
+
+%{!
+TwelfTag is [User:Rsimmons](/wiki/user-rsimmons/) system for non-interactively checking Twelf code. This is a guide to TwelfTag for contributors; if you are a reader, then [TwelfTag](/wiki/twelftag/) may be more helpful. While [Twelf Live](/wiki/twelf-live/) allows people to interact with signatures, TwelfTag is designed for writing and checking code for use in wiki articles.
+
+Neither the &lt;nowiki&gt;&lt;twelf&gt;&lt;/nowiki&gt; tag nor the &lt;nowiki&gt;&lt;twelflink&gt;&lt;/nowiki&gt; tag have any required arguments. The optional arguments for &lt;nowiki&gt;&lt;twelf&gt;&lt;/nowiki&gt; tags are:
+* ``check=\{true|false|decl\}`` (default ``false``) - cannot be used when hidden=true
+* ``discard=\{true|false\}`` (default ``false``)
+* ``hidden=\{true|false\}`` (default ``false``)
+* ``import="..something.."`` (default ``"main"``)
+* ``export="..something.."`` (default ``"main"``)
+
+The optional arguments for &lt;nowiki&gt;&lt;twelflink&gt;&lt;/nowiki&gt; tags are:
+* ``check=\{true|false\}`` (default ``false``)
+* ``import="..something.."`` (default ``"main"``)
+
+The following document discusses the function of each of these tags.
+
+#
+# The ``&lt;twelf&gt;`` tag for syntax highlighting
+
+The ``&lt;twelf&gt;`` tag itself is simple enough, it works much like an HTML &lt;nowiki&gt;&lt;pre&gt;&lt;/nowiki&gt; environment with 
+!}%

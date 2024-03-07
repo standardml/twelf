@@ -1,0 +1,25 @@
+%%! title: "About The Twelf Project"
+
+%{!
+Twelf is a research project concerned with the design, implementation, and application of logical frameworks funded by the National Science Foundation under grants CCR-9619584 and CCR-9988281 Meta-Logical Frameworks, CCR-0306313 Efficient Logical Frameworks (Principal Investigator: Frank Pfenning) and by DARPA under the contract number F196268-95-C-0050 The Fox Project: Advanced Languages for Systems Software (Principal Investigators: Robert Harper, Peter Lee, and Frank Pfenning).
+
+The Twelf implementation comprises
+
+*the LF logical framework, including type reconstruction;
+*the Elf constraint logic programming language;
+*an inductive meta-theorem prover for LF (very preliminary);
+*and an Emacs interface.
+
+The principal authors of Twelf are
+
+*[http://www.cs.cmu.edu/~fp/ Frank Pfenning], and
+*[http://www.itu.dk/people/carsten/ Carsten Schürmann]
+
+with major contrubtions by
+
+*[http://www.cs.mcgill.ca/~bpientka/ Brigitte Pientka],
+* Roberto Virga, and
+*[http://www.cs.cmu.edu/~kw/ Kevin Watkins]
+
+Twelf provides a uniform meta-language for specifying, implementing, and proving properties of programming languages and logics. Example suites include Cartesian Closed Categories and lambda-calculus, the Church-Rosser theorem for the untyped lambda-calculus, Mini-ML including type preservation and compilation, cut elimination, theory of logic programming, and Hilbert's deduction theorem.
+!}%

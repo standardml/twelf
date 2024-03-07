@@ -1,0 +1,9 @@
+%%! title: "Template:Exists"
+
+%{!
+&lt;font face="Lucida Sans Unicode"&gt;∃&lt;/font&gt;&lt;noinclude&gt;
+
+This template renders the _there exists_ (latex \exists) symbol, with workarounds for Internet Explorer. Use it by typing &lt;nowiki&gt;\{\{exists\}\}&lt;/nowiki&gt; in an article.
+
+&lt;/noinclude&gt;
+!}%

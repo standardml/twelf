@@ -1,0 +1,9 @@
+%%! title: "Template:Forall"
+
+%{!
+&lt;font face="Lucida Sans Unicode"&gt;∀&lt;/font&gt;&lt;noinclude&gt;
+
+This template renders the _for all_ (latex \forall) symbol, with workarounds for Internet Explorer. Use it by typing &lt;nowiki&gt;\{\{forall\}\}&lt;/nowiki&gt; in an article.
+
+&lt;/noinclude&gt;
+!}%

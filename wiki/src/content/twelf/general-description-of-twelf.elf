@@ -1,0 +1,15 @@
+%%! title: "General description of Twelf"
+
+%{!
+_This quick introduction to Twelf is aimed at people without any specific technical background. If you want more information, you can find it on the [documentation](/wiki/documentation/) page._
+
+[[Image:ServerOK.png|thumb|_Using Twelf with the Emacs text editor._ The red, blue, and black text at the top is Twelf code, and the black text at the bottom is the output from the Twelf program reading the code.]]**Twelf** is a piece of computer software, and it is also a computer language understood by the Twelf software. This is a common ambiguity in computer systems - you can "install Java on your computer" (Java, a piece of computer software), or you can "write programs in Java for work" (Java, the computer language that is understood and interpreted by the software).
+
+C code and Java code describe programs, HTML code describes graphical web pages, and Twelf code describes _logical systems._ Logical systems are sometimes strange to think about, because the only logical system that most people have used is basic arithmetic (addition, subtraction, division, etc.), or maybe set theory if they're particularly ambitious. Most people that use Twelf aren’t interested in using it to do basic arithmetic, because there are a great deal more interesting logical systems than just the ones that we learn about in high school. 
+
+The reason someone might want to use Twelf code to describe a logical system is that once they’ve described it, they can write more Twelf code that uses that logical system. You could use Twelf to write out a statement about basic arithmetic (for instance, “if a + b = c, then b + a = c”), and then use Twelf to write out a justification of why that statement is true (i.e. a _proof_). When you do so, Twelf will check your proof, making sure that what you said actually is true! 
+
+Twelf is by no means the only program you can use to do this sort of thing. ACL2, AUTOMATH, Coq, HOL, HOL Light, LEGO, Isabelle, MetaPRL, NuPRL PVS, and TPS are just a few (!) of the systems that will let you define logical systems and prove things with them. A lot of really amazing work is done using these different systems: one project at the University of Pittsburgh is using HOL Light to check a proof of the Kepler conjecture [http://code.google.com/p/flyspeck/], and The Economist wrote an article about it [http://www.economist.com/science/displayStory.cfm?story_id=3809661] (unfortunately, it is no longer freely available).
+
+But here’s where, for people that use Twelf, it gets interesting: it turns out that while basic arithmetic, set theory, and interesting logics are logical systems, _programming languages_ are also logical systems - and Twelf has a couple of unique features that make it a great tool to use when the logical systems you are working with are programming languages...
+!}%

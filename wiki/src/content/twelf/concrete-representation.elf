@@ -1,0 +1,827 @@
+%%! title: "Concrete representation"
+
+%{! The use of [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/), using Twelf's binding structure
+to represent binding structure in an encoded language,
+is one of the more unique and convenient
+aspects of using Twelf. However, the fundamental nature of the binding 
+structure has been troubling to some, because it is not obvious that 
+everything you might ever want to do to a lambda term is doable within the 
+framework of HOAS. 
+
+One way to deal with this question is to show that there is a bijection between
+HOAS terms in Twelf and some **concrete representation** of terms with bound 
+variables. 
+In that case, any arbitrary operation on the concrete representation can be 
+related
+to an operation in the HOAS representation by translating the HOAS term into
+concrete form, performing the operation on the concrete term, and translating 
+it back into HOAS. That said, we do not know of any practical proof that has 
+required this technique.
+
+The technique of de Bruijn indices, described fully
+w:de Bruijn index|on Wikipedia]], is a popular technique
+for concretely representing binding structures.
+This page describes a bijection between closed de Bruijn indices and closed 
+HOAS terms, and proves that bijection correct. 
+We will use a modified version of de Bruijn indices - it was easier to 
+start counting from 0, whereas true de Bruijn indices count from 1. The 
+bijection is defined using two relations, ``exp--&gt;db`` and 
+``db--&gt;exp``. We prove the bijection is correct in four steps:
+
+- ``exp--&gt;db`` is a total and unique relation between HOAS to de Bruijn terms, and can therefore be thought of as the function _e2d_.
+- ``db--&gt;exp`` is a total and unique relation between de Bruijn terms to HOAS, and can therefore be thought of as the function _d2e_.
+- For all closed de Bruijn terms E, _d2e_(_e2d_ E) = E
+- For all closed HOAS terms E, _e2d_ (_d2e_ E) = E
+
+We do not prove that the 
+bijection is an isomorphism - both HOAS and de Bruijn indices have a built-in
+notion of "substitution," and a proof of isomorphism would require us to
+define substitution on our de Bruijn terms and show that substitution behaves
+the same way in the de Bruijn representation as it does in the HOAS 
+representation.
+
+This encoding makes heavy use of [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) in representing
+de Bruijn terms, both to ensure
+well-formedness of all terms and to encode a [structural metric](/wiki/structural-metrics/) directly
+into the type of a de Bruijn term. The proof could also be done with
+[extrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) by having a separate well-formedness judgment for
+de Bruijn terms and a separate judgment relating a de Bruijn term to the
+structural metric it corresponds to, but in this example the intrinsic 
+approach made the proofs simpler.
+\}% %\{ !}%
+
+%%## Preliminaries
+
+%{! We will need the ability to use [reasoning from false](/wiki/reasoning-from-false/) at one place
+to avoid a spurious case that [coverage checking](/wiki/coverage-checking/) does not deal with
+correctly, and as is the case with many examples, we will utilize
+[natural numbers](/wiki/natural-numbers/) extensively.. !}%
+
+uninhabited : type.
+%freeze uninhabited.
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+id-nat : nat -> nat -> type.
+id-nat/refl : id-nat N N.
+
+%{! We will also need a less-than relation on numbers. For reasons that will
+become clear, we will also need to define an [identity](/wiki/equality/) on less-than 
+derivations. Finally, we define ``lt12``, which allows us to take
+two numbers N &lt; M and case analyze on whether (s N) = M or (s N) &lt; M. !}%
+
+lt : nat -> nat -> type.
+lt/z : lt z (s N).
+lt/s : lt (s N1) (s N2) <- lt N1 N2.
+
+id-lt : lt N M -> lt N' M' -> type.
+id-lt/refl : id-lt L L.
+
+lt12 : nat -> nat -> type.
+lt12/1 : lt12 N (s N).
+lt12/2 : lt12 N (s M) <- lt N M.
+
+%{! Finally, we define two helper functions ``lt+``, which produces
+a derivation M &lt; (N + 1) from a derivation of M &lt; N, and ``lts``, which
+produces a derivation of N &lt; (s N) from any natural number N. Most
+of the tedious reasoning required for this example is about trivial 
+properties of these two helper functions; it is hidden here but
+can be revealed by clicking on the source code link at the top of the page. !}%
+
+lt+ : lt M N -> lt M (s N) -> type.
+%mode lt+ +D -D2.
+lt+/z : lt+ lt/z lt/z.
+lt+/s : lt+ (lt/s LT1) (lt/s LT2) <- lt+ LT1 LT2.
+%worlds() (lt+ _ _).
+%total T (lt+ T _).
+
+lts : {N} lt N (s N) -> type.
+%mode lts +N -LT.
+lts/z : lts z lt/z.
+lts/s : lts (s N) (lt/s D) <- lts N D.
+%worlds () (lts _ _).
+%total T (lts T _).
+
+%{! | hidden=tru !}%
+
+lt+-irrev : {L1: lt N1 N2} lt+ L1 L2 -> {L1': lt N1 N2} lt+ L1' L2 -> type.
+%mode lt+-irrev +L1 +L2 +L1' -L3.
+- : lt+-irrev lt/z lt+/z lt/z lt+/z.
+- : lt+-irrev (lt/s L1) (lt+/s L1+) (lt/s L2) (lt+/s L2+)
+     <- lt+-irrev L1 L1+ L2 L2+.
+%worlds () (lt+-irrev _ _ _ _).
+%total T (lt+-irrev T _ _ _).
+
+
+can-lts : {N}{LT: lt N (s N)} lts N LT -> type.
+%mode can-lts +N +LT -LTS.
+- : can-lts z _ lts/z.
+- : can-lts (s N) (lt/s LT) (lts/s LTS) <- can-lts N LT LTS.
+%worlds () (can-lts _ _ _).
+%total T (can-lts T _ _).
+
+can-lt+ : {LT: lt M N}{LT': lt M (s N)} lt+ LT LT' -> type.
+%mode can-lt+ +LT +LT' -LT+.
+- : can-lt+ lt/z lt/z lt+/z.
+- : can-lt+ (lt/s LT) (lt/s LT') (lt+/s LT+) <- can-lt+ LT LT' LT+.
+%worlds () (can-lt+ _ _ _).
+%total T (can-lt+ T _ _).
+
+lt-s-cong : id-lt L1 L1' -> id-lt (lt/s L1) (lt/s L1') -> type.
+%mode lt-s-cong +ID1 -ID2.
+- : lt-s-cong id-lt/refl id-lt/refl.
+%worlds () (lt-s-cong _ _).
+%total {} (lt-s-cong _ _).
+
+lt+-uniq : id-lt L1 L2 -> lt+ L1 L1' -> lt+ L2 L2' -> id-lt L1' L2' -> type.
+%mode lt+-uniq +ID +L1 +L2 -ID2.
+- : lt+-uniq id-lt/refl lt+/z lt+/z id-lt/refl.
+- : lt+-uniq id-lt/refl (lt+/s LT+1) (lt+/s LT+2) ID
+     <- lt+-uniq id-lt/refl LT+1 LT+2 ID2
+     <- lt-s-cong ID2 ID.
+%worlds () (lt+-uniq _ _ _ _).
+%total T (lt+-uniq _ T _ _).
+
+lts-uniq : id-nat N1 N2 -> lts N1 L1 -> lts N2 L2 -> id-lt L1 L2 -> type.
+%mode lts-uniq +ID +L1 +L2 -ID2.
+- : lts-uniq id-nat/refl lts/z lts/z id-lt/refl.
+- : lts-uniq id-nat/refl (lts/s LT1) (lts/s LT2) ID
+     <- lts-uniq id-nat/refl LT1 LT2 ID1
+     <- lt-s-cong ID1 ID.
+%worlds () (lts-uniq _ _ _ _).
+%total T (lts-uniq _ T _ _).
+
+
+lt-opt-s : lt12 N M -> lt12 (s N) (s M) -> type.
+%mode lt-opt-s +D -D2.
+lt-opt-s/1 : lt-opt-s lt12/1 lt12/1.
+lt-opt-s/2 : lt-opt-s (lt12/2 LT) (lt12/2 (lt/s LT)).
+%worlds () (lt-opt-s _ _).
+%total {} (lt-opt-s _ _).
+
+lt-opt : lt N M -> lt12 N M -> type.
+%mode lt-opt +D -D2.
+lt-opt/z1 : lt-opt lt/z lt12/1.
+lt-opt/z2 : lt-opt lt/z (lt12/2 lt/z).
+lt-opt/s : lt-opt (lt/s LT) LT12'
+	    <- lt-opt LT LT12
+	    <- lt-opt-s LT12 LT12'.
+%worlds () (lt-opt _ _).
+%total T (lt-opt T _).
+
+lt-opt-succ1 : {LT: lt N (s N)} lt-opt LT lt12/1 -> type.
+%mode lt-opt-succ1 +LT -LTO.
+- : lt-opt-succ1 lt/z lt-opt/z1.
+- : lt-opt-succ1 (lt/s LT) (lt-opt/s lt-opt-s/1 LTS)
+     <- lt-opt-succ1 LT LTS.
+%worlds () (lt-opt-succ1 _ _).
+%total T (lt-opt-succ1 T _).
+
+lt-opt-succ2 : lt+ LT LT' -> lt-opt LT' (lt12/2 LT) -> type.
+%mode lt-opt-succ2 +LT -LT0.
+- : lt-opt-succ2 lt+/z lt-opt/z2.
+- : lt-opt-succ2 (lt+/s LT+) (lt-opt/s lt-opt-s/2 LTO)
+     <- lt-opt-succ2 LT+ LTO.
+%worlds () (lt-opt-succ2 _ _).
+%total T (lt-opt-succ2 T _).
+
+lt-opt2-s-uniq : id-lt LT1 LT1' 
+		  -> lt-opt-s (lt12/2 LT1) (lt12/2 LT2)
+		  -> lt-opt-s (lt12/2 LT1') (lt12/2 LT2')
+		  -> id-lt LT2 LT2' -> type.
+%mode lt-opt2-s-uniq +ID +D1 +D2 -ID2.
+- : lt-opt2-s-uniq id-lt/refl lt-opt-s/2 lt-opt-s/2 id-lt/refl.
+%worlds () (lt-opt2-s-uniq _ _ _ _).
+%total {} (lt-opt2-s-uniq _ _ _ _).
+
+lt-opt2-uniq : id-lt LT1 LT1' 
+		-> lt-opt LT1 (lt12/2 LT2) 
+		-> lt-opt LT1' (lt12/2 LT2')
+		-> id-lt LT2 LT2' -> type.
+%mode lt-opt2-uniq +ID1 +L1 +L2 -ID2.
+- : lt-opt2-uniq id-lt/refl lt-opt/z2 lt-opt/z2 id-lt/refl.
+- : lt-opt2-uniq id-lt/refl (lt-opt/s LS L) (lt-opt/s LS' L') ID
+     <- lt-opt2-uniq id-lt/refl L L' ID1
+     <- lt-opt2-s-uniq ID1 LS LS' ID.
+%worlds () (lt-opt2-uniq _ _ _ _).
+%total T (lt-opt2-uniq _ T _ _).
+
+lt-opt-excl : lt-opt LT lt12/1 -> lt-opt LT (lt12/2 L) -> uninhabited -> type.
+%mode lt-opt-excl +D1 +D2 -D3.
+- : lt-opt-excl (lt-opt/s LS L) (lt-opt/s LS' L') X
+     <- lt-opt-excl L L' X.
+%worlds () (lt-opt-excl _ _ _).
+%total T (lt-opt-excl T _ _).
+
+
+%%## HOAS lambda terms
+
+%{! The representation of the untyped lambda calculus is extremely simple in
+higher-order abstract syntax; we also define congruence lemmas for lam and app.
+
+What is interesting is the ``[%block](/wiki/percent-block/)`` 
+declaration of ``blocksimple``. This is a standard way of looking at the
+LF context when we are using HOAS lambda terms, but it is not the one we will 
+use in most cases. !}%
+
+exp : type.
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+%block blocksimple : block {v: exp}.
+
+id-exp : exp -> exp -> type.
+id-exp/refl : id-exp E E.
+
+id-lam-cong : ({v} id-exp (E v) (E' v)) 
+		-> id-exp (lam E) (lam E') -> type.
+- : id-lam-cong ([v] id-exp/refl) id-exp/refl.
+%mode id-lam-cong +I1 -I.
+%worlds (blocksimple) (id-lam-cong _ _).
+%total {} (id-lam-cong _ _).
+
+id-app-cong : id-exp E1 E1' 
+		-> id-exp E2 E2'
+		-> id-exp (app E1 E2) (app E1' E2') -> type.
+- : id-app-cong id-exp/refl id-exp/refl id-exp/refl.
+%mode id-app-cong +I1 +I2 -I.
+%worlds (blocksimple) (id-app-cong _ _ _).
+%total {} (id-app-cong _ _ _).
+
+%{! The problem with ``blocksimple`` is that we will need, crucially, to
+be able to know when something is a variable (as opposed to an application or a 
+lambda term). The world ``blockvar`` achieves this by requiring that
+all variables be accompanied by a judgment ``isvar v``; because these
+judgments cannot be defined, they can only be introduced as hypothetical
+judgments, so having (isvar E) ensures that E is a variable. !}%
+
+isvar : exp -> type.
+%block blockvar : block {v}{iv: isvar v}.
+
+%{! However, we will need one more block declaration to be able to do everything
+we need. In particular, the block ``blockvar`` is not enough to ensure that 
+we always will be able to determine whether an open lambda term is a lambda, an
+application, or a variable. In order to do this, we need a specialized block 
+declaration ``blockcases`` that specifies that whenever I add a variable 
+to the context, I add it along with a ``isvar`` hypothesis and a 
+``can-case`` hypothesis. 
+
+The definition of ``fake`` is a bit of a hack - we need to allow
+``can-case`` to depend on ``can-case`` or we will run afoul of
+Twelf's [autofreeze](/wiki/percent-freeze/) feature. If you are running this proof on your
+own computer, try deleting the line to see Twelf's error message. !}%
+
+case : exp -> type.
+case/lam : case (lam [x] E x).
+case/app : case (app E1 E2).
+case/var : isvar V -> case V.
+
+can-case : {E} case E -> type.
+fake : can-case E C -> can-case E C -> type.
+- : fake E F <- ({d:can-case X Y} can-case X' Y').
+
+%block blockcases : block {v}{iv: isvar v}{d: can-case v (case/var iv)}.
+
+can-case/lam : can-case (lam [x] E x) (case/lam).
+can-case/app : can-case (app E1 E2) (case/app) .
+%mode can-case +E -C.
+%worlds (blockcases) (can-case _ _).
+%total T (can-case T _). 
+
+%%## de Bruijn lambda terms
+
+%%### Structural metric: Trees
+
+%{! In order for the totality proof for the de Bruijn to HOAS translation to go
+through, we will need to show that there is a metric by which ``unbind``
+does not change the size of a term. 
+
+Because Twelf does not relate the sizes of bound variables and the free 
+variables ``unbind`` replaces them with in any way, in order to achieve
+this we relate de Bruijn terms to an abstract tree representation;
+then, we can use that tree representation as the [structural metric](/wiki/structural-metrics/) to
+prove termination for the de Bruijn to HOAS translation. !}%
+
+etree : type.
+etree/lam : etree -> etree.
+etree/app : etree -> etree -> etree.
+etree/var : etree.
+
+id-etree : etree -> etree -> type.
+id-etree/refl : id-etree E E.
+
+id-etree/app-cong : id-etree E1 E1'
+		     -> id-etree E2 E2' 
+		     -> id-etree (etree/app E1 E2) (etree/app E1' E2') -> type.
+%mode id-etree/app-cong +ID +ID2 -ID'.
+- : id-etree/app-cong id-etree/refl id-etree/refl id-etree/refl.
+%worlds () (id-etree/app-cong _ _ _).
+%total {} (id-etree/app-cong _ _ _).
+
+id-etree/lam-cong : id-etree E E' 
+		     -> id-etree (etree/lam E) (etree/lam E') -> type.
+%mode id-etree/lam-cong +ID -ID'.
+- : id-etree/lam-cong id-etree/refl id-etree/refl.
+%worlds () (id-etree/lam-cong _ _).
+%total {} (id-etree/lam-cong _ _).
+
+%%### Encoding terms
+
+%{! We choose an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of de Bruijn terms so that every term
+that passes the LF type checker is well-formed - in particular, a term
+with ``exp^ N`` is a well-formed de Bruijn term inside of N lambdas.
+An earlier version of this encoding had a separate well-formedness judgment; 
+the upshot of this encoding was that a lot of complexity got rephrased
+in terms of simple reasoning about relations like ``lt+``. 
+
+The structural metric is made a part of the intrinsic in order to simplify
+later proofs. !}%
+
+exp^  : nat -> etree -> type.
+lam^  : exp^ (s N) Et -> exp^ N (etree/lam Et).
+app^  : exp^ N Et1 -> exp^ N Et2 -> exp^ N (etree/app Et1 Et2).
+fvar^ : {x: exp} isvar x -> exp^ N etree/var.
+bvar^ : {n: nat} lt n M -> exp^ M etree/var.
+
+%{! We will think of de Bruijn terms in two different ways depending on whether
+we are thinking in terms of a closed world or a world described by 
+``blockvar``. Recall that
+in a closed world (i.e. an empty LF context) we cannot form anything with
+type ``isvar V``, so in an empty context we cannot form a term with
+``fvar^``. The ``fvar^`` constructor is what allows us to link
+HOAS terms and de Bruijn terms, by incorporating variables from the
+HOAS representation directly inside of a de Bruijn term.
+
+We also define identity and congruence on de Bruijn terms. !}%
+
+id-exp^ : exp^ N E1 -> exp^ M E2 -> type.
+id-exp^/refl : id-exp^ E E.
+
+id-bvar^-cong : id-nat N N'
+		 -> id-lt LT LT'
+		 -> id-exp^ (bvar^ N LT) (bvar^ N' LT') -> type.
+- : id-bvar^-cong id-nat/refl id-lt/refl id-exp^/refl.
+%mode id-bvar^-cong +D1 +D2 -D^.
+%worlds (blockvar) (id-bvar^-cong _ _ _).
+%total {} (id-bvar^-cong _ _ _).
+
+id-app^-cong : id-exp^ E1 E1' 
+		-> id-exp^ E2 E2' 
+		-> id-exp^ (app^ E1 E2) (app^ E1' E2') -> type.
+- : id-app^-cong id-exp^/refl id-exp^/refl id-exp^/refl.
+%mode id-app^-cong +D1 +D -D2.
+%worlds (blockvar) (id-app^-cong _ _ _).
+%total {} (id-app^-cong _ _ _).
+
+id-lam^-cong : id-exp^ E E' -> id-exp^ (lam^ E) (lam^ E') -> type.
+- : id-lam^-cong id-exp^/refl id-exp^/refl.
+%mode id-lam^-cong +D1 -D2.
+%worlds (blockvar) (id-lam^-cong _ _).
+%total {} (id-lam^-cong _ _).
+
+%%### Binding and unbinding
+
+%{! The key operations on de Bruijn terms are a binding and unbinding
+operation - essentially, bind takes a free (HOAS) variable and makes it
+a different free (de Bruijn) variable. 
+By way of an example, if we have &lt;math&gt;x,y \vdash (\lambda 1 x) y&lt;/math&gt;,
+then binding &lt;math&gt;x&lt;/math&gt; will result in 
+&lt;math&gt;y \vdash (\lambda 1 2) y&lt;/math&gt;, and binding &lt;math&gt;y&lt;/math&gt; will 
+result in &lt;math&gt;x \vdash (\lambda 1 x) 1&lt;/math&gt;.
+
+Unfortunately, the structural metric ends up being included in both
+``bind`` and ``unbind``, which complicates the otherwise relatively
+simple judgments significantly. !}%
+
+bind : ({v} isvar v -> exp^ N Et) -> exp^ (s N) Et -> type.
+%mode bind +E1 -E.
+
+bind/match : bind ([v][iv] fvar^ v iv) (bvar^ N LT)
+		   <- lts N LT.
+
+bind/fvar : bind ([v][iv] fvar^ X V) (fvar^ X V).
+
+bind/bvar : bind ([v][iv] bvar^ M LT) (bvar^ M LT') 
+		  <- lt+ LT LT'.
+
+bind/app : bind ([v][iv] app^ (E1 v iv) (E2 v iv)) (app^ E1' E2') 
+		 <- bind ([v][iv] E1 v iv) E1'
+		 <- bind ([v][iv] E2 v iv) E2'.
+
+bind/lam : bind ([v][iv] lam^ (E v iv)) (lam^ E') 
+		 <- bind ([v][iv] E v iv) E'.
+
+%worlds (blockvar) (bind _ _).
+%total T (bind T _).
+
+%{!  !}%
+
+unbind-bvar : lt12 M (s N) -> ({v} isvar v -> exp^ N etree/var) -> type.
+%mode unbind-bvar +LT -E .
+
+unbind-bvar/match : unbind-bvar lt12/1 ([v][iv] fvar^ v iv).
+
+unbind-bvar/nomatch : unbind-bvar (lt12/2 LT) ([v][iv] bvar^ M LT).
+
+%worlds (blockvar) (unbind-bvar _ _).
+%total {} (unbind-bvar _ _).
+
+unbind : exp^ (s N) Et -> ({v} isvar v -> exp^ N Et) -> type.
+%mode unbind +E1 -E2.
+
+unbind/fvar : unbind (fvar^ V' IV') ([v][iv] fvar^ V' IV').
+
+unbind/bvar : unbind (bvar^ M LT) ([v][iv] E v iv) 
+		   <- lt-opt LT LT12 
+		   <- unbind-bvar LT12 ([v][iv] E v iv).
+
+unbind/app : unbind (app^ E1 E2) ([v][iv] app^ (E1' v iv) (E2' v iv))
+		  <- unbind E1 ([v][iv] E1' v iv)
+		  <- unbind E2 ([v][iv] E2' v iv).
+
+unbind/lam : unbind (lam^ E1) ([v][iv] lam^ (E1' v iv))
+		  <- unbind E1 ([v][iv] E1' v iv).
+
+%worlds (blockvar) (unbind _ _).
+%total T (unbind T _).
+
+%%### Properties of bind and unbind
+
+%{! Now we will show that bind and unbind are inverses of each other,
+which mirrors the proof we will eventually prove about the ``exp-&gt;db``
+and ``db-&gt;exp`` being inverses of each other. In particular, in 
+``unbind-uniq`` we need to use [reasoning from false](/wiki/reasoning-from-false/) along with a
+special lemma. 
+
+The theorem statements were difficult to get correct, but the proofs are
+relatively straightforward and are omitted (they are present in the full
+source code for this page). !}%
+
+bind-uniq : ({v}{iv:isvar v} id-exp^ (Ea v iv) (Ea' v iv))
+		  -> bind Ea Eb
+		  -> bind Ea' Eb'
+		  -> id-exp^ Eb Eb' -> type.
+%mode bind-uniq +I1 +B1 +B2 -I2. %{}%
+
+unbind-uniq : id-exp^ Ea Ea'
+		   -> unbind Ea Eb
+		   -> unbind Ea' Eb'
+		   -> ({v}{iv: isvar v} id-exp^ (Eb v iv) (Eb' v iv)) -> type.
+%mode unbind-uniq +I1 +U1 +U2 -I2. %{}%
+
+bind-unbind : bind ([v] E^ v) E^'
+	      -> unbind E^' ([v] E^ v) -> type.
+%mode bind-unbind +B -U. %{}%
+
+unbind-bind : unbind E^ ([v] E^' v)
+	      -> bind ([v] E^' v) E^ -> type.
+%mode unbind-bind +U -B. %{|hidden=true}% 
+
+% Cases for bind-uniq
+- : bind-uniq ([v][iv] id-exp^/refl) bind/fvar bind/fvar 
+     id-exp^/refl.
+- : bind-uniq ([v][iv] id-exp^/refl) (bind/bvar LT+) 
+     (bind/bvar LT+') ID
+     <- lt+-uniq id-lt/refl LT+ LT+' ID+
+     <- id-bvar^-cong id-nat/refl ID+ ID.
+- : bind-uniq ([v][iv] id-exp^/refl) (bind/match LTS) 
+     (bind/match LTS') ID
+     <- lts-uniq id-nat/refl LTS LTS' IDS
+     <- id-bvar^-cong id-nat/refl IDS ID.
+- : bind-uniq ([v][iv] id-exp^/refl) 
+     (bind/app F2 F1) (bind/app F2' F1') ID
+     <- bind-uniq ([v][iv] id-exp^/refl) F1 F1' ID1
+     <- bind-uniq ([v][iv] id-exp^/refl) F2 F2' ID2
+     <- id-app^-cong ID1 ID2 ID.
+- : bind-uniq ([v][iv] id-exp^/refl) 
+     (bind/lam F1) (bind/lam F1') ID
+     <- bind-uniq ([v][iv] id-exp^/refl) F1 F1' ID1
+     <- id-lam^-cong ID1 ID.
+%worlds (blockvar) (bind-uniq _ _ _ _).
+%total T (bind-uniq _ T _ _).
+
+% Cases for unbind-uniq
+lem : {Eb: {v} isvar v -> exp^ N Et} {Eb': {v} isvar v -> exp^ N Et} 
+       uninhabited 
+       -> ({v}{iv: isvar v} id-exp^ (Eb v iv: exp^ N Et) (Eb' v iv: exp^ N Et)) 
+       -> type.
+%mode lem +Eb +Eb' +X -D.
+%worlds (blockvar) (lem _ _ _ _). 
+%total {} (lem _ _ _ _).
+
+- : unbind-uniq id-exp^/refl unbind/fvar unbind/fvar 
+     ([v][iv] id-exp^/refl).
+- : unbind-uniq id-exp^/refl  % Spurious case
+     (unbind/bvar unbind-bvar/match A)
+     (unbind/bvar unbind-bvar/nomatch B) ID
+     <- lt-opt-excl A B X
+     <- lem _ _ X ID.
+- : unbind-uniq id-exp^/refl  % Spurious case
+     (unbind/bvar unbind-bvar/nomatch A)
+     (unbind/bvar unbind-bvar/match B) ID
+     <- lt-opt-excl B A X
+     <- lem _ _ X ID.
+- : unbind-uniq id-exp^/refl
+     (unbind/bvar unbind-bvar/match A)
+     (unbind/bvar unbind-bvar/match B)
+	([v][iv] id-exp^/refl).
+- : unbind-uniq id-exp^/refl
+     (unbind/bvar unbind-bvar/nomatch (Opt1: lt-opt LT (lt12/2 LT2)))
+     (unbind/bvar unbind-bvar/nomatch (Opt2: lt-opt LT (lt12/2 LT2')))
+     ID
+     <- lt-opt2-uniq id-lt/refl Opt1 Opt2 ID1
+     <- {v}{iv: isvar v} id-bvar^-cong id-nat/refl ID1 (ID v iv).
+- : unbind-uniq id-exp^/refl 
+     (unbind/app E2 E1) 
+     (unbind/app E2' E1') ID
+     <- unbind-uniq id-exp^/refl E1 E1' ID1
+     <- unbind-uniq id-exp^/refl E2 E2' ID2
+     <- {v}{iv: isvar v} id-app^-cong (ID1 v iv) (ID2 v iv) (ID v iv).
+- : unbind-uniq id-exp^/refl
+     (unbind/lam E) (unbind/lam E') ID
+     <- unbind-uniq id-exp^/refl E E' ID1
+     <- {v}{iv: isvar v} id-lam^-cong (ID1 v iv) (ID v iv).
+%worlds (blockvar) (unbind-uniq _ _ _ _).
+%total T (unbind-uniq _ T _ _). 
+
+% Cases for bind-unbind
+- : bind-unbind bind/fvar unbind/fvar.
+- : bind-unbind (bind/match (LTS: lts N LT)) 
+     (unbind/bvar unbind-bvar/match Opt)
+     <- lt-opt-succ1 LT Opt.
+- : bind-unbind (bind/bvar (LT+: lt+ LT LT')) 
+     (unbind/bvar unbind-bvar/nomatch Opt)
+     <- lt-opt-succ2 LT+ Opt.
+- : bind-unbind (bind/app B2 B1) (unbind/app U2 U1)
+     <- bind-unbind B1 U1
+     <- bind-unbind B2 U2.
+- : bind-unbind (bind/lam B) (unbind/lam U)
+     <- bind-unbind B U.
+
+%worlds (blockvar) (bind-unbind _ _).
+%total T (bind-unbind T _). 
+
+% Cases for unbind-bind
+- : unbind-bind unbind/fvar bind/fvar.
+- : unbind-bind (unbind/bvar unbind-bvar/match Opt) (bind/match LTS)
+     <- can-lts _ _ LTS.
+- : unbind-bind 
+     (unbind/bvar unbind-bvar/nomatch (Opt: lt-opt LT' (lt12/2 LT))) 
+     (bind/bvar LT+)
+     <- can-lt+ LT LT' LT+.
+- : unbind-bind (unbind/app U2 U1) (bind/app B2 B1)
+     <- unbind-bind U1 B1
+     <- unbind-bind U2 B2.
+- : unbind-bind (unbind/lam U) (bind/lam B)
+     <- unbind-bind U B.
+
+%worlds (blockvar) (unbind-bind _ _).
+%total T (unbind-bind T _).  %{}%
+
+
+%%## Relating HOAS and de Bruijn representations
+
+%{! This is the penultimate section. What we want to prove, ultimately, is
+a bijection between _closed_ HOAS terms and _closed_ de Bruijn terms;
+however, in order to get there we will prove a bijection between open
+HOAS terms and open de Bruijn terms, which is the subject of this section.
+Doing so requires reasoning with the structural metric, using the complex
+``blockcases`` block description, and generally making a mess. The
+theorem about closed terms in the next session will be simpler, but will use 
+the more complex lemmas from this section. !}%
+
+%%### HOAS to de Bruijn
+
+%{! It is here that we will need to use the ``blockcases`` block description
+discussed above; even though it makes the translation more complicated, we
+directly prove the translation total in order to avoid writing a ton
+of [effectiveness lemmas](/wiki/effectiveness-lemma/); the uniqueness of this translation is simple,
+but dependent on the effectiveness of ``bind``. !}%
+
+exp->db : {E} case E -> {Et} exp^ z Et -> type.
+%mode exp->db +E +C -Et -E^.
+
+exp->db/var : exp->db _ (case/var IV) etree/var (fvar^ V IV).
+exp->db/lam : exp->db (lam ([v] E2 v)) case/lam (etree/lam Et) (lam^ E^')
+	       <- ({v}{iv: isvar v} can-case v (case/var iv) ->
+		     can-case (E2 v) (CASE v iv))
+	       <- ({v}{iv: isvar v} can-case v (case/var iv) ->
+		     exp->db (E2 v) (CASE v iv) Et (E^'' v iv))
+	       <- bind E^'' E^'.
+exp->db/app : exp->db (app E1 E2) case/app (etree/app Et1 Et2) (app^ E1' E2')
+	       <- can-case E1 CASE1
+	       <- can-case E2 CASE2
+	       <- exp->db E1 CASE1 Et1 E1'
+	       <- exp->db E2 CASE2 Et2 E2'.
+
+%worlds (blockcases) (exp->db _ _ _ _).
+%total T (exp->db T _ _ _). %{}%
+
+uniq->db : exp->db E2 C Et E^ 
+	    -> exp->db E2 C Et' E^' 
+	    -> id-etree Et Et'
+	    -> id-exp^ E^ E^' -> type.
+%mode uniq->db +E1 +E2 -ID1 -ID2.
+
+- : uniq->db exp->db/var exp->db/var id-etree/refl id-exp^/refl.
+- : uniq->db (exp->db/lam F T C) (exp->db/lam F' T' C') IDe ID^
+     <- ({v}{iv: isvar v}{c: can-case v (case/var iv)}
+	   uniq->db (T v iv c) (T' v iv c) IDe1 (ID^1 v iv))
+     <- bind-uniq ID^1 F F' ID^2
+     <- id-etree/lam-cong IDe1 IDe
+     <- id-lam^-cong ID^2 ID^.
+- : uniq->db (exp->db/app T2 T1 C2 C1) (exp->db/app T2' T1' C2' C1') IDe ID^
+     <- uniq->db T1 T1' IDe1 ID^1
+     <- uniq->db T2 T2' IDe2 ID^2
+     <- id-etree/app-cong IDe1 IDe2 IDe
+     <- id-app^-cong ID^1 ID^2 ID^.
+
+%worlds (blockcases) (uniq->db _ _ _ _).
+%total T (uniq->db T _ _ _).
+
+%%### de Bruijn to HOAS
+
+%{! It is here that we will need to use the ``etree`` [structural metric](/wiki/structural-metrics/)
+to provide a usable termination argument for ``db-&gt;exp``. !}%
+
+db->exp : {Et} exp^ z Et -> {E} case E -> type.
+%mode db->exp +ET +E^ -E -C.
+
+db->exp/fvar : db->exp etree/var (fvar^ V IV) V (case/var IV).
+db->exp/lam : db->exp (etree/lam ET) (lam^ E^) (lam E) case/lam
+	       <- unbind E^ E^'
+	       <- {v}{iv: isvar v} can-case v (case/var iv)
+		  -> db->exp ET (E^' v iv) (E v) _.
+db->exp/app : db->exp (etree/app ET1 ET2) (app^ E1^ E2^) (app E1 E2) case/app
+	       <- db->exp ET1 E1^ E1 _
+	       <- db->exp ET2 E2^ E2 _.
+
+%worlds (blockcases) (db->exp _ _ _ _).
+%total T (db->exp T _ _ _). %{}%
+
+uniq->exp : id-exp^ E^ E^'
+	     -> db->exp ET E^ E C
+	     -> db->exp ET' E^' E' C'
+	     -> id-exp E E' -> type.
+%mode uniq->exp +ID1 +E1 +E2 -ID.
+
+- : uniq->exp id-exp^/refl db->exp/fvar db->exp/fvar id-exp/refl.
+- : uniq->exp id-exp^/refl 
+     (db->exp/lam ([v][iv][c: can-case v (case/var iv)] T v iv c) UB) 
+     (db->exp/lam ([v][iv][c: can-case v (case/var iv)] T' v iv c) UB') ID
+     <- unbind-uniq id-exp^/refl UB UB' 
+	(ID1: {v:exp} {iv:isvar v} id-exp^ (E v iv) (E' v iv))
+     <- ({v}{iv:isvar v}{c: can-case v (case/var iv)}
+	   uniq->exp (ID1 v iv) (T v iv c) (T' v iv c) (ID2 v))
+     <- id-lam-cong ID2 ID.
+- : uniq->exp id-exp^/refl (db->exp/app T2 T1) (db->exp/app T2' T1') ID
+     <- uniq->exp id-exp^/refl T1 T1' ID1
+     <- uniq->exp id-exp^/refl T2 T2' ID2
+     <- id-app-cong ID1 ID2 ID.
+
+%worlds (blockcases) (uniq->exp _ _ _ _).
+%total T (uniq->exp _ T _ _).
+
+
+%%### Composition: HOAS -&gt; de Bruijn -&gt; HOAS
+
+inverseEDE : exp->db E C Et E^ -> db->exp Et E^ E C -> type.
+%mode inverseEDE +ED -DE.
+
+- : inverseEDE exp->db/var db->exp/fvar.
+- : inverseEDE (exp->db/lam B T C) (db->exp/lam T' U)
+     <- bind-unbind B U
+     <- {v}{iv:isvar v}{c:can-case v (case/var iv)}
+	inverseEDE (T v iv c) (T' v iv c).
+- : inverseEDE (exp->db/app T2 T1 C2 C1) (db->exp/app T2' T1')
+     <- inverseEDE T1 T1'
+     <- inverseEDE T2 T2'.
+
+%worlds (blockcases) (inverseEDE _ _).
+%total T (inverseEDE T _). %{}%
+
+%%### Composition: de Bruijn -&gt; HOAS -&gt; de Bruijn
+
+%{! We need one last trick in order to make this proof go through in the
+opposite direction; we will need an effectiveness lemma on top of an
+effectiveness lemma! (Effectiveness lemmas can get out of control sometimes.) !}%
+
+can-can-case : {C: case E} can-case E C -> type.
+fake : type.
+- : fake <- (can-can-case E V -> can-can-case E' V').
+%block blockcancases
+   : block {v}{iv:isvar v}{c:can-case v (case/var iv)}
+      {cc:can-can-case (case/var iv) c}.
+- : can-can-case case/app can-case/app.
+- : can-can-case case/lam can-case/lam.
+%mode can-can-case +C -CC.
+%worlds (blockcancases) (can-can-case _ _).
+%total {} (can-can-case _ _). 
+
+%{! With our slightly absurd effectiveness effectiveness lemma in tow, we can
+complete the proof that composition in the other direction is the identity. !}%
+
+inverseDED : db->exp Et E^ E C -> exp->db E C Et E^ -> type.
+%mode inverseDED +DE -ED.
+
+- : inverseDED db->exp/fvar exp->db/var.
+- : inverseDED (db->exp/lam (T:{v}{iv:isvar v}{c} 
+				 db->exp Et (E^ v iv) (E v) (Case v iv)) U) 
+     (exp->db/lam B T' C)
+     <- unbind-bind U B
+     <- ({v}{iv:isvar v}{c:can-case v (case/var iv)}
+	   can-can-case (case/var iv) c 
+	   -> inverseDED (T v iv c) (T' v iv c))
+     <- ({v}{iv:isvar v}{c:can-case v (case/var iv)}
+	   can-can-case (case/var iv) c
+	   -> can-can-case _ (C v iv c)).
+- : inverseDED (db->exp/app T2 T1) (exp->db/app T2' T1' C2 C1)
+     <- inverseDED T1 T1'
+     <- inverseDED T2 T2'
+     <- can-can-case _ C1
+     <- can-can-case _ C2.
+
+%worlds (blockcancases) (inverseDED _ _).   
+%total T (inverseDED T _). %{}%
+
+%%## Wrapping up
+
+%{! The one step that remains is to perform the above four steps for a
+simpler theorem statement in a closed world, since ultimately what we 
+want is a theorem about closed terms anyway. These theorems would likely
+be less useful in practice than the ones already proven because the 
+closed world assumption makes them less general, but they more concisely
+state what was done. !}%
+
+%{! * ``exp--&gt;db`` is a total and unique relation between HOAS to de Bruijn terms, and can therefore be thought of as the function _e2d_ !}%
+
+exp-->db : exp -> exp^ z Et -> type.
+exp-->db/ : exp-->db E E^ 
+	     <- can-case E (C: case E)
+	     <- exp->db E C Et (E^: exp^ z Et).
+%mode exp-->db +E -E^.
+%worlds () (exp-->db _ _).
+%total {} (exp-->db _ _).
+
+uniq-->db : exp-->db E E1 -> exp-->db E E2 -> id-exp^ E1 E2 -> type.
+- : uniq-->db (exp-->db/ ED C) (exp-->db/ ED' C') ID
+     <- uniq->db ED ED' _ ID.
+%mode uniq-->db +E +E' -ID.
+%worlds () (uniq-->db _ _ _).
+%total {} (uniq-->db _ _ _).
+
+%{! * ``db--&gt;exp`` is a total and unique relation between de Bruijn terms to HOAS, and can therefore be thought of as the function _d2e_ !}%
+
+db-->exp : exp^ z Et -> exp -> type.
+db-->exp/ : db-->exp E^ E
+	     <- db->exp Et E^ E _.
+%mode db-->exp +E^ -E.
+%worlds () (db-->exp _ _).
+%total {} (db-->exp _ _).
+
+uniq-->exp : db-->exp E E1 -> db-->exp E E2 -> id-exp E1 E2 -> type.
+- : uniq-->exp (db-->exp/ DE) (db-->exp/ DE') ID
+     <- uniq->exp id-exp^/refl DE DE' ID.
+%mode uniq-->exp +E +E' -ID.
+%worlds () (uniq-->exp _ _ _).
+%total {} (uniq-->exp _ _ _).
+
+%{! * For all closed de Bruijn terms E, _d2e_(_e2d_ E) = !}%
+
+db-->exp-->db : db-->exp E^ E -> exp-->db E E^ -> type.
+- : db-->exp-->db (db-->exp/ DE) (exp-->db/ ED C)
+     <- inverseDED DE (ED: exp->db E Case Et E^) 
+     <- can-can-case Case C.
+%mode db-->exp-->db +DE -ED.
+%worlds () (db-->exp-->db _ _).
+%total {} (db-->exp-->db _ _).
+
+%{! * For all closed HOAS terms E, _e2d_ (_d2e_ E) = !}%
+
+exp-->db-->exp : exp-->db E E^ -> db-->exp E^ E -> type.
+- : exp-->db-->exp (exp-->db/ ED C) (db-->exp/ DE)
+     <- inverseEDE ED DE.
+%mode exp-->db-->exp +ED -DE.
+%worlds () (exp-->db-->exp _ _).
+%total {} (exp-->db-->exp _ _). %{}%
+
+
+%%## Examples
+
+%{! It's also a good idea to run a ``[%query](/wiki/percent-query/)`` on some examples as
+a sanity check. First, we translate the Church numeral "4," &lt;math&gt;\lambda f.\lambda x.f(f(f(f x)))&lt;/math&gt; from a
+HOAS to a de Bruijn index representation. |check=decl !}%
+
+%query 1 * exp-->db 
+   (lam [f] lam [x] app f (app f (app f (app f x)))) DB.
+
+%{! Next, we translate the Church boolean operator "Not," &lt;math&gt;\lambda p . p (\lambda x . \lambda y . y) (\lambda x . \lambda y . x)&lt;/math&gt; from a
+Bruijn index to a HOAS representation. |check=decl !}%
+
+%query 1 * db-->exp 
+   (lam^ (app^ (app^ 
+     (bvar^ z lt/z) 
+     (lam^ (lam^ (bvar^ z lt/z))))
+     (lam^ (lam^ (bvar^ (s z) (lt/s lt/z)))))) HOAS.

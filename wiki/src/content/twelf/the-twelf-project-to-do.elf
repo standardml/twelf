@@ -1,0 +1,201 @@
+%%! title: "The Twelf Project:To do"
+
+%{!
+__NOTOC__
+
+
+#
+# Ongoing to-do items
+
+\{| border="1" cellpadding="5" cellspacing="0"
+|-
+| **Title** || **Description** || **Adopted By** || **Status**
+|-
+| **:Category:pages needing attention|Pages needing attention]]**
+| Pages that use templates like \{\{tl|needs\}\}, or \{\{tl|stub\}\} are automatically placed in this :category:pages needing attention|category]]. Some jobs are small, some are large.
+| Everyone 
+| _Ongoing_
+|-
+| **Special:wantedpages|Pages that don't exist]]**
+| Sets of natural numbers]].
+| Rob & Dan
+| _Almost ready?_
+|-
+| **Twelf Standard Library**
+| We have a lot of code examples, but very little code that can be used as "take this code and you can use it in your work; here's a list structure or a map structure or a tree that you can use in your proof easily" or "someone, by now, has really honestly proven what you want to prove about natural numbers. you don't have to write it again" The final nature of this will depend on how we decide to distribute code (a wish-list item below), but code development would be good.
+| Rob (could use help)
+| **Code development** - list, sets, trees, maps
+|-
+| **Tutorial level icons**
+| I'm planning to make nice icons to mark the difficulty level (beginner / intermediate / advanced) of each tutorial.
+| Tom
+| _soon_
+|-
+| **Understanding Twelf error messages**
+| For novices, Twelf's error messages can be confusing, especially they're not familiar with the type theory.  It might be useful to have an explanation of error messages in the context of how we are encouraging people to use Twelf (e.g. "Expected type family, found object constant" -- did you forget "-&gt; type"? Have you read [judgments as types](/wiki/judgment/)?)
+: That's a good idea. Some error messages already have pages, like [output freeness](/wiki/output-freeness/) and [ambiguous hyperkind](/wiki/ambiguous-hyperkind/) (heh). Having a page with a short summary of each error and common causes would be great. I suggest [error messages](/wiki/error-messages/) as a title? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 00:08, 18 November 2006 (EST)
+: BTW, one really nice thing that Microsoft's compiler does (maybe the only nice thing) is that each error or warning has a short code number that can be used to search for that specific error message. I don't know how feasible it would be to get such a thing in Twelf, but it would make populating the list a lot easier! &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 00:08, 18 November 2006 (EST)
+| spoons
+| _In progress_
+|-
+|\}
+
+#
+# Wish-list items
+
+Feel free to adopt a topic and leave the topic here if you'd like to work on it but may not have time for a bit. If you're about to start working on the project, move it to the Active items section.
+
+\{| border="1" cellpadding="5" cellspacing="0"
+|-
+| **Title** || **Description** || **Adopted By** || **Status**
+|-
+| **Non-locking [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 00:47, 11 October 2006 (EDT)
+:: I suggest using bash and ``ulimit`` to limit the spawned twelf process to one or two seconds of CPU. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 10:59, 11 October 2006 (EDT)
+| Rob?
+| _Could use improvement_
+|-
+| **Rewrite intro**
+| The intro on the [main page](/wiki/main-page/) sucks, and includes a link begging for editing.
+| ?
+| _Needed_
+|-
+| **Twelf.el**
+| consolidate emacs hacks for new twelf.el?
+* Karl has some, I know. I have a few too. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 18:02, 5 October 2006 (EDT)
+| Tom?
+| _Wishlist_
+|-
+| **More tutorials**
+| There is a list of tutorials that need to be written on the [Talk:Tutorials](/wiki/talk-tutorials/).
+| ?
+| _wishlist_
+|-
+| **Offsite backup**
+| I have the database do a full dump every day into [http://twelf.plparty.org/w/backup this folder] (the only privacy concern seems to be revealing the IP addresses of edits, which I don't think we care about - passwords are hashed against our usernames). Could someone automate a pull of this every couple of days to their home machine?
+* I'm now doing it when I do my backup cycle, but that's not very often. I suggest that you bz2 it and copy it to AFS somewhere, since they do quality backups. (If your home dir is not big enough, we can usually get project space.) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 08:42, 16 October 2006 (EDT)
+|
+| _Partial_
+|-
+| **Exercises**
+| Does it make sense to have some suggested exercises for someone wanting to learn Twelf but who doesn't have an easy research project to try it out on?
+| ?
+| _?_
+|-
+| **Code distribution**
+| The wiki itself won't work for code development&mdash;it's way too high a cost to synchronize changes&mdash;but can work as an excellent index into some other code repository. My guess is that we're going to need to have a public SVN or CVS server running, preferably with a web interface that we can link to from the wiki. Either we roll our own, or we could go with SourceForge.
+* ConCert has a subversion repository; we should use that IMO. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 15:21, 2 October 2006 (EDT)
+:* Can we get that to allow public read-only access? If so, I agree. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:04, 2 October 2006 (EDT)
+:** Yes, we can set up a repository on the ConCert SVN server with public read-only access.  I just need to learn/remember how. — [User:Spoons](/wiki/user-spoons/) 13:33, 26 October 2006 (EDT)
+| ?
+| _Wishlist_
+|-
+| **um.elf**
+| Rob and Jake both did a Twelf UM implementation - we should make them pretty, possibly tweak them to run a _little_ better, and put them up.
+| Rob?
+| _Low priority_
+|-
+| **Bibliography of LF**
+| The [bibliography of LF](/wiki/bibliography-of-lf/) needs cleaning up, finishing of the transwikificaition, and ultimately needs its links checked. It should also be updated with citations for more recent work (Is this second part its own wishlist item?). 
+| Rob
+| _Low priority_
+|-
+| **Negation as failure**
+| Karl mentioned a new trick to do "negation as failure" using [deterministic declaration](/wiki/deterministic-declaration/) at the &lt;s&gt;ConCert&lt;/s&gt; InCert meeting. Supposedly it's just a few lines, which would make a nice Twelf Wiki page. Maybe dklee knows how to do this and can post about it?
+|
+| _?_
+|-
+| **Closure conversion**
+| I know how to do closure conversion (Karl's technique), which was previously thought to be difficult in Twelf. It's worth a tutorial. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:07, 1 October 2007 (EDT)
+|
+| _?_
+|-
+
+|\}
+
+#
+# Completed items
+
+\{| border="1" cellpadding="5" cellspacing="0"
+|-
+| **Title** || **Description** || **Adopted By** || **Status**
+|- 
+| **[Glossary](/wiki/glossary/)**
+| Glossary that contains the jargon terms that we see often. Nick Benton's WMM talk complained (rightfully) about the way that experts use jargon terms that _never appear anywhere in the manual_. There should be a single page for quickly answering the question, "What is a ______?"
+* examples (please expand, anyone): adequacy, extensionality, shallow and deep encodings, shallow and deep equality, intrinsic and extrinsic encodings, hackbind, functionality, metatheorem, coverage, constant, judgment, relation, signature, regular worlds, world subsumption, subordination, canonical form, subderivation, total, ...
+* rh: there's a difference (don't ask me to define it) between jargon and terminology.  we shouldn't give the impression that technical terminology is mere jargon.  for example, hackbind is jargon, but canonical form is terminology.  one difference is that terminology is really defined somewhere, even if people don't know it.
+** I agree and the distinction is important. Unfortunately for users, it's not easy to tell whether something is terminology or jargon, without first at least knowing what it means. Can a unified glossary keep this distinction? I think so. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 04:29, 24 September 2006 (MST)
+| Dan, Rwh, Tom
+| **Stable for now**
+|-
+| **Deep and shallow [equality](/wiki/equality/)**
+| Dan explained the solution [Elves_talk:Main_Page](/wiki/elves-talk-main-page/) to a question I had about how to relate the two obvious descriptions of [equality](/wiki/equality/)
+| &lt;strike&gt;Rob&lt;/strike&gt; DRL 
+| **Obsolete/Done**
+|-
+| **Software**
+| The pages that hold or point to software have (mostly) now been protected. Protection should be completed, and the [software](/wiki/download/) and [release history](/wiki/release-history/) pages should be updated with correct information and links to the software itself.
+| Rob
+| **Done**
+|-
+| **Explanation of %trustme**
+| The page [Holes in metatheorems](/wiki/incremental-metatheorem-development/) has a description of pre-1.5R1 holes, but currently no description of %trustme
+| Dan Lee
+| **Done**
+|-
+| **Debugging syntax highlighting**
+| The syntax highlighting module is not, and isn't really built to be, perfect. If you find a quirk in the syntax highlighting, leave it at Project:To do/Syntax highlighting]].
+:: I rewrite the syntax highlighter in Haskell, it appears to be much faster to call out to Haskell than it was to parse in PHP. But because everything has been completely rewritten, there may be new and exciting bugs. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:05, 5 November 2006 (EST)
+| Everyone (discovery), Rob (fixing)
+| **Stable**
+|-
+| **AJALF**
+| (from Dan Lee) The merit of this idea is probably some combination of ridiculous, cool, useful, and interesting exercise for an undergraduate. It would be neat if we had a webserver somewhere running a cgi script that would allow you to check Twelf code off the wiki/via a web interface. Being able to check code off the wiki would allow us to develop examples directly out of the wiki, instead of cutting and pasting from our workstations. The other advantage is that people could try Twelf hacking without going through any install procedure.
+* According to Tom, Jason Reed has already written code for this. However, it will have to wait until the Wiki moves off my website to its real home, wherever that is. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 07:39, 22 September 2006 (MST)
+** Note: We could use iframes or pop-up windows to host just that part off-site. I agree this is pretty low priority though. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 11:40, 22 September 2006 (MST)
+*** New way to do this is almost in place. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 19:09, 12 October 2006 (EDT)
+| Tom and Rob
+| **Stable**
+|-
+| **Transwiki**
+| Get things from the [http://fp.logosphere.cs.cmu.edu/twelf/ old twelf wiki] over here
+| Rob
+| **Done for now**
+|-
+| **Cute little icon**
+| We should get one of those little icons that shows up in the navagation bar, like all the big grownup websites.
+| Tom
+| _Done_
+|-
+| **Explanation of substitution lemmas**
+| An explanation of how to permute the lambdas in the LF context to prove things like substitution in a language with a store. In particular, I want to show how you can do this for a substitution lemma for a dependently typed lambda calculus without resorting to explicit contexts.
+
+I've drafted the article, but I invite people to point out points that require clarification in [Talk:Substitution_lemma](/wiki/talk-substitution-lemma/) --[User:DanielKLee](/wiki/user-danielklee/) 21:08, 24 September 2006 (MST)
+| Dan Lee
+| **Done for now**
+|-
+| **Learning Twelf**
+| A prominent page that leads prospective users to an appropriate tutorial, should they like to learn about or learn Twelf. (appears in the lower right corner of the [Main Page](/wiki/main-page/)
+| Rob
+| **Done (the portal part)**
+|- 
+| **Debug Math**
+| The math tag doesn't parse anymore, and I need to figure out what went wrong - Depot could have killed something that accidentally ended up in /user/local
+:: For some reason /usr/local/bin dropped out of the server's search path. If someone figures out why, it would be good to fix this; for now, I have recompiled the math processor with built-in absolute filenames, which makes the missing $PATH irrelevant. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 14:58, 5 October 2006 (EDT)
+| Rob
+| **Done**
+|-
+| **CPS Conversion**
+| CPS conversion is a little tricky, mainly because the natural algorithm is itself continuation based. I have done it several times, so I can write a tutorial using my best known technique. Relies on [CPS conversion](/wiki/cps-conversion/)**
+|-
+| **[Converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/)**
+| Simple tutorial on this, referenced in [CPS conversion](/wiki/cps-conversion/)
+| Tom
+| _[Converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/)_
+|-
+| **[Linear logic](/wiki/linear-logic/)**
+| Someone should write a tutorial on linear logic, since we have a good way to do it but it is not obvious.
+| Karl
+| _[linear logic](/wiki/linear-logic/)_
+|-
+|\}
+!}%

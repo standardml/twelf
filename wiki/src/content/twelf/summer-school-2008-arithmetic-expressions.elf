@@ -1,0 +1,160 @@
+%%! title: "Summer school 2008:Arithmetic expressions"
+
+%{! 
+
+\{\{Summer school 2008
+   |noprevious = 
+   |next = Arithmetic expressions with let-binding
+   |nextname = Arithmetic expressions with let-binding
+\}\}
+
+#
+# Rudimentary arithmetic
+
+In on-paper notation, the syntax of the natural numbers is given as follows:
+
+&lt;math&gt;n ::= \mathsf\{z\} \, | \, \mathsf\{s\}(n)&lt;/math&gt;
+
+That is, &lt;math&gt;\mathsf\{z\}&lt;/math&gt; is a natural number, and if &lt;math&gt;n&lt;/math&gt; is a natural number, then &lt;math&gt;\mathsf\{s\}(n)&lt;/math&gt; is as well.
+
+We represent natural numbers as an LF type ``nat`` with two constants generating LF terms of that type:
+
+ !}%
+
+nat : type.             %name nat M.
+z : nat.
+s : nat -> nat.
+
+%{! 
+
+The constant ``z`` constructs a ``nat``; the constant ``s`` constructs a ``nat`` from a ``nat``.
+
+#
+#
+# Addition
+
+Next, we define addition as a judgement relating two natural numbers to their sum:
+
+&lt;table style="margin-left:auto;margin-right:auto" cellpadding="24"&gt;
+&lt;tr&gt;&lt;td&gt;
+&lt;math&gt;\{\qquad\} \over \{\mathsf\{add\}(\mathsf\{z\},n,n)\}
+&lt;/math&gt;
+&lt;/td&gt;&lt;td&gt;
+&lt;math&gt;
+\{\mathsf\{add\}(m,n,p)\} \over
+\{\mathsf\{add\}(\mathsf\{s\}(m), n, \mathsf\{s\}(p))\}
+&lt;/math&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+This judgement is represented in LF as follows:
+
+ !}%
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) 
+         <- add M N P.
+
+%{! 
+
+The first line says that the type family ``add`` relates three natural numbers.  The second line says that the first two (the addends) determine the third (the sum).  The constants ``add/z`` and ``add/s`` correspond to the inference rules above.
+
+#
+#
+#
+# Totality
+
+Twelf verifies that addition is a total function on closed terms of type nat:
+
+ !}%
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%{! 
+The declarations should be read as follows:
+* [%mode](/wiki/percent-mode/): The two addends are inputs; the sum is an output.
+* [%worlds](/wiki/percent-worlds/): ``add`` is defined on closed LF terms
+* [%total](/wiki/percent-total/): For all ``M`` and ``N``, there exists a ``P`` such that ``add M N P`` is derivable.
+
+This proves a [totality assertion](/wiki/totality-assertion/) for ``add``.
+ !}%
+
+%{! 
+
+#
+# Simple arithmetic expressions
+
+ !}%
+
+exp : type.             %name exp E.
+num : nat -> exp.
+plus : exp -> exp -> exp.
+
+%{! 
+#
+#
+# Evaluation
+
+First, we define a syntactic category of answers, which in this case is
+just natural numbers:
+
+ !}%
+
+ans : type.				%name ans A.
+anum : nat -> ans.
+
+%{! 
+Next, we define the evaluation judgement relating an expression to an answer.
+ !}%
+
+eval : exp -> ans -> type.		%name eval Deval.
+%mode eval +E1 -E2.
+
+eval/num
+   : eval (num N) (anum N).
+
+eval/plus
+   : eval (plus E1 E2) (anum N)
+      <- eval E1 (anum N1)
+      <- eval E2 (anum N2)
+      <- add N1 N2 N.
+
+%worlds () (eval _ _).
+%total E (eval E _).
+
+%{! 
+Twelf verifies that evaluation is total: 
+* the mode declaration says that the expression is an input, and the answer is an output.
+* the worlds declaration says that we're only considering closed expressions
+* the total declaration asks Twelf to verify that ``eval`` defines a total relation from closed expressions to closed answers.  
+ !}%
+
+%{! 
+#
+#
+# Solving for derivations
+
+We can use logic programming to [%solve](/wiki/percent-solve/) for derivations.  
+
+ !}%
+
+two : nat = (s (s z)).
+%solve _ : add two two N.
+
+two_exp : exp = num two.
+%solve _ : eval (plus two_exp two_exp) E.
+
+%{! 
+
+
+\{\{Summer school 2008
+   |noprevious = 
+   |next = Arithmetic expressions with let-binding
+   |nextname = Arithmetic expressions with let-binding
+\}\}
+
+ !}%

@@ -1,0 +1,212 @@
+%%! title: "Proving metatheorems:Natural numbers: Answers to exercises"
+
+%{!
+This page contains answers to the exercises listed [Proving metatheorems:Summary: the natural numbers](/wiki/proving-metatheorems-summary-the-natural-numbers/).  If you've solved an exercise that isn't answered on this page, or if you have a different solution to an exercise, please add it here.
+
+#
+# Commutativity of Addition
+
+_State and prove a metatheorem showing that ``plus`` is commutative._
+
+&lt;twelf import="pluscommute" hidden="true"&gt;
+nat : type.
+z   : nat.
+s   : nat -&gt; nat.
+
+plus   : nat -&gt; nat -&gt; nat -&gt; type.
+plus-z : plus z N2 N2.
+plus-s : plus (s N1) N2 (s N3)
+          &lt;- plus N1 N2 N3.
+
+even : nat -&gt; type.
+even-z : even z.
+even-s : even (s (s N)) 
+          &lt;- even N.
+&lt;/twelf&gt;
+The theorem may be stated:
+
+&lt;twelf discard="true"&gt;
+plus-commutes : plus N1 N2 N3 -&gt; plus N2 N1 N3 -&gt; type.
+%mode plus-commutes +D1 -D2.
+&lt;/twelf&gt;
+
+However, before we prove this theorem, we first prove two lemmas.  The first says that for any natural number &lt;math&gt;n&lt;/math&gt;, &lt;math&gt;n+0=n&lt;/math&gt;.  This is similar to the constant ``plus-z``, but the order of the arguments to ``plus`` has been changed:
+
+&lt;twelf import="pluscommute"&gt;
+plus-zero-id :  \{N1 : nat\} plus N1 z N1 -&gt; type.
+%mode plus-zero-id +N -D.
+
+pzidz : plus-zero-id
+         z
+         plus-z.
+
+pzids : plus-zero-id
+         (s N)
+         (plus-s D : plus (s N) z (s N))
+          &lt;- plus-zero-id N D.
+
+%worlds () (plus-zero-id _ _).
+%total N (plus-zero-id N _).
+&lt;/twelf&gt;
+
+Our second lemma states that if &lt;math&gt;\mathsf\{plus\}(n_1,n_2,n_3)&lt;/math&gt; then &lt;math&gt;\mathsf\{plus\}(n_1, \mathsf\{succ\}(n_2), \mathsf\{succ\}(n_3))&lt;/math&gt;.  This lemma is similar to the constant ``plus-s``, but the order of the arguments to ``plus`` has been changed:
+
+&lt;twelf import="pluscommute"&gt;
+plus-flip : plus N1 N2 N3 -&gt; plus N1 (s N2) (s N3) -&gt; type.
+%mode plus-flip +D1 -D2.
+
+pfz : plus-flip 
+       _
+       plus-z.
+
+pfs : plus-flip
+       (plus-s Dplus : plus (s N1) N2 (s N3))
+       (plus-s DIH   : plus (s N1) (s N2) (s (s N3)))
+         &lt;- plus-flip Dplus DIH.
+
+%worlds () (plus-flip _ _).
+%total D (plus-flip D _).
+&lt;/twelf&gt;
+
+Finally, using these two lemmas, we may prove the theorem itself:
+
+&lt;twelf import="pluscommute"&gt;
+plus-commutes : plus N1 N2 N3 -&gt; plus N2 N1 N3 -&gt; type.
+%mode plus-commutes +D1 -D2.
+
+pcz : plus-commutes
+       _
+       D
+        &lt;- plus-zero-id N1 D.
+       
+pcs : plus-commutes       
+       (plus-s Dplus: plus (s N1') N2 (s N3'))
+       D
+        &lt;- plus-commutes Dplus DIH
+        &lt;- plus-flip DIH D.
+
+%worlds () (plus-commutes _ _).
+%total D (plus-commutes D _).
+&lt;/twelf&gt;
+
+#
+# Even/odd numbers and addition
+
+#
+#
+# Define the odd numbers
+
+&lt;twelf import="pluscommute"&gt;
+odd   : nat -&gt; type.
+odd-1 : odd (s z).
+odd-s : odd N -&gt; odd (s (s N)).
+&lt;/twelf&gt;
+
+#
+#
+# The successor of an even number is an odd number, and vice versa
+
+&lt;twelf import="pluscommute"&gt;
+succ-even : even N -&gt; odd (s N) -&gt; type.
+%mode succ-even +D1 -D2.
+
+sez : succ-even even-z odd-1.
+
+ses : succ-even (even-s EvenA) (odd-s OddA)
+       &lt;- succ-even EvenA OddA.
+
+%worlds () (succ-even _ _).
+%total D (succ-even D _).
+
+succ-odd : odd N -&gt; even (s N) -&gt; type.
+%mode succ-odd +D1 -D2.
+
+so1 : succ-odd odd-1 (even-s even-z).
+
+sos : succ-odd (odd-s OddA) (even-s EvenA)
+       &lt;- succ-odd OddA EvenA.
+
+%worlds () (succ-odd _ _).
+%total D (succ-odd D _).
+&lt;/twelf&gt;
+
+#
+#
+# The sum of an even and an odd number is odd
+
+&lt;twelf import="pluscommute"&gt;
+sum-even-odd : even N1 -&gt; odd N2 -&gt; plus N1 N2 N3 -&gt; odd N3 -&gt; type.
+%mode sum-even-odd +D1 +D2 +D3 -D4.
+
+seoz : sum-even-odd even-z OddN2 plus-z OddN2.
+
+seos : sum-even-odd
+       (even-s EvenN1)
+       OddN2
+       (plus-s (plus-s PlusN1N2N3))
+       (odd-s OddN3)
+       &lt;- sum-even-odd EvenN1 OddN2 PlusN1N2N3 OddN3.
+
+%worlds () (sum-even-odd _ _ _ _).
+%total D (sum-even-odd D _ _ _).
+&lt;/twelf&gt;
+
+#
+#
+# The sum of an odd plus an even number is odd
+
+&lt;twelf import="pluscommute"&gt;
+sum-odd-even : odd N1 -&gt; even N2 -&gt; plus N1 N2 N3 -&gt; odd N3 -&gt; type.
+%mode sum-odd-even +D1 +D2 +D3 -D4.
+
+soe1 : sum-odd-even odd-1 EvenN2 _ OddN3
+        &lt;- succ-even EvenN2 OddN3.
+
+soes : sum-odd-even
+        (odd-s OddN1)
+        EvenN2
+        (plus-s (plus-s PlusN1N2N3))
+        (odd-s OddN3)
+        &lt;- sum-odd-even OddN1 EvenN2 PlusN1N2N3 OddN3.
+
+%worlds () (sum-odd-even _ _ _ _).
+%total D (sum-odd-even D _ _ _).
+&lt;/twelf&gt;
+
+or we can use the previously proved commutativity lemma of plus:
+
+&lt;twelf import="pluscommute"&gt;
+sum-odd-even : odd M -&gt; even N -&gt; plus M N P -&gt; odd P -&gt; type.
+%mode sum-odd-even +O +E +P -O2.
+
+soe : sum-odd-even
+       (O : odd M)
+       (E : even N)
+       (A : plus M N P)
+       (O0 : odd P)
+       &lt;- plus-commutes A A0
+       &lt;- sum-even-odd E O A0 O0.
+
+%worlds () (sum-odd-even _ _ _ _).
+%total D (sum-odd-even D _ _ _).
+&lt;/twelf&gt;
+
+#
+#
+# The sum of two odd numbers is even
+
+&lt;twelf import="pluscommute" check="true"&gt;
+sum-odds : odd N1 -&gt; odd N2 -&gt; plus N1 N2 N3 -&gt; even N3 -&gt; type.
+%mode sum-odds +D1 +D2 +D3 -D4.
+
+soz : sum-odds odd-1 OddN2 _ EvenN3
+       &lt;- succ-odd OddN2 EvenN3.
+
+sos : sum-odds (odd-s OddN1) OddN2 (plus-s (plus-s PlusN1N2N3)) (even-s
+EvenN3)
+       &lt;- sum-odds OddN1 OddN2 PlusN1N2N3 EvenN3.
+
+%worlds () (sum-odds _ _ _ _).
+%total D (sum-odds D _ _ _).
+&lt;/twelf&gt;
+!}%

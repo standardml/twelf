@@ -1,0 +1,9 @@
+%%! title: "Template:Otimes"
+
+%{!
+&lt;font face="Lucida Sans Unicode"&gt;⊗&lt;/font&gt;&lt;noinclude&gt;
+
+This template renders the tensor (latex \otimes) symbol, with workarounds for Internet Explorer. Use it by typing &lt;nowiki&gt;\{\{otimes\}\}&lt;/nowiki&gt; in an article.
+
+&lt;/noinclude&gt;
+!}%

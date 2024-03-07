@@ -1,0 +1,90 @@
+%%! title: "Download"
+
+%{!
+The current version of Twelf is 1.7.1. You can also [Twelf Live](/wiki/twelf-live/) in your browser.
+
+* [http://twelf.org/releases/twelf-src-1.7.1.tar.gz twelf-src-1.7.1.tar.gz] - Source distribution, can be built with MLton or SML/NJ
+* [http://twelf.org/releases/twelf-linux-1.7.1.tar.gz twelf-linux-1.7.1.tar.gz] - Pre-built distribution for Linux
+* [http://twelf.org/releases/twelf-osx-1.7.1.dmg twelf-osx-1.7.1.dmg] - Pre-built distribution for OSX
+* (Working on it) - Pre-built distribution for Windows
+
+#
+# Installation instructions
+
+#
+#
+#
+# Pre-compiled versions
+
+If you download the pre-compiled Linux or Windows versions of Twelf, simply run the installer (on Windows) or unpack the tarball wherever you want to put the distribution (on Linux), and the skip to the instructions for setting up Emacs below.
+
+#
+#
+#
+# Installing with SML/NJ
+
+You will need to have the Standard ML of New Jersey software on your computer. This can be obtained from the [http://www.smlnj.org SML/NJ website]. Additionally, you will need the standard unix-style Make tools. These come with basically any Linux distribution. Windows users should check out the [http://www.cygwin.com Cygwin Project] to install those tools under Windows. Once you have these things set up, Twelf can be built by running the following commands:
+
+&lt;pre&gt;$ cd twelf
+$ make smlnj&lt;/pre&gt;
+
+#
+#
+#
+# Installing with MLton
+
+You will need to have the MLton compiler installed on your system. This can be obtained from the [http://mlton.org/ MLton website]. Using Twelf with MLton has not been tested on Windows. On Linux, Twelf can be built by running the following commands:
+
+&lt;pre&gt;$ cd twelf
+$ make mlton&lt;/pre&gt;
+
+#
+#
+#
+# Setting up Emacs
+
+A piece of information about using [Twelf with Emacs](/wiki/twelf-with-emacs/) is printed out by the installation script (and can be found in the disk image for the OSX distribution), telling you to add two lines somewhere in your ``.emacs`` file. If you don't have a ``.emacs`` file in your home directory, you can create one and add these two lines.
+
+If you put Twelf in the directory ``/somewhere/twelf/`` then you should add these lines (just replace ``somewhere`` with wherever you built Twelf).
+
+&lt;code&gt;(setq twelf-root "/somewhere/twelf/")
+(load (concat twelf-root "emacs/twelf-init.el"))&lt;/code&gt;
+
+When using the Windows installer, the default directory is ``C:\Program Files\Twelf``, so 
+
+&lt;code&gt;(setq twelf-root "C:\\Program Files\\Twelf\\")
+(load (concat twelf-root "emacs\\twelf-init.el"))&lt;/code&gt;
+
+#
+# Other ways of getting Twelf
+
+#
+#
+#
+# Twelf Night(ly)
+
+The [http://twelf.plparty.org/builds Twelf Night(ly)] system is regularly updated with OSX and Linux binary distributions, and includes the output of an extensive test suite. Before you download from Twelf Night(ly), check the log messages and make sure nothing seems out of the ordinary. If anything seems wrong, or if the Windows binary is out of date, contact [User:Rsimmons](/wiki/user-rsimmons/) who maintains the system.
+
+#
+#
+#
+# Twelf Subversion
+&lt;!-- If you change this subheading's title, make sure you also change the articles that link to this section specifically:
+
+* Holes in metatheorems
+
+--&gt;
+
+Subversion comes installed on most Linux systems and Mac OS X systems, and can be obtained from [http://subversion.tigris.org/ subversion.tigris.org] for other operating systems, including Windows. If subversion is installed, the development version of Twelf (which is not guaranteed to be stable, but which usually is in practice) can be checked out by executing the following command at a command line:
+
+&lt;pre&gt;$ svn co https://svn.concert.cs.cmu.edu/twelf/trunk twelf&lt;/pre&gt;
+
+These commands will download all of the Twelf source code into a directory called "twelf" inside of the directory you are in when you execute the commands listed in the installation instructions.
+
+#
+#
+#
+# Older versions of Twelf
+
+Links to older software versions are available from the [revision history](/wiki/release-history/) page, but use of any version earlier than 1.7.0, especially when working with metatheorems, is highly discouraged.
+!}%

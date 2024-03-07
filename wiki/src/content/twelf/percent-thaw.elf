@@ -1,0 +1,29 @@
+%%! title: "%thaw"
+
+%{!
+\{\{undocumented\}\}
+The **``%thaw``** directive allows previously [frozen](/wiki/percent-freeze/) type families to be extended with new [canonical forms](/wiki/canonical-form/). Because this can easily be used to invalidate [metatheorem](/wiki/metatheorem/)s, it is a directive that can only be used in [unsafe mode](/wiki/unsafe-mode/).
+
+If Twelf is in unsafe mode, the following code can be run to demonstrate **``%thaw``**:
+
+&lt;twelf&gt;
+nat : type.
+z : nat.
+s : nat -&gt; nat.
+
+%freeze nat.
+
+% Right here I could not declare a new constant of type nat
+
+%thaw nat.
+
+% Now I can define a wacky new natural number
+q : nat.
+&lt;/twelf&gt;
+
+#
+# See also
+
+* [Auto-freezing](/wiki/percent-freeze/)
+\{\{keyword|key=thaw\}\}
+!}%

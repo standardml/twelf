@@ -1,0 +1,47 @@
+%%! title: "Talk:%theorem"
+
+%{!
+This page seems too terse and erroneous too.
+%theorem is equivalent to a type family definition and a mode definition
+(and much more readable!).
+It does NOT include %worlds.
+I know that _real_ Twelf users don't ever use it, even
+when it would make their meta-theorems much easier to read.
+I think this is a shame.  %theorem declarations are 
+perfectly compatible with manual theorem proving.
+&lt;twelf&gt;
+bool : type.
+
+
+true : bool.
+
+false : bool.
+
+
+%freeze bool.
+
+
+
+eq : bool -&gt; bool -&gt; type.
+
+
+eq/ : eq B B.
+
+
+
+%theorem eq-reflexive : 
+        forall \{X\} 
+        exists \{E:eq X X\} 
+        true.
+
+- : eq-reflexive _ eq/.
+
+%worlds () (eq-reflexive _ _).
+%total \{ \} (eq-reflexive _ _).
+&lt;/twelf&gt;
+[User:Boyland](/wiki/user-boyland/) 22:36, 24 January 2008 (EST)
+
+The confusion here, I believe, is that %theorem does perform the %worlds job when being used as part of the [theorem prover](/wiki/theorem-prover/), but not when being used in totality-declaration-style. I think the edit here is accurate, if you want to run with it it could use a simple example. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:08, 30 January 2008 (EST)
+
+Seems fine now [User:boyland](/wiki/user-boyland/) 11:33, 6 February 2008 (EST)
+!}%

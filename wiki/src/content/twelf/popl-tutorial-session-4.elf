@@ -1,0 +1,11 @@
+%%! title: "POPL Tutorial/Session 4"
+
+%{!
+#
+# Type preservation for MinML
+
+In this session, we will prove type preservation for MinML.
+
+- We recommend that you type in what we type, so your fingers get used to Twelf. But if you want to save your self some typing, start from the [POPL_Tutorial/Session 4 Starter](/wiki/popl-tutorial-session-4-starter/)
+- Answers to the exercises: [POPL Tutorial/Session 4 Answer](/wiki/popl-tutorial-session-4-answer/)
+!}%

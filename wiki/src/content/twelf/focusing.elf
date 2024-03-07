@@ -1,0 +1,301 @@
+%%! title: "Focusing"
+
+%{! Focusing for polarized logic and focalization (the completeness of focusing). This proof has been de-unicoded by a sed [https://github.com/robsimmons/agda-lib/blob/lambdatown/sedforwiki script],
+the original is [https://github.com/robsimmons/agda-lib/blob/lambdatown/Polar.elf here]. 
+| hidden=true !}%
+
+small: type. 
+big: type.
+s: small.
+b: small -> big.
+
+%%## Syntax
+
+pol: type. %name pol P.
++: pol.
+-: pol.
+
+%{! We define propositions in an environment with free atoms !}%
+atom: pol -> type. %name atom Q q.
+%block atom+: block {Q+: atom +}.
+%block atom-: block {Q-: atom -}.
+
+typ: pol -> type. %name typ A.
+c: atom P -> typ P.
+
+dn: typ - -> typ +.
+bot: typ +.
+\/: typ + -> typ + -> typ +. %infix none 5 \/.
+top+: typ +.
+*: typ + -> typ + -> typ +. %infix none 5 *.
+
+up: typ + -> typ -.
+=>: typ + -> typ - -> typ -. %infix none 5 =>.
+top-: typ -.
+/\: typ - -> typ - -> typ -. %infix none 5 /\.
+
+%{! Succedents are things that come to the right of the turnstile !}%
+suc: type. %name suc Suc jmt.
+inv: typ - -> suc. %postfix 3 inv.
+true: typ + -> suc. %postfix 3 true.
+susp: typ - -> suc. %postfix 3 susp. 
+
+%{! Right-stable judgments are ones that are either positive or suspended !}%
+stable: suc -> type. %name stable St.
+sp: stable (A+ true).
+sn: stable (A- susp).
+
+%{! An inversion context ``Inv`` is a list of positive propositions !}%
+pos: type. %name pos Inv.
+#: pos.
+,: typ + -> pos -> pos. %infix right 3 ,.
+
+
+%%## Sequent calculus
+
+seqform: type. %name seqform Form.
+exp: seqform -> type. %name exp E z.
+
+rfoc: typ + -> seqform. 
+%abbrev value: typ + -> type = [A+] exp (rfoc A+).
+
+leftform: type.
+hasleft: leftform -> suc -> seqform.
+
+ininv: pos -> leftform.
+%abbrev term: pos -> suc -> type = [Inv][U] exp (hasleft (ininv Inv) U).
+
+infoc: typ - -> leftform.
+%abbrev spine: typ - -> suc -> type = [A-][U] exp (hasleft (infoc A-) U).
+
+hyp: typ - -> type. %name hyp X x.
+%block nprop : some {A-: typ -} block {x: hyp A-}.
+%block aprop : some {Q+: atom +} block {z: value (c Q+)}.
+%block pprop : some {A+: typ +} block {z: value A+}.
+%worlds (atom+ | atom- | nprop) (hyp _).
+
+%block gamma_suspnormal = (atom+ | atom- | nprop | aprop). % World for cut
+%block gamma = (atom+ | atom- | nprop | pprop).            % World for identity
+
+suspnormal: suc -> type.
+snn: suspnormal (A- inv).
+snp: suspnormal (A+ true).
+sna: suspnormal ((c Q-) susp).
+
+suspstable: suc -> type.
+ss: stable U -> suspnormal U -> suspstable U.
+
+suspnormalF: seqform -> type.
+snr: suspnormalF (rfoc A+).
+snl: suspnormalF (hasleft _ U) <- suspnormal U. 
+
+%%#### Values
+
+%{! 
+``V ::= z | thunk N | inl V | inr V | ⟨⟩+ | ⟨V1,V2⟩+`` 
+
+The rule ``id+`` corresponding to the proof term ``z`` comes for free
+from LF.  
+ !}%
+
+dnR: term # (A- inv) -> value (dn A-).
+\/R1: value A+ -> value (A+ \/ B+).
+\/R2: value B+ -> value (A+ \/ B+).
+top+R: value top+.
+*R: value A+ -> value B+ -> value (A+ * B+).
+
+%%#### Terms
+
+%{! 
+``M ::= ret V | x &bull; Sp | ⟨z⟩.N | x.N | abort | [N1, N2] | ⟨⟩.N | ×N | ⟨N⟩ | \{N\} | &lambda;N | ⟨⟩- | ⟨N1,N2⟩-`` 
+ !}%
+
+focR: value A+ -> term # (A+ true).
+focL: stable Suc -> hyp A- -> spine A- Suc -> term # Suc.
+&eta;+: (value (c Q+) -> term Inv Suc) -> term (c Q+ , Inv) Suc.
+dnL: (hyp A- -> term Inv Suc) -> term (dn A- , Inv) Suc.
+botL: term (bot , Inv) Suc.
+\/L: term (A+ , Inv) Suc -> term (B+ , Inv) Suc -> term (A+ \/ B+ , Inv) Suc.
+top+L: term Inv Suc -> term (top+ , Inv) Suc.
+*L: term (A+ , B+ , Inv) Suc -> term (A+ * B+ , Inv) Suc.
+&eta;-: term # ((c Q-) susp) -> term # ((c Q-) inv).
+upR: term # (A+ true) -> term # (up A+ inv).
+=>R: term (A+ , #) (B- inv) -> term # (A+ => B- inv).
+top-R: term # (top- inv).
+/\R: term # (A- inv) -> term # (B- inv) -> term # (A- /\ B- inv).
+
+%%#### Spines
+
+%{! 
+``Sp ::= nil | pm N | V;Sp | &pi;1;Sp | &pi;2;Sp`` 
+ !}%
+
+id-: spine A- (A- susp).
+upL: stable Suc -> term (A+ , #) Suc -> spine (up A+) Suc.
+=>L: value A+ -> spine B- Suc -> spine (A+ => B-) Suc.
+/\L1: spine A- Suc -> spine (A- /\ B-) Suc.
+/\L2: spine B- Suc -> spine (A- /\ B-) Suc.
+
+%%#### Negative focal substitution
+
+%{! Our encoding gives us positive focal substitution for free - it's
+very natural to describe suspended propsitions ``⟨A+⟩`` in the
+hypothetical context as variables of type ``rfoc A+``, which is
+adequate and gives us the ``id+`` rule for free. By chosing a more
+traditional way of describing negative suspended propositions (instead
+of the complicated encoding that gives us ``id-`` for free), we have
+forced ourselves to prove a theorem, negative focal substitution, that
+we could have avoided. The partial "NoNil" development avoids proving
+subst-. !}%
+
+subst-: stable U 
+  -> exp (hasleft L (A- susp)) 
+  -> spine A- U
+  -> exp (hasleft L U) 
+  -> type.
+%mode subst- +Pf +E +Sp -Sp'.
+
+/: subst- Pf (focL _ X Sp0) Sp (focL Pf X Sp0')
+    <- subst- Pf Sp0 Sp Sp0'. 
+/: subst- Pf (&eta;+ [z] N z) Sp (&eta;+ [z] N' z)
+    <- {z} subst- Pf (N z) Sp (N' z).
+/: subst- Pf (dnL [x] N x) Sp (dnL [x] N' x)
+    <- {x} subst- Pf (N x) Sp (N' x).
+/: subst- Pf botL Sp botL.
+/: subst- Pf (\/L N1 N2) Sp (\/L N1' N2')
+    <- subst- Pf N1 Sp N1'
+    <- subst- Pf N2 Sp N2'.
+/: subst- Pf (top+L N) Sp (top+L N')
+    <- subst- Pf N Sp N'.
+/: subst- Pf (*L N) Sp (*L N')
+    <- subst- Pf N Sp N'.
+
+/: subst- Pf id- Sp Sp.
+/: subst- Pf (upL _ N) Sp (upL Pf N')
+    <- subst- Pf N Sp N'.
+/: subst- Pf (=>L V Sp0) Sp (=>L V Sp0')
+    <- subst- Pf Sp0 Sp Sp0'.
+/: subst- Pf (/\L1 Sp0) Sp (/\L1 Sp0')
+    <- subst- Pf Sp0 Sp Sp0'.
+/: subst- Pf (/\L2 Sp0) Sp (/\L2 Sp0')
+    <- subst- Pf Sp0 Sp Sp0'.
+
+%worlds (gamma) (subst- _ _ _ _).
+%total E (subst- _ E _ _).
+
+
+%%## Cut admissibility
+
+%{! Cut admissibility has a couple of mutually inductive theorems, but
+no more than is absolutely necessary given the syntactic classes we're
+dealing with. Furthermore, the different theorems we use neatly sort
+out the informal division of cases that we are used to dealing with
+when proving cut admissibility theorems. The "principal" substitutions
+capture the principal cuts:
+
+* ``V &bull; Ni`` - positive cut formula, and
+* ``N &bull; Sp`` - negative cut formula. !}%
+
+cut+: {A+} small 
+  -> suspnormal U
+  -> value A+ 
+  -> term (A+ , Inv) U
+  -> term Inv U
+  -> type.
+
+cut-: {A-} small
+  -> suspstable U
+  -> term # (A- inv)
+  -> spine A- U
+  -> term # U
+  -> type.
+
+%mode cut+ +A +S +Pf +V +N -N'.
+%mode cut- +A +S +Pf +N +Sp -N'.
+
+%{! The "rightist" substitution ``N/x]]E`` captures all right
+commutative cuts. Each inductive call within this group decreases the
+size of the expression E that we are substituting into. !}%
+
+rsubst:  {A-} big
+  -> suspnormalF Form
+  -> term # (A- inv) 
+  -> (hyp A- -> exp Form)
+  -> exp Form 
+  -> type.
+
+%mode rsubst  +A +S +Pf +N +E -E'.
+
+%{! The "leftist" substitution ``&lt;&lt;E&gt;&gt;N`` captures all left commutative
+cuts.  Each inductive call within this group decreases the size of the
+expression E that we are substituting in, hence "leftist." !}%
+
+lsubst: {A+} big 
+  -> suspstable U
+  -> exp (hasleft L (A+ true))
+  -> term (A+ , #) U
+  -> exp (hasleft L U) 
+  -> type.
+
+%mode lsubst +A +S +Pf +E +N -E'.
+
+%%#### Principal substitution/cuts
+
+%{! ``(V &bull; N) = N' &lt;/nowiki&gt;&lt;/tt !}%
+
+/: cut+ (c Q+) S _ X (&eta;+ [z] N z) (N X).
+
+/: cut+ (dn A-) s Pf (dnR M) (dnL N) N'
+  <- rsubst A- (b s) (snl Pf) M N (N': term Inv U).
+
+/: cut+ (A+ \/ B+) S Pf (\/R1 V) (\/L N1 N2) N'
+  <- cut+ A+ S Pf V N1 (N': term Inv U).
+
+/: cut+ (A+ \/ B+) S Pf (\/R2 V) (\/L N1 N2) N'
+  <- cut+ B+ S Pf V N2 (N': term Inv U).
+
+/: cut+ top+ S Pf top+R (top+L N) N.
+
+/: cut+ (A+ * B+) S Pf (*R V1 V2) (*L N) N'
+  <- cut+ A+ S Pf V1 N (NB: term (B+ , Inv) U)
+  <- cut+ B+ S Pf V2 NB (N': term Inv U).
+
+%{! ``(M &bull; Sp) = N' &lt;/nowiki&gt;&lt;/tt !}%
+
+/: cut- (c Q-) S Pf (&eta;- N) id- N.
+
+/: cut- (up A+) s Pf (upR N) (upL _ M) N'
+    <- lsubst A+ (b s) Pf N M N'.
+
+/: cut- (A+ => B-) S (ss Pf1 Pf2) (=>R N) (=>L V Sp) N'
+  <- cut+ A+ S snn V N (NB: term # (B- inv))
+  <- cut- B- S (ss Pf1 Pf2) NB Sp (N': term # U).
+
+/: cut- (A- /\ B-) S Pf (/\R N1 N2) (/\L1 Sp) N'
+  <- cut- A- S Pf N1 Sp (N': term # U).
+
+/: cut- (A- /\ B-) S Pf (/\R N1 N2) (/\L2 Sp) N'
+  <- cut- B- S Pf N2 Sp (N': term # U).
+
+%%#### Rightist substitution (right commutative cuts)
+
+%{! ``M/x]]V = V' &lt;/nowiki&gt;&lt;/tt !}%
+
+/: rsubst A- S snr M ([x] V) (V: value (c Q+)).
+
+/: rsubst A- S snr M ([x] dnR (N x)) (dnR N')
+  <- rsubst A- S (snl snn) M ([x] N x) (N': term # (C- inv)).
+
+/: rsubst A- S snr M ([x] \/R1 (V x)) (\/R1 V')
+  <- rsubst A- S snr M ([x] V x) (V': value C1+).
+
+/: rsubst A- S snr M ([x] \/R2 (V x)) (\/R2 V')
+  <- rsubst A- S snr M ([x] V x) (V': value C2+).
+
+/: rsubst A- S snr M ([x] top+R) top+R.
+
+/: rsubst A- S snr M ([x] *R (V1 x) (V2 x)) (*R V1' V2')
+  <- rsubst A- S snr M ([x] V1 x) (V1': value C1+)
+  <- rsubst A- S snr M ([x] V2 x) (V2': value C2+).
+
+%{! ``

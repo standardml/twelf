@@ -1,0 +1,23 @@
+%%! title: "MediaWiki:Sidebar"
+
+%{!
+* the twelf wiki
+** mainpage|mainpage
+** About The Twelf Project|The Twelf Project
+** Download|Download Twelf
+** Documentation|Documentation 
+&lt;!-- The space here is controlled by Mediawiki:Monobook.css --&gt;
+** recentchanges-url|recentchanges
+** Project:Contributing|Contributing
+
+* learn twelf
+** Introductions to Twelf|Introductions
+** Tutorials|Tutorials
+** Case studies|Case studies
+** Glossary|Twelf glossary
+** Ask Twelf Elf|Ask Twelf Elf
+
+* reference
+** Bibliography of LF|LF bibliography
+** Research projects using Twelf|Research with Twelf
+!}%

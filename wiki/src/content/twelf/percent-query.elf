@@ -1,0 +1,65 @@
+%%! title: "%query"
+
+%{!
+The **``%query``** declarations specify a type (that corresponds to a judgment by the [judgments as types](/wiki/judgment/) principle), and tells Twelf's [logic programming](/wiki/logic-programming/) engine to search for a proof of that judgment. 
+
+A query declaration also takes two other inputs, which can either be a number or a star "``*``". The meaning of this can be slightly counterintuitive:
+
+* The first input is the _expected number of solutions_ - a star here means "as many solutions as you let Twelf look for"
+* The second input is the _number of solutions to find_ - a star here means "keep looking until you have found all solutions"
+
+This meaning that some possible queries will always fail:
+
+* ``%query 5 4 ...`` will always fail because there is no way to come up with 5 solutions in 4 tries
+* ``%query 6 6 ...`` means the same thing as ``%query * 6 ...``, because both mean "try six times, and find a solution every time"
+* ``%query * * ...`` will either keep coming up with more solutions forever (and will therefore not terminatie) or it will eventually fail to come up with a solution and so will fail.
+
+#
+# Example
+
+We will use the example of list membership to demonstrate ``%query`` because there may be multiple ways to find an element in a list (if that element occurs multiple times).
+
+&lt;twelf&gt;
+elem : type.
+a : elem.
+b : elem.
+c : elem.
+d : elem.
+
+list : type.
+nil : list.
+, : elem -&gt; list -&gt; list. %infix right 10 ,.
+
+sample-list : list = a , c , a , b , a , c , a , a , b , c , c , d , nil.
+
+member : elem -&gt; list -&gt; type.
+member/hit  : member A (A , L).
+member/skip : member A (B , L)
+               &lt;- member A L.
+&lt;/twelf&gt;
+
+&lt;twelf discard=true check=true&gt;
+%query 1 * member d sample-list.   % There is exactly one "d" in the list
+%query 3 3 member a sample-list.   % There are at least three "a's" in the list
+%query * 2 member b sample-list.   % There are at least two "b's" in the list
+%query * 0 member c sample-list.   % Try zero times (the query isn't even run)
+%query 8 0 member c sample-list.   % Try zero times (the query isn't even run)
+%query 3 * member a sample-list.   % Fails because there are more than 3 solutions
+&lt;/twelf&gt;
+
+#
+#
+# Getting output from ``%query``
+
+Unlike ``[%solve](/wiki/percent-solve/)``, ``%query`` declarations do not allow you to insert the output of a query into the [signature](/wiki/twelf-signature/). However, you can inspect the output in the Twelf buffer. For example, if we leave the first argument of ``%query`` as a proof term]] that caused the query to succeed. The proof terms below indicate that the first two instances of ``b`` is located in the fourth position in the list (the search skips three times and then hits) and in the ninth position in the list (the search skips eight times and then hits).
+
+&lt;twelf check=decl&gt;
+%query * 2 D : member b sample-list. 
+&lt;/twelf&gt;
+
+#
+# See also
+
+* \{\{guide|chapter=5|section=23|title=Query Declaration\}\}
+\{\{keyword|key=query\}\}
+!}%

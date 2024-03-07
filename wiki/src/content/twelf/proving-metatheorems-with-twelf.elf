@@ -1,0 +1,31 @@
+%%! title: "Proving metatheorems with Twelf"
+
+%{!
+#
+# Is this introduction for you?
+
+The life story of a typical [deductive system](/wiki/object-logic/) goes something like this: One day, a programming language designer has an idea for a new programming language.  She writes down the language's [abstract syntax](/wiki/abstract-syntax/).  Then, she gives the syntax meaning by defining some [judgement](/wiki/judgment/)s for it, such as a type system or an operational semantics.  Next, she investigates the language's properties by proving some theorems.  Maybe she fiddles with the language some to make the desired theorems true; maybe the idea doesn't work at all and she goes on to something else.  Maybe she implements the language to try out some examples.  Eventually, if the idea works out, she writes up a paper about the language.  If it's a good idea, then she, or maybe someone who read the paper, will someday want to extend the language, or incorporate the idea into another language.
+
+Twelf is a tool that assists people designing deductive systems: One day, a programming language designer has an idea.  Then, she formalizes the syntax and judgements of the language in the [LF](/wiki/lf/) logical framework.  She uses Twelf to check her proofs of the theorems.  She uses Twelf to run the language definition itself to try out some examples.  Her paper includes a Twelf appendix, which makes her and her readers much more confident that the theorems in the paper are actually true.  When someone goes to extend the language, he has a formal, machine-checkable artifact that he can study or perhaps even reuse directly.
+
+This introduction assumes that the first version of this story is somewhat familiar to you (if not, you should read a textbook such as [http://www.cis.upenn.edu/~bcpierce/tapl/ TAPL] or  [https://www.cs.cmu.edu/~rwh/pfpl/ PFPL]).  Here, you will learn the fundamentals of the Twelf version of the story.  This guide unveils Twelf in several layers.  The first layer uses a _very_ simple deductive system ([natural numbers](/wiki/natural-numbers/) with addition) to introduce the Twelf methodology.  The second layer tells the same story for a programming language with variable binding (the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/)), which is where Twelf really shines.  The third layer presents some more-interesting proofs and introduces one additional feature of Twelf, the ability to do proofs about open terms.
+
+#
+# Table of contents
+
+-First-order representations: The natural numbers 
+-# [Proving metatheorems: Representing the syntax of the natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/) 
+-# [Proving metatheorems: Simply typed LF](/wiki/proving-metatheorems-simply-typed-lf/)
+-# [Proving metatheorems: Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/) 
+-# [Proving metatheorems: Full LF](/wiki/proving-metatheorems-full-lf/)
+-# [Proving metatheorems: Proving totality assertions about the natural numbers](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/)
+-# [Proving metatheorems: Proving metatheorems about the natural numbers](/wiki/proving-metatheorems-proving-metatheorems-about-the-natural-numbers/) 
+-# [Proving metatheorems: Summary: the natural numbers](/wiki/proving-metatheorems-summary-the-natural-numbers/) ([Proving metatheorems: Natural numbers: Answers to exercises](/wiki/proving-metatheorems-natural-numbers-answers-to-exercises/))
+-Higher-order representations: The STLC
+-# [Proving metatheorems: Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/)
+-# [Proving metatheorems: Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/)
+-# [Proving metatheorems: Proving metatheorems about the STLC](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/)
+-# [Proving metatheorems: Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/)
+-# [Proving metatheorems: Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/)
+-# [Proving metatheorems: Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/) ([Proving metatheorems: STLC: Answers to exercises](/wiki/proving-metatheorems-stlc-answers-to-exercises/))
+!}%

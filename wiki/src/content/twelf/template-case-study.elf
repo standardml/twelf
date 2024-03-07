@@ -1,0 +1,8 @@
+%%! title: "Template:Case study"
+
+%{!
+&lt;hr&gt;
+&lt;small&gt;Read more Twelf [case studies](/wiki/case-studies/) and other Twelf [documentation](/wiki/documentation/).&lt;/small&gt;
+
+&lt;includeonly&gt;&lt;!-- template isn't in the category, only uses of it --&gt;[Category:Case studies](/wiki/category-case-studies/)&lt;/includeonly&gt;
+!}%

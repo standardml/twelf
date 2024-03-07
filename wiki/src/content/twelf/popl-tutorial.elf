@@ -1,0 +1,79 @@
+%%! title: "POPL Tutorial"
+
+%{!
+&lt;!--
+&lt;div style="font-size:162%;border:none;margin: 0;padding:.1em;color:#F00"&gt;**_We want your input!**_&lt;/div&gt;
+
+Help us out by filling out our handy dandy [http://spreadsheets.google.com/viewform?key=pff4VF1v6KVNcwC_c2qFAGA feedback form]!
+--&gt;
+
+#
+# Mechanizing Metatheory with LF and Twelf
+
+Do you want to learn how to use [Main page](/wiki/main-page/) to specify, implement, and prove
+properties about programming languages?  
+
+Come to the Twelf tutorial on **January 19, 2009**, co-located with POPL 2009, in
+**Savannah, Georgia**.
+
+Learn to:
+* Represent [deductive systems](/wiki/object-logic/) in [LF](/wiki/lf/)
+* Prove [metatheorem](/wiki/metatheorem/)s with [Main page](/wiki/main-page/)
+under the helpful guidance of Twelf experts.  
+
+The tutorial will be a highly interactive introduction to LF and Twelf
+aimed at programming languages researchers. No prior experience with LF
+and Twelf is presumed.  Participants will leave the workshop with
+experience in reading and writing LF representations of programming
+languages, and experience reading, writing, and debugging Twelf proofs.
+
+Register at the [http://www.regmaster.com/conf/popl2009.html POPL 2009 registration site]!  
+                                                                                                                                                            
+The tutorial is organized and presented by the CMU Principles of Programming group.  The presenters and TAs at POPL will be Dan Licata, William Lovas, Chris Martens, Rob Simmons, Bob Harper, and Karl Crary.  
+
+#
+# Schedule
+
+The tutorial will begin at **9:00AM**. Get [http://twelf.plparty.org/tutorialslides/lectures.pdf the slides]!
+
+* Part 1: [POPL_Tutorial/Basics](/wiki/popl-tutorial-basics/)
+* Part 2: [POPL_Tutorial/MinML](/wiki/popl-tutorial-minml/)
+* Part 3: [POPL_Tutorial/Combinators](/wiki/popl-tutorial-combinators/)
+* Coda: [POPL_Tutorial/Next](/wiki/popl-tutorial-next/)
+
+There will be a morning coffee break (10AM), lunch (12:30PM-1:30PM), and an afternoon coffee break (3PM).
+
+#
+# Get Twelf before the tutorial!
+
+The tutorial will be interactive, with participants writing Twelf code, so you should come with Twelf installed on your laptop.
+
+Pre-built binaries of Twelf are available for most operating systems: see the [Download](/wiki/download/).
+
+Otherwise:
+* you can build Twelf from the [http://twelf.plparty.org/builds/twelf-src.tar.gz source tarball].  You will need [http://www.mlton.org MLton] or [http://www.smlnj.org sml/nj]. 
+* you can make yourself an account on the wiki, and do the exercises on your User:&lt;login&gt; page (linked at the top after you log in).
+
+Then see [Twelf with Emacs](/wiki/twelf-with-emacs/) for the basics of interacting with Twelf.  (You can also use [Twelf without Emacs](/wiki/twelf-without-emacs/), by interacting with the Twelf server directly.)
+
+#
+# Sponsors
+
+Thanks to our sponsors: 
+[http://www.cs.cmu.edu Carnegie Mellon School of Computer Science],
+[http://www.research.ibm.com IBM Research], 
+[http://research.microsoft.com/ Microsoft Research], 
+[http://www.intel.com/ Intel],
+[http://www.docomolabs-usa.com/ DOCOMO USA Labs],
+[http://www.mozilla.org/ Mozilla],
+[http://www.google.com/ Google].
+
+Image:POPL_Tutorial-IBM.jpg|600px]]
+
+Image:POPL Tutorial-msr.jpg]] Image:POPL Tutorial-intel.jpg|300px]]
+
+
+Image:POPL_Tutorial-docomo-logo.gif|250px]] Image:POPL Tutorial-mozilla.jpg|300px]]
+
+Image:POPL Tutorial-google-logo.gif]]
+!}%

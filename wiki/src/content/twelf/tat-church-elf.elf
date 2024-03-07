@@ -1,0 +1,48 @@
+%%! title: "TAT/church.elf"
+
+%{! Part 2: Polymorphic Lambda Calculu !}%
+
+tp : type.
+arrow : tp -> tp -> tp. 
+forall : (tp -> tp) -> tp. 
+%block tvar : block {a:tp}.
+
+tm : tp -> type.
+lam : (tm T -> tm S) -> tm (arrow T S). 
+app : tm (arrow T S) -> tm T -> tm S.
+tlam : ({a:tp} tm (T a)) -> tm (forall ([a] T a)).
+tapp : tm (forall [a] T a) -> {S:tp} tm (T S). 
+
+%% Iterators %%
+
+%% iter N F E is "apply F to E N times"
+iter : nat -> {T:tp} tm (arrow T T) -> tm T -> tm T -> type.
+
+iter/z : iter z T F E E.
+iter/s : iter (s N) T F E (app F E') 
+          <- iter N T F E E'. 
+
+%% Church Encoding %%
+
+encode : nat -> tm (forall [a] (arrow (arrow a a) (arrow a a))) -> type.
+%mode encode +N -E. 
+
+encode/z : encode z (tlam [a] lam [f] lam [x] x). 
+
+encode/s : encode (s N)  
+               (tlam [a] lam [f:tm (arrow a a)] lam [x:tm a]
+                  app (app (tapp E a) f) x)
+            <- encode N E.
+
+%worlds () (encode _ _). 
+%total N (encode N _). 
+
+equiv : tm T -> tm T -> type.
+lam-beta : equiv (app (lam [x] M x) N) (M N). 
+
+sound : iter N T F E E' -> encode N EN
+         -> equiv E' (app (app (tapp EN T) F) E)  -> type.
+%mode sound +X1 +X2 -X3.
+
+%worlds () (sound _ _ _). 
+%total {} (sound _ _ _).

@@ -1,0 +1,49 @@
+%%! title: "Talk:Output freeness"
+
+%{!
+This topic was on the other wiki as well: http://fp.logosphere.cs.cmu.edu/twelf/?n=Answers.Freeness . It's by Geoff Washburn, not me, so if you include a lot from that file you'll need to add a &lt;nowiki&gt;\{\{license-by-sa\}\}&lt;/nowiki&gt; tag. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:57, 7 September 2006 (MST)
+* Oops, I didn't notice that. Well, my MIT-license version seems to have all the same info, so I don't think there's any need to import it, though perhaps the example could be a little simpler. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 06:54, 11 September 2006 (MST)
+
+#
+# How does output coverage differ from output freeness?
+
+That question deserves a thorough answer, but Jason and I came up with this program while screwing around: observe that ``fake-thm`` output covers, even though the subgoal invocation of ``ff`` in the ``ft/z`` case is not "output free" because the output argument is a ground term:
+
+&lt;twelf&gt;
+nat : type.
+s : nat -&gt; nat.
+z : nat.
+
+bool : type.
+t : bool.
+f : bool.
+
+add : nat -&gt; nat -&gt; nat -&gt; type.
+%mode add +M +N -O.
+
+add/z : add M z M.
+add/s : add M (s N) (s O')
+     &lt;- add M N O'.
+
+%worlds () (add _ _ _).
+%total N (add _ N _).
+
+boolcont : bool -&gt; type.
+@ : \{B\} boolcont B.
+
+ff : \{B : bool\} \{C : boolcont B\} type.
+%mode ff +B -C.
+- : ff B (@ B).
+
+fake-thm : \{M : nat\} type.
+%mode fake-thm -N.
+
+ft/z : fake-thm z
+ &lt;- ff t (@ t).
+
+%worlds () (ff _ _) (fake-thm _).
+%total D (ff D _).
+%total [] (fake-thm _).
+&lt;/twelf&gt;
+::: &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 16:58, 26 October 2006 (EDT)
+!}%

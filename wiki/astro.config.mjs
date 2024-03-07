@@ -1,6 +1,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLinksValidator from "starlight-links-validator";
+import wikiRedirects from "./wiki-redirects.json"
 
 const KATEX_JS = {
   type: "module",
@@ -20,10 +21,7 @@ const IMPORT_MAP = JSON.stringify({ imports: { katex: KATEX_JS.src } });
 
 // https://astro.build/config
 export default defineConfig({
-  redirects: {
-    "/wiki/Category:Twelf": "/wiki/categorytwelf/",
-    "/wiki/CAtEgORyTweLF": "/wiki/categorytwelf/",
-  },
+  redirects: wikiRedirects,
   integrations: [
     starlight({
       title: "The Twelf Project",

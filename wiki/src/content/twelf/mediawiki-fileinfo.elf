@@ -1,0 +1,5 @@
+%%! title: "MediaWiki:Fileinfo"
+
+%{!
+$1KB, MIME type: ``$2``
+!}%

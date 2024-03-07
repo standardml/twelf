@@ -1,0 +1,73 @@
+%%! title: "%freeze"
+
+%{!
+\{\{undocumented|article\}\}
+The **``%freeze``** declaration _freezes_ a set of type families. A frozen family cannot be extended: new constants at that type cannot be added, nor can the [subordination](/wiki/subordination/) relation be extended such that the family could depend on other types. The ``[%thaw](/wiki/percent-thaw/)`` declaration can be used to reenable the extension of a type family.
+
+#
+# Syntax
+
+The syntax is as follows:
+
+``%freeze t1 t2 ... tn.``
+
+The type families ``t1``&ndash;``tn`` are frozen.
+
+#
+# Example
+
+Suppose we define addition in the natural way:
+
+&lt;twelf&gt;
+nat : type.
+z : nat. 
+s : nat -&gt; nat.    %prefix 9999 s.
+
+plus : nat -&gt; nat -&gt; nat -&gt; type.
+%mode plus +N +M -O.
+
+plus/z : plus z N N.
+plus/s : plus (s N) M (s P)
+      &lt;- plus N M P.
+&lt;/twelf&gt;
+
+At this point, we may still extend the definition of addition:
+
+&lt;twelf check=decl&gt;
+plus/zz : plus M z M.
+&lt;/twelf&gt;
+
+However, if we freeze ``plus`` then this will not be allowed:
+
+&lt;twelf check=decl discard=true&gt;
+%freeze plus.
+plus/zzz : plus z z z.
+&lt;/twelf&gt;
+
+More subtly, we will not be able to extend the [subordination](/wiki/subordination/) relation for ``plus``:
+
+&lt;twelf check=decl discard=true&gt;
+%freeze plus.
+thing : type.
+
+oops : (thing -&gt; plus _ _ _) -&gt; type.
+&lt;/twelf&gt;
+
+The subordination relation can be extended such that other non-frozen types depend on a frozen type, of course:
+
+&lt;twelf check=decl discard=true&gt;
+%freeze plus.
+thing : type.
+
+okay : (plus _ _ _ -&gt; thing) -&gt; type.
+&lt;/twelf&gt;
+
+Because types are automatically frozen in common cases (see below), one may occasionally need to induce subordination relations in anticipation of code that follows freezing. This can be done as in the type ``oops`` above, before using ``%freeze`` or metatheory like ``%worlds``.
+
+#
+# Autofreeze
+
+Twelf CVS\{\{discuss|Version\}\} automatically freezes any family for which there has been a ``[%worlds](/wiki/percent-worlds/)`` declaration. This prevents mistakes where a metatheorem is proved for a type family but then that type family is extended, invalidating the theorem.\{\{discuss|Soundness\}\}
+
+\{\{keyword|key=freeze\}\}
+!}%

@@ -1,0 +1,9 @@
+%%! title: "Template:Lolli"
+
+%{!
+&lt;font face="Lucida Sans Unicode"&gt;⊸&lt;/font&gt;&lt;noinclude&gt;
+
+This template renders the lolli (latex \multimap) symbol from linear logic, with workarounds for Internet Explorer. Use it by typing &lt;nowiki&gt;\{\{lolli\}\}&lt;/nowiki&gt; or &lt;nowiki&gt;\{\{multimap\}\}&lt;/nowiki&gt; in an article.
+
+&lt;/noinclude&gt;
+!}%

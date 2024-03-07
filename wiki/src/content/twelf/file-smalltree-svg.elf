@@ -1,0 +1,13 @@
+%%! title: "File:Smalltree.svg"
+
+%{!
+Graphic of a tree with four leaves
+
+Very strange, when Illustrator CS1 created this file it left a bad piece of code:
+
+ &lt;flowDef  xmlns="&ns_flows;"&gt;
+
+That I had to manually make a good XML tag with 
+
+ &lt;flowDef  xmlns="&ns_flows;" /&gt;
+!}%

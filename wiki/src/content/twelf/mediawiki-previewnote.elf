@@ -1,0 +1,5 @@
+%%! title: "MediaWiki:Previewnote"
+
+%{!
+&lt;strong&gt;This is only a preview; changes have not yet been saved!&lt;/strong&gt;
+!}%

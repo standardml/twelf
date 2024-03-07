@@ -1,0 +1,13 @@
+%%! title: "%querytabled"
+
+%{!
+The **``%querytabled``** directive starts a query using Twelf's [tabled logic programming](/wiki/tabled-logic-programming/) engine, so that instances of a type family marked with ``[%tabled](/wiki/percent-tabled/)`` directive will be derived at most once during proof search. It otherwise looks the same as ``[%query](/wiki/percent-query/)``.
+
+#
+# See also
+
+* [Tabled logic programming](/wiki/tabled-logic-programming/)
+* \{\{guide|chapter=5|section=31|title=Tabled Logic Programming\}\}
+
+\{\{keyword|key=querytabled\}\}
+!}%

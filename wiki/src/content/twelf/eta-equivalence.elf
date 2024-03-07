@@ -1,0 +1,21 @@
+%%! title: "Eta-equivalence"
+
+%{!
+**Eta-equivalence** (η-equivalence) is a notion of proof equivalence in natural deduction logics with introduction and elimination forms.  Roughly, it says that any proof of a proposition is equivalent to one which introduces the proposition's principal connective.  It is a form of extensional equivalence.
+
+Consider the simply-typed lambda-calculus with arrow types.
+
+&lt;math&gt;A ::= a \mid A_1 \rightarrow A_2&lt;/math&gt;
+
+&lt;math&gt;e ::= x \mid \lambda x\{:\}A.\, e \mid e_1\ e_2&lt;/math&gt;
+
+Eta-equivalence for terms &lt;math&gt;\texttt\{\}e : A \rightarrow B&lt;/math&gt; is the least [congruence relation](/wiki/congruence-relation/) &lt;math&gt;\texttt\{\}e_1 =_\eta e_2&lt;/math&gt; closed under the &lt;math&gt;\texttt\{\}\eta&lt;/math&gt; axiom:
+
+&lt;math&gt;\{(x \not\in \mathit\{FV\}(e)) \over \lambda x\{:\}A.\, e\ x =_\eta e\} \eta&lt;/math&gt;
+
+In logics and typed calculi, eta-equivalence is usually oriented to the left yielding a notion of _eta-expansion_.  For example:
+
+&lt;math&gt;e : A \rightarrow B \Longrightarrow_\eta \lambda x\{:\}A.\, e\ x&lt;/math&gt;
+
+Eta-expansion transforms an arbitrary proof of a proposition into a proof that introduces the proposition's principal connective.  A term with no sub-terms that can be eta-expanded without introducing [beta-equivalence](/wiki/beta-equivalence/) is said to be _eta-long_.  Being eta-long is one aspect of being [canonical forms](/wiki/canonical-form/).
+!}%

@@ -1,0 +1,6 @@
+%%! title: "Template:Twelf code"
+
+%{!
+&lt;hr&gt;&lt;small&gt;The above page contains an example of [tutorial](/wiki/tutorials/) as an illustrative example, or it may stand on its own.&lt;/small&gt;
+&lt;includeonly&gt;[Category:Twelf code](/wiki/category-twelf-code/)&lt;/includeonly&gt;
+!}%

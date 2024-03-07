@@ -1,0 +1,148 @@
+%%! title: "%unique"
+
+%{!
+\{\{undocumented\}\}
+A **``%unique``** declaration attempts to automatically check whether some positions of a relation (its outputs) are uniquely determined by some other positions (its inputs). Its syntax is similar to that of ``[%mode](/wiki/percent-mode/)``, except that in addition to being able to specify an argument to be an input (``+``), an output (``-``), or unmoded (``*``), you may also specify an argument to be a unique output (``-1``).
+
+Successful ``%unique`` declarations are used to simplify [coverage checking](/wiki/coverage-checking/), and they can easily be transformed into first-class [uniqueness lemma](/wiki/uniqueness-lemma/).
+
+&lt;!--
+Currently there is no way to utilize the result of a successful ``%unique`` declaration and so its use is not suggested - an equivalent result can be established by a [uniqueness lemma](/wiki/uniqueness-lemma/).
+--&gt;
+
+#
+# Example
+
+We define the oft-used example of addition of [natural numbers](/wiki/natural-numbers/):
+
+&lt;twelf&gt;
+nat : type.
+z : nat.
+s : nat -&gt; nat.
+
+plus : nat -&gt; nat -&gt; nat -&gt; type.
+pz : plus z N N.
+ps : plus (s N1) N2 (s N3)
+      &lt;- plus N1 N2 N3.
+&lt;/twelf&gt;
+
+
+
+We can then check for uniqueness using ``%unique`` (a ``[%worlds](/wiki/percent-worlds/)`` declaration is also required).
+
+&lt;twelf check=decl discard=true&gt;
+%worlds () (plus _ _ _).
+%unique plus +N1 +N2 -1N3.
+&lt;/twelf&gt;
+
+
+
+If we had created a non-unique definition of ``plus``, for instance by adding an additional, broken version of ``ps2``, Twelf would have indicated an error upon checking for uniqueness:
+
+&lt;twelf&gt;
+ps2 : plus (s N1) N2 N3 
+      &lt;- plus N1 N2 N3.
+&lt;/twelf&gt;
+
+&lt;twelf check=decl discard=true&gt;
+%worlds () (plus _ _ _).
+%unique plus +N1 +N2 -1N3.
+&lt;/twelf&gt;
+
+
+#
+# Mutual recursion
+
+Checking the uniqueness of mutually recursive predicates
+creates a problem, because uniqueness (unlike ``[%mode](/wiki/percent-mode/)``) cannot
+be checked incrementally.  We therefore introduce a simultaneous
+form of uniqueness declarations, in analogy with other
+simultaneous declarations.
+
+&lt;twelf&gt;
+nat : type.
+z : nat.
+s : nat -&gt; nat.
+
+div2 : nat -&gt; nat -&gt; type.
+div2' : nat -&gt; nat -&gt; type.
+d2s : div2 (s N) (s M)
+      &lt;- div2' N M.
+d2z : div2 z z.
+d2's : div2' (s N) M
+       &lt;- div2 N M.
+
+%worlds () (div2 _ _) (div2' _ _).
+
+%unique (div2 +N -1M) (div2' +N' -1M').
+&lt;/twelf&gt;
+
+#
+# Coverage checking
+
+Successful ``%unique`` declarations are taken into account to simplify certain kinds of coverage goals in [coverage checking](/wiki/coverage-checking/).  Suppose you have a goal with two hypotheses of the form
+ ... \{x : a N1 ... Nk M \} ... \{y : a N1 ... Nk M' \} ...
+where the inputs ``N1 ... Nk`` are all equal, and suppose further that you have declared (and Twelf checked)
+ %unique a +X1 ... +Xk -1Y.
+Then, Twelf's coverage checker will unify the unique outputs ``M`` and ``M'`` in the coverage goal, which may cause some otherwise non-exhaustive pattern match to be recognized as exhaustive.  (If ``M`` and ``M'`` do not unify, the coverage goal is impossible, and no case will be needed to cover it.)
+
+As a simple example, consider proving a first-class [uniqueness lemma](/wiki/uniqueness-lemma/) for the original ``plus`` relation defined above.
+&lt;twelf&gt;
+nat : type.
+z : nat.
+s : nat -&gt; nat.
+
+plus : nat -&gt; nat -&gt; nat -&gt; type.
+pz : plus z N N.
+ps : plus (s N1) N2 (s N3)
+      &lt;- plus N1 N2 N3.
+&lt;/twelf&gt;
+
+To state such a lemma , we first define [identity](/wiki/equality/) on natural numbers with just one constructor, reflexivity.
+&lt;twelf&gt;
+id : nat -&gt; nat -&gt; type.
+refl : id N N.
+&lt;/twelf&gt;
+Then we can say that for any &lt;math&gt;N_1&lt;/math&gt; and &lt;math&gt;N_2&lt;/math&gt;, if both &lt;math&gt;N_1 + N_2 = M&lt;/math&gt; and &lt;math&gt;N_1 + N_2 = M'&lt;/math&gt;, then in fact &lt;math&gt;M = M'&lt;/math&gt;.
+&lt;twelf&gt;
+plus-unique : plus N1 N2 M -&gt; plus N1 N2 M' -&gt; id M M' -&gt; type.
+%mode plus-unique +D +D' -Did.
+&lt;/twelf&gt;
+We might naively hope to be able to prove this theorem with a single case:
+&lt;twelf&gt;
+- : plus-unique D D' refl.
+&lt;/twelf&gt;
+However, before taking any uniqueness information into account, this pattern match isn't sufficiently general to cover all cases, since matching the third argument as ``refl`` requires the types of ``D`` and ``D'`` to be equal.
+&lt;twelf check=decl discard=true&gt;
+%worlds () (plus-unique _ _ _).
+%total \{\} (plus-unique _ _ _).
+&lt;/twelf&gt;
+If we can show that ``plus``'s output is unique, though, the coverage checker can determine that the coverage goal need not be so generic: the types of ``D`` and ``D'`` _can_ be considered equal, since the uniqueness declaration says that they _will_ be.
+&lt;twelf&gt;
+%worlds () (plus _ _ _).
+%unique plus +X1 +X2 -1Y.
+&lt;/twelf&gt;
+&lt;twelf check=decl&gt;
+%worlds () (plus-unique _ _ _).
+%total \{\} (plus-unique _ _ _).
+&lt;/twelf&gt;
+
+#
+# See also
+
+&lt;bibtex&gt;@InProceedings\{
+  editor = "K.Slind and A.Bunker and G.Gopalakrishnan",
+  author = "Penny Anderson and Frank Pfenning",
+  title = "Verifying uniqueness in a logical framework",
+  booktitle = "Proceedings of the 17th International Conference on Theorem Proving in Higher Order Logics (TPHOLs'04)",
+  pages = "18-33",
+  month = "September",
+  year = "2004",
+  address = "Park City, Utah",
+  note = "Springer LNCS 3223",
+\}&lt;/bibtex&gt;
+
+
+
+\{\{keyword|key=unique\}\}
+!}%

@@ -1,0 +1,198 @@
+%%! title: "Manipulating proof witnesses as inputs"
+
+%{!
+Christopher asks...
+&lt;blockquote&gt;
+There are things which I can express as a sequence of two "%solve"
+commands that I can't express in one:
+e.g.
+&lt;twelf discard=true&gt;
+%solve A : foo.
+%solve B : bar A.
+&lt;/twelf&gt;
+
+I'd like to be able to write a type quux which combines the two
+searches, like:
+
+&lt;twelf discard=true&gt;
+quux : \{ A : foo \} bar A -&gt; type.
+%mode quux -A -B.
+quux_con : \{ A : foo \} \{ B : foo A \} quux A B
+% or maybe if there was syntax like
+% quux_con2 : quux A B &lt;- A : foo &lt;- B : foo A
+&lt;/twelf&gt;
+&lt;/blockquote&gt;
+#
+# Response
+
+I believe what you want to do is doable - you were on the right track with introducing A as an [explicit parameter](/wiki/implicit-and-explicit-parameters/) here. However, I would caution you against what you're suggesting, because - as far as I know, what you're asking requires essentially duplicating your entire program as [effectiveness lemmas](/wiki/effectiveness-lemma/).
+
+I had trouble working out what the meaning of the example was based on abstract examples, so included the natural numbers with plus. We also encode the metatheorem for the commutivity of plus, but we're not interested in the fact that it is a metatheorem here - ``plus`` here is our analog for ``foo`` above, and so ``plus-comm`` is our ``bar``.
+&lt;twelf hidden="true"&gt;
+nat : type.
+z : nat. 
+s : nat -&gt; nat.
+
+
+
+plus : nat -&gt; nat -&gt; nat -&gt; type.
+%mode plus +N1 +N2 -N3.
+
+plus/z : plus z N N.
+
+plus/s : plus (s N1) N2 (s N3) 
+          &lt;- plus N1 N2 N3.
+
+
+
+plus-zero : \{N\} plus N z N -&gt; type.
+%mode plus-zero +N -D.
+
+plus-zero/z : plus-zero z plus/z.
+
+plus-zero/s : plus-zero (s N) (plus/s D) &lt;- plus-zero N D.
+
+
+
+plus-succ : plus N1 N2 N3 -&gt; plus N1 (s N2) (s N3) -&gt; type.
+%mode plus-succ +D1 -D2.
+
+plus-succ/z : plus-succ plus/z plus/z.
+
+plus-succ/s : plus-succ (plus/s D1) (plus/s D2)
+               &lt;- plus-succ D1 D2.
+
+
+&lt;/twelf&gt;&lt;twelf&gt;
+plus-comm : plus A B C -&gt; plus B A C -&gt; type.
+%mode plus-comm +A -B.
+
+plus-comm/z : plus-comm plus/z (D: plus N z N)
+               &lt;- plus-zero N D.
+plus-comm/s : plus-comm (plus/s D1) D2
+               &lt;- plus-comm D1 D3
+               &lt;- plus-succ D3 D2.
+&lt;/twelf&gt; 
+
+If you want to see the code leading up to that point, you can &lt;twelflink&gt;see it here&lt;/twelflink&gt;.
+
+Now, in our example, we have a new version of the first code example:
+
+&lt;twelf check="decl" noinclude="true"&gt;
+%solve derivA : plus (s (s z)) (s z) _.
+%solve derivB : plus-comm derivA C.
+&lt;/twelf&gt;
+
+As far as I can tell, the equivalent of your relation above in my example is one that takes two natural numbers ``A`` and ``B`` and produces
+
+* The natural number ``C`` that is the sum of ``A`` and ``B``
+* A derivation ``D`` of ``plus A B C``
+* A derivation of the commuted sum ``D'``, i.e. ``plus B A C``
+* A derivation of ``plus-comm D D'`` of that 
+
+This is realized in the following relation:
+
+&lt;twelf discard=true&gt;
+twoplus : \{A\}\{B\}\{C\}\{D: plus A B C\}\{D': plus B A C\} plus-comm D D' -&gt; type.
+%mode twoplus +A +B -C -D -D' -D_.
+&lt;/twelf&gt;
+
+#
+#
+# Lots of effectiveness lemmas
+
+In order to get what we want, we are going to have to encode a bunch of [effectiveness lemmas](/wiki/effectiveness-lemma/)&mdash;not having written them those may have been what was giving you trouble before. In your example you seem to indicate that the relations you were working with were not necessarily total relations from inputs to outputs - if that is the case, then you will define what could more accurately be called _effectiveness relations_. What effectiveness lemmas/relations do is express _how to build a proof witness given certain inputs_ - in some sense making the proof search process explicit rather than letting ``%solve`` handle it.
+
+Our effectivness lemma for ``plus`` looks like this. Pay careful attention to what is an input and what is an output.
+
+&lt;twelf&gt;
+can-plus : \{A\}\{B\}\{C\} plus A B C -&gt; type.
+%mode can-plus +A +B -C -D.
+
+can-plus/z : can-plus z B B plus/z.
+
+can-plus/s : can-plus (s A) B (s C) (plus/s D)
+              &lt;- can-plus A B C D.
+
+%worlds () (can-plus _ _ _ _).
+%total T (can-plus T _ _ _).
+&lt;/twelf&gt;
+
+The totality checks on these and the other effectiveness lemmas are just a sanity check here - this technique would work even if you were working with relations which were not total. As before, I will skip over the effectivenes lemmas for ``plus-zero`` and ``plus-succ`` and skip to the proof for 
+
+&lt;twelf hidden=true&gt;
+
+can-plus-zero : \{N\}\{D: plus N z N\} plus-zero N D -&gt; type.
+%mode can-plus-zero +N -D -DZ.
+
+can-plus-zero/z : can-plus-zero z plus/z plus-zero/z.
+
+can-plus-zero/s : can-plus-zero (s N) (plus/s D) (plus-zero/s DZ)
+		   &lt;- can-plus-zero N D DZ.
+
+%worlds () (can-plus-zero _ _ _).
+%total T (can-plus-zero T _ _).
+
+
+
+can-plus-succ : \{D:plus A B C\}\{D': plus A (s B) (s C)\} plus-succ D D' -&gt; type.
+%mode can-plus-succ +D -D' -DS.
+
+can-plus-succ/z : can-plus-succ plus/z plus/z plus-succ/z.
+
+can-plus-succ/s : can-plus-succ (plus/s D) (plus/s D') (plus-succ/s DS)
+		   &lt;- can-plus-succ D D' DS.
+
+%worlds () (can-plus-succ _ _ _).
+%total T (can-plus-succ T _ _).
+
+&lt;/twelf&gt;&lt;twelf&gt;
+can-plus-comm : \{D: plus A B C\}\{D': plus B A C\} plus-comm D D' -&gt; type.
+%mode can-plus-comm +D -D' -DC.
+
+can-plus-comm/z : can-plus-comm plus/z (D: plus N z N) (plus-comm/z DZ)
+		   &lt;- can-plus-zero N D (DZ: plus-zero N D).
+
+can-plus-succ/s : can-plus-comm (plus/s D) D_ (plus-comm/s DS DC)
+		   &lt;- can-plus-comm D D' DC
+		   &lt;- can-plus-succ D' D_ DS.
+
+%worlds () (can-plus-comm _ _ _).
+%total T (can-plus-comm T _ _).
+&lt;/twelf&gt;
+
+To see all of the code with effectiveness lemmas included, &lt;twelflink&gt;click here&lt;/twelflink&gt;.
+
+#
+#
+# Putting together the ``twoplus`` relation
+
+Now that we have all the effectiveness lemmas we could ever need or want, it is relatively simple to define twoplus. Furthermore, because we established totality of ``plus`` and ``plus-comm``, it is simple to establish totality of ``twoplus``.
+
+&lt;twelf&gt;
+twoplus : \{A\}\{B\}\{C\}\{D: plus A B C\}\{D': plus B A C\} plus-comm D D' -&gt; type.
+%mode twoplus +A +B -C -D -D' -D_.
+
+twoplus/i : twoplus A B C D D' DC
+             &lt;- can-plus A B C D
+	     &lt;- can-plus-comm D D' DC.
+
+%worlds () (twoplus _ _ _ _ _ _).
+%total \{\} (twoplus _ _ _ _ _ _).
+&lt;/twelf&gt;
+
+You can &lt;twelflink&gt;see all the code&lt;/twelflink&gt; or &lt;twelflink check="true"&gt;see Twelf's response&lt;/twelflink&gt; to checking it.
+
+#
+# Side note about ``%define``
+
+As a side note, look at Twelf's output when we solved ``%solve B : plus-comm A C.`` It didn't allow us to see the type of ``C``, and it didn't allow us to use ``C`` later in the program. We can bind outputs of functions and use them later in the signature by using [define declaration](/wiki/define-declaration/), as the following example shows:
+
+&lt;twelf check="decl"&gt;
+%solve deriv1 : plus (s (s z)) (s z) _.
+%define deriv2 = C 
+%solve deriv3 : plus-comm deriv1 C.
+
+test = plus/s deriv2. 
+&lt;/twelf&gt;
+!}%

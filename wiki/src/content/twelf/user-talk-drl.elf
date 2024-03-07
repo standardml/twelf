@@ -1,0 +1,160 @@
+%%! title: "User talk:Drl"
+
+%{!
+Hello! I actually like the monospaced presentation better:
+
+&lt;math&gt;\texttt\{even\}(N) \over \texttt\{even\}(s \, (s \, N))&lt;/math&gt;
+
+You've got admin rights, btw. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:02, 23 October 2006 (EDT)
+
+
+#
+# Sidebar
+
+You might be interested in editing the [Mediawiki:sidebar](/wiki/mediawiki-sidebar/). — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:51, 23 October 2006 (EDT)
+
+#
+# Oh yeah
+
+You did write one of those papers-about-twelf things, now didn't you? :-) — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:50, 20 March 2007 (EDT)
+
+#
+# Aite
+
+I'm showering, driving to school, and emailing! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 09:18, 21 March 2007 (EDT)
+
+#
+# Some small feature requests (didn't want to lose track of these completely)
+
+* %reduces under a binder (comes up, e.g. in [strengthening](/wiki/strengthening/)).  When you know (forall x. A x &lt; B), you could at least conclude A &lt; B when x doesn't occur, which as I recall is enough for this example.
+* new emacs mode with karl's macros
+* for world violations, move some of the info that gets printed on higher chatter to the default, so it's easier to debug
+
+#
+# Example (which Adam did much &lt;strike&gt;better&lt;/strike&gt; slower than me)
+
+&lt;twelf&gt;
+
+tp : type.
+unit : tp.
+arrow : tp -&gt; tp -&gt; tp.
+
+exp : type.
+lam : (exp -&gt; exp) -&gt; exp.
+app : exp -&gt; exp -&gt; exp.
+
+of : exp -&gt; tp -&gt; type.
+of/app : of (app E1 E2) T
+        &lt;- of E1 (arrow T2 T)
+        &lt;- of E2 T2.
+of/lam : of (lam E) (arrow T2 T)
+       &lt;- \{x : exp\} of x T2 -&gt; of (E x) T.
+
+false : type.
+
+%block ofb : some \{T : tp\} block \{x : exp\} \{dx : of x T\}.
+
+id : tp -&gt; tp -&gt; type.
+refl : id T T.
+
+lemma : (\{x\} \{dx : of x T\} of x T')
+      -&gt; (\{x\} of x T -&gt; of x (arrow T' T0)) 
+      -&gt; false
+      -&gt; type.
+%mode lemma +X1 +X2 -X3.
+
+%worlds (ofb) (lemma _ _ _).
+%total \{\} (lemma _ _ _).
+
+thm : of (lam [x] (app x x)) T -&gt; false -&gt; type.
+%mode thm +X1 -X2.
+
+- : thm (of/lam [x] [dx] (of/app (D x dx) (D' x dx))) XXX
+  &lt;- lemma D D' XXX. 
+
+%worlds (ofb) (thm X Y).
+%total \{\} (thm X Y).
+
+&lt;/twelf&gt;
+
+#
+#
+# Any var, not just the last one
+
+&lt;twelf&gt;
+tp : type.                                                                                                                                                                        ar : tp -&gt; tp -&gt; tp. %infix right 10 ar.                                                                                                                                          
+b : tp.                                                                                                                                                                           
+                                                                                                                                                                                  
+exp : type.                                                                                                                                                                       
+app : exp -&gt; exp -&gt; exp.                                                
+lam : (exp -&gt; exp) -&gt; exp.                                                                                                                                                        
+                                                                                                                                                                                  
+of : exp -&gt; tp -&gt; type.                                                                                                                                                           
+of_app : of E1 (T1 ar T2) -&gt; of E2 T1 -&gt; of (app E1 E2) T2.                                                                                                                       
+of_lam : (\{x\}of x T1 -&gt; of (E x) T2) -&gt; of (lam E) (T1 ar T2).                                                                                                                    
+                                                                                                                                                                                  
+%block ofblock : some \{T:tp\} block \{x:exp\}\{u: of x T\}.                                                                                                                            
+%worlds (ofblock) (of _ _).                                                                                                                                                       
+                                                                                                                                                                                  
+false : type.                                                                                                                                                                     
+                                                                                                                                                                                  
+isvar : exp -&gt; type.                                                                                                                                                              
+                                                                                                                                                                                  
+                                                                                                                                                                                  
+                                                                                                                                                                                  
+%block varBlock : some \{T:tp\} block \{x:exp\}\{u: of x T\}\{v:isvar x\}.                                                                                                                
+                                                                                                                                                                                  
+contra : isvar X -&gt; of X T1 -&gt; of X (T1 ar T2) -&gt; false -&gt; type.                                                                                                                  
+%mode contra +V +D1 +D2 -E.                                                                                                                                                       
+%worlds (varBlock) (contra _ _ _ _).                                                                                                                                              
+%total \{E1 D1 D2\} (contra E1 D1 D2 _).                                                                                                                                            
+                                                                                                                                                                                  
+boo : isvar X -&gt; of (app X X) T -&gt; false -&gt; type.                                                                                                                                 
+%mode boo +X +D -E.                                                                                                                                                               
+boo_lam : boo X (of_app D1 D2) B                                                                                                                                                  
+           &lt;- contra X D2 D1 B.                                                                                                                                                                                                                                                                                                                                   
+                                                                                                                                                                                  
+%worlds (varBlock) (boo _ _ _).                                                                                                                                                   
+%total \{\} (boo _ _ _).                            
+&lt;/twelf&gt;
+
+#
+#
+# Delphin Version by Adam
+
+&lt;code&gt;
+sig &lt;tp : type&gt; %name A t                                                                                                                                                         
+    &lt;ar : tp -&gt; tp -&gt; tp&gt; %infix right 10                                                                                                                                         
+    &lt;b : tp&gt; ;                                                                                                                                                                    
+                                                                                                                                                                                  
+sig &lt;exp : type&gt;                                                                                                                                                                  
+    &lt;app : exp -&gt; exp -&gt; exp&gt;                                                                                                                                                     
+    &lt;lam : (exp -&gt; exp) -&gt; exp&gt;;                                                                                                                                                  
+                                                                                                                                                                                  
+sig &lt;of : exp -&gt; tp -&gt; type&gt;                                                                                                                                                      
+    &lt;of_app : of E1 (T1 ar T2) -&gt; of E2 T1 -&gt; of (app E1 E2) T2&gt;                                                                                                                  
+    &lt;of_lam : (\{x\}of x T1 -&gt; of (E x) T2) -&gt; of (lam E) (T1 ar T2)&gt;;                                                                                                              
+                                                                                                                                                                                  
+sig &lt;false : type&gt;;                                                                                                                                                               
+                                                                                                                                                                                  
+sig &lt;eq : tp -&gt; tp -&gt; type&gt; -&gt; of X (T1 ar T2) -&gt; false -&gt; type.                                                                                                                  
+    &lt;eqid : eq T1 T1&gt;;                                                                                                                                                            
+                                                                                                                                                                                  
+params = &lt;exp&gt;, &lt;of (E#) T&gt;;                                                                                                                                                      
+                                                                                                                                                                                  
+                                                                                                                                                                                  
+type contextProp = &lt;x:exp#&gt; -&gt; &lt;(of x T1)&gt; -&gt; &lt;(of x T2)&gt; -&gt; &lt;eq T1 T2&gt;;                                                                                                          
+                                                                                                                                                                                                                                                                                                                                 
+
+fun contraEq : &lt;eq (T1 ar T2) T1&gt; -&gt; &lt;false&gt; = fn .;                                                                                                                              
+                                                                                                                                                                                  
+fun impossible1 : contextProp -&gt; &lt;of (lam [x] app x x) T&gt; -&gt; &lt;false&gt;                                                                                                              
+   = fn C &lt;of_lam ([x][d] of_app (D1 x d) (D2 x d))&gt; =&gt;                                                                                                                           
+           (case \{&lt;x&gt;\}\{&lt;d:of x T1&gt;\} contraEq ((C with &lt;x&gt; &lt;d&gt; &lt;d&gt; =&gt; &lt;eqid&gt;) &lt;x&gt; &lt;D1 x d&gt; &lt;D2 x d&gt;)                                                                               
+             of \{&lt;x&gt;\}\{&lt;d&gt;\}&lt;bot&gt; =&gt; &lt;bot&gt;);                                                                                                                                        
+                                                                                            d                                                                                     
+                                                                                                                                                                                  
+fun impossibleGeneral : contextProp -&gt; &lt;x:exp#&gt; -&gt; &lt;of (app x x) T&gt; -&gt; &lt;false&gt;                                                                                                    
+   = fn C &lt;x&gt; &lt;of_app D1 D2&gt; =&gt; contraEq (C &lt;x&gt; &lt;D1&gt; &lt;D2&gt;); 
+&lt;/code&gt;
+!}%

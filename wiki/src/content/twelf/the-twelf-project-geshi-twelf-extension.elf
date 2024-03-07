@@ -1,0 +1,5 @@
+%%! title: "The Twelf Project:GeSHi Twelf extension"
+
+%{!
+This is Rob's first attempt at a Twelf highlighting module for the [http://qbnz.com/highlighter/ | GeSHi] extension. You probably are more interested in the page about [The Twelf Project:Syntax Highlighting](/wiki/the-twelf-project-syntax-highlighting/), especially because this highlighter is depreciated and the syntax highlighter for 
+!}%

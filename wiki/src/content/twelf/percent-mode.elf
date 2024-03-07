@@ -1,0 +1,117 @@
+%%! title: "%mode"
+
+%{!
+The **``%mode``** declaration specifies the way in which a relation is intended to be used, by specifying those arguments that are _inputs_ or _outputs_. Twelf then checks that all constants defining the relation respect the mode specified (are "well-moded").
+
+The ``%mode`` declaration is an important part of the specification of a [totality assertion](/wiki/totality-assertion/). In the "for all/exists" statement about a relation, the "for all" terms are the input arguments to the relation, and the "exists" terms are its outputs.
+
+#
+# Syntax
+
+A mode declaration for the family _id_ with _n_ arguments usually takes the following ("short") form:
+
+&lt;code&gt;%mode id a1 ... an.&lt;/code&gt;
+
+Each argument ``ai`` is ``+``_ID_, ``-``_ID_, or ``*``_ID_ for some distinct identifier _ID_. ``+`` indicates that the argument is an input, ``-`` that it is an output, and ``*`` that the argument is unrestricted. (The ``*`` mode is rarely used.) For example, a natural mode for the ``plus`` relation on [natural numbers](/wiki/natural-numbers/) is:
+
+&lt;twelf discard=true&gt;
+plus : nat -&gt; nat -&gt; nat -&gt; type.
+%mode plus +N1 +N2 -N3.
+&lt;/twelf&gt;
+
+The names ``N1``..``N3`` are arbitrary, but each must be distinct.
+
+#
+#
+# Full form
+
+The short mode declaration above only specifies the mode for explicit parameters; the modes for implicit parameters are then assigned automatically. Occasionally, one needs to use a "full" form to specify the modes of implicit parameters:
+
+&lt;twelf discard=true&gt;
+%mode p1 ... pm  term.
+&lt;/twelf&gt;
+
+Each parameter ``pi`` is ``+\{``_ID_`` : term\}``, ``-\{``_ID_`` : term\}``, or ``*\{``_ID_`` : term\}`` for distinct identifiers _ID_. Terms may refer to the variables bound in the previous parameters. For example, the full mode declaration corresponding to the short one above would be:
+
+&lt;twelf discard=true&gt;
+plus : nat -&gt; nat -&gt; nat -&gt; type.
+%mode +\{N1:nat\} +\{N2:nat\} -\{N3:nat\} plus N1 N2 N3.
+&lt;/twelf&gt;
+
+\{\{needs|an example where the full mode specification is actually needed\}\}
+
+#
+# Mode checking
+
+#
+#
+# Basic mode checking errors
+
+Say we give a definition of the natural numbers with addition in line with the descriptions above:
+
+&lt;twelf&gt;
+nat: type.
+z: nat.
+s: nat -&gt; nat.
+
+plus: nat -&gt; nat -&gt; nat -&gt; type.
+%mode plus +N1 +N2 -N3.
+
+pz: plus z N N.
+ps: plus (s N1) N2 (s N3)
+     &lt;- plus N1 N2 N3.
+&lt;/twelf&gt;
+
+The input of plus is the first and second positions, and the output of plus is the third position, which means that for any [ground](/wiki/ground/) objects in the first and second positions, there must only be a ground object in the third position. If one of the output arguments is not forced to be a ground, which would be the case if the output of plus no longer matched the output of the subgoal]], then 
+
+&lt;twelf check=decl discard=true&gt;
+px: plus (s N1) N2 (s N)
+     &lt;- plus N1 N2 N3.
+&lt;/twelf&gt;
+
+Another problem occurs when the _inputs_ to a subgoal are not known to be ground, which would happen if we mis-named one of the inputs to the subgoal.
+
+&lt;twelf check=decl discard=true&gt;
+py: plus (s N1) N2 (s N3)
+     &lt;- plus N N2 N3.
+&lt;/twelf&gt;
+
+#
+#
+# Ordering subgoals
+
+Mode checking considers subgoals _in order_, i.e. from top to bottom when the subgoals are written out in the standard style using backwards arrows. The order of subgoals matters very much for mode checking. Say we have an identity function that maps inputs (the first position) to outputs (the second position).
+
+&lt;twelf&gt;
+id: nat -&gt; nat -&gt; type.
+%mode id +N1 -N2.
+
+id/refl: id N N.
+&lt;/twelf&gt;
+
+The rule ``ps'`` below passes the mode checker, because the call to ``id`` takes the ground argument ``N1`` and creates a ground output ``N1'``, which is then used in the derivation for ``plus N1' N2 N3``.
+
+&lt;twelf check=decl discard=true&gt;
+ps': plus (s N1) N2 (s N3)
+      &lt;- id N1 N1'
+      &lt;- plus N1' N2 N3.
+&lt;/twelf&gt;
+
+However, if we reverse the order of the two subgoals, even though the result is logically equivalent, Twelf considers ``plus N1' N2 N3`` before ``id N1 N1'``, and so does consider ``N1'`` to be ground when it encounters it; thus, complaining accordingly: 
+
+&lt;twelf check=decl discard=true&gt;
+ps': plus (s N1) N2 (s N3)
+      &lt;- plus N1' N2 N3
+      &lt;- id N1 N1'.
+&lt;/twelf&gt;
+
+\{\{needs|a more complete description of more interesting mode checking problems\}\}
+
+#
+# See also
+* \{\{guide|chapter=7|section=41|title=Modes\}\}
+* \{\{proving|title=Proving totality assertions about the natural numbers\}\}, particulary the section on [Proving metatheorems:Proving_totality_assertions_about_the_natural_numbers](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/).
+
+
+\{\{keyword|key=mode\}\}
+!}%

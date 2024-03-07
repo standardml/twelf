@@ -1,0 +1,158 @@
+%%! title: "Respects lemma"
+
+%{!
+_You should read the tutorial on [equality](/wiki/equality/) before reading this one._
+
+At a high level, a **respects lemma** shows that a type family or term constructor "respects" some relations on its arguments.  Specifically, we use the term _respects lemma_ to refer to:
+- a lemma proving that the indices to a type family "respect" some relations on those indices, in the sense that inhabitation of the type family is preserved by replacing related indices.  
+- a **compatibility lemma** for a term constructor ``f``, which states that if some relations hold for some arguments, then a relation holds for ``f`` applied to those arguments.
+
+Often, the relations in question are [equality](/wiki/equality/).  
+
+#
+# Example: Proving that a type family respects equality
+
+It is often necessary to prove a respects lemma showing that a type family respects equality of its indices.  
+For example, we can define the standard equality relation ``bin-eq`` for binary numbers, the standard ``and`` relation on binary numbers, and then prove a _respects lemma_ that ``and`` respects equality:
+
+&lt;twelf&gt;
+bin : type. 
+
+e : bin. 
+1 : bin -&gt; bin. 
+0 : bin -&gt; bin.
+
+bin-eq : bin -&gt; bin -&gt; type.
+bin-eq/ : bin-eq N N.
+
+% note: not defined unless the numbers are the same length
+and : bin -&gt; bin -&gt; bin -&gt; type.
+%mode and +N1 +N2 -N3.
+
+and/e : and e e e.
+and/00 : and (0 M) (0 N) (0 P) &lt;- and M N P.
+and/01 : and (0 M) (1 N) (0 P) &lt;- and M N P.
+and/10 : and (1 M) (0 N) (0 P) &lt;- and M N P.
+and/11 : and (1 M) (1 N) (1 P) &lt;- and M N P.
+
+%\{
+The respects lemma: the and relation respects equality
+\}%
+
+and-resp : bin-eq M M' -&gt; bin-eq N N' -&gt; bin-eq O O' -&gt; and M N O -&gt; and M' N' O' -&gt; type.
+%mode and-resp +EQM +EQN +EQO +A -A'.
+
+- : and-resp bin-eq/ bin-eq/ bin-eq/ A A.
+
+%worlds () (and-resp _ _ _ _ _).
+%total \{\} (and-resp _ _ _ _ _).
+&lt;/twelf&gt;
+
+The theorem ``and-resp`` states that if M and M' are equal, and N and N' are equal, and O and O' are equal, and M & N = O, then M' & N' = O'. The proof is trivial: since the only way to conclude ``bin-eq`` is using ``bin-eq/`` where both binary numbers must be identical, the same derivation of ``and`` that we got as input works for the output.
+
+If ``bin-eq`` were some other equivalence relation (_e.g._, ignoring leading zeros), the respects lemma would require a more sophisticated proof (e.g., an inductive argument over the derivation of the equality).
+
+Although we proved that ``and`` respects equality in all three arguments, we can easily use this lemma even when we only have an equality derivation for one pair of arguments, as long as the other two pairs of arguments are already syntactically equal. For example, we can prove:
+
+&lt;twelf&gt;
+and-first-resp : bin-eq M M' -&gt; and M N O -&gt; and M' N O -&gt; type.
+%mode and-first-resp +EQ +A -A'.
+
+- : and-first-resp EQ A A' &lt;- and-resp EQ bin-eq/ bin-eq/ A A'.
+%worlds () (and-first-resp _ _ _).
+%total D (and-first-resp D _ _).
+&lt;/twelf&gt;
+
+(This theorem is trivial and could have been proven directly, but it illustrates the point.) When we invoke the ``and-resp`` lemma as a subgoal, we pass along the equality derivation for the first two arguments, and pass along the constant ``bin-eq/`` for the others, which are known to be identical. Therefore, it suffices to define the more general respects lemmas and then invoke them in specialized ways, if necessary.
+
+\{\{needs|an example where a respects lemma is needed\}\}
+
+#
+# Example: proving compatibility lemmas
+
+Another kind of respects lemma is a **compatibility lemma**, which states that a relation is respected by the application of term constructors. (This is also called a **congruence lemma** when the relation in question is an equivalence relation.) For example, we can prove compatibility lemmas about the constructors ``1`` and ``0``:
+
+&lt;twelf&gt;
+1-compat : bin-eq M M' -&gt; bin-eq (1 M) (1 M') -&gt; type.
+%mode 1-compat +EQ -EQ'.
+- : 1-compat bin-eq/ bin-eq/.
+
+0-compat : bin-eq M M' -&gt; bin-eq (0 M) (0 M') -&gt; type.
+%mode 0-compat +EQ -EQ'.
+- : 0-compat bin-eq/ bin-eq/.
+
+%worlds () (1-compat _ _) (0-compat _ _).
+%total (D E) (1-compat D _) (0-compat E _).
+&lt;/twelf&gt;
+
+We might use these compatibility lemmas in proving some theorems about binary numbers. For instance, we might want to prove that ``not`` is its own inverse:
+
+&lt;twelf&gt;
+not : bin -&gt; bin -&gt; type.
+%mode not +B -B'.
+not/e : not e e.
+not/1 : not (1 B) (0 B') &lt;- not B B'.
+not/0 : not (0 B) (1 B') &lt;- not B B'.
+
+notnot : not A B -&gt; not B C -&gt; bin-eq A C -&gt; type.
+%mode notnot +N +N' -EQ.
+
+notnot/e : notnot not/e not/e bin-eq/.
+notnot/1 : notnot (not/1 N1) (not/0 N2) EQ'
+        &lt;- notnot N1 N2 (EQ : bin-eq A' C')
+        &lt;- 1-compat EQ (EQ' : bin-eq (1 A') (1 C')).
+notnot/0 : notnot (not/0 N1) (not/1 N2) EQ'
+        &lt;- notnot N1 N2 (EQ : bin-eq A' C')
+        &lt;- 0-compat EQ (EQ' : bin-eq (0 A') (0 C')).
+
+%worlds () (notnot _ _ _).
+%total D (notnot D _ _).
+&lt;/twelf&gt;
+
+In the inductive cases of ``notnot``, we have a derivation ``EQ`` that two smaller numbers are equal, and need to use this derivation to prove that if we apply the ``1`` constructor (for each) to each of the terms, they are still equal.
+
+#
+#
+# Generalized compatibility lemmas
+
+Compatibility lemmas can be generalized somewhat so that we needn't prove so many. Instead of defining the ``0-compat`` and ``1-compat`` cases separately, we can abstract over the constructor as an LF function:
+
+&lt;twelf&gt;
+f-compat : \{EQ  : bin-eq M M'\}
+           \{F   : bin -&gt; bin\} 
+           \{EQ' : bin-eq (F M) (F M')\}
+           type.
+%mode f-compat +EQ +F -EQ'.
+- : f-compat bin-eq/ _ bin-eq/.
+%worlds () (f-compat _ _ _).
+%total D (f-compat D _ _).
+&lt;/twelf&gt;
+
+Here, we instead prove that if ``M`` and ``M'`` are equal, then ``F M`` and ``F M'`` are equal for any ``F``. Now we can prove the ``notnot`` theorem again using only this generalized compatibility lemma:
+
+&lt;twelf&gt;
+notnot : not A B -&gt; not B C -&gt; bin-eq A C -&gt; type.
+%mode notnot +N +N' -EQ.
+
+notnot/e : notnot not/e not/e bin-eq/.
+notnot/1 : notnot (not/1 N1) (not/0 N2) EQ'
+        &lt;- notnot N1 N2 EQ
+        &lt;- f-compat EQ 1 EQ'.
+notnot/0 : notnot (not/0 N1) (not/1 N2) EQ'
+        &lt;- notnot N1 N2 EQ
+        &lt;- f-compat EQ 0 EQ'.
+
+%worlds () (notnot _ _ _).
+%total D (notnot D _ _).
+&lt;/twelf&gt;
+
+Here we pass in the constructors ``1 : bin -&gt; bin`` and ``0 : bin -&gt; bin`` as ``F``. The functions could arbitrary complex, like ``[b] 0 (1 (1 b))``.
+
+This generalization technique usually only works when equality is defined as Twelf identity, because of the arbitrariness of the function passed in. When it can be used, it can substantially reduce the number of compatibility lemmas that one needs to state.
+
+\{\{needs|a description of some more advanced/tasteless generalization tricks\}\}
+
+&lt;twelflink&gt;All code from this tutorial&lt;/twelflink&gt;. &lt;twelflink check="true"&gt;Twelf's output from this tutorial&lt;/twelflink&gt;.
+
+\{\{tutorial\}\}
+!}%

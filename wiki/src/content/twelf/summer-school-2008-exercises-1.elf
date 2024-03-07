@@ -1,0 +1,34 @@
+%%! title: "Summer school 2008:Exercises 1"
+
+%{!
+\{\{Summer school 2008
+   |noprevious = 
+   |nonext = \}\}
+
+#
+# Add pairs [Summer school 2008:Typed arithmetic expressions with pairs](/wiki/summer-school-2008-typed-arithmetic-expressions-with-pairs/)
+
+Extend the [Summer school 2008:Typed arithmetic expressions (value)](/wiki/summer-school-2008-typed-arithmetic-expressions-value/) language with binary pairs (see [http://www.cs.cmu.edu/~rwh/plbook/book.pdf PFPL Chapter 16] if you need a refresher on the syntax and typing rules for pairs).  
+
+This will be easiest if you start from [Summer school 2008:Typed arithmetic expressions (value)](/wiki/summer-school-2008-typed-arithmetic-expressions-value/).  Use the "Code: here" link in the top-left corner to download the code.
+
+You will need to add:
+
+- a type ``prod T U``
+- expression constructors for pairing ``(pair E1 E2)``, and first and second projection ``(fst E)`` and ``(snd E)``.
+- new cases for evaluation
+
+Get Twelf to verify the totality of your extended evaluation judgement.
+
+If you're feeling ambitious, add disjoint sums ([http://www.cs.cmu.edu/~rwh/plbook/book.pdf PFPL Chapter 17]) as well! [Summer school 2008:Alternate typed arithmetic expressions with sums](/wiki/summer-school-2008-alternate-typed-arithmetic-expressions-with-sums/)
+
+#
+# Getting familiar with Twelf
+
+Read the discussion of Twelf's totality checker on  [Proving_metatheorems:Proving_totality_assertions_about_the_natural_numbers](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/) so that you understand Twelf's error messages better.
+
+#
+# Call-by-name
+
+Do a call-by-name version of evaluation for [Summer school 2008:Arithmetic expressions with let-binding](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding/).  How would you prove evaluation terminates?
+!}%
