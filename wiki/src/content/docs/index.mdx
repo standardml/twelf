@@ -70,7 +70,7 @@ you enter the following Twelf declarations:
 
 Let's break down what each of these declarations means:
 
-- The [`%mode`](/wiki/percent/mode) declaration specifies the mode of a type family&mdash;in this case, that `N1` and `N2` are universally quantified (`+`) and that `N3` is existentially quantified (`-`). We will sometimes refer to the universally-quantified types as ''inputs'' and the existentially-quantified types as ''outputs''.
+- The  declaration specifies the mode of a type family&mdash;in this case, that `N1` and `N2` are universally quantified (`+`) and that `N3` is existentially quantified (`-`). We will sometimes refer to the universally-quantified types as ''inputs'' and the existentially-quantified types as ''outputs''.
 - The `[[%worlds]]` declaration states the totality assertion for LF terms in the empty context, which adequately represent natural numbers and the addition judgement.
 - The `[[%total]]` declaration asks Twelf to prove the totality assertion by induction on the canonical forms `N1` of type `nat`. Note that it is the position of the variable named in the `%total` that determines the induction index.
 
@@ -137,4 +137,3 @@ the term `N1` is a strict subterm of the term `(s N1)`. On the other hand, Twelf
 would not accept the totality of `plus` if `N2` were used as the induction order&mdash;the
 same term `N2` in the conclusion of this constant appears in the premise:
 
-[test link](/wiki/categorytwelf/)
