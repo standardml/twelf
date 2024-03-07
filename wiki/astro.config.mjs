@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import starlightLinksValidator from "starlight-links-validator";
 
 const KATEX_JS = {
   type: "module",
@@ -15,20 +16,18 @@ const KATEX_CSS = {
     "sha384-OH8qNTHoMMVNVcKdKewlipV4SErXqccxxlg6HC9Cwjr5oZu2AdBej1TndeCirael",
   crossorigin: "anonymous",
 };
-
-const IMPORT_MAP = `
-{
-  "imports": {
-    "katex": "${KATEX_JS.src}"
-  }
-}
-`;
+const IMPORT_MAP = JSON.stringify({ imports: { katex: KATEX_JS.src } });
 
 // https://astro.build/config
 export default defineConfig({
+  redirects: {
+    "/wiki/Category:Twelf": "/wiki/categorytwelf/",
+    "/wiki/CAtEgORyTweLF": "/wiki/categorytwelf/",
+  },
   integrations: [
     starlight({
       title: "The Twelf Project",
+      plugins: [starlightLinksValidator()],
       description: "Home of the Twelf programming language",
       social: {
         github: "https://github.com/standardml/twelf",
@@ -38,7 +37,7 @@ export default defineConfig({
         { tag: "script", attrs: { type: "importmap" }, content: IMPORT_MAP },
         { tag: "script", attrs: KATEX_JS },
         { tag: "link", attrs: KATEX_CSS },
-        { tag: "script", attrs: { type: "module", src: "./math.mjs" } },
+        { tag: "script", attrs: { type: "module", src: "/math.mjs" } },
       ],
       sidebar: [
         { label: "Home", link: "/" } /*,

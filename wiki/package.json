@@ -3,9 +3,9 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev & node elf-watcher.mjs --watch",
     "start": "astro dev",
-    "build": "astro check && astro build",
+    "build": "node elf-watcher.mjs && astro check && astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -16,5 +16,9 @@
     "katex": "^0.16.9",
     "sharp": "^0.32.5",
     "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7",
+    "starlight-links-validator": "^0.6.0"
   }
 }
