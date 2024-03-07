@@ -5,7 +5,8 @@ name: Run Tests
 on:
   push:
     branches:
-      - master
+      - main
+      - wiki
   pull_request:
 
 jobs:
