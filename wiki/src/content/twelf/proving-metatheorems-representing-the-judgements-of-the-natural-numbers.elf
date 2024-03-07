@@ -1,7 +1,6 @@
 %%! title: "Proving metatheorems:Representing the judgements of the natural numbers"
 
-%{!
-\{\{proving metatheorems
+%{! \{\{proving metatheorems
   | prev = Simply typed LF
   | prevname = Simply typed LF
   | next = Full LF
@@ -37,19 +36,21 @@ In the previous sections, we saw how to represent object-language syntax as the 
 
 However, to adequately represent judgements, we must generalize from simply-typed LF to dependently-typed LF.  A moment's thought reveals why a dependently-typed language is appropriate: Object-language judgements are parametrized by their subjects&mdash;for example &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; is parametrized by the number &lt;math&gt;\texttt\{\}n&lt;/math&gt; being judged to be even.  Consequently, to represent judgements themselves as LF types, we should consider LF types that are parametrized by the subjects of object-language judgements.  But the judgement subjects&mdash;the syntax of the language&mdash;are represented as LF terms.  Thus, to represent judgements themselves as LF types, it is natural to consider families of LF types parameterized by LF terms.  
 
-For example, we represent the judgement &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; using the following signature:
-&lt;twelf hidden="true"&gt;
+For example, we represent the judgement &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; using the following signature: !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 nat : type.
 z   : nat.
-s   : nat -&gt; nat.
-&lt;/twelf&gt;
-&lt;twelf&gt;
-even    : nat -&gt; type.
-even-z  : even z.
-even-s  : \{N:nat\} even N -&gt; even (s (s N)).
-&lt;/twelf&gt;
+s   : nat -> nat.
 
-The first declaration says that ``even`` is a family of types indexed by a ``nat``.  This means that for every term ``N : nat``, there is a type ``even N``.  Note that the syntax ``-&gt;`` is overloaded: it is used to classify both type-level families and and term-level functions.  We then use this type
+%{!  !}%
+    
+even    : nat -> type.
+even-z  : even z.
+even-s  : {N:nat} even N -> even (s (s N)).
+
+%{! The first declaration says that ``even`` is a family of types indexed by a ``nat``.  This means that for every term ``N : nat``, there is a type ``even N``.  Note that the syntax ``-&gt;`` is overloaded: it is used to classify both type-level families and and term-level functions.  We then use this type
 family to define the types of two term constants.
 
 The first term constant, ``even-z``, has type ``even z``.  This constant represents the derivation that consists of the first inference rule above, which concludes &lt;math&gt;\mathsf\{even\}(\mathsf\{zero\})&lt;/math&gt;.  
@@ -118,15 +119,13 @@ This judgement defines addition by induction on the first argument.
 #
 # LF representation
 
-This judgement is represented by the following LF signature:
+This judgement is represented by the following LF signature: !}%
+    
+plus   : nat -> nat -> nat -> type.
+plus-z : {N2:nat} plus z N2 N2.
+plus-s : {N1:nat} {N2:nat} {N3:nat} plus N1 N2 N3 -> plus (s N1) N2 (s N3).
 
-&lt;twelf&gt;
-plus   : nat -&gt; nat -&gt; nat -&gt; type.
-plus-z : \{N2:nat\} plus z N2 N2.
-plus-s : \{N1:nat\} \{N2:nat\} \{N3:nat\} plus N1 N2 N3 -&gt; plus (s N1) N2 (s N3).
-&lt;/twelf&gt;
-
-The type family ``plus`` is indexed by three terms of type ``nat`` because the informal judgement has three parameters.  The constants correspond to the two inference rules, inhabiting the type family with terms representing derivations.  For example, the term
+%{! The type family ``plus`` is indexed by three terms of type ``nat`` because the informal judgement has three parameters.  The constants correspond to the two inference rules, inhabiting the type family with terms representing derivations.  For example, the term
 
 &lt;pre&gt;plus-s (s z) (s z) (s (s z)) 
        (plus-s z (s z) (s z) 
@@ -149,5 +148,10 @@ These adequacy theorems will be more precise after we review the full language o
   | prev = Simply typed LF
   | prevname = Simply typed LF
   | next = Full LF
-  | nextname = Full LF\}\}
+  | nextname = Full LF\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Representing_the_judgements_of_the_natural_numbers).
 !}%

@@ -1,7 +1,6 @@
 %%! title: "Programming language theory with Twelf"
 
-%{!
-#
+%{! #
 # Preface
 
 The study of programming languages generally proceeds in two parallel directions.  In one direction,
@@ -50,24 +49,32 @@ case of TAPL, we will be making use of some notes of Benjamin Pierce for his cou
 #
 # Table of Contents
 
-Part 1:  Introduction to Twelf]]
+Part 1:  [[Introduction to Twelf]]
 - [First-order encodings](/wiki/first-order-encodings/)
 - [Signatures as logic programs](/wiki/signatures-as-logic-programs/)
 - [Signature checking](/wiki/signature-checking/): modes, termination, coverage, totality
-- Logical Foundations of Programming Languages]]
-- LFPL:Chapter  1|Chapter  1]]: Inductive Definitions
-- LFPL:Chapter  4|Chapter  4]]: Transition Systems
-- LFPL:Chapter  5|Chapter  5]]: Basic Syntactic Objects
-- LFPL:Chapter  6|Chapter  6]]: Binding and Scope
-- LFPL:Chapter  7|Chapter  7]]: Concrete Syntax
-- LFPL:Chapter  8|Chapter  8]]: Abstract Syntax
-- LFPL:Chapter  9|Chapter  9]]: Static Semantics
-- LFPL:Chapter 10|Chapter 10]]: Dynamic Semantics
-- LFPL:Chapter 11|Chapter 11]]: Type Safety
-- LFPL:Chapter 12|Chapter 12]]: Evaluation Semantics
-- LFPL:Chapter 14|Chapter 14]]: Functions
-- LFPL:Chapter 15|Chapter 15]]: Gödel's System T
-- LFPL:Chapter 16|Chapter 16]]: Plotkin's PCF
+- [[Higher-order encodings]]
+- [[Common patterns and pitfalls]]
 
-Part 3: Types and Programming Languages]]
+Part 2:  [[Logical Foundations of Programming Languages]]
+- [[LFPL:Chapter  1|Chapter  1]]: Inductive Definitions
+- [[LFPL:Chapter  4|Chapter  4]]: Transition Systems
+- [[LFPL:Chapter  5|Chapter  5]]: Basic Syntactic Objects
+- [[LFPL:Chapter  6|Chapter  6]]: Binding and Scope
+- [[LFPL:Chapter  7|Chapter  7]]: Concrete Syntax
+- [[LFPL:Chapter  8|Chapter  8]]: Abstract Syntax
+- [[LFPL:Chapter  9|Chapter  9]]: Static Semantics
+- [[LFPL:Chapter 10|Chapter 10]]: Dynamic Semantics
+- [[LFPL:Chapter 11|Chapter 11]]: Type Safety
+- [[LFPL:Chapter 12|Chapter 12]]: Evaluation Semantics
+- [[LFPL:Chapter 14|Chapter 14]]: Functions
+- [[LFPL:Chapter 15|Chapter 15]]: Gödel's System T
+- [[LFPL:Chapter 16|Chapter 16]]: Plotkin's PCF
+
+Part 3: [[Types and Programming Languages]] !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Programming_language_theory_with_Twelf).
 !}%

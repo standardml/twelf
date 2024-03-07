@@ -1,7 +1,6 @@
 %%! title: "Output factoring"
 
-%{!
-When checking coverage of [metatheorem](/wiki/metatheorem/)s, a common problem arises because the [output coverage](/wiki/coverage-checking/) checker only considers each rule in isolation. The proof transformation technique for addressing this problem is known as **output factoring**.
+%{! When checking coverage of [metatheorem](/wiki/metatheorem/)s, a common problem arises because the [output coverage](/wiki/coverage-checking/) checker only considers each rule in isolation. The proof transformation technique for addressing this problem is known as **output factoring**.
  
 The primary symptom of the problem is if Twelf fails when checking an %total declaration and gives this sort of error:
 &lt;code&gt;Totality: Output of subgoal not covered
@@ -10,53 +9,50 @@ Output coverage error ...&lt;/code&gt;
 #
 # Even and odd
 
-In this section, we prove that every natural number is even or odd.  First, we define the judgements:
-
-&lt;twelf&gt;
+In this section, we prove that every natural number is even or odd.  First, we define the judgements: !}%
+    
 nat : type.
 z : nat.
-s : nat -&gt; nat.
+s : nat -> nat.
 
-odd : nat -&gt; type.
-even : nat -&gt; type. 
+odd : nat -> type.
+even : nat -> type. 
 
 z-e : even z.
-s-o : odd (s X) &lt;- even X.
-s-e : even (s X) &lt;- odd X.
+s-o : odd (s X) <- even X.
+s-e : even (s X) <- odd X.
 
-even_or_odd : nat -&gt; type. 
+even_or_odd : nat -> type. 
 
-eoo-e : even_or_odd X &lt;- even X.
-eoo-o : even_or_odd X &lt;- odd X. 
-&lt;/twelf&gt;
+eoo-e : even_or_odd X <- even X.
+eoo-o : even_or_odd X <- odd X.
 
-#
+%{! #
 #
 # Incorrect proof
 
-Next, we attempt the following theorem:
-
-&lt;twelf&gt;
-always_even_or_odd : \{N:nat\} even_or_odd N -&gt; type.
+Next, we attempt the following theorem: !}%
+    
+always_even_or_odd : {N:nat} even_or_odd N -> type.
 %mode always_even_or_odd +D -P.   
 
 aeo_zero : always_even_or_odd z (eoo-e z-e). 
 
 aeo_even : always_even_or_odd (s X) (eoo-e (s-e Y))
-	    &lt;- always_even_or_odd X (eoo-o Y).
+	    <- always_even_or_odd X (eoo-o Y).
 
 aeo_odd  : always_even_or_odd (s X) (eoo-o (s-o Y))
-	    &lt;- always_even_or_odd X (eoo-e Y).
+	    <- always_even_or_odd X (eoo-e Y).
 
-%worlds () (always_even_or_odd D P). 
-&lt;/twelf&gt;
+%worlds () (always_even_or_odd D P).
 
-Unfortunately, totality check fails:
-&lt;twelf check="true" discard=true&gt;
-%total D (always_even_or_odd D _). 
-&lt;/twelf&gt;
+%{! Unfortunately, totality check fails: !}%
+    
+%{! (options removed from twelftag: check="true" discard=true) !}%
 
-The line number in Twelf's error message points to the premise of ``aeo_even``.  The output of  ``always_even_or_odd`` can be either ``eoo-o _`` or ``eoo-e _``, but this premise pattern-matches as if the output is always ``eoo-o _``. The constant ``aeo_odd`` covers the alternative case when the output is ``eoo-e _``.  
+%total D (always_even_or_odd D _).
+
+%{! The line number in Twelf's error message points to the premise of ``aeo_even``.  The output of  ``always_even_or_odd`` can be either ``eoo-o _`` or ``eoo-e _``, but this premise pattern-matches as if the output is always ``eoo-o _``. The constant ``aeo_odd`` covers the alternative case when the output is ``eoo-e _``.  
 
 Unfortunately, Twelf's output-coverage checker does not notice this sort of multiple-constant output coverage: the output-coverage checker only accepts a relation if each constant covers all outputs of its premises.
 
@@ -66,34 +62,32 @@ Unfortunately, Twelf's output-coverage checker does not notice this sort of mult
 
 Nonetheless, we need to case-analyze this output in order to complete the proof.  How can we do so?  Well, Twelf does not allow output coverage to be split across constants, but it certainly allows **input coverage** to be split across constants.  Thus, we can solve the problem by turning an output-coverage checking problem into an input-coverage checking problem.  We do this by writing an additional helper lemma.
 
-Looking at what the two constants do with the output of the inductive call, we can see that in each case they turn a derivation of ``even_or_odd X`` into a derivation of ``even_or_odd (s X)``—it's just that they do it differently depending on what the output is.  Thus, we factor this reasoning into a lemma:
-
-&lt;twelf&gt;
-lemma : even_or_odd X -&gt; even_or_odd (s X) -&gt; type.
+Looking at what the two constants do with the output of the inductive call, we can see that in each case they turn a derivation of ``even_or_odd X`` into a derivation of ``even_or_odd (s X)``—it's just that they do it differently depending on what the output is.  Thus, we factor this reasoning into a lemma: !}%
+    
+lemma : even_or_odd X -> even_or_odd (s X) -> type.
 %mode lemma +X -Y. 
 - : lemma (eoo-o Y) (eoo-e (s-e Y)).
 - : lemma (eoo-e Y) (eoo-o (s-o Y)).
 %worlds () (lemma _ _). 
-%total X (lemma X _).					       
-&lt;/twelf&gt;
+%total X (lemma X _).
 
-Using this lemma, we complete the proof as follows:
+%{! Using this lemma, we complete the proof as follows: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
 
-&lt;twelf check="true"&gt;
-always_even_or_odd : \{N:nat\} even_or_odd N -&gt; type.
+always_even_or_odd : {N:nat} even_or_odd N -> type.
 %mode always_even_or_odd +D -P.   
 
 aeo_zero : always_even_or_odd z (eoo-e z-e). 
 
 aeo_succ : always_even_or_odd (s X) D'
-	    &lt;- always_even_or_odd X D
-            &lt;- lemma D D'.
+	    <- always_even_or_odd X D
+            <- lemma D D'.
 
 %worlds () (always_even_or_odd D P). 
-%total D (always_even_or_odd D _). 
-&lt;/twelf&gt;
+%total D (always_even_or_odd D _).
 
-#
+%{! #
 # Progress
 
 Another example where output factoring comes up is the progress theorem for a programming language:
@@ -102,64 +96,62 @@ Another example where output factoring comes up is the progress theorem for a pr
 
 A typical case of progress makes an inductive call on a subderivation and then case-analyzes whether the result is a value or takes a step.  This reasoning must be factored off into lemmas to avoid output coverage problems.  
 
-Using the simply typed λ-calculus defined in \{\{proving|title=Representing the judgements of the STLC\}\}, we now show how output factoring is used to prove progress.  For review, here is the LF signature for the STLC:
-
-&lt;twelf&gt;
+Using the simply typed λ-calculus defined in \{\{proving|title=Representing the judgements of the STLC\}\}, we now show how output factoring is used to prove progress.  For review, here is the LF signature for the STLC: !}%
+    
 %% Syntax
 tp    : type.
 
 unit  : tp.
-arrow : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
 
 tm    : type.
 empty : tm.
-lam   : tp -&gt; (tm -&gt; tm) -&gt; tm.
-app   : tm -&gt; tm -&gt; tm.
+lam   : tp -> (tm -> tm) -> tm.
+app   : tm -> tm -> tm.
 
 %% Static Semantics 
 
-of       : tm -&gt; tp -&gt; type.
+of       : tm -> tp -> type.
 of_empty : of empty unit.
 of_lam   : of (lam T2 ([x] (E x))) (arrow T2 T)
-            &lt;- (\{x:tm\} \{dx : of x T2\} of (E x) T).
+            <- ({x:tm} {dx : of x T2} of (E x) T).
 of_app   : of (app E1 E2) T
-            &lt;- of E2 T2
-            &lt;- of E1 (arrow T2 T).
+            <- of E2 T2
+            <- of E1 (arrow T2 T).
 
 %% Dynamic Semantics
 
-value       : tm -&gt; type.
+value       : tm -> type.
 value_empty : value empty.
 value_lam   : value (lam T2 ([x] E x)).
              
-step          : tm -&gt; tm -&gt; type.
+step          : tm -> tm -> type.
 step_app_1    : step (app E1 E2) (app E1' E2)
-                 &lt;- step E1 E1'.
+                 <- step E1 E1'.
 step_app_2    : step (app E1 E2) (app E1 E2')
-                 &lt;- step E2 E2'
-                 &lt;- value E1.
+                 <- step E2 E2'
+                 <- value E1.
 
 step_app_beta : step (app (lam T2 ([x] E x)) E2) (E E2)
-                 &lt;- value E2.
-&lt;/twelf&gt;
+                 <- value E2.
 
-The result of progress is represented by the following sum type:
-&lt;twelf&gt;
-val_or_step : tm -&gt; type.
+%{! The result of progress is represented by the following sum type: !}%
+    
+val_or_step : tm -> type.
 vos_val : val_or_step E
-           &lt;- value E.
+           <- value E.
 vos_step : val_or_step E
-            &lt;- step E E'.
-&lt;/twelf&gt;
+            <- step E E'.
 
-As discussed above, we first prove a factoring lemma that does all the work after the inductive call of the application case:
+%{! As discussed above, we first prove a factoring lemma that does all the work after the inductive call of the application case: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
 
-&lt;twelf check="true"&gt;
 progress/app : of E1 (arrow T2 T)
-                -&gt; val_or_step E1
-                -&gt; val_or_step E2
-                -&gt; val_or_step (app E1 E2)
-                -&gt; type.
+                -> val_or_step E1
+                -> val_or_step E2
+                -> val_or_step (app E1 E2)
+                -> type.
 %mode progress/app +DofE1 +DvosE1 +DvosE2 -DvosApp.
 
 pa_step_1 : progress/app 
@@ -182,14 +174,15 @@ pa_val_val : progress/app
               (vos_step (step_app_beta DvalE2)).
               
 %worlds () (progress/app _ _ _ _).
-%total \{\} (progress/app _ _ _ _).
-&lt;/twelf&gt;
+%total {} (progress/app _ _ _ _).
 
-We give this lemma the typing derivation for ``E1`` so that we can learn in the case ``pa_val_val`` that the ``E1`` is a ``lam``, which is necessary to apply ``step_app_beta``.  Note that there is no need for an explicit value inversion/canonical forms lemma: in the case ``pa_val_val``, we simply assume that ``E1`` is a ``lam``, and the coverage checker justifies this assumption because it is both a ``value`` and has type ``arrow T2 T``.
+%{! We give this lemma the typing derivation for ``E1`` so that we can learn in the case ``pa_val_val`` that the ``E1`` is a ``lam``, which is necessary to apply ``step_app_beta``.  Note that there is no need for an explicit value inversion/canonical forms lemma: in the case ``pa_val_val``, we simply assume that ``E1`` is a ``lam``, and the coverage checker justifies this assumption because it is both a ``value`` and has type ``arrow T2 T``.
 
-Using this lemma, the proof of progress is quite simple:
-&lt;twelf check="true"&gt;
-progress : of E T -&gt; val_or_step E -&gt; type. 
+Using this lemma, the proof of progress is quite simple: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+progress : of E T -> val_or_step E -> type. 
 %mode progress +Dof -Dvos.
 
 prog_empty : progress of_empty (vos_val value_empty).
@@ -199,13 +192,17 @@ prog_lam : progress (of_lam ([x] [dx] DofE x dx)) (vos_val value_lam).
 prog_app : progress (of_app (DofE1 : of E1 (arrow T2 T)) 
                             (DofE2 : of E2 T2))
             DvosApp
-            &lt;- progress DofE1 (DvosE1 : val_or_step E1)
-            &lt;- progress DofE2 (DvosE2 : val_or_step E2)
-            &lt;- progress/app DofE1 DvosE1 DvosE2 DvosApp.
+            <- progress DofE1 (DvosE1 : val_or_step E1)
+            <- progress DofE2 (DvosE2 : val_or_step E2)
+            <- progress/app DofE1 DvosE1 DvosE2 DvosApp.
 
 %worlds () (progress _ _).             
 %total D (progress D _).
-&lt;/twelf&gt;
 
-\{\{tutorial\}\}
+%{! \{\{tutorial\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Output_factoring).
 !}%

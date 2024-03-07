@@ -121,7 +121,7 @@ update-exp-z : update-exp (E $exp EL) z E' (E' $exp EL).
 update-exp-s : update-exp (E $exp EL) (s N) E' (E $exp EL')
 	       <- update-exp EL N E' EL'.
 
-%{! |hidden=tr !}%
+%{! |hidden=true !}%
 
 
 tplist : type. 
@@ -446,7 +446,7 @@ progress : of ST E T
 	    -> notstuck S E -> type. 
 %mode progress +T +TS -NS. 
 
-%{! A natural number is already a valu !}%
+%{! A natural number is already a value !}%
 
 prog-int : progress t-int _ (ns-isval v-int). 
 
@@ -464,7 +464,7 @@ prog-ref : progress (t-ref T) TS NS
 	    <- lemma NS1 NS. 
 
 
-%{! To prove progress for addition, we will need to use the fact that the subexpressions both have type ``int-tp``—that way, once they are reduced to values, they must be numbers, not locations !}%
+%{! To prove progress for addition, we will need to use the fact that the subexpressions both have type ``int-tp``—that way, once they are reduced to values, they must be numbers, not locations. !}%
 
 lemma : of ST E1 int-tp
 	 -> notstuck S E1 
@@ -483,7 +483,7 @@ prog-add : progress (t-add T2 T1) TS NS
 	    <- progress T2 TS NS2
 	    <- lemma T1 NS1 T2 NS2 NS.
 
-%{! We use both the notstuckness of the subexpressions and the ability to always project from a well-typed store (``of-projection``) to prove the ``gets`` case !}%
+%{! We use both the notstuckness of the subexpressions and the ability to always project from a well-typed store (``of-projection``) to prove the ``gets`` case. !}%
 
 lemma : of-store ST S 
 	 -> of ST E (ref-tp T) 
@@ -499,11 +499,11 @@ prog-bang : progress (t-bang T) TS NS
 	     <- progress T TS NS1 
 	     <- lemma TS T NS1 NS. 
 
-%{! A location is already a value !}%
+%{! A location is already a value. !}%
 
 prog-loc : progress (t-loc PROJ-T) TS (ns-isval v-loc). 
 
-%{! We use both the notstuckness of the subexpressions and the ability to always update from a well-typed store (``of-update``) to prove the ``gets`` case !}%
+%{! We use both the notstuckness of the subexpressions and the ability to always update from a well-typed store (``of-update``) to prove the ``gets`` case. !}%
 
 lemma : of-store ST S 
 	 -> of ST E1 (ref-tp T) 
@@ -524,7 +524,7 @@ proj-gets : progress (t-gets T2 T1) TS NS
 	     <- progress T2 TS NS2
 	     <- lemma TS T1 NS1 NS2 NS.
 
-%{! We use a lemma about the nonstuckness of the subexpression to prove the ``let`` case !}%
+%{! We use a lemma about the nonstuckness of the subexpression to prove the ``let`` case. !}%
 
 lemma : {EF: exp -> exp} notstuck S E -> notstuck S (let E EF) -> type. 
 %mode lemma +EF +NS1 -NS. 
@@ -607,7 +607,7 @@ weak-let : weakening (t-let F T) S (t-let F’ T’)
 %worlds (var-tp) (weakening _ _ _). 
 %total T (weakening T S T’). 
 
-%{! A comparable notion of weakening must be defined for lists !}%
+%{! A comparable notion of weakening must be defined for lists: !}%
 
 weakening-list : of-list ST EL TL 
 		  -> subset-tp ST ST’ 
@@ -636,7 +636,7 @@ preservation : of ST E T
 		-> of-store ST’ S’ -> type. 
 %mode preservation +T +TS +E -S -T’ -TS’. 
 
-%{! In the cases where evaluation is passed on to a later step, the cases are mostly a straightforward call to the induction hypothesis and the weakening lemma !}%
+%{! In the cases where evaluation is passed on to a later step, the cases are mostly a straightforward call to the induction hypothesis and the weakening lemma. !}%
 
 pres-s1-add : preservation (t-add T2 T1) ST (s1-add E) S (t-add T2’ T1’) ST’ 
 	       <- preservation T1 ST E S T1’ ST’ 
@@ -658,7 +658,7 @@ pres-s-let : preservation (t-let F T) ST (s-let E) S (t-let F’ T’) ST’
 	      <- preservation T ST E S T’ ST’ 
 	      <- {x}{v} weakening (F x v) S (F’ x v). 
 
-%{! The cases where evaluation happens are more involved—for instance, the ``ref`` case relies on the very involved ``append-lemma`` from the auxillary lemmas !}%
+%{! The cases where evaluation happens are more involved—for instance, the ``ref`` case relies on the very involved ``append-lemma`` from the auxillary lemmas. !}%
 
 
 
@@ -725,11 +725,11 @@ let (gets x (! x + n (s z)))
 ! x + n (s z).
 
 
-%{! We can typecheck the program (in the empty store typing ``nil-tp``). The syntax we use for ``[%query](/wiki/percent-query/)`` indicates that we only expect there to be one solution (because type checking should be syntax directed): |check=de !}%
+%{! We can typecheck the program (in the empty store typing ``nil-tp``). The syntax we use for ``[%query](/wiki/percent-query/)`` indicates that we only expect there to be one solution (because type checking should be syntax directed): |check=decl !}%
 
 %query 1 * (of nil-tp prog1 T).
 
-%{! We can then run the program to completion (starting in the empty store ``nil-exp``). We expect the final state ``S`` to include the number 4, and we expect the program to evaluate to value ``V`` 5. The multi-step evaluation judgment ``run`` is defined to run arbitrarily until stopping, so we only want the first solution—it will be the solution resulting in running ``run-step`` as many times as possible: |check=de !}%
+%{! We can then run the program to completion (starting in the empty store ``nil-exp``). We expect the final state ``S`` to include the number 4, and we expect the program to evaluate to value ``V`` 5. The multi-step evaluation judgment ``run`` is defined to run arbitrarily until stopping, so we only want the first solution—it will be the solution resulting in running ``run-step`` as many times as possible: |check=decl !}%
 
 %query 1 1 (run nil-exp prog1 S V).
 
@@ -740,3 +740,9 @@ let (gets x (! x + n (s z)))
 <references />
 
 {{case study}}
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Mutable_state).
+!}%

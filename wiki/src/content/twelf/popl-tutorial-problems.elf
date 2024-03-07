@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial/Problems"
 
-%{!
-* [POPL Tutorial/cps](/wiki/popl-tutorial-cps/) by jcreed
+%{! * [POPL Tutorial/cps](/wiki/popl-tutorial-cps/) by jcreed
 * [POPL Tutorial/cps-rp](/wiki/popl-tutorial-cps-rp/) by dklee, based on code by jcreed
 * [POPL Tutorial/cps-problem](/wiki/popl-tutorial-cps-problem/) by arbob, based on code by jcreed
 ** [POPL Tutorial/CPS_Solutions](/wiki/popl-tutorial-cps-solutions/) by arbob, based on code by jcreed
@@ -28,5 +27,10 @@
 * CPS variations (Dklee and arbob are working on this for wednesday)
 * Stack machine vs. SOS vs. evaluation (Will and Chris are working on this for Weds)
 * Authorization logic
-* ML5
+* ML5 !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Problems).
 !}%

@@ -108,7 +108,7 @@ You guys should know what to do from here (it's just like what you were doing in
 
 _ = of/lam ([x: exp] [d: of x unit] d) : of (lam unit ([x] x)) (arrow unit unit).
 
-%{! The absolutely correct observation made about this in class was that **Hypotheticals in the object language are represented as functions in the metalanguage._ !}%
+%{! The absolutely correct observation made about this in class was that **Hypotheticals in the object language are represented as functions in the metalanguage.** !}%
 
 
 %%## Dynamic semantics (evaluation rules)
@@ -187,4 +187,10 @@ So we an prove this theorem:
 preservation : of E T -> step E E' -> of E' T -> type.
 %mode preservation +D1 +D2 -D2.
 
-%{! Thus ends today's lesson !}%
+%{! Thus ends today's lesson. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Lecture_23:_Typed_Lambda_Calculus_in_Twelf).
+!}%

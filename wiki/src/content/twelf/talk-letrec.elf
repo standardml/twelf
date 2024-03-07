@@ -1,7 +1,6 @@
 %%! title: "Talk:Letrec"
 
-%{!
-#
+%{! #
 # Different formalism?
 
 The formalism on the current page is probably the right thing to do for "real-world binding", since it's closest to the actual syntax that people will have in mind.  
@@ -22,5 +21,10 @@ let x1 = pi_1 o in
 in e
 &lt;/code&gt;
 
-[User:Drl](/wiki/user-drl/) 15:22, 16 October 2007 (EDT)
+[User:Drl](/wiki/user-drl/) 15:22, 16 October 2007 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Letrec).
 !}%

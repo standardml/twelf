@@ -1,7 +1,6 @@
 %%! title: "The Twelf Project:1.0"
 
-%{!
-This page is about plans for a **1.0** release of the Twelf Wiki.
+%{! This page is about plans for a **1.0** release of the Twelf Wiki.
 
 #
 # Press Release
@@ -32,14 +31,23 @@ The Twelf Wiki Team
 #
 # PL Party Coffee - Notes
 
-The first two subsections, where things are assigned, are things that we'd like to have done by next Wednesday. Things that are unassigned will be claimed before then moved to the [General description of Twelf](/wiki/general-description-of-twelf/) - _Will to revise_
-:* Reading a Twelf proof]] - _DKLee"
+The first two subsections, where things are assigned, are things that we'd like to have done by next Wednesday. Things that are unassigned will be claimed before then moved to the [[Project:To do|To do]] list at that point, if not before.
+
+Doing things off the [[Project:To do|To do]] list are also good things to do!
+
+#
+#
+# Come to the site, learn to use Twelf
+
+* Rewriting the pointers into these things: _Tom and Dan Licata to revise_
+:* [General description of Twelf](/wiki/general-description-of-twelf/) - _Will to revise_
+:* [[Reading a Twelf proof]] - _DKLee"
 ::* How to read declarations of proofs (type family + mode + worlds + total)
 ::* Why the cases in the middle don't matter at that point
 ::* Adequacy!
 ::* Minimal on syntax
 :* [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) - _Dan Licata_
-:* The "forest" - Case studies, Tutorials, Glossary - Redlinks to be attacked by _Aleffert_, _Spoons_ (?) and others (Also see Special:Wantedpages]])
+:* The "forest" - Case studies, Tutorials, Glossary - Redlinks to be attacked by _Aleffert_, _Spoons_ (?) and others (Also see [[Special:Wantedpages]])
 
 #
 #
@@ -73,13 +81,13 @@ Here are some specific demands. If we already have these, or you address them, t
 :: I'm satisfied on this. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 11:18, 21 March 2007 (EDT)
 
 * There needs to be a good article at [metatheorem](/wiki/metatheorem/), which could perhaps be a wikified _How to Believe a Twelf Proof_. This material proves to be a major stumbling block for getting even eminent type theorists to understand what Twelf is and how to use it.
-: [Metatheorem](/wiki/metatheorem/) exists, and I think it's in a position where some criticism of it would be helpful; however, the DKLee-task-lisked HtBaTP-equivalent article is going to be [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 01:48, 28 February 2007 (EST)
+: [Metatheorem](/wiki/metatheorem/) exists, and I think it's in a position where some criticism of it would be helpful; however, the DKLee-task-lisked HtBaTP-equivalent article is going to be [[Reading a Twelf proof]] - I'd be particularly happy to see this one by launch but I don't consider it a dealbreaker either. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 01:48, 28 February 2007 (EST)
 
-* There needs to be more content that will be new to, say, the POPLmark crowd. We should have tutorials that explain how to do some things in Twelf that people actually want to do in their research, like &lt;s&gt;[linear logic](/wiki/linear-logic/)&lt;/s&gt;, normalization via &lt;s&gt;[cut elimination](/wiki/admissibility-of-cut/)&lt;/s&gt;, and closure conversion]].
+* There needs to be more content that will be new to, say, the POPLmark crowd. We should have tutorials that explain how to do some things in Twelf that people actually want to do in their research, like &lt;s&gt;[linear logic](/wiki/linear-logic/)&lt;/s&gt;, normalization via &lt;s&gt;[cut elimination](/wiki/admissibility-of-cut/)&lt;/s&gt;, and [[closure conversion]].
 
 * We need to have good man pages for the most important declarations for mechanizing metatheory: [%worlds](/wiki/percent-worlds/) [%block](/wiki/percent-block/) [%total](/wiki/percent-total/).
 
-* We need at least minimal articles about the most important Twelf concepts, _e.g._ &lt;s&gt;[subordination](/wiki/subordination/)&lt;/s&gt;, &lt;s&gt;[LF](/wiki/lf/)&lt;/s&gt;, &lt;s&gt;[adequacy](/wiki/adequacy/)&lt;/s&gt;, &lt;s&gt;[canonical form](/wiki/canonical-form/)&lt;/s&gt;, &lt;s&gt;[unification](/wiki/unification/)&lt;/s&gt;, &lt;s&gt;[ground](/wiki/ground/)&lt;/s&gt;, [totality assertion](/wiki/totality-assertion/)).&lt;/s&gt;
+* We need at least minimal articles about the most important Twelf concepts, _e.g._ &lt;s&gt;[subordination](/wiki/subordination/)&lt;/s&gt;, &lt;s&gt;[LF](/wiki/lf/)&lt;/s&gt;, &lt;s&gt;[adequacy](/wiki/adequacy/)&lt;/s&gt;, &lt;s&gt;[canonical form](/wiki/canonical-form/)&lt;/s&gt;, &lt;s&gt;[unification](/wiki/unification/)&lt;/s&gt;, &lt;s&gt;[ground](/wiki/ground/)&lt;/s&gt;, [[kind]], [[subterm]]. I mean, really. If these are covered in the tutorials, we should extract those discussions to seed these pages. &lt;s&gt;Also, some other important articles are very incomplete, embarrassing stubs right now (_e.g._ [totality assertion](/wiki/totality-assertion/)).&lt;/s&gt;
 
 ::* Reading back over this list I don't disagree with most of these, and the half articles I have also identified as something I/we definitely need to address - but some of this is just the effect of us psyching ourselves out because we've held onto this too long already (i.e. "well, it's been long enough we should have...") which will lead to us never releasing the thing. An article on unification before the release would be great, but it absense won't prevent this from being a useful resource to some undergraduate somewhere. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 11:37, 26 February 2007 (EST)
 :::* I think it will, because questions like "what is unification?" or "what is subordination?" are very natural when learning Twelf, and if unanswered, are a large impediment to understanding what's going on. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 16:01, 26 February 2007 (EST)
@@ -89,5 +97,10 @@ Here are some specific demands. If we already have these, or you address them, t
 
 :::::::&nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:43, 16 October 2006 (EDT)
 :::::::&nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 09:48, 26 February 2007 (EST)
-:::::::&nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 11:18, 21 March 2007 (EDT)
+:::::::&nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 11:18, 21 March 2007 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:1.0).
 !}%

@@ -1,7 +1,6 @@
 %%! title: "Template:Guide"
 
-%{!
-[http://www.cs.cmu.edu/~twelf/guide-1-4/twelf_\{\{\{chapter\}\}\}.html#SEC\{\{\{section\}\}\} \{\{\{title\}\}\}] in the [User's Guide](/wiki/users-guide/)&lt;noinclude&gt;
+%{! [http://www.cs.cmu.edu/~twelf/guide-1-4/twelf_\{\{\{chapter\}\}\}.html#SEC\{\{\{section\}\}\} \{\{\{title\}\}\}] in the [User's Guide](/wiki/users-guide/)&lt;noinclude&gt;
 
 ----
 
@@ -15,5 +14,10 @@ yields
 
 We should use this to link to sections in the guide, since the URL may change when the guide is updated.
 
-&lt;/noinclude&gt;
+&lt;/noinclude&gt; !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Guide).
 !}%

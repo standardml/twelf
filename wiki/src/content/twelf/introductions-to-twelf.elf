@@ -1,7 +1,6 @@
 %%! title: "Introductions to Twelf"
 
-%{!
-The following introductory guides are available:
+%{! The following introductory guides are available:
 
 * [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/): if you have some background in programming languages but no prior experience with LF and Twelf, start with this introduction.
 
@@ -16,5 +15,10 @@ Basic mechanics:
 * [Twelf without Emacs](/wiki/twelf-without-emacs/): Running the twelf-server directly from the command line.
 
 We plan to add other introductory articles for other audiences.  If you have suggestions, please
-[http://twelf.plparty.org/w/index.php?title=Talk:Introductions_to_Twelf&action=edit&section=new leave us a message].
+[http://twelf.plparty.org/w/index.php?title=Talk:Introductions_to_Twelf&action=edit&section=new leave us a message]. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Introductions_to_Twelf).
 !}%

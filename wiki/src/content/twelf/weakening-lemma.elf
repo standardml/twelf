@@ -1,61 +1,58 @@
 %%! title: "Weakening lemma"
 
-%{!
-**Weakening** is the property of a hypothetical judgment that if Γ \{\{vdash\}\} J, then Γ, A \{\{vdash\}\} J. That is, if a judgment holds in a context Γ, then it holds in Γ extended with additional hypotheses. Weakening holds for most logics, but its absence is central to the formulation of substructural logics such as [linear logic](/wiki/linear-logic/).
+%{! **Weakening** is the property of a hypothetical judgment that if Γ \{\{vdash\}\} J, then Γ, A \{\{vdash\}\} J. That is, if a judgment holds in a context Γ, then it holds in Γ extended with additional hypotheses. Weakening holds for most logics, but its absence is central to the formulation of substructural logics such as [linear logic](/wiki/linear-logic/).
 
 Often, we represent an an object-language hypothetical judgement by [higher-order judgements](/wiki/higher-order-judgements/).  When a judgement is represented in such a fashion, weakening comes "for free" from the LF representation.  In particular, we may weaken a derivation by wrapping LF lambdas around it.
 
-For example, consider the following simply typed λ-calculus:
-
-&lt;twelf&gt;
+For example, consider the following simply typed λ-calculus: !}%
+    
 %% Syntax
 
 tp : type.
  
 tp/unit  : tp.
-tp/arrow : tp -&gt; tp -&gt; tp.
+tp/arrow : tp -> tp -> tp.
  
 exp : type.
  
 exp/unit : exp.
-exp/lam  : tp -&gt; (exp -&gt; exp) -&gt; exp.
-exp/app  : exp -&gt; exp -&gt; exp.
+exp/lam  : tp -> (exp -> exp) -> exp.
+exp/app  : exp -> exp -> exp.
 
 
 %% Typing 
 
-of : exp -&gt; tp -&gt; type.
+of : exp -> tp -> type.
  
 of/unit : of exp/unit tp/unit.
  
 of/lam  : of (exp/lam T E) (tp/arrow T T')
-           &lt;- (\{x:exp\} of x T
-                -&gt; of (E x) T').
+           <- ({x:exp} of x T
+                -> of (E x) T').
  
 of/app  : of (exp/app E1 E2) T'
-           &lt;- of E2 T
-           &lt;- of E1 (tp/arrow T T').
-&lt;/twelf&gt; 
+           <- of E2 T
+           <- of E1 (tp/arrow T T').
 
-Object-language typing is a hypothetical judgement; we represent it using LF variables to model hypotheses (see \{\{proving|title=Representing the judgements of the STLC\}\} for more discussion of this representation).  
+%{! Object-language typing is a hypothetical judgement; we represent it using LF variables to model hypotheses (see \{\{proving|title=Representing the judgements of the STLC\}\} for more discussion of this representation).  
 
-We can prove weakening for this hypothetical judgement as a metatheorem: 
+We can prove weakening for this hypothetical judgement as a metatheorem: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
 
-&lt;twelf check="true"&gt; 
-wkn : \{T':tp\}
+wkn : {T':tp}
        of E T
-       -&gt; (\{x\} of x T' -&gt; of E T)
-       -&gt; type.
+       -> ({x} of x T' -> of E T)
+       -> type.
 %mode wkn +T' +D1 -D2.
 
 - : wkn T' D1 ([x][dx:of x T'] D1).
 
-%block of-block : some \{T\} block \{x : exp\} \{dx : of x T\}.
+%block of-block : some {T} block {x : exp} {dx : of x T}.
 %worlds (of-block) (wkn _ _ _).
-%total \{\} (wkn _ _ _). 
-&lt;/twelf&gt;
+%total {} (wkn _ _ _).
 
-The proof is direct: given any derivation ``D1``, we can wrap LF lambdas around it to create a derivation under the necessary hypotheses.  The fact that this works corresponds to the fact that weakening is admissible for LF, which is why we say that the object language inherits the hypothetical structure of the meta-language.  
+%{! The proof is direct: given any derivation ``D1``, we can wrap LF lambdas around it to create a derivation under the necessary hypotheses.  The fact that this works corresponds to the fact that weakening is admissible for LF, which is why we say that the object language inherits the hypothetical structure of the meta-language.  
 
 Although we proved weakening as a metatheorem here for illustrative purposes, in practice it is unnecessary to write such proofs. Uses of weakening can be "inlined" by simply introducing LF lambdas when necessary.
 
@@ -67,5 +64,10 @@ Although we proved weakening as a metatheorem here for illustrative purposes, in
 * [Exchange lemma](/wiki/exchange-lemma/)
 * [Substitution lemma](/wiki/substitution-lemma/)
 
-\{\{tutorial\}\}
+\{\{tutorial\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Weakening_lemma).
 !}%

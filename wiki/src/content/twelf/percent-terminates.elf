@@ -1,7 +1,6 @@
 %%! title: "%terminates"
 
-%{!
-A **[%terminates](/wiki/percent-terminates/)** declaration provides checks that a program will either succeed or fail in a finite amount of time when given [ground](/wiki/ground/) inputs. 
+%{! A **[%terminates](/wiki/percent-terminates/)** declaration provides checks that a program will either succeed or fail in a finite amount of time when given [ground](/wiki/ground/) inputs. 
 
 A ``[%total](/wiki/percent-total/)`` declaration uses the same syntax as a ``%terminates`` declaration. 
 
@@ -14,117 +13,115 @@ Twelf considers a term to be smaller than another term if it can inspect the two
 
 A term A is only considered to be smaller than B if A is a strict subterm of B. So, for instance, ``(s (s z))``, ``(s z)``, and ``z`` are all subterms of ``(f (s (s z)) (s z))``, but ``(f z z)`` is not. 
 
-As usual, we will use the [natural numbers](/wiki/natural-numbers/) as the basis for our example. 
-
-&lt;twelf&gt;
+As usual, we will use the [natural numbers](/wiki/natural-numbers/) as the basis for our example. !}%
+    
 nat: type.
 
 z: nat.
-s: nat -&gt; nat.
-&lt;/twelf&gt;
+s: nat -> nat.
 
-#
+%{! #
 #
 # Non-ordering
 
-The simplest termination ordering says that no termination argument is needed, because there are no recursive calls! We can write such an ordering for ``triv``, which takes a number and can either return a number one greater or one less.
-
-&lt;twelf&gt;
-triv: nat -&gt; nat -&gt; type.
+The simplest termination ordering says that no termination argument is needed, because there are no recursive calls! We can write such an ordering for ``triv``, which takes a number and can either return a number one greater or one less. !}%
+    
+triv: nat -> nat -> type.
 %mode triv +A -B.
 
 triv/: triv (s N) N.
 triv/: triv N (s N).
-&lt;/twelf&gt;
 
-&lt;twelf check=decl&gt;
-%terminates \{\} (triv _ _).
-&lt;/twelf&gt;
+%{!  !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
 
-#
+%terminates {} (triv _ _).
+
+%{! #
 #
 # Simple ordering
 
-A simple ordering says that one term always gets smaller in a subgoal, even if the other ones get larger. The first argument to ``a`` always gets smaller in this example (even though the second may get bigger). We only need to be able to reason about the first argument, but we define both to be inputs.
-
-&lt;twelf&gt;
-a : nat -&gt; nat -&gt; type.
+A simple ordering says that one term always gets smaller in a subgoal, even if the other ones get larger. The first argument to ``a`` always gets smaller in this example (even though the second may get bigger). We only need to be able to reason about the first argument, but we define both to be inputs. !}%
+    
+a : nat -> nat -> type.
 %mode a +A +B.
 
 a0 : a z z.
 a1 : a (s N1) N
-      &lt;- a N1 (s (s (s N))).
-&lt;/twelf&gt;
-&lt;twelf check=decl&gt;
+      <- a N1 (s (s (s N))).
+
+%{!  !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
+
 %terminates N (a N _).
-&lt;/twelf&gt;
 
-Alternatively, the second argument to ``b`` always gets smaller (even though the first may stay the same), and the termination declarations capture this information. The ``*A`` in the ``[%mode](/wiki/percent-mode/)`` declaration means that we do not care whether the first argument to ``b`` is an input or an output. 
+%{! Alternatively, the second argument to ``b`` always gets smaller (even though the first may stay the same), and the termination declarations capture this information. The ``*A`` in the ``[%mode](/wiki/percent-mode/)`` declaration means that we do not care whether the first argument to ``b`` is an input or an output. 
 
-Notice that because we already showed ``a`` to be terminating, we can use it as a subgoal to ``b`` as long as it is only called with ground terms.
-
-&lt;twelf&gt;
-b : nat -&gt; nat -&gt; type.
+Notice that because we already showed ``a`` to be terminating, we can use it as a subgoal to ``b`` as long as it is only called with ground terms. !}%
+    
+b : nat -> nat -> type.
 %mode b *A +B.
 
 b0 : b (s z) (s z).
 b1 : b N (s (s M))
-      &lt;- b N M
-      &lt;- a (s (s (s M))) M.
-&lt;/twelf&gt;
-&lt;twelf check=decl&gt;
-%terminates N (b _ N).
-&lt;/twelf&gt;
+      <- b N M
+      <- a (s (s (s M))) M.
 
-#
+%{!  !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
+
+%terminates N (b _ N).
+
+%{! #
 #
 # Simultaneous ordering
 
-We can define a relation ``c`` that non-deterministically counts three numbers down to zero:
-
-&lt;twelf&gt;
-c : nat -&gt; nat -&gt; nat -&gt; type.
+We can define a relation ``c`` that non-deterministically counts three numbers down to zero: !}%
+    
+c : nat -> nat -> nat -> type.
 %mode c +N1 +N2 +N3.
 
 c0 : c z z z.
 c1 : c (s N1) N2 N3
-      &lt;- c N1 N2 N3.
+      <- c N1 N2 N3.
 c2 : c N1 (s N2) N3
-      &lt;- c N1 N2 N3.
+      <- c N1 N2 N3.
 c3 : c N1 N2 (s N3)
-      &lt;- c N1 N2 N3.
-&lt;/twelf&gt;
+      <- c N1 N2 N3.
 
-No single term gets smaller at any one step, but _some_ term gets smaller at every step. We can express this using a simultaneous ordering:
+%{! No single term gets smaller at any one step, but _some_ term gets smaller at every step. We can express this using a simultaneous ordering: !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
 
-&lt;twelf check=decl&gt;
 %terminates [N1 N2 N3] (c N1 N2 N3).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Lexicographic ordering
 
-Lexicographic orders generalize simultaneous orders - using a lexicographic ordering we can define ``d`` in a manner similar to ``c``, but we can allow the second and third numbers to count _up_ whenever the first number counts down, and allow the third number to count up whenever the second number counts down.  However, the first number must stay constant when the second counts down, and the first and second both must stay constant when the third counts down.
-
-&lt;twelf&gt;
-d : nat -&gt; nat -&gt; nat -&gt; type.
+Lexicographic orders generalize simultaneous orders - using a lexicographic ordering we can define ``d`` in a manner similar to ``c``, but we can allow the second and third numbers to count _up_ whenever the first number counts down, and allow the third number to count up whenever the second number counts down.  However, the first number must stay constant when the second counts down, and the first and second both must stay constant when the third counts down. !}%
+    
+d : nat -> nat -> nat -> type.
 %mode d +N1 +N2 +N3.
 
 d0 : d z z z.
 d1 : d (s N1) N2 N3
-      &lt;- d N1 (s (s (s (s N2)))) (s (s N3)).
+      <- d N1 (s (s (s (s N2)))) (s (s N3)).
 d2 : d N1 (s N2) N3
-      &lt;- d N1 N2 (s N3).
+      <- d N1 N2 (s N3).
 d3 : d N1 N2 (s N3)
-      &lt;- d N1 N2 N3.
-&lt;/twelf&gt;
+      <- d N1 N2 N3.
 
-&lt;twelf check=decl&gt;
-%terminates \{N1 N2 N3\} (d N1 N2 N3).
-&lt;/twelf&gt;
+%{!  !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
 
-#
+%terminates {N1 N2 N3} (d N1 N2 N3).
+
+%{! #
 #
 # Lexicographic ordering II
 
@@ -134,97 +131,89 @@ Another example that is (slightly) less contrived arises with lists of natural n
 * The sum of ``z`` and ``cons N L`` is the sum of ``N`` and ``L``.
 * The sum of ``(s N)`` and ``L`` is ``s M``, if ``M`` is the sume of ``N`` and ``L``.
 
-This is a lexicographic induction - either the list gets smaller, or the natural number gets smaller and the list stays the same size.
-
-&lt;twelf&gt;
+This is a lexicographic induction - either the list gets smaller, or the natural number gets smaller and the list stays the same size. !}%
+    
 list : type.
 nil : list.
-cons : nat -&gt; list -&gt; list.
+cons : nat -> list -> list.
 
-listsum : nat -&gt; list -&gt; nat -&gt; type.
+listsum : nat -> list -> nat -> type.
 %mode listsum +N +L -M.
 
 lsz : listsum z nil z.
-lsl : listsum z (cons N L) M &lt;- listsum N L M.
-lss : listsum (s N) L (s M) &lt;- listsum N L M.
-&lt;/twelf&gt;
+lsl : listsum z (cons N L) M <- listsum N L M.
+lss : listsum (s N) L (s M) <- listsum N L M.
 
-&lt;twelf check=decl&gt;
-%terminates \{L N\} (listsum N L M).
-&lt;/twelf&gt;
+%{!  !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
 
-#
+%terminates {L N} (listsum N L M).
+
+%{! #
 #
 # Mutual, lexicographic ordering
 
-In this case, we have a program that is non-deterministic to illustrate more possibilities. We will describe a "big" lemma and a "small" lemma, each with two arguments. Twelf decides what is "big" or "small" based on the way we order things - from small to large - in the ``%terminates`` declaration below.
+In this case, we have a program that is non-deterministic to illustrate more possibilities. We will describe a "big" lemma and a "small" lemma, each with two arguments. Twelf decides what is "big" or "small" based on the way we order things - from small to large - in the ``%terminates`` declaration below. !}%
+    
+%{! (options removed from twelftag: check=true) !}%
 
-&lt;twelf check=true&gt;
-big : nat -&gt; nat -&gt; nat -&gt; type.
-small : nat -&gt; nat -&gt; nat -&gt; type.
+big : nat -> nat -> nat -> type.
+small : nat -> nat -> nat -> type.
 %mode big +A +B -C.
 %mode small +A +B -C.
-&lt;/twelf&gt;
 
-We can split up the possibilities into four cases:
+%{! We can split up the possibilities into four cases:
 
-* We "bottom out" in a base case or a call to another theorem:
-
-&lt;twelf&gt;
+* We "bottom out" in a base case or a call to another theorem: !}%
+    
 & : small z N N.
 & : big N M P
-     &lt;- listsum N (cons M (cons M nil)) P.
-&lt;/twelf&gt;
+     <- listsum N (cons M (cons M nil)) P.
 
-* The second argument gets smaller (nothing else matters)
-
-&lt;twelf&gt;
+%{! * The second argument gets smaller (nothing else matters) !}%
+    
 & : small N1 (s N2) N3
-     &lt;- big (s (s N1)) N2 N3.
+     <- big (s (s N1)) N2 N3.
 & : small N1 (s N2) N3
-     &lt;- big N2 N2 N3.
+     <- big N2 N2 N3.
 & : big N1 (s (s N2)) N3
-     &lt;- big N1 N2 N3.
-&lt;/twelf&gt;
+     <- big N1 N2 N3.
 
-* The first argument gets smaller, and the second argument gets no bigger.
-
-&lt;twelf&gt;
+%{! * The first argument gets smaller, and the second argument gets no bigger. !}%
+    
 & : small (s N1) (s N2) (s N3)
-     &lt;- big N1 N2 N3.
+     <- big N1 N2 N3.
 & : big (s N1) N2 N3
-     &lt;- big N1 N2 N3.
-&lt;/twelf&gt;
+     <- big N1 N2 N3.
 
-* The "lemma" gets smaller and everything else gets no bigger.
-
-&lt;twelf&gt;
+%{! * The "lemma" gets smaller and everything else gets no bigger. !}%
+    
 & : big N1 N2 N3
-     &lt;- small N1 N2 N3.
+     <- small N1 N2 N3.
 & : big (s N1) (s N2) N3
-     &lt;- small N1 N2 N3.
-&lt;/twelf&gt;
+     <- small N1 N2 N3.
 
-These requirements are encoded in the declaration below. The ordering of the patterns declares ``small`` to be smaller than ``big``, and either the second argument (``B1`` and ``B2``) gets smaller, or else it gets no bigger and the first
-argument (``A1`` and ``A2``) gets smaller.
+%{! These requirements are encoded in the declaration below. The ordering of the patterns declares ``small`` to be smaller than ``big``, and either the second argument (``B1`` and ``B2``) gets smaller, or else it gets no bigger and the first
+argument (``A1`` and ``A2``) gets smaller. !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
 
-&lt;twelf check=decl&gt;
-%terminates \{(B1 B2) (A1 A2)\} (small A2 B2 _) (big A1 B1 _).
-&lt;/twelf&gt;
+%terminates {(B1 B2) (A1 A2)} (small A2 B2 _) (big A1 B1 _).
 
-#
+%{! #
 # Troubleshooting
 
-The simplest example of running afoul of the Twelf termination checker is if the recursive call uses an argument unrelated to the original argument. 
+The simplest example of running afoul of the Twelf termination checker is if the recursive call uses an argument unrelated to the original argument. !}%
+    
+%{! (options removed from twelftag: discard=true check=decl) !}%
 
-&lt;twelf discard=true check=decl&gt;
-e: nat -&gt; nat -&gt; type.
-- : e N M &lt;- e M N.
+e: nat -> nat -> type.
+- : e N M <- e M N.
 %mode e +N +M.
 %terminates N (e N M).
-&lt;/twelf&gt;
 
-As the error message indicates, Twelf requires that ``M`` be less than ``N`` in the recursive call in order for termination analysis to hold, but it has
+%{! As the error message indicates, Twelf requires that ``M`` be less than ``N`` in the recursive call in order for termination analysis to hold, but it has
 no way of establishing this. If, for some reason, the un-fufilled termination requirement is actually true, it can often be established with a ``[%reduces](/wiki/percent-reduces/)``
 declaration.
 
@@ -233,6 +222,11 @@ declaration.
 
 * \{\{guide|chapter=8|section=45|title=Termination\}\}
 * ``[%total](/wiki/percent-total/)``
-* Lexicographic induction]]
-* [Mutual induction](/wiki/mutual-induction/)
+* [[Lexicographic induction]]
+* [Mutual induction](/wiki/mutual-induction/) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25terminates).
 !}%

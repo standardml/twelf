@@ -1,7 +1,6 @@
 %%! title: "Linear logic"
 
-%{!
-The fact that the LF type theory uses only unrestricted assumptions has led some to assume that it cannot encode substructural logics such as linear logic.  In fact, LF admits a very elegant encoding of linear logic, given below.  The key idea is a judgement used to enforce the linear use of each linear assumption.
+%{! The fact that the LF type theory uses only unrestricted assumptions has led some to assume that it cannot encode substructural logics such as linear logic.  In fact, LF admits a very elegant encoding of linear logic, given below.  The key idea is a judgement used to enforce the linear use of each linear assumption.
 
 #
 #
@@ -10,21 +9,22 @@ The fact that the LF type theory uses only unrestricted assumptions has led some
 #
 #
 #
-# Syntax
+# Syntax !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
 
-&lt;twelf hidden="true"&gt;
 %%%%%  Syntax  %%%%%
 
-&lt;/twelf&gt;
-&lt;twelf&gt;
+%{!  !}%
+    
 %%%  Types  %%%
 tp	: type.  %name tp T.
 
--o	: tp -&gt; tp -&gt; tp.  %infix right 7 -o.
-*	: tp -&gt; tp -&gt; tp.  %infix right 10 *.
-&	: tp -&gt; tp -&gt; tp.  %infix right 9 &.
-+	: tp -&gt; tp -&gt; tp.  %infix right 8 +.
-!	: tp -&gt; tp.
+-o	: tp -> tp -> tp.  %infix right 7 -o.
+*	: tp -> tp -> tp.  %infix right 10 *.
+&	: tp -> tp -> tp.  %infix right 9 &.
++	: tp -> tp -> tp.  %infix right 8 +.
+!	: tp -> tp.
 zero	: tp.
 top	: tp.
 
@@ -37,193 +37,182 @@ one	: tp
 
 term	: type.  %name term M.
 
-lam	: (term -&gt; term) -&gt; term.
-app	: term -&gt; term -&gt; term.
+lam	: (term -> term) -> term.
+app	: term -> term -> term.
 
-tensor	: term -&gt; term -&gt; term.
-lett	: term -&gt; (term -&gt; term -&gt; term) -&gt; term.
+tensor	: term -> term -> term.
+lett	: term -> (term -> term -> term) -> term.
 
-pair	: term -&gt; term -&gt; term.
-pi1	: term -&gt; term.
-pi2	: term -&gt; term.
+pair	: term -> term -> term.
+pi1	: term -> term.
+pi2	: term -> term.
 
-in1	: term -&gt; term.
-in2	: term -&gt; term.
-case	: term -&gt; (term -&gt; term) -&gt; (term -&gt; term) -&gt; term.
+in1	: term -> term.
+in2	: term -> term.
+case	: term -> (term -> term) -> (term -> term) -> term.
 
-bang	: term -&gt; term.
-letb	: term -&gt; (term -&gt; term) -&gt; term.
+bang	: term -> term.
+letb	: term -> (term -> term) -> term.
 
-any	: term -&gt; term.
+any	: term -> term.
 
 unit	: term.
 
 %% derived syntax for 1
 star	: term
 	= bang unit.
-leto	: term -&gt; term -&gt; term
+leto	: term -> term -> term
 	= [t1] [t2] letb t1 ([x] t2).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 #
 # Linearity
 
-Linearity is enforced by employing a linearity judgement for each linear assumption.  The linearity judgement ensures that a variable is used linearly (roughly speaking, exactly once) within its scope.  (For an example of its use, see the rule ``of/lam`` for linear lambda abstraction below, which ensures that its argument is used linearly within its body.)
-
-&lt;twelf hidden="true"&gt;
-
-
+Linearity is enforced by employing a linearity judgement for each linear assumption.  The linearity judgement ensures that a variable is used linearly (roughly speaking, exactly once) within its scope.  (For an example of its use, see the rule ``of/lam`` for linear lambda abstraction below, which ensures that its argument is used linearly within its body.) !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
 
 %%%%%  Linearity  %%%%%
-&lt;/twelf&gt;
-&lt;twelf&gt;
-linear : (term -&gt; term) -&gt; type.
-&lt;/twelf&gt;
 
-For example, a variable is used linearly in a single occurrence of that variable:
-&lt;twelf&gt;
+%{!  !}%
+    
+linear : (term -> term) -> type.
+
+%{! For example, a variable is used linearly in a single occurrence of that variable: !}%
+    
 linear/var	: linear ([x] x).
-&lt;/twelf&gt;
 
-A variable is used linearly in a lambda abstraction if it is used linearly in the body.  (The abstraction's argument must also be used linearly in the body, but that is handled separately, by the abstraction's typing rule.)
-
-&lt;twelf&gt;
+%{! A variable is used linearly in a lambda abstraction if it is used linearly in the body.  (The abstraction's argument must also be used linearly in the body, but that is handled separately, by the abstraction's typing rule.) !}%
+    
 linear/lam	: linear ([x] lam (M x))
-		   &lt;- (\{y\} linear ([x] M x y)).
-&lt;/twelf&gt;
+		   <- ({y} linear ([x] M x y)).
 
-A variable is used linearly in application, if it is used linearly in one of the two subterms and does not appear at all in the other:
-
-&lt;twelf&gt;
+%{! A variable is used linearly in application, if it is used linearly in one of the two subterms and does not appear at all in the other: !}%
+    
 linear/app1	: linear ([x] app (M1 x) M2)
-		   &lt;- linear M1.
+		   <- linear M1.
 linear/app2	: linear ([x] app M1 (M2 x))
-		   &lt;- linear M2.
-&lt;/twelf&gt;
+		   <- linear M2.
 
-The remaining constructs use the same technique.  Note that there is no rule for ``bang``; no linear variable may appear within a ``bang``.  Also note that a linear variable need not appear within an ``any`` (as with ``unit``); however, if it does appear, it must be used linearly.
-
-&lt;twelf&gt;
+%{! The remaining constructs use the same technique.  Note that there is no rule for ``bang``; no linear variable may appear within a ``bang``.  Also note that a linear variable need not appear within an ``any`` (as with ``unit``); however, if it does appear, it must be used linearly. !}%
+    
 linear/tensor1	: linear ([x] tensor (M1 x) M2)
-		   &lt;- linear M1.
+		   <- linear M1.
 linear/tensor2	: linear ([x] tensor M1 (M2 x))
-		   &lt;- linear M2.
+		   <- linear M2.
 
 linear/lett1	: linear ([x] lett (M1 x) M2)
-		   &lt;- linear M1.
+		   <- linear M1.
 linear/lett2	: linear ([x] lett M1 (M2 x))
-		   &lt;- (\{y\} \{z\} linear ([x] M2 x y z)).
+		   <- ({y} {z} linear ([x] M2 x y z)).
 
 linear/pair	: linear ([x] pair (M1 x) (M2 x))
-		   &lt;- linear M1
-		   &lt;- linear M2.
+		   <- linear M1
+		   <- linear M2.
 
 linear/pi1	: linear ([x] pi1 (M x))
-		   &lt;- linear M.
+		   <- linear M.
 
 linear/pi2	: linear ([x] pi2 (M x))
-		   &lt;- linear M.
+		   <- linear M.
 
 linear/in1	: linear ([x] in1 (M x))
-		   &lt;- linear M.
+		   <- linear M.
 
 linear/in2	: linear ([x] in2 (M x))
-		   &lt;- linear M.
+		   <- linear M.
 
 linear/case1	: linear ([x] case (M x) M1 M2)
-		   &lt;- linear M.
+		   <- linear M.
 linear/case2	: linear ([x] case M (M1 x) (M2 x))
-		   &lt;- (\{y\} linear ([x] M1 x y))
-		   &lt;- (\{y\} linear ([x] M2 x y)).
+		   <- ({y} linear ([x] M1 x y))
+		   <- ({y} linear ([x] M2 x y)).
 
 linear/letb1	: linear ([x] letb (M1 x) M2)
-		   &lt;- linear M1.
+		   <- linear M1.
 linear/letb2	: linear ([x] letb M1 (M2 x))
-		   &lt;- (\{y\} linear ([x] M2 x y)).
+		   <- ({y} linear ([x] M2 x y)).
 
 linear/any1	: linear ([x] any (M x))
-		   &lt;- linear M.
+		   <- linear M.
 linear/any2	: linear ([x] any M).
 
 linear/unit	: linear ([x] unit).
 
 %% derived rules for 1
 linear/leto1	: linear ([x] leto (M1 x) M2)
-		   &lt;- linear M1
+		   <- linear M1
 		= [d] linear/letb1 d.
 linear/leto2	: linear ([x] leto M1 (M2 x))
-		   &lt;- linear M2
+		   <- linear M2
 		= [d] linear/letb2 ([y] d).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 #
 # Typing rules
 
-The typing rules are standard for linear logic, except that they must check that the linearity invariants are maintained.  Thus, the typing rule for any construct that binds a linear variable (``lam``, for example) has a premise (or premises) ensuring that such variable(s) are used linearly in their scope.  However, ``letb``, which binds an unrestricted variable, does not check for linear usage of that variable.
-
-&lt;twelf hidden="true"&gt;
-
-
+The typing rules are standard for linear logic, except that they must check that the linearity invariants are maintained.  Thus, the typing rule for any construct that binds a linear variable (``lam``, for example) has a premise (or premises) ensuring that such variable(s) are used linearly in their scope.  However, ``letb``, which binds an unrestricted variable, does not check for linear usage of that variable. !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
 
 %%%%%  Typing Rules  %%%%%
-&lt;/twelf&gt;
-&lt;twelf&gt;
-of : term -&gt; tp -&gt; type.
+
+%{!  !}%
+    
+of : term -> tp -> type.
 
 of/lam		: of (lam M) (T1 -o T2)
-		   &lt;- (\{x\} of x T1 -&gt; of (M x) T2)
-		   &lt;- linear M.
+		   <- ({x} of x T1 -> of (M x) T2)
+		   <- linear M.
 
 of/app		: of (app M1 M2) T2
-		   &lt;- of M1 (T1 -o T2)
-		   &lt;- of M2 T1.
+		   <- of M1 (T1 -o T2)
+		   <- of M2 T1.
 
 of/tensor	: of (tensor M1 M2) (T1 * T2)
-		   &lt;- of M1 T1
-		   &lt;- of M2 T2.
+		   <- of M1 T1
+		   <- of M2 T2.
 
 of/lett		: of (lett M1 M2) T
-		   &lt;- of M1 (T1 * T2)
-		   &lt;- (\{x\} of x T1 -&gt; \{y\} of y T2 -&gt; of (M2 x y) T)
-		   &lt;- (\{y\} linear ([x] M2 x y))
-		   &lt;- (\{x\} linear ([y] M2 x y)).
+		   <- of M1 (T1 * T2)
+		   <- ({x} of x T1 -> {y} of y T2 -> of (M2 x y) T)
+		   <- ({y} linear ([x] M2 x y))
+		   <- ({x} linear ([y] M2 x y)).
 
 of/pair		: of (pair M1 M2) (T1 & T2)
-		   &lt;- of M1 T1
-		   &lt;- of M2 T2.
+		   <- of M1 T1
+		   <- of M2 T2.
 
 of/pi1		: of (pi1 M) T1
-		   &lt;- of M (T1 & T2).
+		   <- of M (T1 & T2).
 
 of/pi2		: of (pi2 M) T2
-		   &lt;- of M (T1 & T2).
+		   <- of M (T1 & T2).
 
 of/in1		: of (in1 M) (T1 + T2)
-		   &lt;- of M T1.
+		   <- of M T1.
 
 of/in2		: of (in2 M) (T1 + T2)
-		   &lt;- of M T2.
+		   <- of M T2.
 
 of/case		: of (case M M1 M2) T
-		   &lt;- of M (T1 + T2)
-		   &lt;- (\{x\} of x T1 -&gt; of (M1 x) T)
-		   &lt;- (\{x\} of x T2 -&gt; of (M2 x) T)
-		   &lt;- linear M1
-		   &lt;- linear M2.
+		   <- of M (T1 + T2)
+		   <- ({x} of x T1 -> of (M1 x) T)
+		   <- ({x} of x T2 -> of (M2 x) T)
+		   <- linear M1
+		   <- linear M2.
 
 of/bang		: of (bang M) (! T)
-		   &lt;- of M T.
+		   <- of M T.
 
 of/letb		: of (letb M1 M2) T2
-		   &lt;- of M1 (! T1)
-		   &lt;- (\{x\} of x T1 -&gt; of (M2 x) T2).
+		   <- of M1 (! T1)
+		   <- ({x} of x T1 -> of (M2 x) T2).
 
 of/any		: of (any M) T
-		   &lt;- of M zero.
+		   <- of M zero.
 
 of/unit		: of unit top.
 
@@ -232,44 +221,39 @@ of/star		: of star one
 		= of/bang of/unit.
 
 of/leto		: of (leto M1 M2) T
-		   &lt;- of M1 one
-		   &lt;- of M2 T
+		   <- of M1 one
+		   <- of M2 T
 		= [d2] [d1] of/letb ([x] [d] d2) d1.
-&lt;/twelf&gt;
 
-
-#
+%{! #
 #
 # Subject Reduction
 
-As a metatheoretic example, we may prove the subject reduction property using this encoding.  First we define the relevant worlds:
-
-&lt;twelf hidden="true"&gt;
-
-
+As a metatheoretic example, we may prove the subject reduction property using this encoding.  First we define the relevant worlds: !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
 
 %%%%%  Worlds  %%%%%
-&lt;/twelf&gt;
-&lt;twelf&gt;
-%block block	: block \{x:term\}.
-%block bind	: some \{t:tp\} block \{x:term\} \{d:of x t\}.
-&lt;/twelf&gt;
 
-Next we define reduction:
+%{!  !}%
+    
+%block block	: block {x:term}.
+%block bind	: some {t:tp} block {x:term} {d:of x t}.
 
-&lt;twelf hidden="true"&gt;
-
-
+%{! Next we define reduction: !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
 
 %%%%%  Reduction  %%%%%
-&lt;/twelf&gt;
-&lt;twelf&gt;
-reduce : term -&gt; term -&gt; type.
+
+%{!  !}%
+    
+reduce : term -> term -> type.
 
 red/refl	: reduce M M.
 red/trans	: reduce M1 M3
-		   &lt;- reduce M1 M2
-		   &lt;- reduce M2 M3.
+		   <- reduce M1 M2
+		   <- reduce M2 M3.
 
 %% beta rules
 red/beta	: reduce (app (lam M1) M2) (M1 M2).
@@ -282,38 +266,38 @@ red/beta!	: reduce (letb (bang M1) M2) (M2 M1).
 
 %% compatibility
 red/lam		: reduce (lam M) (lam M')
-		   &lt;- (\{x\} reduce (M x) (M' x)).
+		   <- ({x} reduce (M x) (M' x)).
 red/app		: reduce (app M1 M2) (app M1' M2')
-		   &lt;- reduce M1 M1'
-		   &lt;- reduce M2 M2'.
+		   <- reduce M1 M1'
+		   <- reduce M2 M2'.
 red/tensor	: reduce (tensor M1 M2) (tensor M1' M2')
-		   &lt;- reduce M1 M1'
-		   &lt;- reduce M2 M2'.
+		   <- reduce M1 M1'
+		   <- reduce M2 M2'.
 red/lett	: reduce (lett M1 M2) (lett M1' M2')
-		   &lt;- reduce M1 M1'
-		   &lt;- (\{x\} \{y\} reduce (M2 x y) (M2' x y)).
+		   <- reduce M1 M1'
+		   <- ({x} {y} reduce (M2 x y) (M2' x y)).
 red/pair	: reduce (pair M1 M2) (pair M1' M2')
-		   &lt;- reduce M1 M1'
-		   &lt;- reduce M2 M2'.
+		   <- reduce M1 M1'
+		   <- reduce M2 M2'.
 red/pi1		: reduce (pi1 M) (pi1 M')
-		   &lt;- reduce M M'.
+		   <- reduce M M'.
 red/pi2		: reduce (pi2 M) (pi2 M')
-		   &lt;- reduce M M'.
+		   <- reduce M M'.
 red/in1		: reduce (in1 M) (in1 M')
-		   &lt;- reduce M M'.
+		   <- reduce M M'.
 red/in2		: reduce (in2 M) (in2 M')
-		   &lt;- reduce M M'.
+		   <- reduce M M'.
 red/case        : reduce (case M M1 M2) (case M' M1' M2')
-		   &lt;- reduce M M'
-		   &lt;- (\{x\} reduce (M1 x) (M1' x))
-		   &lt;- (\{x\} reduce (M2 x) (M2' x)).
+		   <- reduce M M'
+		   <- ({x} reduce (M1 x) (M1' x))
+		   <- ({x} reduce (M2 x) (M2' x)).
 red/bang	: reduce (bang M) (bang M')
-		   &lt;- reduce M M'.
+		   <- reduce M M'.
 red/letb        : reduce (letb M1 M2) (letb M1' M2')
-		   &lt;- reduce M1 M1'
-		   &lt;- (\{x\} reduce (M2 x) (M2' x)).
+		   <- reduce M1 M1'
+		   <- ({x} reduce (M2 x) (M2' x)).
 red/any		: reduce (any M) (any M')
-		   &lt;- reduce M M'.
+		   <- reduce M M'.
 
 %% commuting conversions
 red/app/lett	: reduce
@@ -406,245 +390,241 @@ red/any/letb	: reduce
 red/any/any	: reduce
 		   (any (any M))
 		   (any M).
-&lt;/twelf&gt;
 
-
-Next we define syntactic equality and establish some uninteresting properties about it.
-
-&lt;twelf hidden="true"&gt;
-
-
+%{! Next we define syntactic equality and establish some uninteresting properties about it. !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
 
 %%%%%  Equality  %%%%%
-&lt;/twelf&gt;
-&lt;twelf&gt;
-tp-eq : tp -&gt; tp -&gt; type.
+
+%{!  !}%
+    
+tp-eq : tp -> tp -> type.
 tp-eq/i		: tp-eq T T.
 
-term-eq : term -&gt; term -&gt; type.
+term-eq : term -> term -> type.
 term-eq/i	: term-eq M M.
-&lt;/twelf&gt;
 
-&lt;twelf hidden="true"&gt;
-
-
+%{!  !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
 
 %%%%%  Cons Lemmas  %%%%%
 
-any-resp : term-eq M M' -&gt; term-eq (any M) (any M') -&gt; type.
+any-resp : term-eq M M' -> term-eq (any M) (any M') -> type.
 %mode any-resp +X1 -X2.
 
 -	: any-resp term-eq/i term-eq/i.
 
 %worlds (block | bind) (any-resp _ _).
-%total \{\} (any-resp _ _).
+%total {} (any-resp _ _).
 
 
 
-app-resp : term-eq M1 M1' -&gt; term-eq M2 M2' -&gt; term-eq (app M1 M2) (app M1' M2') -&gt; type.
+app-resp : term-eq M1 M1' -> term-eq M2 M2' -> term-eq (app M1 M2) (app M1' M2') -> type.
 %mode app-resp +X1 +X2 -X3.
 
 -	: app-resp term-eq/i term-eq/i term-eq/i.
 
 %worlds (block | bind) (app-resp _ _ _).
-%total \{\} (app-resp _ _ _).
+%total {} (app-resp _ _ _).
 
 
 
-bang-resp : term-eq M M' -&gt; term-eq (bang M) (bang M') -&gt; type.
+bang-resp : term-eq M M' -> term-eq (bang M) (bang M') -> type.
 %mode bang-resp +X1 -X2.
 
 -	: bang-resp term-eq/i term-eq/i.
 
 %worlds (block | bind) (bang-resp _ _).
-%total \{\} (bang-resp _ _).
+%total {} (bang-resp _ _).
 
 
 
-case-resp : term-eq M1 M1' -&gt; (\{x\} term-eq (M2 x) (M2' x)) -&gt; (\{x\} term-eq (M3 x) (M3' x)) -&gt; term-eq (case M1 M2 M3) (case M1' M2' M3') -&gt; type.
+case-resp : term-eq M1 M1' -> ({x} term-eq (M2 x) (M2' x)) -> ({x} term-eq (M3 x) (M3' x)) -> term-eq (case M1 M2 M3) (case M1' M2' M3') -> type.
 %mode case-resp +X1 +X2 +X3 -X4.
 
 -	: case-resp term-eq/i ([_] term-eq/i) ([_] term-eq/i) term-eq/i.
 
 %worlds (block | bind) (case-resp _ _ _ _).
-%total \{\} (case-resp _ _ _ _).
+%total {} (case-resp _ _ _ _).
 
 
 
-in1-resp : term-eq M M' -&gt; term-eq (in1 M) (in1 M') -&gt; type.
+in1-resp : term-eq M M' -> term-eq (in1 M) (in1 M') -> type.
 %mode in1-resp +X1 -X2.
 
 -	: in1-resp term-eq/i term-eq/i.
 
 %worlds (block | bind) (in1-resp _ _).
-%total \{\} (in1-resp _ _).
+%total {} (in1-resp _ _).
 
 
 
-in2-resp : term-eq M M' -&gt; term-eq (in2 M) (in2 M') -&gt; type.
+in2-resp : term-eq M M' -> term-eq (in2 M) (in2 M') -> type.
 %mode in2-resp +X1 -X2.
 
 -	: in2-resp term-eq/i term-eq/i.
 
 %worlds (block | bind) (in2-resp _ _).
-%total \{\} (in2-resp _ _).
+%total {} (in2-resp _ _).
 
 
 
-lam-resp : (\{x\} term-eq (M x) (M' x)) -&gt; term-eq (lam M) (lam M') -&gt; type.
+lam-resp : ({x} term-eq (M x) (M' x)) -> term-eq (lam M) (lam M') -> type.
 %mode lam-resp +X1 -X2.
 
 -	: lam-resp ([x] term-eq/i) term-eq/i.
 
 %worlds (block | bind) (lam-resp _ _).
-%total \{\} (lam-resp _ _).
+%total {} (lam-resp _ _).
 
 
 
-letb-resp : term-eq M1 M1' -&gt; (\{x\} term-eq (M2 x) (M2' x)) -&gt; term-eq (letb M1 M2) (letb M1' M2') -&gt; type.
+letb-resp : term-eq M1 M1' -> ({x} term-eq (M2 x) (M2' x)) -> term-eq (letb M1 M2) (letb M1' M2') -> type.
 %mode letb-resp +X1 +X2 -X3.
 
 -	: letb-resp term-eq/i ([x] term-eq/i) term-eq/i.
 
 %worlds (block | bind) (letb-resp _ _ _).
-%total \{\} (letb-resp _ _ _).
+%total {} (letb-resp _ _ _).
 
 
 
-lett-resp : term-eq M1 M1' -&gt; (\{x\} \{y\} term-eq (M2 x y) (M2' x y)) -&gt; term-eq (lett M1 M2) (lett M1' M2') -&gt; type.
+lett-resp : term-eq M1 M1' -> ({x} {y} term-eq (M2 x y) (M2' x y)) -> term-eq (lett M1 M2) (lett M1' M2') -> type.
 %mode lett-resp +X1 +X2 -X3.
 
 -	: lett-resp term-eq/i ([x] [y] term-eq/i) term-eq/i.
 
 %worlds (block | bind) (lett-resp _ _ _).
-%total \{\} (lett-resp _ _ _).
+%total {} (lett-resp _ _ _).
 
 
 
-pair-resp : term-eq M1 M1' -&gt; term-eq M2 M2' -&gt; term-eq (pair M1 M2) (pair M1' M2') -&gt; type.
+pair-resp : term-eq M1 M1' -> term-eq M2 M2' -> term-eq (pair M1 M2) (pair M1' M2') -> type.
 %mode pair-resp +X1 +X2 -X3.
 
 -	: pair-resp term-eq/i term-eq/i term-eq/i.
 
 %worlds (block | bind) (pair-resp _ _ _).
-%total \{\} (pair-resp _ _ _).
+%total {} (pair-resp _ _ _).
 
 
 
-pi1-resp : term-eq M M' -&gt; term-eq (pi1 M) (pi1 M') -&gt; type.
+pi1-resp : term-eq M M' -> term-eq (pi1 M) (pi1 M') -> type.
 %mode pi1-resp +X1 -X2.
 
 -	: pi1-resp term-eq/i term-eq/i.
 
 %worlds (block | bind) (pi1-resp _ _).
-%total \{\} (pi1-resp _ _).
+%total {} (pi1-resp _ _).
 
 
 
-pi2-resp : term-eq M M' -&gt; term-eq (pi2 M) (pi2 M') -&gt; type.
+pi2-resp : term-eq M M' -> term-eq (pi2 M) (pi2 M') -> type.
 %mode pi2-resp +X1 -X2.
 
 -	: pi2-resp term-eq/i term-eq/i.
 
 %worlds (block | bind) (pi2-resp _ _).
-%total \{\} (pi2-resp _ _).
+%total {} (pi2-resp _ _).
 
 
 
-tensor-resp : term-eq M1 M1' -&gt; term-eq M2 M2' -&gt; term-eq (tensor M1 M2) (tensor M1' M2') -&gt; type.
+tensor-resp : term-eq M1 M1' -> term-eq M2 M2' -> term-eq (tensor M1 M2) (tensor M1' M2') -> type.
 %mode tensor-resp +X1 +X2 -X3.
 
 -	: tensor-resp term-eq/i term-eq/i term-eq/i.
 
 %worlds (block | bind) (tensor-resp _ _ _).
-%total \{\} (tensor-resp _ _ _).
+%total {} (tensor-resp _ _ _).
 
 
 
 
 %%%%%  Respects Lemmas  %%%%%
 
-linear-resp : (\{x\} term-eq (M1 x) (M2 x)) -&gt; linear M1 -&gt; linear M2 -&gt; type.
+linear-resp : ({x} term-eq (M1 x) (M2 x)) -> linear M1 -> linear M2 -> type.
 %mode linear-resp +X1 +X2 -X3.
 
 -	: linear-resp ([x] term-eq/i) D D.
 
 %worlds (block | bind) (linear-resp _ _ _).
-%total \{\} (linear-resp _ _ _).
+%total {} (linear-resp _ _ _).
 
 
 
-reduce-resp : term-eq M1 M1' -&gt; term-eq M2 M2' -&gt; reduce M1 M2 -&gt; reduce M1' M2' -&gt; type.
+reduce-resp : term-eq M1 M1' -> term-eq M2 M2' -> reduce M1 M2 -> reduce M1' M2' -> type.
 %mode reduce-resp +X1 +X2 +X3 -X4.
 
 -	: reduce-resp term-eq/i term-eq/i D D.
 
 %worlds (block | bind) (reduce-resp _ _ _ _).
-%total \{\} (reduce-resp _ _ _ _).
-%reduces D1 &lt;= D2 (reduce-resp _ _ D2 D1).
+%total {} (reduce-resp _ _ _ _).
+%reduces D1 <= D2 (reduce-resp _ _ D2 D1).
 
 
 
 %%%%%  Down to Business  %%%%%
-&lt;/twelf&gt;
 
-Next we prove an important lemma: when a variable x is used linearly in a term M1, and M1 is substituted for a linear variable in a term M2 that does not mention x, than x is used linearly in the result.
-
-&lt;twelf&gt;
-compose-linear : linear M1 -&gt; linear M2 -&gt; linear ([x] M1 (M2 x)) -&gt; type.
+%{! Next we prove an important lemma: when a variable x is used linearly in a term M1, and M1 is substituted for a linear variable in a term M2 that does not mention x, than x is used linearly in the result. !}%
+    
+compose-linear : linear M1 -> linear M2 -> linear ([x] M1 (M2 x)) -> type.
 %mode compose-linear +X1 +X2 -X3.
-&lt;/twelf&gt;
 
-&lt;twelf hidden="true"&gt;
+%{!  !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 -	: compose-linear linear/var D D.
 
 -	: compose-linear (linear/lam D1) D2 (linear/lam D)
-	   &lt;- (\{y\} compose-linear (D1 y) D2 (D y)).
+	   <- ({y} compose-linear (D1 y) D2 (D y)).
 
 -	: compose-linear (linear/app1 D1) D2 (linear/app1 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 -	: compose-linear (linear/app2 D1) D2 (linear/app2 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 
 -	: compose-linear (linear/tensor1 D1) D2 (linear/tensor1 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 -	: compose-linear (linear/tensor2 D1) D2 (linear/tensor2 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 
 -	: compose-linear (linear/lett1 D1) D2 (linear/lett1 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 -	: compose-linear (linear/lett2 D1) D2 (linear/lett2 D)
-	   &lt;- (\{y\} \{z\} compose-linear (D1 y z) D2 (D y z)).
+	   <- ({y} {z} compose-linear (D1 y z) D2 (D y z)).
 
 -	: compose-linear (linear/pair D1b D1a) D2 (linear/pair Db Da)
-	   &lt;- compose-linear D1a D2 Da
-	   &lt;- compose-linear D1b D2 Db.
+	   <- compose-linear D1a D2 Da
+	   <- compose-linear D1b D2 Db.
 
 -	: compose-linear (linear/pi1 D1) D2 (linear/pi1 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 
 -	: compose-linear (linear/pi2 D1) D2 (linear/pi2 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 
 -	: compose-linear (linear/in1 D1) D2 (linear/in1 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 
 -	: compose-linear (linear/in2 D1) D2 (linear/in2 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 
 -	: compose-linear (linear/case1 D1) D2 (linear/case1 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 -	: compose-linear (linear/case2 D1b D1a) D2 (linear/case2 Db Da)
-	   &lt;- (\{y\} compose-linear (D1a y) D2 (Da y))
-	   &lt;- (\{y\} compose-linear (D1b y) D2 (Db y)).
+	   <- ({y} compose-linear (D1a y) D2 (Da y))
+	   <- ({y} compose-linear (D1b y) D2 (Db y)).
 
 -	: compose-linear (linear/letb1 D1) D2 (linear/letb1 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 -	: compose-linear (linear/letb2 D1) D2 (linear/letb2 D)
-	   &lt;- (\{y\} compose-linear (D1 y) D2 (D y)).
+	   <- ({y} compose-linear (D1 y) D2 (D y)).
 
 -	: compose-linear (linear/any1 D1) D2 (linear/any1 D)
-	   &lt;- compose-linear D1 D2 D.
+	   <- compose-linear D1 D2 D.
 -	: compose-linear linear/any2 _ linear/any2.
 
 -	: compose-linear linear/unit _ linear/unit.
@@ -652,28 +632,25 @@ compose-linear : linear M1 -&gt; linear M2 -&gt; linear ([x] M1 (M2 x)) -&gt; ty
 %worlds (block | bind) (compose-linear _ _ _).
 %total D (compose-linear D _ _).
 
-
-
-&lt;/twelf&gt;
-
-Next we prove a technical lemma.  It states that if x does not appear in M1, and M1 reduces to M2, then x does not appear in M2.
-
-&lt;twelf&gt;
-reduce-closed : (\{x:term\} reduce M1 (M2 x)) -&gt; (\{x:term\} term-eq M2' (M2 x)) -&gt; type.
+%{! Next we prove a technical lemma.  It states that if x does not appear in M1, and M1 reduces to M2, then x does not appear in M2. !}%
+    
+reduce-closed : ({x:term} reduce M1 (M2 x)) -> ({x:term} term-eq M2' (M2 x)) -> type.
 %mode reduce-closed +X1 -X2.
-&lt;/twelf&gt;
 
-&lt;twelf hidden="true"&gt;
+%{!  !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 -	: reduce-closed ([x] red/refl) ([x] term-eq/i).
 
-reduce-closed!trans : (\{x:term\} term-eq M1' (M1 x)) -&gt; (\{x:term\} reduce (M1 x) (M2 x)) -&gt; (\{x:term\} term-eq M2' (M2 x)) -&gt; type.
+reduce-closed!trans : ({x:term} term-eq M1' (M1 x)) -> ({x:term} reduce (M1 x) (M2 x)) -> ({x:term} term-eq M2' (M2 x)) -> type.
 %mode reduce-closed!trans +X1 +X2 -X3.
 
 -	: reduce-closed ([x] red/trans (D2 x) (D1 x)) Deq2
-	   &lt;- reduce-closed D1 Deq1
-	   &lt;- reduce-closed!trans Deq1 D2 Deq2.
+	   <- reduce-closed D1 Deq1
+	   <- reduce-closed!trans Deq1 D2 Deq2.
 -	: reduce-closed!trans ([x] term-eq/i) D Deq
-	   &lt;- reduce-closed D Deq.
+	   <- reduce-closed D Deq.
 
 -	: reduce-closed ([x] red/beta) ([x] term-eq/i).
 -	: reduce-closed ([x] red/beta*) ([x] term-eq/i).
@@ -684,56 +661,56 @@ reduce-closed!trans : (\{x:term\} term-eq M1' (M1 x)) -&gt; (\{x:term\} reduce (
 -	: reduce-closed ([x] red/beta!) ([x] term-eq/i).
 
 -	: reduce-closed ([x] red/lam (Dred x)) Deq'
-	   &lt;- (\{y\} reduce-closed ([x] Dred x y) ([x] Deq x y))
-	   &lt;- (\{x\} lam-resp (Deq x) (Deq' x)).
+	   <- ({y} reduce-closed ([x] Dred x y) ([x] Deq x y))
+	   <- ({x} lam-resp (Deq x) (Deq' x)).
 -	: reduce-closed ([x] red/app (Dred2 x) (Dred1 x)) Deq
-	   &lt;- reduce-closed Dred1 Deq1
-	   &lt;- reduce-closed Dred2 Deq2
-	   &lt;- (\{x\} app-resp (Deq1 x) (Deq2 x) (Deq x)).
+	   <- reduce-closed Dred1 Deq1
+	   <- reduce-closed Dred2 Deq2
+	   <- ({x} app-resp (Deq1 x) (Deq2 x) (Deq x)).
 
 -	: reduce-closed ([x] red/tensor (Dred2 x) (Dred1 x)) Deq
-	   &lt;- reduce-closed Dred1 Deq1
-	   &lt;- reduce-closed Dred2 Deq2
-	   &lt;- (\{x\} tensor-resp (Deq1 x) (Deq2 x) (Deq x)).
+	   <- reduce-closed Dred1 Deq1
+	   <- reduce-closed Dred2 Deq2
+	   <- ({x} tensor-resp (Deq1 x) (Deq2 x) (Deq x)).
 -	: reduce-closed ([x] red/lett (Dred2 x) (Dred1 x)) Deq
-	   &lt;- reduce-closed Dred1 Deq1
-	   &lt;- (\{y\} \{z\} reduce-closed ([x] Dred2 x y z) ([x] Deq2 x y z))
-	   &lt;- (\{x\} lett-resp (Deq1 x) (Deq2 x) (Deq x)).
+	   <- reduce-closed Dred1 Deq1
+	   <- ({y} {z} reduce-closed ([x] Dred2 x y z) ([x] Deq2 x y z))
+	   <- ({x} lett-resp (Deq1 x) (Deq2 x) (Deq x)).
 
 -	: reduce-closed ([x] red/pair (Dred2 x) (Dred1 x)) Deq
-	   &lt;- reduce-closed Dred1 Deq1
-	   &lt;- reduce-closed Dred2 Deq2
-	   &lt;- (\{x\} pair-resp (Deq1 x) (Deq2 x) (Deq x)).
+	   <- reduce-closed Dred1 Deq1
+	   <- reduce-closed Dred2 Deq2
+	   <- ({x} pair-resp (Deq1 x) (Deq2 x) (Deq x)).
 -	: reduce-closed ([x] red/pi1 (Dred x)) Deq'
-	   &lt;- reduce-closed Dred Deq
-	   &lt;- (\{x\} pi1-resp (Deq x) (Deq' x)).
+	   <- reduce-closed Dred Deq
+	   <- ({x} pi1-resp (Deq x) (Deq' x)).
 -	: reduce-closed ([x] red/pi2 (Dred x)) Deq'
-	   &lt;- reduce-closed Dred Deq
-	   &lt;- (\{x\} pi2-resp (Deq x) (Deq' x)).
+	   <- reduce-closed Dred Deq
+	   <- ({x} pi2-resp (Deq x) (Deq' x)).
 
 -	: reduce-closed ([x] red/in1 (Dred x)) Deq'
-	   &lt;- reduce-closed Dred Deq
-	   &lt;- (\{x\} in1-resp (Deq x) (Deq' x)).
+	   <- reduce-closed Dred Deq
+	   <- ({x} in1-resp (Deq x) (Deq' x)).
 -	: reduce-closed ([x] red/in2 (Dred x)) Deq'
-	   &lt;- reduce-closed Dred Deq
-	   &lt;- (\{x\} in2-resp (Deq x) (Deq' x)).
+	   <- reduce-closed Dred Deq
+	   <- ({x} in2-resp (Deq x) (Deq' x)).
 -	: reduce-closed ([x] red/case (Dred3 x) (Dred2 x) (Dred1 x)) Deq'
-	   &lt;- reduce-closed Dred1 Deq1
-	   &lt;- (\{y\} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
-	   &lt;- (\{y\} reduce-closed ([x] Dred3 x y) ([x] Deq3 x y))
-	   &lt;- (\{x\} case-resp (Deq1 x) (Deq2 x) (Deq3 x) (Deq' x)).
+	   <- reduce-closed Dred1 Deq1
+	   <- ({y} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
+	   <- ({y} reduce-closed ([x] Dred3 x y) ([x] Deq3 x y))
+	   <- ({x} case-resp (Deq1 x) (Deq2 x) (Deq3 x) (Deq' x)).
 
 -	: reduce-closed ([x] red/bang (Dred x)) Deq'
-	   &lt;- reduce-closed Dred Deq
-	   &lt;- (\{x\} bang-resp (Deq x) (Deq' x)).
+	   <- reduce-closed Dred Deq
+	   <- ({x} bang-resp (Deq x) (Deq' x)).
 -	: reduce-closed ([x] red/letb (Dred2 x) (Dred1 x)) Deq
-	   &lt;- reduce-closed Dred1 Deq1
-	   &lt;- (\{y\} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
-	   &lt;- (\{x\} letb-resp (Deq1 x) (Deq2 x) (Deq x)).
+	   <- reduce-closed Dred1 Deq1
+	   <- ({y} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
+	   <- ({x} letb-resp (Deq1 x) (Deq2 x) (Deq x)).
 
 -	: reduce-closed ([x] red/any (Dred x)) Deq'
-	   &lt;- reduce-closed Dred Deq
-	   &lt;- (\{x\} any-resp (Deq x) (Deq' x)).
+	   <- reduce-closed Dred Deq
+	   <- ({x} any-resp (Deq x) (Deq' x)).
 
 -	: reduce-closed ([x] red/app/lett) ([x] term-eq/i).
 -	: reduce-closed ([x] red/app/case) ([x] term-eq/i).
@@ -767,34 +744,31 @@ reduce-closed!trans : (\{x:term\} term-eq M1' (M1 x)) -&gt; (\{x:term\} reduce (
 %worlds (block | bind) (reduce-closed _ _) (reduce-closed!trans _ _ _).
 %total (D1 D2) (reduce-closed D1 _) (reduce-closed!trans _ D2 _).
 
-
-
-&lt;/twelf&gt;
-
-With these lemmas in hand, we can prove the subject reduction theorem.  In fact, there are two theorems to be proved simultaneously.  One (``sr``) states that types are preserved by reduction, and the other (``srl``) states that linearity is preserved by reduction.
-
-&lt;twelf&gt;
-srl : (\{x\} reduce (M x) (M' x)) 
-       -&gt; (\{x\} of x T -&gt; of (M x) T') 
-       -&gt; linear M 
+%{! With these lemmas in hand, we can prove the subject reduction theorem.  In fact, there are two theorems to be proved simultaneously.  One (``sr``) states that types are preserved by reduction, and the other (``srl``) states that linearity is preserved by reduction. !}%
+    
+srl : ({x} reduce (M x) (M' x)) 
+       -> ({x} of x T -> of (M x) T') 
+       -> linear M 
 %%
-       -&gt; linear M' -&gt; type.
+       -> linear M' -> type.
 
 sr : reduce M M' 
-      -&gt; of M T
+      -> of M T
 %%
-      -&gt; of M' T -&gt; type.
+      -> of M' T -> type.
 %mode srl +X1 +X2 +X3 -X4.
 %mode sr +X1 +X2 -X3.
-&lt;/twelf&gt;
 
-&lt;twelf hidden="true"&gt;
+%{!  !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 -refl	: srl ([x] red/refl) _ D D.
 
 -trans	: srl ([x] red/trans (Dred23 x) (Dred12 x)) Dof1 Dlin1 Dlin3
-	   &lt;- srl Dred12 Dof1 Dlin1 Dlin2
-	   &lt;- (\{x\} \{d\} sr (Dred12 x) (Dof1 x d) (Dof2 x d))
-	   &lt;- srl Dred23 Dof2 Dlin2 Dlin3.
+	   <- srl Dred12 Dof1 Dlin1 Dlin2
+	   <- ({x} {d} sr (Dred12 x) (Dof1 x d) (Dof2 x d))
+	   <- srl Dred23 Dof2 Dlin2 Dlin3.
 
 -beta1	: srl ([x] red/beta : reduce (app (lam (M1 x)) M2) _)
 	   ([x] [d] of/app (Dof2 x d : of _ T2) (of/lam (Dlin1 x) (Dof1 x d)))
@@ -804,18 +778,18 @@ sr : reduce M M'
 	   ([x] [d] of/app (Dof2 x d : of _ T2) (of/lam (Dlin1 x) (Dof1 x d)))
 	   (linear/app2 Dlin)
 	   Dlin'
-	   &lt;- compose-linear (Dlin1 unit) Dlin Dlin'.
+	   <- compose-linear (Dlin1 unit) Dlin Dlin'.
 	  
 -bet*11	: srl ([x] red/beta* : reduce (lett (tensor (M1 x) M2) M) _)
 	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d : of _ (T1 * T2)))
 	   (linear/lett1 (linear/tensor1 Dlin))
 	   Dlin'
-	   &lt;- compose-linear (Dlin1 unit M2) Dlin Dlin'.
+	   <- compose-linear (Dlin1 unit M2) Dlin Dlin'.
 -bet*12	: srl ([x] red/beta* : reduce (lett (tensor M1 (M2 x)) M) _)
 	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d : of _ (T1 * T2)))
 	   (linear/lett1 (linear/tensor2 Dlin))
 	   Dlin'
-	   &lt;- compose-linear (Dlin2 unit M1) Dlin Dlin'.
+	   <- compose-linear (Dlin2 unit M1) Dlin Dlin'.
 -bet*2	: srl ([x] red/beta* : reduce (lett (tensor M1 M2) (M x)) _)
 	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d : of _ (T1 * T2)))
 	   (linear/lett2 Dlin)
@@ -834,7 +808,7 @@ sr : reduce M M'
 	   ([x] [d] of/case (Dlin2 x) (Dlin1 x) _ _ (_ : of _ (T1 + T2)))
 	   (linear/case1 (linear/in1 Dlin))
 	   Dlin'
-	   &lt;- compose-linear (Dlin1 unit) Dlin Dlin'.
+	   <- compose-linear (Dlin1 unit) Dlin Dlin'.
 -bt+1-2	: srl ([x] red/beta+1 : reduce (case (in1 M) (M1 x) (M2 x)) _)
 	   ([x] [d] of/case (Dlin2 x) (Dlin1 x) _ _ (_ : of _ (T1 + T2)))
 	   (linear/case2 Dlin2' Dlin1')
@@ -844,7 +818,7 @@ sr : reduce M M'
 	   ([x] [d] of/case (Dlin2 x) (Dlin1 x) _ _ (_ : of _ (T1 + T2)))
 	   (linear/case1 (linear/in2 Dlin))
 	   Dlin'
-	   &lt;- compose-linear (Dlin2 unit) Dlin Dlin'.
+	   <- compose-linear (Dlin2 unit) Dlin Dlin'.
 -bt+2-2	: srl ([x] red/beta+2 : reduce (case (in2 M) (M1 x) (M2 x)) _)
 	   ([x] [d] of/case (Dlin2 x) (Dlin1 x) _ _ (_ : of _ (T1 + T2)))
 	   (linear/case2 Dlin2' Dlin1')
@@ -859,138 +833,138 @@ sr : reduce M M'
 	   ([x] [d] of/lam (Dlin1 x) (Dof x d))
 	   (linear/lam Dlin)
 	   (linear/lam Dlin')
-	   &lt;- (\{y\} \{e\} srl ([x] Dred x y) ([x] [d] Dof x d y e) (Dlin y) (Dlin' y)).
+	   <- ({y} {e} srl ([x] Dred x y) ([x] [d] Dof x d y e) (Dlin y) (Dlin' y)).
 
 -app1	: srl ([x] red/app (Dred2 x) (Dred1 x))
 	   ([x] [d] of/app (Dof2 x d) (Dof1 x d))
 	   (linear/app1 Dlin)
-	   Dlin_
-	   &lt;- srl Dred1 Dof1 Dlin Dlin'
-	   &lt;- reduce-closed Dred2 Deq
-	   &lt;- (\{x\} app-resp term-eq/i (Deq x) (Deq' x))
-	   &lt;- linear-resp Deq' (linear/app1 Dlin') Dlin_.
+	   Dlin''
+	   <- srl Dred1 Dof1 Dlin Dlin'
+	   <- reduce-closed Dred2 Deq
+	   <- ({x} app-resp term-eq/i (Deq x) (Deq' x))
+	   <- linear-resp Deq' (linear/app1 Dlin') Dlin''.
 -app2	: srl ([x] red/app (Dred2 x) (Dred1 x))
 	   ([x] [d] of/app (Dof2 x d) (Dof1 x d))
 	   (linear/app2 Dlin)
-	   Dlin_
-	   &lt;- srl Dred2 Dof2 Dlin Dlin'
-	   &lt;- reduce-closed Dred1 Deq
-	   &lt;- (\{x\} app-resp (Deq x) term-eq/i (Deq' x))
-	   &lt;- linear-resp Deq' (linear/app2 Dlin') Dlin_.
+	   Dlin''
+	   <- srl Dred2 Dof2 Dlin Dlin'
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} app-resp (Deq x) term-eq/i (Deq' x))
+	   <- linear-resp Deq' (linear/app2 Dlin') Dlin''.
 
 -tens1	: srl ([x] red/tensor (Dred2 x) (Dred1 x))
 	   ([x] [d] of/tensor (Dof2 x d) (Dof1 x d))
 	   (linear/tensor1 Dlin)
-	   Dlin_
-	   &lt;- srl Dred1 Dof1 Dlin Dlin'
-	   &lt;- reduce-closed Dred2 Deq
-	   &lt;- (\{x\} tensor-resp term-eq/i (Deq x) (Deq' x))
-	   &lt;- linear-resp Deq' (linear/tensor1 Dlin') Dlin_.
+	   Dlin''
+	   <- srl Dred1 Dof1 Dlin Dlin'
+	   <- reduce-closed Dred2 Deq
+	   <- ({x} tensor-resp term-eq/i (Deq x) (Deq' x))
+	   <- linear-resp Deq' (linear/tensor1 Dlin') Dlin''.
 -tens2	: srl ([x] red/tensor (Dred2 x) (Dred1 x))
 	   ([x] [d] of/tensor (Dof2 x d) (Dof1 x d))
 	   (linear/tensor2 Dlin)
-	   Dlin_
-	   &lt;- srl Dred2 Dof2 Dlin Dlin'
-	   &lt;- reduce-closed Dred1 Deq
-	   &lt;- (\{x\} tensor-resp (Deq x) term-eq/i (Deq' x))
-	   &lt;- linear-resp Deq' (linear/tensor2 Dlin') Dlin_.
+	   Dlin''
+	   <- srl Dred2 Dof2 Dlin Dlin'
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} tensor-resp (Deq x) term-eq/i (Deq' x))
+	   <- linear-resp Deq' (linear/tensor2 Dlin') Dlin''.
 
 -lett1	: srl ([x] red/lett (Dred2 x) (Dred1 x))
 	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d))
 	   (linear/lett1 Dlin)
-	   Dlin_
-	   &lt;- srl Dred1 Dof1 Dlin Dlin'
-	   &lt;- (\{y\} \{z\} reduce-closed ([x] Dred2 x y z) ([x] Deq x y z))
-	   &lt;- (\{x\} lett-resp term-eq/i (Deq x) (Deq' x))
-	   &lt;- linear-resp Deq' (linear/lett1 Dlin') Dlin_.
+	   Dlin''
+	   <- srl Dred1 Dof1 Dlin Dlin'
+	   <- ({y} {z} reduce-closed ([x] Dred2 x y z) ([x] Deq x y z))
+	   <- ({x} lett-resp term-eq/i (Deq x) (Deq' x))
+	   <- linear-resp Deq' (linear/lett1 Dlin') Dlin''.
 -lett2	: srl ([x] red/lett (Dred2 x) (Dred1 x))
 	   ([x] [d] of/lett (Dlin2 x) (Dlin1 x) (Dof2 x d) (Dof1 x d))
 	   (linear/lett2 Dlin)
-	   Dlin_
-	   &lt;- (\{y\} \{e:of y T1\} \{z\} \{f:of z T2\} srl ([x] Dred2 x y z) ([x] [d] Dof2 x d y e z f) (Dlin y z) (Dlin' y z))
-	   &lt;- reduce-closed Dred1 Deq
-	   &lt;- (\{x\} lett-resp (Deq x) ([_] [_] term-eq/i) (Deq' x))
-	   &lt;- linear-resp Deq' (linear/lett2 Dlin') Dlin_.
+	   Dlin''
+	   <- ({y} {e:of y T1} {z} {f:of z T2} srl ([x] Dred2 x y z) ([x] [d] Dof2 x d y e z f) (Dlin y z) (Dlin' y z))
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} lett-resp (Deq x) ([_] [_] term-eq/i) (Deq' x))
+	   <- linear-resp Deq' (linear/lett2 Dlin') Dlin''.
 
 -pair	: srl ([x] red/pair (Dred2 x) (Dred1 x))
 	   ([x] [d] of/pair (Dof2 x d) (Dof1 x d))
 	   (linear/pair Dlin2 Dlin1)
 	   (linear/pair Dlin2' Dlin1')
-	   &lt;- srl Dred1 Dof1 Dlin1 Dlin1'
-	   &lt;- srl Dred2 Dof2 Dlin2 Dlin2'.
+	   <- srl Dred1 Dof1 Dlin1 Dlin1'
+	   <- srl Dred2 Dof2 Dlin2 Dlin2'.
 
 -pi1	: srl ([x] red/pi1 (Dred x))
 	   ([x] [d] of/pi1 (Dof x d))
 	   (linear/pi1 Dlin)
 	   (linear/pi1 Dlin')
-	   &lt;- srl Dred Dof Dlin Dlin'.
+	   <- srl Dred Dof Dlin Dlin'.
 
 -pi2	: srl ([x] red/pi2 (Dred x))
 	   ([x] [d] of/pi2 (Dof x d))
 	   (linear/pi2 Dlin)
 	   (linear/pi2 Dlin')
-	   &lt;- srl Dred Dof Dlin Dlin'.
+	   <- srl Dred Dof Dlin Dlin'.
 
 -in1	: srl ([x] red/in1 (Dred x))
 	   ([x] [d] of/in1 (Dof x d))
 	   (linear/in1 Dlin)
 	   (linear/in1 Dlin')
-	   &lt;- srl Dred Dof Dlin Dlin'.
+	   <- srl Dred Dof Dlin Dlin'.
 
 -in2	: srl ([x] red/in2 (Dred x))
 	   ([x] [d] of/in2 (Dof x d))
 	   (linear/in2 Dlin)
 	   (linear/in2 Dlin')
-	   &lt;- srl Dred Dof Dlin Dlin'.
+	   <- srl Dred Dof Dlin Dlin'.
 
 -case1	: srl ([x] red/case (Dred3 x) (Dred2 x) (Dred1 x))
 	   ([x] [d] of/case (Dlin3 x) (Dlin2 x) (Dof3 x d) (Dof2 x d) (Dof1 x d))
 	   (linear/case1 Dlin)
-	   Dlin_
-	   &lt;- srl Dred1 Dof1 Dlin Dlin'
-	   &lt;- (\{y\} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
-	   &lt;- (\{y\} reduce-closed ([x] Dred3 x y) ([x] Deq3 x y))
-	   &lt;- (\{x\} case-resp term-eq/i (Deq2 x) (Deq3 x) (Deq' x))
-	   &lt;- linear-resp Deq' (linear/case1 Dlin') Dlin_.
+	   Dlin''
+	   <- srl Dred1 Dof1 Dlin Dlin'
+	   <- ({y} reduce-closed ([x] Dred2 x y) ([x] Deq2 x y))
+	   <- ({y} reduce-closed ([x] Dred3 x y) ([x] Deq3 x y))
+	   <- ({x} case-resp term-eq/i (Deq2 x) (Deq3 x) (Deq' x))
+	   <- linear-resp Deq' (linear/case1 Dlin') Dlin''.
 -case2	: srl ([x] red/case (Dred3 x) (Dred2 x) (Dred1 x))
 	   ([x] [d] of/case (Dlin3 x) (Dlin2 x) (Dof3 x d) (Dof2 x d) (Dof1 x d))
 	   (linear/case2 Dlin3' Dlin2')
-	   Dlin_
-	   &lt;- (\{x'\} \{d'\} srl ([x] Dred2 x x') ([x] [d] Dof2 x d x' d') (Dlin2' x') (Dlin2_ x'))
-	   &lt;- (\{x'\} \{d'\} srl ([x] Dred3 x x') ([x] [d] Dof3 x d x' d') (Dlin3' x') (Dlin3_ x'))
-	   &lt;- reduce-closed Dred1 Deq
-	   &lt;- (\{x\} case-resp (Deq x) ([y] term-eq/i) ([y] term-eq/i) (Deq' x))
-	   &lt;- linear-resp Deq' (linear/case2 Dlin3_ Dlin2_) Dlin_.
+	   Dlin''
+	   <- ({x'} {d'} srl ([x] Dred2 x x') ([x] [d] Dof2 x d x' d') (Dlin2' x') (Dlin2'' x'))
+	   <- ({x'} {d'} srl ([x] Dred3 x x') ([x] [d] Dof3 x d x' d') (Dlin3' x') (Dlin3'' x'))
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} case-resp (Deq x) ([y] term-eq/i) ([y] term-eq/i) (Deq' x))
+	   <- linear-resp Deq' (linear/case2 Dlin3'' Dlin2'') Dlin''.
 
 -letb1	: srl ([x] red/letb (Dred2 x) (Dred1 x))
 	   ([x] [d] of/letb (Dof2 x d) (Dof1 x d))
 	   (linear/letb1 Dlin)
-	   Dlin_
-	   &lt;- srl Dred1 Dof1 Dlin Dlin'
-	   &lt;- (\{y\} reduce-closed ([x] Dred2 x y) ([x] Deq x y))
-	   &lt;- (\{x\} letb-resp term-eq/i (Deq x) (Deq' x))
-	   &lt;- linear-resp Deq' (linear/letb1 Dlin') Dlin_.
+	   Dlin''
+	   <- srl Dred1 Dof1 Dlin Dlin'
+	   <- ({y} reduce-closed ([x] Dred2 x y) ([x] Deq x y))
+	   <- ({x} letb-resp term-eq/i (Deq x) (Deq' x))
+	   <- linear-resp Deq' (linear/letb1 Dlin') Dlin''.
 -letb1	: srl ([x] red/letb (Dred2 x) (Dred1 x))
 	   ([x] [d] of/letb (Dof2 x d) (Dof1 x d))
 	   (linear/letb2 Dlin)
-	   Dlin_
-	   &lt;- (\{x'\} \{d'\} srl ([x] Dred2 x x') ([x] [d] Dof2 x d x' d') (Dlin x') (Dlin' x'))
-	   &lt;- reduce-closed Dred1 Deq
-	   &lt;- (\{x\} letb-resp (Deq x) ([y] term-eq/i) (Deq' x))
-	   &lt;- linear-resp Deq' (linear/letb2 Dlin') Dlin_.
+	   Dlin''
+	   <- ({x'} {d'} srl ([x] Dred2 x x') ([x] [d] Dof2 x d x' d') (Dlin x') (Dlin' x'))
+	   <- reduce-closed Dred1 Deq
+	   <- ({x} letb-resp (Deq x) ([y] term-eq/i) (Deq' x))
+	   <- linear-resp Deq' (linear/letb2 Dlin') Dlin''.
 
 -any1	: srl ([x] red/any (Dred x))
 	   ([x] [d] of/any (Dof x d))
 	   (linear/any1 Dlin)
 	   (linear/any1 Dlin')
-	   &lt;- srl Dred Dof Dlin Dlin'.
+	   <- srl Dred Dof Dlin Dlin'.
 -any2	: srl ([x] red/any (Dred x))
 	   ([x] [d] of/any (Dof x d))
 	   linear/any2
 	   Dlin
-	   &lt;- reduce-closed Dred Deq
-	   &lt;- (\{x\} any-resp (Deq x) (Deq' x))
-	   &lt;- linear-resp Deq' linear/any2 Dlin.
+	   <- reduce-closed Dred Deq
+	   <- ({x} any-resp (Deq x) (Deq' x))
+	   <- linear-resp Deq' linear/any2 Dlin.
 
 -Cl*11	: srl ([x] red/app/lett : reduce (app (lett (M1 x) M2) M3) _) _
 	   (linear/app1 (linear/lett1 Dlin))
@@ -1252,8 +1226,8 @@ sr : reduce M M'
 
 -refl	: sr red/refl D D.
 -trans	: sr (red/trans Dred23 Dred12) D1 D3
-	   &lt;- sr Dred12 D1 D2
-	   &lt;- sr Dred23 D2 D3.
+	   <- sr Dred12 D1 D2
+	   <- sr Dred23 D2 D3.
 
 -beta	: sr red/beta (of/app Dof2 (of/lam _ Dof1)) (Dof1 _ Dof2).
 -beta*	: sr red/beta* (of/lett Dlin2 Dlin1 Dof (of/tensor Dof2 Dof1)) (Dof _ Dof1 _ Dof2).
@@ -1264,46 +1238,46 @@ sr : reduce M M'
 -beta!	: sr red/beta! (of/letb Dof2 (of/bang Dof1)) (Dof2 _ Dof1).
 
 -lam	: sr (red/lam Dred) (of/lam Dlin Dof) (of/lam Dlin' Dof')
-	   &lt;- (\{x\} \{d\} sr (Dred x) (Dof x d) (Dof' x d))
-	   &lt;- srl Dred Dof Dlin Dlin'.
+	   <- ({x} {d} sr (Dred x) (Dof x d) (Dof' x d))
+	   <- srl Dred Dof Dlin Dlin'.
 -app	: sr (red/app Dred2 Dred1) (of/app Dof2 Dof1) (of/app Dof2' Dof1')
-	   &lt;- sr Dred1 Dof1 Dof1'
-	   &lt;- sr Dred2 Dof2 Dof2'.
+	   <- sr Dred1 Dof1 Dof1'
+	   <- sr Dred2 Dof2 Dof2'.
 -tensor	: sr (red/tensor Dred2 Dred1) (of/tensor Dof2 Dof1) (of/tensor Dof2' Dof1')
-	   &lt;- sr Dred1 Dof1 Dof1'
-	   &lt;- sr Dred2 Dof2 Dof2'.
+	   <- sr Dred1 Dof1 Dof1'
+	   <- sr Dred2 Dof2 Dof2'.
 -lett	: sr (red/lett Dred2 Dred1) (of/lett Dlin2 Dlin1 Dof2 Dof1) (of/lett Dlin2' Dlin1' Dof2' Dof1')
-	   &lt;- sr Dred1 Dof1 Dof1'
-	   &lt;- (\{x\} \{d:of x T1\} \{y\} \{e:of y T2\} sr (Dred2 x y) (Dof2 x d y e) (Dof2' x d y e))
-	   &lt;- (\{y\} \{e:of y T2\}
+	   <- sr Dred1 Dof1 Dof1'
+	   <- ({x} {d:of x T1} {y} {e:of y T2} sr (Dred2 x y) (Dof2 x d y e) (Dof2' x d y e))
+	   <- ({y} {e:of y T2}
 		 srl ([x] Dred2 x y) ([x] [d] Dof2 x d y e) (Dlin1 y) (Dlin1' y))
-	   &lt;- (\{x\} \{d:of x T1\}
+	   <- ({x} {d:of x T1}
 		 srl ([y] Dred2 x y) ([y] [e] Dof2 x d y e) (Dlin2 x) (Dlin2' x)).
 -pair	: sr (red/pair Dred2 Dred1) (of/pair Dof2 Dof1) (of/pair Dof2' Dof1')
-	   &lt;- sr Dred1 Dof1 Dof1'
-	   &lt;- sr Dred2 Dof2 Dof2'.
+	   <- sr Dred1 Dof1 Dof1'
+	   <- sr Dred2 Dof2 Dof2'.
 -pi1	: sr (red/pi1 Dred) (of/pi1 Dof) (of/pi1 Dof')
-	   &lt;- sr Dred Dof Dof'.
+	   <- sr Dred Dof Dof'.
 -pi2	: sr (red/pi2 Dred) (of/pi2 Dof) (of/pi2 Dof')
-	   &lt;- sr Dred Dof Dof'.
+	   <- sr Dred Dof Dof'.
 -in1	: sr (red/in1 Dred) (of/in1 Dof) (of/in1 Dof')
-	   &lt;- sr Dred Dof Dof'.
+	   <- sr Dred Dof Dof'.
 -in2	: sr (red/in2 Dred) (of/in2 Dof) (of/in2 Dof')
-	   &lt;- sr Dred Dof Dof'.
+	   <- sr Dred Dof Dof'.
 -case	: sr (red/case Dred3 Dred2 Dred1) (of/case Dlin3 Dlin2 Dof3 Dof2 Dof1) (of/case Dlin3' Dlin2' Dof3' Dof2'
  Dof1')
-	   &lt;- sr Dred1 Dof1 Dof1'
-	   &lt;- (\{x\} \{d\} sr (Dred2 x) (Dof2 x d) (Dof2' x d))
-	   &lt;- (\{x\} \{d\} sr (Dred3 x) (Dof3 x d) (Dof3' x d))
-	   &lt;- srl Dred2 Dof2 Dlin2 Dlin2'
-	   &lt;- srl Dred3 Dof3 Dlin3 Dlin3'.
+	   <- sr Dred1 Dof1 Dof1'
+	   <- ({x} {d} sr (Dred2 x) (Dof2 x d) (Dof2' x d))
+	   <- ({x} {d} sr (Dred3 x) (Dof3 x d) (Dof3' x d))
+	   <- srl Dred2 Dof2 Dlin2 Dlin2'
+	   <- srl Dred3 Dof3 Dlin3 Dlin3'.
 -letb	: sr (red/letb Dred2 Dred1) (of/letb Dof2 Dof1) (of/letb Dof2' Dof1')
-	   &lt;- sr Dred1 Dof1 Dof1'
-	   &lt;- (\{x\} \{d\} sr (Dred2 x) (Dof2 x d) (Dof2' x d)).
+	   <- sr Dred1 Dof1 Dof1'
+	   <- ({x} {d} sr (Dred2 x) (Dof2 x d) (Dof2' x d)).
 -bang	: sr (red/bang Dred) (of/bang Dof) (of/bang Dof')
-	   &lt;- sr Dred Dof Dof'.
+	   <- sr Dred Dof Dof'.
 -any	: sr (red/any Dred) (of/any Dof) (of/any Dof')
-	   &lt;- sr Dred Dof Dof'.
+	   <- sr Dred Dof Dof'.
 
 -Cl*	: sr red/app/lett (of/app Dof3 (of/lett Dlin2 Dlin1 Dof2 Dof1))
 	   (of/lett
@@ -1400,15 +1374,19 @@ sr : reduce M M'
 
 %worlds (bind) (srl _ _ _ _) (sr _ _ _).
 %total (D1 D2) (srl D1 _ _ _) (sr D2 _ _).
-&lt;/twelf&gt;
 
-&lt;twelflink&gt;
+%{! ``&gt;
 Show complete code.
-&lt;/twelflink&gt;
+``
 
-&lt;twelflink check="true"&gt;
+`` check="true"&gt;
 Show Twelf output.
-&lt;/twelflink&gt;
+``
 
-\{\{case study\}\}
+\{\{case study\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Linear_logic).
 !}%

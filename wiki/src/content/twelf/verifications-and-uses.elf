@@ -11,7 +11,7 @@ and its _global soundness_ - if we can verify the truth of proposition ``A``, an
 that ``A`` is true to verify the truth of ``B``, then we can also verify the truth of 
 ``B`` without the assumption that ``A`` is true.
 
-We can also think of the logic of verifications of uses, by way of the w:Curry-Howard correspondence|Curry-Howard correspondence]], as
+We can also think of the logic of verifications of uses, by way of the [[w:Curry-Howard correspondence|Curry-Howard correspondence]], as
 a ("Church-style") [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of the [canonical forms](/wiki/canonical-form/) of the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/). In this view, the
 constructive content of the global completeness theorem is η-expansion and the constructive content of
 global soundness is [hereditary substitution](/wiki/hereditary-substitution/). Therefore, this article is closely connected to the case
@@ -19,7 +19,7 @@ study on [hereditary substitution for the STLC](/wiki/hereditary-substitution-fo
 article, however. That article defines a terminating partial function called "hereditary substitution" 
 that operates on untyped ("Curry-style") lambda-calculus terms, and then works through the process of showing that, 
 given well-typed inputs, the function is actually total. That view is helpful when thinking about dependent type 
-systems, bidirectional type checking]], or the implementation of a logical framework, but
+systems, [[bidirectional type checking]], or the implementation of a logical framework, but
 certain problems can be greatly simplified when we think of terms as intrinsically typed. !}%
 
 %%## Propositions and rules
@@ -165,7 +165,7 @@ lem : jf_or_rm ([x] R x) -> jf_or_rm ([x] ∧E₂ (R x)) -> type.
 %worlds (bl_atom | bl_hyp) (always_jf_or_rm _ _).
 %total R (always_jf_or_rm R _).
 
-%{! One way to avoid this ugly detour is to use [verifications and uses with zippers](/wiki/verifications-and-uses-with-zippers/) !}%
+%{! One way to avoid this ugly detour is to use [[spine form]], another way is considered in the page on [verifications and uses with zippers](/wiki/verifications-and-uses-with-zippers/). !}%
 
 %%## Global soundness
 
@@ -245,3 +245,9 @@ former theorem calls the latter two theorems with all the same arguments. !}%
 (hsubst_rr C _ S _ _) 
 (hsubst_rn D _ _ T _ _)
 (hsubst_r B _ R _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Verifications_and_uses).
+!}%

@@ -1,7 +1,6 @@
 %%! title: "Talk:Glossary"
 
-%{!
-TODO (delete from this page when done):
+%{! TODO (delete from this page when done):
 
 basic:
 * &lt;math&gt;\gg&lt;/math&gt;  http://en.wikipedia.org/wiki/List_of_mathematical_symbols shows it as "much greater than."  I see it in 
@@ -11,5 +10,10 @@ n \gg N \over
 &lt;/math&gt;
 
 high priority:
-* [%total](/wiki/percent-total/)
+* [%total](/wiki/percent-total/) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Glossary).
 !}%

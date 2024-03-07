@@ -1,11 +1,14 @@
 %%! title: "Proving metatheorems:STLC: Answers to exercises"
 
-%{!
-
-This page contains answers to the exercises listed [Proving metatheorems: Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/). If you've solved an exercise that isn't answered on this page, or if you have a different solution to an exercise, please add it here.
+%{! This page contains answers to the exercises listed [Proving metatheorems: Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/). If you've solved an exercise that isn't answered on this page, or if you have a different solution to an exercise, please add it here.
 
 #
 # STLC with products
 
-_Add product types (&lt;math&gt;\tau_1 \times \tau_2&lt;/math&gt;) to the STLC and extend the proof of preservation to cover this new type._
+_Add product types (&lt;math&gt;\tau_1 \times \tau_2&lt;/math&gt;) to the STLC and extend the proof of preservation to cover this new type._ !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:STLC:_Answers_to_exercises).
 !}%

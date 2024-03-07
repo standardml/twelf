@@ -128,3 +128,9 @@ complete : steps (eval K E) (return # V0)
 %worlds () (complete _ _ _).
 %reduces C < A (complete A _ C).
 %total T (complete T _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Control_machine).
+!}%

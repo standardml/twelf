@@ -1,135 +1,139 @@
 %%! title: "Proving metatheorems:Proving metatheorems in non-empty contexts"
 
-%{!
-\{\{proving metatheorems
+%{! \{\{proving metatheorems
   | next = Summary: the STLC
   | nextname = Summary
   | prev = Proving metatheorems about the STLC
   | prevname = Proving metatheorems\}\}
 
-By using Twelf's ability to prove totality assertions for type families in general worlds, we can mechanize metatheorems about open LF terms.  We prove a simple metatheorem about the judgement ``size E N`` as an example.  
-&lt;twelf hidden="true"&gt;
+By using Twelf's ability to prove totality assertions for type families in general worlds, we can mechanize metatheorems about open LF terms.  We prove a simple metatheorem about the judgement ``size E N`` as an example. !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 tp    : type.
 unit  : tp.
-arrow : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
 
 tm    : type.
 empty : tm.
-lam   : tp -&gt; (tm -&gt; tm) -&gt; tm.
-app   : tm -&gt; tm -&gt; tm.
+lam   : tp -> (tm -> tm) -> tm.
+app   : tm -> tm -> tm.
 
 nat : type.
 z   : nat.
-s   : nat -&gt; nat.
+s   : nat -> nat.
 
-plus   : nat -&gt; nat -&gt; nat -&gt; type.
+plus   : nat -> nat -> nat -> type.
 %mode plus +X1 +X2 -X3.
 
 plus-z : plus z N2 N2.
 plus-s : plus (s N1) N2 (s N3)
-	  &lt;- plus N1 N2 N3.
+	  <- plus N1 N2 N3.
 
 %worlds () (plus _ _ _).
 %total N (plus N _ _).
-&lt;/twelf&gt;
-&lt;twelf hidden="true"&gt;
-plus-exists : \{N1\} \{N2\} plus N1 N2 N3 -&gt; type.
+
+%{!  !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
+plus-exists : {N1} {N2} plus N1 N2 N3 -> type.
 %mode plus-exists +X1 +X2 -X3.
 
 - : plus-exists z _ plus-z.
 - : plus-exists (s N1) N2 (plus-s D)
-     &lt;- plus-exists N1 N2 D.
+     <- plus-exists N1 N2 D.
 
 %worlds () (plus-exists _ _ _).
 %total N1 (plus-exists N1 _ _).
 
-plus-z-rh : \{n:nat\} plus n z n -&gt; type.
+plus-z-rh : {n:nat} plus n z n -> type.
 %mode plus-z-rh +N -D.
 
 - : plus-z-rh z plus-z.
 - : plus-z-rh (s N) (plus-s D)
-     &lt;- plus-z-rh N (D : plus N z N).
+     <- plus-z-rh N (D : plus N z N).
 
 %worlds () (plus-z-rh _ _).
 %total N (plus-z-rh N _).
 
-plus-s-rh : plus N1 N2 N3 -&gt; plus N1 (s N2) (s N3) -&gt; type.
+plus-s-rh : plus N1 N2 N3 -> plus N1 (s N2) (s N3) -> type.
 %mode plus-s-rh +D1 -D2.
 
 - : plus-s-rh plus-z plus-z.
 - : plus-s-rh (plus-s (D : plus N1' N2 N3')) (plus-s D')
-     &lt;- plus-s-rh D (D' : plus N1' (s N2) (s N3')).
+     <- plus-s-rh D (D' : plus N1' (s N2) (s N3')).
 
 %worlds () (plus-s-rh _ _).
 %total D (plus-s-rh D _).
 
-plus-commute : plus N1 N2 N3 -&gt; plus N2 N1 N3 -&gt; type.
+plus-commute : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
 %mode plus-commute +D1 -D2.
 
 -       : plus-commute (plus-z : plus z N N) D
-           &lt;- plus-z-rh N D.
--       : plus-commute (plus-s D : plus (s N1) N2 (s N3)) D_
-           &lt;- plus-commute D (D' : plus N2 N1 N3)
-           &lt;- plus-s-rh D' (D_ : plus N2 (s N1) (s N3)).
+           <- plus-z-rh N D.
+-       : plus-commute (plus-s D : plus (s N1) N2 (s N3)) D''
+           <- plus-commute D (D' : plus N2 N1 N3)
+           <- plus-s-rh D' (D'' : plus N2 (s N1) (s N3)).
 
 %worlds () (plus-commute _ _).
 %total D (plus-commute D _).
 
-id/nat      : nat -&gt; nat -&gt; type.
+id/nat      : nat -> nat -> type.
 id/nat-refl : id/nat N N.
 
 id/nat-s-cong : id/nat N1 N2
-                 -&gt; id/nat (s N1) (s N2)
-                 -&gt; type.
+                 -> id/nat (s N1) (s N2)
+                 -> type.
 %mode id/nat-s-cong +X1 -X2.
 
 - : id/nat-s-cong id/nat-refl  id/nat-refl.
 
 %worlds () (id/nat-s-cong _ _).
-%total \{\} (id/nat-s-cong _ _).
+%total {} (id/nat-s-cong _ _).
 
 plus-unique : plus N1 N2 N3
-	      -&gt; plus N1 N2 N3'
-	      -&gt; id/nat N3 N3'
-	      -&gt; type.
+	      -> plus N1 N2 N3'
+	      -> id/nat N3 N3'
+	      -> type.
 %mode plus-unique +X1 +X2 -X3.
 
 - : plus-unique D D id/nat-refl.
 - : plus-unique (plus-s D) (plus-s D') DidS
-     &lt;- plus-unique D D' Did
-     &lt;- id/nat-s-cong Did DidS.
+     <- plus-unique D D' Did
+     <- id/nat-s-cong Did DidS.
 
 %worlds () (plus-unique _ _ _).
 %total D (plus-unique D _ _).
 
 plus-respects-id : plus N1 N2 N3
-                   -&gt; id/nat N1 N1'
-                   -&gt; id/nat N2 N2'
-                   -&gt; id/nat N3 N3'
-                   -&gt; plus N1' N2' N3'
-                   -&gt; type.
+                   -> id/nat N1 N1'
+                   -> id/nat N2 N2'
+                   -> id/nat N3 N3'
+                   -> plus N1' N2' N3'
+                   -> type.
 %mode plus-respects-id +X1 +X2 +X3 +X4 -X5.
 
 - : plus-respects-id D id/nat-refl id/nat-refl id/nat-refl  D.
 
 %worlds () (plus-respects-id _ _ _ _ _).
-%total \{\} (plus-respects-id _ _ _ _ _).
+%total {} (plus-respects-id _ _ _ _ _).
 
 id/nat-sym : id/nat N1 N2
-              -&gt; id/nat N2 N1
-              -&gt; type.
+              -> id/nat N2 N1
+              -> type.
 %mode id/nat-sym +X1 -X2.
 
 - : id/nat-sym id/nat-refl  id/nat-refl.
 
 %worlds () (id/nat-sym _ _).
-%total \{\} (id/nat-sym _ _).
+%total {} (id/nat-sym _ _).
 
 plus-assoc : plus A B AB
-             -&gt; plus B C BC
-             -&gt; plus AB C ABC
-             -&gt; plus A BC ABC
-             -&gt; type.
+             -> plus B C BC
+             -> plus AB C ABC
+             -> plus A BC ABC
+             -> type.
 %mode plus-assoc +X1 +X2 +X3 -X4.
 
 - : plus-assoc 
@@ -137,42 +141,42 @@ plus-assoc : plus A B AB
      DplusB-C 
      DplusB-C' 
      Dplus
-     &lt;- plus-unique DplusB-C DplusB-C' Did
-     &lt;- plus-respects-id plus-z id/nat-refl id/nat-refl Did Dplus.
+     <- plus-unique DplusB-C DplusB-C' Did
+     <- plus-respects-id plus-z id/nat-refl id/nat-refl Did Dplus.
 
 - : plus-assoc 
      (plus-s DplusA'-B)
      DplusB-C
      (plus-s DplusA'B-C) 
      (plus-s DplusA'-BC)
-     &lt;- plus-assoc DplusA'-B DplusB-C DplusA'B-C DplusA'-BC.
+     <- plus-assoc DplusA'-B DplusB-C DplusA'B-C DplusA'-BC.
 
 %worlds () (plus-assoc _ _ _ _).
 %total D (plus-assoc D _ _ _).
 
 plus-assoc2 : plus A B AB
-	       -&gt; plus B C BC
-	       -&gt; plus AB C ABC
-	       -&gt; plus A BC ABC
-	       -&gt; type.
+	       -> plus B C BC
+	       -> plus AB C ABC
+	       -> plus A BC ABC
+	       -> type.
 %mode plus-assoc2 +X1 +X2 -X3 +X4.
 
 - : plus-assoc2 D1 D2 D3' D4
-     &lt;- plus-exists _ _ D3
-     &lt;- plus-assoc D1 D2 D3 D4'
-     &lt;- plus-unique D4 D4' Did
-     &lt;- id/nat-sym Did Did'
-     &lt;- plus-respects-id D3 id/nat-refl id/nat-refl Did' D3'.
+     <- plus-exists _ _ D3
+     <- plus-assoc D1 D2 D3 D4'
+     <- plus-unique D4 D4' Did
+     <- id/nat-sym Did Did'
+     <- plus-respects-id D3 id/nat-refl id/nat-refl Did' D3'.
 
 %worlds () (plus-assoc2 _ _ _ _).
-%total \{\} (plus-assoc2 _ _ _ _).
+%total {} (plus-assoc2 _ _ _ _).
 
 lemma : plus N1 N2 Nsum	      
-	 -&gt; plus Ndiff1 N1 N1'
-	 -&gt; plus Ndiff2 N2 N2'
-	 -&gt; plus N1' N2' Nsum'
-	 -&gt; plus Ndiff Nsum  Nsum'
-	 -&gt; type.
+	 -> plus Ndiff1 N1 N1'
+	 -> plus Ndiff2 N2 N2'
+	 -> plus N1' N2' Nsum'
+	 -> plus Ndiff Nsum  Nsum'
+	 -> type.
 %mode lemma +X1 +X2 +X3 +X4 -X5.
 
 - : lemma 
@@ -184,42 +188,45 @@ lemma : plus N1 N2 Nsum
      %% there's probably a way to do without these two commutes
      %% and the one at the end;
      %% proof was originally written with the other argument order
-     &lt;- plus-commute D1pre D1
-     &lt;- plus-commute D2pre D2
-     &lt;- plus-exists Ndiff1 N2' (Ddiff1+2' : plus Ndiff1 N2' Ndiff1+2')
-     &lt;- plus-assoc D1 Ddiff1+2' D' (Dassoc : plus N1 Ndiff1+2' Nsum')
-     &lt;- plus-commute D2 (D2' : plus Ndiff2 N2 N2')
-     &lt;- plus-exists Ndiff1 Ndiff2 (Ddiff1+2 : plus Ndiff1 Ndiff2 Ndiff1+2)
-     &lt;- plus-assoc2 Ddiff1+2 D2' 
+     <- plus-commute D1pre D1
+     <- plus-commute D2pre D2
+     <- plus-exists Ndiff1 N2' (Ddiff1+2' : plus Ndiff1 N2' Ndiff1+2')
+     <- plus-assoc D1 Ddiff1+2' D' (Dassoc : plus N1 Ndiff1+2' Nsum')
+     <- plus-commute D2 (D2' : plus Ndiff2 N2 N2')
+     <- plus-exists Ndiff1 Ndiff2 (Ddiff1+2 : plus Ndiff1 Ndiff2 Ndiff1+2)
+     <- plus-assoc2 Ddiff1+2 D2' 
 	(Dassoc' : plus Ndiff1+2 N2 Ndiff1+2')
 	Ddiff1+2'
-     &lt;- plus-commute Dassoc' 
-	(Dassoc_ : plus N2 Ndiff1+2 Ndiff1+2')
-     &lt;- plus-assoc2 D Dassoc_ Dres Dassoc
-     &lt;- plus-commute Dres Dres'.
+     <- plus-commute Dassoc' 
+	(Dassoc'' : plus N2 Ndiff1+2 Ndiff1+2')
+     <- plus-assoc2 D Dassoc'' Dres Dassoc
+     <- plus-commute Dres Dres'.
 
 %worlds () (lemma _ _ _ _ _).
-%total \{\}  (lemma _ _ _ _ _).
-&lt;/twelf&gt;
-&lt;twelf hidden="true"&gt;
-size       : tm -&gt; nat -&gt; type.
+%total {}  (lemma _ _ _ _ _).
+
+%{!  !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
+size       : tm -> nat -> type.
 %mode size +E -N.
 
 size-empty : size empty (s z). 
 size-lam   : size (lam _ E) (s N)
-		&lt;- (\{x\} \{dx : size x (s z)\}
+		<- ({x} {dx : size x (s z)}
 		      size (E x) N).
 size-app   : size (app E1 E2) (s N)
-		&lt;- size E1 N1
-		&lt;- size E2 N2 
-		&lt;- plus N1 N2 N.
+		<- size E1 N1
+		<- size E2 N2 
+		<- plus N1 N2 N.
 
-%block size-block : block \{x : tm\} \{dx : size x (s z)\}.
+%block size-block : block {x : tm} {dx : size x (s z)}.
 
 %worlds (size-block) (size _ _).
 %total E (size E _).
-&lt;/twelf&gt;
-#
+
+%{! #
 # Lower bound on size of substitution: Theorem statement
 
 We prove that substitution never decreases the size of a term.  The informal theorem statement is as follows:
@@ -238,75 +245,75 @@ By adequacy, this theorem can be recast as the following statement about LF term
 
 Considering arbitrary contexts in the world ``(size-block)*`` is necessary to capture the informal theorem statement, which ranges over all possibly-open terms &lt;math&gt;\mathsf\{\}e&lt;/math&gt; and &lt;math&gt;\mathsf\{\}e'&lt;/math&gt;.  The ``size`` derivation for the term &lt;math&gt;\mathsf\{\}e&lt;/math&gt; with a distinguished free variable &lt;math&gt;\mathsf\{\}x&lt;/math&gt; is represented by an LF term of higher type ``\{x:tm\} size x (s z) -&gt; size (E x) N``.  
 
-We can prove this theorem in Twelf by giving a relation that satisfies the following totality assertion:
-&lt;twelf discard=true&gt;
-subst-size : \{E' : tm\}
-	       (\{x : tm\} size x (s z) -&gt; size (E x) N)
-	       -&gt; size (E E') N'
-	       -&gt; plus Ndiff N N'
-	       -&gt; type.
+We can prove this theorem in Twelf by giving a relation that satisfies the following totality assertion: !}%
+    
+%{! (options removed from twelftag: discard=true) !}%
+
+subst-size : {E' : tm}
+	       ({x : tm} size x (s z) -> size (E x) N)
+	       -> size (E E') N'
+	       -> plus Ndiff N N'
+	       -> type.
 %mode subst-size +E' +D1 +D2 -DL.
 %worlds (size-block) (subst-size _ _ _ _).
-&lt;/twelf&gt;
 
-#
+%{! #
 # Proof attempt
 
-For pedagogical purposes, we first present an incorrect proof attempt; the change required to fix this attempt is small.  The proof uses some straightforward lemmas about arithmetic:
+For pedagogical purposes, we first present an incorrect proof attempt; the change required to fix this attempt is small.  The proof uses some straightforward lemmas about arithmetic: !}%
+    
+%{! (options removed from twelftag: discard=true) !}%
 
-&lt;twelf discard=true&gt;
-plus-s-rh : plus N1 N2 N3 -&gt; plus N1 (s N2) (s N3) -&gt; type.
+plus-s-rh : plus N1 N2 N3 -> plus N1 (s N2) (s N3) -> type.
 %mode plus-s-rh +D1 -D2.
 %worlds () (plus-s-rh _ _).
 
-plus-commute : plus N1 N2 N3 -&gt; plus N2 N1 N3 -&gt; type.
+plus-commute : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
 %mode plus-commute +D1 -D2.
 %worlds () (plus-commute _ _).
 
 lemma : plus N1 N2 Nsum	      
-	 -&gt; plus Ndiff1 N1 N1'
-	 -&gt; plus Ndiff2 N2 N2'
-	 -&gt; plus N1' N2' Nsum'
-	 -&gt; plus Ndiff Nsum  Nsum'
-	 -&gt; type.
+	 -> plus Ndiff1 N1 N1'
+	 -> plus Ndiff2 N2 N2'
+	 -> plus N1' N2' Nsum'
+	 -> plus Ndiff Nsum  Nsum'
+	 -> type.
 %mode lemma +X1 +X2 +X3 +X4 -X5.
 %worlds () (lemma _ _ _ _ _).
-&lt;/twelf&gt;
 
-The first two would be part of an arithmetic library; the third is a simple lemma that is proved directly using commutativity and associativity of addition.
+%{! The first two would be part of an arithmetic library; the third is a simple lemma that is proved directly using commutativity and associativity of addition.
 
-Additionally, the proof of the theorem uses the following easy lemma: 
+Additionally, the proof of the theorem uses the following easy lemma: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
 
-&lt;twelf check="true"&gt;
 size-at-least-one : size E N
-		      -&gt; plus (s z) N' N
-		      -&gt; type.
+		      -> plus (s z) N' N
+		      -> type.
 %mode size-at-least-one +X1 -X2.
 
 - : size-at-least-one _ (plus-s plus-z).
 
 %worlds (size-block) (size-at-least-one _ _).
-%total \{\} (size-at-least-one _ _).
-&lt;/twelf&gt;
+%total {} (size-at-least-one _ _).
 
-This relation is total because every way to create a term of type ``size E N`` syntactically produces a term of type ``size E (s N')`` for some ``N'``.  The input coverage checker notices this fact by splitting and therefore validates this simple proof.  
+%{! This relation is total because every way to create a term of type ``size E N`` syntactically produces a term of type ``size E (s N')`` for some ``N'``.  The input coverage checker notices this fact by splitting and therefore validates this simple proof.  
 
-Next, we attempt a proof of the theorem:
-
-&lt;twelf&gt;
-subst-size : \{E' : tm\}
-	       (\{x : tm\} size x (s z) -&gt; size (E x) N)
-	       -&gt; size (E E') N'
-	       -&gt; plus Ndiff N N'
-	       -&gt; type.
+Next, we attempt a proof of the theorem: !}%
+    
+subst-size : {E' : tm}
+	       ({x : tm} size x (s z) -> size (E x) N)
+	       -> size (E E') N'
+	       -> plus Ndiff N N'
+	       -> type.
 %mode subst-size +E' +D1 +D2 -DL.
 
 - : subst-size E'
      ([x] [dx] dx)
      D
      Dplus'
-     &lt;- size-at-least-one D Dplus
-     &lt;- plus-commute Dplus Dplus'.
+     <- size-at-least-one D Dplus
+     <- plus-commute Dplus Dplus'.
      
 - : subst-size E'
      ([x] [dx] size-empty)
@@ -320,10 +327,10 @@ subst-size : \{E' : tm\}
 	   : size (lam T _) _))
      (size-lam D')
      Dplus'
-     &lt;- (\{y : tm\}
-	   \{dy : size y (s z)\}
+     <- ({y : tm}
+	   {dy : size y (s z)}
 	   subst-size E' ([x] [dx] D x dx y dy) (D' y dy) Dplus)
-     &lt;- plus-s-rh Dplus Dplus'.
+     <- plus-s-rh Dplus Dplus'.
 
 - : subst-size E'
      ([x] [dx] 
@@ -337,42 +344,41 @@ subst-size : \{E' : tm\}
 	(D2' : size (E2 E') N2')
 	(D1' : size (E1 E') N1'))
      DplusRes'
-     &lt;- subst-size E' D1 
+     <- subst-size E' D1 
 	(D1' : size (E1 E') N1')
 	(Dplus1 : plus Ndiff1 N1 N1')
-     &lt;- subst-size E' D2 
+     <- subst-size E' D2 
 	(D2' : size (E2 E') N2')
 	(Dplus2 : plus Ndiff2 N2 N2')
-     &lt;- lemma Dplus Dplus1 Dplus2 Dplus' DplusRes
-     &lt;- plus-s-rh DplusRes DplusRes'.
+     <- lemma Dplus Dplus1 Dplus2 Dplus' DplusRes
+     <- plus-s-rh DplusRes DplusRes'.
 
 %worlds (size-block) (subst-size _ _ _ _).
-&lt;/twelf&gt;
 
-By now, you should be getting good at reading relational Twelf proofs of metatheorems as the informal proofs they represent.  This proof is slightly more involved than those that we have seen before, but it involves no new machinery.  We call out some of the tricky parts of the proof:
+%{! By now, you should be getting good at reading relational Twelf proofs of metatheorems as the informal proofs they represent.  This proof is slightly more involved than those that we have seen before, but it involves no new machinery.  We call out some of the tricky parts of the proof:
 * The proof inducts over and case-analyzes the LF term of type ``\{x:tm\} size x (s z) -&gt; size (E x) N``.  By inversion, such a term has the form ``[x] [dx] M`` where ``M : size (E x) N``.  Thus, the proof includes one case for each possible ``M``.  This includes each constructor of type ``size``, along with the distinguished variable ``x``.  
 * Make sure you understand why each constant world checks: The ``subst-size`` premise of the case for ``size-lam`` is in an extended context, but that this context stays in the appropriate world.  Additionally, by world subsumption, ``(size-block)*`` subsumes the world containing only the empty context for the arithmetic lemmas.  
 
-However, the totality check fails:
-&lt;twelf check="decl" discard=true&gt;
-%total D (subst-size _ D _ _).
-&lt;/twelf&gt;
+However, the totality check fails: !}%
+    
+%{! (options removed from twelftag: check="decl" discard=true) !}%
 
-This error message tells us that this proof does not cover the case for variables in the context itself.  That is, we forgot to cover the case when the size derivation is a variable (representing the use of a hypothesis) but is not the distinguished variable ``x``.
+%total D (subst-size _ D _ _).
+
+%{! This error message tells us that this proof does not cover the case for variables in the context itself.  That is, we forgot to cover the case when the size derivation is a variable (representing the use of a hypothesis) but is not the distinguished variable ``x``.
 
 #
 # Corrected proof
 
 To fix the proof, we need to cover the case for other variables in the LF context.  But where can we put such a theorem case, since it needs to talk about the variable in the context?  The answer is that we can use LF hypotheses: we assume a case of the theorem ``subst-size`` in the LF context along with every assumption of ``x:tm,dx:size x (s z)``.  This technique works because proofs of metatheorems are just LF constants of particular types.
 
-To correct the proof, we work over contexts of a different form.  Only the ``size-lam`` case needs to change, so we elide the others:
-
-&lt;twelf&gt;
-subst-size : \{E' : tm\}
-	       (\{x : tm\} size x (s z) -&gt; size (E x) N)
-	       -&gt; size (E E') N'
-	       -&gt; plus Ndiff N N'
-	       -&gt; type.
+To correct the proof, we work over contexts of a different form.  Only the ``size-lam`` case needs to change, so we elide the others: !}%
+    
+subst-size : {E' : tm}
+	       ({x : tm} size x (s z) -> size (E x) N)
+	       -> size (E E') N'
+	       -> plus Ndiff N N'
+	       -> type.
 %mode subst-size +E' +D1 +D2 -DL.
 
 - : subst-size E'
@@ -382,24 +388,27 @@ subst-size : \{E' : tm\}
 	   : size (lam T _) _))
      (size-lam D')
      Dplus'
-     &lt;- (\{y : tm\}
-	   \{dy : size y (s z)\}
-	   \{_ : \{E' : tm\} subst-size E'
+     <- ({y : tm}
+	   {dy : size y (s z)}
+	   {_ : {E' : tm} subst-size E'
 		 ([x : tm] [dx : size x (s z)] dy) 
 		 dy 
-		 plus-z\}
+		 plus-z}
 	   subst-size E' ([x] [dx] D x dx y dy) (D' y dy) Dplus)
-     &lt;- plus-s-rh Dplus Dplus'.
+     <- plus-s-rh Dplus Dplus'.
 
 %% ...
-&lt;/twelf&gt;
-&lt;twelf hidden="true"&gt;
+
+%{!  !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 - : subst-size E'
      ([x] [dx] dx)
      D
      Dplus'
-     &lt;- size-at-least-one D Dplus
-     &lt;- plus-commute Dplus Dplus'.
+     <- size-at-least-one D Dplus
+     <- plus-commute Dplus Dplus'.
      
 - : subst-size E'
      ([x] [dx] size-empty)
@@ -418,24 +427,26 @@ subst-size : \{E' : tm\}
 	(D2' : size (E2 E') N2')
 	(D1' : size (E1 E') N1'))
      DplusRes'
-     &lt;- subst-size E' D1 
+     <- subst-size E' D1 
 	(D1' : size (E1 E') N1')
 	(Dplus1 : plus Ndiff1 N1 N1')
-     &lt;- subst-size E' D2 
+     <- subst-size E' D2 
 	(D2' : size (E2 E') N2')
 	(Dplus2 : plus Ndiff2 N2 N2')
-     &lt;- lemma Dplus Dplus1 Dplus2 Dplus' DplusRes
-     &lt;- plus-s-rh DplusRes DplusRes'.
-&lt;/twelf&gt;
-&lt;twelf check="decl"&gt;
-%block ssblock : block \{y : tm\} 
-		       \{dy : size y (s z)\}
-		       \{_ : \{E' : tm\} subst-size E' ([x] [dx] dy) dy plus-z\}.
+     <- lemma Dplus Dplus1 Dplus2 Dplus' DplusRes
+     <- plus-s-rh DplusRes DplusRes'.
+
+%{!  !}%
+    
+%{! (options removed from twelftag: check="decl") !}%
+
+%block ssblock : block {y : tm} 
+		       {dy : size y (s z)}
+		       {_ : {E' : tm} subst-size E' ([x] [dx] dy) dy plus-z}.
 %worlds (ssblock) (subst-size _ _ _ _).
 %total D (subst-size _ D _ _).
-&lt;/twelf&gt;
 
-The block ``ssblock`` extends ``size-block`` with a case of the theorem: when the size derivation is ``dy`` from the context, the term ``E`` must be ``[_] y``, so by inversion the derivation of ``size (([_] y) E') N'`` must be ``dy`` as well, in which case ``plus-z`` derives ``plus z (s z) (s z)``.  The only other change is that the premise of the case for ``size-lam`` adds this extra assumption to the context.  In this world, the relation is indeed total.  
+%{! The block ``ssblock`` extends ``size-block`` with a case of the theorem: when the size derivation is ``dy`` from the context, the term ``E`` must be ``[_] y``, so by inversion the derivation of ``size (([_] y) E') N'`` must be ``dy`` as well, in which case ``plus-z`` derives ``plus z (s z) (s z)``.  The only other change is that the premise of the case for ``size-lam`` adds this extra assumption to the context.  In this world, the relation is indeed total.  
 
 #
 # Correctness of the revised theorem statement
@@ -463,5 +474,10 @@ Putting a case of a theorem in the context is a general technique that is useful
   | next = Summary: the STLC
   | nextname = Summary
   | prev = Proving metatheorems about the STLC
-  | prevname = Proving metatheorems\}\}
+  | prevname = Proving metatheorems\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_metatheorems_in_non-empty_contexts).
 !}%

@@ -1,7 +1,6 @@
 %%! title: "User talk:Rsimmons"
 
-%{!
-#
+%{! #
 # Twelf Blog
 
 I think the environment subtyping stuff will make a great early entry into the Twelf Blog. On the announcement for it on the frontpage, I noticed that you referred to a "Dan" doing the entry. It takes a while for it to set it, but there are a lot of Dans in the POP group, and unfortunately both Dans who do Twelf related stuff are Dan Ls. I'm a wiki n00b, so I can't figure out how to edit that particular column (it seems locked down), but it might be less confusing to disambiguate that. Will I need to register for the blog seperately? --[User:DanielKLee](/wiki/user-danielklee/) 21:53, 5 September 2006 (MST)
@@ -9,13 +8,13 @@ I think the environment subtyping stuff will make a great early entry into the T
 #
 # linking to cats
 
-You can link to a category by writing &lt;nowiki&gt;[User:Tom7](/wiki/user-tom7/) 09:42, 6 September 2006 (MST)
+You can link to a category by writing &lt;nowiki&gt;[[:Category:tutorials|tutorials]]&lt;/nowiki&gt;, which looks like [[:Category:tutorials|tutorials]]. [User:Tom7](/wiki/user-tom7/) 09:42, 6 September 2006 (MST)
 
 #
 # most wanted articles
 
 My list of most-wanted articles:
-* um.elf]] 
+* [[um.elf]] 
 * [[Image:Tom_Twelfelf2.jpg|thumb|left]]
 &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:54, 14 September 2006 (MST)
 
@@ -54,7 +53,7 @@ You keep breakin' it! ;) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 19:43,
 #
 # I LF Bees
 
-I started a page at Project:1.0]] where we can plan for a wide release, and seeded it with demands. Your thoughts are welcome... &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:49, 16 October 2006 (EDT)
+I started a page at [[Project:1.0]] where we can plan for a wide release, and seeded it with demands. Your thoughts are welcome... &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:49, 16 October 2006 (EDT)
 
 #
 # Sad
@@ -132,5 +131,10 @@ I suspect there's a decent tutorial to be had just explaining that sentence. :)
 # Twelf Live broken?
 
 Hi Rob. It says on the front page to contact you if anything is broken. Well, Twelf Live doesn't seem to work. I was looking forward to trying it. Cheers.
-:: Hi! Thanks for noticing that, I moved some stuff and deleted some code and forgot to update links and test that. Twelf Live is a bit rougher than it's supposed to be at the moment (lots of superfluous %% OK %%s) but it's the best I could do on short notice; I'll get back around to it. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 11:41, 9 September 2010 (EDT)
+:: Hi! Thanks for noticing that, I moved some stuff and deleted some code and forgot to update links and test that. Twelf Live is a bit rougher than it's supposed to be at the moment (lots of superfluous %% OK %%s) but it's the best I could do on short notice; I'll get back around to it. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 11:41, 9 September 2010 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User_talk:Rsimmons).
 !}%

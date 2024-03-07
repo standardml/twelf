@@ -1,8 +1,7 @@
 %%! title: "Template:Keyword"
 
-%{!
-&lt;center&gt;&lt;div style="width:50em; border-width: 1px; border-style: solid; border-color:#AAFFFF; background:#EEFFFF"&gt;
-&lt;b&gt;:Category:keywords|Twelf keywords]]&lt;/b&gt;&lt;br/&gt;&lt;hr style="height:1px; color:#AAFFFF; background-color:#AAFFFF" /&gt;
+%{! &lt;center&gt;&lt;div style="width:50em; border-width: 1px; border-style: solid; border-color:#AAFFFF; background:#EEFFFF"&gt;
+&lt;b&gt;[[:Category:keywords|Twelf keywords]]&lt;/b&gt;&lt;br/&gt;&lt;hr style="height:1px; color:#AAFFFF; background-color:#AAFFFF" /&gt;
 ``[%.](/wiki/percent-eof/)
 [abbrev declaration](/wiki/abbrev-declaration/)
 [%assert](/wiki/percent-assert/)
@@ -35,11 +34,16 @@
 [%worlds](/wiki/percent-worlds/)``
 &lt;/div&gt;&lt;/center&gt;
 &lt;noinclude&gt;
-This template is intended for the bottom of articles about Twelf keywords, as an index. It also includes the article in the :category:keywords|keywords category]]. Use it as &lt;nowiki&gt;\{\{keyword|key=name\}\}&lt;/nowiki&gt;, where _name_ is the name by which the keyword should be sorted.
+This template is intended for the bottom of articles about Twelf keywords, as an index. It also includes the article in the [[:category:keywords|keywords category]]. Use it as &lt;nowiki&gt;\{\{keyword|key=name\}\}&lt;/nowiki&gt;, where _name_ is the name by which the keyword should be sorted.
 
 The file ``twelf/src/frontend/lexer.fun`` in the Twelf sources contains the full list.
 &lt;/noinclude&gt;
 &lt;includeonly&gt;
 \{\{\{nocat|[[Category:keywords|\{\{\{key|\{\{\{PAGENAME\}\}\}\}\}\}]]\}\}\}
-&lt;/includeonly&gt;
+&lt;/includeonly&gt; !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Keyword).
 !}%

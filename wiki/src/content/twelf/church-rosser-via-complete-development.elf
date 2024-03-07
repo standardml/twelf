@@ -47,7 +47,7 @@ app : trm -> trm -> trm.
 %worlds (=>b) (=> _ _).
 %total E (=> E _).
 
-%{! Note that Twelf can prove that parallel reduction is total automatically !}%
+%{! Note that Twelf can prove that parallel reduction is total automatically! !}%
 
 %%### Complete development
 
@@ -195,7 +195,7 @@ Thus, we arrive at the following block:
 Why may we call ``decide`` from contexts made up of ``==&gt;totb`` blocks when decide was only stated for
 contexts made up of ``decideb`` blocks?  In general, extending the context could create new cases that
 ``decide`` would be unable to handle.  However, in this instance, both of the new assumptions, which have types
-``==&gt;`` and ``==&gt;-tot``, are irrelevant (insubordinate]]) to ``decide``, 
+``==&gt;`` and ``==&gt;-tot``, are irrelevant (in[[subordinate]]) to ``decide``, 
 so Twelf permits this world subsumption.  That is, ``decide`` is only concerned with ``trm``s and derivations of
 ``notlam`` and derivations of ``decide`` itself, and neither ``==&gt;`` nor ``==&gt;-tot`` assumptions 
 influence those types.
@@ -217,13 +217,13 @@ subst : ({x : trm} x => x -> (M x => M' x))
 	 -> type.
 %mode subst +D1 +D2 -D3.
 
-%{! (M x) is x !}%
+%{! (M x) is x: !}%
 - : subst ([x] [prx] prx) Dn Dn.
 
-%{! (M x) doesn't mention x at all (this covers all other variables in the context, as well any other x-closed term) !}%
+%{! (M x) doesn't mention x at all (this covers all other variables in the context, as well any other x-closed term): !}%
 - : subst ([x] [prx] D) _ D.
 
-%{! The remaining cases proceed compositionally !}%
+%{! The remaining cases proceed compositionally: !}%
 - : subst ([x] [prx] (=>/app (Dm2 x prx) (Dm1 x prx))) Dn (=>/app Dm2' Dm1')
      <- subst Dm2 Dn Dm2'
      <- subst Dm1 Dn Dm1'.
@@ -514,3 +514,9 @@ case would have a contradictory derivation of ``notlam (lam _)`` as an argument 
 %{! 
 \{\{case study\}\}
  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Church-Rosser_via_complete_development).
+!}%

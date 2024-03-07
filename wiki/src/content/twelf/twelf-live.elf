@@ -1,7 +1,6 @@
 %%! title: "Twelf Live"
 
-%{!
-You can **try Twelf now** from the wiki without installing any software! The same [The Twelf Project:TwelfTag](/wiki/the-twelf-project-twelftag/) system that allows code on the wiki to be automatically checked powers an online, interactive Twelf interface. 
+%{! You can **try Twelf now** from the wiki without installing any software! The same [The Twelf Project:TwelfTag](/wiki/the-twelf-project-twelftag/) system that allows code on the wiki to be automatically checked powers an online, interactive Twelf interface. 
 
 http://twelf.plparty.org/live/
 
@@ -16,7 +15,7 @@ Feel free to develop bits of Twelf code in this manner. If you plan on doing ser
 
 The interface for Twelf Live is fairly simple; text is entered into the "Input" window just as it would be entered into Emacs when using [Twelf with Emacs](/wiki/twelf-with-emacs/).  Hitting the "check" button causes the "Output" window to display the output of Twelf from reading the file - the screenshot below shows Twelf Live immediately after the "check" button is clicked.
 
-Image:TWELFLIVE-2.png]]
+[[Image:TWELFLIVE-2.png]]
 
 #
 #
@@ -24,5 +23,10 @@ Image:TWELFLIVE-2.png]]
 
 It can be difficult, when there is a great deal of output, to see just the part that you are interested in. In this situation it is useful to use the incremental view, which is opened by clicking "open incremental view." In incremental view, Twelf will not display anything while checking the first input window (assuming there are no errors), but will display output normally while checking the second input window. This can be seen below, where Twelf only outputs the result of checking the ``[%query](/wiki/percent-query/)`` declaration.
 
-Image:TWELFLIVE-3.png]]
+[[Image:TWELFLIVE-3.png]] !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Twelf_Live).
 !}%

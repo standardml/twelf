@@ -3,7 +3,8 @@
 %{! In the [verifications and uses](/wiki/verifications-and-uses/) article we saw a typical presentation of a logic of verifications and uses, and in article on [hereditary substitution with zippers](/wiki/hereditary-substitution-with-a-zipper/) we saw an attempt to clean up the "ugly part" of that proof by defining a zipper-like structure over terms. The reason that global soundness for this system did not hold is that Twelf could not verify (without the use of a [structural metric](/wiki/structural-metrics/)) that a "zipped" use was the same size as an "unzipped" use, so [termination checking](/wiki/percent-terminates/) failed when a recursive
 call was made on a term that had been unzipped. 
 
-In this article, we give a different solution. This system has something of the flavor of a [hereditary substitution with zippers](/wiki/hereditary-substitution-with-a-zipper/), it is still much closer to a natural deduction system - the analogue of the natural deduction term ``atm (⊃E (⊃E (⊃E (var x) N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;)
+In this article, we give a different solution. This system has something of the flavor of a [[spine form]] presentation; however, as we discussed in the 
+[hereditary substitution with zippers](/wiki/hereditary-substitution-with-a-zipper/), it is still much closer to a natural deduction system - the analogue of the natural deduction term ``atm (⊃E (⊃E (⊃E (var x) N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;)
 N&lt;sub&gt;3&lt;/sub&gt;)`` in the natural deduction system is 
 ``atm x (⊃E (⊃E (⊃E end N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;) N&lt;sub&gt;3&lt;/sub&gt;)`` in this version of "natural deduction" - the form of proofs stays the same
 with the exception that the head variable ``x`` has been pulled out into the front. !}%
@@ -53,11 +54,11 @@ eta : {A} ({B} hyp B -> use B A -> verif A) -> type.
 %worlds (bl_atom | bl_hyp) (eta _ _).
 %total A (eta A _).
 
-%{! Let's see some examples of η-expansions: | check = dec !}%
+%{! Let's see some examples of η-expansions: | check = decl !}%
 
 %solve _ : {q1}{q2}{q3} eta (a q1 ⊃ a q2 ⊃ a q3) (X q1 q2 q3).
 
-%{! | check = dec !}%
+%{! | check = decl !}%
 
 %solve _ : {q1}{q2}{q3} eta ((a q1 ⊃ a q2) ⊃ a q3) (X q1 q2 q3).
 
@@ -115,3 +116,9 @@ hsubst_rn : {A}{B} verif A -> (hyp A -> use A B) -> verif B -> type.
 (hsubst_n A _ M _)
 (hsubst_rr B _ R _) 
 (hsubst_rn C _ _ S _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Verifications_and_uses_with_zippers).
+!}%

@@ -1,7 +1,6 @@
 %%! title: "CADE Tutorial"
 
-%{!
-&lt;!--
+%{! &lt;!--
 &lt;div style="font-size:162%;border:none;margin: 0;padding:.1em;color:#F00"&gt;**_We want your input!**_&lt;/div&gt;
 
 Help us out by filling out our handy dandy [http://spreadsheets.google.com/viewform?key=pff4VF1v6KVNcwC_c2qFAGA feedback form]!
@@ -62,6 +61,11 @@ Thanks to our sponsors:
 [http://www.demtech.dk DemTech Project],
 [http://www.itu.dk IT University of Copenhagen],
 
-Image:POPL_Tutorial-cmu.gif|250px]] Image:POPL_Tutorial-scslogo.gif]]
-Image:demtech.png|100px]]
+[[Image:POPL_Tutorial-cmu.gif|250px]] [[Image:POPL_Tutorial-scslogo.gif]]
+[[Image:demtech.png|100px]] !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/CADE_Tutorial).
 !}%

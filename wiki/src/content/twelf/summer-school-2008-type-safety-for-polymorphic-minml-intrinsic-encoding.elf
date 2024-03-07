@@ -201,3 +201,9 @@ prog : {E : exp T} val-or-step E -> type.
 %{! 
 And thus we have proved type safety for MinML with polymorphism!
  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Type_safety_for_polymorphic_MinML_(intrinsic_encoding)).
+!}%

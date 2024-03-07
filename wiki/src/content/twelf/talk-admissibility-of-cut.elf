@@ -1,7 +1,6 @@
 %%! title: "Talk:Admissibility of cut"
 
-%{!
-#
+%{! #
 # Questions on Sequent Calculus
 
 If init works at any prop, why do you need the two judgements when you do the encoding?
@@ -13,5 +12,10 @@ If you give these two rules for and, is it right-asynch or left-asynch or both? 
 # Sectioning looks off
 
 Are the other "... cuts" supposed to be indented an additional level? [User:Drl](/wiki/user-drl/) 17:45, 15 March 2007 (EDT)
-* Nope. I fixed it. Thanks for spotting it! &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 18:38, 15 March 2007 (EDT)
+* Nope. I fixed it. Thanks for spotting it! &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 18:38, 15 March 2007 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Admissibility_of_cut).
 !}%

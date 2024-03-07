@@ -1,8 +1,14 @@
 %%! title: "Template:Literatetwelf"
 
-%{!
-&lt;div id="literate" style="float:right;border:solid #BBBBEE 1px;margin:1em;"&gt;
+%{! &lt;div id="literate" style="float:right;border:solid #BBBBEE 1px;margin:1em;"&gt;
 \{| cellspacing="0" style="background:#E7E7FF;"
-| style="font-size:8pt;padding:4pt;line-height:1.25em;" | This is [Category:Twelf code](/wiki/category-twelf-code/)[Category:Literate Twelf code](/wiki/category-literate-twelf-code/)&lt;/includeonly&gt;
-&lt;noinclude&gt;This template should only be used by the 
+| style="font-size:8pt;padding:4pt;line-height:1.25em;" | This is [[Project:Literate Twelf|Literate Twelf]]&lt;hr /&gt;&lt;small&gt;Code: [\{\{SERVER\}\}\{\{SCRIPTPATH\}\}/index.php?title=\{\{FULLPAGENAMEE\}\}&action=raw&ctype=text/css here]&lt;br/&gt;Status: \{\{\{status\}\}\}&lt;br /&gt;Output: [\{\{SERVER\}\}\{\{\{output\}\}\} here].&lt;/small&gt;
+|\}
+&lt;/div&gt;&lt;includeonly&gt;[Category:Twelf code](/wiki/category-twelf-code/)[Category:Literate Twelf code](/wiki/category-literate-twelf-code/)&lt;/includeonly&gt;
+&lt;noinclude&gt;This template should only be used by the [[Project:Literate Twelf|Literate Twelf]] extension as a header for pages created by the Literate Twelf pre-processor&lt;/noinclude&gt; !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Literatetwelf).
 !}%

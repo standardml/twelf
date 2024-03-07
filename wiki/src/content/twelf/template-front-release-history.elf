@@ -1,7 +1,6 @@
 %%! title: "Template:Front-Release History"
 
-%{!
-* **March 1, 2005** - Twelf 1.5R1 is now available
+%{! * **March 1, 2005** - Twelf 1.5R1 is now available
 :*twelf-1-5R1.tar.gz (source distribution only)
 :*Significantly improved tabling over Twelf 1.5
 :*The documentation is not yet updated
@@ -11,5 +10,10 @@
 :*This is a source distribution only
 :*It contains several undocumented features, among them some uniqueness checking and improved tabling.
 
-[Release history](/wiki/release-history/)
+[Release history](/wiki/release-history/) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Front-Release_History).
 !}%

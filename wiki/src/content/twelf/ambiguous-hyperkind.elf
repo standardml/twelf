@@ -1,13 +1,17 @@
 %%! title: "Ambiguous hyperkind"
 
-%{!
-An **ambiguous hyperkind** occurs in pathological cases like this:
-
-&lt;twelf check="decl"&gt;
+%{! An **ambiguous hyperkind** occurs in pathological cases like this: !}%
+    
+%{! (options removed from twelftag: check="decl") !}%
 
 a : type.
 
 b = a : _ _ .
 
-&lt;/twelf&gt;
+%{!  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Ambiguous_hyperkind).
 !}%

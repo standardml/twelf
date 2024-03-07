@@ -1,22 +1,22 @@
 %%! title: "Constraint domains and coverage checking"
 
-%{!
-::_You should not attach any particular significance to the fact that Twelf returns OK (or raises an uncaught exception, or starts playing the theme music to M*A*S*H...) on a signature that mentions a constraint domain and also tries to prove coverage or totality metatheorems._ - Kevin Watkins
+%{! ::_You should not attach any particular significance to the fact that Twelf returns OK (or raises an uncaught exception, or starts playing the theme music to M*A*S*H...) on a signature that mentions a constraint domain and also tries to prove coverage or totality metatheorems._ - Kevin Watkins
 
 It is tempting to try to use [constraint domains](/wiki/constraint-domain/) to do seemingly innocent helpful things. However, at the present time, constraint domains should be seen as completely incompatible with features that Twelf uses to prove [metatheorems](/wiki/metatheorem/), such as ``[%mode](/wiki/percent-mode/)``, ``[%covers](/wiki/percent-covers/)``, and ``[%total](/wiki/percent-total/)``. 
 
-One particular way that this error happens is when users attempt to formalize a language with exceptions, and want to index their language with strings.
+One particular way that this error happens is when users attempt to formalize a language with exceptions, and want to index their language with strings. !}%
+    
+%{! (options removed from twelftag: discard=true) !}%
 
-&lt;twelf discard=true&gt;
 %use equality/strings. 
 
 exp : type.
-error : string -&gt; exp.
-&lt;/twelf&gt;
+error : string -> exp.
 
-This should be avoided at all costs in favor of explicitly defining a type of error messages _within_ the signature.
+%{! This should be avoided at all costs in favor of explicitly defining a type of error messages _within_ the signature. !}%
+    
+%{! (options removed from twelftag: discard=true) !}%
 
-&lt;twelf discard=true&gt;
 errormessage : type.
 
 bad-value : errormessage.
@@ -24,48 +24,45 @@ type-error : errormessage.
 % ...etc...
 
 exp : type.
-error : errormessage -&gt; exp.
-&lt;/twelf&gt;
+error : errormessage -> exp.
 
-#
+%{! #
 # Example: apparent unsoundness with constraint domains
 
 The essential problem is that the interaction between constraint domains and the Twelf
-coverage checker is not well defined. Take the following example:
-
-&lt;twelf&gt;
+coverage checker is not well defined. Take the following example: !}%
+    
 %use word32. 
 
 exp : type.
 
-x : word32 -&gt; exp.
+x : word32 -> exp.
 y : exp.
 z : exp.
 
-q : exp -&gt; exp -&gt; type.
+q : exp -> exp -> type.
 %mode q +A1 -A2. 
 
 q/y : q y y.
 
 q/z : q z z.
-&lt;/twelf&gt;
 
-Twelf appears to allow us to prove that, for any input in the first position, ``q`` will always run
-successfully and return an output in the second position.
+%{! Twelf appears to allow us to prove that, for any input in the first position, ``q`` will always run
+successfully and return an output in the second position. !}%
+    
+%{! (options removed from twelftag: name="fork" check=decl) !}%
 
-&lt;twelf name="fork" check=decl&gt;
 %worlds () (q _ _). 
-%total T (q T _).  
-&lt;/twelf&gt;
+%total T (q T _).
 
-However, Twelf's assertion of totality here is completely bogus, which we can see if we try to run
-q as a logic program with ``(x 5)`` in the first position.
+%{! However, Twelf's assertion of totality here is completely bogus, which we can see if we try to run
+q as a logic program with ``(x 5)`` in the first position. !}%
+    
+%{! (options removed from twelftag: include=fork check=decl) !}%
 
-&lt;twelf include=fork check=decl&gt;
 %solve _ : q (x 5) _.
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Analysis
 
@@ -75,15 +72,20 @@ One way of looking at the problem above is that the above proof isn't quite a pr
 ``q`` any input that will allow it to fail.
 
 If we modify our worlds declaration to specify that there may be some ``word32``s around&mdash;because there _are_ some 
-``word32``s around, there are &lt;math&gt;2^\{32\}&lt;/math&gt; of them!&mdash;then the theorem fails as it should.
+``word32``s around, there are &lt;math&gt;2^\{32\}&lt;/math&gt; of them!&mdash;then the theorem fails as it should. !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
 
-&lt;twelf check=decl&gt;
-%block some-word32s : block \{x: word32\}.
+%block some-word32s : block {x: word32}.
 
 %worlds (some-word32s) (q _ _).
 %total T (q T _).
-&lt;/twelf&gt;
 
-However, as there is no account for exactly what ``%use`` _does_ to the signature, it is very difficult to be certain, when we are using constraint domains, that we have proven the theorems we think we have proven. This is precisely
-why constraint domains and metatheorem declarations like ``%covers`` and ``%total`` should never be used in the same signature.
+%{! However, as there is no account for exactly what ``%use`` _does_ to the signature, it is very difficult to be certain, when we are using constraint domains, that we have proven the theorems we think we have proven. This is precisely
+why constraint domains and metatheorem declarations like ``%covers`` and ``%total`` should never be used in the same signature. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Constraint_domains_and_coverage_checking).
 !}%

@@ -1,36 +1,36 @@
 %%! title: "Abbrev declaration"
 
-%{!
-The **``%abbrev``** keyword can be placed before any definition]] in a Twelf [signature](/wiki/twelf-signature/) to cause the definition to, in the future, act as syntatic shorthand for some other term.
+%{! The **``%abbrev``** keyword can be placed before any [[definition]] in a Twelf [signature](/wiki/twelf-signature/) to cause the definition to, in the future, act as syntatic shorthand for some other term.
 
 #
 # Example
 
-Say, for some reason, we had extremely verbose names for the syntax of the [natural numbers](/wiki/natural-numbers/).
-
-&lt;twelf&gt;
+Say, for some reason, we had extremely verbose names for the syntax of the [natural numbers](/wiki/natural-numbers/). !}%
+    
 this-is-a-long-name-for-nat : type.
 this-is-a-long-name-for-z : this-is-a-long-name-for-nat.
-this-is-a-long-name-for-s : this-is-a-long-name-for-nat -&gt; this-is-a-long-name-for-nat.
-&lt;/twelf&gt;
+this-is-a-long-name-for-s : this-is-a-long-name-for-nat -> this-is-a-long-name-for-nat.
 
-We can define ``nat`` and ``z`` from their long names using ``%abbrev``, and ``s`` without ``%abbrev``.
-
-&lt;twelf&gt;
+%{! We can define ``nat`` and ``z`` from their long names using ``%abbrev``, and ``s`` without ``%abbrev``. !}%
+    
 %abbrev nat = this-is-a-long-name-for-nat.
 %abbrev z   = this-is-a-long-name-for-z.
 s   = this-is-a-long-name-for-s.
-&lt;/twelf&gt;
 
-We can see the difference here - while definitions like ``s`` will be expanded only if they have to be, definitions made with the ``%abbrev`` keyword are always expanded by Twelf.
+%{! We can see the difference here - while definitions like ``s`` will be expanded only if they have to be, definitions made with the ``%abbrev`` keyword are always expanded by Twelf. !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
 
-&lt;twelf check=decl&gt;
 three = s (s (s z)).
-&lt;/twelf&gt;
 
-#
+%{! #
 # See also
 
 * \{\{guide|title=Definitions|chapter=3|section=10\}\}
-\{\{keyword|key=abbrev\}\}
+\{\{keyword|key=abbrev\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Abbrev_declaration).
 !}%

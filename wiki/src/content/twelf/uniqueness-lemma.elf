@@ -1,7 +1,6 @@
 %%! title: "Uniqueness lemma"
 
-%{!
-Many judgements of an object language have the property that, given some subjects of the judgement, the other subjects are determined uniquely.  For example: The [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/) on natural numbers has the property that the two addends determine the sum uniquely.  A typing judgement for a programming language may have the property that a term has at most one type.  The operational semantics of a programming language may have the property that a term steps to at most one other term.  We refer to a metatheorem that establishes such a property a **uniqueness lemma**.  
+%{! Many judgements of an object language have the property that, given some subjects of the judgement, the other subjects are determined uniquely.  For example: The [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/) on natural numbers has the property that the two addends determine the sum uniquely.  A typing judgement for a programming language may have the property that a term has at most one type.  The operational semantics of a programming language may have the property that a term steps to at most one other term.  We refer to a metatheorem that establishes such a property a **uniqueness lemma**.  
 
 The goal of this article is to teach you how to prove uniqueness lemmas in Twelf.  The only subtlety is that the statement of a uniqueness lemma requires an auxiliary definition of a judgement defining equality at the relevant types.  
 
@@ -12,39 +11,37 @@ Sometimes a uniqueness lemma can be proven trivially by leveraging a ``[%unique]
 #
 # Example: Flipping bits
 
-The following is a simple example of a uniqueness lemma. First we define bits and a simple relation ``bit-flip`` that negates a bit.
-
-&lt;twelf&gt;
+The following is a simple example of a uniqueness lemma. First we define bits and a simple relation ``bit-flip`` that negates a bit. !}%
+    
 bit : type.
 
 bit/0 : bit.
 bit/1 : bit.
 
-bit-flip : bit -&gt; bit -&gt; type.
+bit-flip : bit -> bit -> type.
 
 bit-flip/01 : bit-flip bit/0 bit/1.
 bit-flip/10 : bit-flip bit/1 bit/0.
-&lt;/twelf&gt;
 
-We would like to prove that the second argument of ``bit-flip`` is determined uniquely by the first.  How do we state this theorem?  We assume two derivations of ``bit-flip`` for the same input that seem to have distinct outputs and we prove that the outputs are the same:  
+%{! We would like to prove that the second argument of ``bit-flip`` is determined uniquely by the first.  How do we state this theorem?  We assume two derivations of ``bit-flip`` for the same input that seem to have distinct outputs and we prove that the outputs are the same:  
 
 : If ``D : bit-flip B1 B2`` and ``D' : bit-flip B1 B2'`` then ``B2 = B2'``.
 
-The only subtlety in proving this theorem in Twelf is that we need a judgement representing the equality used in the conclusion.  If the output of the judgement is in fact unique (rather than unique modulo some equivalence relation), then the best judgement to use is the [identity](/wiki/equality/) relation at the appropriate type:
-
-&lt;twelf&gt;
-id-bit : bit -&gt; bit -&gt; type.
+The only subtlety in proving this theorem in Twelf is that we need a judgement representing the equality used in the conclusion.  If the output of the judgement is in fact unique (rather than unique modulo some equivalence relation), then the best judgement to use is the [identity](/wiki/equality/) relation at the appropriate type: !}%
+    
+id-bit : bit -> bit -> type.
 id-bit/refl : id-bit B B.
-&lt;/twelf&gt;
 
-Identity internalizes syntactic equality of canonical forms as a judgement: ``id B B'`` is inhabited only when ``B`` an ``B'`` are the same LF term.  
+%{! Identity internalizes syntactic equality of canonical forms as a judgement: ``id B B'`` is inhabited only when ``B`` an ``B'`` are the same LF term.  
 
-Thus, we can prove the theorem by exhibiting the following total relation:
-&lt;twelf check="true" export="alt"&gt;
+Thus, we can prove the theorem by exhibiting the following total relation: !}%
+    
+%{! (options removed from twelftag: check="true" export="alt") !}%
+
 bit-flip-unique : bit-flip B1 B2
-               -&gt; bit-flip B1 B2'
-               -&gt; id-bit B2 B2'
-               -&gt; type.
+               -> bit-flip B1 B2'
+               -> id-bit B2 B2'
+               -> type.
 %mode bit-flip-unique +D1 +D2 -D3.
 
 - : bit-flip-unique bit-flip/01 bit-flip/01 id-bit/refl.
@@ -52,22 +49,22 @@ bit-flip-unique : bit-flip B1 B2
 - : bit-flip-unique bit-flip/10 bit-flip/10 id-bit/refl.
 
 %worlds () (bit-flip-unique _ _ _).
-%total \{\} (bit-flip-unique _ _ _).
-&lt;/twelf&gt;
+%total {} (bit-flip-unique _ _ _).
 
-#
+%{! #
 #
 # Alternate formulation
 
 Uniqueness can also be expressed in a less-direct but sometimes more-convenient way that is nonetheless logically equivalent to the previous theorem.
-In this theorem statement, we assume derivations whose _inputs_ are related by an identity relation, and show that the outputs are identical as well.  This theorem statement applies when we have evidence that the inputs are identical but the two derivations of the judgement in question have different types.  The proof is no more complicated than the previous formulation, because when we derive the precondition ``id-bit B1 B1'`` using ``id-bit/refl`` (the only rule we could use to derive that fact), ``B1`` and ``B1'`` are forced to be identical objects, just as they were in the previous proof. 
+In this theorem statement, we assume derivations whose _inputs_ are related by an identity relation, and show that the outputs are identical as well.  This theorem statement applies when we have evidence that the inputs are identical but the two derivations of the judgement in question have different types.  The proof is no more complicated than the previous formulation, because when we derive the precondition ``id-bit B1 B1'`` using ``id-bit/refl`` (the only rule we could use to derive that fact), ``B1`` and ``B1'`` are forced to be identical objects, just as they were in the previous proof. !}%
+    
+%{! (options removed from twelftag: check="true" discard="true") !}%
 
-&lt;twelf check="true" discard="true"&gt;
 bit-flip-unique-alt : id-bit B1 B1'
-                       -&gt; bit-flip B1 B2
-                       -&gt; bit-flip B1' B2'
-                       -&gt; id-bit B2 B2'
-                       -&gt; type.
+                       -> bit-flip B1 B2
+                       -> bit-flip B1' B2'
+                       -> id-bit B2 B2'
+                       -> type.
 %mode bit-flip-unique-alt +D0 +D1 +D2 -D3.
 
 - : bit-flip-unique-alt id-bit/refl bit-flip/01 bit-flip/01 id-bit/refl.
@@ -75,35 +72,39 @@ bit-flip-unique-alt : id-bit B1 B1'
 - : bit-flip-unique-alt id-bit/refl bit-flip/10 bit-flip/10 id-bit/refl.
 
 %worlds () (bit-flip-unique-alt _ _ _ _).
-%total \{\} (bit-flip-unique-alt _ _ _ _).
-&lt;/twelf&gt;&lt;twelf hidden="true" import="alt"&gt;
+%total {} (bit-flip-unique-alt _ _ _ _).
+
+%{!  !}%
+    
+%{! (options removed from twelftag: hidden="true" import="alt") !}%
+
 bit-flip-resp : id-bit B1 B1'
-                 -&gt; id-bit B2 B2'
-                 -&gt; bit-flip B1 B2
-                 -&gt; bit-flip B1' B2'
-                 -&gt; type.
+                 -> id-bit B2 B2'
+                 -> bit-flip B1 B2
+                 -> bit-flip B1' B2'
+                 -> type.
 %mode bit-flip-resp +D0 +D1 +D2 -D3.
 
 - : bit-flip-resp id-bit/refl id-bit/refl D D.
 
 %worlds () (bit-flip-resp _ _ _ _).
-%total \{\} (bit-flip-resp _ _ _ _).
+%total {} (bit-flip-resp _ _ _ _).
 
 bit-flip-unique-alt : id-bit B1 B1' 
-                       -&gt; bit-flip B1 B2
-                       -&gt; bit-flip B1' B2'
-                       -&gt; id-bit B2 B2'
-                       -&gt; type.
+                       -> bit-flip B1 B2
+                       -> bit-flip B1' B2'
+                       -> id-bit B2 B2'
+                       -> type.
 %mode bit-flip-unique-alt +D0 +D1 +D2 -D3.
 
 - : bit-flip-unique-alt ID1 (BF: bit-flip B1 B2) (BF': bit-flip B1' B2') ID2
-     &lt;- bit-flip-resp ID1 id-bit/refl BF (BF_: bit-flip B1' B2)
-     &lt;- bit-flip-unique BF_ BF' (ID2: id-bit B2 B2').
+     <- bit-flip-resp ID1 id-bit/refl BF (BF'': bit-flip B1' B2)
+     <- bit-flip-unique BF'' BF' (ID2: id-bit B2 B2').
 
 %worlds () (bit-flip-unique-alt _ _ _ _).
-%total \{\} (bit-flip-unique-alt _ _ _ _).
-&lt;/twelf&gt;
-However, this alternate formulation is equivalent to the above uniqueness lemma.  It is easy to see that this lemma implies the above, as we can always call this lemma with ``id-bit/refl``.  To prove the other direction, we can compose the above uniqueness lemma with a [respects lemma](/wiki/respects-lemma/) showing that ``bit-flip`` respects equality.  &lt;twelflink import=alt&gt;Here is an example&lt;/twelflink&gt; of proving ``bit-flip-unique-alt`` using a uniqueness lemma and a respects lemma (&lt;twelflink import=alt check=true&gt;here is Twelf's output&lt;/twelflink&gt;).  Because the [respects lemma](/wiki/respects-lemma/) will often be necessary for other reasons, it is usually preferable to prove it and the above uniqueness lemma, rather than the composed version presented here.
+%total {} (bit-flip-unique-alt _ _ _ _).
+
+%{! However, this alternate formulation is equivalent to the above uniqueness lemma.  It is easy to see that this lemma implies the above, as we can always call this lemma with ``id-bit/refl``.  To prove the other direction, we can compose the above uniqueness lemma with a [respects lemma](/wiki/respects-lemma/) showing that ``bit-flip`` respects equality.  `` import=alt&gt;Here is an example`` of proving ``bit-flip-unique-alt`` using a uniqueness lemma and a respects lemma (`` import=alt check=true&gt;here is Twelf's output``).  Because the [respects lemma](/wiki/respects-lemma/) will often be necessary for other reasons, it is usually preferable to prove it and the above uniqueness lemma, rather than the composed version presented here.
 
 #
 # Bigger example: determinism of evaluation
@@ -114,84 +115,86 @@ As a slightly more-involved example of a uniqueness lemma, we can prove that the
 
 Here, equality of terms means syntactic identity modulo α-equivalence
 
-This proof reuses the formulation of the STLC from [Proving metatheorems:Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/); see that article for a description of the language and its operational semantics.  We recap the signature for the STLC here:
-&lt;twelf&gt;
+This proof reuses the formulation of the STLC from [Proving metatheorems:Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/); see that article for a description of the language and its operational semantics.  We recap the signature for the STLC here: !}%
+    
 %% Syntax
 tp    : type.
 
 unit  : tp.
-arrow : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
 
 tm    : type.
 empty : tm.
-lam   : tp -&gt; (tm -&gt; tm) -&gt; tm.
-app   : tm -&gt; tm -&gt; tm.
+lam   : tp -> (tm -> tm) -> tm.
+app   : tm -> tm -> tm.
 
 %% Dynamic Semantics
 
-value       : tm -&gt; type.
+value       : tm -> type.
 value_empty : value empty.
 value_lam   : value (lam T2 ([x] E x)).
              
-step          : tm -&gt; tm -&gt; type.
+step          : tm -> tm -> type.
 step_app_1    : step (app E1 E2) (app E1' E2)
-                 &lt;- step E1 E1'.
+                 <- step E1 E1'.
 step_app_2    : step (app E1 E2) (app E1 E2')
-                 &lt;- step E2 E2'
-                 &lt;- value E1.
+                 <- step E2 E2'
+                 <- value E1.
 
 step_app_beta : step (app (lam T2 ([x] E x)) E2) (E E2)
-                 &lt;- value E2.
-&lt;/twelf&gt;
+                 <- value E2.
 
-To state the uniqueness lemma, we define an identity type for ``tm``:
-
-&lt;twelf&gt;
-id : tm -&gt; tm -&gt; type.
+%{! To state the uniqueness lemma, we define an identity type for ``tm``: !}%
+    
+id : tm -> tm -> type.
 refl : id E E.
-&lt;/twelf&gt;
 
-The judgement ``id`` represent object-language α-equivalence: α-equivalent STLC terms are represented by α-equivalent LF terms, and ``id E E'`` is inhabited exactly when ``E`` and ``E'`` are α-equivalent in LF.  
+%{! The judgement ``id`` represent object-language α-equivalence: α-equivalent STLC terms are represented by α-equivalent LF terms, and ``id E E'`` is inhabited exactly when ``E`` and ``E'`` are α-equivalent in LF.  
 
-The proof of determinism requires a congruence lemma, which states that applications are equal if their subterms are:
-&lt;twelf&gt;
+The proof of determinism requires a congruence lemma, which states that applications are equal if their subterms are: !}%
+    
 id_app_cong : id E1 E1' 
-               -&gt; id E2 E2' 
-               -&gt; id (app E1 E2) (app E1' E2') 
-               -&gt; type.
+               -> id E2 E2' 
+               -> id (app E1 E2) (app E1' E2') 
+               -> type.
 %mode id_app_cong +X1 +X2 -X3.
 
 - : id_app_cong refl refl refl.
 
 %worlds () (id_app_cong _ _ _).
-%total \{\} (id_app_cong _ _ _).
-&lt;/twelf&gt;
+%total {} (id_app_cong _ _ _).
 
-Next, we present a complete proof of determinism:
-&lt;twelf check="true"&gt;
-det : step E E' -&gt; step E E_ -&gt; id E' E_ -&gt; type.
+%{! Next, we present a complete proof of determinism: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+det : step E E' -> step E E'' -> id E' E'' -> type.
 %mode det +X1 +X2 -X3.
 
-det-1 : det (step_app_1 DstepE1') (step_app_1 DstepE1_) DidApp
-         &lt;- det DstepE1' DstepE1_ DidE1
-         &lt;- id_app_cong DidE1 refl DidApp.
+det-1 : det (step_app_1 DstepE1') (step_app_1 DstepE1'') DidApp
+         <- det DstepE1' DstepE1'' DidE1
+         <- id_app_cong DidE1 refl DidApp.
 
-det-2 : det (step_app_2 _ DstepE2') (step_app_2 _ DstepE2_) DidApp
-         &lt;- det DstepE2' DstepE2_ DidE2
-         &lt;- id_app_cong refl DidE2 DidApp.
+det-2 : det (step_app_2 _ DstepE2') (step_app_2 _ DstepE2'') DidApp
+         <- det DstepE2' DstepE2'' DidE2
+         <- id_app_cong refl DidE2 DidApp.
 
 det-b : det (step_app_beta _) (step_app_beta _) refl.
 
 %worlds () (det _ _ _).
 %total D (det D _ _).
-&lt;/twelf&gt;
 
-Observe that the [totality assertion](/wiki/totality-assertion/) for this type family implies the informal statement above.  
+%{! Observe that the [totality assertion](/wiki/totality-assertion/) for this type family implies the informal statement above.  
 
 The proof consists of three cases, and in each case the two ``step`` derivations conclude with the same final rule.  The cases ``det-1`` and ``det-2`` appeal to the inductive hypothesis on the subderivations and then use the congruence lemma for identity.  The case ``det-b`` concludes equality by reflexivity because the left-hand term of ``step-app-beta`` uniquely determines the form of the right-hand term.
 
 Twelf successfully proves the totality of ``det``, even though the relation elides the "off-diagonal" cases where the two ``step`` derivations do not concludes with the same final rule.  This is because the off-diagonal cases are all vacuously true---and moreover, Twelf's coverage checker
 rules out these contradictory cases automatically.  For example, if one derivation concluded with ``step-app-1`` and the other with ``step-app-2``, then there would be subderivations concluding both ``value E1`` and ``step E1 E1'``.  These two types can never be simultaneously inhabited: ``step`` is only inhabited when ``E1`` is an application, and there is no rule inhabiting ``value`` for an application.  Similarly, if one derivation concluded with ``step-app-1`` and the other with ``step-app-beta``, subderivations would give a ``step`` derivation whose left-hand side is a ``lam``, which cannot exist.  The other off-diagonal cases can be contradicted in a similar manner.  Twelf's coverage checker rules out cases like these where the inputs to a metatheorem result in an uninhabited instance of some type family.  See also: [Reasoning from false](/wiki/reasoning-from-false/)
 
-\{\{tutorial\}\}
+\{\{tutorial\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Uniqueness_lemma).
 !}%

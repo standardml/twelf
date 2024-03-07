@@ -1,16 +1,25 @@
 %%! title: "The Twelf Project:Contributing"
 
-%{!
-Welcome to the Twelf Project. If you are interested in helping in any way, your contributions would be welcomed and appreciated! We encourage you to Special:Userlogin&type=signup | sign up for an account]] so that we can say hello to you by name and not IP address. However, currently the wiki is editable by anyone, so logging in is not required. 
+%{! Welcome to the Twelf Project. If you are interested in helping in any way, your contributions would be welcomed and appreciated! We encourage you to [[Special:Userlogin&type=signup | sign up for an account]] so that we can say hello to you by name and not IP address. However, currently the wiki is editable by anyone, so logging in is not required. 
 
 These links might be useful:
 
-* [Twelf style guide](/wiki/twelf-style-guide/), which talks about style of Twelf code, which is also useful)
-* [Talk:Main Page](/wiki/talk-main-page/).
+* [[Project:TwelfTag]] - syntax highlighting & inline code checking
+* [[Project:Literate Twelf]] - a hack of TwelfTag that makes it very easy to write Twelf offline in a wiki-friendly way
+* [[Project:To do]] - the work queue for wiki contributors
+* [[Project:Style guide]] - a style guide for contributions to the Twelf Project Wiki (not to be confused with [Twelf style guide](/wiki/twelf-style-guide/), which talks about style of Twelf code, which is also useful)
+* [[Project:Copyright]] - this wiki is generally available under a license which allows open use, but we have provisions if you cannot, or do not wish to, contribute content with that license.
+* [[Project:Administrators]] - people that can help you if you have a problem.
+* You can edit the individual sections of the front page by following the links at [Talk:Main Page](/wiki/talk-main-page/).
 
-If you have any need for "admin" status on the wiki to do things like delete pages and edit protected pages, just ask an [Talk:Ask Twelf Elf](/wiki/talk-ask-twelf-elf/).
+If you have any need for "admin" status on the wiki to do things like delete pages and edit protected pages, just ask an [[Project:Administrators|current administrator]] - it should be no problem, though it would help if we know who you are and have met you in person. If you're interested in sharing your knowledge with others, become a volunteer Twelf helper by leaving a message at [Talk:Ask Twelf Elf](/wiki/talk-ask-twelf-elf/).
 
 Thanks and welcome!
 
-- Administrators of the Twelf Project Wiki
+- Administrators of the Twelf Project Wiki !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Contributing).
 !}%

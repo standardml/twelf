@@ -1,7 +1,6 @@
 %%! title: "Computation and Deduction 2009"
 
-%{!
-These are notes for Computation and Deduction 2009.
+%{! These are notes for Computation and Deduction 2009.
 
 [Computation and Deduction 2009/20090204](/wiki/computation-and-deduction-2009-20090204/)  Homework: complete the progress proof.
 
@@ -15,7 +14,7 @@ These are notes for Computation and Deduction 2009.
 
 [Computation and Deduction 2009/20090304](/wiki/computation-and-deduction-2009-20090304/)  Homework: complete the proof of the subst lemma.
 
-[Computation and Deduction 2009/20090316](/wiki/computation-and-deduction-2009-20090316/)  Homework: complete the trans/ifz and trans/app cases.  (Computation and Deduction 2009/20090316-sol | Incomplete solution.]])
+[Computation and Deduction 2009/20090316](/wiki/computation-and-deduction-2009-20090316/)  Homework: complete the trans/ifz and trans/app cases.  ([[Computation and Deduction 2009/20090316-sol | Incomplete solution.]])
 
 [Computation and Deduction 2009/20090318](/wiki/computation-and-deduction-2009-20090318/)
 
@@ -41,5 +40,10 @@ Project ideas from 15-851 1997: [http://www.cs.cmu.edu/~fp/courses/97-comp-ded/p
 
 [Computation and Deduction 2009/20090427](/wiki/computation-and-deduction-2009-20090427/)
 
-[Computation and Deduction 2009/20090429](/wiki/computation-and-deduction-2009-20090429/)
+[Computation and Deduction 2009/20090429](/wiki/computation-and-deduction-2009-20090429/) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009).
 !}%

@@ -1,7 +1,6 @@
 %%! title: "Talk:Exchange lemma"
 
-%{!
-#
+%{! #
 # Needs more information?
 
 I understand what's going on in this article, and think it's a good thing to show, but I think the article needs a descripition of how this would be encountered in practice - how the explicit exchange metatheorem would actually be avoided by rearranging the order of the lambdas... — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 19:03, 27 September 2006 (MST)
@@ -10,5 +9,10 @@ I understand what's going on in this article, and think it's a good thing to sho
 
 :: The code doesn't have to make LOTS of sense out of context - for me, it helps to just see it. What do you think of these changes? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 20:28, 27 September 2006 (MST)
 
-::: This snippet works for me. I re-worded it slightly and fixed a missing ``. --[User:DanielKLee](/wiki/user-danielklee/) 20:43, 27 September 2006 (MST)
+::: This snippet works for me. I re-worded it slightly and fixed a missing ``. --[User:DanielKLee](/wiki/user-danielklee/) 20:43, 27 September 2006 (MST) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Exchange_lemma).
 !}%

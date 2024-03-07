@@ -1,7 +1,6 @@
 %%! title: "Template:Needs"
 
-%{!
-&lt;div style="float:left;border:solid #EEBBBB 1px;margin:1px;"&gt;
+%{! &lt;div style="float:left;border:solid #EEBBBB 1px;margin:1px;"&gt;
 \{| cellspacing="0" style="background:#FFE7E7;"
 | style="font-size:8pt;padding:4pt;line-height:1.25em;" | This article or section needs \{\{\{1\}\}\}.
 |\}
@@ -20,5 +19,12 @@ Which produces:
 |\}
 &lt;/div&gt;&lt;br clear="all" /&gt;
 
-It also lists the page in the 
+It also lists the page in the [[:Category:pages needing attention|pages needing attention]] category.
+
+&lt;/noinclude&gt; !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Needs).
 !}%

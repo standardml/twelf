@@ -1,99 +1,96 @@
 %%! title: "%covers"
 
-%{!
-A **``%covers``** declaration checks [input coverage](/wiki/coverage-checking/) for a type family, which is one of the two kinds of [coverage checking](/wiki/coverage-checking/) that Twelf performs. Running a ``[%total](/wiki/percent-total/)`` declaration checks input coverage as well as [output coverage](/wiki/coverage-checking/).
+%{! A **``%covers``** declaration checks [input coverage](/wiki/coverage-checking/) for a type family, which is one of the two kinds of [coverage checking](/wiki/coverage-checking/) that Twelf performs. Running a ``[%total](/wiki/percent-total/)`` declaration checks input coverage as well as [output coverage](/wiki/coverage-checking/).
 
 The ``%covers`` declaration essentially checks that your type family does an ML-style exhaustive match on its inputs; this does not establish that running your program will succeed, or even terminate!
 
 #
 # Example
 
-For this example, we define a type ``elem`` with three elements, ``a``, ``b``, ``c``, and a relation ``rel`` with three positions. We will then use ``%covers`` to check coverage on this relation given a number of different ways of assigning positions as either inputs or outputs.
-
-&lt;twelf&gt;
+For this example, we define a type ``elem`` with three elements, ``a``, ``b``, ``c``, and a relation ``rel`` with three positions. We will then use ``%covers`` to check coverage on this relation given a number of different ways of assigning positions as either inputs or outputs. !}%
+    
 elem: type.
 
 a: elem.
 b: elem.
 c: elem.
 
-rel: elem -&gt; elem -&gt; elem -&gt; type.
+rel: elem -> elem -> elem -> type.
 fail : type.
 
 rel1 : rel a X c.
-rel2 : rel b Y b &lt;- fail.
-rel3 : rel c c c &lt;- rel c a c.
+rel2 : rel b Y b <- fail.
+rel3 : rel c c c <- rel c a c.
 
 %worlds () (rel _ _ _) (fail).
-&lt;/twelf&gt;
 
+%{! The first ``%covers`` declaration below checks that ``rel`` covers the first position - it does, as there is one case for each of the three possibilities. This is true even though ``rel b X Y`` will fail and the query ``rel c X Y`` will loop forever. The second declaration checks that ``rel`` covers the second position, which happens trivially because the first case, labeled ``rel1``, and the second case ``rel2``, have a [[metavariable]] in the second position that matches any possible input. !}%
+    
+%{! (options removed from twelftag: check=true discard=true) !}%
 
-The first ``%covers`` declaration below checks that ``rel`` covers the first position - it does, as there is one case for each of the three possibilities. This is true even though ``rel b X Y`` will fail and the query ``rel c X Y`` will loop forever. The second declaration checks that ``rel`` covers the second position, which happens trivially because the first case, labeled ``rel1``, and the second case ``rel2``, have a metavariable]] in the second position that matches any possible input.
-
-&lt;twelf check=true discard=true&gt;
 %covers rel +X1 -X2 -X3.
 %covers rel -X1 +X2 -X3.
-&lt;/twelf&gt;
 
+%{! If we try to check coverage on the third position, however, we get an error; the third position does not have a case that handles ``a``. !}%
+    
+%{! (options removed from twelftag: check=decl discard=true) !}%
 
-If we try to check coverage on the third position, however, we get an error; the third position does not have a case that handles ``a``.
-
-&lt;twelf check=decl discard=true&gt;
 %covers rel -X1 -X2 +X3.
-&lt;/twelf&gt;
 
+%{! Furthermore, even though we cover the first and second positions individually, if we consider them together we leave out two cases, which is what Twelf's response below explains: !}%
+    
+%{! (options removed from twelftag: check=decl discard=true) !}%
 
-Furthermore, even though we cover the first and second positions individually, if we consider them together we leave out two cases, which is what Twelf's response below explains:
-
-&lt;twelf check=decl discard=true&gt;
 %covers rel +X1 +X2 -X3.
-&lt;/twelf&gt;
 
-#
+%{! #
 # Limitations
 
-Coverage checking is a weak test; it only checks that at least one constant will immediately apply during proof search. For example, the following program coverage checks:
-
-&lt;twelf&gt;
+Coverage checking is a weak test; it only checks that at least one constant will immediately apply during proof search. For example, the following program coverage checks: !}%
+    
 bit : type.
 0 : bit.
 1 : bit.
 
-nope : bit -&gt; type.
+nope : bit -> type.
 %mode nope +B.
 
-not : bit -&gt; bit -&gt; type.
+not : bit -> bit -> type.
 %mode not +B -B'.
 
 n0 : not 0 1.
 n1 : not 1 0.
 
-zero : bit -&gt; bit -&gt; type.
+zero : bit -> bit -> type.
 %mode zero +B -B'.
 
 cn : zero X 0
-  &lt;- nope X.
+  <- nope X.
 
 cz : zero X 0
-  &lt;- zero X 1.
+  <- zero X 1.
 
 cf : zero X 0
-  &lt;- not X X.
+  <- not X X.
 
 %worlds () (nope _) (not _ _) (zero _ _).
 %covers zero +B -B'.
-&lt;/twelf&gt;
 
-Although ``zero`` passes the coverage check, it always fails. ``cn`` matches all inputs, but then appeals to a subgoal (``nope``) that is empty and immediately fails. ``cz`` appeals recursively to ``zero``, but insists that its output be ``1``, so this also fails. ``cf`` appeals to the total relation ``not``, but in a way that constrains the output so that it also always fails (see [output freeness](/wiki/output-freeness/)). To get all of these tests, you must use the [%total](/wiki/percent-total/) declaration. Here, totality fails on the first case as expected:
+%{! Although ``zero`` passes the coverage check, it always fails. ``cn`` matches all inputs, but then appeals to a subgoal (``nope``) that is empty and immediately fails. ``cz`` appeals recursively to ``zero``, but insists that its output be ``1``, so this also fails. ``cf`` appeals to the total relation ``not``, but in a way that constrains the output so that it also always fails (see [output freeness](/wiki/output-freeness/)). To get all of these tests, you must use the [%total](/wiki/percent-total/) declaration. Here, totality fails on the first case as expected: !}%
+    
+%{! (options removed from twelftag: check=decl discard=true) !}%
 
-&lt;twelf check=decl discard=true&gt;
 %total D (zero D _).
-&lt;/twelf&gt;
 
-#
+%{! #
 # See also
 
 * \{\{guide|chapter=9|section=54|title=Input Coverage\}\}
 * [Input coverage](/wiki/coverage-checking/)
-* [Coverage checking](/wiki/coverage-checking/)
+* [Coverage checking](/wiki/coverage-checking/) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25covers).
 !}%

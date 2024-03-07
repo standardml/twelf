@@ -1,7 +1,6 @@
 %%! title: "Download"
 
-%{!
-The current version of Twelf is 1.7.1. You can also [Twelf Live](/wiki/twelf-live/) in your browser.
+%{! The current version of Twelf is 1.7.1. You can also [Twelf Live](/wiki/twelf-live/) in your browser.
 
 * [http://twelf.org/releases/twelf-src-1.7.1.tar.gz twelf-src-1.7.1.tar.gz] - Source distribution, can be built with MLton or SML/NJ
 * [http://twelf.org/releases/twelf-linux-1.7.1.tar.gz twelf-linux-1.7.1.tar.gz] - Pre-built distribution for Linux
@@ -86,5 +85,10 @@ These commands will download all of the Twelf source code into a directory calle
 #
 # Older versions of Twelf
 
-Links to older software versions are available from the [revision history](/wiki/release-history/) page, but use of any version earlier than 1.7.0, especially when working with metatheorems, is highly discouraged.
+Links to older software versions are available from the [revision history](/wiki/release-history/) page, but use of any version earlier than 1.7.0, especially when working with metatheorems, is highly discouraged. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Download).
 !}%

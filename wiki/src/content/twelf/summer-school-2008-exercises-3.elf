@@ -1,7 +1,6 @@
 %%! title: "Summer school 2008:Exercises 3"
 
-%{!
-#
+%{! #
 # Polymorphic MinML [Summer school 2008:Type safety for polymorphic MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-polymorphic-minml-intrinsic-encoding/)
 
 Add explicit polymorphism to MinML and prove type safety:
@@ -28,5 +27,10 @@ These primitives are simpler than full mutable references because their dynamic 
 #
 # Determinacy of Evaluation
 
-Prove that the dynamic semantics of MinML are deterministic (every expression steps to at most one other expression).  Hint: you will need to use [equality](/wiki/equality/) to state the theorem.  See the discussion of [uniqueness lemma](/wiki/uniqueness-lemma/)s for a proof of determinacy for the simply-typed λ-calculus.
+Prove that the dynamic semantics of MinML are deterministic (every expression steps to at most one other expression).  Hint: you will need to use [equality](/wiki/equality/) to state the theorem.  See the discussion of [uniqueness lemma](/wiki/uniqueness-lemma/)s for a proof of determinacy for the simply-typed λ-calculus. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Exercises_3).
 !}%

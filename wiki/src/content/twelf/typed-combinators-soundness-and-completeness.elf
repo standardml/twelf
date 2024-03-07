@@ -1012,3 +1012,9 @@ state x and y in the same order, even in the reification theorems.
 
 %worlds (master-block) (sound _ _ _ _).
 %total {} (sound _ _ _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Typed_combinators_soundness_and_completeness).
+!}%

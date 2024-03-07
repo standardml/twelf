@@ -1,7 +1,6 @@
 %%! title: "Talk:CPS conversion"
 
-%{!
-#
+%{! #
 # Strange world declarations
 
 Can anybody pinpoint the reason that Twelf requires these odd world and mode declarations? Is it a bug? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 17:51, 5 October 2006 (EDT)
@@ -9,15 +8,15 @@ Can anybody pinpoint the reason that Twelf requires these odd world and mode dec
 #
 # Termination order backwards?
 
-It seems that the documentation in the guide is the opposite of what is actually implemented. With the total declaration
-
-&lt;twelf&gt;%total (A B C D) 
+It seems that the documentation in the guide is the opposite of what is actually implemented. With the total declaration !}%
+    
+%total (A B C D) 
           (tocpsv- A _ _) 
           (tocpsv+ B _ _) 
           (tocps- _ C _ _ _) 
-          (tocps+ _ D _ _ _).&lt;/twelf&gt;
+          (tocps+ _ D _ _ _).
 
-I can call ``tocps-`` from ``tocps+`` on the same derivation. The documentation says the opposite: that earlier theorems can call later ones. (See \{\{guide|chapter=8|section=51|title=mutual recursion\}\}). Am I crazy? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 17:55, 5 October 2006 (EDT)
+%{! I can call ``tocps-`` from ``tocps+`` on the same derivation. The documentation says the opposite: that earlier theorems can call later ones. (See \{\{guide|chapter=8|section=51|title=mutual recursion\}\}). Am I crazy? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 17:55, 5 October 2006 (EDT)
 
 : I was under the impression it was later theorems that can call earlier ones (at least that's how I've used it in the past). --[User:DanielKLee](/wiki/user-danielklee/) 16:48, 6 October 2006 (EDT)
 
@@ -29,5 +28,10 @@ The Twelf output indicates a syntax error in the example. Yay technology. --[Use
 :: We owe Tom an apology, he writes brillant code; he included type information in his code that was not part of the signature. Which is exactly what &lt;nowiki&gt;&lt;twelf noinclude="true"&gt;&lt;/nowiki&gt; is for. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 23:08, 6 October 2006 (EDT)
 ::: Word. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 23:52, 8 October 2006 (EDT)
 :::: You should use ``&lt;twelf noinclude="true" check="decl"&gt;`` to link to a [%solve](/wiki/percent-solve/) that establishes those derivations too, perhaps? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 23:59, 8 October 2006 (EDT)
-::::: I'm really just using the twelf tag here to display a term with syntax highlighting; I don't think it needs to be checked. (Actually, I think it would distract from what's actually important.) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 14:41, 9 October 2006 (EDT)
+::::: I'm really just using the twelf tag here to display a term with syntax highlighting; I don't think it needs to be checked. (Actually, I think it would distract from what's actually important.) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 14:41, 9 October 2006 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:CPS_conversion).
 !}%

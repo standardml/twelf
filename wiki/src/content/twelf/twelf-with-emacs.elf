@@ -1,7 +1,6 @@
 %%! title: "Twelf with Emacs"
 
-%{!
-The preferred way to interact with Twelf is through its emacs mode, which is included in the Twelf distribution. The [Download](/wiki/download/) page has basic information for setting up Emacs mode with Twelf.
+%{! The preferred way to interact with Twelf is through its emacs mode, which is included in the Twelf distribution. The [Download](/wiki/download/) page has basic information for setting up Emacs mode with Twelf.
 
 #
 # Prerequisites
@@ -58,20 +57,18 @@ Save the file (by using CTRL-x CTRL-s in Emacs).
 #
 # Creating a .elf file
 
-Then create a file ``sometwelf.elf`` (by using CTRL-x CTRL-f in Emacs) and enter the following text:
-
-&lt;twelf&gt;
+Then create a file ``sometwelf.elf`` (by using CTRL-x CTRL-f in Emacs) and enter the following text: !}%
+    
 nat : type.
 z : nat.
-s : nat -&gt; nat.
-ss : nat -&gt; nat = [n] s (s n).
+s : nat -> nat.
+ss : nat -> nat = [n] s (s n).
 
-plus : nat -&gt; nat -&gt; nat -&gt; type.
+plus : nat -> nat -> nat -> type.
 plus/z : plus z N N.
-plus/s : plus N M P -&gt; plus (s N) M (s P).
-&lt;/twelf&gt;
+plus/s : plus N M P -> plus (s N) M (s P).
 
-Save the file (by using CTRL-x CTRL-s in Emacs).
+%{! Save the file (by using CTRL-x CTRL-s in Emacs).
 
 #
 # Using the Twelf emacs mode
@@ -139,5 +136,10 @@ If you use multiple frames with Emacs, ``twelf-mode`` annoyingly pops up the Twe
 
 #
 # See also
-* \{\{guide|chapter=13|section=74|title=Emacs Interface\}\}
+* \{\{guide|chapter=13|section=74|title=Emacs Interface\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Twelf_with_Emacs).
 !}%

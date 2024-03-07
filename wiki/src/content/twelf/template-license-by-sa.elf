@@ -1,9 +1,14 @@
 %%! title: "Template:License-by-sa"
 
+%{! \{| style="width:100%; margin-bottom:5px; border: 1px solid; background-color: #FF9999; text-align:center; font-size:0.9em;"
+|-
+| style="width:100%; text-align:center; font-size:1.1em;" | **The content on this page is released under the [[Project:BY-SA | Creative Commons Attribution-ShareAlike License]]**
+|-
+| style="width:100%; text-align:center; font-size:0.9em;" | If you edit this page, your edits are covered by the same license. **This tag must not be removed!** See the [[Project:Copyright]] page for more information.
+|\} !}%
+
 %{!
-\{| style="width:100%; margin-bottom:5px; border: 1px solid; background-color: #FF9999; text-align:center; font-size:0.9em;"
-|-
-| style="width:100%; text-align:center; font-size:1.1em;" | **The content on this page is released under the Project:BY-SA | Creative Commons Attribution-ShareAlike License]]**
-|-
-| style="width:100%; text-align:center; font-size:0.9em;" | If you edit this page, your edits are covered by the same license. **This tag must not be removed!** See the 
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:License-by-sa).
 !}%

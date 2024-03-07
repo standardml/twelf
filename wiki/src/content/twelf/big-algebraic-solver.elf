@@ -6,7 +6,7 @@ The big algebraic software is a [tactical theorem proving](/wiki/tactical-theore
 
 %%## Preexisting logic
 
-%{! In the Princeton FPCC project where this was developed, many of the definitions below were more general (for instance, equality was on anything, not just numbers) and many things stated here as axioms were lemmas that had corresponding proofs. These are just the definitions and lemmas that were used within the solver !}%
+%{! In the Princeton FPCC project where this was developed, many of the definitions below were more general (for instance, equality was on anything, not just numbers) and many things stated here as axioms were lemmas that had corresponding proofs. These are just the definitions and lemmas that were used within the solver. !}%
 
 tnum : type.
 tform : type.
@@ -200,7 +200,7 @@ algebra_times_hint : tnum -> type = [a] pf (a == a).
 
 %%#### Listify
 
-%{! Decomposes equations into list form ``0 + (1 * A * B * C) + D - E + (1 * F * G) +...&lt;/tt !}%
+%{! Decomposes equations into list form ``0 + (1 * A * B * C) + D - E + (1 * F * G) +...`` !}%
 
 %clause
 listify_imp : listify A Pos Neg
@@ -967,3 +967,9 @@ algebra_times_hint (a + b * c) -> algebra_fact (a + b * c > zero)
 
 ex_30 : pf (A < zero) -> pf (B >= zero) -> pf (C * A >= A * (D + zero)) ->
 pf (B * C * one <= B * D) = [p1][p2][p3] imp_e (ex_29 A B C D refl p1 refl p2) p3.
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Big_algebraic_solver).
+!}%

@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial/Saturday"
 
-%{!
-#
+%{! #
 # Notes from Saturday
 
 Please fill out our &lt;big&gt;**_[https://spreadsheets.google.com/viewform?key=p0-89EvFXQhUXF827jjk_Dg feedback form]**_&lt;/big&gt;.
@@ -60,5 +59,10 @@ Otherwise:
 * you can build Twelf from the [http://twelf.plparty.org/builds/twelf-src.tar.gz source tarball].  You will need [http://www.mlton.org MLton] or [http://www.smlnj.org sml/nj]. 
 * you can make yourself an account on the wiki, and do the exercises on your User:&lt;login&gt; page (linked at the top after you log in).
 
-Then see [Twelf with Emacs](/wiki/twelf-with-emacs/) for the basics of interacting with Twelf.  (You can also use [Twelf without Emacs](/wiki/twelf-without-emacs/), by interacting with the Twelf server directly.)
+Then see [Twelf with Emacs](/wiki/twelf-with-emacs/) for the basics of interacting with Twelf.  (You can also use [Twelf without Emacs](/wiki/twelf-without-emacs/), by interacting with the Twelf server directly.) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Saturday).
 !}%

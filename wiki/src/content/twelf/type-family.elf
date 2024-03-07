@@ -1,7 +1,6 @@
 %%! title: "Type family"
 
-%{!
-We use the word **type family** to refer to the syntactic class of [LF](/wiki/lf/) that classifies terms and is classified by kinds.  The type families include the types of LF, which are dependent function types and type family constants  that are fully applied to arguments.  The type families also include partially applied type family constants.  We refer to the arguments of a type family constant as the **subjects** or **indices** of the family.    
+%{! We use the word **type family** to refer to the syntactic class of [LF](/wiki/lf/) that classifies terms and is classified by kinds.  The type families include the types of LF, which are dependent function types and type family constants  that are fully applied to arguments.  The type families also include partially applied type family constants.  We refer to the arguments of a type family constant as the **subjects** or **indices** of the family.    
 
 The LF methodology specifies how [judgment](/wiki/judgment/).
 
@@ -15,5 +14,10 @@ The LF methodology specifies how [judgment](/wiki/judgment/).
 * [Syntax (Object logic)](/wiki/syntax-object-logic/)
 * [Relation](/wiki/relation/)
 
-\{\{stub\}\}
+\{\{stub\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Type_family).
 !}%

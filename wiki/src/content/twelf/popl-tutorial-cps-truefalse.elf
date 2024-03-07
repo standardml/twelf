@@ -1,53 +1,57 @@
 %%! title: "POPL Tutorial/cps-truefalse"
 
-%{!
-#
-# CPS Conversion
-
-
-&lt;twelf&gt;
+%{! #
+# CPS Conversion !}%
+    
 tp : type.
 o  : tp.
-# &gt; : tp -&gt; tp -&gt; tp.           %infix right 3 =&gt;.
+=> : tp -> tp -> tp.           %infix right 3 =>.
 
-exp   : tp -&gt; type.
-value : tp -&gt; type.
-app   : exp (A =&gt; B) -&gt; exp A -&gt; exp B.
-lam   : (value A -&gt; exp B) -&gt; value (A =&gt; B).
-ret   : value A -&gt; exp A.
-%block sourceb : some \{A : tp\} block \{x : value A\}.
+exp   : tp -> type.
+value : tp -> type.
+app   : exp (A => B) -> exp A -> exp B.
+lam   : (value A -> exp B) -> value (A => B).
+ret   : value A -> exp A.
+%block sourceb : some {A : tp} block {x : value A}.
 %worlds (sourceb) (exp _) (value _).
 
 contra  : type.
-cvalue  : tp -&gt; type.
-ccont   : tp -&gt; type.
-capp    : cvalue (A =&gt; B) -&gt; cvalue A -&gt; ccont B -&gt; contra.
-clam    : (cvalue A -&gt; ccont B -&gt; contra) -&gt; cvalue (A =&gt; B).
-cfalsei : (cvalue A -&gt; contra) -&gt; ccont A.
-cthrow : ccont A -&gt; cvalue A -&gt; contra.
-%block targetb1 : some \{A : tp\} block \{x : cvalue A\}.
-%block targetb2 : some \{A : tp\} block \{x : ccont A\}.
+cvalue  : tp -> type.
+ccont   : tp -> type.
+capp    : cvalue (A => B) -> cvalue A -> ccont B -> contra.
+clam    : (cvalue A -> ccont B -> contra) -> cvalue (A => B).
+cfalsei : (cvalue A -> contra) -> ccont A.
+cthrow : ccont A -> cvalue A -> contra.
+%block targetb1 : some {A : tp} block {x : cvalue A}.
+%block targetb2 : some {A : tp} block {x : ccont A}.
 %worlds (targetb1 | targetb2) (contra) (cvalue _) (ccont _).
 
-cps : value A -&gt; cvalue A -&gt; type.
+cps : value A -> cvalue A -> type.
 %mode cps +X1 -X2.
 
-cpse : exp A -&gt; (ccont A -&gt; contra) -&gt; type.
+cpse : exp A -> (ccont A -> contra) -> type.
 %mode cpse +X1 -X2.
 
-cps/lam : cps (lam (E:value A -&gt; exp B))
-              (clam (E':cvalue A -&gt; ccont B -&gt; contra))
-           &lt;- (\{x:value A\}\{x':cvalue A\} cps x x' -&gt; cpse (E x) (E' x')).
-cpse/app : cpse (app (E1:exp (B =&gt; A)) (E2:exp B))
-                ([c:ccont A] E1' (cfalsei ([f:cvalue (B =&gt; A)]
+cps/lam : cps (lam (E:value A -> exp B))
+              (clam (E':cvalue A -> ccont B -> contra))
+           <- ({x:value A}{x':cvalue A} cps x x' -> cpse (E x) (E' x')).
+cpse/app : cpse (app (E1:exp (B => A)) (E2:exp B))
+                ([c:ccont A] E1' (cfalsei ([f:cvalue (B => A)]
                                              E2' (cfalsei([x:cvalue B]
                                                             capp f x c)))))
-            &lt;- cpse E1 (E1':ccont (B =&gt; A) -&gt; contra)
-            &lt;- cpse E2 (E2':ccont B -&gt; contra).
+            <- cpse E1 (E1':ccont (B => A) -> contra)
+            <- cpse E2 (E2':ccont B -> contra).
 cpse/ret : cpse (ret (V:value A)) ([c:ccont A] cthrow c V')
-            &lt;- cps V (V':cvalue A).
+            <- cps V (V':cvalue A).
 
-%block cpsb : some \{A : tp\} block \{x : value A\} \{x' : cvalue A\} \{d : cps x x'\}.
+%block cpsb : some {A : tp} block {x : value A} {x' : cvalue A} {d : cps x x'}.
 %worlds (cpsb) (cps _ _) (cpse _ _).
-%total (E V) (cps E _) (cpse V _).&lt;/twelf&gt;
+%total (E V) (cps E _) (cpse V _).
+
+%{!  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/cps-truefalse).
 !}%

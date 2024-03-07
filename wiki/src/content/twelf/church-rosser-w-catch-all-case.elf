@@ -104,7 +104,7 @@ because there are at least two options. In this variant, we utilize the
 technique of using a [catch-all case](/wiki/catch-all-case/) in order to avoid putting
 a fact about variable substitution cases in the context. This latter
 style is used in the Twelf examples directory and is explored on the wiki
-in the page Church-Rosser (alternate substitution theorem)]].
+in the page [[Church-Rosser (alternate substitution theorem)]].
 
 The interesting cases are really the first two - if we reach a reduction for
 the variable we are substituing for, then our second argument is 
@@ -374,7 +374,13 @@ have to do the same case in reverse; we omit the graphic.
      <- substitute D2a' D2b' 
           (D2   : reduce (E2a E2b) (Ea' Eb')).
 
-%{! Now we are done! We check in the ``exps`` world with free variable !}%
+%{! Now we are done! We check in the ``exps`` world with free variables. !}%
 
 %worlds (exps_id) (diamond _ _ _ _).
 %total D1 (diamond D1 D2 _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Church-Rosser_(w/_catch-all_case)).
+!}%

@@ -13,7 +13,7 @@ the [HOAS_nat_bijection] page).  In the comments here, I emphasize those
 different aspects rather than repeat the same discussion.
  !}%
 
-%{! | hidden = tru !}%
+%{! | hidden = true !}%
 % contents included from ../library/std.elf
 %%%%%% Proposed Twelf Standard Library
 %%%%%% John Boyland
@@ -67,7 +67,7 @@ equal   : comp.
 
 %freeze comp.
 
-%{! | hidden = tru !}%
+%{! | hidden = true !}%
 % contents included from ../library/bool.elf
 %%%%% bool.elf
 %%%%% Boolean literals
@@ -379,7 +379,7 @@ or/FF: or false false false.
 %abbrev bool`and-total = and-total.
 %abbrev bool`or-total* = or-total*.
 %abbrev bool`or-total = or-total.
-%{! | hidden = tru !}%
+%{! | hidden = true !}%
 % contents included from ../library/nat.elf
 %%%%% Natural numbers
 %%%%% John Boyland
@@ -6445,7 +6445,7 @@ max/< : gt X2 X1 -> max X1 X2 X2.
 %abbrev nat`succ-preserves-min-converse = succ-preserves-min-converse.
 %abbrev nat`succ-preserves-max = succ-preserves-max.
 %abbrev nat`succ-preserves-max-converse = succ-preserves-max-converse.
-%{! | hidden = tru !}%
+%{! | hidden = true !}%
 % contents included from ../library/natpair.elf
 %%%%% natpair.elf
 %%%%% Pairs of natural numbers
@@ -7325,7 +7325,7 @@ nat2pair : nat -> pair -> type = [N] [P] pair2nat P N.
 %abbrev natpair`constrained2-pair2nat-unbounded = constrained2-pair2nat-unbounded.
 %abbrev natpair`natpair = natpair.
 %abbrev natpair`natpair/ = natpair/.
-%{! | hidden = tru !}%
+%{! | hidden = true !}%
 % contents included from ../library/multiset.elf
 %%%%%% Multisets of natural numbers
 %%%%%% John Boyland
@@ -17338,3 +17338,9 @@ uninteresting arithmetic fiddling.
 
 %worlds () (tonat-one2one _ _ _ _).
 %total { } (tonat-one2one _ _ _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Indexed_HOAS_nat_bijection).
+!}%

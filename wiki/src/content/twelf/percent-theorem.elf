@@ -1,7 +1,6 @@
 %%! title: "%theorem"
 
-%{!
-The **``%theorem``** declaration acts as the _specification_ of a theorem.
+%{! The **``%theorem``** declaration acts as the _specification_ of a theorem.
 
 \{\{needs|syntax of the declaration\}\}
 
@@ -21,5 +20,10 @@ When using the Twelf [theorem prover](/wiki/theorem-prover/), a ``%theorem`` dec
 * [Theorem prover](/wiki/theorem-prover/)
 * \{\{guide|title=Theorem Prover|chapter=10|section=57\}\}
 
-\{\{keyword|key=theorem\}\}
+\{\{keyword|key=theorem\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25theorem).
 !}%

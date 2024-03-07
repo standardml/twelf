@@ -1,7 +1,6 @@
 %%! title: "Proving metatheorems:Proving totality assertions in non-empty contexts"
 
-%{!
-\{\{proving metatheorems
+%{! \{\{proving metatheorems
   | next = Proving metatheorems in non-empty contexts
   | nextname = Proving metatheorems in non-empty contexts
   | prev = Proving metatheorems about the STLC
@@ -12,74 +11,77 @@ So far, we have only proved relations total in the empty LF context.  In this se
 #
 # Definition of Size
 
-The definition of size uses the definitions of [Proving metatheorems:Representing the syntax of the natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/), [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), and [Proving metatheorems:Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) from earlier in this article.  
-&lt;twelf export="syntax" hidden="true"&gt;
+The definition of size uses the definitions of [Proving metatheorems:Representing the syntax of the natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/), [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), and [Proving metatheorems:Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) from earlier in this article. !}%
+    
+%{! (options removed from twelftag: export="syntax" hidden="true") !}%
+
 tp    : type.
 unit  : tp.
-arrow : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
  
 tm    : type.
 empty : tm.
-lam   : tp -&gt; (tm -&gt; tm) -&gt; tm.
-app   : tm -&gt; tm -&gt; tm.
+lam   : tp -> (tm -> tm) -> tm.
+app   : tm -> tm -> tm.
 
 nat : type.
 z   : nat.
-s   : nat -&gt; nat.
+s   : nat -> nat.
 
-plus   : nat -&gt; nat -&gt; nat -&gt; type.
+plus   : nat -> nat -> nat -> type.
 %mode plus +X1 +X2 -X3.
 
 plus-z : plus z N2 N2.
 plus-s : plus (s N1) N2 (s N3)
-	  &lt;- plus N1 N2 N3.
+	  <- plus N1 N2 N3.
 
 %worlds () (plus _ _ _).
 %total N (plus N _ _).
-&lt;/twelf&gt;
-Informally, we define the size of a term as follows:
+
+%{! Informally, we define the size of a term as follows:
 * &lt;math&gt;\mathsf\{\}|x| = 1&lt;/math&gt;
 * &lt;math&gt;|\langle\rangle| = 1&lt;/math&gt;
 * &lt;math&gt;|e_1 \; e_2| = 1 + |e_1| + |e_2|&lt;/math&gt;
 * &lt;math&gt;\mathsf\{\}|\lambda x:\tau.e| = 1 + |e|&lt;/math&gt;
 
-We define this function in LF using the following judgement:
+We define this function in LF using the following judgement: !}%
+    
+%{! (options removed from twelftag: check="true" import="syntax" export="preworld") !}%
 
-&lt;twelf check="true" import="syntax" export="preworld"&gt;
-size       : tm -&gt; nat -&gt; type.
+size       : tm -> nat -> type.
 %mode size +E -N.
 
 size-empty : size empty (s z). 
 size-lam   : size (lam _ E) (s N)
-		&lt;- (\{x : tm\} 
-                    \{_ : size x (s z)\}
+		<- ({x : tm} 
+                    {_ : size x (s z)}
 		      size (E x) N).
 size-app   : size (app E1 E2) (s N)
-		&lt;- size E1 N1
-		&lt;- size E2 N2 
-		&lt;- plus N1 N2 N.
-&lt;/twelf&gt;
+		<- size E1 N1
+		<- size E2 N2 
+		<- plus N1 N2 N.
 
-The only subtlety in this judgement is that we have recast size as a hypothetical judgement: each variable ``x:tm`` in the context is assumed to have size 1.  Correspondingly, the premise of the ``lam`` case extends the context with such an assumption for the bound variable.  
+%{! The only subtlety in this judgement is that we have recast size as a hypothetical judgement: each variable ``x:tm`` in the context is assumed to have size 1.  Correspondingly, the premise of the ``lam`` case extends the context with such an assumption for the bound variable.  
 
 #
 # World Declarations
 
-We would like to assert that every term has a size.  However, because the definition of the size judgement extends the LF context, our usual worlds declaration fails:
-&lt;twelf import="preworld" discard=true check="decl"&gt;
+We would like to assert that every term has a size.  However, because the definition of the size judgement extends the LF context, our usual worlds declaration fails: !}%
+    
+%{! (options removed from twelftag: import="preworld" discard=true check="decl") !}%
+
 %worlds () (size _ _).
-&lt;/twelf&gt;
 
-The worlds declaration fails because ``size`` does not stay in the empty context.
+%{! The worlds declaration fails because ``size`` does not stay in the empty context.
 
-To give an appropriate worlds declaration for this type family, we must first specify the form of the contexts in which we consider it.  We do so with a block declaration:
+To give an appropriate worlds declaration for this type family, we must first specify the form of the contexts in which we consider it.  We do so with a block declaration: !}%
+    
+%{! (options removed from twelftag: import="preworld" export="withworld") !}%
 
-&lt;twelf import="preworld" export="withworld"&gt;
-%block size-block : block \{x : tm\} \{_ : size x (s z)\}.
+%block size-block : block {x : tm} {_ : size x (s z)}.
 %worlds (size-block) (size _ _).
-&lt;/twelf&gt;
 
-The block declaration names a context block comprised of the assumptions ``x:tm, _:size x (s z)``.  The world declaration declares ``size`` for any context composed of any number of ``size-blocks``.  That
+%{! The block declaration names a context block comprised of the assumptions ``x:tm, _:size x (s z)``.  The world declaration declares ``size`` for any context composed of any number of ``size-blocks``.  That
 is, it specifies that we consider ``size`` in the [regular world](/wiki/percent-worlds/) ``(size-block)*``.  
 
 In general, Twelf permits regular world declarations of the form ``(b1 | b2 | ... | bn)*`` for blocks ``b1`` through ``bn`` defined by ``%block`` declarations.
@@ -137,91 +139,96 @@ There are two things to note about this totality assertion:
 
 Twelf verifies totality assertions in non-empty contexts in the same manner as before.  If a type family world checks, then the inductive hypothesis of a totality relation for a recursive premise (or the previously established totality assertion for a prior type family) will never fail to apply because of the form of the context.  Thus, the only differences in checking totality assertions for general contexts are that world checking may fail, and that coverage checking must account for variables from the context.  
 
-In this case, Twelf succeeds in proving the totality of ``size``.
+In this case, Twelf succeeds in proving the totality of ``size``. !}%
+    
+%{! (options removed from twelftag: check="true" import="withworld" export="withtotal") !}%
 
-&lt;twelf check="true" import="withworld" export="withtotal"&gt;
 %total E (size E _).
-&lt;/twelf&gt;
 
-#
+%{! #
 # Example world errors
 
-In this section, we show some example world errors.  For comparison, we collect the complete correct definition of ``size`` here:
+In this section, we show some example world errors.  For comparison, we collect the complete correct definition of ``size`` here: !}%
+    
+%{! (options removed from twelftag: check="true" import="syntax" discard=true) !}%
 
-&lt;twelf check="true" import="syntax" discard=true&gt;
-size       : tm -&gt; nat -&gt; type.
+size       : tm -> nat -> type.
 %mode size +E -N.
 
 size-empty : size empty (s z). 
 size-lam   : size (lam _ E) (s N)
-		&lt;- (\{x : tm\} 
-                    \{_ : size x (s z)\}
+		<- ({x : tm} 
+                    {_ : size x (s z)}
 		      size (E x) N).
 size-app   : size (app E1 E2) (s N)
-		&lt;- size E1 N1
-		&lt;- size E2 N2 
-		&lt;- plus N1 N2 N.
+		<- size E1 N1
+		<- size E2 N2 
+		<- plus N1 N2 N.
 
-%block size-block : block \{x : tm\} \{_ : size x (s z)\}.
+%block size-block : block {x : tm} {_ : size x (s z)}.
 %worlds (size-block) (size _ _).
 %total E (size E _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Premise in an incorrect context
 
-One possible world error is to write a premise whose local context extensions do not stay in the appropriate world.   For example, if we forgot the ``size`` assumption in the ``lam`` case, Twelf would report an error:
+One possible world error is to write a premise whose local context extensions do not stay in the appropriate world.   For example, if we forgot the ``size`` assumption in the ``lam`` case, Twelf would report an error: !}%
+    
+%{! (options removed from twelftag: import="preworld" discard=true check="decl") !}%
 
-&lt;twelf import="preworld" discard=true check="decl"&gt;
 size-lam   : size (lam _ E) (s N)
-		&lt;- (\{x : tm\} 		   
+		<- ({x : tm} 		   
                       size (E x) N).
-%block size-block : block \{x : tm\} \{_ : size x (s z)\}.
+%block size-block : block {x : tm} {_ : size x (s z)}.
 %worlds (size-block) (size _ _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # World subsumption failure
 
-Another possible world error is that world subsumption could fail.  For example, if ``size`` were stated for a  world containing natural number assumptions (which of course ruins the adequacy of ``nat`` for the natural numbers), it would not be permissible to call ``plus``:
+Another possible world error is that world subsumption could fail.  For example, if ``size`` were stated for a  world containing natural number assumptions (which of course ruins the adequacy of ``nat`` for the natural numbers), it would not be permissible to call ``plus``: !}%
+    
+%{! (options removed from twelftag: import="preworld" discard=true check="decl") !}%
 
-&lt;twelf import="preworld" discard=true check="decl"&gt;
-%block size-block : block \{x : tm\} \{_ : size x (s z)\}.
-%block natblock : block \{x:nat\}.
+%block size-block : block {x : tm} {_ : size x (s z)}.
+%block natblock : block {x:nat}.
 %worlds (natblock | size-block) (size _ _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Totality failure because of a forgotten assumption
 
-Finally, a type family can be world correct but fail to define a total relation if we consider the theorem in an improper world.  For example, say we had defined ``size`` as follows:
+Finally, a type family can be world correct but fail to define a total relation if we consider the theorem in an improper world.  For example, say we had defined ``size`` as follows: !}%
+    
+%{! (options removed from twelftag: check="decl" import="syntax" discard=true) !}%
 
-&lt;twelf check="decl" import="syntax" discard=true&gt;
-size       : tm -&gt; nat -&gt; type.
+size       : tm -> nat -> type.
 %mode size +E -N.
 
 size-empty : size empty (s z). 
 size-lam   : size (lam _ E) (s N)
-		&lt;- (\{x : tm\} size (E x) N).
+		<- ({x : tm} size (E x) N).
 size-app   : size (app E1 E2) (s N)
-		&lt;- size E1 N1
-		&lt;- size E2 N2 
-		&lt;- plus N1 N2 N.
+		<- size E1 N1
+		<- size E2 N2 
+		<- plus N1 N2 N.
 
-%block size-block : block \{x : tm\}.
+%block size-block : block {x : tm}.
 %worlds (size-block) (size _ _).
 %total E (size E _).
-&lt;/twelf&gt;
 
-This definition world checks because the context in ``size-lam`` is of the form specified by the world declaration.  However, the type family ``size`` does not define a total relation because it does not cover 
+%{! This definition world checks because the context in ``size-lam`` is of the form specified by the world declaration.  However, the type family ``size`` does not define a total relation because it does not cover 
 variables ``x:tm`` in the LF context.  A total relation must cover both the LF constants in the signature and the LF variables in all contexts in the world.
 
 \{\{proving metatheorems
   | next = Proving metatheorems in non-empty contexts
   | nextname = Proving metatheorems in non-empty contexts
   | prev = Proving metatheorems about the STLC
-  | prevname = Proving metatheorems\}\}
+  | prevname = Proving metatheorems\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_totality_assertions_in_non-empty_contexts).
 !}%

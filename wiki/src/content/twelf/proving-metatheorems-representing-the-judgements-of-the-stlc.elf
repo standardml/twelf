@@ -1,7 +1,6 @@
 %%! title: "Proving metatheorems:Representing the judgements of the STLC"
 
-%{!
-\{\{proving metatheorems
+%{! \{\{proving metatheorems
   | prev = Representing the syntax of the STLC
   | prevname = Representing syntax
   | next = Proving metatheorems about the STLC
@@ -38,19 +37,17 @@ Hypothesis is derivable by the rule &lt;math&gt;\mbox\{of-var\}&lt;/math&gt;.  W
 #
 # LF representation
 
-In the previous section, we used LF binding to represent object-language variables.  In this section, we use LF binding to represent object-language hypothetical judgements.  The following LF signature represents the above judgement &lt;math&gt;\gamma \vdash e : \tau&lt;/math&gt; with the LF type family ``of``.  
-
-&lt;twelf&gt;
-of       : tm -&gt; tp -&gt; type.
+In the previous section, we used LF binding to represent object-language variables.  In this section, we use LF binding to represent object-language hypothetical judgements.  The following LF signature represents the above judgement &lt;math&gt;\gamma \vdash e : \tau&lt;/math&gt; with the LF type family ``of``. !}%
+    
+of       : tm -> tp -> type.
 of-empty : of empty unit.
 of-lam   : of (lam T2 ([x] E x)) (arrow T2 T)
-            &lt;- (\{x: tm\} of x T2 -&gt; of (E x) T).
+            <- ({x: tm} of x T2 -> of (E x) T).
 of-app   : of (app E1 E2) T
-            &lt;- of E1 (arrow T2 T)
-            &lt;- of E2 T2.
-&lt;/twelf&gt;
+            <- of E1 (arrow T2 T)
+            <- of E2 T2.
 
-The first thing to note is that the type family is indexed by a ``tm`` and a ``tp`` but **not** a representation of the context &lt;math&gt;\gamma&lt;/math&gt;.  The reason for this is that we identify the object-language context with the LF context.  Specifically, an object-language assumption &lt;math&gt;x:\tau&lt;/math&gt; does two things:
+%{! The first thing to note is that the type family is indexed by a ``tm`` and a ``tp`` but **not** a representation of the context &lt;math&gt;\gamma&lt;/math&gt;.  The reason for this is that we identify the object-language context with the LF context.  Specifically, an object-language assumption &lt;math&gt;x:\tau&lt;/math&gt; does two things:
 * It binds the variable &lt;math&gt;\mathsf\{\}x&lt;/math&gt;.
 * It declares a typing assumption &lt;math&gt;x : \tau&lt;/math&gt;.
 
@@ -72,12 +69,12 @@ Some examples may help clarify the intended representation:
 
 \{\{needs|examples\}\}
 
-**Eta-expansion.** As we mentioned [Proving metatheorems:Full LF](/wiki/proving-metatheorems-full-lf/), Twelf permits programmers to write non-eta-expanded terms, which it treats as syntactic sugar for their eta-expansions.  For example, we could equivalently have written:
-&lt;twelf&gt;
+**Eta-expansion.** As we mentioned [Proving metatheorems:Full LF](/wiki/proving-metatheorems-full-lf/), Twelf permits programmers to write non-eta-expanded terms, which it treats as syntactic sugar for their eta-expansions.  For example, we could equivalently have written: !}%
+    
 of-lam  : of (lam T2 E) (arrow T2 T)
-            &lt;- ...
-&lt;/twelf&gt;
-This version differs from ``of-lam`` above in that the term ``E`` is not eta-expanded.  Some consider it good Twelf style to write terms in a fully eta-expanded ([eta-long](/wiki/eta-equivalence/)) form, because (1) the eta-expanded terms are the canonical forms of LF, and (2) the eta-expansion makes the binding structure apparent in the syntax, without knowing the types of the involved constants.  On the other hand, readers who know the types of the constants may find the eta-short version easier to read.
+            <- ...
+
+%{! This version differs from ``of-lam`` above in that the term ``E`` is not eta-expanded.  Some consider it good Twelf style to write terms in a fully eta-expanded ([eta-long](/wiki/eta-equivalence/)) form, because (1) the eta-expanded terms are the canonical forms of LF, and (2) the eta-expansion makes the binding structure apparent in the syntax, without knowing the types of the involved constants.  On the other hand, readers who know the types of the constants may find the eta-short version easier to read.
 
 #
 #
@@ -130,24 +127,22 @@ Next, we define the operational semantics with a judgement &lt;math&gt;e \mapsto
 #
 # LF representation
 
-These judgements are represented in LF in the usual fashion.  The closed LF terms of these types adequately represent the above judgements.
-
-&lt;twelf&gt;
-value       : tm -&gt; type.
+These judgements are represented in LF in the usual fashion.  The closed LF terms of these types adequately represent the above judgements. !}%
+    
+value       : tm -> type.
 value-empty : value empty.
 value-lam   : value (lam T ([x] E x)).
 
-step          : tm -&gt; tm -&gt; type.
+step          : tm -> tm -> type.
 step-app-1    : step (app E1 E2) (app E1' E2)
-                 &lt;- step E1 E1'.
+                 <- step E1 E1'.
 step-app-2    : step (app E1 E2) (app E1 E2') 
-                 &lt;- value E1
-                 &lt;- step E2 E2'.
+                 <- value E1
+                 <- step E2 E2'.
 step-app-beta : step (app (lam T2 ([x] E x)) E2) (E E2)
-                 &lt;- value E2.
-&lt;/twelf&gt;
+                 <- value E2.
 
-In ``step-app-beta``, the right-hand term is the application ``E E2``, which represents the substitution on the right-hand side of the informal rule.
+%{! In ``step-app-beta``, the right-hand term is the application ``E E2``, which represents the substitution on the right-hand side of the informal rule.
 
 And that completes our representation of the STLC in LF.  Now, we can start proving metatheorems about the language using Twelf.
 
@@ -155,5 +150,10 @@ And that completes our representation of the STLC in LF.  Now, we can start prov
   | prev = Representing the syntax of the STLC
   | prevname = Representing syntax
   | next = Proving metatheorems about the STLC
-  | nextname = Proving metatheorems\}\}
+  | nextname = Proving metatheorems\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Representing_the_judgements_of_the_STLC).
 !}%

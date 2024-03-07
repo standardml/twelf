@@ -1,6 +1,6 @@
 %%! title: "TAT/church.elf"
 
-%{! Part 2: Polymorphic Lambda Calculu !}%
+%{! Part 2: Polymorphic Lambda Calculus !}%
 
 tp : type.
 arrow : tp -> tp -> tp. 
@@ -46,3 +46,9 @@ sound : iter N T F E E' -> encode N EN
 
 %worlds () (sound _ _ _). 
 %total {} (sound _ _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/TAT/church.elf).
+!}%

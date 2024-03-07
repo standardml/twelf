@@ -465,3 +465,9 @@ schedule_serial : evcost E1 E2 G -> sizeof G C -> steps E1 E2 C -> value E2 -> t
 
 %worlds () (schedule_serial _ _ _ _).
 %total [D] (schedule_serial D _ _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Cost_semantics).
+!}%

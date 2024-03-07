@@ -1,54 +1,56 @@
 %%! title: "Proving metatheorems talk:Representing the judgements of the STLC"
 
-%{!
-Are the discussion pages live?  Who knows.
+%{! Are the discussion pages live?  Who knows.
 
-Okay, my question is this: why is the eta expansion in the of-lam type necessary?  I believe that it is, but I also believe that it's not obvious why it's there.  In particular, I replaced it with
+Okay, my question is this: why is the eta expansion in the of-lam type necessary?  I believe that it is, but I also believe that it's not obvious why it's there.  In particular, I replaced it with !}%
+    
+of-lam : (of (lam T1 E) (arr T1 T2))                                                     
+           <- ({x : tm} (of x T2) -> of (E x) T).
 
-&lt;twelf&gt;
- of-lam : (of (lam T1 E) (arr T1 T2))                                                     
-           &lt;- (\{x : tm\} (of x T2) -&gt; of (E x) T).                                         
-&lt;/twelf&gt;
-and found that my trivial typecheck of ((\ x . x) &lt;&gt;) still went through....
+%{! and found that my trivial typecheck of ((\ x . x) &lt;&gt;) still went through....
 
-Oh... FWIW, here it is:
-&lt;twelf&gt;
- bogus : (of (app (lam unit ([x] x)) mt) unit) -&gt; type.                                   
+Oh... FWIW, here it is: !}%
+    
+bogus : (of (app (lam unit ([x] x)) mt) unit) -> type.                                   
                                                                                          
  bogusval : (bogus                                                                        
                (of-app                                                                    
                   of-unit                                                                 
                   (of-lam ([x] [DxhasT2 : (of x unit)] DxhasT2)))).
-&lt;/twelf&gt;
-I'm guessing that further exploration will make this clear, but if I can formulate simple examples that appear to work without the eta-expansion, then I think it may bear explaining in the text.                 
+
+%{! I'm guessing that further exploration will make this clear, but if I can formulate simple examples that appear to work without the eta-expansion, then I think it may bear explaining in the text.                 
 : 
-User:76.209.222.184|76.209.222.184]] 04:15, 13 April 2007 (EDT) John Clements
+[[User:76.209.222.184|76.209.222.184]] 04:15, 13 April 2007 (EDT) John Clements
 
-: Hi John. Yeah, the discussion pages are a great place for questions like this!  This is a good question, and I'm going to figure out where to explain the answer in the text.  For now, the quick answer is that there is no difference between the two types:
-&lt;twelf&gt;
+: Hi John. Yeah, the discussion pages are a great place for questions like this!  This is a good question, and I'm going to figure out where to explain the answer in the text.  For now, the quick answer is that there is no difference between the two types: !}%
+    
 of-lam : (of (lam T1 E) (arr T1 T2))                                                     
-          &lt;- ...                                          
+          <- ...                                          
 of-lam' : (of (lam T1 ([x] E x)) (arr T1 T2))                                                     
-           &lt;- ... 
-&lt;/twelf&gt;                                        
+           <- ...
 
-: More generally, there is no difference between a variable at function type (like ``E : tm -&gt; tm`` above) and its eta-expansion (``[x] E x``): Twelf treats the first as syntactic sugar for the second.  In the official syntax of canonical forms, everything must be eta-expanded as much as possible (without introducing beta-redices).  There are a couple of reasons why this is a nice thing to do:
+%{! : More generally, there is no difference between a variable at function type (like ``E : tm -&gt; tm`` above) and its eta-expansion (``[x] E x``): Twelf treats the first as syntactic sugar for the second.  In the official syntax of canonical forms, everything must be eta-expanded as much as possible (without introducing beta-redices).  There are a couple of reasons why this is a nice thing to do:
 - If you define equality of non-canonical forms by mapping them to a canonical form, this notion of equality will include eta-equivalence.
 - This is important for adequacy: you don't want both the eta-expanded version and the non-eta-expanded version to both be canonical forms. E.g., say we had ``first:tm-&gt;tm`` in the LF signature that we used to represent STLC syntax because we added pairs.  If you don't mod out by eta, then both ``lam ([y:tm] first y)`` and ``lam first`` would be different canonical forms, but presumably they would represent the same object-language thing (λx.first(x)).  
 - Technically, when you're working with canonical forms, it's useful to know that every canonical form of function type is a lambda.
 
 : In terms of Twelf style, it's arguably clearer to eta-expand variables of function type, since then you can distinguish terms of function type from terms of base type just by looking at the syntax.  I don't always follow this convention, but I try to do it for the code that's most likely to be read (e.g., the definitions of the most important judgements).  I get sloppy in auxiliary judgements and proofs, though.  
 
-: Also, I like your clever way of type-checking the example typing derivation above by definition a type family indexed by exactly the type that you want to inhabit.  However, there is an easier way, using another feature of Twelf that I haven't figured out where to explain in this intro tutorial: definitions.  That is, you can write
-&lt;twelf&gt;
+: Also, I like your clever way of type-checking the example typing derivation above by definition a type family indexed by exactly the type that you want to inhabit.  However, there is an easier way, using another feature of Twelf that I haven't figured out where to explain in this intro tutorial: definitions.  That is, you can write !}%
+    
 deriv : of (app (lam unit ([x] x)) mt) unit =                                                                                        
         of-app of-unit                                                                 
            (of-lam ([x] [DxhasT2 : (of x unit)] DxhasT2)))).
-&lt;/twelf&gt;
-: Definitions aren't really that useful when you're specifying a language or proving theorems about it (unless you want to name some derived forms), but they are nice for doing examples.  
+
+%{! : Definitions aren't really that useful when you're specifying a language or proving theorems about it (unless you want to name some derived forms), but they are nice for doing examples.  
 
 : Does that answer make sense? [User:Drl](/wiki/user-drl/) 10:57, 13 April 2007 (EDT)
 : PS: Feel free to make yourself an account on the wiki if you don't want to sign questions like this with your IP address.
 
-:: For now, I added a couple of blurbs about eta-expansion (and definitions, too) [Proving metatheorems:Full LF](/wiki/proving-metatheorems-full-lf/) and [Proving metatheorems:Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/).  Thanks for the suggestions!  I'd appreciate any other comments like this as you work though the article.  [User:Drl](/wiki/user-drl/) 14:13, 13 April 2007 (EDT)
+:: For now, I added a couple of blurbs about eta-expansion (and definitions, too) [Proving metatheorems:Full LF](/wiki/proving-metatheorems-full-lf/) and [Proving metatheorems:Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/).  Thanks for the suggestions!  I'd appreciate any other comments like this as you work though the article.  [User:Drl](/wiki/user-drl/) 14:13, 13 April 2007 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems_talk:Representing_the_judgements_of_the_STLC).
 !}%

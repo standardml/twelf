@@ -1,16 +1,20 @@
 %%! title: "Talk:Using nat-less with %reduces"
 
-%{!
-What do you think about turning this into a tutorial on _strong induction over natural numbers_? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 11:45, 28 September 2006 (MST)
+%{! What do you think about turning this into a tutorial on _strong induction over natural numbers_? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 11:45, 28 September 2006 (MST)
 
-: Makes sense to me, as it's an extention of the [%reduces](/wiki/percent-reduces/) article. Also, some of the code may need to be jiggled to work correctly with the parser - I'll add it to the parser to do list, but I'm not sure I can get it to *not* highlight ``thing1`` in:
-
-&lt;twelf&gt;name-of-metatheorem : \{N\}
+: Makes sense to me, as it's an extention of the [%reduces](/wiki/percent-reduces/) article. Also, some of the code may need to be jiggled to work correctly with the parser - I'll add it to the parser to do list, but I'm not sure I can get it to *not* highlight ``thing1`` in: !}%
+    
+name-of-metatheorem : {N}
     thing1 N z N
-    -&gt; thing2 z N N
-    -&gt; type.&lt;/twelf&gt;
+    -> thing2 z N N
+    -> type.
 
-: — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 15:09, 28 September 2006 (MST)
+%{! : — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 15:09, 28 September 2006 (MST)
 
-:: That might be a good idea. Any fun ideas for a theorem to prove using strong induction? The other target for the "Strong induction" tutorial would be the nat-division stuff, which already has an example of using %reduces to get the induction right. --[User:DanielKLee](/wiki/user-danielklee/) 15:55, 28 September 2006 (MST)
+:: That might be a good idea. Any fun ideas for a theorem to prove using strong induction? The other target for the "Strong induction" tutorial would be the nat-division stuff, which already has an example of using %reduces to get the induction right. --[User:DanielKLee](/wiki/user-danielklee/) 15:55, 28 September 2006 (MST) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Using_nat-less_with_%25reduces).
 !}%

@@ -1,7 +1,6 @@
 %%! title: "The Twelf Project:To do"
 
-%{!
-__NOTOC__
+%{! __NOTOC__
 
 
 #
@@ -11,13 +10,27 @@ __NOTOC__
 |-
 | **Title** || **Description** || **Adopted By** || **Status**
 |-
-| **:Category:pages needing attention|Pages needing attention]]**
-| Pages that use templates like \{\{tl|needs\}\}, or \{\{tl|stub\}\} are automatically placed in this :category:pages needing attention|category]]. Some jobs are small, some are large.
+| **[[:Category:pages needing attention|Pages needing attention]]**
+| Pages that use templates like \{\{tl|needs\}\}, or \{\{tl|stub\}\} are automatically placed in this [[:category:pages needing attention|category]]. Some jobs are small, some are large.
 | Everyone 
 | _Ongoing_
 |-
-| **Special:wantedpages|Pages that don't exist]]**
-| Sets of natural numbers]].
+| **[[Special:wantedpages|Pages that don't exist]]**
+| [[Special:wantedpages]] contains a list of the pages that are linked to but don't exist yet. Sometimes the right thing to do is to adjust the target of the link to an existing page, but usually we need to make these pages.
+| Everyone 
+| _Ongoing_
+|-
+|\}
+
+#
+# Active to-do items
+
+\{| border="1" cellpadding="5" cellspacing="0"
+|-
+| **Title** || **Description** || **Adopted By** || **Status**
+|-
+| **Set/map extension**
+| A simplification of the issues Appel/Leroy seemed to have with CIVMark - from environments to simple sets of naturals, represented by lists. This exists at [[Sets of natural numbers]].
 | Rob & Dan
 | _Almost ready?_
 |-
@@ -49,7 +62,9 @@ Feel free to adopt a topic and leave the topic here if you'd like to work on it 
 |-
 | **Title** || **Description** || **Adopted By** || **Status**
 |-
-| **Non-locking [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 00:47, 11 October 2006 (EDT)
+| **Non-locking [[Project:TwelfTag|TwelfTag]]**
+| Currently, running an infinite-looping Twelf program through TwelfTag completely locks the wiki (just MediaWiki, not apache, and not the webserver) until I log in as root and kill the process. PHP-spawned processes are already set to much lower priority than httpd, and from there runaway processes can be killed at leisure, if not automatically. So the problem is just that it locks MediaWiki, which it absolutely can't be allowed to do, and I don't have enough apache/php-fu knowledge to know how to deal with the problem.
+: Update, I've made it so that PHP disassociates itself from the process after 10 seconds; this is unsatisfying and reminds me of the way Emacs works, but it doesn't permanently lock up PHP, which is good enough for now. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 00:47, 11 October 2006 (EDT)
 :: I suggest using bash and ``ulimit`` to limit the spawned twelf process to one or two seconds of CPU. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 10:59, 11 October 2006 (EDT)
 | Rob?
 | _Could use improvement_
@@ -143,7 +158,7 @@ Feel free to adopt a topic and leave the topic here if you'd like to work on it 
 | **Done**
 |-
 | **Debugging syntax highlighting**
-| The syntax highlighting module is not, and isn't really built to be, perfect. If you find a quirk in the syntax highlighting, leave it at Project:To do/Syntax highlighting]].
+| The syntax highlighting module is not, and isn't really built to be, perfect. If you find a quirk in the syntax highlighting, leave it at [[Project:To do/Syntax highlighting]].
 :: I rewrite the syntax highlighter in Haskell, it appears to be much faster to call out to Haskell than it was to parse in PHP. But because everything has been completely rewritten, there may be new and exciting bugs. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:05, 5 November 2006 (EST)
 | Everyone (discovery), Rob (fixing)
 | **Stable**
@@ -185,7 +200,9 @@ I've drafted the article, but I invite people to point out points that require c
 | **Done**
 |-
 | **CPS Conversion**
-| CPS conversion is a little tricky, mainly because the natural algorithm is itself continuation based. I have done it several times, so I can write a tutorial using my best known technique. Relies on [CPS conversion](/wiki/cps-conversion/)**
+| CPS conversion is a little tricky, mainly because the natural algorithm is itself continuation based. I have done it several times, so I can write a tutorial using my best known technique. Relies on [[reversing the polarity]].
+| Tom
+| **[CPS conversion](/wiki/cps-conversion/)**
 |-
 | **[Converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/)**
 | Simple tutorial on this, referenced in [CPS conversion](/wiki/cps-conversion/)
@@ -197,5 +214,10 @@ I've drafted the article, but I invite people to point out points that require c
 | Karl
 | _[linear logic](/wiki/linear-logic/)_
 |-
-|\}
+|\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:To_do).
 !}%

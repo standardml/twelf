@@ -1,7 +1,6 @@
 %%! title: "Judgment"
 
-%{!
-In the context of this wiki, we use the word **judgment** (or **judgement**) to refer to a relation that is defined inductively by a collection of inference rules.  The **judgments as types principle** is a name for the methodology by which judgments are represented in LF.
+%{! In the context of this wiki, we use the word **judgment** (or **judgement**) to refer to a relation that is defined inductively by a collection of inference rules.  The **judgments as types principle** is a name for the methodology by which judgments are represented in LF.
 
 #
 # A judgment in standard notation
@@ -24,19 +23,21 @@ For example, we can define a judgment that a [natural number](/wiki/natural-numb
 
 A judgment is represented in LF using the **judgments as types** methodology: we represent a judgment with an LF type, where the inhabitants of this type correspond exactly to derivations of the judgement.
 
-For example, we represent the judgment &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; using the following signature:
-&lt;twelf hidden="true"&gt;
+For example, we represent the judgment &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; using the following signature: !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 nat : type.
 z   : nat.
-s   : nat -&gt; nat.
-&lt;/twelf&gt;
-&lt;twelf&gt;
-even    : nat -&gt; type.
-even-z  : even z.
-even-s  : \{N:nat\} even N -&gt; even (s (s N)).
-&lt;/twelf&gt;
+s   : nat -> nat.
 
-The first declaration says that ``even`` is a family of types indexed by a ``nat``.  This means that for every term ``N : nat``, there is a type ``even N``.  Note that the syntax ``-&gt;`` is overloaded: it is used to classify both type-level families and term-level functions.  We then use this type family to define the types of two term constants.
+%{!  !}%
+    
+even    : nat -> type.
+even-z  : even z.
+even-s  : {N:nat} even N -> even (s (s N)).
+
+%{! The first declaration says that ``even`` is a family of types indexed by a ``nat``.  This means that for every term ``N : nat``, there is a type ``even N``.  Note that the syntax ``-&gt;`` is overloaded: it is used to classify both type-level families and term-level functions.  We then use this type family to define the types of two term constants.
 
 The first term constant, ``even-z``, has type ``even z``.  This constant represents the derivation that consists of the first inference rule above, which concludes &lt;math&gt;\mathsf\{even\}(\mathsf\{zero\})&lt;/math&gt;.  
 
@@ -65,5 +66,10 @@ The term ``even-s (s (s z)) (even-s z even-z)`` represents a derivation that 4 i
 * [Hypothetical judgement](/wiki/hypothetical-judgment/)s can be represented in LF in a [higher-order judgement](/wiki/higher-order-judgements/) manner, using LF binding to represent hypotheses.  
 * The [introductions to Twelf](/wiki/introductions-to-twelf/) discuss how judgments are represented in LF in more detail.
 
-\{\{stub\}\}
+\{\{stub\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Judgment).
 !}%

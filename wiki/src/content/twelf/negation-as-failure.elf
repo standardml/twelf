@@ -97,10 +97,16 @@ We can use a number of ``%solve`` declarations to test our ``less`` and ``gte`` 
 
 
 %{! 
-It is important to note that while these definitions work as intended as logic programs, proving appropriate meta-theorems]] about judgments that use negation as failure is problematic or impossible. 
+It is important to note that while these definitions work as intended as logic programs, proving appropriate [[meta-theorems]] about judgments that use negation as failure is problematic or impossible. 
 
 **Note from dklee: I had to run home to take care of some stuff. I will finish documenting this later in the evening.**
 
 \{\{stub\}\}
 
  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Negation_as_failure).
+!}%

@@ -1,6 +1,6 @@
 %%! title: "Computation and Deduction 2009/20090203"
 
-%{! Code from class, March 2 !}%
+%{! Code from class, March 2. !}%
 
 ttp : type. %name ttp T.
 
@@ -130,3 +130,9 @@ correct' : trans E T V -> ttrans T T' -> tof V (tnot (tnot T')) -> type.
 
 %worlds (transbind) (correct _ _ _).
 %total D (correct D _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090203).
+!}%

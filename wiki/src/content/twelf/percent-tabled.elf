@@ -1,7 +1,6 @@
 %%! title: "%tabled"
 
-%{!
-The ``**%tabled**`` directive informs Twelf's [tabled logic programming](/wiki/tabled-logic-programming/) engine to record derivations for a certain type family _at most once_ during a query started with a ``[%querytabled](/wiki/percent-querytabled/)`` directive. It is therefore a bit like ``[Deterministic declaration](/wiki/deterministic-declaration/)`` in that it changes Twelf's search behavior for a single type family.
+%{! The ``**%tabled**`` directive informs Twelf's [tabled logic programming](/wiki/tabled-logic-programming/) engine to record derivations for a certain type family _at most once_ during a query started with a ``[%querytabled](/wiki/percent-querytabled/)`` directive. It is therefore a bit like ``[Deterministic declaration](/wiki/deterministic-declaration/)`` in that it changes Twelf's search behavior for a single type family.
 
 #
 # See also
@@ -9,5 +8,10 @@ The ``**%tabled**`` directive informs Twelf's [tabled logic programming](/wiki/t
 * [Tabled logic programming](/wiki/tabled-logic-programming/)
 * \{\{guide|chapter=5|section=31|title=Tabled Logic Programming\}\}
 
-\{\{keyword|key=querytabled\}\}
+\{\{keyword|key=querytabled\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25tabled).
 !}%

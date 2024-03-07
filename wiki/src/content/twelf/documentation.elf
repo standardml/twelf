@@ -1,7 +1,6 @@
 %%! title: "Documentation"
 
-%{!
-#
+%{! #
 # Learn Twelf on the wiki
 
 &lt;!-- in general, this section should be kept consistent with the main page --&gt;
@@ -42,11 +41,16 @@ Besides information on this wiki, there have been a number of papers and tutoria
 #
 # Experience reports and commentary
 
-* poplmark:The POPLmark Challenge|The POPLmark Challenge]] has a page on poplmark:Twelf|Twelf]] and commentary on the POPLmark poplmark:submission from Carnegie Mellon|submission from Carnegie Mellon]] that uses Twelf.
+* [[poplmark:The POPLmark Challenge|The POPLmark Challenge]] has a page on [[poplmark:Twelf|Twelf]] and commentary on the POPLmark [[poplmark:submission from Carnegie Mellon|submission from Carnegie Mellon]] that uses Twelf.
 * Andrew Appel and Xavier Leroy's [http://www.inria.fr/rrrt/rr-5914.html A list-machine benchmark for mechanized metatheory] serves as both a tutorial and an experience report on using Twelf to prove theroems about compilers.
 
 #
 # Other
 
-Is there some form of documentation that should be on this wiki but isn't? Add it to [The Twelf Project:To do](/wiki/the-twelf-project-to-do/) list or [The_Twelf_Project:Contributing](/wiki/the-twelf-project-contributing/) it.
+Is there some form of documentation that should be on this wiki but isn't? Add it to [The Twelf Project:To do](/wiki/the-twelf-project-to-do/) list or [The_Twelf_Project:Contributing](/wiki/the-twelf-project-contributing/) it. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Documentation).
 !}%

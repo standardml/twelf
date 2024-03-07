@@ -1,7 +1,6 @@
 %%! title: "Talk:Equality"
 
-%{!
-#
+%{! #
 # Deep equality
 
 Not all equalities that are are _not_ syntactic equality are "defined inductively over the structure of terms". I know of some algorithmic equalities that are a combination of syntax directed and type directed. Some declarative equality systems aren't necessarily anything directed. 
@@ -28,5 +27,10 @@ I think this may need to turn into a disambiguation page going to two or three d
 — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 12:20, 9 October 2006 (EDT)
 :* But you can make _respects_ lemmas for both deep and shallow equality (and sometimes you have to). They're just really easy if you define equality by way of LF's notion of equality. The fact that we have to write these lemmas at all is a demonstration that Twelf has no special support that would distinguish the first and second bullets as being really different. The third is just another example of defining an equivalence relation (in this case by quotienting), which is a good example but not a distinct category. (IMO) (Maybe I should put "(IMO)" in my sig. ;)) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 14:45, 9 October 2006 (EDT)
 
-::* I think I now have something that makes sense based on your comments - Tom, care to weigh in? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:03, 9 October 2006 (EDT)
+::* I think I now have something that makes sense based on your comments - Tom, care to weigh in? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:03, 9 October 2006 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Equality).
 !}%

@@ -1,23 +1,22 @@
 %%! title: "User talk:DanielKLee"
 
-%{!
-#
+%{! #
 # My To-Do/Wish List
 
 * Fill in the %trustme example for the [%trustme](/wiki/percent-trustme/) article
 * Tutorial: Introductory series. Tutorials for people who start knowing nothing about Twelf
 * Tutorial: Manually proving substitution lemmas [for dependently typed languages], i.e. the slide
 
-You should add that stuff to the page I made at Project:To do]] - I've already listed your adoption of the %trustme article — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 07:43, 22 September 2006 (MST)
+You should add that stuff to the page I made at [[Project:To do]] - I've already listed your adoption of the %trustme article — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 07:43, 22 September 2006 (MST)
 
 #
 # Fixup
 
 I deleted the fictonal blog entries - until we know what we're doing, when we're doing it, and where things are permanently hosted, I don't think we should spend time on the blog - it's just something I wanted to make sure was there as part of the equation. In any case, my thought is that blog updates will be something along the lines of "we've now added a tutorial describing closure conversion," a paragraph about why that's important/hard/easy, and a link to a page on the wiki, where we have pretty things like syntax highlighting.
 
-You can find links that let you edit individual sections of the front page at [Talk:Main Page](/wiki/talk-main-page/), a fact which I have added to Project:Contributing]].
+You can find links that let you edit individual sections of the front page at [Talk:Main Page](/wiki/talk-main-page/), a fact which I have added to [[Project:Contributing]].
 
-Also, was something like [Twelf style guide](/wiki/twelf-style-guide/), which also might have been what you were thinking about. - [User:Rsimmons](/wiki/user-rsimmons/) 09:05, 6 September 2006 (MST)
+Also, was something like [[Project:Style guide]] what you were thinking about? We also should think about a [Twelf style guide](/wiki/twelf-style-guide/), which also might have been what you were thinking about. - [User:Rsimmons](/wiki/user-rsimmons/) 09:05, 6 September 2006 (MST)
 
 #
 # CVS
@@ -31,7 +30,7 @@ Would a simpler version of your "slide" example be the storetype weakining issue
 
 : That is the non-dependent types version of the technique. I was planning on doing a more generalized explanation of this (the current write-up is very Rob's thesis specific and fails to call the "extra induction" a substitution lemma), which would lead into the version for dependent types. The "slide" substitution for dependent types isn't as generally useful as explicit contexts, but it's among the most badass Twelf hacks I know. If you don't mind, I'd like to take this one over, but definitely do transwiki the other answers from the old Q&A.
 
-:: 'swhy I asked. Go for it, and horray for general solutions! User:128.2.223.28|128.2.223.28]] 11:57, 22 September 2006 (MST)
+:: 'swhy I asked. Go for it, and horray for general solutions! [[User:128.2.223.28|128.2.223.28]] 11:57, 22 September 2006 (MST)
 
 #
 # ``can`` vs. expressiveness
@@ -50,7 +49,7 @@ I'm at home today, so no coffee for me. Doesn't seem like anybody did anything s
 #
 # "Group" doesn't work anymore
 
-Using include="..." works similarly - I had to change it to handle multiple inheritance. See [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:22, 11 October 2006 (EDT)
+Using include="..." works similarly - I had to change it to handle multiple inheritance. See [[Project:TwelfTag|the TwelfTag page]] for an explanation of the modified feature, I'm sorry about that. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:22, 11 October 2006 (EDT)
 
 : Oh I see... *cry* --[User:DanielKLee](/wiki/user-danielklee/) 17:34, 11 October 2006 (EDT)
 
@@ -58,5 +57,10 @@ Using include="..." works similarly - I had to change it to handle multiple inhe
 
 ::: Done. Don't say I never did anything for you :). — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:44, 11 October 2006 (EDT)
 
-::: Thanks!! --[User:DanielKLee](/wiki/user-danielklee/) 17:45, 11 October 2006 (EDT)
+::: Thanks!! --[User:DanielKLee](/wiki/user-danielklee/) 17:45, 11 October 2006 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User_talk:DanielKLee).
 !}%

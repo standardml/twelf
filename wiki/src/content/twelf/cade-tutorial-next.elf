@@ -1,7 +1,6 @@
 %%! title: "CADE Tutorial/Next"
 
-%{!
-If you want to read more about Twelf, you can check out the [introductions to Twelf](/wiki/introductions-to-twelf/), [tutorials](/wiki/tutorials/), and [case studies](/wiki/case-studies/) on the wiki.
+%{! If you want to read more about Twelf, you can check out the [introductions to Twelf](/wiki/introductions-to-twelf/), [tutorials](/wiki/tutorials/), and [case studies](/wiki/case-studies/) on the wiki.
 
 We strongly recommend that you work on some of the following exercises: you'll get a flavor for the experience of defining systems and proving theorems in Twelf.  If we have time at the end of the tutorial, we'll break into small groups and you can pick an interesting problem or two to work on.  If you get stuck, ask a TA!  Refer to the solutions to check your work (though Server OK from Twelf should be assurance enough!)  Feel free to ask us for help during the rest of the conference. 
 
@@ -17,5 +16,10 @@ We strongly recommend that you work on some of the following exercises: you'll g
 * [POPL Tutorial/cps-problem2](/wiki/popl-tutorial-cps-problem2/) -- Define a higher-order variant of the CPS conversion that never creates administrative redexes ([POPL Tutorial/CPS Solution2](/wiki/popl-tutorial-cps-solution2/))
 * [POPL Tutorial/Church Rosser (Problem)](/wiki/popl-tutorial-church-rosser-problem/) -- Prove Church and Rosser's seminal result via a Diamond Lemma for the untyped lambda calculus. ([POPL Tutorial/Church Rosser](/wiki/church-rosser-w-identity-reduction/))
 * [POPL Tutorial/Exceptions-problem](/wiki/popl-tutorial-exceptions-problem/) -- Prove type safety for an extension of MinML with exceptions defined using structural operational semantics with a "raises" judgement.  ([POPL Tutorial/Exceptions](/wiki/popl-tutorial-exceptions/))
-* [POPL Tutorial/Typed bracket abstraction](/wiki/popl-tutorial-typed-bracket-abstraction/) -- Explore the relation between the simply-typed lambda calculus and combinatory logic using Curry's classic bracket abstraction algorithm.  ([POPL Tutorial/Typed bracket abstraction (solution)](/wiki/popl-tutorial-typed-bracket-abstraction-solution/))
+* [POPL Tutorial/Typed bracket abstraction](/wiki/popl-tutorial-typed-bracket-abstraction/) -- Explore the relation between the simply-typed lambda calculus and combinatory logic using Curry's classic bracket abstraction algorithm.  ([POPL Tutorial/Typed bracket abstraction (solution)](/wiki/popl-tutorial-typed-bracket-abstraction-solution/)) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/CADE_Tutorial/Next).
 !}%

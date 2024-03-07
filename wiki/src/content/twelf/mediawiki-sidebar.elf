@@ -1,7 +1,6 @@
 %%! title: "MediaWiki:Sidebar"
 
-%{!
-* the twelf wiki
+%{! * the twelf wiki
 ** mainpage|mainpage
 ** About The Twelf Project|The Twelf Project
 ** Download|Download Twelf
@@ -19,5 +18,10 @@
 
 * reference
 ** Bibliography of LF|LF bibliography
-** Research projects using Twelf|Research with Twelf
+** Research projects using Twelf|Research with Twelf !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/MediaWiki:Sidebar).
 !}%

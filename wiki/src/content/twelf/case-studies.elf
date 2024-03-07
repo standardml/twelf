@@ -1,7 +1,6 @@
 %%! title: "Case studies"
 
-%{!
-The following **case studies** present interesting applications of Twelf.  Some of these case studies use proof techniques that are explained in the [tutorials](/wiki/tutorials/), so you may wish to read those first.  
+%{! The following **case studies** present interesting applications of Twelf.  Some of these case studies use proof techniques that are explained in the [tutorials](/wiki/tutorials/), so you may wish to read those first.  
 
 Feel free to add your own case studies here.  We would welcome experience reports that document not just the Twelf code you wrote but your experience writing it. (If the goal of your article is to teach a specific Twelf technique, it should instead be a [tutorials](/wiki/tutorials/), and if your Twelf code is off-site, you should instead add it to the list of [Research projects using Twelf](/wiki/research-projects-using-twelf/).)
 
@@ -60,5 +59,10 @@ Feel free to add your own case studies here.  We would welcome experience report
 : An encoding of a polymorphic linear lambda calculus with fixed points in LF, and a metatheorem proving that ground contextual equivalence with respect to a call-by-name semantics coincides with ground contextual equivalence with respect to a call-by-value semantics.
 
 * [Lax logic](/wiki/lax-logic/), by [User:Rsimmons](/wiki/user-rsimmons/)
-: Establishing the correspondence between two different presentations of propositional lax logic and showing soundness and completeness of the two systems, in the process establishing cut and identity.
+: Establishing the correspondence between two different presentations of propositional lax logic and showing soundness and completeness of the two systems, in the process establishing cut and identity. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Case_studies).
 !}%

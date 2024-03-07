@@ -1,7 +1,6 @@
 %%! title: "Congruence relation"
 
-%{!
-A congruence relation on a language is an [equivalence relation](/wiki/equivalence-relation/) that is compatible with the term constructors of that language.
+%{! A congruence relation on a language is an [equivalence relation](/wiki/equivalence-relation/) that is compatible with the term constructors of that language.
 
 Consider the untyped lambda-calculus:
 
@@ -21,5 +20,10 @@ and the compatibility rules,
   \{\; \over x = x\} \qquad
   \{ e_1 = e_2 \over \lambda x.\, e_1 = \lambda x.\, e_2 \} \qquad
   \{ e_1 = e_1' \qquad e_2 = e_2' \over e_1\ e_2 = e_1'\ e_2' \}.
-&lt;/math&gt;
+&lt;/math&gt; !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Congruence_relation).
 !}%

@@ -1,39 +1,40 @@
 %%! title: "Proving metatheorems:Natural numbers: Answers to exercises"
 
-%{!
-This page contains answers to the exercises listed [Proving metatheorems:Summary: the natural numbers](/wiki/proving-metatheorems-summary-the-natural-numbers/).  If you've solved an exercise that isn't answered on this page, or if you have a different solution to an exercise, please add it here.
+%{! This page contains answers to the exercises listed [Proving metatheorems:Summary: the natural numbers](/wiki/proving-metatheorems-summary-the-natural-numbers/).  If you've solved an exercise that isn't answered on this page, or if you have a different solution to an exercise, please add it here.
 
 #
 # Commutativity of Addition
 
-_State and prove a metatheorem showing that ``plus`` is commutative._
+_State and prove a metatheorem showing that ``plus`` is commutative._ !}%
+    
+%{! (options removed from twelftag: import="pluscommute" hidden="true") !}%
 
-&lt;twelf import="pluscommute" hidden="true"&gt;
 nat : type.
 z   : nat.
-s   : nat -&gt; nat.
+s   : nat -> nat.
 
-plus   : nat -&gt; nat -&gt; nat -&gt; type.
+plus   : nat -> nat -> nat -> type.
 plus-z : plus z N2 N2.
 plus-s : plus (s N1) N2 (s N3)
-          &lt;- plus N1 N2 N3.
+          <- plus N1 N2 N3.
 
-even : nat -&gt; type.
+even : nat -> type.
 even-z : even z.
 even-s : even (s (s N)) 
-          &lt;- even N.
-&lt;/twelf&gt;
-The theorem may be stated:
+          <- even N.
 
-&lt;twelf discard="true"&gt;
-plus-commutes : plus N1 N2 N3 -&gt; plus N2 N1 N3 -&gt; type.
+%{! The theorem may be stated: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
+plus-commutes : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
 %mode plus-commutes +D1 -D2.
-&lt;/twelf&gt;
 
-However, before we prove this theorem, we first prove two lemmas.  The first says that for any natural number &lt;math&gt;n&lt;/math&gt;, &lt;math&gt;n+0=n&lt;/math&gt;.  This is similar to the constant ``plus-z``, but the order of the arguments to ``plus`` has been changed:
+%{! However, before we prove this theorem, we first prove two lemmas.  The first says that for any natural number &lt;math&gt;n&lt;/math&gt;, &lt;math&gt;n+0=n&lt;/math&gt;.  This is similar to the constant ``plus-z``, but the order of the arguments to ``plus`` has been changed: !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
 
-&lt;twelf import="pluscommute"&gt;
-plus-zero-id :  \{N1 : nat\} plus N1 z N1 -&gt; type.
+plus-zero-id :  {N1 : nat} plus N1 z N1 -> type.
 %mode plus-zero-id +N -D.
 
 pzidz : plus-zero-id
@@ -43,16 +44,16 @@ pzidz : plus-zero-id
 pzids : plus-zero-id
          (s N)
          (plus-s D : plus (s N) z (s N))
-          &lt;- plus-zero-id N D.
+          <- plus-zero-id N D.
 
 %worlds () (plus-zero-id _ _).
 %total N (plus-zero-id N _).
-&lt;/twelf&gt;
 
-Our second lemma states that if &lt;math&gt;\mathsf\{plus\}(n_1,n_2,n_3)&lt;/math&gt; then &lt;math&gt;\mathsf\{plus\}(n_1, \mathsf\{succ\}(n_2), \mathsf\{succ\}(n_3))&lt;/math&gt;.  This lemma is similar to the constant ``plus-s``, but the order of the arguments to ``plus`` has been changed:
+%{! Our second lemma states that if &lt;math&gt;\mathsf\{plus\}(n_1,n_2,n_3)&lt;/math&gt; then &lt;math&gt;\mathsf\{plus\}(n_1, \mathsf\{succ\}(n_2), \mathsf\{succ\}(n_3))&lt;/math&gt;.  This lemma is similar to the constant ``plus-s``, but the order of the arguments to ``plus`` has been changed: !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
 
-&lt;twelf import="pluscommute"&gt;
-plus-flip : plus N1 N2 N3 -&gt; plus N1 (s N2) (s N3) -&gt; type.
+plus-flip : plus N1 N2 N3 -> plus N1 (s N2) (s N3) -> type.
 %mode plus-flip +D1 -D2.
 
 pfz : plus-flip 
@@ -62,80 +63,80 @@ pfz : plus-flip
 pfs : plus-flip
        (plus-s Dplus : plus (s N1) N2 (s N3))
        (plus-s DIH   : plus (s N1) (s N2) (s (s N3)))
-         &lt;- plus-flip Dplus DIH.
+         <- plus-flip Dplus DIH.
 
 %worlds () (plus-flip _ _).
 %total D (plus-flip D _).
-&lt;/twelf&gt;
 
-Finally, using these two lemmas, we may prove the theorem itself:
+%{! Finally, using these two lemmas, we may prove the theorem itself: !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
 
-&lt;twelf import="pluscommute"&gt;
-plus-commutes : plus N1 N2 N3 -&gt; plus N2 N1 N3 -&gt; type.
+plus-commutes : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
 %mode plus-commutes +D1 -D2.
 
 pcz : plus-commutes
        _
        D
-        &lt;- plus-zero-id N1 D.
+        <- plus-zero-id N1 D.
        
 pcs : plus-commutes       
        (plus-s Dplus: plus (s N1') N2 (s N3'))
        D
-        &lt;- plus-commutes Dplus DIH
-        &lt;- plus-flip DIH D.
+        <- plus-commutes Dplus DIH
+        <- plus-flip DIH D.
 
 %worlds () (plus-commutes _ _).
 %total D (plus-commutes D _).
-&lt;/twelf&gt;
 
-#
+%{! #
 # Even/odd numbers and addition
 
 #
 #
-# Define the odd numbers
+# Define the odd numbers !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
 
-&lt;twelf import="pluscommute"&gt;
-odd   : nat -&gt; type.
+odd   : nat -> type.
 odd-1 : odd (s z).
-odd-s : odd N -&gt; odd (s (s N)).
-&lt;/twelf&gt;
+odd-s : odd N -> odd (s (s N)).
 
+%{! #
 #
-#
-# The successor of an even number is an odd number, and vice versa
+# The successor of an even number is an odd number, and vice versa !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
 
-&lt;twelf import="pluscommute"&gt;
-succ-even : even N -&gt; odd (s N) -&gt; type.
+succ-even : even N -> odd (s N) -> type.
 %mode succ-even +D1 -D2.
 
 sez : succ-even even-z odd-1.
 
 ses : succ-even (even-s EvenA) (odd-s OddA)
-       &lt;- succ-even EvenA OddA.
+       <- succ-even EvenA OddA.
 
 %worlds () (succ-even _ _).
 %total D (succ-even D _).
 
-succ-odd : odd N -&gt; even (s N) -&gt; type.
+succ-odd : odd N -> even (s N) -> type.
 %mode succ-odd +D1 -D2.
 
 so1 : succ-odd odd-1 (even-s even-z).
 
 sos : succ-odd (odd-s OddA) (even-s EvenA)
-       &lt;- succ-odd OddA EvenA.
+       <- succ-odd OddA EvenA.
 
 %worlds () (succ-odd _ _).
 %total D (succ-odd D _).
-&lt;/twelf&gt;
 
+%{! #
 #
-#
-# The sum of an even and an odd number is odd
+# The sum of an even and an odd number is odd !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
 
-&lt;twelf import="pluscommute"&gt;
-sum-even-odd : even N1 -&gt; odd N2 -&gt; plus N1 N2 N3 -&gt; odd N3 -&gt; type.
+sum-even-odd : even N1 -> odd N2 -> plus N1 N2 N3 -> odd N3 -> type.
 %mode sum-even-odd +D1 +D2 +D3 -D4.
 
 seoz : sum-even-odd even-z OddN2 plus-z OddN2.
@@ -145,38 +146,38 @@ seos : sum-even-odd
        OddN2
        (plus-s (plus-s PlusN1N2N3))
        (odd-s OddN3)
-       &lt;- sum-even-odd EvenN1 OddN2 PlusN1N2N3 OddN3.
+       <- sum-even-odd EvenN1 OddN2 PlusN1N2N3 OddN3.
 
 %worlds () (sum-even-odd _ _ _ _).
 %total D (sum-even-odd D _ _ _).
-&lt;/twelf&gt;
 
+%{! #
 #
-#
-# The sum of an odd plus an even number is odd
+# The sum of an odd plus an even number is odd !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
 
-&lt;twelf import="pluscommute"&gt;
-sum-odd-even : odd N1 -&gt; even N2 -&gt; plus N1 N2 N3 -&gt; odd N3 -&gt; type.
+sum-odd-even : odd N1 -> even N2 -> plus N1 N2 N3 -> odd N3 -> type.
 %mode sum-odd-even +D1 +D2 +D3 -D4.
 
 soe1 : sum-odd-even odd-1 EvenN2 _ OddN3
-        &lt;- succ-even EvenN2 OddN3.
+        <- succ-even EvenN2 OddN3.
 
 soes : sum-odd-even
         (odd-s OddN1)
         EvenN2
         (plus-s (plus-s PlusN1N2N3))
         (odd-s OddN3)
-        &lt;- sum-odd-even OddN1 EvenN2 PlusN1N2N3 OddN3.
+        <- sum-odd-even OddN1 EvenN2 PlusN1N2N3 OddN3.
 
 %worlds () (sum-odd-even _ _ _ _).
 %total D (sum-odd-even D _ _ _).
-&lt;/twelf&gt;
 
-or we can use the previously proved commutativity lemma of plus:
+%{! or we can use the previously proved commutativity lemma of plus: !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
 
-&lt;twelf import="pluscommute"&gt;
-sum-odd-even : odd M -&gt; even N -&gt; plus M N P -&gt; odd P -&gt; type.
+sum-odd-even : odd M -> even N -> plus M N P -> odd P -> type.
 %mode sum-odd-even +O +E +P -O2.
 
 soe : sum-odd-even
@@ -184,29 +185,35 @@ soe : sum-odd-even
        (E : even N)
        (A : plus M N P)
        (O0 : odd P)
-       &lt;- plus-commutes A A0
-       &lt;- sum-even-odd E O A0 O0.
+       <- plus-commutes A A0
+       <- sum-even-odd E O A0 O0.
 
 %worlds () (sum-odd-even _ _ _ _).
 %total D (sum-odd-even D _ _ _).
-&lt;/twelf&gt;
 
+%{! #
 #
-#
-# The sum of two odd numbers is even
+# The sum of two odd numbers is even !}%
+    
+%{! (options removed from twelftag: import="pluscommute" check="true") !}%
 
-&lt;twelf import="pluscommute" check="true"&gt;
-sum-odds : odd N1 -&gt; odd N2 -&gt; plus N1 N2 N3 -&gt; even N3 -&gt; type.
+sum-odds : odd N1 -> odd N2 -> plus N1 N2 N3 -> even N3 -> type.
 %mode sum-odds +D1 +D2 +D3 -D4.
 
 soz : sum-odds odd-1 OddN2 _ EvenN3
-       &lt;- succ-odd OddN2 EvenN3.
+       <- succ-odd OddN2 EvenN3.
 
 sos : sum-odds (odd-s OddN1) OddN2 (plus-s (plus-s PlusN1N2N3)) (even-s
 EvenN3)
-       &lt;- sum-odds OddN1 OddN2 PlusN1N2N3 EvenN3.
+       <- sum-odds OddN1 OddN2 PlusN1N2N3 EvenN3.
 
 %worlds () (sum-odds _ _ _ _).
 %total D (sum-odds D _ _ _).
-&lt;/twelf&gt;
+
+%{!  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Natural_numbers:_Answers_to_exercises).
 !}%

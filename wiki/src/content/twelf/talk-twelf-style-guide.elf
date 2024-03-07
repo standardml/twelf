@@ -1,7 +1,6 @@
 %%! title: "Talk:Twelf style guide"
 
-%{!
-#
+%{! #
 # Uninhabited type flame war goes here
 
 I noticed there was some discussion about this in another place, but while I believe it would be a good idea to standardize on the name of the uninhabited type, "void" is not really standard or "common practice" yet. (I've seen false, falsity, absurd, and void. I use "uninhabited"). We probably need to have a "standards"/style guide meeting to decide these sorts of issues. 
@@ -12,16 +11,16 @@ I noticed there was some discussion about this in another place, but while I bel
 #
 # Note: you *can* use uppercase identifiers
 
-The following twelf code checks (1.5R1) (and in fact syntax highlights much more correctly than it does under the wiki syntax highlighter. I won't bother fixing the wiki syntax highlighting modules - the syntax module only needs to highlight code that is well-styled for me to be happy.
-
-&lt;twelf&gt;NAT : type.
+The following twelf code checks (1.5R1) (and in fact syntax highlights much more correctly than it does under the wiki syntax highlighter. I won't bother fixing the wiki syntax highlighting modules - the syntax module only needs to highlight code that is well-styled for me to be happy. !}%
+    
+NAT : type.
 
 Z : NAT.
-S : NAT -&gt; NAT.
+S : NAT -> NAT.
 
-SIX = (S (S (S (S (S (S Z)))))).&lt;/twelf&gt;
+SIX = (S (S (S (S (S (S Z)))))).
 
-So we should not say the parser doesn't allow it, we should say that the parser doesn't allow it but _use is punishable by **eternal damnation**_. — this is a [User:rsimmons](/wiki/user-rsimmons/) (a [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 05:42, 7 September 2006 (MST)
+%{! So we should not say the parser doesn't allow it, we should say that the parser doesn't allow it but _use is punishable by **eternal damnation**_. — this is a [User:rsimmons](/wiki/user-rsimmons/) (a [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 05:42, 7 September 2006 (MST)
 
 #
 # %abbrev
@@ -65,21 +64,25 @@ What should its designation be? I want to avoid the use of ``eq'-nat`` or ``eq-n
 #
 # Whitespace
 
-This is nitpicking, but if I have a really stupid lemma I may just want to get it out of the way as quickly as possible: &lt;twelf&gt;nat-neq-symm : nat-neq N1 N2 -&gt; nat-neq N2 N1 -&gt; type.
+This is nitpicking, but if I have a really stupid lemma I may just want to get it out of the way as quickly as possible: !}%
+    
+nat-neq-symm : nat-neq N1 N2 -> nat-neq N2 N1 -> type.
 %mode nat-neq-symm +D1 -D2.
 - : nat-neq-symm nat-neq/gt nat-neq/lt.
 - : nat-neq-symm nat-neq/lt nat-neq/gt.
 - : nat-neq-symm (nat-neq/s N1) (nat-neq/s N2)
-     &lt;- nat-neq-symm N1 N2.
+     <- nat-neq-symm N1 N2.
 %worlds () (nat-neq-symm _ _).
-%total T (nat-neq-symm T _).&lt;/twelf&gt; 
-Do you think the whitespace currently recommended in the document is necessary in these cases? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:15, 22 September 2006 (MST)
+%total T (nat-neq-symm T _).
+
+%{! Do you think the whitespace currently recommended in the document is necessary in these cases? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:15, 22 September 2006 (MST)
 
 
 : Necessary to make the proof understandable? Probably not. Necessary to keep the structure of the code-base uniform? Probably. I try not to differentiate between how I format stupid lemmas and lemmas that make me feel stupid, out of karmic fear that the lemmas will catch on and I'll have to do more of the second kind. --[User:DanielKLee](/wiki/user-danielklee/) 09:58, 23 September 2006 (MST)
 
-:: I'll buy it. So is this the style we're going for? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 12:49, 23 September 2006 (MST)
-&lt;twelf&gt;nat-neq-symm : nat-neq N1 N2 -&gt; nat-neq N2 N1 -&gt; type.
+:: I'll buy it. So is this the style we're going for? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 12:49, 23 September 2006 (MST) !}%
+    
+nat-neq-symm : nat-neq N1 N2 -> nat-neq N2 N1 -> type.
 %mode nat-neq-symm +D1 -D2.
 
 - : nat-neq-symm nat-neq/gt nat-neq/lt.
@@ -87,13 +90,12 @@ Do you think the whitespace currently recommended in the document is necessary i
 - : nat-neq-symm nat-neq/lt nat-neq/gt.
 
 - : nat-neq-symm (nat-neq/s N1) (nat-neq/s N2)
-     &lt;- nat-neq-symm N1 N2.
+     <- nat-neq-symm N1 N2.
 
 %worlds () (nat-neq-symm _ _).
-%total T (nat-neq-symm T _).&lt;/twelf&gt;
+%total T (nat-neq-symm T _).
 
-
-:: Yes. --[User:DanielKLee](/wiki/user-danielklee/) 12:57, 23 September 2006 (MST)
+%{! :: Yes. --[User:DanielKLee](/wiki/user-danielklee/) 12:57, 23 September 2006 (MST)
 
 : I actually prefer the less-space version.  I wrote the rational signature with 200+ theorems. By omitting blank lines except between theorems, it easily parses into a series of chunks.  If I used two blank lines between each theorem and one line between each case, the whole thing would turn into a horrid mess. [User:Boyland](/wiki/user-boyland/) 23:55, 11 March 2007 (EDT)
 
@@ -128,8 +130,8 @@ I was looking over the style guide, and I noticed the stuff about "word-order" a
 #
 # Anticipating modules
 
-I'd like to use a naming convention that simulates modules: short names that are then abbrev'ed at the end to have a name like SIG.name, except that of course you can't use ".".  Any opinions on what character would be used as a module separator, should modules ever be added?  It'd be nice if the character were low-impact (ink-wise). Currently I'm experimenting with backquote.  
-&lt;twelf&gt;
+I'd like to use a naming convention that simulates modules: short names that are then abbrev'ed at the end to have a name like SIG.name, except that of course you can't use ".".  Any opinions on what character would be used as a module separator, should modules ever be added?  It'd be nice if the character were low-impact (ink-wise). Currently I'm experimenting with backquote. !}%
+    
 %%%% Imports
 
 %abbrev nat = nat`nat.
@@ -143,19 +145,19 @@ I'd like to use a naming convention that simulates modules: short names that are
 
 frv : type.
 
-one : rat -&gt; nat -&gt; frv.
+one : rat -> nat -> frv.
 
 
-eq : frv -&gt; frv -&gt; type.
+eq : frv -> frv -> type.
 
 eq/ : frv_eq F F.
 
 
-ge : frv -&gt; frv -&gt; type.
+ge : frv -> frv -> type.
 
 ge/ : frv_ge (one X O) (one Y O')
-    &lt;- nat`eq O O'           %% abbreviated import not necessary
-    &lt;- gre X Y.
+    <- nat`eq O O'           %% abbreviated import not necessary
+    <- gre X Y.
 
 ...
 
@@ -164,8 +166,8 @@ ge/ : frv_ge (one X O) (one Y O')
 %abbrev frv`frv = frv.
 %abbrev frv`eq = eq.
 %abbrev frv`ge = ge.
-&lt;/twelf&gt;
-(Module names can't be UPPERCASE without a lot of pain.)
+
+%{! (Module names can't be UPPERCASE without a lot of pain.)
 To those abbrev-sceptics, it makes a difference because identifiers (like "eq") can be reused between "modules" if there is an "abbrev"iated (!) long name. [User:Boyland](/wiki/user-boyland/) 00:18, 12 March 2007 (EDT)
 : Just need to add that slash (the character recommended by the existing style guide for this purpose) doesn't seem like a good idea since it is already (over-)used for other things. [User:Boyland](/wiki/user-boyland/) 00:23, 12 March 2007 (EDT)
 
@@ -175,5 +177,10 @@ To those abbrev-sceptics, it makes a difference because identifiers (like "eq") 
 ::: I've used an "abbrev import" style before myself, but not quite the same way. If you use short names (``eq``) and then re-declare them as long names with abbrev (``frv`eq``) as you do, then the emacs buffer is going to be filled with shadowed ``%eq%``, and you may have to go back into your "module" to export 50 more things like ``gt/`` in order to prove metatheorems later. If, alternatively, you write things in "long style" and then try to abbrev them down when you need them in a particular place (so you do "abbrev import" but not "abbrev export"), you don't have that metatheorem problem (you can always access anything with the long name). From my experience trying this, it is sometimes hard to read error messages when you write down as ``(s (s (s (s z))))`` and the emacs buffer displays ``(nat/s (nat/s (nat/s (nat/s nat/z))))`` - but you may find that this is not a significant problem for you. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 11:16, 12 March 2007 (EDT)
 :::: Of ```-_+/\,`` only ```-/,`` can be typed on a US keyboard without modifiers, so I think those are to be slightly preferred. I use / since I like - as a word separator. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 14:05, 12 March 2007 (EDT)
 ::::: Right, I'd forgotten that that was why ``_`` fell out of favor, good point. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 19:06, 12 March 2007 (EDT)
-:::: Regarding the need the reload a whole buffer to export an additional thing; in my current code where I use this convention, I use a perl script to export *everything*.  Regarding ` vs. / vs -: I also use '-' as a word separator in theorems.  I don't want / since I want something that can clearly be substituted with ``.`` (the character shouldn't be overloaded) when real modules arrive.  (It seems modules have been heralded since 2001.  What's their status?).  [User:Boyland](/wiki/user-boyland/) 20:50, 12 March 2007 (EDT)
+:::: Regarding the need the reload a whole buffer to export an additional thing; in my current code where I use this convention, I use a perl script to export *everything*.  Regarding ` vs. / vs -: I also use '-' as a word separator in theorems.  I don't want / since I want something that can clearly be substituted with ``.`` (the character shouldn't be overloaded) when real modules arrive.  (It seems modules have been heralded since 2001.  What's their status?).  [User:Boyland](/wiki/user-boyland/) 20:50, 12 March 2007 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Twelf_style_guide).
 !}%

@@ -1,59 +1,57 @@
 %%! title: "Proving metatheorems:Proving metatheorems about the STLC"
 
-%{!
-\{\{proving metatheorems
+%{! \{\{proving metatheorems
   | prev = Representing the judgements of the STLC
   | prevname = Representing judgements
   | next = Proving totality assertions in non-empty contexts
   | nextname = Proving totality assertions in non-empty contexts\}\}
 
-In this section, we show how to prove type preservation for the STLC.  As you will see, this theorem is really no harder than the metatheorems about the natural numbers that we proved above.  For reference, we recap the entire LF signature representing the STLC:
-
-&lt;twelf&gt;
+In this section, we show how to prove type preservation for the STLC.  As you will see, this theorem is really no harder than the metatheorems about the natural numbers that we proved above.  For reference, we recap the entire LF signature representing the STLC: !}%
+    
 %% Syntax
 
 tp    : type.
 unit  : tp.
-arrow : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
 
 tm    : type.
 empty : tm.
-app   : tm -&gt; tm -&gt; tm.
-lam   : tp -&gt; (tm -&gt; tm) -&gt; tm.
+app   : tm -> tm -> tm.
+lam   : tp -> (tm -> tm) -> tm.
 
 %% Static Semantics
 
-of       : tm -&gt; tp -&gt; type.
+of       : tm -> tp -> type.
 of-empty : of empty unit.
 of-lam   : of (lam T2 ([x] E x)) (arrow T2 T)
-            &lt;- (\{x: tm\} of x T2 -&gt; of (E x) T).
+            <- ({x: tm} of x T2 -> of (E x) T).
 of-app   : of (app E1 E2) T
-            &lt;- of E1 (arrow T2 T)
-            &lt;- of E2 T2.
+            <- of E1 (arrow T2 T)
+            <- of E2 T2.
 
 %% Dynamic Semantics
 
-value       : tm -&gt; type.
+value       : tm -> type.
 value-empty : value empty.
 value-lam   : value (lam T ([x] E x)).
 
-step          : tm -&gt; tm -&gt; type.
+step          : tm -> tm -> type.
 step-app-1    : step (app E1 E2) (app E1' E2)
-                 &lt;- step E1 E1'.
+                 <- step E1 E1'.
 step-app-2    : step (app E1 E2) (app E1 E2') 
-                 &lt;- value E1
-                 &lt;- step E2 E2'.
+                 <- value E1
+                 <- step E2 E2'.
 step-app-beta : step (app (lam T2 ([x] E x)) E2) (E E2)
-                 &lt;- value E2.
-&lt;/twelf&gt;
+                 <- value E2.
 
-#
+%{! #
 # Preservation
 
-Here is a complete Twelf proof of preservation for the STLC:
+Here is a complete Twelf proof of preservation for the STLC: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
 
-&lt;twelf check="true"&gt;
-preserv : step E E' -&gt; of E T -&gt; of E' T -&gt; type.                                                                                                                     
+preserv : step E E' -> of E T -> of E' T -> type.                                                                                                                     
 %mode preserv +Dstep +Dof -Dof'.                                                                                                                                      
                                                                                                                                                                       
 preserv-app-1    : preserv                                                                                                                                            
@@ -61,27 +59,26 @@ preserv-app-1    : preserv
                     (of-app (DofE2 : of E2 T2)                                                                                                                        
                             (DofE1 : of E1 (arrow T2 T)))                                                                                                             
                     (of-app DofE2 DofE1')                                                                                                                             
-                    &lt;- preserv DstepE1 DofE1 (DofE1' : of E1' (arrow T2 T)).                                                                                          
+                    <- preserv DstepE1 DofE1 (DofE1' : of E1' (arrow T2 T)).                                                                                          
                                                                                                                                                                       
 preserv-app-2    : preserv                                                                                                                                            
                     (step-app-2 (DstepE2 : step E2 E2') (DvalE1 : value E1))                                                                                          
                     (of-app (DofE2 : of E2 T2)                                                                                                                        
                             (DofE1 : of E1 (arrow T2 T)))                                                                                                             
                     (of-app DofE2' DofE1)                                                                                                                             
-                    &lt;- preserv DstepE2 DofE2 (DofE2' : of E2' T2).                                                                                                    
+                    <- preserv DstepE2 DofE2 (DofE2' : of E2' T2).                                                                                                    
                                                                                                                                                                       
 preserv-app-beta : preserv                                                                                                                                            
                     (step-app-beta (Dval : value E2))                                                                                                                 
                     (of-app (DofE2 : of E2 T2)                                                                                                                        
                             (of-lam (([x] [dx] DofE x dx)                                                                                                             
-                                       : \{x : tm\} \{dx : of x T2\} of (E x) T)))                                                                                        
+                                       : {x : tm} {dx : of x T2} of (E x) T)))                                                                                        
                     (DofE E2 DofE2).                                                                                                                                  
                                                                                                                                                                       
 %worlds () (preserv _ _ _).                                                                                                                                           
-%total D (preserv D _ _).                                                                                                                                             
-&lt;/twelf&gt;
+%total D (preserv D _ _).
 
-Now, let's examine the pieces of the proof in more detail.
+%{! Now, let's examine the pieces of the proof in more detail.
 
 **Correctness of the theorem statement.** We should check that this Twelf theorem statement actually corresponds to the notion of type preservation that we have in mind, which is stated as follows:
 
@@ -112,5 +109,10 @@ The next section of this introduction describes one new piece of Twelf machinery
   | prev = Representing the judgements of the STLC
   | prevname = Representing judgements
   | next = Proving totality assertions in non-empty contexts
-  | nextname = Proving totality assertions in non-empty contexts\}\}
+  | nextname = Proving totality assertions in non-empty contexts\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_metatheorems_about_the_STLC).
 !}%

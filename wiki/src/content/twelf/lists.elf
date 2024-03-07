@@ -1,335 +1,327 @@
 %%! title: "Lists"
 
-%{!
-This page describes the data structure of lists as well as a large number of operations and theorems about them.
+%{! This page describes the data structure of lists as well as a large number of operations and theorems about them.
 
 #
 # Definition
 
 This standard definition of lists in Twelf . We first define what the list elements are: in this example they are just an arbitrary type ``elem``. This example is parametric in the type of the elements, so you can change this definition to anything you like.
 
-&lt;math&gt;e ::= \texttt\{a\} \,|\, \texttt\{b\} \,|\, \texttt\{c\}(e)&lt;/math&gt;
+&lt;math&gt;e ::= \texttt\{a\} \,|\, \texttt\{b\} \,|\, \texttt\{c\}(e)&lt;/math&gt; !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
 
-&lt;twelf hidden="true"&gt;
 % Lists
 % By Carsten Varming 2006
-&lt;/twelf&gt;&lt;twelf&gt;
 
+%{!  !}%
+    
 elem: type.
 
 a : elem.
 b : elem.
-c : elem -&gt; elem.
-&lt;/twelf&gt;
+c : elem -> elem.
 
-The important defintion is the one of lists. There are two ways of constructing a Twelf object of type ``list``. The first is the constructor for the empty list ``nil``. The second is the constructor ``cons`` that given an object of type ``elem`` and an object of type ``list`` creates a list with elem as head and list as tail.
+%{! The important defintion is the one of lists. There are two ways of constructing a Twelf object of type ``list``. The first is the constructor for the empty list ``nil``. The second is the constructor ``cons`` that given an object of type ``elem`` and an object of type ``list`` creates a list with elem as head and list as tail.
 
-&lt;math&gt;l ::= \texttt\{nil\} \,|\, e :: l&lt;/math&gt;
-
-&lt;twelf&gt;
+&lt;math&gt;l ::= \texttt\{nil\} \,|\, e :: l&lt;/math&gt; !}%
+    
 list : type. %name list Ls.
 
 nil : list.
-cons : elem -&gt; list -&gt; list.
+cons : elem -> list -> list.
 %freeze list.
-&lt;/twelf&gt;
 
-#
+%{! #
 # Equalities
 
-Equality is defined as [identity](/wiki/equality/), which makes the symmetry and transitivity proofs entirely trivial. One [congruence lemma](/wiki/respects-lemma/) needs to be defined ``eq-cong-cons``, expressing that if the tails of two lists are equal, and the heads of the lists are identical, the lists are equal. 
-
-&lt;twelf&gt;
-eq : list -&gt; list -&gt; type.
+Equality is defined as [identity](/wiki/equality/), which makes the symmetry and transitivity proofs entirely trivial. One [congruence lemma](/wiki/respects-lemma/) needs to be defined ``eq-cong-cons``, expressing that if the tails of two lists are equal, and the heads of the lists are identical, the lists are equal. !}%
+    
+eq : list -> list -> type.
 %mode eq +Ls -Ls'.
 eq/ref : eq Ls Ls.
 %worlds () (eq _ _).
 %freeze eq.
 
-eq-symm : eq Ls Ls' -&gt; eq Ls' Ls -&gt; type.
+eq-symm : eq Ls Ls' -> eq Ls' Ls -> type.
 %mode eq-symm +Q -Q'.
 - : eq-symm eq/ref eq/ref.
 %worlds () (eq-symm _ _).
 %freeze eq-symm.
-%total \{\} (eq-symm _ _).
+%total {} (eq-symm _ _).
 
-eq-trans : eq Ls Ls' -&gt; eq Ls' Ls_ -&gt; eq Ls Ls_ -&gt; type.
-%mode eq-trans +Q +Q' -Q_.
+eq-trans : eq Ls Ls' -> eq Ls' Ls'' -> eq Ls Ls'' -> type.
+%mode eq-trans +Q +Q' -Q''.
 - : eq-trans eq/ref eq/ref eq/ref.
 %worlds () (eq-trans _ _ _).
 %freeze eq-trans.
-%total \{\} (eq-trans _ _ _).
+%total {} (eq-trans _ _ _).
 
-eq-cong-cons : \{E\} eq L1 L2 -&gt; eq (cons E L1) (cons E L2) -&gt; type.
+eq-cong-cons : {E} eq L1 L2 -> eq (cons E L1) (cons E L2) -> type.
 %mode eq-cong-cons +E1 +E2 -E3.
 - : eq-cong-cons _ eq/ref eq/ref.
 %worlds () (eq-cong-cons _ _ _).
-%total \{\} (eq-cong-cons _ _ _).
-&lt;/twelf&gt;
+%total {} (eq-cong-cons _ _ _).
 
-#
+%{! #
 # Reversal
 There are at least two very common operations on lists: Reverse and Append. Lists form a semigroup with the opeation append &lt;math&gt;\cdot \diamonds \cdot&lt;/math&gt; and the empty list as right and left unit. If we define an operation &lt;math&gt;f(x,y) = y \diamonds x&lt;/math&gt; then reverse &lt;math&gt;(\cdot)^\top&lt;/math&gt; is an isomorphism between the semigroups (lists,&lt;math&gt;\diamonds&lt;/math&gt;,nil) and (lists,f,nil).
 #
 #
 # Definition
-I will use the standard logic programming way of encoding reversal. In the following ``rev`` will be a ternary relation where the first two elements are input and the third is output. The invariant is &lt;math&gt;\forall a,b,c. a^\top \bowtie b = c&lt;/math&gt;, where &lt;math&gt;\bowtie&lt;/math&gt; is concatenation, thus &lt;math&gt;a^\top=b&lt;/math&gt; is obtained by ``rev a nil b``. We will later see that &lt;math&gt;\bowtie&lt;/math&gt; can be thought of as &lt;math&gt;\diamonds&lt;/math&gt;.
-&lt;twelf&gt;
-rev : list -&gt; list -&gt; list -&gt; type.
-%mode rev +Ls +Ls_ -Ls'.
+I will use the standard logic programming way of encoding reversal. In the following ``rev`` will be a ternary relation where the first two elements are input and the third is output. The invariant is &lt;math&gt;\forall a,b,c. a^\top \bowtie b = c&lt;/math&gt;, where &lt;math&gt;\bowtie&lt;/math&gt; is concatenation, thus &lt;math&gt;a^\top=b&lt;/math&gt; is obtained by ``rev a nil b``. We will later see that &lt;math&gt;\bowtie&lt;/math&gt; can be thought of as &lt;math&gt;\diamonds&lt;/math&gt;. !}%
+    
+rev : list -> list -> list -> type.
+%mode rev +Ls +Ls'' -Ls'.
 rev/nil : rev nil Ls' Ls'.
-rev/cons : rev (cons E Ls) Ls_ Ls'
-               &lt;- rev Ls (cons E Ls_) Ls'.
+rev/cons : rev (cons E Ls) Ls'' Ls'
+               <- rev Ls (cons E Ls'') Ls'.
 %worlds () (rev _ _ _).
 %freeze rev.
 %total D (rev D _ _).
 
-can-rev : \{Ls\} \{Ls'\} rev Ls Ls' Ls_ -&gt; type.
+can-rev : {Ls} {Ls'} rev Ls Ls' Ls'' -> type.
 %mode can-rev +Ls +Ls' -R.
 - : can-rev nil _ rev/nil.
-- : can-rev (cons E Ls) Ls' (rev/cons Ls_)
-            &lt;- can-rev Ls (cons E Ls') Ls_.
+- : can-rev (cons E Ls) Ls' (rev/cons Ls'')
+            <- can-rev Ls (cons E Ls') Ls''.
 %worlds () (can-rev _ _ _).
 %freeze can-rev. 
 %total D (can-rev D _ _).
-&lt;/twelf&gt;
 
+%{! #
 #
-#
-# Equality
-&lt;twelf&gt;
-rev-eq : eq L1 L2 -&gt; eq L3 L4 -&gt; eq L5 L6 -&gt; rev L1 L3 L5 -&gt; rev L2 L4 L6 -&gt; type.
+# Equality !}%
+    
+rev-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> rev L1 L3 L5 -> rev L2 L4 L6 -> type.
 %mode rev-eq +E1 +E2 +E3 +R1 -R2.
 - : rev-eq eq/ref eq/ref eq/ref R R.
 %worlds () (rev-eq _ _ _ _ _).
-%total \{\} (rev-eq _ _ _ _ _).
-&lt;/twelf&gt;
+%total {} (rev-eq _ _ _ _ _).
 
-#
+%{! #
 #
 # Determinism
-As the Twelf definition only states that rev is a relation we need to prove that it indeed is a function. Namely &lt;math&gt;\forall a,b,c,d. a^\top \diamonds b = c \land a^\top \diamonds b = d \Rightarrow c = d&lt;/math&gt;.
-&lt;twelf&gt;
-rev-determ : rev Ls Ls' Ls3 -&gt; rev Ls Ls' Ls4 -&gt; eq Ls3 Ls4 -&gt; type.
+As the Twelf definition only states that rev is a relation we need to prove that it indeed is a function. Namely &lt;math&gt;\forall a,b,c,d. a^\top \diamonds b = c \land a^\top \diamonds b = d \Rightarrow c = d&lt;/math&gt;. !}%
+    
+rev-determ : rev Ls Ls' Ls3 -> rev Ls Ls' Ls4 -> eq Ls3 Ls4 -> type.
 %mode rev-determ +R +R' -Q.
 - : rev-determ rev/nil _ eq/ref.
 - : rev-determ (rev/cons R) (rev/cons R') Q
-         &lt;- rev-determ R R' Q.
+         <- rev-determ R R' Q.
 %worlds () (rev-determ _ _ _).
 %freeze rev-determ.
 %total D (rev-determ D _ _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Double reversal
 Reverse is an isomorphism that turn out to be its own inverse.
-&lt;math&gt;\forall a,b,c. a^\top = b \land b^\top = c \Rightarrow a = c&lt;/math&gt;.
-&lt;twelf&gt;
-revrev-id-lem : rev Ls Ls' Ls_ -&gt; rev Ls_ nil Ls4 -&gt; rev Ls' Ls Ls6 -&gt; eq Ls6 Ls4 -&gt; type.
-%mode revrev-id-lem +R +R' +R_ -Q.
+&lt;math&gt;\forall a,b,c. a^\top = b \land b^\top = c \Rightarrow a = c&lt;/math&gt;. !}%
+    
+revrev-id-lem : rev Ls Ls' Ls'' -> rev Ls'' nil Ls4 -> rev Ls' Ls Ls6 -> eq Ls6 Ls4 -> type.
+%mode revrev-id-lem +R +R' +R'' -Q.
 
 - : revrev-id-lem rev/nil F F' Q
-          &lt;- rev-determ F' F Q.
-- : revrev-id-lem (rev/cons R) R' R_ Q
-          &lt;- revrev-id-lem R R' (rev/cons R_) Q.
+          <- rev-determ F' F Q.
+- : revrev-id-lem (rev/cons R) R' R'' Q
+          <- revrev-id-lem R R' (rev/cons R'') Q.
 
 %worlds () (revrev-id-lem _ _ _ _).
 %freeze revrev-id-lem.
 %total D (revrev-id-lem D _ _ _).
 
-revrev-id : rev A nil B -&gt; rev B nil A -&gt; type.
+revrev-id : rev A nil B -> rev B nil A -> type.
 %mode revrev-id +R -R'.
 - : revrev-id R R'
-  &lt;- can-rev _ nil R1
-  &lt;- revrev-id-lem R R1 rev/nil E
-  &lt;- eq-symm E E'
-  &lt;- rev-eq eq/ref eq/ref E' R1 R'.
+  <- can-rev _ nil R1
+  <- revrev-id-lem R R1 rev/nil E
+  <- eq-symm E E'
+  <- rev-eq eq/ref eq/ref E' R1 R'.
 %worlds () (revrev-id _ _).
 %freeze revrev-id.
-%total \{\} (revrev-id _ _).
-&lt;/twelf&gt;
+%total {} (revrev-id _ _).
 
-#
+%{! #
 #
 # Injectivity
-As reverse has an inverse it is injective &lt;math&gt;\forall a,b,c. a^\top = c \land b^\top = c \Rightarrow a = b&lt;/math&gt;.
-&lt;twelf&gt;
-rev-injective : rev Ls nil Ls' -&gt; rev Ls_ nil Ls' -&gt; eq Ls Ls_ -&gt; type.
+As reverse has an inverse it is injective &lt;math&gt;\forall a,b,c. a^\top = c \land b^\top = c \Rightarrow a = b&lt;/math&gt;. !}%
+    
+rev-injective : rev Ls nil Ls' -> rev Ls'' nil Ls' -> eq Ls Ls'' -> type.
 %mode rev-injective +R +R' -Q.
 - : rev-injective (R : rev Ls nil Ls') R' Q
-      &lt;- revrev-id R R1
-      &lt;- revrev-id R' R1'
-      &lt;- rev-determ R1 R1' Q.
+      <- revrev-id R R1
+      <- revrev-id R' R1'
+      <- rev-determ R1 R1' Q.
 %worlds () (rev-injective _ _ _).
 %freeze rev-injective.
 %total D (rev-injective D _ _).
-&lt;/twelf&gt;
 
-#
+%{! #
 # Append
 
 #
 #
-# Definition
-&lt;twelf&gt;
-append : list -&gt; list -&gt; list -&gt; type.  %name append A.
+# Definition !}%
+    
+append : list -> list -> list -> type.  %name append A.
 
 append/nil : append nil L L.
 append/cons : append (cons E L1) L2 (cons E L3)
-     &lt;- append L1 L2 L3.
+     <- append L1 L2 L3.
 
 %freeze append.
 
-can-append : \{L1\}\{L2\} append L1 L2 L3 -&gt; type.
+can-append : {L1}{L2} append L1 L2 L3 -> type.
 %mode can-append +L1 +L2 -A.
 
 - : can-append nil L append/nil.
 - : can-append (cons E L1) L2 (append/cons A)
-     &lt;- can-append L1 L2 A.
+     <- can-append L1 L2 A.
 
 %worlds () (can-append _ _ _).
 %total D (can-append D _ _).
-&lt;/twelf&gt;
 
+%{! #
 #
-#
-# Equality
-&lt;twelf&gt;
-append-eq : eq L1 L2 -&gt; eq L3 L4 -&gt; eq L5 L6 -&gt; append L1 L3 L5 -&gt; append L2 L4 L6 -&gt; type.
+# Equality !}%
+    
+append-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> append L1 L3 L5 -> append L2 L4 L6 -> type.
 %mode append-eq +E1 +E2 +E3 +A1 -A2.
 
 - : append-eq eq/ref eq/ref eq/ref A A.
 
 %worlds () (append-eq _ _ _ _ _).
-%total \{\} (append-eq _ _ _ _ _).
-&lt;/twelf&gt;
-#
+%total {} (append-eq _ _ _ _ _).
+
+%{! #
 #
 # Units
-We need to prove that ``nil`` is the right and left unit of the semigroup &lt;math&gt;\forall a. a \diamonds nil = nil \diamonds a = a&lt;/math&gt;. The later is by axiom and the former is by this lemma.
-&lt;twelf&gt;
-append-eq-nil : \{L1\} append L1 nil L1 -&gt; type.
+We need to prove that ``nil`` is the right and left unit of the semigroup &lt;math&gt;\forall a. a \diamonds nil = nil \diamonds a = a&lt;/math&gt;. The later is by axiom and the former is by this lemma. !}%
+    
+append-eq-nil : {L1} append L1 nil L1 -> type.
 %mode append-eq-nil +L -A.
 
 - : append-eq-nil nil append/nil.
 - : append-eq-nil (cons E L) (append/cons A) 
-     &lt;- append-eq-nil L A.
+     <- append-eq-nil L A.
 
 %worlds () (append-eq-nil _ _).
 %total D (append-eq-nil D _).
-&lt;/twelf&gt;
-Sometimes it is helpful to reason with equalities like &lt;math&gt;\forall a b. a \diamonds nil = b \Rightarrow a = b&lt;/math&gt;.
-&lt;twelf&gt;
-append-eq-nil : append L1 nil L2 -&gt; eq L1 L2 -&gt; type.
+
+%{! Sometimes it is helpful to reason with equalities like &lt;math&gt;\forall a b. a \diamonds nil = b \Rightarrow a = b&lt;/math&gt;. !}%
+    
+append-eq-nil : append L1 nil L2 -> eq L1 L2 -> type.
 %mode append-eq-nil +A -E.
 
 - : append-eq-nil append/nil eq/ref.
 - : append-eq-nil (append/cons A) E
-     &lt;- append-eq-nil A E1
-     &lt;- eq-cong-cons _ E1 E.
+     <- append-eq-nil A E1
+     <- eq-cong-cons _ E1 E.
 %worlds () (append-eq-nil _ _).
 %total D (append-eq-nil D _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Determinism
-As with reverse we need to show that append is indeed a function &lt;math&gt;\forall a,b,c,c'. a \diamonds b = c \land a \diamonds b = c' \Rightarrow c = c'&lt;/math&gt;.
-&lt;twelf&gt;
-append-determ : append L1 L2 L3 -&gt; append L1 L2 L4 -&gt; eq L3 L4 -&gt; type.
+As with reverse we need to show that append is indeed a function &lt;math&gt;\forall a,b,c,c'. a \diamonds b = c \land a \diamonds b = c' \Rightarrow c = c'&lt;/math&gt;. !}%
+    
+append-determ : append L1 L2 L3 -> append L1 L2 L4 -> eq L3 L4 -> type.
 %mode append-determ +A1 +A2 -E.
 
 - : append-determ append/nil append/nil eq/ref.
 - : append-determ (append/cons A1) (append/cons A2) E
-       &lt;- append-determ A1 A2 E2
-       &lt;- eq-cong-cons _ E2 E.
+       <- append-determ A1 A2 E2
+       <- eq-cong-cons _ E2 E.
 
 %worlds () (append-determ _ _ _).
 %total D (append-determ D _ _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Associativity
-We need to prove that append is associative &lt;math&gt;\forall a,b,c.(a \diamonds b) \diamonds c = a \diamonds (b \diamonds c)&lt;/math&gt;.
-&lt;twelf&gt;
-append-assoc1 : append L1 L2 L3 -&gt; append L3 L4 L5 -&gt; append L2 L4 L6 -&gt; append L1 L6 L5 -&gt; type.
+We need to prove that append is associative &lt;math&gt;\forall a,b,c.(a \diamonds b) \diamonds c = a \diamonds (b \diamonds c)&lt;/math&gt;. !}%
+    
+append-assoc1 : append L1 L2 L3 -> append L3 L4 L5 -> append L2 L4 L6 -> append L1 L6 L5 -> type.
 %mode append-assoc1 +A1 +A2 -A3 -A4.
 
 - : append-assoc1 append/nil A1 A1 append/nil.
 - : append-assoc1 (append/cons A1) (append/cons A2) A3 (append/cons A4)
-      &lt;- append-assoc1 A1 A2 A3 A4.
+      <- append-assoc1 A1 A2 A3 A4.
 
 %worlds () (append-assoc1 _ _ _ _).
 %total D (append-assoc1 D _ _ _).
 
-append-assoc2 : append L1 L2 L3 -&gt; append L3 L4 L5 -&gt; append L2 L4 L6 -&gt; append L1 L6 L7 -&gt; eq L5 L7 -&gt; type.
+append-assoc2 : append L1 L2 L3 -> append L3 L4 L5 -> append L2 L4 L6 -> append L1 L6 L7 -> eq L5 L7 -> type.
 %mode append-assoc2 +A1 +A2 +A3 +A4 -E.
 
 - : append-assoc2 A1 A2 A3 A4 E
-      &lt;- append-assoc1 A1 A2 A3' A4'
-      &lt;- append-determ A3 A3' E3
-      &lt;- append-eq eq/ref E3 eq/ref A4 A4_
-      &lt;- append-determ A4' A4_ E.
+      <- append-assoc1 A1 A2 A3' A4'
+      <- append-determ A3 A3' E3
+      <- append-eq eq/ref E3 eq/ref A4 A4''
+      <- append-determ A4' A4'' E.
 
 %worlds () (append-assoc2 _ _ _ _ _).
-%total \{\} (append-assoc2 _ _ _ _ _).
-&lt;/twelf&gt;
+%total {} (append-assoc2 _ _ _ _ _).
 
-#
+%{! #
 # Append and reversal
 I promissed to prove that ``rev`` is an isomorphism. Lets start by a few lemmas.
-First &lt;math&gt;\forall a,b,c.b^\top \bowtie (a^\top \bowtie c) = (a \diamonds b)^\top \bowtie c&lt;/math&gt;.
-&lt;twelf&gt;
-append-rev1 : append L1 L2 L3 -&gt; rev L1 L4 L5 -&gt; rev L2 L5 L6 -&gt; rev L3 L4 L6 -&gt; type.
+First &lt;math&gt;\forall a,b,c.b^\top \bowtie (a^\top \bowtie c) = (a \diamonds b)^\top \bowtie c&lt;/math&gt;. !}%
+    
+append-rev1 : append L1 L2 L3 -> rev L1 L4 L5 -> rev L2 L5 L6 -> rev L3 L4 L6 -> type.
 %mode append-rev1 +A +R1 +R2 -R3.
 
 - : append-rev1 append/nil rev/nil R R.
 - : append-rev1 (append/cons A) (rev/cons R1) R3 (rev/cons R2) 
- &lt;- append-rev1 A R1 R3 R2.
+ <- append-rev1 A R1 R3 R2.
 
 %worlds () (append-rev1 _ _ _ _).
 %total D (append-rev1 D _ _ _).
-&lt;/twelf&gt;
-And second &lt;math&gt;\forall a,b,c.(a^\top \bowtie b)\diamonds c = a^\top \bowtie (b \diamonds c)&lt;/math&gt;. If we let &lt;math&gt;b = nil&lt;/math&gt; then we get &lt;math&gt;a^\top \diamonds c = a^\top \bowtie c&lt;/math&gt;, which shows how we can think of &lt;math&gt;\bowtie&lt;/math&gt; as &lt;math&gt;\diamonds&lt;/math&gt;.
-&lt;twelf&gt;
-append-rev2 : rev L1 L2 L3 -&gt; append L2 L4 L5 -&gt; append L3 L4 L6 -&gt; rev L1 L5 L6 -&gt; type.
+
+%{! And second &lt;math&gt;\forall a,b,c.(a^\top \bowtie b)\diamonds c = a^\top \bowtie (b \diamonds c)&lt;/math&gt;. If we let &lt;math&gt;b = nil&lt;/math&gt; then we get &lt;math&gt;a^\top \diamonds c = a^\top \bowtie c&lt;/math&gt;, which shows how we can think of &lt;math&gt;\bowtie&lt;/math&gt; as &lt;math&gt;\diamonds&lt;/math&gt;. !}%
+    
+append-rev2 : rev L1 L2 L3 -> append L2 L4 L5 -> append L3 L4 L6 -> rev L1 L5 L6 -> type.
 %mode append-rev2 +R +A +A' -R'.
 
 - : append-rev2 rev/nil A1 A2 R
-  &lt;- append-determ A1 A2 E
-  &lt;- rev-eq eq/ref eq/ref E rev/nil R.
+  <- append-determ A1 A2 E
+  <- rev-eq eq/ref eq/ref E rev/nil R.
 
 - : append-rev2 (rev/cons R) A1 A2 (rev/cons R2)
-  &lt;- append-rev2 R (append/cons A1) A2 R2.
+  <- append-rev2 R (append/cons A1) A2 R2.
 
 %worlds () (append-rev2 _ _ _ _).
 %total D (append-rev2 D _ _ _).
-&lt;/twelf&gt;
-And here we go. &lt;math&gt;\forall a,b,c,d. (a^\top \bowtie b) \diamonds (c^\top \bowtie d)
+
+%{! And here we go. &lt;math&gt;\forall a,b,c,d. (a^\top \bowtie b) \diamonds (c^\top \bowtie d)
 # ((d^\top \bowtie c) \diamonds (b^\top \bowtie a))^\top &lt;/math&gt; which boils down to
-&lt;math&gt;\forall a,c.a^\top \diamonds c^\top = (c \diamonds a)^\top = f(c^\top,a^\top) &lt;/math&gt;, whence reverse is a homeomorphism. This combined with the fact that reverse is its own inverse we get that reverse is an isomorphism.
-&lt;twelf&gt;
-append-rev : rev L1 L2 L3 -&gt; rev LA LB LC -&gt; append LC L3 LT -&gt; rev L2 L1 L3' -&gt; 
-             rev LB LA LC' -&gt; append L3' LC' LT' -&gt; rev LT' nil LT -&gt; type.
+&lt;math&gt;\forall a,c.a^\top \diamonds c^\top = (c \diamonds a)^\top = f(c^\top,a^\top) &lt;/math&gt;, whence reverse is a homeomorphism. This combined with the fact that reverse is its own inverse we get that reverse is an isomorphism. !}%
+    
+append-rev : rev L1 L2 L3 -> rev LA LB LC -> append LC L3 LT -> rev L2 L1 L3' -> 
+             rev LB LA LC' -> append L3' LC' LT' -> rev LT' nil LT -> type.
 %mode append-rev +R1 +R2 +A1 +R3 +R4 +A2 -R3.
 
 - : append-rev R1 (rev/cons R2) A1 R3 R4 A2 R5
-    &lt;- append-rev R1 R2 A1 R3 (rev/cons R4) A2 R5.
+    <- append-rev R1 R2 A1 R3 (rev/cons R4) A2 R5.
 
 - : append-rev (rev/cons R1) rev/nil A1 R2 R3 A2 R5
-    &lt;- append-rev R1 rev/nil A1 (rev/cons R2) R3 A2 R5.
+    <- append-rev R1 rev/nil A1 (rev/cons R2) R3 A2 R5.
 
 - : append-rev rev/nil rev/nil A1 R3 R4 A2 R5
-  &lt;- append-rev2 R3 append/nil A2 RC
-  &lt;- append-rev1 A1 R4 RC RB 
-  &lt;- revrev-id RB R5.
+  <- append-rev2 R3 append/nil A2 RC
+  <- append-rev1 A1 R4 RC RB 
+  <- revrev-id RB R5.
 
 %worlds () (append-rev _ _ _ _ _ _ _).
 %total [D E] (append-rev E D _ _ _ _ _).
-&lt;/twelf&gt;
-&lt;twelflink&gt;See the Twelf code for this example&lt;/twelflink&gt; - &lt;twelflink check=true&gt;See Twelf's output&lt;/twelflink&gt;
 
-\{\{case study\}\}
+%{! ``&gt;See the Twelf code for this example`` - `` check=true&gt;See Twelf's output``
+
+\{\{case study\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Lists).
 !}%

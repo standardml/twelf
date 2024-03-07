@@ -1,12 +1,10 @@
 %%! title: "Sudoku"
 
-%{!
-[[Image:sudokuexample.svg|thumb|right|300px|Example Sudoku puzzle]]
+%{! [[Image:sudokuexample.svg|thumb|right|300px|Example Sudoku puzzle]]
 In the **Sudoku** puzzle, a 9x9 board must be filled with the numbers &lt;math&gt;1 \ldots 9&lt;/math&gt; such that no row, column, or box contains the same digit twice.
 
-\{\{needs|to be completed\}\}
-
-&lt;twelf&gt;
+\{\{needs|to be completed\}\} !}%
+    
 % Sudoku solver, brute force
 
 cell : type.
@@ -22,37 +20,37 @@ cell : type.
 
 nat : type.
 z : nat.
-s : nat -&gt; nat. %prefix 5 s.
+s : nat -> nat. %prefix 5 s.
 nine = s s s  s s s  s s s z.
 
-cells : nat -&gt; type.
-//  : cell -&gt; cells N -&gt; cells (s N).
+cells : nat -> type.
+//  : cell -> cells N -> cells (s N).
 %infix right 5 //.
 nil : cells z.
 
-cellss : nat -&gt; type.
-///  : cells nine -&gt; cellss N -&gt; cellss (s N).
+cellss : nat -> type.
+///  : cells nine -> cellss N -> cellss (s N).
 %infix right 4 ///.
 nill : cellss z.
 
-remove : cells (s N) -&gt; cell -&gt; cells N -&gt; type.
+remove : cells (s N) -> cell -> cells N -> type.
 %mode remove +L +C -L'.
 
 rem-hit  : remove (X // C) X C.
 % okay that we can also skip this one
 rem-miss : remove (X // C) Y (X // C')
-        &lt;- remove C Y C'.
+        <- remove C Y C'.
 
 %worlds () (remove _ _ _).
 %terminates D (remove D _ _).
 
-nodups : cells X -&gt; cells Y -&gt; type.
+nodups : cells X -> cells Y -> type.
 %mode nodups +OK +L.
 
 nd-nil  : nodups _ nil.
 nd-hit  : nodups OK (X // C)
-       &lt;- remove OK X OK'
-       &lt;- nodups OK' C.
+       <- remove OK X OK'
+       <- nodups OK' C.
 
 %worlds () (nodups _ _).
 %terminates D (nodups _ D).
@@ -62,17 +60,17 @@ allcells = 1 // 2 // 3 //
            4 // 5 // 6 //
            7 // 8 // 9 // nil.
 
-unitok : cells nine -&gt; type.
+unitok : cells nine -> type.
 
 uo : unitok C
-  &lt;- nodups allcells C.
+  <- nodups allcells C.
 
 % the nine rows
 %abbrev board = cellss nine.
 
 % extract three boxes from three rows
-boxes : cells nine -&gt; cells nine -&gt; cells nine -&gt;
-        cells nine -&gt; cells nine -&gt; cells nine -&gt; type.
+boxes : cells nine -> cells nine -> cells nine ->
+        cells nine -> cells nine -> cells nine -> type.
 %mode boxes +A +B +C -A' -B' -C'.
 
 b : boxes
@@ -93,10 +91,10 @@ b : boxes
        G3 // H3 // I3 // nil).
 
 %worlds () (boxes _ _ _  _ _ _).
-%total \{\} (boxes _ _ _  _ _ _).
+%total {} (boxes _ _ _  _ _ _).
 
 % transpose a whole board
-transpose : board -&gt; board -&gt; type.
+transpose : board -> board -> type.
 %mode transpose +B -B'.
 
 tr : transpose ((A1 // B1 // C1 // D1 // E1 // F1 // G1 // H1 // I1 // nil) ///
@@ -119,29 +117,29 @@ tr : transpose ((A1 // B1 // C1 // D1 // E1 // F1 // G1 // H1 // I1 // nil) ///
                 (H1 // H2 // H3 // H4 // H5 // H6 // H7 // H8 // H9 // nil) ///
                 (I1 // I2 // I3 // I4 // I5 // I6 // I7 // I8 // I9 // nil) /// nill).
 %worlds () (transpose _ _).
-%total \{\} (transpose C _).
+%total {} (transpose C _).
 
-boardok : board -&gt; type.
+boardok : board -> type.
 
 bo : boardok
      (A /// B /// C /// D /// E /// F /// G /// H /// I /// nill)
 % rows
-  &lt;- unitok A &lt;- unitok B &lt;- unitok C
-  &lt;- unitok D &lt;- unitok E &lt;- unitok F
-  &lt;- unitok G &lt;- unitok H &lt;- unitok I
+  <- unitok A <- unitok B <- unitok C
+  <- unitok D <- unitok E <- unitok F
+  <- unitok G <- unitok H <- unitok I
 % boxes
-  &lt;- boxes A B C  Ab Bb Cb
-  &lt;- unitok Ab &lt;- unitok Bb &lt;- unitok Cb
-  &lt;- boxes D E F  Db Eb Fb
-  &lt;- unitok Da &lt;- unitok Ea &lt;- unitok Fa
-  &lt;- boxes G H I  Gb Hb Ib
-  &lt;- unitok Gb &lt;- unitok Hb &lt;- unitok Ib
+  <- boxes A B C  Ab Bb Cb
+  <- unitok Ab <- unitok Bb <- unitok Cb
+  <- boxes D E F  Db Eb Fb
+  <- unitok Da <- unitok Ea <- unitok Fa
+  <- boxes G H I  Gb Hb Ib
+  <- unitok Gb <- unitok Hb <- unitok Ib
 % cols
-  &lt;- transpose (A  /// B  /// C  /// D  /// E  /// F  /// G  /// H  /// I  /// nill)
+  <- transpose (A  /// B  /// C  /// D  /// E  /// F  /// G  /// H  /// I  /// nill)
                (At /// Bt /// Ct /// Dt /// Et /// Ft /// Gt /// Ht /// It /// nill)
-  &lt;- unitok At &lt;- unitok Bt &lt;- unitok Ct
-  &lt;- unitok Dt &lt;- unitok Et &lt;- unitok Ft
-  &lt;- unitok Gt &lt;- unitok Ht &lt;- unitok It.
+  <- unitok At <- unitok Bt <- unitok Ct
+  <- unitok Dt <- unitok Et <- unitok Ft
+  <- unitok Gt <- unitok Ht <- unitok It.
 
 %solve _ : boardok
 (
@@ -170,10 +168,14 @@ bo : boardok
 (7 // 5 // 9  //  4 // 3 // 6  //  8 // 2 // 1  // nil) ///
 (4 // 3 // 2  //  1 // 8 // 7  //  6 // 9 // 5  // nil) ///
 (6 // 1 // 8  //  5 // 9 // 2  //  3 // 7 // 4  // nil) /// nill).
-&lt;/twelf&gt;
 
-&lt;twelflink&gt;All code from this tutorial&lt;/twelflink&gt;. &lt;twelflink check="true"&gt;Twelf's output from this tutorial&lt;/twelflink&gt;.
+%{! ``&gt;All code from this tutorial``. `` check="true"&gt;Twelf's output from this tutorial``.
 
 
-\{\{case study\}\}[Category:Twelf code](/wiki/category-twelf-code/)
+\{\{case study\}\}[Category:Twelf code](/wiki/category-twelf-code/) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Sudoku).
 !}%

@@ -1,45 +1,47 @@
 %%! title: "%assert"
 
-%{!
-The **``%assert``** directive instructs the [theorem prover](/wiki/theorem-prover/) to accept a previously stated theorem as true without trying to prove that theorem. This directive is thus analogous to a ``[%trustme](/wiki/percent-trustme/)&nbsp;[%total](/wiki/percent-total/)`` directive. Because it instructs Twelf to treat something as true without a proof, Twelf must be in [unsafe mode](/wiki/unsafe-mode/) to use this directive.
+%{! The **``%assert``** directive instructs the [theorem prover](/wiki/theorem-prover/) to accept a previously stated theorem as true without trying to prove that theorem. This directive is thus analogous to a ``[%trustme](/wiki/percent-trustme/)&nbsp;[%total](/wiki/percent-total/)`` directive. Because it instructs Twelf to treat something as true without a proof, Twelf must be in [unsafe mode](/wiki/unsafe-mode/) to use this directive.
 
 #
 # Example
 
-The example from the [theorem prover](/wiki/theorem-prover/) article can be modified to use ``%assert`` instead of ``%prove`` for the two lemmas that are needed to establish the commutativity of addition (this example cannot be run on the wiki, which uses Twelf in safe mode).
-
-&lt;twelf&gt;
+The example from the [theorem prover](/wiki/theorem-prover/) article can be modified to use ``%assert`` instead of ``%prove`` for the two lemmas that are needed to establish the commutativity of addition (this example cannot be run on the wiki, which uses Twelf in safe mode). !}%
+    
 nat : type.
-s : nat -&gt; nat.
+s : nat -> nat.
 z : nat.
 
-plus : nat -&gt; nat -&gt; nat -&gt; type.
+plus : nat -> nat -> nat -> type.
 plus/z : plus z N N.
-plus/s : plus (s N1) N2 (s N3) &lt;- plus N1 N2 N3.
+plus/s : plus (s N1) N2 (s N3) <- plus N1 N2 N3.
 
-%theorem plus-z : forall \{N: nat\} 
-                 exists \{D: plus N z N\} 
+%theorem plus-z : forall {N: nat} 
+                 exists {D: plus N z N} 
                  true.
 %assert (plus-z N D).
 
-%theorem plus-s : forall* \{N1: nat\}\{N2: nat\}\{N3: nat\}
-                 forall \{D1: plus N1 N2 N3\} 
-                 exists \{D2: plus N1 (s N2) (s N3)\} 
+%theorem plus-s : forall* {N1: nat}{N2: nat}{N3: nat}
+                 forall {D1: plus N1 N2 N3} 
+                 exists {D2: plus N1 (s N2) (s N3)} 
                  true.
 %assert (plus-s D1 D2).
 
-%theorem plus-comm : forall* \{N1: nat\}\{N2: nat\}\{N3: nat\}
-                 forall \{D1: plus N1 N2 N3\} 
-                 exists \{D2: plus N2 N1 N3\} 
+%theorem plus-comm : forall* {N1: nat}{N2: nat}{N3: nat}
+                 forall {D1: plus N1 N2 N3} 
+                 exists {D2: plus N2 N1 N3} 
                  true.
 %prove 5 D1 (plus-comm D1 D2).
-&lt;/twelf&gt;
 
-#
+%{! #
 # See also
 
 * [Theorem prover](/wiki/theorem-prover/)
 * \{\{guide|title=Theorem Prover|chapter=10|section=57\}\}
 
-\{\{keyword|key=assert\}\}
+\{\{keyword|key=assert\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25assert).
 !}%

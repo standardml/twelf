@@ -4,11 +4,11 @@
 
 Twelf is a very flexible system that lends itself to a wide variety of [deductive systems](/wiki/object-logic/). This flexibility can be confusing, as different uses of Twelf look very different from one another. Here, we attempt to describe a number of the major modes of use of Twelf.
 
-* **#A framework for defining logics|A framework for defining logics]]** - The judgments of a logic are encoded in Twelf so that Twelf's type checker can check the correctness of proofs. The Foundational Proof Carrying Code project at Princeton used this method extensively to write proofs about programs that could be verified by a small, trusted checker. The primary tutorial for this style is Andrew Appel's [http://www.cs.princeton.edu/~appel/twelf-tutorial/ Hints on Proving Theorems in Twelf]
-* **[metatheorems](/wiki/metatheorem/) about that deductive system. The primary tutorial for this style is [User:Drl](/wiki/user-drl/) [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/), though several others can be found on the [Documentation](/wiki/documentation/) page.
+* **[[#A framework for defining logics|A framework for defining logics]]** - The judgments of a logic are encoded in Twelf so that Twelf's type checker can check the correctness of proofs. The Foundational Proof Carrying Code project at Princeton used this method extensively to write proofs about programs that could be verified by a small, trusted checker. The primary tutorial for this style is Andrew Appel's [http://www.cs.princeton.edu/~appel/twelf-tutorial/ Hints on Proving Theorems in Twelf]
+* **[[#Proving properties about deductive systems|Proving properties about deductive systems]] - This is a relatively recent use of Twelf, but it is also perhaps the most widespread. The judgments of a deductive system, typically a programming language, are encoded in Twelf, and then Twelf is used to verify [metatheorems](/wiki/metatheorem/) about that deductive system. The primary tutorial for this style is [User:Drl](/wiki/user-drl/) [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/), though several others can be found on the [Documentation](/wiki/documentation/) page.
 * Typed logic programming - Twelf can also be used as an advanced typed logic programming language, a variant of Lambda Prolog with dependent types.
 
-Most large projects integrate several of these modes of use. There are some limitations to this integration, particularly in that the [constraint domains](/wiki/constraint-domain/) and type level definitions]] cannot be used in projects that want to prove [metatheorems](/wiki/metatheorem/). 
+Most large projects integrate several of these modes of use. There are some limitations to this integration, particularly in that the [constraint domains](/wiki/constraint-domain/) and [[type level definitions]] cannot be used in projects that want to prove [metatheorems](/wiki/metatheorem/). 
 
 
 #
@@ -135,3 +135,9 @@ Having defined this programming language, we are generally interested in proving
 
 
  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Modes_of_use).
+!}%

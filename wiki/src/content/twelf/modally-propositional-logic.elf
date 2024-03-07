@@ -180,3 +180,9 @@ ca : {A}
 
 %worlds (worldb | accb | capropb | hypb) (ca _ _ _ _). 
 %total {A D E} (ca A D E _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Modally_Propositional_Logic).
+!}%

@@ -10,7 +10,7 @@ reduct's translation.
  !}%
 
 
-%{! --- !}%
+%{! ---- !}%
 
 %{! 
 First we define the syntax of the two languages.  ``term`` is the
@@ -31,7 +31,7 @@ i : cterm.
 
 capp : cterm -> cterm -> cterm.
 
-%{! We can use Twelf's abbreviation mechanism to obtain some cute syntax !}%
+%{! We can use Twelf's abbreviation mechanism to obtain some cute syntax. !}%
 
 %abbrev @ = app.
 %infix left 10 @.
@@ -39,7 +39,7 @@ capp : cterm -> cterm -> cterm.
 %abbrev @@ = capp.
 %infix left 10 @@.
 
-%{! --- !}%
+%{! ---- !}%
 
 %{! 
 Then we define reduction relations on both languages.  ``step`` is the
@@ -125,7 +125,7 @@ cs-trans : cstep* N1 N2 -> cstep* N2 N3 -> cstep* N1 N3 -> type.
 %worlds () (cs-trans _ _ _).
 %total {Cs} (cs-trans Cs _ _).
 
-%{! --- !}%
+%{! ---- !}%
 
 %{! 
 We can now define our translation in the standard way.  Bracket abstraction
@@ -155,7 +155,7 @@ b-s : bracket ([x] capp (N1 x) (N2 x)) (capp (capp s N1') N2')
        <- bracket ([x] N1 x) N1'
        <- bracket ([x] N2 x) N2'.
 
-%{! --- !}%
+%{! ---- !}%
 
 %{! 
 First, we prove the correctness of bracket abstraction itself:
@@ -219,3 +219,9 @@ In Twelf, using higher-order abstract syntax, we get them for free -- see
 
 %worlds () (simulate _ _ _ _).
 %total D (simulate D _ _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Bracket_abstraction).
+!}%

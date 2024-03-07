@@ -301,7 +301,7 @@ prog/ifz
 - : prog/ifz _ (vrs/val value/z) _ _ (vrs/step step/ifz/z).
 - : prog/ifz _ (vrs/val (value/s Dval)) _ _ (vrs/step (step/ifz/s Dval)).
 
-%{! A new case for when the input is an unhandled exception must be provided !}%
+%{! A new case for when the input is an unhandled exception must be provided. !}%
 
 - : prog/ifz _ (vrs/raises Draises) _ _ (vrs/raises (raises/ifz Draises)).
 %worlds () (prog/ifz _ _ _ _ _).
@@ -379,3 +379,9 @@ Exercise: Give the missing cases for of/handle and of/raise. It may be necessary
 
 %worlds () (prog _ _).
 %total Dof (prog Dof _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Exceptions-problem).
+!}%

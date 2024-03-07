@@ -1,7 +1,6 @@
 %%! title: "User:Boyland"
 
-%{!
-John Boyland,
+%{! John Boyland,
 Professor, University of Wisconsin--Milwaukee.
 
 I'm interested in using Twelf and have
@@ -26,32 +25,32 @@ if the error message included the names of these free variables.  Update: of cou
 #
 # An ``exists*`` keyword
 
-In Twelf currently, a theorem has the form
-&lt;twelf&gt;
+In Twelf currently, a theorem has the form !}%
+    
 my-theorem :
-    forall* \{K1\} \{K2\} \{V1:term K1\} \{V2: term K2\}
-    forall \{D:rule V1 V2\}
-    exists \{K3\} \{V3:term K3\} \{DP:rule2 V1 V2 V3\}
+    forall* {K1} {K2} {V1:term K1} {V2: term K2}
+    forall {D:rule V1 V2}
+    exists {K3} {V3:term K3} {DP:rule2 V1 V2 V3}
     true.
-&lt;/twelf&gt;
-Sometimes the existentially bound variables are as extraneous as the ``forall*``
-bound variables.  One would like to write
-&lt;twelf&gt;
+
+%{! Sometimes the existentially bound variables are as extraneous as the ``forall*``
+bound variables.  One would like to write !}%
+    
 my-theorem :
-    forall* \{K1\} \{K2\} \{V1:term K1\} \{V2: term K2\}
-    forall \{D:rule V1 V2\}
-    exists* \{K3\} 
-    exists \{V3:term K3\} \{DP:rule2 V1 V2 V3\}
+    forall* {K1} {K2} {V1:term K1} {V2: term K2}
+    forall {D:rule V1 V2}
+    exists* {K3} 
+    exists {V3:term K3} {DP:rule2 V1 V2 V3}
     true.
-&lt;/twelf&gt;
-Currently my workaround is to avoid the theorem syntax and use an explicit mode declaration:
-&lt;twelf&gt;
-my-theorem : (rule V1 V2) -&gt; (\{V3\} (rule2 V1 V2 V3)) -&gt; type.
-%mode +\{K1\} +\{K2\} +\{V1:term K1\} +\{V2: term K2\} +\{D:rule V1 V2\} 
-            -\{K3\} -\{V3:term K3\} -\{DP:rule2 V1 V2 V3\}
+
+%{! Currently my workaround is to avoid the theorem syntax and use an explicit mode declaration: !}%
+    
+my-theorem : (rule V1 V2) -> ({V3} (rule2 V1 V2 V3)) -> type.
+%mode +{K1} +{K2} +{V1:term K1} +{V2: term K2} +{D:rule V1 V2} 
+            -{K3} -{V3:term K3} -{DP:rule2 V1 V2 V3}
             (my-theorem D DP).
-&lt;/twelf&gt;
-An ``exists*`` keyword should be a trivial addition.
+
+%{! An ``exists*`` keyword should be a trivial addition.
 
 #
 #
@@ -99,43 +98,42 @@ In decreasing order of imporance.
 #
 #
 # Type Reconstruction Nontermination
-Type reconstruction sometimes fails to terminate
-&lt;twelf&gt;
-
+Type reconstruction sometimes fails to terminate !}%
+    
 xxtag : type.
 
 xxtag/a : xxtag.
 
 
-xxterm : xxtag -&gt; type.
+xxterm : xxtag -> type.
 
 xxa : xxterm xxtag/a.
 
 
-xxoutput : xxtag -&gt; type.
+xxoutput : xxtag -> type.
 
-xxoutput/base : xxterm K -&gt; xxoutput K.
+xxoutput/base : xxterm K -> xxoutput K.
 
-xxoutput/exists : (xxterm K -&gt; xxoutput K') -&gt; xxoutput K'.
+xxoutput/exists : (xxterm K -> xxoutput K') -> xxoutput K'.
 
 
-xxtrans : xxoutput K -&gt; xxoutput K -&gt; type.
+xxtrans : xxoutput K -> xxoutput K -> type.
 
-xxtrans/transitive : xxtrans E1 E2 -&gt; xxtrans E2 E3 -&gt; xxtrans E1 E3.
+xxtrans/transitive : xxtrans E1 E2 -> xxtrans E2 E3 -> xxtrans E1 E3.
 
-xxtrans/inside : (\{v\} xxtrans (FE1 v) (FE2 v)) -&gt;
+xxtrans/inside : ({v} xxtrans (FE1 v) (FE2 v)) ->
 	xxtrans (xxoutput/exists FE1) (xxoutput/exists FE2).
 
-xxtrans/gen-exists : \{K1\} \{K2\} \{F:xxterm K1 -&gt; xxoutput K2\} \{T\}
+xxtrans/gen-exists : {K1} {K2} {F:xxterm K1 -> xxoutput K2} {T}
 	xxtrans (F T) (xxoutput/exists F).
 
 
 xxtrans-open-exists :
-	(xxtrans (xxoutput/exists FE1) E2) -&gt;
-	(\{v:xxterm K\} xxtrans (FE1 v) E2) -&gt;
+	(xxtrans (xxoutput/exists FE1) E2) ->
+	({v:xxterm K} xxtrans (FE1 v) E2) ->
 	type.
 
-- : \{K1\} \{K2\} \{O\}
+- : {K1} {K2} {O}
     xxtrans-open-exists
 	 (xxtrans/gen-exists K1 K2 ([v] (xxoutput/exists ([v'] FF v v'))) O) 
         ([v'] (xxtrans/transitive 
@@ -143,8 +141,7 @@ xxtrans-open-exists :
 		    ([v] (FF v v')) O)
 		 (xxtrans/inside ([v] (xxtrans/gen-exists _ _ _ v'))))).
 
-&lt;/twelf&gt;
-The last term is incorrectly typed because ``FF`` depends on K1 and K2, but is not declared explicitly.
+%{! The last term is incorrectly typed because ``FF`` depends on K1 and K2, but is not declared explicitly.
 But in my version of twelf (twelf 1.5R3, with trustme, allegedly from August 2005) doesn't
 appear to terminate when attempting to type it.
 
@@ -156,8 +153,8 @@ appear to terminate when attempting to type it.
 #
 # Coverage Checker Nontermination
 
-The coverage checker sometimes fails to terminate.
-&lt;twelf&gt;
+The coverage checker sometimes fails to terminate. !}%
+    
 %%%% coverage checking doesn't always terminate
 
 %%%% Definitions
@@ -168,13 +165,13 @@ void : type.
 expr : type.
 
 unit : expr. 
-add : expr -&gt; expr -&gt; expr.
+add : expr -> expr -> expr.
 
 
 %%% Nested for evaluation
 
 
-expr-in-expr : (expr -&gt; expr) -&gt; type.
+expr-in-expr : (expr -> expr) -> type.
 
 
 expr-in-expr/add1 : expr-in-expr ([E] (add E _)).
@@ -185,7 +182,7 @@ expr-in-expr/add2 : expr-in-expr ([E] (add unit E)).
 %%% ready for atomic evaluation
 
 
-atomic-expr : expr -&gt; type.
+atomic-expr : expr -> type.
 
 
 atomic-expr/add : atomic-expr (add unit unit).
@@ -194,17 +191,16 @@ atomic-expr/add : atomic-expr (add unit unit).
 %% this "theorem" is actually false
 
 %theorem expr-in-atomic-expr-contradiction :
-	forall* \{E\} \{T\}
-	forall \{AE:atomic-expr (T E)\}
-               \{Tok:expr-in-expr T\}
-	exists \{F:void\}
+	forall* {E} {T}
+	forall {AE:atomic-expr (T E)}
+               {Tok:expr-in-expr T}
+	exists {F:void}
 	true.
 
 %worlds () (expr-in-atomic-expr-contradiction _ _ _).
-%total \{ \} (expr-in-atomic-expr-contradiction _ _ _).
-&lt;/twelf&gt;
+%total { } (expr-in-atomic-expr-contradiction _ _ _).
 
-#
+%{! #
 #
 # Broken Invariant in Coverage Checker
 
@@ -247,15 +243,15 @@ then there is an "uncaught exception" rather than a helpful error message.
 The prover sometimes fails to terminate.
 See example in 
 [http://cs.nju.edu.cn/boyland/proof/using-twelf.html my tutorial] (Section 2.3)
-I have copied it here for completeness:
-&lt;twelf&gt;
+I have copied it here for completeness: !}%
+    
 %%% Example of Twelf from "using-twelf" paper
 
 term : type.
 
 true : term.
 false : term.
-if : term -&gt; term -&gt; term -&gt; term.
+if : term -> term -> term -> term.
 zero : term.
 
 ty : type.
@@ -265,38 +261,38 @@ int : ty.
 
 
 %% relations
-is_value : term -&gt; type.
+is_value : term -> type.
 
 is_value/true : is_value true.
 is_value/false : is_value false.
 is_value/zero : is_value zero.
 
-eval : term -&gt; term -&gt; type.
+eval : term -> term -> type.
 
 eval/if_true : eval (if true X _) X.
 eval/if_false : eval (if false _ X) X.
 eval/if : eval (if E E1 E2) (if E' E1 E2)
-    &lt;- eval E E'.
+    <- eval E E'.
 
-not_stuck : term -&gt; type.
+not_stuck : term -> type.
 
-not_stuck/value : not_stuck X &lt;- is_value X.
-not_stuck/eval : not_stuck X &lt;- eval X X'.
+not_stuck/value : not_stuck X <- is_value X.
+not_stuck/eval : not_stuck X <- eval X X'.
 
-of : term -&gt; ty -&gt; type.
+of : term -> ty -> type.
 
 of/true : of true bool.
 of/false : of false bool.
 of/zero : of zero int.
-of/if : of X bool -&gt; of Y T -&gt; of Z T -&gt; of (if X Y Z) T.
+of/if : of X bool -> of Y T -> of Z T -> of (if X Y Z) T.
 
 %% theorems
 
-progress : (of X T) -&gt; (not_stuck X) -&gt; type.
+progress : (of X T) -> (not_stuck X) -> type.
 %mode progress +D1 -D2.
 %prove 2 T (progress T _).
-&lt;/twelf&gt;
-The theorem prover is deprecated in Twelf, and fixing this bug is not required before producing
+
+%{! The theorem prover is deprecated in Twelf, and fixing this bug is not required before producing
 a new release of Twelf.
 
 #
@@ -320,5 +316,10 @@ example [Indexed HOAS nat bijection](/wiki/indexed-hoas-nat-bijection/) that han
 
 Success: I have implemented a bijection generator. See http://www.cs.uwm.edu/~boyland/papers/map-natural.html
 
-:: Cool! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 02:08, 12 December 2010 (EST)
+:: Cool! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 02:08, 12 December 2010 (EST) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Boyland).
 !}%

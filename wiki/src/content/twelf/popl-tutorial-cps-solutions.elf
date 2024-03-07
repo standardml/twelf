@@ -54,3 +54,9 @@ cpse/ret : cpse (ret (V:value A)) ([c:ccont A] cthrow c V')
 %{! 
 See [POPL Tutorial/CPS_Solution2](/wiki/popl-tutorial-cps-solution2/) for the solution to the second CPS problem.
  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/CPS_Solutions).
+!}%

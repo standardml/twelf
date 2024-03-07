@@ -27,7 +27,7 @@ nat : type.
 z : nat.
 s : nat -> nat.
 
-%{! Again, I can outright define the various natural numbers if I care to, and I can even define an LF term ``succ`` that takes a natural number and returns its successor, though this is kind of a dumb function, because it just applies the ``s`` constructor !}%
+%{! Again, I can outright define the various natural numbers if I care to, and I can even define an LF term ``succ`` that takes a natural number and returns its successor, though this is kind of a dumb function, because it just applies the ``s`` constructor: !}%
 
 0 : nat = z.
 1 : nat = s z.
@@ -178,7 +178,7 @@ mytree : tree = node 2 leaf (node 1 (node 6 (node 5 leaf leaf) (node 2 (node 3 l
 
 %%### Question 2: Code from specification
 
-%{! Define ``append`` and ``flip`` as defined in [http://www.andrew.cmu.edu/course/15-814/homeworks/hw05.html Homework 5]. The ``infix`` relation is defined for you, but you will need to define ``append`` before Twelf will accept that ``infix`` is total !}%
+%{! Define ``append`` and ``flip`` as defined in [http://www.andrew.cmu.edu/course/15-814/homeworks/hw05.html Homework 5]. The ``infix`` relation is defined for you, but you will need to define ``append`` before Twelf will accept that ``infix`` is total. !}%
 
 %%#### Append
 
@@ -232,3 +232,9 @@ infix/s : infix (node N T1 T2) L
 %%                   (node 5 leaf leaf)))
 %%               leaf).
 %% %query 1 * infix mytree (cons 2 (cons 5 (cons 6 (cons 3 (cons 2 (cons 1 nil)))))).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Homework_6).
+!}%

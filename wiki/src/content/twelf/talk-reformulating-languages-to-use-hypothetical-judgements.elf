@@ -1,7 +1,6 @@
 %%! title: "Talk:Reformulating languages to use hypothetical judgements"
 
-%{!
-Thanks Dan, very useful.
+%{! Thanks Dan, very useful.
 
 Here's two other inductive properties of complete development:  
 
@@ -13,7 +12,9 @@ Second, ==&gt; completes any =&gt;:
 
 These two properties give an easy proof that =&gt; has the diamond property: put two of these triangles together along their ==&gt; side.
 
-[User:Drl](/wiki/user-drl/) 16:08, 3 March 2008 (EST)
+[[User:Rpollack|Rpollack]] 17:04, 28 February 2008 (EST)
+
+: Cool.  I know there's a proof of CR in the Twelf examples directory, but I think it proves diamond for parallel reduction directly.  If I get a chance, I'll Twelf these theorems up and then maybe turn this page into a case study instead of a tutorial.  [User:Drl](/wiki/user-drl/) 16:08, 3 March 2008 (EST)
 
 :: Done, but not commented yet: [Church-Rosser via Complete Development](/wiki/church-rosser-via-complete-development/).
 [User:Drl](/wiki/user-drl/) 10:34, 4 March 2008 (EST)
@@ -27,7 +28,14 @@ How about improving the rule ==&gt;/beta to:
 
 This simplifies the proof of "sound" too.
 
-[User:Drl](/wiki/user-drl/) 16:08, 3 March 2008 (EST)
+[[User:Rpollack|Rpollack]] 15:34, 29 February 2008 (EST)
 
-:: Actually, there's one downside to this reformulation: in the original version, Twelf can prove =&gt; total automatically, but in the new version, it gets tripped up by the inversion that if (lam M) =&gt; N then N is (lam N1).  I changed the definition back because I want to let Twelf prove this totality for me in [Church-Rosser via Complete Development](/wiki/church-rosser-via-complete-development/), and I want the code here to stay synchronized with that.  [User:Drl](/wiki/user-drl/) 10:34, 4 March 2008 (EST)
+: Good idea---it makes sense to localize the binding here.  I've seen situations where this move actually gives you less information (e.g., a typed beta-reduction rule in a calculus with a definitional equality rule---you can't invert the derivation of (lam M : A -&gt; B) to get a hypothetical), but for this tutorial it makes sense.  [User:Drl](/wiki/user-drl/) 16:08, 3 March 2008 (EST)
+
+:: Actually, there's one downside to this reformulation: in the original version, Twelf can prove =&gt; total automatically, but in the new version, it gets tripped up by the inversion that if (lam M) =&gt; N then N is (lam N1).  I changed the definition back because I want to let Twelf prove this totality for me in [Church-Rosser via Complete Development](/wiki/church-rosser-via-complete-development/), and I want the code here to stay synchronized with that.  [User:Drl](/wiki/user-drl/) 10:34, 4 March 2008 (EST) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Reformulating_languages_to_use_hypothetical_judgements).
 !}%

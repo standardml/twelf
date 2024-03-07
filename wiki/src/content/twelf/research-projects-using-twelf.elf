@@ -1,7 +1,6 @@
 %%! title: "Research projects using Twelf"
 
-%{!
-Please add your research using Twelf to the links below.  We hope this collection of links will encourage collaboration among Twelf users and record how Twelf is being used in practice.  
+%{! Please add your research using Twelf to the links below.  We hope this collection of links will encourage collaboration among Twelf users and record how Twelf is being used in practice.  
 
 The links on this page are grouped into two rough categories: larger projects (e.g., a multi-year endeavor) and smaller projects (e.g., some Twelf code that accompanies a research paper).  The line between these two is fuzzy, so add your work wherever you think it fits best. __NOTOC__
 
@@ -24,13 +23,20 @@ The links on this page are grouped into two rough categories: larger projects (e
 #
 # Smaller projects
 
-* [http://www.cs.cmu.edu/~drl/pubs/lh05dmlproofs-tr/lh05dmlproofs-tr.pdf Dependent Types for ML] - A paper by [User:drl](/wiki/user-drl/) and User:rwh|Bob Harper]] about enriching an ML-like type system with a form of dependent types.  Much of the metatheory of the language is mechanized in Twelf.  
+* [http://www.cs.cmu.edu/~drl/pubs/lh05dmlproofs-tr/lh05dmlproofs-tr.pdf Dependent Types for ML] - A paper by [User:drl](/wiki/user-drl/) and [[User:rwh|Bob Harper]] about enriching an ML-like type system with a form of dependent types.  Much of the metatheory of the language is mechanized in Twelf.  
 * [http://www.cs.cornell.edu/people/fluet/twelf/index.html Substructural Languages] - Twelf code from some of Matthew Fluet's papers on substructural languages.
 * [http://www.cs.cmu.edu/~jdonham/aml-proof/ Self-Adjusting Computation] - [User:JakeD](/wiki/user-jaked/) formalization of a consistency proof of non-deterministic semantics.
-* [http://www.cs.cmu.edu/~joshuad/papers/intcomp/ Elaborating Intersection and Union Types] — User:Joshua|Joshua Dunfield]]'s proofs about an elaboration semantics.
+* [http://www.cs.cmu.edu/~joshuad/papers/intcomp/ Elaborating Intersection and Union Types] — [[User:Joshua|Joshua Dunfield]]'s proofs about an elaboration semantics.
 
 #
 # Related projects
 
-* 
+* [[poplmark:The POPLmark Challenge|The POPLmark Challenge]] - A project aimed at increasing the overall use of theorem provers like Twelf in programming language design. A solution to the full challege using Twelf submitted by a team at CMU [http://fling-l.seas.upenn.edu/~plclub/cgi-bin/poplmark/index.php?title=Submission_from_Carnegie_Mellon].
+* [http://delphin.poswolsky.com/ Delphin] - An integration of concepts from Twelf and functional programming languages.
+* [http://www.cs.cmu.edu/~fp/elf.html Elf] - The predecessor to Twelf. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Research_projects_using_Twelf).
 !}%

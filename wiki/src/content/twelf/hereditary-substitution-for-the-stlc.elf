@@ -1,7 +1,6 @@
 %%! title: "Hereditary substitution for the STLC"
 
-%{!
-_You may wish to read the tutorial on [admissibility of cut](/wiki/admissibility-of-cut/) and/or the article on [verifications and uses](/wiki/verifications-and-uses/) first._
+%{! _You may wish to read the tutorial on [admissibility of cut](/wiki/admissibility-of-cut/) and/or the article on [verifications and uses](/wiki/verifications-and-uses/) first._
 
 In this tutorial, we recast the proof of cut admissibility as an algorithm for normalizing terms in the simply-typed λ-calculus.  This algorithm is called _hereditary substitution_; it is used in the definition of LF itself, as well as in many other type theories.  To apply hereditary substitution, it is necessary to:
 - Define a language of [canonical form](/wiki/canonical-form/)s.  In programming language terms, canonical forms correspond to terms that are not β-reducible ([beta-normal](/wiki/beta-equivalence/)) and then are η-expanded as much as possible ([eta-long](/wiki/eta-equivalence/)); logically, canonical forms correspond to the cut-free sequent calculus proofs.
@@ -17,7 +16,8 @@ In this article, we formalize hereditary substitution and elaboration in Twelf. 
 
 This example brings together a number of Twelf proof techniques: 
 * using [%reduces](/wiki/percent-reduces/) for termination 
-* [mutual induction](/wiki/mutual-induction/) and [equality](/wiki/equality/) and [respects lemma](/wiki/respects-lemma/)s
+* [mutual induction](/wiki/mutual-induction/) and [[lexicographic induction]]
+* reasoning with [equality](/wiki/equality/) and [respects lemma](/wiki/respects-lemma/)s
 * proving [uniqueness lemma](/wiki/uniqueness-lemma/)s
 * [output factoring](/wiki/output-factoring/)
 * [reasoning from false](/wiki/reasoning-from-false/)
@@ -35,32 +35,30 @@ The canonical forms language is described on this page; the external language an
 #
 # Syntax
 
-We consider a calculus with function and pair types, as well as a single base type:
-
-&lt;twelf&gt;
+We consider a calculus with function and pair types, as well as a single base type: !}%
+    
 tp : type.
 
 b : tp.
-arrow : tp -&gt; tp -&gt; tp.
-prod : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
+prod : tp -> tp -> tp.
 
 rtm : type.
 mtm : type.
 
-app : rtm -&gt; mtm -&gt; rtm.
+app : rtm -> mtm -> rtm.
 c : rtm.
-fst : rtm -&gt; rtm.
-snd : rtm -&gt; rtm.
+fst : rtm -> rtm.
+snd : rtm -> rtm.
 
-asm : rtm -&gt; mtm.
-lam : (rtm -&gt; mtm) -&gt; mtm.
-pair : mtm -&gt; mtm -&gt; mtm.
+asm : rtm -> mtm.
+lam : (rtm -> mtm) -> mtm.
+pair : mtm -> mtm -> mtm.
 
-%block rtm_block : block \{x : rtm\}.
+%block rtm_block : block {x : rtm}.
 %worlds (rtm_block) (tp) (rtm) (mtm).
-&lt;/twelf&gt;
 
-The syntax of types is standard.  There are a few subtleties in the syntax of terms:
+%{! The syntax of types is standard.  There are a few subtleties in the syntax of terms:
 * The syntax of terms is stratified into atomic terms ``rtm`` and canonical terms ``mtm`` in order to syntactically prevent β-redices.  For example, pairs are canonical but the argument of a projection (``fst`` and ``snd``) is atomic, so we can never project from a term that is syntactically a pair.  
 * We name the syntactic classes ``rtm`` and ``mtm`` after the metavariables ``R`` and ``M`` that we will use to refer to them.
 * Because variables are considered to be atomic terms, the body of a ``lam`` binds a variable of type ``rtm``.  This means that the substitution operation that we get "for free" from the encoding is only the substitution of an ``rtm`` for a variable; hereditary substitution defines the substitution of an  ``mtm`` for a variable.
@@ -68,13 +66,12 @@ The syntax of types is standard.  There are a few subtleties in the syntax of te
 
 #
 #
-# Typing judgements
-
-&lt;twelf&gt;
-atom : rtm -&gt; tp -&gt; type.
+# Typing judgements !}%
+    
+atom : rtm -> tp -> type.
 %mode atom +X1 -X2.
 
-canon : mtm -&gt; tp -&gt; type.
+canon : mtm -> tp -> type.
 %mode canon +X1 +X2.
 
 % atomic 
@@ -82,34 +79,33 @@ canon : mtm -&gt; tp -&gt; type.
 atom_c : atom c b.
 
 atom_app : atom (app R1 M2) A
-            &lt;- atom R1 (arrow A2 A)
-            &lt;- canon M2 A2.
+            <- atom R1 (arrow A2 A)
+            <- canon M2 A2.
 
 atom_fst : atom (fst R) A1
-            &lt;- atom R (prod A1 A2).
+            <- atom R (prod A1 A2).
 
 atom_snd : atom (snd R) A2
-            &lt;- atom R (prod A1 A2).
+            <- atom R (prod A1 A2).
 
 %% canonical 
 
 canon_asm : canon (asm R) b
-             &lt;- atom R b.
+             <- atom R b.
 
 canon_lam : canon (lam M) (arrow A2 A)
-             &lt;- \{x : rtm\} (atom x A2) -&gt;  canon (M x) A.
+             <- {x : rtm} (atom x A2) ->  canon (M x) A.
 
 canon_pair : canon (pair M1 M2) (prod A1 A2)
-              &lt;- canon M1 A1
-              &lt;- canon M2 A2.
+              <- canon M1 A1
+              <- canon M2 A2.
 
-%block atom_block : some \{A:tp\}
-                     block \{x:rtm\} \{dx : atom x A\}. 
+%block atom_block : some {A:tp}
+                     block {x:rtm} {dx : atom x A}. 
 %worlds (atom_block) (atom _ _) (canon _ _).
 %terminates (R M) (atom R _) (canon M _).
-&lt;/twelf&gt;
 
-We define two mutually-recursive judgements, ``atom R A`` and ``canon M A``.  The typing judgements for the two syntactic categories have a bidirectional operational interpretation: an ``mtm`` is checked against a type, whereas an ``rtm`` synthesizes a type.  The rules are the standard typing rules for the λ-calculus,  modified to follow the restrictions of the syntax.  Additionally, the rule ``canon_asm`` applies only at base type, which forces an ``mtm`` to be η-long.
+%{! We define two mutually-recursive judgements, ``atom R A`` and ``canon M A``.  The typing judgements for the two syntactic categories have a bidirectional operational interpretation: an ``mtm`` is checked against a type, whereas an ``rtm`` synthesizes a type.  The rules are the standard typing rules for the λ-calculus,  modified to follow the restrictions of the syntax.  Additionally, the rule ``canon_asm`` applies only at base type, which forces an ``mtm`` to be η-long.
 
 These judgements are manifestly terminating, which we verify with the ``%terminates``.
 
@@ -122,84 +118,82 @@ We define three hereditary substitution judgements:
 * ``hsubst_r M0 A0 ([x0] R) R'``: compute the atomic term ``R'`` resulting from substituting ``M0`` for ``x0`` in ``R``.  This judgement applies when ``x0`` is not the head variable of the atomic term ``R``.
 * ``hsubst_rr M0 A0 ([x0] R) M' A'``: compute a new canonical form term ``M'`` resulting from substituting ``M0`` for ``x0`` in ``R``.  This judgement applies when ``x0`` is the head variable of ``R``.
 
-The head variable of an atomic term ``R`` is the variable at the root of a series of eliminations.  E.g., the head of ``fst (app x c)`` is ``x``.  When a canonical form is substituted for a head variable, hereditary substitution continues reducing.  E.g., the following judgement is derivable:
+The head variable of an atomic term ``R`` is the variable at the root of a series of eliminations.  E.g., the head of ``fst (app x c)`` is ``x``.  When a canonical form is substituted for a head variable, hereditary substitution continues reducing.  E.g., the following judgement is derivable: !}%
+    
+%{! (options removed from twelftag: discard=true) !}%
 
-&lt;twelf discard=true&gt;
 hsubst_rr 
  (lam ([x] (pair c c)))
  (arrow b (prod b b)) 
  ([x] fst (app x c))
  c
  b
-&lt;/twelf&gt;
 
-Intuitively, we substitute  ``(lam ([x] (pair c c)))`` to get ``fst (app (lam ([x] (pair c c))) c)`` and then reduce this to ``c``.  
+%{! Intuitively, we substitute  ``(lam ([x] (pair c c)))`` to get ``fst (app (lam ([x] (pair c c))) c)`` and then reduce this to ``c``.  
 
 ``hsubst_rr`` also computes the type of the canonical form it produces, which is needed for the termination metric for hereditary substitution. 
 
-Here are the judgements:
-
-&lt;twelf&gt;
-hsubst_m : mtm -&gt; tp -&gt; (rtm -&gt; mtm) -&gt; mtm -&gt; type.
+Here are the judgements: !}%
+    
+hsubst_m : mtm -> tp -> (rtm -> mtm) -> mtm -> type.
 %mode hsubst_m +X1 +X2 +X3 -X4.
 
-hsubst_r : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; rtm -&gt; type.
+hsubst_r : mtm -> tp -> (rtm -> rtm) -> rtm -> type.
 %mode hsubst_r +X1 +X2 +X3 -X4.
 
-hsubst_rr : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; mtm -&gt; tp -&gt; type.
+hsubst_rr : mtm -> tp -> (rtm -> rtm) -> mtm -> tp -> type.
 %mode hsubst_rr +X1 +X2 +X3 -X4 -X5.
 
 %% Ms
 
 hsubst_m_r : hsubst_m M0 A0 ([x] asm (R x)) (asm R')
-              &lt;- hsubst_r M0 A0 R R'.
+              <- hsubst_r M0 A0 R R'.
 
 hsubst_m_rr : hsubst_m M0 A0 ([x] asm (R x)) M'
-               &lt;- hsubst_rr M0 A0 R M' _.
+               <- hsubst_rr M0 A0 R M' _.
 
 hsubst_m_lam : hsubst_m M0 A0 ([x] (lam ([y] M x y))) (lam M')
-                &lt;- (\{y:rtm\} 
+                <- ({y:rtm} 
                       hsubst_m M0 A0 ([x] M x y) (M' y)).
 
 hsubst_m_pair : hsubst_m M0 A0 ([x] (pair (M1 x) (M2 x))) (pair M1' M2')
-                 &lt;- hsubst_m M0 A0 M1 M1'
-                 &lt;- hsubst_m M0 A0 M2 M2'.
+                 <- hsubst_m M0 A0 M1 M1'
+                 <- hsubst_m M0 A0 M2 M2'.
 
 %% R not head
 
 hsubst_r_closed : hsubst_r M0 A0 ([x] E) E.
 
 hsubst_r_app : hsubst_r M0 A0 ([x] (app (R x) (M x))) (app R' M')
-                &lt;- hsubst_r M0 A0 R R'
-                &lt;- hsubst_m M0 A0 M M'.
+                <- hsubst_r M0 A0 R R'
+                <- hsubst_m M0 A0 M M'.
 
 hsubst_r_fst : hsubst_r M0 A0 ([x] (fst (R x))) (fst R')
-                &lt;- hsubst_r M0 A0 R R'.
+                <- hsubst_r M0 A0 R R'.
 
 hsubst_r_snd : hsubst_r M0 A0 ([x] (snd (R x))) (snd R')
-                &lt;- hsubst_r M0 A0 R R'.
+                <- hsubst_r M0 A0 R R'.
 
 %% r head
 
 hsubst_rr_var : hsubst_rr M0 A0 ([x] x) M0 A0.
 
-hsubst_rr_app : hsubst_rr M0 A0 ([x] app (R1 x) (M2 x)) M_ A
-                 &lt;- hsubst_rr M0 A0 R1 (lam M') (arrow A2 A)
-                 &lt;- hsubst_m M0 A0 M2 M2'
-                 &lt;- hsubst_m M2' A2 M' M_.
+hsubst_rr_app : hsubst_rr M0 A0 ([x] app (R1 x) (M2 x)) M'' A
+                 <- hsubst_rr M0 A0 R1 (lam M') (arrow A2 A)
+                 <- hsubst_m M0 A0 M2 M2'
+                 <- hsubst_m M2' A2 M' M''.
 
 hsubst_rr_fst : hsubst_rr M0 A0 ([x] (fst (R x))) M1' A1'
-                 &lt;- hsubst_rr M0 A0 R (pair M1' M2') (prod A1' A2').
+                 <- hsubst_rr M0 A0 R (pair M1' M2') (prod A1' A2').
 
 hsubst_rr_snd : hsubst_rr M0 A0 ([x] (snd (R x))) M2' A2'
-                 &lt;- hsubst_rr M0 A0 R (pair M1' M2') (prod A1' A2').
+                 <- hsubst_rr M0 A0 R (pair M1' M2') (prod A1' A2').
 
 %worlds (rtm_block) (hsubst_m _ _ _ _) (hsubst_r _ _ _ _) (hsubst_rr _ _ _ _ _).
-%reduces A' &lt;= A0 (hsubst_rr _ A0 _ _ A').
-%terminates \{(A0 A0' A0_) (M R R')\} (hsubst_m _ A0 M _) (hsubst_r _ A0' R _) (hsubst_rr _ A0_ R' _ _).
-&lt;/twelf&gt;
+%reduces A' <= A0 (hsubst_rr _ A0 _ _ A').
+%terminates {(A0 A0' A0'') (M R R')} (hsubst_m _ A0 M _) (hsubst_r _ A0' R _) (hsubst_rr _ A0'' R' _ _).
 
-The rule ``hsubst_r_closed`` is similar to a [catch-all case](/wiki/catch-all-case/): rather than putting cases of hereditary substitution into the LF context, we give a single rule that applies whenever the variable is not free in the term we are substituting into.  This covers both the variables ``y:rtm`` in the context and the constant ``c``, as well as any series of applications or projections made up from these terms—so the downside is that we have made hereditary substitution non-deterministic.  However, keeping hereditary substitution out of the context simplifies some proofs below.
+%{! The rule ``hsubst_r_closed`` is similar to a [catch-all case](/wiki/catch-all-case/): rather than putting cases of hereditary substitution into the LF context, we give a single rule that applies whenever the variable is not free in the term we are substituting into.  This covers both the variables ``y:rtm`` in the context and the constant ``c``, as well as any series of applications or projections made up from these terms—so the downside is that we have made hereditary substitution non-deterministic.  However, keeping hereditary substitution out of the context simplifies some proofs below.
 
 Other than that, the judgements ``hsubst_m`` and ``hsubst_r`` are defined in the straightforward compositional manner.  The interesting judgement is ``hsubst_rr``, which in each case performs some reduction on the output of the recursive call in order to compute a new canonical form.  The most interesting rule is ``hsubst_rr_app``, which continues the hereditary substitution into the body of the function.
 
@@ -209,27 +203,25 @@ When processing the ``%terminates`` declaration, Twelf proves that it is decidab
 #
 # Expansion
 
-Expansion shows that we can turn an atomic term of any type into a canonical term of that type.  It is a total judgement defined by induction on the structure of the type:
-
-&lt;twelf&gt;
-expand : tp -&gt; rtm -&gt; mtm -&gt; type.
+Expansion shows that we can turn an atomic term of any type into a canonical term of that type.  It is a total judgement defined by induction on the structure of the type: !}%
+    
+expand : tp -> rtm -> mtm -> type.
 %mode expand +X1 +X2 -X3.
 
 expand_b : expand b R (asm R).
 
 expand_arrow : expand (arrow A2 A) R (lam M)
-                &lt;- (\{x : rtm\} expand A2 x (M2 x))
-                &lt;- (\{x : rtm\} expand A (app R (M2 x)) (M x)).
+                <- ({x : rtm} expand A2 x (M2 x))
+                <- ({x : rtm} expand A (app R (M2 x)) (M x)).
 
 expand_prod : expand (prod A1 A2) R (pair M1 M2)
-               &lt;- expand A1 (fst R) M1
-               &lt;- expand A2 (snd R) M2.
+               <- expand A1 (fst R) M1
+               <- expand A2 (snd R) M2.
 
 %worlds (rtm_block) (expand _ _ _).
 %total A (expand A _ _).
-&lt;/twelf&gt;
 
-In the ``expand_arrow`` case, we first expand a variable at the argument type, and then we expand the application at the result type.
+%{! In the ``expand_arrow`` case, we first expand a variable at the argument type, and then we expand the application at the result type.
 
 #
 # Canonical forms language: Metatheory
@@ -245,11 +237,10 @@ In the ``expand_arrow`` case, we first expand a variable at the argument type, a
 
 Even though we annotated ``hsubst_rr`` with a [%reduces](/wiki/percent-reduces/) above, we will need an [effectiveness lemma](/wiki/effectiveness-lemma/) version of this [%reduces](/wiki/percent-reduces/) to use that fact in the proof below.
 
-\{\{needs|to figure out if there's a way to avoid this\}\}
-
-&lt;twelf&gt;
-hsubst_rr_size : \{A2\} \{A'\} hsubst_rr M2 A2 R M' A'
-                    -&gt; type.
+\{\{needs|to figure out if there's a way to avoid this\}\} !}%
+    
+hsubst_rr_size : {A2} {A'} hsubst_rr M2 A2 R M' A'
+                    -> type.
 %mode hsubst_rr_size +X1 +X2 +X3.
 
 - : hsubst_rr_size 
@@ -257,41 +248,38 @@ hsubst_rr_size : \{A2\} \{A'\} hsubst_rr M2 A2 R M' A'
 
 - : hsubst_rr_size
      A2 A4 (hsubst_rr_app _ _ Drr)
-     &lt;- hsubst_rr_size A2 (arrow A3 A4) Drr.
+     <- hsubst_rr_size A2 (arrow A3 A4) Drr.
 
 - : hsubst_rr_size
      A2 Al (hsubst_rr_fst Drr)
-     &lt;- hsubst_rr_size A2 (prod Al Ar) Drr.
+     <- hsubst_rr_size A2 (prod Al Ar) Drr.
 
 - : hsubst_rr_size
      A2 Ar (hsubst_rr_snd Drr)
-     &lt;- hsubst_rr_size A2 (prod Al Ar) Drr.
+     <- hsubst_rr_size A2 (prod Al Ar) Drr.
 
 %worlds (rtm_block) (hsubst_rr_size _ _ _).
 %total D (hsubst_rr_size _ _ D).
-%reduces A' &lt;= A2 (hsubst_rr_size A2 A' _).
-&lt;/twelf&gt;
-All the terms are inputs; the only output is the ``%reduces``.
+%reduces A' <= A2 (hsubst_rr_size A2 A' _).
 
-The main theorem proves that under the appropriate typing conditions, hereditary substitutions exist and preserve types.  For atomic terms, this means that one of the two kinds of hereditary substitutions exists.  Thus, we define the following sum type:
+%{! All the terms are inputs; the only output is the ``%reduces``.
 
-&lt;twelf&gt; 
-hsubst_r_exists_sum : mtm -&gt; tp -&gt; (rtm -&gt; rtm) -&gt; tp -&gt; type.
+The main theorem proves that under the appropriate typing conditions, hereditary substitutions exist and preserve types.  For atomic terms, this means that one of the two kinds of hereditary substitutions exists.  Thus, we define the following sum type: !}%
+    
+hsubst_r_exists_sum : mtm -> tp -> (rtm -> rtm) -> tp -> type.
 hsubst_r_exists_sum_r : hsubst_r_exists_sum M2 A2 R A
-                         &lt;- hsubst_r M2 A2 R R'
-                         &lt;- atom R' A.
+                         <- hsubst_r M2 A2 R R'
+                         <- atom R' A.
 hsubst_r_exists_sum_rr : hsubst_r_exists_sum M2 A2 R A'
-                          &lt;- hsubst_rr M2 A2 R M' A'
-                          &lt;- canon M' A'.
-&lt;/twelf&gt;
+                          <- hsubst_rr M2 A2 R M' A'
+                          <- canon M' A'.
 
-Because we are proving a theorem that concludes a disjunction, it should not be surprising that we need some [output factoring](/wiki/output-factoring/) lemmas.  The following lemmas may be proved independently:
-
-&lt;twelf&gt;
+%{! Because we are proving a theorem that concludes a disjunction, it should not be surprising that we need some [output factoring](/wiki/output-factoring/) lemmas.  The following lemmas may be proved independently: !}%
+    
 hsubst_m_exists_asm :  hsubst_r_exists_sum M2 A2 R b
-                       -&gt; hsubst_m M2 A2 ([x] (asm (R x))) M'
-                       -&gt; canon M' b
-                       -&gt; type.
+                       -> hsubst_m M2 A2 ([x] (asm (R x))) M'
+                       -> canon M' b
+                       -> type.
 %mode hsubst_m_exists_asm +X1 -X2 -X3.
 
 - : hsubst_m_exists_asm 
@@ -305,12 +293,12 @@ hsubst_m_exists_asm :  hsubst_r_exists_sum M2 A2 R b
      DcM'.
 
 %worlds (atom_block) (hsubst_m_exists_asm _ _ _).
-%total \{\} (hsubst_m_exists_asm _ _ _).
+%total {} (hsubst_m_exists_asm _ _ _).
 
 
 hsubst_r_exists_fst : hsubst_r_exists_sum M2 A2 R (prod Al Ar)
-                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (fst (R x))) Al
-                       -&gt; type.
+                       -> hsubst_r_exists_sum M2 A2 ([x] (fst (R x))) Al
+                       -> type.
 %mode hsubst_r_exists_fst +X1 -X2.
 
 - : hsubst_r_exists_fst 
@@ -322,12 +310,12 @@ hsubst_r_exists_fst : hsubst_r_exists_sum M2 A2 R (prod Al Ar)
      (hsubst_r_exists_sum_rr DcMl' (hsubst_rr_fst DsR)).
 
 %worlds (atom_block) (hsubst_r_exists_fst _ _).
-%total \{\} (hsubst_r_exists_fst _ _).
+%total {} (hsubst_r_exists_fst _ _).
 
 
 hsubst_r_exists_snd : hsubst_r_exists_sum M2 A2 R (prod Al Ar)
-                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (snd (R x))) Ar
-                       -&gt; type.
+                       -> hsubst_r_exists_sum M2 A2 ([x] (snd (R x))) Ar
+                       -> type.
 %mode hsubst_r_exists_snd +X1 -X2.
 
 - : hsubst_r_exists_snd 
@@ -339,36 +327,34 @@ hsubst_r_exists_snd : hsubst_r_exists_sum M2 A2 R (prod Al Ar)
      (hsubst_r_exists_sum_rr DcMr' (hsubst_rr_snd DsR)).
 
 %worlds (atom_block) (hsubst_r_exists_snd _ _).
-%total \{\} (hsubst_r_exists_snd _ _).
-&lt;/twelf&gt;
+%total {} (hsubst_r_exists_snd _ _).
 
-Next, we prove the overall theorems, as well as a factoring lemma for application.  This last factoring lemma 
-must be in the mutually recursive loop with the main theorems because of the final premise of ``hsubst_rr_app``, which continues the hereditary substitution.  
-
-&lt;twelf&gt;
-hsubst_m_exists : \{A2\}
-                   (\{y : rtm\} \{dy : atom y A2\} canon (M y) A)
-                   -&gt; canon M2 A2
-                   -&gt; hsubst_m M2 A2 M M'
-                   -&gt; canon M' A
-                   -&gt; type.
+%{! Next, we prove the overall theorems, as well as a factoring lemma for application.  This last factoring lemma 
+must be in the mutually recursive loop with the main theorems because of the final premise of ``hsubst_rr_app``, which continues the hereditary substitution. !}%
+    
+hsubst_m_exists : {A2}
+                   ({y : rtm} {dy : atom y A2} canon (M y) A)
+                   -> canon M2 A2
+                   -> hsubst_m M2 A2 M M'
+                   -> canon M' A
+                   -> type.
 %mode hsubst_m_exists +X0 +X1 +X2 -X3 -X4.
 
-hsubst_r_exists : \{A2\}
-                   (\{y : rtm\} \{dx : atom y A2\} atom (R y) A)
-                   -&gt; canon M2 A2
-                   -&gt; hsubst_r_exists_sum M2 A2 R A
-                   -&gt; type.
+hsubst_r_exists : {A2}
+                   ({y : rtm} {dx : atom y A2} atom (R y) A)
+                   -> canon M2 A2
+                   -> hsubst_r_exists_sum M2 A2 R A
+                   -> type.
 %mode hsubst_r_exists +X0 +X1 +X2 -X3.
 
-hsubst_m_exists_app : \{A2\}
+hsubst_m_exists_app : {A2}
                        %% this next argument is makes the termination argument work
-                       (\{y : rtm\} \{dx : atom y A2\} atom (R1 y) (arrow A3 A4)) 
-                       -&gt; hsubst_r_exists_sum M2 A2 R1 (arrow A3 A4)
-                       -&gt; hsubst_m M2 A2 M3 M3'
-                       -&gt; canon M3' A3
-                       -&gt; hsubst_r_exists_sum M2 A2 ([x] (app (R1 x) (M3 x))) A4
-                       -&gt; type.
+                       ({y : rtm} {dx : atom y A2} atom (R1 y) (arrow A3 A4)) 
+                       -> hsubst_r_exists_sum M2 A2 R1 (arrow A3 A4)
+                       -> hsubst_m M2 A2 M3 M3'
+                       -> canon M3' A3
+                       -> hsubst_r_exists_sum M2 A2 ([x] (app (R1 x) (M3 x))) A4
+                       -> type.
 %mode hsubst_m_exists_app +X-1 +X0 +X1 +X2 +X3 -X4.
 
 %% canonical terms
@@ -379,8 +365,8 @@ hsubst_m_exists_app : \{A2\}
      DcM2
      DsR
      DcM'
-     &lt;- hsubst_r_exists A2 DaR DcM2 Dsum
-     &lt;- hsubst_m_exists_asm Dsum DsR DcM'.
+     <- hsubst_r_exists A2 DaR DcM2 Dsum
+     <- hsubst_m_exists_asm Dsum DsR DcM'.
 
 - : hsubst_m_exists 
      A2
@@ -388,8 +374,8 @@ hsubst_m_exists_app : \{A2\}
      (DcM2 : canon M2 A2)
      (hsubst_m_lam DsM)
      (canon_lam DcM')
-     &lt;- (\{y\} 
-           \{dy : atom y Af\}
+     <- ({y} 
+           {dy : atom y Af}
            hsubst_m_exists A2 ([x] [dx] (DcM x dx y dy)) DcM2 (DsM y) (DcM' y dy)).
 
 - : hsubst_m_exists
@@ -398,8 +384,8 @@ hsubst_m_exists_app : \{A2\}
      DcM2
      (hsubst_m_pair DsMr DsMl)
      (canon_pair DcMr' DcMl')
-     &lt;- hsubst_m_exists A2 DcMl DcM2 DsMl DcMl'
-     &lt;- hsubst_m_exists A2 DcMr DcM2 DsMr DcMr'.
+     <- hsubst_m_exists A2 DcMl DcM2 DsMl DcMl'
+     <- hsubst_m_exists A2 DcMr DcM2 DsMr DcMr'.
 
 %% atomic terms
 
@@ -420,25 +406,25 @@ hsubst_m_exists_app : \{A2\}
      ([x] [dx] (atom_app (DcM x dx) (DaR x dx)))
      DcM2
      DsumApp
-     &lt;- hsubst_m_exists A2 DcM DcM2 DsM' DcM'
-     &lt;- hsubst_r_exists A2 DaR DcM2 DsumR'
-     &lt;- hsubst_m_exists_app A2 DaR DsumR' DsM' DcM' DsumApp.
+     <- hsubst_m_exists A2 DcM DcM2 DsM' DcM'
+     <- hsubst_r_exists A2 DaR DcM2 DsumR'
+     <- hsubst_m_exists_app A2 DaR DsumR' DsM' DcM' DsumApp.
 
 - : hsubst_r_exists
      A2
      ([x] [dx] (atom_fst (DcR x dx)))
      DcM2
      DsumFst
-     &lt;- hsubst_r_exists A2 DcR DcM2 DsumR
-     &lt;- hsubst_r_exists_fst DsumR DsumFst.
+     <- hsubst_r_exists A2 DcR DcM2 DsumR
+     <- hsubst_r_exists_fst DsumR DsumFst.
 
 - : hsubst_r_exists
      A2
      ([x] [dx] (atom_snd (DcR x dx)))
      DcM2
      DsumSnd
-     &lt;- hsubst_r_exists A2 DcR DcM2 DsumR
-     &lt;- hsubst_r_exists_snd DsumR DsumSnd.
+     <- hsubst_r_exists A2 DcR DcM2 DsumR
+     <- hsubst_r_exists_snd DsumR DsumSnd.
 
 %% app factoring lemma
 
@@ -456,293 +442,287 @@ hsubst_m_exists_app : \{A2\}
      (hsubst_r_exists_sum_rr (canon_lam DcM4') DsR1)
      DsM3
      DcM3
-     (hsubst_r_exists_sum_rr DcM4_ (hsubst_rr_app DsM4' DsM3 DsR1))
-     &lt;- hsubst_rr_size A2 (arrow A3 A4) DsR1
-     &lt;- hsubst_m_exists A3 DcM4' DcM3 DsM4' DcM4_.
+     (hsubst_r_exists_sum_rr DcM4'' (hsubst_rr_app DsM4' DsM3 DsR1))
+     <- hsubst_rr_size A2 (arrow A3 A4) DsR1
+     <- hsubst_m_exists A3 DcM4' DcM3 DsM4' DcM4''.
 
 %worlds (atom_block) 
 (hsubst_m_exists_app _ _ _ _ _ _)
 (hsubst_r_exists _ _ _ _)
 (hsubst_m_exists _ _ _ _ _).
 
-%total \{(A2 A2' A2_) (D  D' D_)\}
+%total {(A2 A2' A2'') (D  D' D'')}
 (hsubst_m_exists A2' D' _ _ _)
-(hsubst_m_exists_app A2_ D_ _ _ _ _)
+(hsubst_m_exists_app A2'' D'' _ _ _ _)
 (hsubst_r_exists A2 D _ _).
-&lt;/twelf&gt;
 
-As you can see, the proof is a straightforward induction, where in each case we use the appropriate factoring lemma.  In the final case of the application factoring lemma, we use the ``hsubst_rr_size`` lemma for its "side effect" of justifying the recursive call back to ``hsubst_m_exists``.  The mutual lexicographic termination metric is the same as before.
+%{! As you can see, the proof is a straightforward induction, where in each case we use the appropriate factoring lemma.  In the final case of the application factoring lemma, we use the ``hsubst_rr_size`` lemma for its "side effect" of justifying the recursive call back to ``hsubst_m_exists``.  The mutual lexicographic termination metric is the same as before.
 
 #
 #
 #
 # Uniqueness of hereditary substitution
 
-As usual for a [uniqueness lemma](/wiki/uniqueness-lemma/), we must begin by defining the appropriate identity types:
-
-&lt;twelf&gt;
-id/mtm : mtm -&gt; mtm -&gt; type.
+As usual for a [uniqueness lemma](/wiki/uniqueness-lemma/), we must begin by defining the appropriate identity types: !}%
+    
+id/mtm : mtm -> mtm -> type.
 id/mtm_refl : id/mtm M M.
 
-id/rtm : rtm -&gt; rtm -&gt; type.
+id/rtm : rtm -> rtm -> type.
 id/rtm_refl : id/rtm R R.
 
-id/tp : tp -&gt; tp -&gt; type.
+id/tp : tp -> tp -> type.
 id/tp_refl : id/tp A A.
-&lt;/twelf&gt;
 
-We elide the trivial proofs of the equivalence relation, congruence, inversion, and respects lemmas; see the complete Twelf code at the end for their statements.
-&lt;twelf hidden="true"&gt;
+%{! We elide the trivial proofs of the equivalence relation, congruence, inversion, and respects lemmas; see the complete Twelf code at the end for their statements. !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 id/rtm_sym : id/rtm R R'
-	      -&gt; id/rtm R' R
-	      -&gt; type.
+	      -> id/rtm R' R
+	      -> type.
 %mode id/rtm_sym +X1 -X2.
 
 - : id/rtm_sym id/rtm_refl id/rtm_refl.
 
 %worlds (rtm_block) (id/rtm_sym _ _).
-%total \{\} (id/rtm_sym _ _).
+%total {} (id/rtm_sym _ _).
 
 id/tp_arrow_inv : id/tp (arrow A1 A2) (arrow A1' A2')
-		   -&gt; id/tp A1 A1'
-		   -&gt; id/tp A2 A2'
-		   -&gt; type.
+		   -> id/tp A1 A1'
+		   -> id/tp A2 A2'
+		   -> type.
 %mode id/tp_arrow_inv +X1 -X2 -X3.
 
 - : id/tp_arrow_inv _ id/tp_refl id/tp_refl.
 
 %worlds (rtm_block) (id/tp_arrow_inv _ _ _).
-%total \{\} (id/tp_arrow_inv _ _ _).
+%total {} (id/tp_arrow_inv _ _ _).
 
 id/tp_prod_inv : id/tp (prod A1 A2) (prod A1' A2')
-		   -&gt; id/tp A1 A1'
-		   -&gt; id/tp A2 A2'
-		   -&gt; type.
+		   -> id/tp A1 A1'
+		   -> id/tp A2 A2'
+		   -> type.
 %mode id/tp_prod_inv +X1 -X2 -X3.
 
 - : id/tp_prod_inv _ id/tp_refl id/tp_refl.
 
 %worlds (rtm_block) (id/tp_prod_inv _ _ _).
-%total \{\} (id/tp_prod_inv _ _ _).
+%total {} (id/tp_prod_inv _ _ _).
 
 id/rtm_app_cong : id/rtm R R'
-		   -&gt; id/mtm M M'
-		   -&gt; id/rtm (app R M) (app R' M')
-		   -&gt; type.
+		   -> id/mtm M M'
+		   -> id/rtm (app R M) (app R' M')
+		   -> type.
 %mode id/rtm_app_cong +X1 +X2 -X3.
 
 - : id/rtm_app_cong _ _ id/rtm_refl.
 
 %worlds (rtm_block) (id/rtm_app_cong _ _ _).
-%total \{\} (id/rtm_app_cong _ _ _).
+%total {} (id/rtm_app_cong _ _ _).
 
 id/rtm_fst_cong : id/rtm R R'
-		   -&gt; id/rtm (fst R) (fst R')
-		   -&gt; type.
+		   -> id/rtm (fst R) (fst R')
+		   -> type.
 %mode id/rtm_fst_cong +X1  -X3.
 
 - : id/rtm_fst_cong _ id/rtm_refl.
 
 %worlds (rtm_block) (id/rtm_fst_cong _ _).
-%total \{\} (id/rtm_fst_cong _ _).
+%total {} (id/rtm_fst_cong _ _).
 
 id/rtm_snd_cong : id/rtm R R'
-		   -&gt; id/rtm (snd R) (snd R')
-		   -&gt; type.
+		   -> id/rtm (snd R) (snd R')
+		   -> type.
 %mode id/rtm_snd_cong +X1  -X3.
 
 - : id/rtm_snd_cong _ id/rtm_refl.
 
 %worlds (rtm_block) (id/rtm_snd_cong _ _).
-%total \{\} (id/rtm_snd_cong _ _).
+%total {} (id/rtm_snd_cong _ _).
 
-id/mtm_lam_cong :  (\{x:rtm\} id/mtm (M x) (M' x))
-		   -&gt; id/mtm (lam M) (lam M')
-		   -&gt; type.
+id/mtm_lam_cong :  ({x:rtm} id/mtm (M x) (M' x))
+		   -> id/mtm (lam M) (lam M')
+		   -> type.
 %mode id/mtm_lam_cong +X1 -X3.
 
 - : id/mtm_lam_cong _ id/mtm_refl.
 
 %worlds (rtm_block) (id/mtm_lam_cong _ _).
-%total \{\} (id/mtm_lam_cong _ _).
+%total {} (id/mtm_lam_cong _ _).
 
 id/mtm_lam_inv :  id/mtm (lam M) (lam M')
-		  -&gt; (\{x:rtm\} id/mtm (M x) (M' x))
-		  -&gt; type.
+		  -> ({x:rtm} id/mtm (M x) (M' x))
+		  -> type.
 %mode id/mtm_lam_inv +X1 -X3.
 
 - : id/mtm_lam_inv _ ([_] id/mtm_refl).
 
 %worlds (rtm_block) (id/mtm_lam_inv _ _).
-%total \{\} (id/mtm_lam_inv _ _).
+%total {} (id/mtm_lam_inv _ _).
 
 id/mtm_pair_cong : id/mtm M1 M1'
-		   -&gt; id/mtm M2 M2'
-		   -&gt; id/mtm (pair M1 M2) (pair M1' M2')
-		   -&gt; type.
+		   -> id/mtm M2 M2'
+		   -> id/mtm (pair M1 M2) (pair M1' M2')
+		   -> type.
 %mode id/mtm_pair_cong +X1 +X2 -X3.
 
 - : id/mtm_pair_cong _ _ id/mtm_refl.
 
 %worlds (rtm_block) (id/mtm_pair_cong _ _ _).
-%total \{\} (id/mtm_pair_cong _ _ _).
+%total {} (id/mtm_pair_cong _ _ _).
 
 id/mtm_pair_inv : id/mtm (pair M1 M2) (pair M1' M2')
-		   -&gt; id/mtm M1 M1'
-		   -&gt; id/mtm M2 M2'
-		   -&gt; type.
+		   -> id/mtm M1 M1'
+		   -> id/mtm M2 M2'
+		   -> type.
 %mode id/mtm_pair_inv +X1 -X2 -X3.
 
 - : id/mtm_pair_inv _ id/mtm_refl id/mtm_refl.
 
 %worlds (rtm_block) (id/mtm_pair_inv _ _ _).
-%total \{\} (id/mtm_pair_inv _ _ _).
+%total {} (id/mtm_pair_inv _ _ _).
 
 expand_respects_id : id/rtm R R'
-		      -&gt; id/mtm M M'
-		      -&gt; expand A R M
-		      -&gt; expand A R' M'
-		      -&gt; type.
+		      -> id/mtm M M'
+		      -> expand A R M
+		      -> expand A R' M'
+		      -> type.
 %mode expand_respects_id +X1 +X2 +X3 -X4.
 
 - : expand_respects_id _ _ D D.
 
 %worlds (rtm_block) (expand_respects_id _ _ _ _).
-%total \{\} (expand_respects_id _ _ _ _).
+%total {} (expand_respects_id _ _ _ _).
 %reduces D1 = D2 (expand_respects_id _ _ D2 D1).
 
 canon_respects_id :  id/mtm M M'
-		     -&gt; id/tp A A'
-		     -&gt; canon M A
-		     -&gt; canon M' A'
-		     -&gt; type.
+		     -> id/tp A A'
+		     -> canon M A
+		     -> canon M' A'
+		     -> type.
 %mode canon_respects_id +X1 +X2 +X3 -X4.
 
 - : canon_respects_id _ _ D D.
 
 %worlds (atom_block) (canon_respects_id _ _ _ _).
-%total \{\} (canon_respects_id _ _ _ _).
+%total {} (canon_respects_id _ _ _ _).
 %reduces D1 = D2 (canon_respects_id _ _ D2 D1).
 
 hsubst_m_respects_id : id/mtm M2 M2'
-			-&gt; id/tp A2 A2'
-			-&gt; (\{x\} id/mtm (M x) (M' x))
-			-&gt; hsubst_m M2 A2 M Ms
-			-&gt; hsubst_m M2' A2' M' Ms
-			-&gt; type.
+			-> id/tp A2 A2'
+			-> ({x} id/mtm (M x) (M' x))
+			-> hsubst_m M2 A2 M Ms
+			-> hsubst_m M2' A2' M' Ms
+			-> type.
 %mode hsubst_m_respects_id +X1 +X2 +X3 +X4 -X5.
 
 - : hsubst_m_respects_id _ _ _ D D.
 
 %worlds (rtm_block) (hsubst_m_respects_id _ _ _ _ _).
-%total \{\} (hsubst_m_respects_id _ _ _ _ _).
+%total {} (hsubst_m_respects_id _ _ _ _ _).
 %reduces D1 = D2 (hsubst_m_respects_id _ _ _ D2 D1).
 
 id/mtm_asm_cong : id/rtm R R'
-		   -&gt; id/mtm (asm R) (asm R')
-		   -&gt; type.
+		   -> id/mtm (asm R) (asm R')
+		   -> type.
 %mode id/mtm_asm_cong +X1  -X3.
 
 - : id/mtm_asm_cong _ id/mtm_refl.
 
 %worlds (rtm_block) (id/mtm_asm_cong _ _).
-%total \{\} (id/mtm_asm_cong _ _).
-&lt;/twelf&gt;
+%total {} (id/mtm_asm_cong _ _).
 
-The hardest part of proving uniqueness of hereditary substitution is proving that the rules ``hsubst_m_r`` and ``hsubst_m_rr`` are mutually exclusive.  We do by using [reasoning from false](/wiki/reasoning-from-false/).  
-
-&lt;twelf&gt;
+%{! The hardest part of proving uniqueness of hereditary substitution is proving that the rules ``hsubst_m_r`` and ``hsubst_m_rr`` are mutually exclusive.  We do by using [reasoning from false](/wiki/reasoning-from-false/). !}%
+    
 false : type.
 %freeze false.
-&lt;/twelf&gt;
 
-First, we prove that ``hsubst_rr`` is never inhabited when the variable is not free in the term being substituted into:
-&lt;twelf&gt;
+%{! First, we prove that ``hsubst_rr`` is never inhabited when the variable is not free in the term being substituted into: !}%
+    
 hsubst_rr_closed_contra : hsubst_rr M2 A2 ([_] R) M' A'
-                           -&gt; false
-                           -&gt; type.
+                           -> false
+                           -> type.
 %mode hsubst_rr_closed_contra +X1 -X2.
 
 - : hsubst_rr_closed_contra 
      (hsubst_rr_app _ _ Dr)
      X
-     &lt;- hsubst_rr_closed_contra Dr X.
+     <- hsubst_rr_closed_contra Dr X.
 
 - : hsubst_rr_closed_contra 
      (hsubst_rr_fst D)
      X
-     &lt;- hsubst_rr_closed_contra D X.
+     <- hsubst_rr_closed_contra D X.
 
 - : hsubst_rr_closed_contra 
      (hsubst_rr_snd D)
      X
-     &lt;- hsubst_rr_closed_contra D X.
+     <- hsubst_rr_closed_contra D X.
 
 %worlds (rtm_block) (hsubst_rr_closed_contra _ _).
 %total D (hsubst_rr_closed_contra D _).
-&lt;/twelf&gt;
-This is an example of deriving a contradiction by induction—the coverage checker rules out all the base cases.
 
-Next, we show that the two atomic term judgements are exclusive.  In the only base case that is not ruled out by coverage checking, we use the previous lemma.  
-&lt;twelf&gt;
+%{! This is an example of deriving a contradiction by induction—the coverage checker rules out all the base cases.
+
+Next, we show that the two atomic term judgements are exclusive.  In the only base case that is not ruled out by coverage checking, we use the previous lemma. !}%
+    
 %% contradiction of root and non-root
 
 hsubst_r_rr_contra : hsubst_r M2 A2 R R'
-                      -&gt; hsubst_rr M2 A2 R M' A'
-                      -&gt; false
-                      -&gt; type.
+                      -> hsubst_rr M2 A2 R M' A'
+                      -> false
+                      -> type.
 %mode hsubst_r_rr_contra +X1 +X2 -X3.
 
 - : hsubst_r_rr_contra
      hsubst_r_closed
      Drr
      X
-     &lt;- hsubst_rr_closed_contra Drr X.
+     <- hsubst_rr_closed_contra Drr X.
 
 - : hsubst_r_rr_contra 
      (hsubst_r_app _ DsrR)
      (hsubst_rr_app _ _ DsrrR)
      X
-     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+     <- hsubst_r_rr_contra DsrR DsrrR X.
 
 - : hsubst_r_rr_contra 
      (hsubst_r_fst DsrR)
      (hsubst_rr_fst DsrrR)
      X
-     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+     <- hsubst_r_rr_contra DsrR DsrrR X.
 
 - : hsubst_r_rr_contra 
      (hsubst_r_snd DsrR)
      (hsubst_rr_snd DsrrR)
      X
-     &lt;- hsubst_r_rr_contra DsrR DsrrR X.
+     <- hsubst_r_rr_contra DsrR DsrrR X.
 
 %worlds (rtm_block) (hsubst_r_rr_contra _ _ _). %% bar in extra block for lemma below's future use
 %total (D) (hsubst_r_rr_contra D _ _).
-&lt;/twelf&gt;
 
-Next, we write a little lemma showing that ``false`` implies any identity that we need.
-&lt;twelf&gt;
+%{! Next, we write a little lemma showing that ``false`` implies any identity that we need. !}%
+    
 %% false implies id
-false_implies_id/mtm : \{M\} \{M'\}
+false_implies_id/mtm : {M} {M'}
                         false 
-                        -&gt; id/mtm M M'
-                        -&gt; type.
+                        -> id/mtm M M'
+                        -> type.
 %mode false_implies_id/mtm +X1 +X2 +X3 -X4.
 %worlds (rtm_block) (false_implies_id/mtm _ _ _ _). %% bar in extra block for lemma below's future use
-%total \{\} (false_implies_id/mtm _ _ _ _).
-&lt;/twelf&gt;
+%total {} (false_implies_id/mtm _ _ _ _).
 
-The cost of defining hereditary substitution in a non-deterministic manner, which we did to avoid putting cases of hereditary substitution in the context, is that we now need to prove the following lemmas.  These lemmas establish that any way of deriving a hereditary substitution for a closed term produces the same result as ``hsubst_r_closed``.  
-&lt;twelf&gt;
+%{! The cost of defining hereditary substitution in a non-deterministic manner, which we did to avoid putting cases of hereditary substitution in the context, is that we now need to prove the following lemmas.  These lemmas establish that any way of deriving a hereditary substitution for a closed term produces the same result as ``hsubst_r_closed``. !}%
+    
 hsubst_r_vacuous_id : hsubst_r M2 A2 ([_] R) R'
-                     -&gt; id/rtm R' R
-                     -&gt; type.
+                     -> id/rtm R' R
+                     -> type.
 %mode hsubst_r_vacuous_id +X1 -X2.
 
 hsubst_m_vacuous_id : hsubst_m M2 A2 ([_] M) M'
-                     -&gt; id/mtm M' M
-                     -&gt; type.
+                     -> id/mtm M' M
+                     -> type.
 %mode hsubst_m_vacuous_id +X1 -X2.
 
 %% R
@@ -750,71 +730,70 @@ hsubst_m_vacuous_id : hsubst_m M2 A2 ([_] M) M'
 - : hsubst_r_vacuous_id hsubst_r_closed id/rtm_refl.
 
 - : hsubst_r_vacuous_id (hsubst_r_app Dm Dr) Did'
-     &lt;- hsubst_r_vacuous_id Dr DidR
-     &lt;- hsubst_m_vacuous_id Dm DidM
-     &lt;- id/rtm_app_cong DidR DidM Did'.
+     <- hsubst_r_vacuous_id Dr DidR
+     <- hsubst_m_vacuous_id Dm DidM
+     <- id/rtm_app_cong DidR DidM Did'.
 
 - : hsubst_r_vacuous_id (hsubst_r_fst D) Did'
-     &lt;- hsubst_r_vacuous_id D Did
-     &lt;- id/rtm_fst_cong Did Did'.
+     <- hsubst_r_vacuous_id D Did
+     <- id/rtm_fst_cong Did Did'.
 
 - : hsubst_r_vacuous_id (hsubst_r_snd D) Did'
-     &lt;- hsubst_r_vacuous_id D Did
-     &lt;- id/rtm_snd_cong Did Did'.
+     <- hsubst_r_vacuous_id D Did
+     <- id/rtm_snd_cong Did Did'.
 
 %% M
 
 - : hsubst_m_vacuous_id
      (hsubst_m_r Dr)
      Did'
-     &lt;- hsubst_r_vacuous_id Dr Did
-     &lt;- id/mtm_asm_cong Did Did'.
+     <- hsubst_r_vacuous_id Dr Did
+     <- id/mtm_asm_cong Did Did'.
 
 - : hsubst_m_vacuous_id
      (hsubst_m_rr D)
      Did
-     &lt;- hsubst_rr_closed_contra D X
-     &lt;- false_implies_id/mtm _ _ X Did.
+     <- hsubst_rr_closed_contra D X
+     <- false_implies_id/mtm _ _ X Did.
 
 - : hsubst_m_vacuous_id
      (hsubst_m_lam D)
      Did'
-     &lt;- (\{x\} 
+     <- ({x} 
            hsubst_m_vacuous_id (D x) (Did x))
-     &lt;- id/mtm_lam_cong Did Did'.
+     <- id/mtm_lam_cong Did Did'.
 
 - : hsubst_m_vacuous_id
      (hsubst_m_pair D2 D1)
      Did'
-     &lt;- hsubst_m_vacuous_id D1 Did1
-     &lt;- hsubst_m_vacuous_id D2 Did2
-     &lt;- id/mtm_pair_cong Did1 Did2 Did'.
+     <- hsubst_m_vacuous_id D1 Did1
+     <- hsubst_m_vacuous_id D2 Did2
+     <- id/mtm_pair_cong Did1 Did2 Did'.
 
 %worlds (rtm_block) (hsubst_r_vacuous_id _ _) (hsubst_m_vacuous_id _ _).
 %total (D1 D2) 
 (hsubst_r_vacuous_id D1 _)
 (hsubst_m_vacuous_id D2 _).
-&lt;/twelf&gt;
 
-Now, we prove the top-level results:
-&lt;twelf&gt;
+%{! Now, we prove the top-level results: !}%
+    
 hsubst_m_unique : hsubst_m M2 A2 M M'
-                   -&gt; hsubst_m M2 A2 M M_
-                   -&gt; id/mtm M' M_
-                   -&gt; type.
+                   -> hsubst_m M2 A2 M M''
+                   -> id/mtm M' M''
+                   -> type.
 %mode hsubst_m_unique +X1 +X2 -X3.
 
 hsubst_r_unique : hsubst_r M2 A2 R R'
-                   -&gt; hsubst_r M2 A2 R R_
-                   -&gt; id/rtm R' R_
-                   -&gt; type.
+                   -> hsubst_r M2 A2 R R''
+                   -> id/rtm R' R''
+                   -> type.
 %mode hsubst_r_unique +X1 +X2 -X3.
 
 hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
-                    -&gt; hsubst_rr M2 A2 R M_ A_
-                    -&gt; id/mtm M' M_
-                    -&gt; id/tp A' A_
-                    -&gt; type.
+                    -> hsubst_rr M2 A2 R M'' A''
+                    -> id/mtm M' M''
+                    -> id/tp A' A''
+                    -> type.
 %mode hsubst_rr_unique +X1 +X2 -X3 -X4.
 
 %% M
@@ -823,45 +802,45 @@ hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
      (hsubst_m_r Dsr)
      (hsubst_m_r Dsr')
      DidAsm
-     &lt;- hsubst_r_unique Dsr Dsr' DidR
-     &lt;- id/mtm_asm_cong DidR DidAsm.
+     <- hsubst_r_unique Dsr Dsr' DidR
+     <- id/mtm_asm_cong DidR DidAsm.
 
 - : hsubst_m_unique
      (hsubst_m_rr Dsr)
      (hsubst_m_rr Dsr')
      Did
-     &lt;- hsubst_rr_unique Dsr Dsr' Did _.
+     <- hsubst_rr_unique Dsr Dsr' Did _.
 
 %% contradict mismatch
 - : hsubst_m_unique
      (hsubst_m_r Dsr)
      (hsubst_m_rr Dsrr)
      Did
-     &lt;- hsubst_r_rr_contra Dsr Dsrr X
-     &lt;- false_implies_id/mtm _ _ X Did.
+     <- hsubst_r_rr_contra Dsr Dsrr X
+     <- false_implies_id/mtm _ _ X Did.
 
 %% contradict mismatch
 - : hsubst_m_unique
      (hsubst_m_rr Dsrr)
      (hsubst_m_r Dsr)
      Did
-     &lt;- hsubst_r_rr_contra Dsr Dsrr X
-     &lt;- false_implies_id/mtm _ _ X Did.
+     <- hsubst_r_rr_contra Dsr Dsrr X
+     <- false_implies_id/mtm _ _ X Did.
 
 - : hsubst_m_unique
      (hsubst_m_pair DsRight DsLeft)
      (hsubst_m_pair DsRight' DsLeft')
      DidPair
-     &lt;- hsubst_m_unique DsLeft DsLeft' DidLeft
-     &lt;- hsubst_m_unique DsRight DsRight' DidRight
-     &lt;- id/mtm_pair_cong DidLeft DidRight DidPair.
+     <- hsubst_m_unique DsLeft DsLeft' DidLeft
+     <- hsubst_m_unique DsRight DsRight' DidRight
+     <- id/mtm_pair_cong DidLeft DidRight DidPair.
 
 - : hsubst_m_unique
      (hsubst_m_lam Ds)
      (hsubst_m_lam Ds')
      DidLam
-     &lt;- (\{y:rtm\} hsubst_m_unique (Ds y) (Ds' y) (Did y))
-     &lt;- id/mtm_lam_cong Did DidLam.
+     <- ({y:rtm} hsubst_m_unique (Ds y) (Ds' y) (Did y))
+     <- id/mtm_lam_cong Did DidLam.
      
 %% R non-root
 
@@ -871,35 +850,35 @@ hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
      (hsubst_r_closed : hsubst_r M2 A2 ([_] R) R)
      (D : hsubst_r M2 A2 ([_] R) R')
      Did'
-     &lt;- hsubst_r_vacuous_id D Did
-     &lt;- id/rtm_sym Did Did'.
+     <- hsubst_r_vacuous_id D Did
+     <- id/rtm_sym Did Did'.
 
 - : hsubst_r_unique 
      (D : hsubst_r M2 A2 ([_] R) R')
      (hsubst_r_closed : hsubst_r M2 A2 ([_] R) R)
      Did
-     &lt;- hsubst_r_vacuous_id D Did.
+     <- hsubst_r_vacuous_id D Did.
 
 - : hsubst_r_unique 
      (hsubst_r_app DsM' DsR') 
-     (hsubst_r_app DsM_ DsR_)
+     (hsubst_r_app DsM'' DsR'')
      DidApp
-     &lt;- hsubst_r_unique DsR' DsR_ DidR
-     &lt;- hsubst_m_unique DsM' DsM_ DidM
-     &lt;- id/rtm_app_cong DidR DidM DidApp.
+     <- hsubst_r_unique DsR' DsR'' DidR
+     <- hsubst_m_unique DsM' DsM'' DidM
+     <- id/rtm_app_cong DidR DidM DidApp.
 
 - : hsubst_r_unique
      (hsubst_r_fst DsR')
-     (hsubst_r_fst DsR_)
+     (hsubst_r_fst DsR'')
      DidFst
-     &lt;- hsubst_r_unique DsR' DsR_ DidR
-     &lt;- id/rtm_fst_cong DidR DidFst.
+     <- hsubst_r_unique DsR' DsR'' DidR
+     <- id/rtm_fst_cong DidR DidFst.
 - : hsubst_r_unique
      (hsubst_r_snd DsR')
-     (hsubst_r_snd DsR_)
+     (hsubst_r_snd DsR'')
      DidSnd
-     &lt;- hsubst_r_unique DsR' DsR_ DidR
-     &lt;- id/rtm_snd_cong DidR DidSnd.
+     <- hsubst_r_unique DsR' DsR'' DidR
+     <- id/rtm_snd_cong DidR DidSnd.
 
 %% R root
 
@@ -912,32 +891,32 @@ hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
 - : hsubst_rr_unique
      (hsubst_rr_app DsM4' DsM3 DsR1)
      (hsubst_rr_app DsM4'-2 DsM3-2 DsR1-2)
-     DidM4_
+     DidM4''
      DidA4
-     &lt;- hsubst_rr_unique DsR1 DsR1-2 DidLam DidArrow
-     &lt;- hsubst_m_unique DsM3 DsM3-2 DidM3'
-     &lt;- id/tp_arrow_inv DidArrow DidA3 DidA4
-     &lt;- id/mtm_lam_inv DidLam DidM4'
-     &lt;- hsubst_m_respects_id DidM3' DidA3 DidM4' DsM4' DsM4'-1
-     &lt;- hsubst_m_unique DsM4'-1 DsM4'-2 DidM4_.
+     <- hsubst_rr_unique DsR1 DsR1-2 DidLam DidArrow
+     <- hsubst_m_unique DsM3 DsM3-2 DidM3'
+     <- id/tp_arrow_inv DidArrow DidA3 DidA4
+     <- id/mtm_lam_inv DidLam DidM4'
+     <- hsubst_m_respects_id DidM3' DidA3 DidM4' DsM4' DsM4'-1
+     <- hsubst_m_unique DsM4'-1 DsM4'-2 DidM4''.
 
 - : hsubst_rr_unique 
      (hsubst_rr_fst DsR')
-     (hsubst_rr_fst DsR_)
+     (hsubst_rr_fst DsR'')
      DidMl
      DidAl
-     &lt;- hsubst_rr_unique DsR' DsR_ DidPair DidProd
-     &lt;- id/tp_prod_inv DidProd DidAl _
-     &lt;- id/mtm_pair_inv DidPair DidMl _.
+     <- hsubst_rr_unique DsR' DsR'' DidPair DidProd
+     <- id/tp_prod_inv DidProd DidAl _
+     <- id/mtm_pair_inv DidPair DidMl _.
 
 - : hsubst_rr_unique 
      (hsubst_rr_snd DsR')
-     (hsubst_rr_snd DsR_)
+     (hsubst_rr_snd DsR'')
      DidMr
      DidAr
-     &lt;- hsubst_rr_unique DsR' DsR_ DidPair DidProd
-     &lt;- id/tp_prod_inv DidProd _ DidAr
-     &lt;- id/mtm_pair_inv DidPair _ DidMr.
+     <- hsubst_rr_unique DsR' DsR'' DidPair DidProd
+     <- id/tp_prod_inv DidProd _ DidAr
+     <- id/mtm_pair_inv DidPair _ DidMr.
 
 %worlds (rtm_block) 
 (hsubst_m_unique _ _ _)
@@ -948,9 +927,8 @@ hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
 (hsubst_r_unique D2 _ _)
 (hsubst_rr_unique D3 _ _ _)
 (hsubst_m_unique D1 _ _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Expansion
 
@@ -959,14 +937,13 @@ hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
 #
 # Existence of expansion
 
-This lemma is in part an [effectiveness lemma](/wiki/effectiveness-lemma/) for expansion, but it also shows that expansion preserves types.  
-
-&lt;twelf&gt;
-expand_exists : \{A\}
+This lemma is in part an [effectiveness lemma](/wiki/effectiveness-lemma/) for expansion, but it also shows that expansion preserves types. !}%
+    
+expand_exists : {A}
                  atom R A
-                 -&gt; expand A R M
-                 -&gt; canon M A
-                 -&gt; type.
+                 -> expand A R M
+                 -> canon M A
+                 -> type.
 %mode expand_exists +X0 +X1 -X2 -X3.
 
 - : expand_exists 
@@ -980,11 +957,11 @@ expand_exists : \{A\}
      DaR
      (expand_arrow DeApp DeX)
      (canon_lam DcApp)
-     &lt;- (\{x : rtm\}
-           \{dx : atom x A2\}
+     <- ({x : rtm}
+           {dx : atom x A2}
            expand_exists A2 dx (DeX x) (DcM x dx))
-     &lt;- (\{x : rtm\}
-           \{dx : atom x A2\}
+     <- ({x : rtm}
+           {dx : atom x A2}
            expand_exists A (atom_app (DcM x dx) DaR) (DeApp x) (DcApp x dx)).
 
 - : expand_exists
@@ -992,25 +969,23 @@ expand_exists : \{A\}
      DaR
      (expand_prod DeS DeF)
      (canon_pair DcS DcF)
-     &lt;- expand_exists A1 (atom_fst DaR) DeF DcF
-     &lt;- expand_exists A2 (atom_snd DaR) DeS DcS.
+     <- expand_exists A1 (atom_fst DaR) DeF DcF
+     <- expand_exists A2 (atom_snd DaR) DeS DcS.
 
 %worlds (atom_block) (expand_exists _ _ _ _). 
 %total D (expand_exists D _ _ _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 #
 # Uniqueness of expansion
 
-Uniqueness is proved by a straightforward induction using some identity lemmas:
-
-&lt;twelf&gt;
+Uniqueness is proved by a straightforward induction using some identity lemmas: !}%
+    
 expand_unique : expand A R M 
-                 -&gt; expand A R M'
-                 -&gt; id/mtm M M'
-                 -&gt; type.
+                 -> expand A R M'
+                 -> id/mtm M M'
+                 -> type.
 %mode expand_unique +X1 +X2 -X3.
 
 - : expand_unique
@@ -1020,43 +995,47 @@ expand_unique : expand A R M
 
 - : expand_unique 
      (expand_arrow 
-        (DeApp : \{x : rtm\} expand A (app R (Mx x)) (MApp x))
-        (DeX : \{x : rtm\} expand A2 x (Mx x)))
+        (DeApp : {x : rtm} expand A (app R (Mx x)) (MApp x))
+        (DeX : {x : rtm} expand A2 x (Mx x)))
       (expand_arrow 
-         (DeApp' : \{x : rtm\} expand A (app R (Mx' x)) (MApp' x))
-         (DeX' : \{x : rtm\} expand A2 x (Mx' x)))
+         (DeApp' : {x : rtm} expand A (app R (Mx' x)) (MApp' x))
+         (DeX' : {x : rtm} expand A2 x (Mx' x)))
      DidLam
-     &lt;- (\{x : rtm\}
+     <- ({x : rtm}
            expand_unique (DeX x) (DeX' x) (DidX x))
-     &lt;- (\{x : rtm\}
+     <- ({x : rtm}
            id/rtm_app_cong (id/rtm_refl : id/rtm R R) (DidX x) (DidApp x))
-     &lt;- (\{x : rtm\}
+     <- ({x : rtm}
            expand_respects_id (DidApp x) id/mtm_refl (DeApp x) (DeApp-2 x))
-     &lt;- (\{x : rtm\} 
+     <- ({x : rtm} 
            expand_unique (DeApp-2 x) (DeApp' x) (DidAppExp x))
-     &lt;- id/mtm_lam_cong DidAppExp DidLam.
+     <- id/mtm_lam_cong DidAppExp DidLam.
 
 - : expand_unique
      (expand_prod DeS DeF)
      (expand_prod DeS' DeF')
      DidPair
-     &lt;- expand_unique DeF DeF' DidF
-     &lt;- expand_unique DeS DeS' DidS
-     &lt;- id/mtm_pair_cong DidF DidS DidPair.
+     <- expand_unique DeF DeF' DidF
+     <- expand_unique DeS DeS' DidS
+     <- id/mtm_pair_cong DidF DidS DidPair.
      
 %worlds (rtm_block) (expand_unique _ _ _).
 %total D (expand_unique _ D _).
-&lt;/twelf&gt;
 
-#
+%{! #
 # Elaboration
 
 In [Hereditary substitution for the STLC (part 2)](/wiki/hereditary-substitution-for-the-stlc-part-2/), we discuss elaboration.  
 
 The complete Twelf code for this tutorial contains the identity lemmas that we elided above.
 
-&lt;twelflink&gt;All Twelf code for this tutorial.&lt;/twelflink&gt;
-&lt;twelflink check="true"&gt;See Twelf's output.&lt;/twelflink&gt;
+``&gt;All Twelf code for this tutorial.``
+`` check="true"&gt;See Twelf's output.``
 
-\{\{case study\}\}
+\{\{case study\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Hereditary_substitution_for_the_STLC).
 !}%

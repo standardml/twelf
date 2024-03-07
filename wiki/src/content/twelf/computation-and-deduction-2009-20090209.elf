@@ -1,6 +1,6 @@
 %%! title: "Computation and Deduction 2009/20090209"
 
-%{! Code from class, February !}%
+%{! Code from class, February 9 !}%
 
 %% MinML language
 
@@ -186,3 +186,9 @@ preservation : of E T -> step E E' -> of E' T -> type.
 
 %worlds () (preservation _ _ _).
 %total D (preservation _ D _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090209).
+!}%

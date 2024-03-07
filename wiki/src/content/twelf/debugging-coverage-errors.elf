@@ -1,7 +1,6 @@
 %%! title: "Debugging coverage errors"
 
-%{!
-This page lists techniques for debugging [input coverage](/wiki/coverage-checking/) and [output coverage](/wiki/coverage-checking/) errors.
+%{! This page lists techniques for debugging [input coverage](/wiki/coverage-checking/) and [output coverage](/wiki/coverage-checking/) errors.
 
 #
 # Debugging input coverage errors by adding type annotations
@@ -10,27 +9,24 @@ This page lists techniques for debugging [input coverage](/wiki/coverage-checkin
 #
 # Motivating example
 
-As a motivating example, we define a simple subtyping relation on the types of a programming language.  The language includes integers, floating point numbers, and functions.  We consider ``int`` to be a subtype of ``float``, and we give the usual contravariant rule for functions:
-
-&lt;twelf&gt;
+As a motivating example, we define a simple subtyping relation on the types of a programming language.  The language includes integers, floating point numbers, and functions.  We consider ``int`` to be a subtype of ``float``, and we give the usual contravariant rule for functions: !}%
+    
 tp    : type.
 int   : tp.
 float : tp.
-arrow : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
 
-sub       : tp -&gt; tp -&gt; type.
+sub       : tp -> tp -> type.
 sub-ii    : sub int int.
 sub-ff    : sub float float.
 sub-if    : sub int float.
 sub-arrow : sub (arrow T S) (arrow T' S')
-	     &lt;- sub T' T
-	     &lt;- sub S S'.
-&lt;/twelf&gt;
+	     <- sub T' T
+	     <- sub S S'.
 
-Let's prove that this subtyping relation is transitive.  When writing Twelf code, it's sometimes convenient to just blaze ahead with a proof without thinking to hard about what you're doing, and then think about what's going on only if Twelf reports an error.  So a first proof attempt might look like this:
-
-&lt;twelf&gt;
-sub-trans : sub T1 T2 -&gt; sub T2 T3 -&gt; sub T1 T3 -&gt; type.
+%{! Let's prove that this subtyping relation is transitive.  When writing Twelf code, it's sometimes convenient to just blaze ahead with a proof without thinking to hard about what you're doing, and then think about what's going on only if Twelf reports an error.  So a first proof attempt might look like this: !}%
+    
+sub-trans : sub T1 T2 -> sub T2 T3 -> sub T1 T3 -> type.
 %mode sub-trans +X1 +X2 -X3.
 
 - : sub-trans (D : sub T T) (D' : sub T T) D.
@@ -40,73 +36,77 @@ sub-trans : sub T1 T2 -&gt; sub T2 T3 -&gt; sub T1 T3 -&gt; type.
 -arrow : sub-trans 
          (sub-arrow DS DT)
          (sub-arrow DS' DT')
-         (sub-arrow DS_ DT_)
-         &lt;- sub-trans DT DT' DT_
-         &lt;- sub-trans DS DS' DS_.
+         (sub-arrow DS'' DT'')
+         <- sub-trans DT DT' DT''
+         <- sub-trans DS DS' DS''.
 
-&lt;/twelf&gt;
+%{! We let our fingers do the proving and came up with the straightforward inductive proof.  Each case type checks.  Does it work? !}%
+    
+%{! (options removed from twelftag: check="decl" discard=true) !}%
 
-We let our fingers do the proving and came up with the straightforward inductive proof.  Each case type checks.  Does it work?
-
-&lt;twelf check="decl" discard=true&gt;
 %worlds () (sub-trans _ _ _).
 %total D (sub-trans D _ _).
-&lt;/twelf&gt;
 
-Twelf reports an input coverage error: we didn't cover the case for ``sub-arrow`` against ``sub-arrow``.  
+%{! Twelf reports an input coverage error: we didn't cover the case for ``sub-arrow`` against ``sub-arrow``.  
 We think: "But I wrote a case for ``sub-arrow`` against ``sub-arrow`` right up there!  What do you mean I didn't cover it?!"
 
 #
 #
 # Debugging technique
 
-What Twelf is saying is that we didn't cover the **general** case for ``sub-arrow`` against ``sub-arrow``.  That is, the inferred type of the constant ``-arrow`` must be less general than required.   One way to figure out the problem is to read the type of the constant:
-&lt;twelf check="decl" export="branch"&gt;
+What Twelf is saying is that we didn't cover the **general** case for ``sub-arrow`` against ``sub-arrow``.  That is, the inferred type of the constant ``-arrow`` must be less general than required.   One way to figure out the problem is to read the type of the constant: !}%
+    
+%{! (options removed from twelftag: check="decl" export="branch") !}%
+
 -arrow : sub-trans 
          (sub-arrow DS DT)
          (sub-arrow DS' DT')
-         (sub-arrow DS_ DT_)
-         &lt;- sub-trans DT DT' DT_
-         &lt;- sub-trans DS DS' DS_.
-&lt;/twelf&gt;
-As you can see, the type that Twelf inferred has the **same** type ``X4`` as all three types related by ``DT`` and ``DT'``.  Because Twelf unified these parameters, ``-arrow`` doesn't cover the whole space that we think it does.  
+         (sub-arrow DS'' DT'')
+         <- sub-trans DT DT' DT''
+         <- sub-trans DS DS' DS''.
+
+%{! As you can see, the type that Twelf inferred has the **same** type ``X4`` as all three types related by ``DT`` and ``DT'``.  Because Twelf unified these parameters, ``-arrow`` doesn't cover the whole space that we think it does.  
 
 Now, we have to figure out why Twelf inferred this type.  What mistake did we actually make?  One good way to figure this out is to start adding type annotations giving the constants fully general types.  By doing so, we can turn a coverage error into a type error on the constant.  
 
-For example, let's annotate this constant more carefully with what we expect the inputs to be:
-&lt;twelf check="decl" import="branch" export="branch"&gt;
+For example, let's annotate this constant more carefully with what we expect the inputs to be: !}%
+    
+%{! (options removed from twelftag: check="decl" import="branch" export="branch") !}%
+
 -arrow : sub-trans 
          (sub-arrow (DS : sub S1 S2) (DT : sub T2 T1))
          (sub-arrow (DS' : sub S2 S3) (DT' : sub T3 T2))
-         (sub-arrow DS_ DT_)
-         &lt;- sub-trans DT DT' DT_
-         &lt;- sub-trans DS DS' DS_.
-&lt;/twelf&gt;
+         (sub-arrow DS'' DT'')
+         <- sub-trans DT DT' DT''
+         <- sub-trans DS DS' DS''.
 
-This causes Twelf to report a type error, so we know we're on the right track—the constant doesn't cover what we want it to.
+%{! This causes Twelf to report a type error, so we know we're on the right track—the constant doesn't cover what we want it to.
 
-We can make this type error more comprehensible by removing some of the constraints.  Specifically, we can take out the return term to remove some of the constraints on ``DT_``:
-&lt;twelf check="decl" export="branch2"&gt;
+We can make this type error more comprehensible by removing some of the constraints.  Specifically, we can take out the return term to remove some of the constraints on ``DT_``: !}%
+    
+%{! (options removed from twelftag: check="decl" export="branch2") !}%
+
 -arrow : sub-trans 
          (sub-arrow (DS : sub S1 S2) (DT : sub T2 T1))
          (sub-arrow (DS' : sub S2 S3) (DT' : sub T3 T2))
          _
-         &lt;- sub-trans DT DT' DT_
-         &lt;- sub-trans DS DS' DS_.
-&lt;/twelf&gt;
-Ah ha!  Twelf is pointing us to the first premise, as saying that because ``DT`` has type ``sub T2 T1``, the second argument ``DT'`` needs to have type ``sub T1 X1`` for some ``X1``; but we wrote a term with type ``sub T3 T2``.  If we annotate the constant enough that Twelf knows that ``T1`` and ``T3`` are supposed to be different, this is reported as a type error.  Otherwise, Twelf unifies these two, coming up with a valid type for the constant; but because this type doesn't cover the part of the relation that we thought it did, we get an input coverage error.  
+         <- sub-trans DT DT' DT''
+         <- sub-trans DS DS' DS''.
 
-As you may have figured out already, the problem is that the first recursive call should swap the two arguments:
-&lt;twelf check="decl" export="branch3"&gt;
+%{! Ah ha!  Twelf is pointing us to the first premise, as saying that because ``DT`` has type ``sub T2 T1``, the second argument ``DT'`` needs to have type ``sub T1 X1`` for some ``X1``; but we wrote a term with type ``sub T3 T2``.  If we annotate the constant enough that Twelf knows that ``T1`` and ``T3`` are supposed to be different, this is reported as a type error.  Otherwise, Twelf unifies these two, coming up with a valid type for the constant; but because this type doesn't cover the part of the relation that we thought it did, we get an input coverage error.  
+
+As you may have figured out already, the problem is that the first recursive call should swap the two arguments: !}%
+    
+%{! (options removed from twelftag: check="decl" export="branch3") !}%
+
 -arrow : sub-trans 
          (sub-arrow (DS : sub S1 S2) (DT : sub T2 T1))
          (sub-arrow (DS' : sub S2 S3) (DT' : sub T3 T2))
-         (sub-arrow DS_ DT_)
-         &lt;- sub-trans DT' DT DT_
-         &lt;- sub-trans DS DS' DS_.
-&lt;/twelf&gt;
+         (sub-arrow DS'' DT'')
+         <- sub-trans DT' DT DT''
+         <- sub-trans DS DS' DS''.
 
-In this example, this "fix" itself creates some termination trouble; see the article on [mutual induction](/wiki/mutual-induction/) for a completed proof.  But the broken proof illustrates a useful technique for coverage checking.  
+%{! In this example, this "fix" itself creates some termination trouble; see the article on [mutual induction](/wiki/mutual-induction/) for a completed proof.  But the broken proof illustrates a useful technique for coverage checking.  
 
 #
 #
@@ -292,5 +292,10 @@ through the introduction of a trivial (syntactic) equality predicate.  Make sure
 listed &lt;em&gt;before&lt;/em&gt; the variable that needs to be split in your meta-theorem.  Otherwise,
 the coverage checker will split the equality predicate and re-introduce the problem.
 
-\{\{tutorial\}\}
+\{\{tutorial\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Debugging_coverage_errors).
 !}%

@@ -547,11 +547,11 @@ r0 : {a:atm pos} {b:atm pos} right (' a * ' b -o up (' b * ' a))
 d0 : {a:atm pos} {b:atm pos} conc (' a * ' b -o up (' b * ' a))
    = [a] [b] -oR ([hab] *L ([ha] [hb] upR (*R (init hb) (init ha))) hab).
 
-%{! |check=de !}%
+%{! |check=decl !}%
 
 %query 1 * {a}{b} sdR (r0 a b) (D0 a b).
 
-%{! |check=de !}%
+%{! |check=decl !}%
 
 %query 1 * {a}{b} cp- (d0 a b) (R0 a b).
 
@@ -627,3 +627,9 @@ corresponds nicely to Twelf's built-in backward-chaining semantics.
    right (down (' a)
           -o down (down (' a) -o ' b) 
             -o down (down (' b) -o ' c) -o ' c).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Weak_focusing).
+!}%

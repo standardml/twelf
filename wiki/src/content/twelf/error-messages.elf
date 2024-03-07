@@ -1,7 +1,6 @@
 %%! title: "Error messages"
 
-%{!
-This page lists many **error messages** that may be encountered using Twelf.  The explanations given below are not a complete but will hopefully be helpful when using Twelf as described in this wiki.
+%{! This page lists many **error messages** that may be encountered using Twelf.  The explanations given below are not a complete but will hopefully be helpful when using Twelf as described in this wiki.
 
 ;**Ambiguous reconstruction** 
 :This error may indicate not passing enough “parameters” to a theorem.
@@ -31,10 +30,10 @@ This page lists many **error messages** that may be encountered using Twelf.  Th
 :This only happens in pathological cases, see [ambiguous hyperkind](/wiki/ambiguous-hyperkind/).
 
 ;Occurrence of variable ... in output (-) argument not necessarily ground
-:Twelf expects that in [mode checking](/wiki/percent-mode/), all things declared to be outputs (-) are completely determined by inputs to the relation or the outputs of subgoals]], and gives this error when that assumption is violated. See ``[%mode](/wiki/percent-mode/)``.
+:Twelf expects that in [mode checking](/wiki/percent-mode/), all things declared to be outputs (-) are completely determined by inputs to the relation or the outputs of [[subgoals]], and gives this error when that assumption is violated. See ``[%mode](/wiki/percent-mode/)``.
 
 ;Occurrence of variable ... in input (+) argument not necessarily ground
-:Twelf expects that in [mode checking](/wiki/percent-mode/), when a [%mode](/wiki/percent-mode/)``.
+:Twelf expects that in [mode checking](/wiki/percent-mode/), when a [[subgoal]] is used, then all things declared to be inputs (+) of the subgoal are entirely determined by inputs to the relation, and gives this error when that assumption is violated. See ``[%mode](/wiki/percent-mode/)``.
 
 ;**Signature error: Global signature size 20000 exceeded**
 :You have loaded and reloaded so many signatures that the maximum number has been exceeded.
@@ -57,5 +56,10 @@ This page lists many **error messages** that may be encountered using Twelf.  Th
 
 In general, trying to find the exact cause of the error in a long proof may require binary search (ending the proof early and seeing at what point the error changes from "output not ground" to the error in question).
 
-\{\{needs|a more complete list of errors and better explanations\}\}
+\{\{needs|a more complete list of errors and better explanations\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Error_messages).
 !}%

@@ -24,7 +24,7 @@ void: type. %freeze void.
 
 0 = z.
 1 = s 0.
-%{! ... and continuing on to 25 |hidden = tr !}%
+%{! ... and continuing on to 25 |hidden = true !}%
 2 = s 1.
 3 = s 2.
 4 = s 3.
@@ -330,4 +330,10 @@ can-dichotomy-nat : {N1}{N2} dichotomy-nat N1 N2 -> type.
 %worlds () (can-dichotomy-nat _ _ _).
 %total T (can-dichotomy-nat T _ _).
 
-%{! \{\{case study\} !}%
+%{! \{\{case study\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Natural_numbers_with_inequality).
+!}%

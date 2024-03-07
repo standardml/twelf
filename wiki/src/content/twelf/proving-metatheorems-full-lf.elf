@@ -1,7 +1,6 @@
 %%! title: "Proving metatheorems:Full LF"
 
-%{!
-\{\{proving metatheorems
+%{! \{\{proving metatheorems
   | prev = Representing the judgements of the natural numbers
   | prevname = Representing judgements
   | next = Proving totality assertions about the natural numbers
@@ -55,33 +54,34 @@ Twelf permits several syntactic conveniences for writing LF signatures.  The pur
 #
 # Definitions
 
-In Twelf, you can define an LF constant for later use.  For example:
-&lt;twelf hidden="true"&gt;
+In Twelf, you can define an LF constant for later use.  For example: !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
 nat : type.
 z   : nat.
-s   : nat -&gt; nat.
+s   : nat -> nat.
 
-even    : nat -&gt; type.
+even    : nat -> type.
 even-z  : even z.
-even-s  : \{N:nat\} even N -&gt; even (s (s N)).
-&lt;/twelf&gt;
-&lt;twelf&gt;
+even-s  : {N:nat} even N -> even (s (s N)).
+
+%{!  !}%
+    
 2 : nat = s (s z).
 even-2 : even 2 = even-s z even-z.
-&lt;/twelf&gt;
-The first constant names a natural number ``2``; the second names a derivation that ``2`` is even.
 
-You can name terms of higher type as well:
-&lt;twelf&gt;
-ss : nat -&gt; nat = [x:nat] s (s x).
-&lt;/twelf&gt;
+%{! The first constant names a natural number ``2``; the second names a derivation that ``2`` is even.
 
-This constant might be used as follows:
-&lt;twelf&gt;
+You can name terms of higher type as well: !}%
+    
+ss : nat -> nat = [x:nat] s (s x).
+
+%{! This constant might be used as follows: !}%
+    
 even-4 : even (ss 2) = even-s 2 even-2.
-&lt;/twelf&gt;
 
-Note that defined constants do not contribute any new inhabitants to the canonical forms of the given types.  
+%{! Note that defined constants do not contribute any new inhabitants to the canonical forms of the given types.  
 
 #
 #
@@ -97,46 +97,50 @@ Twelf permits non-canonical forms, which are treated as syntactic sugar for the 
 #
 # Implicit arguments
 
-Writing out all of the parameters to a constant becomes tedious, so Twelf permits these parameters to be left implicit.  Specifically, if a variable starting with a lower-case letter is left unbound in a constant's type, Twelf reports an error.  If a variable beginning with an upper-case letter is left unbound, Twelf implicitly binds it in a ``\{N\}`` at the outside of the type.  For example, the following two ways of declaring the constant ``plus-s`` give it the same type:
-&lt;twelf discard="true"&gt;
+Writing out all of the parameters to a constant becomes tedious, so Twelf permits these parameters to be left implicit.  Specifically, if a variable starting with a lower-case letter is left unbound in a constant's type, Twelf reports an error.  If a variable beginning with an upper-case letter is left unbound, Twelf implicitly binds it in a ``\{N\}`` at the outside of the type.  For example, the following two ways of declaring the constant ``plus-s`` give it the same type: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
 %% explicit
-plus-s : \{N1:nat\} \{N2:nat\} \{N3:nat\} plus N1 N2 N3 -&gt; plus (s N1) N2 (s N3).
+plus-s : {N1:nat} {N2:nat} {N3:nat} plus N1 N2 N3 -> plus (s N1) N2 (s N3).
 %% implicit
-plus-s : plus N1 N2 N3 -&gt; plus (s N1) N2 (s N3).
-&lt;/twelf&gt;
-Similarly, we can make the parameter to ``plus-z`` implicit:
-&lt;twelf discard="true"&gt;
+plus-s : plus N1 N2 N3 -> plus (s N1) N2 (s N3).
+
+%{! Similarly, we can make the parameter to ``plus-z`` implicit: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
 %%explicit
-plus-z : \{N2:nat\} plus z N2 N2.
+plus-z : {N2:nat} plus z N2 N2.
 %%implicit
 plus-z : plus z N2 N2.
-&lt;/twelf&gt;
 
-In most circumstances, Twelf can infer the types of the implicit parameters from their use in the constant's type.  If it cannot, it reports an error---the type of a constant must be fully determined when the constant is processed.
+%{! In most circumstances, Twelf can infer the types of the implicit parameters from their use in the constant's type.  If it cannot, it reports an error---the type of a constant must be fully determined when the constant is processed.
 
-The application of a constant to its implicit parameters is then inferred from context.  For example, using the fully explicit definition of ``plus``, the derivation that 2 + 1 = 3 is written as follows:
-&lt;twelf&gt;
+The application of a constant to its implicit parameters is then inferred from context.  For example, using the fully explicit definition of ``plus``, the derivation that 2 + 1 = 3 is written as follows: !}%
+    
 d2+1e = plus-s (s z) (s z) (s (s z)) 
         (plus-s z (s z) (s z) 
                 (plus-z (s z))).
-&lt;/twelf&gt;
-Using the implicit version, it is much shorter:
-&lt;twelf&gt;
+
+%{! Using the implicit version, it is much shorter: !}%
+    
 d2+1i = plus-s (plus-s plus-z).
-&lt;/twelf&gt;
-The type of this term is ambiguous, but Twelf will attempt to use [unification](/wiki/unification/) to infer the most general possible type.
+
+%{! The type of this term is ambiguous, but Twelf will attempt to use [unification](/wiki/unification/) to infer the most general possible type.
 
 #
 #
 # Backwards arrow
 
-Twelf permits a type ``A -&gt; B`` to be written ``B &lt;- A``.  This makes it easier to see the result of applying a constant to all of its arguments.  For example:
-&lt;twelf discard="true"&gt;
-plus-s : plus (s N1) N2 (s N3)
-           &lt;- plus N1 N2 N3.
-&lt;/twelf&gt;
+Twelf permits a type ``A -&gt; B`` to be written ``B &lt;- A``.  This makes it easier to see the result of applying a constant to all of its arguments.  For example: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
 
-When we write ``C &lt;- Pn &lt;- ... P1``, we will refer to ``C`` as the _conclusion_ of the constant and each ``Pi`` as a _premise_, by analogy with the terminology for the inference rule that this constant represents.  
+plus-s : plus (s N1) N2 (s N3)
+           <- plus N1 N2 N3.
+
+%{! When we write ``C &lt;- Pn &lt;- ... P1``, we will refer to ``C`` as the _conclusion_ of the constant and each ``Pi`` as a _premise_, by analogy with the terminology for the inference rule that this constant represents.  
 
 The backwards-arrow also has implications on the logic programming operational semantics for LF, as we discuss below; the conclusion/premise terminology is consistent with the use of these words in logic programming as well.
 
@@ -144,22 +148,26 @@ The backwards-arrow also has implications on the logic programming operational s
 #
 # Type and term inference
 
-Twelf permits type annotations, which are written ``M:A``, on all terms.  Type annotations can be used for documentation.  Additionally, in some cases they are necessary to help guide type inference.  We can also use a type annotation to determine the type of an implicit parameter: 
-&lt;twelf&gt;
+Twelf permits type annotations, which are written ``M:A``, on all terms.  Type annotations can be used for documentation.  Additionally, in some cases they are necessary to help guide type inference.  We can also use a type annotation to determine the type of an implicit parameter: !}%
+    
 d2+1i' = plus-s (plus-s (plus-z : plus z (s z) (s z))).
-&lt;/twelf&gt;
-This term unambiguously has type ``plus (s (s z)) (s z) (s (s (s z)))``
+
+%{! This term unambiguously has type ``plus (s (s z)) (s z) (s (s (s z)))``
 
 Type annotations on the arguments of lambda-terms ``[x:A] M`` are sometimes necessary, but they can often be elided.  Type annotations on Pi-types ``\{x:A2\} A`` can sometimes be elided when the type of the variable is determined by its use.
 
-When they are determined from context, terms can be elided by writing an underscore.  For example, if the constants defining ``plus`` were declared with explicit ``nat`` parameters, we could still write the derivation of 2+1=3 as follows: 
-&lt;twelf&gt;
+When they are determined from context, terms can be elided by writing an underscore.  For example, if the constants defining ``plus`` were declared with explicit ``nat`` parameters, we could still write the derivation of 2+1=3 as follows: !}%
+    
 d2+1e' = plus-s _ _ _ (plus-s _ _ _ (plus-z (s z))).
-&lt;/twelf&gt;
 
-\{\{proving metatheorems
+%{! \{\{proving metatheorems
   | prev = Representing the judgements of the natural numbers
   | prevname = Representing judgements
   | next = Proving totality assertions about the natural numbers
-  | nextname = Proving totality assertions\}\}
+  | nextname = Proving totality assertions\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Full_LF).
 !}%

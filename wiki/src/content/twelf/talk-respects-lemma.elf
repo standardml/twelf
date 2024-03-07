@@ -1,35 +1,32 @@
 %%! title: "Talk:Respects lemma"
 
-%{!
-#
+%{! #
 # Not general enough
 
-I don't know if we are defining _congruence lemma_ or if we're taking the definition from somewhere else, but I think that this definition is perhaps needlessly specialized. In almost any system these lemmas must concern more than just a single relation R. For instance:
-
-&lt;twelf&gt;
+I don't know if we are defining _congruence lemma_ or if we're taking the definition from somewhere else, but I think that this definition is perhaps needlessly specialized. In almost any system these lemmas must concern more than just a single relation R. For instance: !}%
+    
 exp : type.
 val : type.
 
 
-pair : val -&gt; val -&gt; val.
+pair : val -> val -> val.
 % values are expressions
-value : val -&gt; exp.
-lam : (val -&gt; exp) -&gt; val.
-let : exp -&gt; (val -&gt; exp) -&gt; exp.
+value : val -> exp.
+lam : (val -> exp) -> val.
+let : exp -> (val -> exp) -> exp.
 
-eq-val : val -&gt; val -&gt; type.
+eq-val : val -> val -> type.
 eq-val/ : eq-val V V.
 
-eq-exp : exp -&gt; exp -&gt; type.
+eq-exp : exp -> exp -> type.
 eq-exp/ : eq-exp M M.
 
-pair-cong : eq-val V1 V1' -&gt; eq-val V2 V2' -&gt; eq-val (pair V1 V2) (pair V1' V2') -&gt; type.
-let-cong  : eq-exp M M' -&gt; (\{v\} eq-exp (N v) (N' v)) -&gt; eq-exp (let M N) (let M' N') -&gt; type.
-value-cong : eq-val V V' -&gt; eq-exp (value V) (value V') -&gt; type.
-lam-cong  : (\{v\} eq-exp (M v) (M' v)) -&gt; eq-val (lam M) (lam M') -&gt; type.
-&lt;/twelf&gt;
+pair-cong : eq-val V1 V1' -> eq-val V2 V2' -> eq-val (pair V1 V2) (pair V1' V2') -> type.
+let-cong  : eq-exp M M' -> ({v} eq-exp (N v) (N' v)) -> eq-exp (let M N) (let M' N') -> type.
+value-cong : eq-val V V' -> eq-exp (value V) (value V') -> type.
+lam-cong  : ({v} eq-exp (M v) (M' v)) -> eq-val (lam M) (lam M') -> type.
 
-``pair-cong`` is a congruence lemma as you defined. But the others are not: ``let-cong``, uses only ``eq-exp`` but the statement of the lemma needs to quantify over values ("for all v, if R(N v) and R(N' v) ...") so it doesn't fit the form. ``val-cong``'s premise is a different relation. ``lam-cong`` has both problems.
+%{! ``pair-cong`` is a congruence lemma as you defined. But the others are not: ``let-cong``, uses only ``eq-exp`` but the statement of the lemma needs to quantify over values ("for all v, if R(N v) and R(N' v) ...") so it doesn't fit the form. ``val-cong``'s premise is a different relation. ``lam-cong`` has both problems.
 
 Moreover, all of these are instances of what Karl and Tom and probably others call "respects" lemmas. Do we have an article about that, or should this article be about that instead? I think it would be a more useful subject. If "congruence lemma" is already taken by other mathematicians, we need a new name for such "respects" lemmas. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 10:13, 20 October 2006 (EDT)
 
@@ -41,13 +38,11 @@ Moreover, all of these are instances of what Karl and Tom and probably others ca
 #
 # Why is compatibility a respects lemma?
 
-I don't understand why compatibility is a respects lemma?  What relation is being shown to respect bin-eq in 
+I don't understand why compatibility is a respects lemma?  What relation is being shown to respect bin-eq in !}%
+    
+1-compat : bin-eq M M' -> bin-eq (1 M) (1 M') -> type.
 
-&lt;twelf&gt;
-1-compat : bin-eq M M' -&gt; bin-eq (1 M) (1 M') -&gt; type.
-&lt;/twelf&gt;
-
-?
+%{! ?
 
 Or, in what sense is 1 a relation?
 
@@ -79,32 +74,35 @@ Most of these **... lemma** articles don't hold together. I've grepped through a
 That said, 
 * the vast majority of theorems in TALT with the token ``resp``, as well as
 * all the theorems with the token ``respects`` in DRL's ``exp-evaluation``, ``lc-height``, and ``list-append-assoc`` 
-encode the idea of _referential transparency_ as Stephen Brookes explains it. Every online source on referential transparency is crap, as far as I can find; according to Brooks the term embodies the idea of Frege: _The meaning of a sentence must remain unchanged when a part of the sentence is replaced by an expression having the same meaning._ Your example of equals-for-equals for ``and`` embodies this fact, so does this theorem from TALT: 
-&lt;twelf&gt;
-elab_operand_resp_same : same_operands O O' -&gt; elab_operand LI N O OE -&gt; elab_operand LI N O' OE -&gt; type.
-&lt;/twelf&gt;
-The inputs are always a bunch of type families saying "things are equivalent in some way", plus one relation that isn't considered "equivalence" (``and`` in your example, ``elab_operand`` in the above example)). The output is that same relation, but with equals replaced for equals. This, I think, is a great way to explain what we mean by "respects lemmas" - in this formulation, "respects lemmas" have something very fundamental to do with equality/equivalence.
+encode the idea of _referential transparency_ as Stephen Brookes explains it. Every online source on referential transparency is crap, as far as I can find; according to Brooks the term embodies the idea of Frege: _The meaning of a sentence must remain unchanged when a part of the sentence is replaced by an expression having the same meaning._ Your example of equals-for-equals for ``and`` embodies this fact, so does this theorem from TALT: !}%
+    
+elab_operand_resp_same : same_operands O O' -> elab_operand LI N O OE -> elab_operand LI N O' OE -> type.
 
-Another example from TALT doesn't have precisely this form, but still fits into the idea of substutiting equals for equals, becuase it is implicitly operates based on the idea that ``N*M`` and ``N*M'`` are the same thing.
-&lt;twelf&gt;
-binary_size_resp3 : product N M N*M -&gt; product N M N*M' -&gt; binary_int E V (B : binary N*M) -&gt; binary_int E V (B' : binary N*M') -&gt; type.
+%{! The inputs are always a bunch of type families saying "things are equivalent in some way", plus one relation that isn't considered "equivalence" (``and`` in your example, ``elab_operand`` in the above example)). The output is that same relation, but with equals replaced for equals. This, I think, is a great way to explain what we mean by "respects lemmas" - in this formulation, "respects lemmas" have something very fundamental to do with equality/equivalence.
+
+Another example from TALT doesn't have precisely this form, but still fits into the idea of substutiting equals for equals, becuase it is implicitly operates based on the idea that ``N*M`` and ``N*M'`` are the same thing. !}%
+    
+binary_size_resp3 : product N M N*M -> product N M N*M' -> binary_int E V (B : binary N*M) -> binary_int E V (B' : binary N*M') -> type.
 %mode binary_size_resp3 +X1 +X2 +X3 -X4.
-&lt;/twelf&gt;
 
-On the other hand, TALT also has this theorem: 
-&lt;twelf&gt;
-ii_add_resp : eaddress_eq E E' -&gt; oper_eq O O' -&gt; iinst_eq (ii_add N E O) (ii_add N E' O') -&gt; type.
-&lt;/twelf&gt; 
-This describes what I wanted to call "congruence" early on and which you disagreed with. However, think about if, instead of ``ii_add`` being a function, 
-&lt;twelf&gt;ii_add : \{Nsz:nat\} eaddress Nsz -&gt; oper Nsz -&gt; iinst.&lt;/twelf&gt;
-it was a total relation with three inputs and an output.  
-&lt;twelf&gt;ii_add : \{Nsz:nat\} eaddress Nsz -&gt; oper Nsz -&gt; iinst -&gt; type.&lt;/twelf&gt; 
-Then the theorem above would be 
-&lt;twelf&gt;
-ii_add_resp : eaddress_eq E E' -&gt; oper_eq O O' -&gt; ii_add N E O II -&gt; ii_add N E' O' II' -&gt; iinst_eq II II' -&gt; type.
+%{! On the other hand, TALT also has this theorem: !}%
+    
+ii_add_resp : eaddress_eq E E' -> oper_eq O O' -> iinst_eq (ii_add N E O) (ii_add N E' O') -> type.
+
+%{! This describes what I wanted to call "congruence" early on and which you disagreed with. However, think about if, instead of ``ii_add`` being a function, !}%
+    
+ii_add : {Nsz:nat} eaddress Nsz -> oper Nsz -> iinst.
+
+%{! it was a total relation with three inputs and an output. !}%
+    
+ii_add : {Nsz:nat} eaddress Nsz -> oper Nsz -> iinst -> type.
+
+%{! Then the theorem above would be !}%
+    
+ii_add_resp : eaddress_eq E E' -> oper_eq O O' -> ii_add N E O II -> ii_add N E' O' II' -> iinst_eq II II' -> type.
 %mode ii_add_resp +Eq1 +Eq2 +OP2 +OP1 -Eq3.
-&lt;/twelf&gt;
-This is the form of a [uniqueness lemma](/wiki/uniqueness-lemma/), and not a statement about referential transparency as the vast majority of ``resp``-proofs in TALT are; the same goes for every one of the ``cong`` lemmas that Tom mentions at the top. 
+
+%{! This is the form of a [uniqueness lemma](/wiki/uniqueness-lemma/), and not a statement about referential transparency as the vast majority of ``resp``-proofs in TALT are; the same goes for every one of the ``cong`` lemmas that Tom mentions at the top. 
 
 Here is what I propose we either write (or else write something similar), or else delete all three of these confusing crazy articles and start over.
 * [Respects lemmas](/wiki/respects-lemma/) are lemmas that embody referential transparency. They deal with a relation _respecting_ an equivalence relation by permitting the substitution of equals for equals. Part and parcel of this is that the relation that respect equivalence (``and`` or ``binary_int`` or ``elab_operand``) don't need to be thought of as having "inputs" and "outputs." 
@@ -136,5 +134,10 @@ Sorry for writing so much — [User:rsimmons](/wiki/user-rsimmons/) (and his [Us
 
 :: I figured this well might be what you were always trying to say; I've just been lost in the woods about this and needed to work it out for myself. Do I understand you correctly when you say that "compatibility" does fit the meaning you say it has in mathland? If so, great; maybe we should just have the page "Congruence lemma" and mention that "Compatibility lemma" is a generalized case of this? I think the original point of these techniques were that they were specific and showed up all the time; therefore it would be nice to be as specific as is reasonable. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 10:53, 9 March 2007 (EST)
 
-::: I think I have the definition of compatibility right.  William is the one who corrected my use of congruence on non-equiv relations, so ask him.  I'm thinking that it would be most clear if we just have one page on identity types that introduces this terminology in that specific context, with subsections for respects, congruence, ... .  Then we can say that we use the terminology analogously for other equiv rels and relations in general.  That will be less abstract than defining the terms in the context of a general discussion of equiv rels.  [User:Drl](/wiki/user-drl/) 11:44, 9 March 2007 (EST)
+::: I think I have the definition of compatibility right.  William is the one who corrected my use of congruence on non-equiv relations, so ask him.  I'm thinking that it would be most clear if we just have one page on identity types that introduces this terminology in that specific context, with subsections for respects, congruence, ... .  Then we can say that we use the terminology analogously for other equiv rels and relations in general.  That will be less abstract than defining the terms in the context of a general discussion of equiv rels.  [User:Drl](/wiki/user-drl/) 11:44, 9 March 2007 (EST) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Respects_lemma).
 !}%

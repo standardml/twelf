@@ -1,12 +1,16 @@
 %%! title: "%trustme"
 
-%{!
-\{\{undocumented\}\} The **``%trustme``** keyword, when it precedes another directive such as a **``%total``** directive, causes Twelf to believe that the directive succeeded even if it did not. This feature is only available in [unsafe mode](/wiki/unsafe-mode/), and can be used to easily create [holes in metatheorems](/wiki/incremental-metatheorem-development/).
+%{! \{\{undocumented\}\} The **``%trustme``** keyword, when it precedes another directive such as a **``%total``** directive, causes Twelf to believe that the directive succeeded even if it did not. This feature is only available in [unsafe mode](/wiki/unsafe-mode/), and can be used to easily create [holes in metatheorems](/wiki/incremental-metatheorem-development/).
 
 #
 # See also
 
 * [Holes in metatheorems](/wiki/incremental-metatheorem-development/)
 
-\{\{keyword|key=trustme\}\}
+\{\{keyword|key=trustme\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25trustme).
 !}%

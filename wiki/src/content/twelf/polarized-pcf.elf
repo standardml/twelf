@@ -326,3 +326,9 @@ complete/streamfix : complete (poltp/stream D) (estreamfix E1)
 
 %worlds (completeb) (complete _ E _).
 %total (E) (complete _ E _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Polarized_PCF).
+!}%

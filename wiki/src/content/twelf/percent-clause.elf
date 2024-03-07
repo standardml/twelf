@@ -1,7 +1,6 @@
 %%! title: "%clause"
 
-%{!
-The **``%clause``** keyword allows a constant that is defined to be used by Twelf during proof search. If **``%clause``** is not used, then Twelf will only perform proof search on constants that are declared in the [signature](/wiki/twelf-signature/).
+%{! The **``%clause``** keyword allows a constant that is defined to be used by Twelf during proof search. If **``%clause``** is not used, then Twelf will only perform proof search on constants that are declared in the [signature](/wiki/twelf-signature/).
 
 This function of Twelf is incompatible with Twelf's ability to prove [metatheorems](/wiki/metatheorem/), and so type families that use **``%clause``** or depend on other type families that use **``%clause``** cannot be a part of directives that specify [totality assertions](/wiki/totality-assertion/) such as ``[%total](/wiki/percent-total/)``. It has mostly been used to do [tactical theorem proving](/wiki/tactical-theorem-proving/) in Twelf, and the article on that subject has an example of ``%clause`` being used.
 
@@ -12,5 +11,10 @@ This function of Twelf is incompatible with Twelf's ability to prove [metatheore
 *[Tactical theorem proving](/wiki/tactical-theorem-proving/)
 
 
-\{\{keyword|key=clause\}\}
+\{\{keyword|key=clause\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25clause).
 !}%

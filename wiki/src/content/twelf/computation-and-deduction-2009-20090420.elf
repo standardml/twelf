@@ -1,6 +1,6 @@
 %%! title: "Computation and Deduction 2009/20090420"
 
-%{! Code from class, April 20 !}%
+%{! Code from class, April 20. !}%
 
 nat : type. %name nat N.
 
@@ -244,3 +244,9 @@ esubst : ({x} append (cons G1 x A) G2 (G x))
 
 %worlds (bind | ovar) (esubst _ _ _ _ _ _).
 %total D (esubst _ _ _ _ D _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090420).
+!}%

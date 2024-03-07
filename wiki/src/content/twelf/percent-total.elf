@@ -1,13 +1,12 @@
 %%! title: "%total"
 
-%{!
-In Twelf, a [totality assertion](/wiki/totality-assertion/) for an LF [type family](/wiki/type-family/) is specified by a ``[%mode](/wiki/percent-mode/)`` declaration and a ``[%worlds](/wiki/percent-worlds/)`` declarations. A **``%total``** declaration for a type family causes Twelf to attempt to verify the specified totality assertion.  Twelf does so by attempting to prove that the type family defines a total logic program.  The ``%total`` declaration is used both to verify properties of object-language [judgment](/wiki/judgment/)s and to check proofs of general [metatheorem](/wiki/metatheorem/)s.  
+%{! In Twelf, a [totality assertion](/wiki/totality-assertion/) for an LF [type family](/wiki/type-family/) is specified by a ``[%mode](/wiki/percent-mode/)`` declaration and a ``[%worlds](/wiki/percent-worlds/)`` declarations. A **``%total``** declaration for a type family causes Twelf to attempt to verify the specified totality assertion.  Twelf does so by attempting to prove that the type family defines a total logic program.  The ``%total`` declaration is used both to verify properties of object-language [judgment](/wiki/judgment/)s and to check proofs of general [metatheorem](/wiki/metatheorem/)s.  
 
 A ``%total`` declaration requires that [%mode](/wiki/percent-mode/) checking and [%worlds](/wiki/percent-worlds/) checking have already succeeded.  
 Then a **``%total``** declaration causes Twelf to run a number of analyses:
 * **[Termination analysis](/wiki/percent-terminates/)** - The syntax of a ``%total`` declaration is the same as a ``[%terminates](/wiki/percent-terminates/)`` declaration, and Twelf runs its termination analysis with that information.  This verifies that the logic program always terminates when given [ground](/wiki/ground/) inputs. 
 * **[Coverage checking](/wiki/coverage-checking/)** - Twelf uses the modes specified by the ``[%mode](/wiki/percent-mode/)`` declaration (``[%mode](/wiki/percent-mode/)`` and ``[%covers](/wiki/percent-covers/)`` declarations also have the same syntax) to check input coverage.  This verifies that the logic program will match all possible ground inputs in the specified set of contexts.  
-* **[Coverage checking](/wiki/coverage-checking/)** - Twelf checks that the output of a [output freeness](/wiki/output-freeness/) violations. 
+* **[Coverage checking](/wiki/coverage-checking/)** - Twelf checks that the output of a [[subgoal]] can never fail to unify.  First, it checks for incorrect constant pattern-matching; next, it checks for [output freeness](/wiki/output-freeness/) violations. 
 
 Taken together, these analyses verify that if the type family is run as a [logic program](/wiki/logic-programming/) in Twelf with ground derivations in the input positions, then it the execution will terminate successfully and will derive ground derivations in the output positions.  This proves the [totality assertion](/wiki/totality-assertion/) for the type family:  
 in any context conforming to the ``%worlds`` declaration, for any ground derivations in the input positions (as specified by the ``%mode`` declaration), there exist ground derivations for the output positions such that the type family is inhabited.
@@ -18,5 +17,10 @@ in any context conforming to the ``%worlds`` declaration, for any ground derivat
 * \{\{guide|chapter=9|section=55|title=Totality\}\}
 
 \{\{keyword|key=total\}\}
-\{\{stub\}\}
+\{\{stub\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25total).
 !}%

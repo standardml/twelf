@@ -1,7 +1,6 @@
 %%! title: "Twelf without Emacs"
 
-%{!
-First, you should read up on [Twelf with Emacs](/wiki/twelf-with-emacs/), to understand [Twelf with Emacs](/wiki/twelf-with-emacs/) and how one interacts with those files.  Then, instead of using emacs, you can run the ``twelf-server`` command directly from your shell and interact with your files using the following commands.  (You may find it convenient to run ``twelf-server`` under some readline wrapper program like ``rlwrap`` or ``ledit`` to get command-line editing and history.)
+%{! First, you should read up on [Twelf with Emacs](/wiki/twelf-with-emacs/), to understand [Twelf with Emacs](/wiki/twelf-with-emacs/) and how one interacts with those files.  Then, instead of using emacs, you can run the ``twelf-server`` command directly from your shell and interact with your files using the following commands.  (You may find it convenient to run ``twelf-server`` under some readline wrapper program like ``rlwrap`` or ``ledit`` to get command-line editing and history.)
 
 #
 #
@@ -34,5 +33,10 @@ You can exit the logic programming top-level by pressing Ctrl-C.
 #
 # Quitting
 
-To quit from the Twelf server, type &lt;code&gt;quit&lt;/code&gt; or press Ctrl-D.
+To quit from the Twelf server, type &lt;code&gt;quit&lt;/code&gt; or press Ctrl-D. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Twelf_without_Emacs).
 !}%

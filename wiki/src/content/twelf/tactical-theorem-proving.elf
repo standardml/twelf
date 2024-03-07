@@ -153,4 +153,10 @@ same thing as ``p1`` above. |check=decl !}%
 
 %solve p2 : {a}{b}{c}{d} list' (a + (b + c) + d) _.
 
-%{! This is not the recommended style for a number of reasons (metatheoretic parts of Twelf like [totality assertions](/wiki/totality-assertion/) won't work with ``%clause``), but a few large examples such as the [big algebraic solver](/wiki/big-algebraic-solver/) have been written in this style !}%
+%{! This is not the recommended style for a number of reasons (metatheoretic parts of Twelf like [totality assertions](/wiki/totality-assertion/) won't work with ``%clause``), but a few large examples such as the [big algebraic solver](/wiki/big-algebraic-solver/) have been written in this style. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Tactical_theorem_proving).
+!}%

@@ -1,8 +1,7 @@
 %%! title: "Reformulating languages to use hypothetical judgements"
 
-%{!
-It's easy to represent [hypothetical judgement](/wiki/hypothetical-judgment/)s in LF, exploiting [higher-order judgements](/wiki/higher-order-judgements/) representation techniques.  This tutorial presents some object-language judgements which are **not** typically phrased as hypothetical judgements, but can easily be reformulated as such, making the correspondence with their LF representation quite clear.  
-In particular, we discuss parallel reduction and complete development for the lambda-calculus; thanks to User:rpollack]] for suggesting this example.
+%{! It's easy to represent [hypothetical judgement](/wiki/hypothetical-judgment/)s in LF, exploiting [higher-order judgements](/wiki/higher-order-judgements/) representation techniques.  This tutorial presents some object-language judgements which are **not** typically phrased as hypothetical judgements, but can easily be reformulated as such, making the correspondence with their LF representation quite clear.  
+In particular, we discuss parallel reduction and complete development for the lambda-calculus; thanks to [[User:rpollack]] for suggesting this example.
 
 Before reading this tutorial, you should learn about hypothetical judgements and their representation in LF: [Proving metatheorems: Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/) shows how object-language hypothetical judgements can be represented using LF binding. [Proving metatheorems: Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/) shows an additional example, and discusses proving totality assertions about higher-order judgements. [Proving metatheorems: Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) shows how to use totality assertions to prove metatheorems about higher-order judgements. 
 
@@ -50,15 +49,13 @@ lam (x.M) trm
 where the first rule means "all those trees that happen to be variables are terms": it would break the abstraction of variables-as-scoped-data to state a rule about all those trees that happen to be variables.    
 
 The moral of the story is that syntax with binding can be thought of as a hypothetical judgement.
-The LF encoding of this syntax can be thought of as an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of the above judgement ``x1 trm ... xn trm |- M trm``. LF provides typed binding trees, so we can define terms by specifying typed operators, rather than a predicate over untyped trees:  
-
-&lt;twelf&gt;
+The LF encoding of this syntax can be thought of as an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of the above judgement ``x1 trm ... xn trm |- M trm``. LF provides typed binding trees, so we can define terms by specifying typed operators, rather than a predicate over untyped trees: !}%
+    
 trm : type.
-lam : (trm -&gt; trm) -&gt; trm.
-app : trm -&gt; trm -&gt; trm.
-&lt;/twelf&gt;
+lam : (trm -> trm) -> trm.
+app : trm -> trm -> trm.
 
-Then the judgement ``x1 trm ... xn trm |- M trm`` becomes the LF judgement 
+%{! Then the judgement ``x1 trm ... xn trm |- M trm`` becomes the LF judgement 
 ``x1 : trm ... xn : trm |- M : trm`` where ``x`` and ``M`` are LF variables and terms.
 
 #
@@ -136,25 +133,23 @@ G |- \x.M =&gt; \x.N
 
 Now the ``var`` rule is unobjectionable.  In the premies of the rules ``beta`` and ``lam``, which deal with binding forms, the context is extended with the assumption that ``x =&gt; x`` for the bound variable ``x``.  The derivations of this version are isomorphic to the first definition of ``G |- M =&gt; N``, but the ``var`` rule here has a more generally acceptable form. 
 
-The LF representation of this formulation is quite direct:
+The LF representation of this formulation is quite direct: !}%
+    
+=> : trm -> trm -> type.  %infix none 10 =>.
 
-&lt;twelf&gt;
-# &gt; : trm -&gt; trm -&gt; type.  %infix none 10 =&gt;.
+=>/beta : (app (lam M) N) => M' N'
+          <- ({x:trm} x => x -> M x => M' x) 
+          <- N => N'.
+=>/app  : (app M N) => (app M' N')
+          <- N => N'
+          <- M => M'.
+=>/lam  : lam M => lam M'
+          <- ({x:trm} x => x -> M x => M' x).
 
-# &gt;/beta : (app (lam M) N) =&gt; M' N'
-          &lt;- (\{x:trm\} x =&gt; x -&gt; M x =&gt; M' x) 
-          &lt;- N =&gt; N'.
-# &gt;/app  : (app M N) =&gt; (app M' N')
-          &lt;- N =&gt; N'
-          &lt;- M =&gt; M'.
-# &gt;/lam  : lam M =&gt; lam M'
-          &lt;- (\{x:trm\} x =&gt; x -&gt; M x =&gt; M' x).
+%block =>b : block {x : trm} {=>/x : x => x}.
+%worlds (=>b) (=> _ _).
 
-%block =&gt;b : block \{x : trm\} \{=&gt;/x : x =&gt; x\}.
-%worlds (=&gt;b) (=&gt; _ _).
-&lt;/twelf&gt;
-
-Derivations using ``var`` are represented by LF variables representing the reduction assumptions in ``G``.  The Twelf ``%worlds`` declaration documents the form of ``G`` in our informal definition.
+%{! Derivations using ``var`` are represented by LF variables representing the reduction assumptions in ``G``.  The Twelf ``%worlds`` declaration documents the form of ``G`` in our informal definition.
 
 #
 #
@@ -194,26 +189,24 @@ G |- \x.M =&gt; \x.N
 
 In this case, this reformulation changes the structure of derivations (these are **not** isomorphic to what we started with) but does not change the relation defined by them, as reflexivity was admissible above.  This reformulation clearly would not be an option if reflexivity were not admissible, as in the example of complete development (below).
 
-The LF representation looks like this:
+The LF representation looks like this: !}%
+    
+=> : trm -> trm -> type.  %infix none 10 =>.
 
-&lt;twelf&gt;
-# &gt; : trm -&gt; trm -&gt; type.  %infix none 10 =&gt;.
+=>/refl : M => M.
+=>/beta : (app (lam M) N) => M' N'
+          <- ({x:trm} M x => M' x)
+          <- N => N'.
+=>/app  : (app M N) => (app M' N')
+          <- N => N'
+          <- M => M'.
+=>/lam  : lam M => lam M'
+          <- ({x:trm} M x => M' x).
 
-# &gt;/refl : M =&gt; M.
-# &gt;/beta : (app (lam M) N) =&gt; M' N'
-          &lt;- (\{x:trm\} M x =&gt; M' x)
-          &lt;- N =&gt; N'.
-# &gt;/app  : (app M N) =&gt; (app M' N')
-          &lt;- N =&gt; N'
-          &lt;- M =&gt; M'.
-# &gt;/lam  : lam M =&gt; lam M'
-          &lt;- (\{x:trm\} M x =&gt; M' x).
+%block trmb : block {x : trm}.
+%worlds (trmb) (=> _ _).
 
-%block trmb : block \{x : trm\}.
-%worlds (trmb) (=&gt; _ _).
-&lt;/twelf&gt;
-
-#
+%{! #
 #
 # Reformulation 3 : tagged variables
 
@@ -266,41 +259,36 @@ G, x trm, notlam x, x =&gt; x |- M ==&gt; N
 G |- \x.M ==&gt; \x.N
 &lt;/pre&gt;
 
-The LF representation is direct:
-
-&lt;twelf&gt;
-notlam : trm -&gt; type.
+The LF representation is direct: !}%
+    
+notlam : trm -> type.
 notlam/app : notlam (app _ _).
 
-%block nlb : block \{x : trm\} \{nlx : notlam x\}.
+%block nlb : block {x : trm} {nlx : notlam x}.
 %worlds (nlb) (notlam _).
-&lt;/twelf&gt;
 
-Whenever we add a ``trm`` assumption to the LF context, we assume that it is not a lambda.  The Twelf ``%worlds`` declaration documents this fact, and causes Twelf to complain if we ever violate this convention.  
+%{! Whenever we add a ``trm`` assumption to the LF context, we assume that it is not a lambda.  The Twelf ``%worlds`` declaration documents this fact, and causes Twelf to complain if we ever violate this convention.  
 
-Then complete development is a simple twist on parallel reduction:
-&lt;twelf check="true"&gt;
-#
-# &gt; : trm -&gt; trm -&gt; type.  %infix none 10 ==&gt;.
+Then complete development is a simple twist on parallel reduction: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
 
-#
-# &gt;/beta : (app (lam M) N) ==&gt; M' N'
-          &lt;- (\{x:trm\} notlam x -&gt; x ==&gt; x -&gt; M x ==&gt; M' x)
-          &lt;- N ==&gt; N'.
-#
-# &gt;/app  : (app M N) ==&gt; (app M' N')
-          &lt;- N ==&gt; N'
-          &lt;- M ==&gt; M'
-	  &lt;- notlam M.
-#
-# &gt;/lam  : lam M ==&gt; lam M'
-          &lt;- (\{x:trm\} notlam x -&gt; x ==&gt; x -&gt; M x ==&gt; M' x).
+==> : trm -> trm -> type.  %infix none 10 ==>.
 
-%block ==&gt;b : block \{x : trm\} \{nlx : notlam x\} \{==&gt;/x : x ==&gt; x\}.
-%worlds (==&gt;b) (==&gt; _ _).
-&lt;/twelf&gt;
+==>/beta : (app (lam M) N) ==> M' N'
+          <- ({x:trm} notlam x -> x ==> x -> M x ==> M' x)
+          <- N ==> N'.
+==>/app  : (app M N) ==> (app M' N')
+          <- N ==> N'
+          <- M ==> M'
+	  <- notlam M.
+==>/lam  : lam M ==> lam M'
+          <- ({x:trm} notlam x -> x ==> x -> M x ==> M' x).
 
-Every time we extend the context, we add an assumption ``notlam x`` for that variable.  We also add a reflexivity assumption for each variable because the informal definition of complete development still has a reflexivity rule for variables (even though the relation is not reflexive in general).  
+%block ==>b : block {x : trm} {nlx : notlam x} {==>/x : x ==> x}.
+%worlds (==>b) (==> _ _).
+
+%{! Every time we extend the context, we add an assumption ``notlam x`` for that variable.  We also add a reflexivity assumption for each variable because the informal definition of complete development still has a reflexivity rule for variables (even though the relation is not reflexive in general).  
 
 #
 #
@@ -318,5 +306,10 @@ then  ``G |- M[M'/x] ==&gt; N[M'/x]``.  The form of the context ensures that we 
 * [Higher-order judgement](/wiki/higher-order-judgements/)s
 * The case study on [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/) for some proofs about the judgements defined here, illustrating the use of [regular world](/wiki/percent-worlds/)s.
 
-\{\{tutorial\}\}
+\{\{tutorial\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Reformulating_languages_to_use_hypothetical_judgements).
 !}%

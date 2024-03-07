@@ -1,69 +1,71 @@
 %%! title: "User:Jcreed/Sandbox"
 
-%{!
-&lt;twelf check="false"&gt;
+%{!  !}%
+    
+%{! (options removed from twelftag: check="false") !}%
+
 pos : type.
 neg : type.
 
-+ :    pos -&gt; pos -&gt; pos.               % binary sums
++ :    pos -> pos -> pos.               % binary sums
 void : pos.                             % void
-* :    pos -&gt; pos -&gt; pos.               % binary products
+* :    pos -> pos -> pos.               % binary products
 unit : pos.                             % unit
-# &gt; :   pos -&gt; neg -&gt; neg.		% functions
-|| :  neg -&gt; neg -&gt; neg.		% negative disjunction
-down : neg -&gt; pos.			% down shift
-up :   pos -&gt; neg.			% up shift
-rec : (pos -&gt; pos) -&gt; pos.              % recursive types
-\&gt; :   neg -&gt; pos -&gt; pos.		% wtf?
-↑ : pos -&gt; neg -&gt; neg.
-↓ : neg -&gt; neg -&gt; neg.
-%infix right 13 +. %infix right 14 *. %infix right 12 =&gt;.
-%infix right 12 \&gt;. %infix right 13 ||.
+=> :   pos -> neg -> neg.		% functions
+|| :  neg -> neg -> neg.		% negative disjunction
+down : neg -> pos.			% down shift
+up :   pos -> neg.			% up shift
+rec : (pos -> pos) -> pos.              % recursive types
+\> :   neg -> pos -> pos.		% wtf?
+↑ : pos -> neg -> neg.
+↓ : neg -> neg -> neg.
+%infix right 13 +. %infix right 14 *. %infix right 12 =>.
+%infix right 12 \>. %infix right 13 ||.
 %infix right 11 ↑. %infix right 10 ↓.
 
 bool = unit + unit.                     % booleans
 nat = rec [X] unit + X.                 % naturals
 tree = [A] rec [X] A + X * X.		% binary trees
-stream = [A] rec [X] unit + A * down (unit =&gt; up X).  % lazy lists
+stream = [A] rec [X] unit + A * down (unit => up X).  % lazy lists
 int : pos.                              % machine integers
 
 i : type.
 %mode i.
 z : i.
-s : i -&gt; i.   %prefix 10 s.
-add : i -&gt; i -&gt; i -&gt; type.  %mode add +M +N -P.
+s : i -> i.   %prefix 10 s.
+add : i -> i -> i -> type.  %mode add +M +N -P.
 add/z : add z N N.
-add/s : add (s M) N (s P) &lt;- add M N P.
+add/s : add (s M) N (s P) <- add M N P.
 %worlds () (add M _ _). %total (M) (add M _ _). %unique add +M +N -P.
 
-mult : i -&gt; i -&gt; i -&gt; type.  %mode mult +M +N -P.
+mult : i -> i -> i -> type.  %mode mult +M +N -P.
 mult/z : mult z N z.
-mult/s : mult (s M) N Q &lt;- mult M N P &lt;- add P N Q.
+mult/s : mult (s M) N Q <- mult M N P <- add P N Q.
 %worlds () (mult M _ _). %total (M) (mult M _ _). %unique mult +M +N -P.
 
 frame : type.
 ⋅ : frame.
-, : frame -&gt; frame -&gt; frame.
-vhol : neg -&gt; frame.
-khol : pos -&gt; pos -&gt; frame.
+, : frame -> frame -> frame.
+vhol : neg -> frame.
+khol : pos -> pos -> frame.
 %infix right 11 ,.
 
-pat+ : frame -&gt; pos -&gt; type.
-pat- : (pos -&gt; frame) -&gt; neg -&gt; type.
+pat+ : frame -> pos -> type.
+pat- : (pos -> frame) -> neg -> type.
 %mode pat+ -FΔ +A.
 %mode pat- -FΔ +A.
 
-n   : i -&gt; pat+ ⋅ int.
-inl : pat+ FΔ A -&gt; pat+ FΔ (A + B).
-inr : pat+ FΔ B -&gt; pat+ FΔ (A + B).
+n   : i -> pat+ ⋅ int.
+inl : pat+ FΔ A -> pat+ FΔ (A + B).
+inr : pat+ FΔ B -> pat+ FΔ (A + B).
 u   : pat+ ⋅ unit.
-pair : pat+ FΔ₁ A -&gt; pat+ FΔ₂ B -&gt; pat+ (FΔ₁ , FΔ₂) (A * B).
-fold : pat+ FΔ (A (rec A)) -&gt; pat+ FΔ (rec A).
-app : pat+ FΔ₁ A -&gt; pat- FΔ₂* B -&gt; pat- ([C] FΔ₁ , FΔ₂* C) (A =&gt; B).
-** : pat- FΔ₁* A -&gt; pat+ (FΔ₁* B) (A \&gt; B).
-sw : pat- FΔ₁* A -&gt; pat- FΔ₂* B -&gt; pat- ([C] FΔ₁* C , FΔ₂* C) (A || B).
-papp : pat+ FΔ₁ A -&gt; pat- FΔ₂* B -&gt; pat- ([C] FΔ₁ , FΔ₂* C) (A ↑ B).
-bnd : pat- FΔ* B -&gt; pat- ([C] vhol A , FΔ* C) (A ↓ B).
+pair : pat+ FΔ₁ A -> pat+ FΔ₂ B -> pat+ (FΔ₁ , FΔ₂) (A * B).
+fold : pat+ FΔ (A (rec A)) -> pat+ FΔ (rec A).
+app : pat+ FΔ₁ A -> pat- FΔ₂* B -> pat- ([C] FΔ₁ , FΔ₂* C) (A => B).
+** : pat- FΔ₁* A -> pat+ (FΔ₁* B) (A \> B).
+sw : pat- FΔ₁* A -> pat- FΔ₂* B -> pat- ([C] FΔ₁* C , FΔ₂* C) (A || B).
+papp : pat+ FΔ₁ A -> pat- FΔ₂* B -> pat- ([C] FΔ₁ , FΔ₂* C) (A ↑ B).
+bnd : pat- FΔ* B -> pat- ([C] vhol A , FΔ* C) (A ↓ B).
 
 vvar : pat+ (vhol A) (down A).
 kvar : pat- (khol A) (up A).
@@ -71,83 +73,83 @@ kvar : pat- (khol A) (up A).
 tt : pat+ ⋅ bool = inl u.
 ff : pat+ ⋅ bool = inr u.
 zz : pat+ ⋅ nat = fold (inl u).
-ss : pat+ FΔ nat -&gt; pat+ FΔ nat = [p] fold (inr p).  %prefix 9 ss.
-leaf : pat+ FΔ A -&gt; pat+ FΔ (tree A) = [p] fold (inl p).
-node : pat+ FΔ₁ (tree A) -&gt; pat+ FΔ₂ (tree A) -&gt; pat+ (FΔ₁ , FΔ₂) (tree A) = [p₁] [p₂] fold (inr (pair p₁ p₂)).
+ss : pat+ FΔ nat -> pat+ FΔ nat = [p] fold (inr p).  %prefix 9 ss.
+leaf : pat+ FΔ A -> pat+ FΔ (tree A) = [p] fold (inl p).
+node : pat+ FΔ₁ (tree A) -> pat+ FΔ₂ (tree A) -> pat+ (FΔ₁ , FΔ₂) (tree A) = [p₁] [p₂] fold (inr (pair p₁ p₂)).
 nil : pat+ ⋅ (stream A) = fold (inl u).
-cons : pat+ FΔ A -&gt; pat+ (FΔ , vhol (unit =&gt; up (stream A))) (stream A) = [p] fold (inr (pair p vvar)).
+cons : pat+ FΔ A -> pat+ (FΔ , vhol (unit => up (stream A))) (stream A) = [p] fold (inr (pair p vvar)).
 
 j : type.
-rfoc : pos -&gt; j.
-linv : pos -&gt; pos -&gt; j.
-rinv : neg -&gt; j.
-lfoc : neg -&gt; pos -&gt; j.
-all : frame -&gt; j.
-neu : pos -&gt; j.
-abs : (pos -&gt; j) -&gt; j.
+rfoc : pos -> j.
+linv : pos -> pos -> j.
+rinv : neg -> j.
+lfoc : neg -> pos -> j.
+all : frame -> j.
+neu : pos -> j.
+abs : (pos -> j) -> j.
 
-tm : j -&gt; type.
-⊢ : frame -&gt; j -&gt; j.   %infix right 9 ⊢.
+tm : j -> type.
+⊢ : frame -> j -> j.   %infix right 9 ⊢.
 
-λ_ : tm J -&gt; tm (FΔ ⊢ J).
-λ, : tm (FΔ₁ ⊢ FΔ₂ ⊢ J) -&gt; tm (FΔ₁ , FΔ₂ ⊢ J).
-λval : (tm (rinv A) -&gt; tm J) -&gt; tm (vhol A ⊢ J).
-λcon : (tm (linv A B) -&gt; tm J) -&gt; tm (khol A B ⊢ J).
-λsub : (tm (all FΔ) -&gt; tm J) -&gt; tm (FΔ ⊢ J).
+λ_ : tm J -> tm (FΔ ⊢ J).
+λ, : tm (FΔ₁ ⊢ FΔ₂ ⊢ J) -> tm (FΔ₁ , FΔ₂ ⊢ J).
+λval : (tm (rinv A) -> tm J) -> tm (vhol A ⊢ J).
+λcon : (tm (linv A B) -> tm J) -> tm (khol A B ⊢ J).
+λsub : (tm (all FΔ) -> tm J) -> tm (FΔ ⊢ J).
 %prefix 9 λ_. %prefix 9 λ,. %prefix 9 λval. %prefix 9 λcon. %prefix 9 λsub.
 
-val+ : pat+ FΔ A -&gt; tm (all FΔ) -&gt; tm (rfoc A).
-con- : pat- FΔ* A -&gt; tm (all (FΔ* B)) -&gt; tm (lfoc A B).
-par : (\{p\} tm (C p)) -&gt; tm (abs C).
+val+ : pat+ FΔ A -> tm (all FΔ) -> tm (rfoc A).
+con- : pat- FΔ* A -> tm (all (FΔ* B)) -> tm (lfoc A B).
+par : ({p} tm (C p)) -> tm (abs C).
 
-sval : tm (rinv A) -&gt; tm (all (vhol A)).
-scon : tm (linv A B) -&gt; tm (all (khol A B)).
+sval : tm (rinv A) -> tm (all (vhol A)).
+scon : tm (linv A B) -> tm (all (khol A B)).
 snil :  tm (all ⋅).
-sjoin : tm (all FΔ₁) -&gt; tm (all FΔ₂) -&gt; tm (all (FΔ₁ , FΔ₂)).
+sjoin : tm (all FΔ₁) -> tm (all FΔ₂) -> tm (all (FΔ₁ , FΔ₂)).
 
-return : tm (rfoc A) -&gt; tm (neu A).
-call- : tm (lfoc A B) -&gt; tm (rinv A) -&gt; tm (neu B).
-call+ : tm (linv A B) -&gt; tm (neu A) -&gt; tm (neu B).
-let : tm (all FΔ) -&gt; tm (FΔ ⊢ neu A) -&gt; tm (neu A).
+return : tm (rfoc A) -> tm (neu A).
+call- : tm (lfoc A B) -> tm (rinv A) -> tm (neu B).
+call+ : tm (linv A B) -> tm (neu A) -> tm (neu B).
+let : tm (all FΔ) -> tm (FΔ ⊢ neu A) -> tm (neu A).
 
-kbody : tm (linv A B) -&gt; pat+ FΔ A -&gt; tm (FΔ ⊢ neu B) -&gt; type.
+kbody : tm (linv A B) -> pat+ FΔ A -> tm (FΔ ⊢ neu B) -> type.
 %mode kbody +K +P -E.
 
-vbody : tm (rinv A) -&gt; pat- FΔ* A -&gt; tm (abs [B] FΔ* B ⊢ neu B) -&gt; type.
+vbody : tm (rinv A) -> pat- FΔ* A -> tm (abs [B] FΔ* B ⊢ neu B) -> type.
 %mode vbody +V +D -E.
 
 %worlds () (kbody K P _). %total P (kbody K P _). %unique kbody +K +P -E.
 %worlds () (vbody V D _). %total D (vbody V D _). %unique vbody +V +D -E.
 
 result : type.
-halt : i -&gt; result.
+halt : i -> result.
 
-load : tm (all FΔ) -&gt; tm (FΔ ⊢ J) -&gt; tm J -&gt; type.
-step : tm (neu A) -&gt; tm (neu A) -&gt; type.
-eval : tm (neu A) -&gt; tm (rfoc A) -&gt; type.
+load : tm (all FΔ) -> tm (FΔ ⊢ J) -> tm J -> type.
+step : tm (neu A) -> tm (neu A) -> type.
+eval : tm (neu A) -> tm (rfoc A) -> type.
 %mode load +Sσ +T -T'.
 %mode step +E -E'.
 %mode eval +E -V.
 
 ld/_ : load Sσ (λ_ T) T.
-ld/join : load (sjoin Sσ₁ Sσ₂) (λ, T) T_ &lt;- load Sσ₁ T T' &lt;- load Sσ₂ T' T_.
+ld/join : load (sjoin Sσ₁ Sσ₂) (λ, T) T'' <- load Sσ₁ T T' <- load Sσ₂ T' T''.
 ld/val : load (sval V) (λval T*) (T* V).
 ld/con : load (scon K) (λcon T*) (T* K).
 ld/sub : load Sσ (λsub T) (T Sσ).
 
 st/call- : step (call- (con- D Sσ) V) (let Sσ (E _))
-   &lt;- vbody V D (par E).
+   <- vbody V D (par E).
 st/call+ : step (call+ K (return (val+ P Sσ))) (let Sσ E)
-   &lt;- kbody K P E.
+   <- kbody K P E.
 st/cong : step (call+ K E) (call+ K E')
-   &lt;- step E E'.
+   <- step E E'.
 st/let :  step (let Sσ E) E'
-   &lt;- load Sσ E E'.
+   <- load Sσ E E'.
 
 ev/return : eval (return V) V.
 ev/step : eval E V
-	&lt;- step E E'
-	&lt;- eval E' V.
+	<- step E E'
+	<- eval E' V.
 
 %worlds () (load _ _ _). %total (Sσ) (load Sσ _ _). %unique load +Sσ +T -T.
 % %worlds () (step _ _). %covers step +E -R. %unique step +E -R.
@@ -161,11 +163,11 @@ idk/x : kbody idk P (λsub [σ] return (val+ P σ)).
 
 plus : tm (linv (int * int) int).
 plus/mn : kbody plus (pair (n M) (n N)) (λ_ return (val+ (n P) snil))
-             &lt;- add M N P.
+             <- add M N P.
 
 times : tm (linv (int * int) int).
 times/mn : kbody times (pair (n M) (n N)) (λ_ return (val+ (n P) snil))
-             &lt;- mult M N P.
+             <- mult M N P.
 
 %total P (kbody K P _). %unique kbody +K +P -E.
 %total D (vbody V D _). %unique vbody +V +D -E.
@@ -206,77 +208,77 @@ fst/xy : kbody fst (pair P1 P2) (λ, λsub [σ₁] λsub [σ₂] return (val+ P1
 snd : tm (linv (A * B) B).
 snd/xy : kbody snd (pair P1 P2) (λ, λsub [σ₁] λsub [σ₂] return (val+ P2 σ₂)).
 
-case : tm (linv A C) -&gt; tm (linv B C) -&gt; tm (linv (A + B) C).
-case/inl : kbody (case K1 K2) (inl P) E1 &lt;- kbody K1 P E1.
-case/inr : kbody (case K1 K2) (inr P) E2 &lt;- kbody K2 P E2.
+case : tm (linv A C) -> tm (linv B C) -> tm (linv (A + B) C).
+case/inl : kbody (case K1 K2) (inl P) E1 <- kbody K1 P E1.
+case/inr : kbody (case K1 K2) (inr P) E2 <- kbody K2 P E2.
 
-lam : tm (linv A B) -&gt; tm (rinv (A =&gt; up B)).
+lam : tm (linv A B) -> tm (rinv (A => up B)).
 lam/x : vbody (lam K) (app P kvar) (par [_] λ, λsub [σ] λcon [k] call+ k (call+ K (return (val+ P σ)))).
 
-unlam : tm (rinv (A =&gt; up B)) -&gt; tm (linv A B).
+unlam : tm (rinv (A => up B)) -> tm (linv A B).
 unlam/x : kbody (unlam V) P (λsub [σ] call- (con- (app P kvar) (sjoin σ (scon idk))) V).
 
-con : (\{Δ\} pat+ Δ A -&gt; tm (all Δ) -&gt; tm (neu C)) -&gt; tm (linv A C).
+con : ({Δ} pat+ Δ A -> tm (all Δ) -> tm (neu C)) -> tm (linv A C).
 con/x : kbody (con K) P (λsub [σ] K _ P σ).
 
-conV : (tm (rfoc A) -&gt; tm (neu C)) -&gt; tm (linv A C).
+conV : (tm (rfoc A) -> tm (neu C)) -> tm (linv A C).
 conV/x : kbody (conV K) P (λsub [σ] K (val+ P σ)).
 
-fn : (tm (rfoc A) -&gt; tm (rinv B)) -&gt; tm (rinv (A =&gt; B)).
+fn : (tm (rfoc A) -> tm (rinv B)) -> tm (rinv (A => B)).
 fn/x : vbody (fn V) (app P D) (par [_] λ, λsub [σ₁] λsub [σ₂] let σ₂ (E (val+ P σ₁) _))
-	&lt;- \{x\} vbody (V x) D (par (E x)).
+	<- {x} vbody (V x) D (par (E x)).
 
-letV : tm (neu A) -&gt; (tm (rfoc A) -&gt; tm (neu C)) -&gt; tm (neu C) = [E] [f] call+ (conV f) E.
+letV : tm (neu A) -> (tm (rfoc A) -> tm (neu C)) -> tm (neu C) = [E] [f] call+ (conV f) E.
 
-letVp : tm (neu A) -&gt; (\{Δ\} pat+ Δ A -&gt; tm (all Δ) -&gt; tm (neu C)) -&gt; tm (neu C) = [E] [f] call+ (con f) E.
+letVp : tm (neu A) -> ({Δ} pat+ Δ A -> tm (all Δ) -> tm (neu C)) -> tm (neu C) = [E] [f] call+ (con f) E.
 
-∘ : tm (linv B C) -&gt; tm (linv A B) -&gt; tm (linv A C)
+∘ : tm (linv B C) -> tm (linv A B) -> tm (linv A C)
   = [K1] [K2] conV [x] call+ K1 (call+ K2 (return x)).
 %infix left 12 ∘.
 
-delay : tm (rinv A) -&gt; tm (neu (down A))
+delay : tm (rinv A) -> tm (neu (down A))
  = [V] return (val+ vvar (sval V)).
 
-grab : (tm (rinv A) -&gt; tm (neu C)) -&gt; tm (linv (down A) C).
+grab : (tm (rinv A) -> tm (neu C)) -> tm (linv (down A) C).
 grab/x : kbody (grab E*) vvar (λval E*).
 
-thunk : tm (neu C) -&gt; tm (linv unit C).
+thunk : tm (neu C) -> tm (linv unit C).
 thunk/u : kbody (thunk E) u (λ_ E).
 
-thunk' : tm (neu C) -&gt; tm (rinv (up C)).
+thunk' : tm (neu C) -> tm (rinv (up C)).
 thunk'/k : vbody (thunk' E) kvar (par [_] λcon [k] call+ k E).
 
-force : tm (neu (down A)) -&gt; tm (rinv A).
+force : tm (neu (down A)) -> tm (rinv A).
 force/u : vbody (force E) D (par [_] λsub [σ] call+ (grab [x] call- (con- D σ) x) E).
 
 %% EFFECTS
-%% effectful terms encoded as negative values of type (A -&gt; B) -&gt; C...
+%% effectful terms encoded as negative values of type (A -> B) -> C...
 
-trip' : pos -&gt; neg -&gt; neg -&gt; neg = [A] [B] [C] (A ↑ B) ↓ C.
-trip : pos -&gt; pos -&gt; pos -&gt; neg = [A] [B] [C] down (A =&gt; up B) =&gt; up C.
-eff : pos -&gt; pos -&gt; pos -&gt; j = [A] [B] [C] rinv (trip A B C).
+trip' : pos -> neg -> neg -> neg = [A] [B] [C] (A ↑ B) ↓ C.
+trip : pos -> pos -> pos -> neg = [A] [B] [C] down (A => up B) => up C.
+eff : pos -> pos -> pos -> j = [A] [B] [C] rinv (trip A B C).
 
-shift : (tm (linv A B) -&gt; tm (eff D D C)) -&gt; tm (eff A B C).
+shift : (tm (linv A B) -> tm (eff D D C)) -> tm (eff A B C).
 shift/k : vbody (shift E) (app vvar kvar) (par [_] λ, λval [x] λcon [k]
        call- (con- (app vvar kvar) (sjoin (sval (lam idk)) (scon k))) (E (unlam x))).
 
-reset : tm (eff B B A) -&gt; tm (eff A C C).
+reset : tm (eff B B A) -> tm (eff A C C).
 reset/e : vbody (reset E) (app vvar kvar) (par [_] λ, λval [x] λcon [k]
        call+ k (call- (con- (app vvar kvar) (sjoin (sval (lam idk)) (scon (unlam x)))) E)).
 
-plug : tm (eff A B C) -&gt; tm (linv A B) -&gt; tm (neu C)
+plug : tm (eff A B C) -> tm (linv A B) -> tm (neu C)
    = [V] [k] call- (con- (app vvar kvar) (sjoin (sval (lam k)) (scon idk))) V.
 
-! : tm (neu A) -&gt; tm (eff A C C).
+! : tm (neu A) -> tm (eff A C C).
 !/x : vbody (! E) (app vvar kvar) (par [_] λ, λval [x] λcon [k]
        call+ k (call+ (unlam x) E)).
 %prefix 9 !.
 
-eapp : tm (linv A B) -&gt; tm (eff A C1 C2) -&gt; tm (eff B C1 C2).
+eapp : tm (linv A B) -> tm (eff A C1 C2) -> tm (eff B C1 C2).
 eapp/x : vbody (eapp K E) (app vvar kvar) (par [_] λ, λval [x] λcon [k]
        call- (con- (app vvar kvar) (sjoin (sval (lam ((unlam x) ∘ K))) (scon k))) E).
 
-;; : tm (eff unit C2 C3) -&gt; tm (eff unit C1 C2) -&gt; tm (eff unit C1 C3)
+;; : tm (eff unit C2 C3) -> tm (eff unit C1 C2) -> tm (eff unit C1 C3)
    = [e1] [e2] shift [k] !
 	       plug e1 (thunk (
 	       plug e2 (thunk (call+ k (return (val+ u snil)))))).
@@ -287,7 +289,7 @@ eapp/x : vbody (eapp K E) (app vvar kvar) (par [_] λ, λval [x] λcon [k]
 
 %% stuff
 
-caseB : tm (neu C) -&gt; tm (neu C) -&gt; tm (linv bool C)
+caseB : tm (neu C) -> tm (neu C) -> tm (linv bool C)
  = [E1] [E2] case (conV [_] E1) (conV [_] E2).
 
 cmpB : tm (linv (bool * bool) bool).
@@ -302,11 +304,11 @@ cmpI/ss : kbody cmpI (pair (n (s N1)) (n (s N2))) (λ_ call+ cmpI (return (val+ 
 cmpI/zs : kbody cmpI (pair (n z) (n (s _))) (λ_ return (val+ ff snil)).
 cmpI/zs : kbody cmpI (pair (n (s _)) (n z)) (λ_ return (val+ ff snil)).
 
-&& : tm (neu bool) -&gt; tm (neu bool) -&gt; tm (neu bool)
+&& : tm (neu bool) -> tm (neu bool) -> tm (neu bool)
    = [E1] [E2] call+ (caseB E2 (return (val+ ff snil))) E1.
 %infix left 9 &&.
 
-cmpS : tm (linv (A * A) bool) -&gt; tm (linv (stream A * stream A) bool).
+cmpS : tm (linv (A * A) bool) -> tm (linv (stream A * stream A) bool).
 cmpS/nil :  kbody (cmpS F) (pair nil nil) (λ_ return (val+ tt snil)).
 cmpS/cons : kbody (cmpS F) (pair (cons P1) (cons P2)) (λ, λ, λsub [σ₁] λval [x₁] λ, λsub [σ₂] λval [x₂]
 	call+ F (return (val+ (pair P1 P2) (sjoin σ₁ σ₂))) &&
@@ -354,52 +356,52 @@ same/xy : kbody same (pair P1 P2) (λ, λsub [σ₁] λsub [σ₂]
 
 %% Direct-style with shift + reset
 
-%abbrev expOf : pos -&gt; pos -&gt; pos -&gt; type = [A] [B] [C] tm (eff A B C).
-%abbrev valOf : pos -&gt; type = [A] tm (rfoc A).
-%abbrev conOf : pos -&gt; pos -&gt; type = [A] [B] tm (linv A B).
+%abbrev expOf : pos -> pos -> pos -> type = [A] [B] [C] tm (eff A B C).
+%abbrev valOf : pos -> type = [A] tm (rfoc A).
+%abbrev conOf : pos -> pos -> type = [A] [B] tm (linv A B).
 
-V : valOf A -&gt; expOf A C C = [V] ! return V.
-EApp : conOf A B -&gt; expOf A C1 C2 -&gt; expOf B C1 C2 = eapp.
+V : valOf A -> expOf A C C = [V] ! return V.
+EApp : conOf A B -> expOf A C1 C2 -> expOf B C1 C2 = eapp.
 
-Pair : expOf A C2 C3 -&gt; expOf B C1 C2 -&gt; expOf (A * B) C1 C3
+Pair : expOf A C2 C3 -> expOf B C1 C2 -> expOf (A * B) C1 C3
    = [e1] [e2] shift [k] !
 	       plug e1 (con [_] [p1] [σ₁]
 	       plug e2 (con [_] [p2] [σ₂]
                call+ k (return (val+ (pair p1 p2) (sjoin σ₁ σ₂))))).
 
-%abbrev Fst : expOf (A * B) C1 C2 -&gt; expOf A C1 C2 = [e] eapp fst E.
-%abbrev Snd : expOf (A * B) C1 C2 -&gt; expOf B C1 C2 = [e] eapp snd E.
+%abbrev Fst : expOf (A * B) C1 C2 -> expOf A C1 C2 = [e] eapp fst E.
+%abbrev Snd : expOf (A * B) C1 C2 -> expOf B C1 C2 = [e] eapp snd E.
 
-Inl : expOf A C1 C2 -&gt; expOf (A + B) C1 C2
+Inl : expOf A C1 C2 -> expOf (A + B) C1 C2
    = [e] shift [k] ! plug e (con [_] [p] [σ] call+ k (return (val+ (inl p) σ))).
-Inr : expOf B C1 C2 -&gt; expOf (A + B) C1 C2
+Inr : expOf B C1 C2 -> expOf (A + B) C1 C2
    = [e] shift [k] ! plug e (con [_] [p] [σ] call+ k (return (val+ (inr p) σ))).
-Case : expOf (A + B) C2 C3 -&gt; (valOf A -&gt; expOf C C1 C2) -&gt; (valOf B -&gt; expOf C C1 C2) -&gt; expOf C C1 C3
+Case : expOf (A + B) C2 C3 -> (valOf A -> expOf C C1 C2) -> (valOf B -> expOf C C1 C2) -> expOf C C1 C3
    = [e] [f] [g] shift [k] !
 	plug e (case (conV [x] plug (f x) k) (conV [y] plug (g y) k)).
 
-Fn : (valOf A -&gt; expOf B C1 C2) -&gt; valOf (down (A =&gt; trip B C1 C2))
+Fn : (valOf A -> expOf B C1 C2) -> valOf (down (A => trip B C1 C2))
    = [f] val+ vvar (sval (fn f)).
 
-App : expOf (down (A =&gt; trip B C1 C2)) C0 C3 -&gt; expOf A C2 C0 -&gt; expOf B C1 C3
+App : expOf (down (A => trip B C1 C2)) C0 C3 -> expOf A C2 C0 -> expOf B C1 C3
    = [e1] [e2] shift [k] !
        plug e1 (grab [f]
        plug e2 (con [_] [p] [σ]
        call- (con- (app p (app vvar kvar)) (sjoin σ (sjoin (sval (lam k)) (scon idk)))) f)).
 
-Shift : (conOf A B -&gt; expOf D D C) -&gt; expOf A B C = shift.
-Reset : expOf B B A -&gt; expOf A C C = reset.
+Shift : (conOf A B -> expOf D D C) -> expOf A B C = shift.
+Reset : expOf B B A -> expOf A C C = reset.
 
 Z : expOf int C C = ! (return (val+ (n z) snil)).
-S : expOf int C1 C2 -&gt; expOf int C1 C2 = [e] eapp add1 e.  %prefix 9 S.
+S : expOf int C1 C2 -> expOf int C1 C2 = [e] eapp add1 e.  %prefix 9 S.
 
-Plus : expOf int C2 C3 -&gt; expOf int C1 C2 -&gt; expOf int C1 C3
+Plus : expOf int C2 C3 -> expOf int C1 C2 -> expOf int C1 C3
    = [e1] [e2] shift [k] !
 	       plug e1 (con [_] [p1] [σ₁]
 	       plug e2 (con [_] [p2] [σ₂]
                call+ k (call+ plus (return (val+ (pair p1 p2) (sjoin σ₁ σ₂)))))).
 
-Times : expOf int C2 C3 -&gt; expOf int C1 C2 -&gt; expOf int C1 C3
+Times : expOf int C2 C3 -> expOf int C1 C2 -> expOf int C1 C3
    = [e1] [e2] shift [k] !
 	       plug e1 (con [_] [p1] [σ₁]
 	       plug e2 (con [_] [p2] [σ₂]
@@ -408,7 +410,7 @@ Times : expOf int C2 C3 -&gt; expOf int C1 C2 -&gt; expOf int C1 C3
 Abort0 : expOf A B int = shift [k] ! return (val+ n0 snil).
 Abort1 : expOf A B int = shift [k] ! return (val+ n1 snil).
 
-%abbrev run : expOf A A int -&gt; i -&gt; type = [t] [x] eval (call- (con- (app vvar kvar) (sjoin (sval (lam idk)) (scon idk))) t) (val+ (n x) snil).
+%abbrev run : expOf A A int -> i -> type = [t] [x] eval (call- (con- (app vvar kvar) (sjoin (sval (lam idk)) (scon idk))) t) (val+ (n x) snil).
 
 %query 1 * run (Plus (S S Z) (S S S Z)) N1.                     % N1 = 5
 %query 1 * run (Plus (S S Z) Abort1) N2.                        % N2 = 1
@@ -417,5 +419,10 @@ Abort1 : expOf A B int = shift [k] ! return (val+ n1 snil).
 %query 1 * run (Times (S S Z) (Shift [k] Plus (S Z) (EApp k (EApp k (EApp k (S Z)))))) N5.       % N5 = 9
 %query 1 * run (App (V (Fn [x] Plus (V x) (S Z))) (S Z)) N6.    % N6 = 2
 
-&lt;/twelf&gt;
+%{!  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Jcreed/Sandbox).
 !}%

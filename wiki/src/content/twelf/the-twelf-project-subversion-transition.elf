@@ -1,7 +1,6 @@
 %%! title: "The Twelf Project:Subversion transition"
 
-%{!
-On Wednesday, April 23, 2008, the Twelf Project will switch from using CVS for its version control mechanism to using Subversion. 
+%{! On Wednesday, April 23, 2008, the Twelf Project will switch from using CVS for its version control mechanism to using Subversion. 
 
 #
 # Primary checkout
@@ -103,5 +102,10 @@ twelf-1-5-logosphere
 twelf-1-5R2
 twelf-1-5R4
 twelf-branch-meta
-twelf-poly&lt;/code&gt;
+twelf-poly&lt;/code&gt; !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Subversion_transition).
 !}%

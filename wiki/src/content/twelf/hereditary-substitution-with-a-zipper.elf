@@ -34,9 +34,9 @@ head variable from the inside of a term. !}%
 
 %%## Defining pseudo-zippers
 
-%{! A w:zipper|zipper data structure]] is a way of describing paths into
+%{! A [[w:zipper|zipper data structure]] is a way of describing paths into
 complex structures. A "real" zipper over an atomic term has the structure of a 
-_spine_ in a spine form]] presentation of logic; what we present
+_spine_ in a [[spine form]] presentation of logic; what we present
 here isn't "really" a spine (or a zipper). !}%
 
 zip : prop -> prop -> type.
@@ -169,3 +169,9 @@ declaration.
 (hsubst_rn D _ _ T _)
 (hsubst_r B _ R _).
 </twelf>
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Hereditary_substitution_with_a_zipper).
+!}%

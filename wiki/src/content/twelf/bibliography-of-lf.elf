@@ -1,7 +1,6 @@
 %%! title: "Bibliography of LF"
 
-%{!
-\{\{needswork|The links haven't all been taken over from the [http://www.cs.cmu.edu/~twelf/elf-bib.html old page], and after that happens, they should be tested as many are dead links.\}\}
+%{! \{\{needswork|The links haven't all been taken over from the [http://www.cs.cmu.edu/~twelf/elf-bib.html old page], and after that happens, they should be tested as many are dead links.\}\}
 
 This is a bibliography collected by Frank Pfenning on the LF logical framework, the logic programming language Elf which is based on LF, and the Twelf meta-logical framework (which includes an implementation of Elf). It is a selection of papers from a more general bibliography on logical frameworks. Papers with known URLs in the World-Wide Web have been annotated with their location and can be previewed or retrieved directly. Corrections, additions, and new URL's for papers and implementations are welcome.
 
@@ -118,5 +117,10 @@ This is a bibliography collected by Frank Pfenning on the LF logical framework, 
 - Roberto Virga. Higher-Order Rewriting with Dependent Types. PhD thesis, Department of Mathematical Sciences, Carnegie Mellon University, 1999. Forthcoming.
 Others research papers on [https://www.les-lubies-de-ludi.com ludi].
 For security purposes, the use of a burglary safe of fireproof cabinet must be taken in consideration seriously.
-watch the website http://www.infosafe.fr ( coffre fort, armoire forte et coffre fort ignifugé pour armes for further information )
+watch the website http://www.infosafe.fr ( coffre fort, armoire forte et coffre fort ignifugé pour armes for further information ) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Bibliography_of_LF).
 !}%

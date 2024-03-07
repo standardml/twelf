@@ -1,7 +1,6 @@
 %%! title: "Proving metatheorems with Twelf"
 
-%{!
-#
+%{! #
 # Is this introduction for you?
 
 The life story of a typical [deductive system](/wiki/object-logic/) goes something like this: One day, a programming language designer has an idea for a new programming language.  She writes down the language's [abstract syntax](/wiki/abstract-syntax/).  Then, she gives the syntax meaning by defining some [judgement](/wiki/judgment/)s for it, such as a type system or an operational semantics.  Next, she investigates the language's properties by proving some theorems.  Maybe she fiddles with the language some to make the desired theorems true; maybe the idea doesn't work at all and she goes on to something else.  Maybe she implements the language to try out some examples.  Eventually, if the idea works out, she writes up a paper about the language.  If it's a good idea, then she, or maybe someone who read the paper, will someday want to extend the language, or incorporate the idea into another language.
@@ -27,5 +26,10 @@ This introduction assumes that the first version of this story is somewhat famil
 -# [Proving metatheorems: Proving metatheorems about the STLC](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/)
 -# [Proving metatheorems: Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/)
 -# [Proving metatheorems: Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/)
--# [Proving metatheorems: Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/) ([Proving metatheorems: STLC: Answers to exercises](/wiki/proving-metatheorems-stlc-answers-to-exercises/))
+-# [Proving metatheorems: Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/) ([Proving metatheorems: STLC: Answers to exercises](/wiki/proving-metatheorems-stlc-answers-to-exercises/)) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems_with_Twelf).
 !}%

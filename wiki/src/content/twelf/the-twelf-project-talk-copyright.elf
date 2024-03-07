@@ -1,7 +1,6 @@
 %%! title: "The Twelf Project talk:Copyright"
 
-%{!
-#
+%{! #
 # CC-NC licenses
 
 Can we remove the option for noncommercial cc licenses? They are incompatible with the GPL and GFDL, and so are pretty much a dead end for free content. Is there any indication that people want to use them? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:41, 13 October 2006 (EDT)
@@ -14,5 +13,10 @@ Can we remove the option for noncommercial cc licenses? They are incompatible wi
 Also, I don't see any reason why pages can't be dual- or tri-licensed. What's the idea with that restriction? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:43, 13 October 2006 (EDT)
 : Two reasons - one is just simplicity and not having eight red tags on a single page. The other is that reading licenses I got the impression that there may actually be weird legal things involved in multi-licensing that I didn't quite want to understand. The subtyping relationship of multilicensing is quite complicated and might not be reasonably understood by all editors to a page. I think if someone _did_ strongly express an opinion about wanting to actually multilicense certain pages, the issue would be different, I just couldn't imagine such an odd situation and didn't want people doing it lightly. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:18, 13 October 2006 (EDT)
 :: OK. The purpose of multi-licensing, actually, is to to solve the "subtyping" issues: since most licenses are not directly comparable, it is useful to essentially introduce "intersection types" by asserting that the content can be used under one of many licenses. (So if original content is licensed GPL, GFDL, and cc-by-sa, then someone can fork the content into a GPL codebase or onto Wikipedia or into some like Lessig Twelf remix song or something.) It's actually a pretty common thing on Wikipedia actually to license (especially images) GPL/GFDL/cc. But you're right, this is probably never going to come up. I just thought I'd mention it. (BTW, I do know a lot about copyright stuff in case you ever need an IANAL semi-expert.) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 17:40, 13 October 2006 (EDT)
-::: Aah! Good to know. I am very interested in copyright issues as well... I think it's probably worth removing the one tag restriction, though really I'd rather people just license with &lt;math&gt;\top&lt;/math&gt; in this particular case. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 18:20, 13 October 2006 (EDT)
+::: Aah! Good to know. I am very interested in copyright issues as well... I think it's probably worth removing the one tag restriction, though really I'd rather people just license with &lt;math&gt;\top&lt;/math&gt; in this particular case. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 18:20, 13 October 2006 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project_talk:Copyright).
 !}%

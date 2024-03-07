@@ -1,24 +1,28 @@
 %%! title: "User:Tom7/test.elf"
 
-%{!
-AJALF test!
+%{! AJALF test!
 
-&lt;nowiki&gt;&lt;twelf&gt;this is no-wikied&lt;/twelf&gt;
+&lt;nowiki&gt; !}%
+    
+this is no-wikied
 
-&lt;/nowiki&gt;
-
-&lt;twelf&gt;% Here's some twelf.
+%{! &lt;/nowiki&gt; !}%
+    
+% Here's some twelf.
 
 theorem : type.
 yes : theorem.
 %mode theorem.
-&lt;/twelf&gt;
 
-
-some "literate twelf" here...
-
-&lt;twelf&gt;
+%{! some "literate twelf" here... !}%
+    
 %worlds () (theorem).
-%total \{\} (theorem).
-&lt;/twelf&gt;
+%total {} (theorem).
+
+%{!  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Tom7/test.elf).
 !}%

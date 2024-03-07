@@ -1,5 +1,61 @@
 %%! title: "The Twelf Project:Syntax highlighting"
 
+%{! Syntax highlighting on this website is enabled by [[metawikipedia:GeSHiCodeTag Extension | GeSHiCodeTag]] running on the [http://qbnz.com/highlighter/ General Syntax Highlighter]. A prototype [The Twelf Project:GeSHi Twelf extension](/wiki/the-twelf-project-geshi-twelf-extension/) has been written for the Twelf Wiki that can be enabled by using the ``&lt;code twelf&gt;&lt;/code&gt;``, but this is depreciated; the syntax highlighter called when using the ``&lt;twelf&gt;`` tag of [[Project:TwelfTag|TwelfTag]] is written in Haskell.
+
+As a result, the GeSHi Twelf extensions has bugs that will not be fixed; however, the GeSHi code extension remains for backward-compatability and for highlighting code in languages besides Twelf.
+
+#
+# Using Syntax Highlighting
+
+A full list of supported languages is below - GeSHi comes with support for the PHP, C, OCaml, and others. The best way to enter code is to use the ``&lt;code language&gt;`` tag, where "language" is the language you want to use - GeSHi will print out the list of languages it supports if the one you pick is not one it recognizes. Furthermore, a tag without a language option, i.e. ``&lt;code&gt;``, is a useful way to insert preformatted text into the pages. So this code:
+
+&lt;pre&gt;&lt;code twelf&gt;plus_s : plus (s N1) N2 (s N3)
+	  &lt;- plus N1 N2 N3.&lt;/code&gt;&lt;/pre&gt;
+
+would appear like this:
+
+&lt;code twelf&gt;plus_s : plus (s N1) N2 (s N3)
+	  &lt;- plus N1 N2 N3.&lt;/code&gt;
+
+However, to restate the point made above, you shouldn't ever do this for _Twelf_ code, you should use [[Project:TwelfTag|TwelfTag]].
+
+#
+#
+# Line numbers
+
+There's also an advaced code tag that adds in line numbers (which do _not_ get taken along for the ride if you copy and paste the text!) It would be nice to make this the common practice for large code snippiets, but because it makes the text so darn small in some browsers that it's not a good idea unless someone can figure out how to make it consistantly bigger. This code:
+
+&lt;pre&gt;&lt;code twelf n&gt;nat : type.
+z: nat. s: nat -&gt; nat.
+
+plus : nat -&gt; nat -&gt; nat -&gt; type.
+%mode plus +N1 +N2 -N3.
+plus_z : plus z N N.
+plus_s : plus (s N1) N2 (s N3)
+	  &lt;- plus N1 N2 N3.
+%worlds () (plus _ _ _). %total N (plus N _ _).&lt;/code&gt;&lt;/pre&gt;
+
+will get displayed like this:
+
+&lt;code twelf n&gt;nat : type.
+z: nat. s: nat -&gt; nat.
+
+plus : nat -&gt; nat -&gt; nat -&gt; type.
+%mode plus +N1 +N2 -N3.
+plus_z : plus z N N.
+plus_s : plus (s N1) N2 (s N3)
+	  &lt;- plus N1 N2 N3.
+%worlds () (plus _ _ _). %total N (plus N _ _).&lt;/code&gt;
+
+#
+# Supported Languages
+
+You can use the same structure for a wide variety of other languages, which are all listed below.
+
+&lt;code list&gt; echo "Hello World"; &lt;/php&gt; !}%
+
 %{!
-Syntax highlighting on this website is enabled by metawikipedia:GeSHiCodeTag Extension | GeSHiCodeTag]] running on the [http://qbnz.com/highlighter/ General Syntax Highlighter]. A prototype [The Twelf Project:GeSHi Twelf extension](/wiki/the-twelf-project-geshi-twelf-extension/) has been written for the Twelf Wiki that can be enabled by using the ``&lt;code twelf&gt;&lt;/code&gt;``, but this is depreciated; the syntax highlighter called when using the ``&lt;twelf&gt;`` tag of 
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Syntax_highlighting).
 !}%

@@ -1,7 +1,6 @@
 %%! title: "MediaWiki:Edittools"
 
-%{!
-&lt;!-- Text here will be shown below edit and upload forms. --&gt;
+%{! &lt;!-- Text here will be shown below edit and upload forms. --&gt;
 &lt;!-- nb. the charinsert extension doesn't work, so these have to be copy and pasted manually. we should probably install charinsert. --&gt;
 &lt;div id="editpage-specialchars" class="plainlinks" style="margin-top: 15px; border-width: 1px; border-style: solid; border-color: #aaaaaa; padding: 2px;"&gt;
 **Logic:** &lt;charinsert&gt;← → λ Π Σ α β γ Γ Δ η θ σ Ψ Ω ≡ ¬ ∧ ∨ ∩ ∪ ⊃ ⊂&lt;/charinsert&gt;
@@ -15,5 +14,10 @@
 **Greek:** &lt;charinsert&gt;Α α Β β Γ γ Δ δ&lt;/charinsert&gt; &nbsp; &lt;charinsert&gt;Ε ε Ζ ζ Η η Θ θ&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;Ι ι Κ κ Λ λ Μ μ&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;Ν ν Ξ ξ Ο ο Π π&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;Ρ ρ Σ σ ς Τ τ Υ υ&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;Φ φ Χ χ Ψ ψ Ω ω&lt;/charinsert&gt;
 &lt;/div&gt;
 
-On **talk pages**, please sign your comment by typing four tildes (&lt;nowiki&gt;~~~~&lt;/nowiki&gt;).
+On **talk pages**, please sign your comment by typing four tildes (&lt;nowiki&gt;~~~~&lt;/nowiki&gt;). !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/MediaWiki:Edittools).
 !}%

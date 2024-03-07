@@ -192,3 +192,9 @@ subst : bracket ([y] A y) A' -> {C:comb} ceq (capp A' C) (A C) -> type.
                            {thm-subst: {C:comb} subst dbrack C ceq/k}.
 %worlds (subst-block) (subst _ _ _).
 %total D (subst D _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/CADE_Tutorial/Combinators_Answer).
+!}%

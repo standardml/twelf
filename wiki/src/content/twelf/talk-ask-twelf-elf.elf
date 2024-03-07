@@ -1,7 +1,6 @@
 %%! title: "Talk:Ask Twelf Elf"
 
-%{!
-#
+%{! #
 # Archives
 
 * [Talk:Ask Twelf Elf/Archive 1](/wiki/talk-ask-twelf-elf-archive-1/) (October 2006-March 2007)
@@ -52,7 +51,7 @@ Informally, ==&gt; is the same as =&gt; except for the side condition "M is not 
 My question is how to represent ==&gt; in LF.  There seem to be two issues: how to represent the side condition (the informal system accepts both applications and variables), and what to do about the higher-order premise "\{x:trm\} x =&gt; x"  (because ==&gt; is not reflexive).
 
 Thanks,
-User:Rpollack|Rpollack]] 10:16, 28 February 2008 (EST) Randy
+[[User:Rpollack|Rpollack]] 10:16, 28 February 2008 (EST) Randy
 
 
 : Hi Randy.  This is a great question.  I've started a tutorial answering it: [Working with higher-order judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/).  Feel free to discuss the tutorial on its [Talk:Working with higher-order judgements](/wiki/talk-reformulating-languages-to-use-hypothetical-judgements/) if it's at all unclear.  [User:Drl](/wiki/user-drl/) 15:07, 28 February 2008 (EST)
@@ -70,24 +69,23 @@ Thanks!
 # Queries with non-empty contexts?
 
 Is it possible to use pi-types in the in the goals for %query? The example below shows what I'm trying to do. Since the workaround using a dummy type family works it does not seem to be an inherent limitation in the logic programming engine...
-This is Twelf 1.5R1, Mar 8, 2005 (tabling).
-
-&lt;twelf&gt;
+This is Twelf 1.5R1, Mar 8, 2005 (tabling). !}%
+    
 exp : type.
 
-app : exp -&gt; exp -&gt; exp.
-lam : (exp -&gt; exp) -&gt; exp.
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
 
 tp : type.
 
 unit : tp.
-arrow : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
 
-of : exp -&gt; tp -&gt; type.
+of : exp -> tp -> type.
 
-of-app : (of E1 (arrow T1 T2)) -&gt; (of E2 T1) -&gt; of (app E1 E2) T2.
+of-app : (of E1 (arrow T1 T2)) -> (of E2 T1) -> of (app E1 E2) T2.
 of-lam : of (lam ([x] Body x)) (arrow T1 T2)
-	  &lt;- \{x : exp\} \{Hx : of x T1\} of (Body x) T2.
+	  <- {x : exp} {Hx : of x T1} of (Body x) T2.
 
 %% finds a solution as expected:
 %query 1 1 
@@ -95,20 +93,19 @@ of-lam : of (lam ([x] Body x)) (arrow T1 T2)
 
 %% "found 0" solutions.
 %query 1 1
-  \{x : exp\} \{Hx : of x (arrow unit unit)\}
-  \{y : exp\} \{Hy : of y unit\}
+  {x : exp} {Hx : of x (arrow unit unit)}
+  {y : exp} {Hy : of y unit}
     of (app x y) T.
 
 %% This works, however.
-dummy  : tp -&gt; type.
+dummy  : tp -> type.
 dummy1 : dummy T 
-	  &lt;- \{x : exp\} \{Hx : of x (arrow unit unit)\}
-	     \{y : exp\} \{Hy : of y unit\}
+	  <- {x : exp} {Hx : of x (arrow unit unit)}
+	     {y : exp} {Hy : of y unit}
 	     of (app x y) T.
 %query 1 1 dummy T.
-&lt;/twelf&gt;
 
-#
+%{! #
 # normalization theorems?
 
 Hello, 
@@ -120,7 +117,7 @@ of this meta logic suitable for this?
 Thanks, 
  Andrei Popescu
 
-: See [Hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/) for an example of normalization of the simply-typed lambda calculus. The common way of stating theorems in Twelf does not extend to logical relations arguments defined by induction on a type; however, see http://www.twelf.org/slr/ Structural Logical Relations]] for a slightly different way to encode these in Twelf (as it currently exists).
+: See [Hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/) for an example of normalization of the simply-typed lambda calculus. The common way of stating theorems in Twelf does not extend to logical relations arguments defined by induction on a type; however, see [[http://www.twelf.org/slr/ Structural Logical Relations]] for a slightly different way to encode these in Twelf (as it currently exists).
 — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 02:26, 12 October 2008 (EDT)
 
 #
@@ -137,7 +134,7 @@ http://twelf.plparty.org/wiki/Proving_metatheorems:Natural_numbers:_Answers_to_e
 
 All the best,
 
-Special:Contributions/71.106.190.54|71.106.190.54]] 18:25, 23 October 2008 (EDT)Fernando
+[[Special:Contributions/71.106.190.54|71.106.190.54]] 18:25, 23 October 2008 (EDT)Fernando
 
 ----------------------------------------------------------------------------
 
@@ -294,11 +291,9 @@ I am having trouble understanding when hypothetical judgments can be used in pla
 In the code segment below, the two queries at the bottom look logically equivalent, but Twelf only finds a solution for one of the queries.
 Any help is appreciated.
 Thanks,
---Special:Contributions/128.119.240.174|128.119.240.174]] 11:04, 9 February 2009 (EST)
-John
-
-&lt;twelf&gt;
-
+--[[Special:Contributions/128.119.240.174|128.119.240.174]] 11:04, 9 February 2009 (EST)
+John !}%
+    
 % Define elements
 elem : type.
 i : elem.
@@ -307,28 +302,26 @@ j : elem.
 % Define lists
 list : type.
 nil : list.
-, : elem -&gt; list -&gt; list. %infix right 10 ,.
+, : elem -> list -> list. %infix right 10 ,.
 
 % neq = not equal relation judging when two elements are not equal
-neq : elem -&gt; elem -&gt; type.
+neq : elem -> elem -> type.
 
 % notin A L = A is an element that is not in L
-notin : elem -&gt; list -&gt; type.
+notin : elem -> list -> type.
 notin/nil   : notin A nil.
 notin/skip  : notin A (B, L)
-			  &lt;- neq A B
-			  &lt;- notin A L.
+			  <- neq A B
+			  <- notin A L.
 
 sample-list : list = j , j , nil.
 % Solution found for this query:
-%query 1 1 Y : notin i sample-list &lt;- neq i j.
+%query 1 1 Y : notin i sample-list <- neq i j.
 
 % Solution NOT found this query:
-%query 1 1 Z : \{x:neq i j\} notin i sample-list.
+%query 1 1 Z : {x:neq i j} notin i sample-list.
 
-&lt;/twelf&gt;
-
-#
+%{! #
 # proving things about an intensional property
 
 I find it easy to prove a Twelf metatheorem that an extensional definiton satsifies certain intensional properties.
@@ -348,13 +341,13 @@ Can you point me to a tutorial on it?
 
 :: Yes, if I needed transitivity, it can easily be proved at that point. But I'm going to try to prove a host of theorems like A * B |= B * A  (which can be rephrased with |=) and P |= Q, A |= B implies P * A |= Q * B which cannot be easily rephrased.  Can you point me to the cleanest tutorial on logical relations? [User:Boyland](/wiki/user-boyland/) 13:57, 2 March 2009 (EST)
 
-: An interesting side-note.  I tried phrasing |= in Twelf anyway using
-&lt;twelf&gt;
-implies : term -&gt; term -&gt; type.
+: An interesting side-note.  I tried phrasing |= in Twelf anyway using !}%
+    
+implies : term -> term -> type.
 
-implies/def : (\{s\} models s P -&gt; models s Q) -&gt; implies P Q.
-&lt;/twelf&gt;
-This works great for proving transitivity, but is terrible at proving anything else, like A * B |= B * A. [User:Boyland](/wiki/user-boyland/) 13:57, 2 March 2009 (EST)
+implies/def : ({s} models s P -> models s Q) -> implies P Q.
+
+%{! This works great for proving transitivity, but is terrible at proving anything else, like A * B |= B * A. [User:Boyland](/wiki/user-boyland/) 13:57, 2 March 2009 (EST)
 
 :: It seems like you want a computational function, not an LF function; I'm working on a framework that would provide you with that: [http://www.cs.cmu.edu/~rwh/papers/unibind/short.pdf A Universe of Binding and Computation].  Would "mixed datatypes" in the sense of the introduction of that paper be useful in your definition of "|="? [User:Drl](/wiki/user-drl/) 19:33, 3 March 2009 (EST)
 
@@ -366,59 +359,59 @@ This works great for proving transitivity, but is terrible at proving anything e
 
 : I guess the problem is that Twelf doesn't "know" that this hypothetical value must be of one of the declared forms (z or s) if it is ever substituted.  I wonder why Twelf doesn't have this ability. Would it make the logic unsound? [User:Boyland](/wiki/user-boyland/) 22:25, 7 July 2009 (EDT)
 
-::I tried this out in Twelf and got the expected worlds violation:(this code requires my nat.elf "library" signature)
-&lt;twelf&gt;
+::I tried this out in Twelf and got the expected worlds violation:(this code requires my nat.elf "library" signature) !}%
+    
 form : type.
 
-form/plus : nat -&gt; nat -&gt; nat -&gt; form.
+form/plus : nat -> nat -> nat -> form.
 
-form/forall : (nat -&gt; form) -&gt; form.
+form/forall : (nat -> form) -> form.
 
-form/exists : (nat -&gt; form) -&gt; form.
-
-
-hyp   : form -&gt; type.
-
-conc  : form -&gt; type.
+form/exists : (nat -> form) -> form.
 
 
-conc/plus : plus N1 N2 N3 -&gt; conc (form/plus N1 N2 N3).
+hyp   : form -> type.
 
-ax    : hyp F -&gt; conc F.
+conc  : form -> type.
 
-allr  : (\{n:nat\} conc (F n)) -&gt; conc (form/forall F).
 
-alll  : \{n:nat\} (hyp (F n) -&gt; conc H) -&gt; hyp (form/forall F) -&gt; conc H.
+conc/plus : plus N1 N2 N3 -> conc (form/plus N1 N2 N3).
 
-somer : \{n:nat\} (conc (F n)) -&gt; conc (form/exists F).
+ax    : hyp F -> conc F.
 
-somel : (\{n:nat\} (hyp (F n) -&gt; conc H)) -&gt; hyp (form/exists F) -&gt; conc H.
+allr  : ({n:nat} conc (F n)) -> conc (form/forall F).
+
+alll  : {n:nat} (hyp (F n) -> conc H) -> hyp (form/forall F) -> conc H.
+
+somer : {n:nat} (conc (F n)) -> conc (form/exists F).
+
+somel : ({n:nat} (hyp (F n) -> conc H)) -> hyp (form/exists F) -> conc H.
 
 
 %theorem assert-exists-double :
-	forall \{N\}
-	exists \{AE: (conc (form/exists ([n] (form/plus N N n))))\}
+	forall {N}
+	exists {AE: (conc (form/exists ([n] (form/plus N N n))))}
         true.
 
 - : assert-exists-double N (somer N2 (conc/plus P))
-    &lt;- plus-total P.
+    <- plus-total P.
 
 %worlds () (assert-exists-double _ _).
-%total \{ \} (assert-exists-double _ _).   % Just fine.
+%total { } (assert-exists-double _ _).   % Just fine.
 
 
 %theorem assert-exists-double2 :
-	exists \{AE: (conc (form/forall ([n] (form/exists ([n2] (form/plus n n n2))))))\}
+	exists {AE: (conc (form/forall ([n] (form/exists ([n2] (form/plus n n n2))))))}
         true.
 
 - : assert-exists-double2 
      (allr ([n:nat] (somer (N2 n) (conc/plus (P n)))))
-    &lt;- (\{n:nat\} plus-total* n n (N2 n) (P n)).
+    <- ({n:nat} plus-total* n n (N2 n) (P n)).
 
 %worlds () (assert-exists-double2 _).   %  NB: world violation!
-%total \{ \} (assert-exists-double2 _).
-&lt;/twelf&gt;
-::: It makes sense that this is rejected in Twelf, because the "function" (N2 n) has no ability to be expressed in LF.  But this does mean that the limitation of Twelf's metatheorems is a live issue: not put to rest by the "Structural Logical Relations" paper.
+%total { } (assert-exists-double2 _).
+
+%{! ::: It makes sense that this is rejected in Twelf, because the "function" (N2 n) has no ability to be expressed in LF.  But this does mean that the limitation of Twelf's metatheorems is a live issue: not put to rest by the "Structural Logical Relations" paper.
 
 : After some discussion with Karl Crary, it seems that the best solution is to define an empty relation, define some trustme "metatheorems" that express the desired properties and then prove all theorems in a context (worlds) with a variable of the empty relation.  This ensures that Twelf will not split on the empty relation. [User:Boyland](/wiki/user-boyland/) 15:26, 20 February 2010 (EST)
 
@@ -427,9 +420,8 @@ somel : (\{n:nat\} (hyp (F n) -&gt; conc H)) -&gt; hyp (form/exists F) -&gt; con
 
 I'm attempting to express the operational semantics of concurrent calculi like CCS in Twelf, but the inference rules for these calculi often require negative premises. I was wondering if such a thing is possible in Twelf.
 
-Below is my specification for (part of) a CCS-like language without the rule for hiding actions. Here, 'trans P1 A P2' represents a transition from P1 to P2 labelled with A.
-
-&lt;twelf&gt;
+Below is my specification for (part of) a CCS-like language without the rule for hiding actions. Here, 'trans P1 A P2' represents a transition from P1 to P2 labelled with A. !}%
+    
 label : type.
 proc : type.
 
@@ -439,32 +431,29 @@ c : label.
 d : label.
 0 : proc.
 
-, : label -&gt; proc -&gt; proc.
-+ : proc -&gt; proc -&gt; proc.
-| : proc -&gt; proc -&gt; proc.
+, : label -> proc -> proc.
++ : proc -> proc -> proc.
+| : proc -> proc -> proc.
 
 %infix right 12 ,.
 %infix left 10 +.
 %infix left 9 |.
 
-trans : proc -&gt; label -&gt; proc -&gt; type.
+trans : proc -> label -> proc -> type.
 
-pref-rule : \{A:label\} \{P:proc\} trans (A , P) A P.
-suml-rule : \{A:label\} \{P1:proc\} \{Q:proc\} \{P2:proc\} trans P1 A P2 -&gt; trans (P1 + Q) A P2.
-sumr-rule : \{A:label\} \{P1:proc\} \{Q:proc\} \{P2:proc\} trans P1 A P2 -&gt; trans (Q + P1) A P2.
-parl-rule : \{A:label\} \{P1:proc\} \{Q:proc\} \{P2:proc\} trans P1 A P2 -&gt; trans (P1 | Q) A (P2 | Q).
-parr-rule : \{A:label\} \{P1:proc\} \{Q:proc\} \{P2:proc\} trans P1 A P2 -&gt; trans (Q | P1) A (Q | P2).
-&lt;/twelf&gt;
+pref-rule : {A:label} {P:proc} trans (A , P) A P.
+suml-rule : {A:label} {P1:proc} {Q:proc} {P2:proc} trans P1 A P2 -> trans (P1 + Q) A P2.
+sumr-rule : {A:label} {P1:proc} {Q:proc} {P2:proc} trans P1 A P2 -> trans (Q + P1) A P2.
+parl-rule : {A:label} {P1:proc} {Q:proc} {P2:proc} trans P1 A P2 -> trans (P1 | Q) A (P2 | Q).
+parr-rule : {A:label} {P1:proc} {Q:proc} {P2:proc} trans P1 A P2 -> trans (Q | P1) A (Q | P2).
 
-In order to encode the rule for hiding, I would need something like this:
+%{! In order to encode the rule for hiding, I would need something like this: !}%
+    
+\ : proc -> label -> proc.  %infix left 11.
 
-&lt;twelf&gt;
-\ : proc -&gt; label -&gt; proc.  %infix left 11.
+hide-rule: {A:label} {P1:proc} {P2:proc} trans P1 A P2 -> A != B -> trans (P1 \ B) A (P2 \ B)
 
-hide-rule: \{A:label\} \{P1:proc\} \{P2:proc\} trans P1 A P2 -&gt; A != B -&gt; trans (P1 \ B) A (P2 \ B)
-&lt;/twelf&gt;
-
-where A != B is meant to be inequality of labels. Is there a simple way of encoding such negative premise?
+%{! where A != B is meant to be inequality of labels. Is there a simple way of encoding such negative premise?
 
 :: Unfortunately, no: you'll have to define the != judgement inductively yourself, by giving a case for each pair of non-equal labels (and then you may need to prove that A != A is a contradiction).  But we're working on [http://www.cs.cmu.edu/~drl/pubs/lh09unibind/lh09unibind.pdf a framework where you could express this directly], so thanks for the example!  [User:Drl](/wiki/user-drl/) 14:28, 4 May 2009 (EDT)
 
@@ -529,7 +518,7 @@ app/_ : body (app F V) C E'
 % %covers body +V +C -E.
 % %unique body +V +C -E.
 &lt;/code&gt;
-Any ideas? Thanks, User:Noam|Noam]] 07:43, 19 September 2009 (EDT)
+Any ideas? Thanks, [[User:Noam|Noam]] 07:43, 19 September 2009 (EDT)
 
 : Okay now I see that the problem is [Debugging_coverage_errors](/wiki/debugging-coverage-errors/). I don't quite understand what the suggested workaround is (is there an example somewhere?), but I figured out something, which may or may not amount to the same thing...
 
@@ -544,10 +533,28 @@ app : vl (pi A ([x]B* x)) -&gt; \{x:vl A\} vl (tapp B* x).
 app/_ : body (app F V) (t@ C) E'
 	&lt;- body F (V @ C) E'.
 &lt;/code&gt;
-: Now this coverage checks! [User:Boyland](/wiki/user-boyland/) 15:37, 20 February 2010 (EST)
+: Now this coverage checks! [[User:Noam|Noam]] 00:58, 20 September 2009 (EDT)
 
-:Here is a relatively small example that indicates the problem:
-&lt;twelf&gt;
+#
+# Twelf User Manual
+
+Is the user manual for Twelf version 1.5 available? I only noticed that for version 1.4 on Twelf Web site.
+
+#
+# freezing violation: X would depend on Y
+
+Occasionally the Twelf type checker will generate variables of type such as term -&gt; nat and then complain that nat would depend on term in that case.  I find this error message frustrating since (1) I didn't create this variable -- it was generated from an implicit underscore, (2) Since nat does NOT depend on term (e.g.), then why does Twelf generate the dependency, and (3) Just because we have a value of type term -&gt; nat, it doesn't mean that nat depends on term, but rather that the function must ignore its argument.  
+
+Another frustrating thing is that it interferes with incremental proof development: I often supply cases to theorem after earlier (unsuccessfully) checking totality.
+In this case I get the error message "Freezing violation: constant - extends type family X" which I ignore and then check totality again.
+When totality succeeds, I conclude that the theorem is done, but if I read the theorem in over again, it gets this "nat would depend on term" error message.
+
+BTW: I'm using latest CVS Twelf (1.5R3) which apparently has been frozen for a few years.  Is this a bug that has since been fixed?
+
+If it would be helpful, I can try to generate a small example which causes this behavior.[User:Boyland](/wiki/user-boyland/) 15:37, 20 February 2010 (EST)
+
+:Here is a relatively small example that indicates the problem: !}%
+    
 %%%% Definitions
 
 %% Define natural numbers
@@ -555,23 +562,23 @@ app/_ : body (app F V) (t@ C) E'
 nat : type.
 
 z : nat.
-s : nat -&gt; nat.
+s : nat -> nat.
 
 
 
 %% Define terms
 
-term : nat -&gt; type.
+term : nat -> type.
 
 %abbrev t = term z.
 
 
-lit : nat -&gt; t.
+lit : nat -> t.
 
 
 %% equality on terms
 
-eq : term N1 -&gt; term N2 -&gt; type.
+eq : term N1 -> term N2 -> type.
 
 
 eq/ : eq T T.
@@ -582,13 +589,13 @@ eq/ : eq T T.
 %%% Variable levels and nolevel
 
 
-var : term N -&gt; type.
+var : term N -> type.
 
-%block blockvar : some \{n\} block \{t:term n\} \{v:var t\}.
+%block blockvar : some {n} block {t:term n} {v:var t}.
 
 % without this, we get a freezing violation: var would depend on var
 fake : type.
-- : (var X -&gt; var X') -&gt; fake.
+- : (var X -> var X') -> fake.
 
 
 
@@ -599,28 +606,28 @@ varlist : type.
 
 varlist/0 : varlist.
 
-varlist/+ : \{N\} \{V:term N\} var V -&gt; varlist -&gt; varlist.
+varlist/+ : {N} {V:term N} var V -> varlist -> varlist.
 
 
 
 %%% Operations on variable lists:
 
 
-count : varlist -&gt; nat -&gt; nat -&gt; type.
+count : varlist -> nat -> nat -> type.
 
-lookup : varlist -&gt; term N -&gt; varlist -&gt; type.
+lookup : varlist -> term N -> varlist -> type.
 
 
 count/0 : count varlist/0 N z.
 
-count/= : count VL N M -&gt;
+count/= : count VL N M ->
     count (varlist/+ N V _ VL) N (s M).
 
 
 lookup/= : lookup (varlist/+ _ V _ VL) V VL.
 
 lookup/!= :
-	lookup VL V VL' -&gt;
+	lookup VL V VL' ->
     lookup (varlist/+ _ _ _ VL) V VL'.
 
 
@@ -629,42 +636,42 @@ lookup/!= :
 
 
 %theorem count-independent:
-	forall* \{N\} \{N'\} \{M\} \{VL\}
-	forall	\{FC: \{v:term N\} (var v) -&gt; count VL N' M\}
-	exists	\{C: count VL N' M\}
+	forall* {N} {N'} {M} {VL}
+	forall	{FC: {v:term N} (var v) -> count VL N' M}
+	exists	{C: count VL N' M}
 	true.
 
 - : count-independent ([v] [i] count/0) count/0.
 
 - : count-independent ([v] [i] count/= (FC v i)) (count/= C)
-    &lt;- count-independent FC C.
+    <- count-independent FC C.
 
 %worlds (blockvar) (count-independent _ _).
 %total (C) (count-independent C _).
 
 
 %theorem lookup-count-independent:
-	forall* \{N\} \{N'\} \{FVL\} \{FFVL'\} \{M\}
-	forall	\{FFL: \{v': term N'\} \{i': var v'\} \{v: term N\} \{i: var v\}
-		       lookup (FVL v i) v (FFVL' v' i' v i)\}
-		\{FFC: \{v': term N'\} \{i': var v'\} \{v: term N\} \{i: var v\}
-		       count (FFVL' v' i' v i) N M\}
-	exists	\{FVL': \{v: term N\} \{i:var v\} varlist\}
-                \{FL: \{v: term N\} \{i:var v\} lookup (FVL v i) v (FVL' v i)\}
-		\{FC: \{v: term N\} \{i:var v\} count (FVL' v i) N M\}
+	forall* {N} {N'} {FVL} {FFVL'} {M}
+	forall	{FFL: {v': term N'} {i': var v'} {v: term N} {i: var v}
+		       lookup (FVL v i) v (FFVL' v' i' v i)}
+		{FFC: {v': term N'} {i': var v'} {v: term N} {i: var v}
+		       count (FFVL' v' i' v i) N M}
+	exists	{FVL': {v: term N} {i:var v} varlist}
+                {FL: {v: term N} {i:var v} lookup (FVL v i) v (FVL' v i)}
+		{FC: {v: term N} {i:var v} count (FVL' v i) N M}
 	true.
 
 - : lookup-count-independent ([v'] [i'] [v] [i] lookup/=) FFC _ ([v] [i] lookup/=) FC
-    &lt;- (\{v\} \{i\} count-independent ([v'] [i'] FFC v' i' v i) (FC v i)).
+    <- ({v} {i} count-independent ([v'] [i'] FFC v' i' v i) (FC v i)).
 
 - : lookup-count-independent ([v':term N'] [i':var v'] [v:term N] [i:var v] lookup/!= (FFL v' i' v i)) FFC ([v] [i] FVL v i)
      ([v:term N] [i:var v] lookup/!= (FL v i)) FC
-    &lt;- lookup-count-independent FFL FFC _ FL FC.
+    <- lookup-count-independent FFL FFC _ FL FC.
 
 %worlds (blockvar) (lookup-count-independent _ _ _ _ _).
 %total (L) (lookup-count-independent L _ _ _ _).
-&lt;/twelf&gt;
-:: This code checks fine with the online version of Twelf.  It must be a problem with Twelf-CVS.
+
+%{! :: This code checks fine with the online version of Twelf.  It must be a problem with Twelf-CVS.
 :: Update: The code still fails with the latest truck from SVN.  So it seems the online twelf checker has a different version than twelf-CVS/SVN.  older? [User:Boyland](/wiki/user-boyland/) 18:17, 22 February 2010 (EST)
 
 #
@@ -677,27 +684,28 @@ Below is my complete program; when I run it in twelf, it does not seem to termin
 Any advice?
 
 Thanks,
-Robby
+Robby !}%
+    
+%{! (options removed from twelftag: discard=true) !}%
 
-&lt;twelf discard=true&gt;
- exp : type.
+exp : type.
  z : exp.
- s : exp -&gt; exp.
- case : exp -&gt; exp -&gt; (exp -&gt; exp) -&gt; exp.
- lam : (exp -&gt; exp) -&gt; exp.
- app : exp -&gt; exp -&gt; exp.
- fix : (exp -&gt; exp) -&gt; exp.
+ s : exp -> exp.
+ case : exp -> exp -> (exp -> exp) -> exp.
+ lam : (exp -> exp) -> exp.
+ app : exp -> exp -> exp.
+ fix : (exp -> exp) -> exp.
 
- eval : exp -&gt; exp -&gt; type.
+ eval : exp -> exp -> type.
  ev_z : eval z z.
- ev_s : eval E V -&gt; eval (s E) (s V).
- ev_case_z : eval E1 z -&gt; eval E2 V -&gt; eval (case E1 E2 ([y:exp] E3 y)) V.
+ ev_s : eval E V -> eval (s E) (s V).
+ ev_case_z : eval E1 z -> eval E2 V -> eval (case E1 E2 ([y:exp] E3 y)) V.
  ev_case_s : eval E1 (s V1)
-          -&gt; eval (E3 V1) V
-          -&gt; eval (case E1 E2 E3) V.
+          -> eval (E3 V1) V
+          -> eval (case E1 E2 E3) V.
  ev_lam : eval (lam F) (lam F).
- ev_app : eval E1 (lam F) -&gt; eval E2 V2 -&gt; eval (F V2) V -&gt; eval (app E1 E2) V.
- ev_fix : eval (E1 (fix E1)) V -&gt; eval (fix E1) V.
+ ev_app : eval E1 (lam F) -> eval E2 V2 -> eval (F V2) V -> eval (app E1 E2) V.
+ ev_fix : eval (E1 (fix E1)) V -> eval (fix E1) V.
 
  double : exp = fix ([double : exp] 
  					  (lam [i : exp] 
@@ -706,65 +714,72 @@ Robby
  							([iminusone : exp] (s (s (app double iminusone))))))).
  
  %query 1 1 D : eval (app double (s z)) (s (s z)).
-&lt;/twelf&gt;
 
----------
+%{! ---------
 
 Hi Robby! Glad you're using Twelf. I'd definitely encourage you to use the "nightly build" - it's currently very stable and has lots of improvements (and fewer bugs) than the last release. Also, it's a good idea to sign your comment with four tildes &lt;nowiki&gt;~~~~&lt;/nowiki&gt; 
 
-Anyway - I had a hunch, that turned out to be right, that the right thing to do was to write a ``[%mode](/wiki/percent-mode/)`` declaration ``%mode eval +E -V.``, which basically means "it makes sense to run ``eval`` as a function with input ``E`` and output ``V``. Sure enough, it complains about both the rule ``ev_case_s`` and ``ev_app``. If I reorder the premises so it no longer complains, the two rules look like this:
-&lt;twelf&gt;
+Anyway - I had a hunch, that turned out to be right, that the right thing to do was to write a ``[%mode](/wiki/percent-mode/)`` declaration ``%mode eval +E -V.``, which basically means "it makes sense to run ``eval`` as a function with input ``E`` and output ``V``. Sure enough, it complains about both the rule ``ev_case_s`` and ``ev_app``. If I reorder the premises so it no longer complains, the two rules look like this: !}%
+    
 ev_case_s : eval (E3 V1) V
-         -&gt; eval E1 (s V1)
-         -&gt; eval (case E1 E2 E3) V.
+         -> eval E1 (s V1)
+         -> eval (case E1 E2 E3) V.
 ev_app : eval (F V2) V 
-         -&gt; eval E2 V2 
-         -&gt; eval E1 (lam F) 
-         -&gt; eval (app E1 E2) V.
-&lt;/twelf&gt;
-In general, it's better to use backwards arrows when you intend to be running something as a logic program; the above program "looks better" written as this equivalent program:
-&lt;twelf&gt;ev_case_s : eval (case E1 E2 E3) V
-         &lt;- eval E1 (s V1)
-         &lt;- eval (E3 V1) V.
+         -> eval E2 V2 
+         -> eval E1 (lam F) 
+         -> eval (app E1 E2) V.
+
+%{! In general, it's better to use backwards arrows when you intend to be running something as a logic program; the above program "looks better" written as this equivalent program: !}%
+    
+ev_case_s : eval (case E1 E2 E3) V
+         <- eval E1 (s V1)
+         <- eval (E3 V1) V.
 ev_lam : eval (lam F) (lam F).
 ev_app : eval (app E1 E2) V
-         &lt;- eval E1 (lam F) 
-         &lt;- eval E2 V2 
-         &lt;- eval (F V2) V.
-&lt;/twelf&gt;Good luck learning Twelf, let us know if we can help you in the future! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:04, 1 November 2010 (EDT)
+         <- eval E1 (lam F) 
+         <- eval E2 V2 
+         <- eval (F V2) V.
+
+%{! Good luck learning Twelf, let us know if we can help you in the future! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:04, 1 November 2010 (EDT)
 -------
 
-Also, you can use this to run programs even if you don't know the answer:
-&lt;twelf hidden=true import=modequestion&gt;
+Also, you can use this to run programs even if you don't know the answer: !}%
+    
+%{! (options removed from twelftag: hidden=true import=modequestion) !}%
+
 exp : type.
 z : exp.
-s : exp -&gt; exp.
-case : exp -&gt; exp -&gt; (exp -&gt; exp) -&gt; exp.
-lam : (exp -&gt; exp) -&gt; exp.
-app : exp -&gt; exp -&gt; exp.
-fix : (exp -&gt; exp) -&gt; exp.
-eval : exp -&gt; exp -&gt; type.
+s : exp -> exp.
+case : exp -> exp -> (exp -> exp) -> exp.
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+fix : (exp -> exp) -> exp.
+eval : exp -> exp -> type.
 ev_z : eval z z.
-ev_s : eval E V -&gt; eval (s E) (s V).
-ev_case_z : eval E1 z -&gt; eval E2 V -&gt; eval (case E1 E2 ([y:exp] E3 y)) V.
+ev_s : eval E V -> eval (s E) (s V).
+ev_case_z : eval E1 z -> eval E2 V -> eval (case E1 E2 ([y:exp] E3 y)) V.
 ev_case_s : eval (case E1 E2 E3) V
-         &lt;- eval E1 (s V1)
-         &lt;- eval (E3 V1) V.
+         <- eval E1 (s V1)
+         <- eval (E3 V1) V.
 ev_lam : eval (lam F) (lam F).
 ev_app : eval (app E1 E2) V
-         &lt;- eval E1 (lam F) 
-         &lt;- eval E2 V2 
-         &lt;- eval (F V2) V.
-ev_fix : eval (E1 (fix E1)) V -&gt; eval (fix E1) V.
+         <- eval E1 (lam F) 
+         <- eval E2 V2 
+         <- eval (F V2) V.
+ev_fix : eval (E1 (fix E1)) V -> eval (fix E1) V.
 double : exp = 
   fix ([double : exp] 
     (lam [i : exp] 
       (case i z ([iminusone : exp] (s (s (app double iminusone))))))).
 %mode eval +A -B.
-&lt;/twelf&gt;
-&lt;twelf import=modequestion check=decl&gt;
- %query 1 1 eval (app double (app double (app double (s (s (s z)))))) V.
-&lt;/twelf&gt;&lt;twelflink import=modequestion&gt;See the corrected Twelf code along with this query&lt;/twelflink&gt; — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:14, 1 November 2010 (EDT)
+
+%{!  !}%
+    
+%{! (options removed from twelftag: import=modequestion check=decl) !}%
+
+%query 1 1 eval (app double (app double (app double (s (s (s z)))))) V.
+
+%{! `` import=modequestion&gt;See the corrected Twelf code along with this query`` — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:14, 1 November 2010 (EDT)
 
 -------
 
@@ -772,7 +787,7 @@ Thanks! I had read about %mode, and had even tried it with the definition of eva
 
 And yes, I do know how to run things without knowing the answer; of course it also didn't work for the example given. I put in the precise answer in a futile hope that that would help twelf terminate. Thanks also for the wiki advice. I'm amazed that it's taken me this long to post on one.... one question about wiki's tho: I had to come back here to see you'd posted. Is there a way to get email notification? (I had already clicked the "watch this page" checkbox.)
 
-User:Robby|Robby]] 11:28, 2 November 2010 (EDT)
+[[User:Robby|Robby]] 11:28, 2 November 2010 (EDT)
 
 -------
 
@@ -781,7 +796,7 @@ I think this wiki has email turned off, actually. To understand the effect of %m
 #
 # POPL tutorial slides location?
 
-The slides linked to from [POPL Tutorial](/wiki/popl-tutorial/) are 404. I tried to use Google to find the slides, but it was no help. User:Jbapple|Jbapple]] 15:09, 15 January 2011 (EST)
+The slides linked to from [POPL Tutorial](/wiki/popl-tutorial/) are 404. I tried to use Google to find the slides, but it was no help. [[User:Jbapple|Jbapple]] 15:09, 15 January 2011 (EST)
 
 #
 # Twelf 1.7.1 ?
@@ -798,45 +813,40 @@ It seems Twelf 1.7.1 is released, but the documentation still seems to be at 1.4
 #
 # Problem to find an induction metric
 
-I would like to prove that if two numbers are the same, e.g., N0 = N1, then, if I set the K-th position of a list to N0, or to N1, I get the same resulting list. The proof is not obvious to me because I cannot, in this case, do induction on the derivation rules of lists. I have these signatures for numbers:
-
-&lt;twelf&gt;
+I would like to prove that if two numbers are the same, e.g., N0 = N1, then, if I set the K-th position of a list to N0, or to N1, I get the same resulting list. The proof is not obvious to me because I cannot, in this case, do induction on the derivation rules of lists. I have these signatures for numbers: !}%
+    
 nat   : type.
 z     : nat.
-s     : nat -&gt; nat.
+s     : nat -> nat.
 
 % eq N1 N2 is true if N1 and N2 represent the same number.
-eq : nat -&gt; nat -&gt; type.
+eq : nat -> nat -> type.
 %mode eq +N1 +N2.
 eq_z : eq z z.
 eq_s : eq (s N1) (s N2)
-    &lt;- eq N1 N2.
+    <- eq N1 N2.
 %worlds () (eq N1 N2).
-%terminates \{N1 N2\} (eq N1 N2).
-&lt;/twelf&gt;
+%terminates {N1 N2} (eq N1 N2).
 
-And these signatures for the list:
-
-&lt;twelf&gt;
+%{! And these signatures for the list: !}%
+    
 list : type.
 element : type.
 nil : list.
-con : element -&gt; list -&gt; list.
-value : nat -&gt; element.
+con : element -> list -> list.
+value : nat -> element.
 
 % set L E N L' == L' is the same list as L, except that its N-th cell has
 % been set to E.
-set : list -&gt; element -&gt; nat -&gt; list -&gt; type.
+set : list -> element -> nat -> list -> type.
 %mode set +L +E +N -L'.
 set_z : set (con E' EL) E z (con E EL).
 set_s : set (con E' L) E (s N) (con E' L')
-    &lt;- set L E N L'.
-&lt;/twelf&gt;
+    <- set L E N L'.
 
-And below is the theorem that I would like to prove:
-
-&lt;twelf&gt;
-eq_set : eq N N' -&gt; set L (value N') V L' -&gt; set L (value N) V L' -&gt; type.
+%{! And below is the theorem that I would like to prove: !}%
+    
+eq_set : eq N N' -> set L (value N') V L' -> set L (value N) V L' -> type.
 %mode eq_set +Eq +Set' -Set.
 
 eq_set_z : eq_set eq_z Set Set.
@@ -844,14 +854,13 @@ eq_set_z : eq_set eq_z Set Set.
 
 %worlds () (eq_set _ _ _).
 %total Eq (eq_set Eq _ _).
-&lt;/twelf&gt;
 
-:: I think you need to determine an equality judgment on L', and prove 
-&lt;twelf&gt;
-        eq_set : eq N N' -&gt; set L (value N') V L' -&gt; set L (value N) V L' -&gt; eq-list L L' -&gt; type.
+%{! :: I think you need to determine an equality judgment on L', and prove !}%
+    
+eq_set : eq N N' -> set L (value N') V L' -> set L (value N) V L' -> eq-list L L' -> type.
         %mode eq_set +Eq +Set' +Set -Eq'.
-&lt;/twelf&gt;
-:: Does that help at all? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:55, 18 June 2012 (EDT)
+
+%{! :: Does that help at all? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:55, 18 June 2012 (EDT)
 
 #
 # trouble with twelf server
@@ -947,32 +956,30 @@ Thanks! Andrej Bauer (please notify me by email about the answer at Andrej.Bauer
 
 I don't see a way to prove %reduces through a lambda abstraction,
 although, it appears that %total checking is able to reason about
-these.  For example:
-
-&lt;twelf&gt;
+these.  For example: !}%
+    
 %% HOAS for LC
 
 t : type.
 
-lam : (t -&gt; t) -&gt; t.
+lam : (t -> t) -> t.
 
-app : t -&gt; t -&gt; t.
+app : t -> t -> t.
 
 
-m : t -&gt; t -&gt; type.
+m : t -> t -> type.
 
 m/0 : m T T.
 
-m/app1 : m T1 T2 -&gt; m (app T1 _) T2.
+m/app1 : m T1 T2 -> m (app T1 _) T2.
 
-m/app2 : m T1 T2 -&gt; m (app _ T1) T2.
+m/app2 : m T1 T2 -> m (app _ T1) T2.
 
-m/lam : (\{x\} m (F x) T) -&gt; m (lam ([x] F x)) T.
+m/lam : ({x} m (F x) T) -> m (lam ([x] F x)) T.
 
-%reduces T2 &lt;= T1 (m T1 T2).
-&lt;/twelf&gt;
+%reduces T2 <= T1 (m T1 T2).
 
-This gives error
+%{! This gives error
 
 Reduction violation:
 Pi (T) &lt;= (F x) ---&gt; (T) &lt;= (lam ([x:t] F x))
@@ -982,16 +989,15 @@ Is there a workaround to this problem?
 
 :: What's an example where this works for %total?
 
-Here's one that checks just fine: [User:Boyland](/wiki/user-boyland/) 08:51, 11 October 2013 (EDT)
-&lt;twelf&gt;
-
+Here's one that checks just fine: [User:Boyland](/wiki/user-boyland/) 08:51, 11 October 2013 (EDT) !}%
+    
 nat : type.
 
 z : nat.
 
-s : nat -&gt; nat.
+s : nat -> nat.
 
-max : nat -&gt; nat -&gt; nat -&gt; type.
+max : nat -> nat -> nat -> type.
 %mode max +N1 +N2 -N3.
 
 max/zz : max z z z.
@@ -1000,29 +1006,28 @@ max/sz : max (s N) z (s N).
 
 max/zs : max z (s N) (s N).
 
-max/ss : max N1 N2 N3 -&gt; max (s N1) (s N2) (s N3). 
+max/ss : max N1 N2 N3 -> max (s N1) (s N2) (s N3). 
 
 %worlds () (max _ _ _).
 %total (N) (max N _ _).
 
 
-height : t -&gt; nat -&gt; type.
+height : t -> nat -> type.
 %mode height +T -N.
 
-%block hb : block \{x\} \{h:height x z\}.
+%block hb : block {x} {h:height x z}.
 
-height/lam : (\{x\} (height x z) -&gt; height (F x) N) -&gt; height (lam F) (s N).
+height/lam : ({x} (height x z) -> height (F x) N) -> height (lam F) (s N).
 
 height/app : height (app T1 T2) (s N3)
-    &lt;- height T1 N1
-    &lt;- height T2 N2
-    &lt;- max N1 N2 N3.
+    <- height T1 N1
+    <- height T2 N2
+    <- max N1 N2 N3.
 
 %worlds (hb) (height _ _).
 %total (T) (height T _).
-&lt;/twelf&gt;
 
-#
+%{! #
 # dictionary in which keys are variable names
 
 Dear Elfs,
@@ -1085,14 +1090,14 @@ http://www.jetbrains.com/idea/download/
 
 Sorry, I could not find a publicly editable notice board. Is there a place where I can post instructions?
 
-User:Ali|Ali]] 02:23, 19 August 2014 (EDT)
+[[User:Ali|Ali]] 02:23, 19 August 2014 (EDT)
 
 #
 # Problems with pages
 
 See for example [Lax logic](/wiki/lax-logic/) where errors reported with: "Failed to parse (PNG conversion failed; check for correct installation of latex, dvips, gs, and convert)" occur very frequently.
 
-User:Fairflow|Fairflow]] 04:11, 9 December 2014 (EST)
+[[User:Fairflow|Fairflow]] 04:11, 9 December 2014 (EST)
 
 I don't see the problem.  Perhaps (1) it has been rsolved, or (2) it may be browser related?
 [User:Boyland](/wiki/user-boyland/) ([User talk:Boyland](/wiki/user-talk-boyland/)) 21:00, 21 October 2016 (UTC)
@@ -1129,5 +1134,10 @@ Mac OS X Catalina deprecated running 32-bit apps, and the pre-built Mac OSX dist
 
 Could this be updated?
 
-Thanks.
+Thanks. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Ask_Twelf_Elf).
 !}%

@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial/Session 5"
 
-%{!
-In this session, you'll get a flavor for the experience of defining systems and proving theorems in Twelf.  Break into small groups and pick an interesting problem or two to work on.  If you get stuck, ask a TA!  Refer to the solutions to check your work (though Server OK from Twelf should be assurance enough!)
+%{! In this session, you'll get a flavor for the experience of defining systems and proving theorems in Twelf.  Break into small groups and pick an interesting problem or two to work on.  If you get stuck, ask a TA!  Refer to the solutions to check your work (though Server OK from Twelf should be assurance enough!)
 
 &lt;big&gt;**_Please fill [https://spreadsheets.google.com/viewform?key=p0-89EvFXQhUXF827jjk_Dg feedback form]**_&lt;/big&gt;
 
@@ -19,5 +18,10 @@ In this session, you'll get a flavor for the experience of defining systems and 
 
 #
 # Advanced problems
-* [POPL Tutorial/Exceptions-problem](/wiki/popl-tutorial-exceptions-problem/) -- Prove type safety for an extension of MinML with exceptions defined using structural operational semantics with a "raises" judgement.  ([POPL Tutorial/Exceptions](/wiki/popl-tutorial-exceptions/))
+* [POPL Tutorial/Exceptions-problem](/wiki/popl-tutorial-exceptions-problem/) -- Prove type safety for an extension of MinML with exceptions defined using structural operational semantics with a "raises" judgement.  ([POPL Tutorial/Exceptions](/wiki/popl-tutorial-exceptions/)) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Session_5).
 !}%

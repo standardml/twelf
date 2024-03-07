@@ -1,13 +1,16 @@
 %%! title: "The Twelf Project:Style guide"
 
-%{!
-_This page is a style guide for contributions to the Twelf Project Wiki. For a style guide for writing Twelf itself, see [Style guide](/wiki/twelf-style-guide/)_
+%{! _This page is a style guide for contributions to the Twelf Project Wiki. For a style guide for writing Twelf itself, see [Style guide](/wiki/twelf-style-guide/)_
 
 #
 # Basic style points
 
 * _Twelf_ is always capitalized.
-* Always snippets of code more than one line long inside &lt;nowiki&gt;&lt;twelf&gt;&lt;/twelf&gt;&lt;/nowiki&gt; tags. Constants, names of lemmas, and keywords like ``%total`` should be displayed in fixed-width fonts by inserting them into &lt;nowiki&gt;````&lt;/nowiki&gt; tags.
+* Always snippets of code more than one line long inside &lt;nowiki&gt; !}%
+    
+
+
+%{! &lt;/nowiki&gt; tags. Constants, names of lemmas, and keywords like ``%total`` should be displayed in fixed-width fonts by inserting them into &lt;nowiki&gt;````&lt;/nowiki&gt; tags.
 * Use lowercase for the titles of pages and &lt;nowiki&gt;==Section headers==&lt;/nowiki&gt;, except for the first character or where English otherwise requires capitalization. (Article titles are case-sensitive except for the first character.) This facilitates linking pages inline, such as "The %trustme declaration is often used to develop proofs with [holes in metatheorems](/wiki/incremental-metatheorem-development/)."
 
 #
@@ -23,7 +26,7 @@ _This page is a style guide for contributions to the Twelf Project Wiki. For a s
 #
 # Editing pages
 
-The MediaWiki software does not come loaded with a style guide, becuase the existing guides are not available under general-user licenses. If you need an introduction to general Wiki markup, then checking out w:Wikipedia:How_to_edit_a_page | how to edit a page on Wikipedia]] might be helpful.
+The MediaWiki software does not come loaded with a style guide, becuase the existing guides are not available under general-user licenses. If you need an introduction to general Wiki markup, then checking out [[w:Wikipedia:How_to_edit_a_page | how to edit a page on Wikipedia]] might be helpful.
 
 #
 #
@@ -31,7 +34,21 @@ The MediaWiki software does not come loaded with a style guide, becuase the exis
 
 You can leave templates on pages by adding the tag &lt;nowiki&gt;\{\{template\}\}&lt;/nowiki&gt; to the text of the page, where "template" is replaced by what you want to add. Tags have a few uses on this wiki:
 
-* **Licensing** (see Project:Syntax Highlighting]].
+* **Licensing** (see [[Project:Copyright]] for more information) - &lt;nowiki&gt;\{\{license-gdfl\}\} \{\{license-gpl\}\}, \{\{license-by-nc\}\}, or \{\{license-by-sa\}\}&lt;/nowiki&gt; can be added to a page at the bottom.
+* **Indicating problems** - the tag &lt;nowiki&gt;\{\{stub\}\} or \{\{stub tutorial\}\}&lt;/nowiki&gt; should be added to the bottom of pages that are very short and need to be longer. If a page is not too short but has problems that need to be addressed, the tag &lt;nowiki&gt;\{\{needswork|Description of the problem\}\}&lt;/nowiki&gt; should be added to the top (replacing "Description of the problem" with an actual description of the problem).
+* **Classification** (see sections below) - the tag &lt;nowiki&gt;\{\{tutorial\}\}&lt;/nowiki&gt; should be added to tutorials, the tag &lt;nowiki&gt;\{\{case study\}\}&lt;/nowiki&gt; should be added to case studies.
+
+#
+#
+# Working with code (syntax highlighting)
+
+The Twelf Project has syntax highlighting enabled for most major programming languages, and has a custom module that can decently highlight most normal Twelf code. The short version is that you should surround any Twelf code you post with &lt;nowiki&gt; !}%
+    
+
+
+%{! &lt;/nowiki&gt; tags. If you want things to be unhighlighted but still in monospaced, pre-formatted form, you can surround the content with &lt;nowiki&gt;&lt;code&gt;&lt;/code&gt;&lt;/nowiki&gt; tags.
+
+The full story can be found at [[Project:Syntax Highlighting]].
 
 Twelf code submitted to the site, when possible, should follow the [Twelf style guide](/wiki/twelf-style-guide/) when such a thing is written.
 
@@ -40,8 +57,18 @@ Twelf code submitted to the site, when possible, should follow the [Twelf style 
 
 Adding new pages is relatively simple, and can be done in one of (at least) two ways. For this example, say you want to create a page titled "Not a page." 
 
-* You can type "Not a page" into the search tool on the left side of the page. (You should do this anyway to make sure there's not a similar page already!) The first line on the page that you go to will say "**There is no page titled ":Not a page".** You can Not a page|create this page]]." Click on the link and you can create the page.
-* You can edit (almost) any page by clicking the "edit" link at top. If you add the text &lt;nowiki&gt;[About The Twelf Project](/wiki/about-the-twelf-project/), and the style guide for writing Twelf code is [Twelf style guide](/wiki/twelf-style-guide/). The main namespace is relatively "flat," in that it has very little directory structure. Structure is preserved in other ways, such as adding categories or tags (which have associated categories) to pages.
+* You can type "Not a page" into the search tool on the left side of the page. (You should do this anyway to make sure there's not a similar page already!) The first line on the page that you go to will say "**There is no page titled ":Not a page".** You can [[Not a page|create this page]]." Click on the link and you can create the page.
+* You can edit (almost) any page by clicking the "edit" link at top. If you add the text &lt;nowiki&gt;[[Not a page]]&lt;/nowiki&gt; to the page, it will show up like this: [[Not a page]]. Click on the link and you can create a page.
+
+The first letter of any page title can appear in uppercase or lowercase - the system always thinks of it as an uppercase letter. Other than the first word, titles of new pages should generally be in lowercase unless they are using a proper noun (like "Twelf").
+
+#
+#
+# What goes where
+
+In general, there are two main "namespaces" in the wiki. This page is in the "Project" namespace, which is why it is called and linked to as "The Twelf Project:Style guide" or, equivalently, "Project:Style guide." Pages that start with "The Twelf Project:" or "Project:" are only for pages that _deal with the fact that this is a wiki._ 
+
+Alternately, the "main namespace" (basically everything else) is for articles dealing with Twelf, the software, the user community, etc. Thus the page talking about The Twelf Project as funded ongoing research work is named [About The Twelf Project](/wiki/about-the-twelf-project/), and the style guide for writing Twelf code is [Twelf style guide](/wiki/twelf-style-guide/). The main namespace is relatively "flat," in that it has very little directory structure. Structure is preserved in other ways, such as adding categories or tags (which have associated categories) to pages.
 
 #
 #
@@ -60,7 +87,7 @@ Completed tutorials should be tagged with &lt;nowiki&gt;\{\{tutorial\}\}&lt;/now
 #
 # Adding code examples
 
-There is not currently a page listing all the code examples. The reason for this is that code here is currently primarily useful in terms of tutorials it is attached to. but all pages that are primarily a code example should include the tag &lt;nowiki&gt;\{\{twelf code\}\}&lt;/nowiki&gt;, which adds the page to the :Category:Twelf code | category for twelf code]].
+There is not currently a page listing all the code examples. The reason for this is that code here is currently primarily useful in terms of tutorials it is attached to. but all pages that are primarily a code example should include the tag &lt;nowiki&gt;\{\{twelf code\}\}&lt;/nowiki&gt;, which adds the page to the [[:Category:Twelf code | category for twelf code]].
 
 #
 #
@@ -72,5 +99,10 @@ You can add code that can be thought of as "standard library"-style code and can
 
 [http://cvresumewritingservices.org buy resume]
 
-[http://perfectessay.ca/ buy essay]
+[http://perfectessay.ca/ buy essay] !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Style_guide).
 !}%

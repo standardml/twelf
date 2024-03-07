@@ -1,9 +1,8 @@
 %%! title: "Talk:Introductions to Twelf"
 
-%{!
-If you have suggestions for an audience that is not addressed by the existing tutorials, please leave them here.
+%{! If you have suggestions for an audience that is not addressed by the existing tutorials, please leave them here.
 
-I'd like to add a page with the following on how to run twelf programs. How can I do this? Note that this is for non-emacs users. If there are similar (quick and easy) instructions on how to run twelf on emacs, let me know and I'll link them from this page. User:Giselle|Giselle]] (User talk:Giselle|talk]]) 19:47, 12 December 2016 (UTC)
+I'd like to add a page with the following on how to run twelf programs. How can I do this? Note that this is for non-emacs users. If there are similar (quick and easy) instructions on how to run twelf on emacs, let me know and I'll link them from this page. [[User:Giselle|Giselle]] ([[User talk:Giselle|talk]]) 19:47, 12 December 2016 (UTC)
 
 Great!  Thanks.  I started making a new page and discovered we have a page already for this.
 Take a look at [Twelf without Emacs](/wiki/twelf-without-emacs/).  Perhaps you can use your examples to make it
@@ -66,5 +65,10 @@ You can enter in querying mode by typing &lt;code&gt;top&lt;/code&gt; following 
  interrupt
  %% OK %%
 
-To understand better what just happened and what all the words in this file represent, move on to [Proving_metatheorems_with_Twelf](/wiki/proving-metatheorems-with-twelf/).
+To understand better what just happened and what all the words in this file represent, move on to [Proving_metatheorems_with_Twelf](/wiki/proving-metatheorems-with-twelf/). !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Introductions_to_Twelf).
 !}%

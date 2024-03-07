@@ -1,7 +1,6 @@
 %%! title: "Higher-order judgements"
 
-%{!
-When representing [judgment](/wiki/judgment/)s in [LF](/wiki/lf/), it is often possible to represent [hypothetical judgment](/wiki/hypothetical-judgment/)s using LF binding.  We call this representation technique**higher-order judgments_ because judgments are represented using higher-order types in LF.  Higher-order representations are advantageous because hypothetical judgment properties such as [weakening](/wiki/weakening-lemma/), [exchange](/wiki/exchange-lemma/), and [substitution](/wiki/substitution-lemma/) are inherited "for free" from the corresponding properties of LF.
+%{! When representing [judgment](/wiki/judgment/)s in [LF](/wiki/lf/), it is often possible to represent [hypothetical judgment](/wiki/hypothetical-judgment/)s using LF binding.  We call this representation technique**higher-order judgments_ because judgments are represented using higher-order types in LF.  Higher-order representations are advantageous because hypothetical judgment properties such as [weakening](/wiki/weakening-lemma/), [exchange](/wiki/exchange-lemma/), and [substitution](/wiki/substitution-lemma/) are inherited "for free" from the corresponding properties of LF.
 
 #
 # Example
@@ -41,33 +40,30 @@ Hypothesis is derivable by the rule &lt;math&gt;\mbox\{of-var\}&lt;/math&gt;.  W
 #
 # LF representation
 
-We represent the syntax of this calculus with the following LF signature:
-
-&lt;twelf&gt;
+We represent the syntax of this calculus with the following LF signature: !}%
+    
 tp : type.
-arrow : tp -&gt; tp -&gt; tp.
+arrow : tp -> tp -> tp.
 unit : tp.
 
 tm : type.
 empty : tm.
-app : tm -&gt; tm -&gt; tm.
-lam : tp -&gt; (tm -&gt; tm) -&gt; tm.
-&lt;/twelf&gt;
-Terms are represented using [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
+app : tm -> tm -> tm.
+lam : tp -> (tm -> tm) -> tm.
 
-As an example of higher-order representations of judgments, we use LF binding to represent the object-language typing judgement.  The following LF signature represents the above judgement &lt;math&gt;\gamma \vdash e : \tau&lt;/math&gt; with the LF type family ``of``.  
+%{! Terms are represented using [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
 
-&lt;twelf&gt;
-of       : tm -&gt; tp -&gt; type.
+As an example of higher-order representations of judgments, we use LF binding to represent the object-language typing judgement.  The following LF signature represents the above judgement &lt;math&gt;\gamma \vdash e : \tau&lt;/math&gt; with the LF type family ``of``. !}%
+    
+of       : tm -> tp -> type.
 of-empty : of empty unit.
 of-lam   : of (lam T2 ([x] E x)) (arrow T2 T)
-            &lt;- (\{x: tm\} of x T2 -&gt; of (E x) T).
+            <- ({x: tm} of x T2 -> of (E x) T).
 of-app   : of (app E1 E2) T
-            &lt;- of E1 (arrow T2 T)
-            &lt;- of E2 T2.
-&lt;/twelf&gt;
+            <- of E1 (arrow T2 T)
+            <- of E2 T2.
 
-The first thing to note is that the type family is indexed by a ``tm`` and a ``tp`` but **not** a representation of the context &lt;math&gt;\gamma&lt;/math&gt;.  The reason for this is that we identify the object-language context with the LF context.  Specifically, an object-language assumption &lt;math&gt;x:\tau&lt;/math&gt; does two things:
+%{! The first thing to note is that the type family is indexed by a ``tm`` and a ``tp`` but **not** a representation of the context &lt;math&gt;\gamma&lt;/math&gt;.  The reason for this is that we identify the object-language context with the LF context.  Specifically, an object-language assumption &lt;math&gt;x:\tau&lt;/math&gt; does two things:
 * It binds the variable &lt;math&gt;\mathsf\{\}x&lt;/math&gt;.
 * It declares a typing assumption &lt;math&gt;x : \tau&lt;/math&gt;.
 
@@ -91,5 +87,10 @@ The constants ``of-empty`` and ``of-app`` correspond to the informal inference r
 * [Reformulating languages to use hypothetical judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/)
 * [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/)
 
-\{\{stub\}\}
+\{\{stub\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Higher-order_judgements).
 !}%

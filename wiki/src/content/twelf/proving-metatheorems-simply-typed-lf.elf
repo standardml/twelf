@@ -1,7 +1,6 @@
 %%! title: "Proving metatheorems:Simply typed LF"
 
-%{!
-\{\{proving metatheorems
+%{! \{\{proving metatheorems
    |prev= Representing the syntax of the natural numbers
    |prevname= Representing syntax
    |next=Representing the judgements of the natural numbers
@@ -33,13 +32,13 @@ The types &lt;math&gt;\texttt\{\}A&lt;/math&gt; consist of base types (&lt;math&
 #
 # Canonical forms
 
-The above syntax describes what we call _[canonical form](/wiki/canonical-form/)s_ (as long as they are well-typed, more on this below).  Note what is _not_ a canonical form: there is no syntactic way to apply a lambda-abstraction &lt;math&gt;\texttt\{\}\lambda x.M&lt;/math&gt; to an argument.  Based on your past experience with programming languages, it may seem strange to define LF so that only canonical forms exist—we are not allowed to write down any programs that have any computation left to do.  However, this restriction makes sense if you think about our methodology for representing object languages in LF.  In the previous section, we represented natural numbers with the following LF signature:
-&lt;twelf&gt;
+The above syntax describes what we call _[canonical form](/wiki/canonical-form/)s_ (as long as they are well-typed, more on this below).  Note what is _not_ a canonical form: there is no syntactic way to apply a lambda-abstraction &lt;math&gt;\texttt\{\}\lambda x.M&lt;/math&gt; to an argument.  Based on your past experience with programming languages, it may seem strange to define LF so that only canonical forms exist—we are not allowed to write down any programs that have any computation left to do.  However, this restriction makes sense if you think about our methodology for representing object languages in LF.  In the previous section, we represented natural numbers with the following LF signature: !}%
+    
 nat : type.
 z   : nat.
-s   : nat -&gt; nat.
-&lt;/twelf&gt;
-For this representation to be adequate, the only LF terms of type ``nat`` must be ``z``, ``s z``, ``s (s z)``, and so on.  It is easy to see that non-canonical LF terms interfere with this encoding.  For example, the LF term &lt;math&gt;(\lambda x. \texttt\{s\} \, x) \, \texttt\{z\}&lt;/math&gt; would have type ``nat``, but it is not the representation of any informal natural number. This would contradict the third part of the adequacy argument in the previous section, but restricting LF to canonical forms avoids these counterexamples.  
+s   : nat -> nat.
+
+%{! For this representation to be adequate, the only LF terms of type ``nat`` must be ``z``, ``s z``, ``s (s z)``, and so on.  It is easy to see that non-canonical LF terms interfere with this encoding.  For example, the LF term &lt;math&gt;(\lambda x. \texttt\{s\} \, x) \, \texttt\{z\}&lt;/math&gt; would have type ``nat``, but it is not the representation of any informal natural number. This would contradict the third part of the adequacy argument in the previous section, but restricting LF to canonical forms avoids these counterexamples.  
 
 It is not worth presenting the typing rules for canonical forms here (see, e.g., &lt;ref&gt;\{\{bibtex:hl07mechanizing\}\}&lt;/ref&gt;).  The only detail we need to note here is that terms &lt;math&gt;\texttt\{\}R&lt;/math&gt; are only canonical at base type &lt;math&gt;\texttt\{\}a&lt;/math&gt;, not at function type.  For example, the constant ``s`` is _not_ a canonical form of type ``nat -&gt; nat``.  However, the term &lt;math&gt;\lambda x.\texttt\{s\} x&lt;/math&gt;, which is equivalent, is a canonical form.  
 
@@ -80,5 +79,10 @@ At this point, you may be wondering what we gain by using a lambda-calculus to r
    |prev= Representing the syntax of the natural numbers
    |prevname= Representing syntax
    |next=Representing the judgements of the natural numbers
-   |nextname= Representing judgements\}\}
+   |nextname= Representing judgements\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Simply_typed_LF).
 !}%

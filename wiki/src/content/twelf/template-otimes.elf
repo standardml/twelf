@@ -1,9 +1,13 @@
 %%! title: "Template:Otimes"
 
-%{!
-&lt;font face="Lucida Sans Unicode"&gt;⊗&lt;/font&gt;&lt;noinclude&gt;
+%{! &lt;font face="Lucida Sans Unicode"&gt;⊗&lt;/font&gt;&lt;noinclude&gt;
 
 This template renders the tensor (latex \otimes) symbol, with workarounds for Internet Explorer. Use it by typing &lt;nowiki&gt;\{\{otimes\}\}&lt;/nowiki&gt; in an article.
 
-&lt;/noinclude&gt;
+&lt;/noinclude&gt; !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Otimes).
 !}%

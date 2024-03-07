@@ -60,7 +60,7 @@ match/cons	: pat -> oexp -> match -> match.
 
 
 
-%{! static semantic !}%
+%{! static semantics !}%
 
 tplist-append	: tplist -> tplist -> tplist -> type. 
 
@@ -505,3 +505,9 @@ preservation	: of-exp E T
 TODO: Finish commentary.
 \{\{stub\}\}
  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Pattern_matching).
+!}%

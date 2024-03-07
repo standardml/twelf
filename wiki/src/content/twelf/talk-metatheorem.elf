@@ -1,7 +1,6 @@
 %%! title: "Talk:Metatheorem"
 
-%{!
-#
+%{! #
 # Placeholder
 
 I'm going to work on this based on Dan's notes, with the idea that I'll fix it based on whatever total consensus arises with all interested parties. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:12, 20 October 2006 (EDT)
@@ -21,8 +20,13 @@ To an outsider, all the "meta"-theorem stuff seems like unnecessary baggage.  No
 - a _theorem_ in an encoded deductive system, and
 - a _metatheorem_ about an encoded deductive system.
 : For example, if I encoded a logic with a judgement ``A true``, then ``(all [a:prop] impl a a) true`` might be a theorem in the encoded logic (if I can come up with an LF term of that type), whereas cut elimination for the logic is a metatheorem about it. [User:Drl](/wiki/user-drl/) 10:14, 13 March 2007 (EDT)
-:: To answer another point (we edit-conflicted each other making the same first point), I don't see this as an issue of "historical resasons" at all, this is the way I understand the research community working now - the two-year-old workshop on doing this sort of thing is called the [http://www.cis.upenn.edu/~sweirich/wmm/ Worshop on Mechanizing Metatheory]. People still think of Prolog as a "theorem prover" for Horn clauses (see the w:Prolog|Wikipedia page on Prolog]]), and those kinds of theorems are the same kinds of "theorems" (``plus 3 4 7``, ``of (lam [x] E x) (arrow unit unit)``) that are discussed on this page - they are nothing like \{\{forall\}\}\{\{exists\}\}-statement metatheorems. Dan/John/others, where do you think this article could explain this better? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 10:30, 13 March 2007 (EDT)
+:: To answer another point (we edit-conflicted each other making the same first point), I don't see this as an issue of "historical resasons" at all, this is the way I understand the research community working now - the two-year-old workshop on doing this sort of thing is called the [http://www.cis.upenn.edu/~sweirich/wmm/ Worshop on Mechanizing Metatheory]. People still think of Prolog as a "theorem prover" for Horn clauses (see the [[w:Prolog|Wikipedia page on Prolog]]), and those kinds of theorems are the same kinds of "theorems" (``plus 3 4 7``, ``of (lam [x] E x) (arrow unit unit)``) that are discussed on this page - they are nothing like \{\{forall\}\}\{\{exists\}\}-statement metatheorems. Dan/John/others, where do you think this article could explain this better? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 10:30, 13 March 2007 (EDT)
 
 :: Reading the current article, I'm okay with the explanation of "theorem", but the transition to the Totality assertion section should rehash the discussion at the top about "metatheorem" being a statement about an object language and contrast it with theorem (I missed the definition of "metatheorem" at the top on the first read).  Also, when I used the word "theorem" this way, Frank objected that he likes to reserve "theorem" for a judgement defining truth in a logic (so not all derivable object-language judgements are "theorems").  Not sure if we want to use the word that way or not.  [User:Drl](/wiki/user-drl/) 12:39, 13 March 2007 (EDT)
-::: I'll work on the first point - as for the second point, perhaps I could add in to the example something with a logic - just &lt;math&gt;A \wedge B&lt;/math&gt;, and say "we could reserve 'theorem' for this kind of statement, but to avoid saying 'derivable object-language judgment' too many times we often blur the distinction by referring to both as theorems. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 08:41, 14 March 2007 (EDT)
+::: I'll work on the first point - as for the second point, perhaps I could add in to the example something with a logic - just &lt;math&gt;A \wedge B&lt;/math&gt;, and say "we could reserve 'theorem' for this kind of statement, but to avoid saying 'derivable object-language judgment' too many times we often blur the distinction by referring to both as theorems. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 08:41, 14 March 2007 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Metatheorem).
 !}%

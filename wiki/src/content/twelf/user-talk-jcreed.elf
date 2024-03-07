@@ -1,23 +1,22 @@
 %%! title: "User talk:Jcreed"
 
-%{!
-hi — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 00:43, 7 October 2006 (EDT)
+%{! hi — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 00:43, 7 October 2006 (EDT)
 
 #
 #
 # Tom7's Twelf Mystery Du Jour
-This is the thing that curiously didn't work:
-&lt;twelf&gt;
+This is the thing that curiously didn't work: !}%
+    
 o : type.
 k : o.
 
-pred : o -&gt; type.
-pred2 : (o -&gt; o) -&gt; type.
+pred : o -> type.
+pred2 : (o -> o) -> type.
 
 
-pred2/ : \{A:o -&gt; o\} pred2 A -&gt; pred (A k).
+pred2/ : {A:o -> o} pred2 A -> pred (A k).
 
-lemma : pred k -&gt; type.
+lemma : pred k -> type.
 %mode lemma +T.
 
 - : lemma (pred2/ _ _).
@@ -25,40 +24,39 @@ lemma : pred k -&gt; type.
 
 %worlds () (lemma _).
 %total D (lemma D).
-&lt;/twelf&gt;
-This is the thing that finally worked:
-&lt;twelf&gt;
+
+%{! This is the thing that finally worked: !}%
+    
 bool : type.
 
 o : type.
 k : o.
 l : o.
-eq : o -&gt; o -&gt; type.
+eq : o -> o -> type.
 refl : eq X X.
 
-pred : o -&gt; type.
-pred2 : (o -&gt; o) -&gt; type.
+pred : o -> type.
+pred2 : (o -> o) -> type.
 
-pred/k : bool -&gt; pred k.
+pred/k : bool -> pred k.
 pred/l : pred l.
-pred2/ : \{A:o -&gt; o\} pred2 A -&gt; pred (A k).
+pred2/ : {A:o -> o} pred2 A -> pred (A k).
 
-lemma : \{A\} pred A -&gt; eq A k -&gt; bool -&gt; type.
+lemma : {A} pred A -> eq A k -> bool -> type.
 %mode lemma +A +T +E -B.
 
 % - : lemma _ (pred2/ _ _) _ true.
 
 - : lemma k (pred/k B) EQ B.
 
-%block bb : block \{b : bool\} \{x:o\}.
+%block bb : block {b : bool} {x:o}.
 %worlds (bb) (lemma _ _ _ _).
 %total D (lemma _ D _ _).
-&lt;/twelf&gt;
 
+%{! #
 #
-#
-# Modal encoding
-&lt;twelf&gt;
+# Modal encoding !}%
+    
 % sorts
 sort : type. %name sort S.
 src : sort. % term from source language
@@ -69,12 +67,12 @@ sx : sort. % sequent
 
 
 % terms
-tm : sort -&gt; type. %name tm X.
+tm : sort -> type. %name tm X.
 z : tm src.
-s : tm src -&gt; tm src.
-/ : tm wd -&gt; tm fm -&gt; tm sx. %infix right 19 /.
-* : tm wd -&gt; tm wd -&gt; tm wd. %infix right 21 *.
-↝ : tm wd -&gt; tm fm -&gt; tm fm. %infix right 20 ↝.
+s : tm src -> tm src.
+/ : tm wd -> tm fm -> tm sx. %infix right 19 /.
+* : tm wd -> tm wd -> tm wd. %infix right 21 *.
+↝ : tm wd -> tm fm -> tm fm. %infix right 20 ↝.
 
 % props
 spos : type. %name spos P.
@@ -83,109 +81,105 @@ sneg : type. %name sneg N.
 tpos : type. %name tpos TP.
 tneg : type. %name tneg TN.
 
--o : spos -&gt; sneg -&gt; sneg.  %infix right 10 -o.
-⊗ : spos -&gt; spos -&gt; spos.  %infix right 11 ⊗.
-&  : sneg -&gt; sneg -&gt; sneg.  %infix right 11 &.
-↑ : spos -&gt; sneg.
-◇ : spos -&gt; sneg.
-↓ : sneg -&gt; spos.
-□ : sneg -&gt; spos.
-atm+ : tm src -&gt; spos.
-atm- : tm src -&gt; sneg.
+-o : spos -> sneg -> sneg.  %infix right 10 -o.
+⊗ : spos -> spos -> spos.  %infix right 11 ⊗.
+&  : sneg -> sneg -> sneg.  %infix right 11 &.
+↑ : spos -> sneg.
+◇ : spos -> sneg.
+↓ : sneg -> spos.
+□ : sneg -> spos.
+atm+ : tm src -> spos.
+atm- : tm src -> sneg.
 
-⇒ : tpos -&gt; tneg -&gt; tneg.  %infix right 10 ⇒.
-∧ : tpos -&gt; tpos -&gt; tpos.  %infix right 11 ∧.
-∨ : tneg -&gt; tneg -&gt; tneg.  %infix right 10 ∨.
-⇑ : tpos -&gt; tneg.
-∃ : (tm S -&gt; tpos) -&gt; tpos.
-∀ : (tm S -&gt; tneg) -&gt; tneg.
-⇓ : tneg -&gt; tpos.
-≤ : tm S -&gt; tm S -&gt; tpos. %infix right 8 ≤.
-• : tm sx -&gt; tneg.
+⇒ : tpos -> tneg -> tneg.  %infix right 10 ⇒.
+∧ : tpos -> tpos -> tpos.  %infix right 11 ∧.
+∨ : tneg -> tneg -> tneg.  %infix right 10 ∨.
+⇑ : tpos -> tneg.
+∃ : (tm S -> tpos) -> tpos.
+∀ : (tm S -> tneg) -> tneg.
+⇓ : tneg -> tpos.
+≤ : tm S -> tm S -> tpos. %infix right 8 ≤.
+• : tm sx -> tneg.
 
 %abbrev $ = [x] [y] • (x / y).
 %infix right 19 $.
 
-xlpn : spos -&gt; (tm wd -&gt; tneg) -&gt; tneg -&gt; type.
-xlnn : sneg -&gt; (tm fm -&gt; tneg) -&gt; tneg -&gt; type.
+xlpn : spos -> (tm wd -> tneg) -> tneg -> type.
+xlnn : sneg -> (tm fm -> tneg) -> tneg -> type.
 
 xlpn/⊗ : xlpn (P1 ⊗ P2) K Z1
-          &lt;- (\{a1\} xlpn P2 ([a2] K (a1 * a2)) (Z2 a1))
-          &lt;- xlpn P1 ([a1] Z2 a1) Z1.
+          <- ({a1} xlpn P2 ([a2] K (a1 * a2)) (Z2 a1))
+          <- xlpn P1 ([a1] Z2 a1) Z1.
 
 xlnn/-o : xlnn (P -o N) K Z1
-          &lt;- (\{a\} xlnn N ([f] K (a ↝ f)) (Z2 a))
-          &lt;- xlpn P ([a] Z2 a) Z1.
+          <- ({a} xlnn N ([f] K (a ↝ f)) (Z2 a))
+          <- xlpn P ([a] Z2 a) Z1.
 
 xlnn/↑ : xlnn (↑ P) K (∀ [f] ⇓ (Z f) ⇒ K f)
-          &lt;- \{f\} xlpn P ([a] a $ f) (Z f).
+          <- {f} xlpn P ([a] a $ f) (Z f).
 
 xlpn/↓ : xlpn (↓ N) K (∀ [a] ⇓ (Z a) ⇒ K a)
-          &lt;- \{a\} xlnn N ([f] a $ f) (Z a).
+          <- {a} xlnn N ([f] a $ f) (Z a).
 
-xlpp : spos -&gt; tm wd -&gt; tpos -&gt; type.
-xlnp : sneg -&gt; tm fm -&gt; tpos -&gt; type.
+xlpp : spos -> tm wd -> tpos -> type.
+xlnp : sneg -> tm fm -> tpos -> type.
 
 xlpp/⊗ : xlpp (P1 ⊗ P2) A (∃ [a1] Z1 a1 ∧ ∃ [a2] Z2 a2 ∧ (a1 * a2 ≤ A))
-          &lt;- (\{a1\} xlpp P1 a1 (Z1 a1))
-          &lt;- (\{a2\} xlpp P2 a2 (Z1 a2)).
+          <- ({a1} xlpp P1 a1 (Z1 a1))
+          <- ({a2} xlpp P2 a2 (Z1 a2)).
 
 xlnp/-o : xlnp (P -o N) F (∃ [a] Z1 a ∧ ∃ [f] Z2 f ∧ (a ↝ f ≤ F))
-          &lt;- (\{a\} xlpp P a (Z1 a))
-          &lt;- (\{f\} xlnp N f (Z2 f)).
+          <- ({a} xlpp P a (Z1 a))
+          <- ({f} xlnp N f (Z2 f)).
 
 xlpn/↓ : xlpp (↓ N) A (⇓ (∀ [f] (Z f) ⇒ A $ f))
-          &lt;- \{f\} xlnp N f (Z f).
+          <- {f} xlnp N f (Z f).
 
 xlpn/↑ : xlnp (↑ P) F (⇓ (∀ [a] (Z a) ⇒ a $ F))
-          &lt;- \{a\} xlpp P a (Z a).
+          <- {a} xlpp P a (Z a).
 
-&lt;/twelf&gt;
-
-#
+%{! #
 #
 # Looking at the equality proof
 
-A simple test of looking at the equality proof and seeing that in each case it is refl:
-
-&lt;twelf&gt;
-look-at-eq : \{A : o -&gt; o\} eq (A k) k -&gt; type.
+A simple test of looking at the equality proof and seeing that in each case it is refl: !}%
+    
+look-at-eq : {A : o -> o} eq (A k) k -> type.
 %mode look-at-eq +A +D.
 
 - : look-at-eq ([x] x) refl.
 - : look-at-eq ([x] k) refl.
 
 %worlds () (look-at-eq _ _).
-%total \{\} (look-at-eq _ _).
-&lt;/twelf&gt;
+%total {} (look-at-eq _ _).
 
-Does this show that you can do any decomposition you'd want to do?
+%{! Does this show that you can do any decomposition you'd want to do?
 [User:Drl](/wiki/user-drl/) 18 October 2007
 
 #
 #
-# A Copy Function
-&lt;twelf&gt;
+# A Copy Function !}%
+    
 o : type.
-eq : o -&gt; o -&gt; type.
+eq : o -> o -> type.
 refl : eq X X.
 k : o.
 l : o.
 
-ho : (o -&gt; o) -&gt; type.
+ho : (o -> o) -> type.
 
-%block b : some \{A : o -&gt; o\} block \{x : ho A\}.
+%block b : some {A : o -> o} block {x : ho A}.
 
-src : o -&gt; type.
-dst : o -&gt; type.
+src : o -> type.
+dst : o -> type.
 
 src/base : src X.
-src/ho : ho A -&gt; src (A k).
+src/ho : ho A -> src (A k).
 
 dst/base : dst k.
-dst/ho : ho A -&gt; dst k.
+dst/ho : ho A -> dst k.
 
-lemma :  src A -&gt; eq A k -&gt; dst k -&gt; type.
+lemma :  src A -> eq A k -> dst k -> type.
 - : lemma src/base EQ dst/base.
 - : lemma (src/ho HO) EQ (dst/ho HO).
 
@@ -193,12 +187,17 @@ lemma :  src A -&gt; eq A k -&gt; dst k -&gt; type.
 %worlds (b) (lemma _ _ _).
 %total D (lemma D _ _ ).
 
-copy :  src k -&gt; dst k -&gt; type.
-- : copy A B &lt;- lemma A refl B.
+copy :  src k -> dst k -> type.
+- : copy A B <- lemma A refl B.
 
 %mode copy +S -D.
 %worlds (b) (copy _ _).
 %total D (copy D _).
-&lt;/twelf&gt;
-[User:Jcreed](/wiki/user-jcreed/) 15:15, 18 October 2007 (EDT)
+
+%{! [User:Jcreed](/wiki/user-jcreed/) 15:15, 18 October 2007 (EDT) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User_talk:Jcreed).
 !}%

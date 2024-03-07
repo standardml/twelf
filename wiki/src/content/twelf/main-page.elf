@@ -1,7 +1,6 @@
 %%! title: "Main Page"
 
-%{!
-&lt;!-- 
+%{! &lt;!-- 
 
 Hi there!   
 
@@ -23,7 +22,7 @@ If you do want to edit things besides those four sections of content, you're in 
 |-
 |style="width:280px;text-align:center;white-space:nowrap;color:#000" |
 &lt;div style="font-size:162%;border:none;margin: 0;padding:.1em;color:#000"&gt;Welcome to [The_Twelf_Project:About](/wiki/about-the-twelf-project/)&lt;/div&gt;
-&lt;div id="articlecount" style="width:100%;text-align:center;font-size:85%;"&gt;Special:allpages|\{\{NUMBEROFARTICLES\}\}]] articles and counting...&lt;/div&gt;
+&lt;div id="articlecount" style="width:100%;text-align:center;font-size:85%;"&gt;[[Special:allpages|\{\{NUMBEROFARTICLES\}\}]] articles and counting...&lt;/div&gt;
 |\}&lt;!-- Portals Follow --&gt;
 |style="width:11%;font-size:95%;color:#000"|
 |\}&lt;!-- End Portals --&gt;
@@ -53,5 +52,10 @@ Download and Learn Twelf&lt;/div&gt;
 |\}
 |\}
 __NOTOC__
-__NOEDITSECTION__
+__NOEDITSECTION__ !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Main_Page).
 !}%

@@ -1,7 +1,6 @@
 %%! title: "Glossary"
 
-%{!
-This **glossary** should include most of the unfamiliar concepts that someone with an undergraduate-level understanding of type theory would encounter in the process of learning to use Twelf. Some of these links point to extensive tutorials, but in those cases the first paragraph or two should include a definition of the concept.
+%{! This **glossary** should include most of the unfamiliar concepts that someone with an undergraduate-level understanding of type theory would encounter in the process of learning to use Twelf. Some of these links point to extensive tutorials, but in those cases the first paragraph or two should include a definition of the concept.
 
 Feel free to add new glossary entries to the list below.  If you encounter a piece of terminology or jargon you haven't seen and it isn't here already, or if a link doesn't answer your question, let us know on the [Talk:Glossary](/wiki/talk-glossary/).
 
@@ -58,5 +57,10 @@ Feel free to add new glossary entries to the list below.  If you encounter a pie
 * [Uniqueness lemma](/wiki/uniqueness-lemma/)
 * [Weakening lemma](/wiki/weakening-lemma/)
 * [%worlds](/wiki/percent-worlds/)
-* [World subsumption](/wiki/world-subsumption/)
+* [World subsumption](/wiki/world-subsumption/) !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Glossary).
 !}%

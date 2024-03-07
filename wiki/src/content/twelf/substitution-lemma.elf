@@ -1,7 +1,6 @@
 %%! title: "Substitution lemma"
 
-%{!
-Type-preserving **substitution** is the property of a hypothetical judgment that if Γ, x : A \{\{vdash\}\} M(x) : B and Γ \{\{vdash\}\} N : A, then Γ, \{\{vdash\}\} M(N) : B. In other words, if we have a well-typed term M(x) that depends on a hypothesis x of type A, and we have a well-typed term N : A, then we can substitute N for the variable x within M to produce a well-typed term that does not depend on x.
+%{! Type-preserving **substitution** is the property of a hypothetical judgment that if Γ, x : A \{\{vdash\}\} M(x) : B and Γ \{\{vdash\}\} N : A, then Γ, \{\{vdash\}\} M(N) : B. In other words, if we have a well-typed term M(x) that depends on a hypothesis x of type A, and we have a well-typed term N : A, then we can substitute N for the variable x within M to produce a well-typed term that does not depend on x.
 
 Depending on how the type system of an object language is encoded, there are a number of different techniques for proving a **substitution lemma** for the language.
 #
@@ -9,54 +8,54 @@ Depending on how the type system of an object language is encoded, there are a n
 
 When an object language is encoded using [higher-order judgements](/wiki/higher-order-judgements/), substitution comes for free: object-language variables and typing assumptions are represented by LF lambdas, so substitution follows from LF application.
 
-Consider the following encoding of a simply typed λ-calculus:
+Consider the following encoding of a simply typed λ-calculus: !}%
+    
+%{! (options removed from twelftag: import="application") !}%
 
-&lt;twelf import="application"&gt;
 %% Syntax
 
 tp : type.
 
 tp/unit  : tp.
-tp/arrow : tp -&gt; tp -&gt; tp.
+tp/arrow : tp -> tp -> tp.
 
 exp : type.
 
 exp/unit : exp.
-exp/lam  : tp -&gt; (exp -&gt; exp) -&gt; exp.
-exp/app  : exp -&gt; exp -&gt; exp.
+exp/lam  : tp -> (exp -> exp) -> exp.
+exp/app  : exp -> exp -> exp.
 
 %% Typing judgement
 
-of : exp -&gt; tp -&gt; type.
+of : exp -> tp -> type.
 
 of/unit : of exp/unit tp/unit.
 
 of/lam  : of (exp/lam T E) (tp/arrow T T')
-           &lt;- (\{x:exp\} of x T
-                -&gt; of (E x) T').
+           <- ({x:exp} of x T
+                -> of (E x) T').
 
 of/app  : of (exp/app E1 E2) T'
-           &lt;- of E2 T
-           &lt;- of E1 (tp/arrow T T').
-&lt;/twelf&gt;
+           <- of E2 T
+           <- of E1 (tp/arrow T T').
 
-We can give a direct proof of substitution:
+%{! We can give a direct proof of substitution: !}%
+    
+%{! (options removed from twelftag: import="application"  check=true) !}%
 
-&lt;twelf import="application"  check=true&gt;
 subst   : of E1 T
-           -&gt; (\{x:exp\}\{dx:of x T\} of (E2 x) T')
-           -&gt; of (E2 E1) T'
-           -&gt; type.
+           -> ({x:exp}{dx:of x T} of (E2 x) T')
+           -> of (E2 E1) T'
+           -> type.
 %mode subst +D1 +D2 -D3.
 
 - : subst D1 D2 (D2 E1 D1).
 
-%block of-block : some \{T:tp\} block \{x:exp\}\{dx:of x T\}.
+%block of-block : some {T:tp} block {x:exp}{dx:of x T}.
 %worlds (of-block) (subst _ _ _).
-%total \{\} (subst _ _ _).
-&lt;/twelf&gt;
+%total {} (subst _ _ _).
 
-The typing derivation for the substitution is created by applying the LF function ``D2``, which represents the hypothetical typing derivation, to the LF term ``D1``, which represents the typing derivation for the substituted term.  
+%{! The typing derivation for the substitution is created by applying the LF function ``D2``, which represents the hypothetical typing derivation, to the LF term ``D1``, which represents the typing derivation for the substituted term.  
 
 Although we proved substitution as a metatheorem ``subst`` here, in practice it is unnecessary to state substitution as a lemma. The substitution can be performed via application whenever it is necessary.
 
@@ -74,47 +73,49 @@ In the following example, the ``assm`` judgment is used in conjunction with the 
 
 However, in this case, the desired substitution principle can be proved via an induction over the structure of the hypothetical judgment. The key to making the following proof work is the fact that [exchange](/wiki/exchange-lemma/) is admissible for this language via its encoding in LF. In general, exchange is admissible whenever assumptions about variables cannot depend on assumptions earlier in the context.
 
-Here is an encoding that uses a different judgement for assumptions:
-&lt;twelf import="var"&gt;
+Here is an encoding that uses a different judgement for assumptions: !}%
+    
+%{! (options removed from twelftag: import="var") !}%
+
 %% Syntax
 
 tp : type.
 
 tp/unit  : tp.
-tp/arrow : tp -&gt; tp -&gt; tp.
+tp/arrow : tp -> tp -> tp.
 
 exp : type.
 
 exp/unit : exp.
-exp/lam  : tp -&gt; (exp -&gt; exp) -&gt; exp.
-exp/app  : exp -&gt; exp -&gt; exp.
+exp/lam  : tp -> (exp -> exp) -> exp.
+exp/app  : exp -> exp -> exp.
 
 %% Typing judgements
 
-assm : exp -&gt; tp -&gt; type.
-of : exp -&gt; tp -&gt; type.
+assm : exp -> tp -> type.
+of : exp -> tp -> type.
 
 of/var  : of E T
-           &lt;- assm E T.
+           <- assm E T.
 
 of/unit : of exp/unit tp/unit.
 
 of/lam  : of (exp/lam T E) (tp/arrow T T')
-           &lt;- (\{x:exp\} assm x T
-                -&gt; of (E x) T').
+           <- ({x:exp} assm x T
+                -> of (E x) T').
 
 of/app  : of (exp/app E1 E2) T'
-           &lt;- of E2 T
-           &lt;- of E1 (tp/arrow T T').
-&lt;/twelf&gt;
+           <- of E2 T
+           <- of E1 (tp/arrow T T').
 
-Now, we prove the substitution theorem:
+%{! Now, we prove the substitution theorem: !}%
+    
+%{! (options removed from twelftag: import="var") !}%
 
-&lt;twelf import="var"&gt;
 subst   : of E1 T
-           -&gt; (\{x:exp\}\{dx:assm x T\} of (E2 x) T')
-           -&gt; of (E2 E1) T'
-           -&gt; type.
+           -> ({x:exp}{dx:assm x T} of (E2 x) T')
+           -> of (E2 E1) T'
+           -> type.
 %mode subst +D1 +D2 -D3.
 
 % case for substituting out the assumption
@@ -124,100 +125,108 @@ subst   : of E1 T
 % catch-all case for of/unit or instances of of/var for a different assumption
 
 - : subst D1 ([x][dx] D2) D2.
-&lt;/twelf&gt;
 
-The following case is the key for the proof of this metatheorem. It works because the language admits the property of exchange.
+%{! The following case is the key for the proof of this metatheorem. It works because the language admits the property of exchange.
 
-In the following case, D2 has the type
-&lt;twelf discard="true"&gt;
-\{x:exp\}\{dx:of x T\}\{y:exp\}\{dy:of y T'\} of (E' x y) T_
-&lt;/twelf&gt;
-The principle of exchange can be applied to produce a derivation of
-&lt;twelf discard="true"&gt;
-\{y:exp\}\{dy:of y T'\}\{x:exp\}\{dx:of x T\} of (E' x y) T_
-&lt;/twelf&gt;
-On the inductive call to subst, the assumptions 
-&lt;twelf discard="true"&gt;\{y:exp\}\{dy:of y T'\}
-&lt;/twelf&gt; 
-are pushed into the LF context, so that a derivation of type
+In the following case, D2 has the type !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
 
-&lt;twelf discard="true"&gt;
-\{x:exp\}\{dx:of x T\} of (E' x y) T_
-&lt;/twelf&gt;
+{x:exp}{dx:of x T}{y:exp}{dy:of y T'} of (E' x y) T''
 
-can be given as the second argument to the inductive call.
+%{! The principle of exchange can be applied to produce a derivation of !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
 
-&lt;twelf import="var" check=true&gt;
+{y:exp}{dy:of y T'}{x:exp}{dx:of x T} of (E' x y) T''
+
+%{! On the inductive call to subst, the assumptions !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
+{y:exp}{dy:of y T'}
+
+%{! are pushed into the LF context, so that a derivation of type !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
+{x:exp}{dx:of x T} of (E' x y) T''
+
+%{! can be given as the second argument to the inductive call. !}%
+    
+%{! (options removed from twelftag: import="var" check=true) !}%
+
 - : subst D1 ([x][dx] of/lam ([y][dy] D2 x dx y dy)) (of/lam D2')
-     &lt;- (\{y\}\{dy\} subst D1 ([x][dx] D2 x dx y dy) (D2' y dy)).
+     <- ({y}{dy} subst D1 ([x][dx] D2 x dx y dy) (D2' y dy)).
 
 - : subst D1 ([x][dx] of/app (D2 x dx) (D3 x dx)) (of/app D2' D3')
-     &lt;- subst D1 D2 D2'
-     &lt;- subst D1 D3 D3'.
+     <- subst D1 D2 D2'
+     <- subst D1 D3 D3'.
 
-%block assm-block : some \{T:tp\} block \{x:exp\}\{dx:assm x T\}.
+%block assm-block : some {T:tp} block {x:exp}{dx:assm x T}.
 %worlds (assm-block) (subst _ _ _).
 %total (D1) (subst _ D1 _).
-&lt;/twelf&gt;
 
-#
+%{! #
 # Substitution lemmas with dependent types [Advanced topic]
 
 The preceding technique for showing substitution lemmas works fine for systems without dependent types. However, it would not work for a system with dependent types, because its typing assumptions could not admit exchange, in general. A recent discovery is that a similarly general technique is available for languages with dependent types and a var rule, despite the apparent absence of an exchange property. Of course, if the system has the same judgment for assumptions and typing derivations, then substitution can be performed via application in LF.
 
 The following example studies a very simple singleton calculus with the dependent Π type for functions. The presence of dependent types means typing assumptions about expressions can depend on expression variables introduced in earlier assumptions. 
 
-Explicit contexts]] could be used to do substition in this case, but this technique is much simpler in practice.
+[[Explicit contexts]] could be used to do substition in this case, but this technique is much simpler in practice. !}%
+    
+%{! (options removed from twelftag: import="depvar") !}%
 
-&lt;twelf import="depvar"&gt;tp : type.
+tp : type.
 exp : type.
 
-tp/sing  : exp -&gt; tp.
+tp/sing  : exp -> tp.
 tp/unit  : tp.
-tp/pi    : tp -&gt; (exp -&gt; tp) -&gt; tp.
+tp/pi    : tp -> (exp -> tp) -> tp.
 
 
 
 exp/unit : exp.
-exp/lam  : tp -&gt; (exp -&gt; exp) -&gt; exp.
-exp/app  : exp -&gt; exp -&gt; exp.
+exp/lam  : tp -> (exp -> exp) -> exp.
+exp/app  : exp -> exp -> exp.
 
 
 
-assm : exp -&gt; tp -&gt; type.
+assm : exp -> tp -> type.
 
 
 
-of : exp -&gt; tp -&gt; type.
+of : exp -> tp -> type.
 
 of/var  : of E T
-           &lt;- assm E T.
+           <- assm E T.
 
 of/unit : of exp/unit tp/unit.
 
 of/lam  : of (exp/lam T E) (tp/pi T T')
-           &lt;- (\{x:exp\} assm x T
-                -&gt; of (E x) (T' x)).
+           <- ({x:exp} assm x T
+                -> of (E x) (T' x)).
 
 of/app  : of (exp/app E1 E2) (T' E2)
-           &lt;- of E2 T
-           &lt;- of E1 (tp/pi T T').
+           <- of E2 T
+           <- of E1 (tp/pi T T').
 
 of/sing : of E (tp/sing E)
-           &lt;- of E tp/unit.
+           <- of E tp/unit.
 
 
 
-%block assm-block : some \{T:tp\} block \{x:exp\}\{dx:assm x T\}.
-&lt;/twelf&gt;
+%block assm-block : some {T:tp} block {x:exp}{dx:assm x T}.
 
-The following metatheorem is actually true, but the naive attempt at proving it will fail.
+%{! The following metatheorem is actually true, but the naive attempt at proving it will fail. !}%
+    
+%{! (options removed from twelftag: import="depvar") !}%
 
-&lt;twelf import="depvar"&gt;
 subst-wontwork   : of E1 T
-                    -&gt; (\{x:exp\}\{dx:assm x T\} of (E2 x) (T' x))
-                    -&gt; of (E2 E1) (T' E1)
-                    -&gt; type.
+                    -> ({x:exp}{dx:assm x T} of (E2 x) (T' x))
+                    -> of (E2 E1) (T' E1)
+                    -> type.
 %mode subst-wontwork +D1 +D2 -D3.
 
 % case for substituting out the assumption
@@ -229,37 +238,37 @@ subst-wontwork   : of E1 T
 - : subst-wontwork D1 ([x][dx] D2) D2.
 
 - : subst-wontwork D1 ([x][dx] of/app (D2 x dx) (D3 x dx)) (of/app D2' D3')
-     &lt;- subst-wontwork D1 D2 D2'
-     &lt;- subst-wontwork D1 D3 D3'.
+     <- subst-wontwork D1 D2 D2'
+     <- subst-wontwork D1 D3 D3'.
 
 - : subst-wontwork D1 ([x][dx] of/sing (D2 x dx)) (of/sing D2')
-     &lt;- subst-wontwork D1 D2 D2'.
-&lt;/twelf&gt;
+     <- subst-wontwork D1 D2 D2'.
 
-The proof fails because this case is not general enough to cover all lambdas. Specifically, this case only applies if the type assigned to the variable y does not depend on the variable x.
+%{! The proof fails because this case is not general enough to cover all lambdas. Specifically, this case only applies if the type assigned to the variable y does not depend on the variable x. !}%
+    
+%{! (options removed from twelftag: import="depvar" check=decl discard=true) !}%
 
-&lt;twelf import="depvar" check=decl discard=true&gt;
 - : subst-wontwork D1 ([x][dx] of/lam ([y][dy:assm y T'] D2 x dx y dy)) (of/lam D2')
-     &lt;- (\{y\}\{dy\} subst-wontwork D1 ([x][dx] D2 x dx y dy) (D2' y dy)).
+     <- ({y}{dy} subst-wontwork D1 ([x][dx] D2 x dx y dy) (D2' y dy)).
 
 %worlds (assm-block) (subst-wontwork _ _ _).
 %total (D1) (subst-wontwork _ D1 _).
-&lt;/twelf&gt;
 
-In the blocker case for the above proof attempt, the problem was that
+%{! In the blocker case for the above proof attempt, the problem was that
 new assumptions could depend on the x. However, E1 is going to be
 substituted in for x anyway. If it is substituted in first, then these
 dependencies disappear. What remains is to show that we can swap in a
 derivation for of E1 T into a derivation of (assm E1 T -&gt; of (E2 E1) (T' E1)).
 
 In the statement of the following metatheorem, (E2 E1) and (T' E1) 
-are generalized by the schematic variables E3 and T_, respectively.
+are generalized by the schematic variables E3 and T_, respectively. !}%
+    
+%{! (options removed from twelftag: import="depvar") !}%
 
-&lt;twelf import="depvar"&gt;
 subst* : of E1 T
-          -&gt; (assm E1 T -&gt; of E3 T_)
-          -&gt; of E3 T_
-          -&gt; type.
+          -> (assm E1 T -> of E3 T'')
+          -> of E3 T''
+          -> type.
 %mode subst* +D1 +D2 -D3.
 
 % case for substituting out the assumption
@@ -271,35 +280,35 @@ subst* : of E1 T
 - : subst* D1 ([dx] D2) D2.
 
 - : subst* D1 ([dx] of/app (D2 dx) (D3 dx)) (of/app D2' D3')
-     &lt;- subst* D1 D2 D2'
-     &lt;- subst* D1 D3 D3'.
+     <- subst* D1 D2 D2'
+     <- subst* D1 D3 D3'.
 
 - : subst* D1 ([dx] of/sing (D2 dx)) (of/sing D2')
-     &lt;- subst* D1 D2 D2'.
+     <- subst* D1 D2 D2'.
 
 - : subst* D1 ([dx] of/lam ([y][dy] D2 dx y dy)) (of/lam D2')
-     &lt;- (\{y\}\{dy\} subst* D1 ([dx] D2 dx y dy) (D2' y dy)).
+     <- ({y}{dy} subst* D1 ([dx] D2 dx y dy) (D2' y dy)).
 
 %worlds (assm-block) (subst* _ _ _).
 %total (D1) (subst* _ D1 _).
-&lt;/twelf&gt;
 
-Having proved the preceding lemma, the general substitution principle can be proven by first substituting E1 in for x, and then applying subst* to eliminate the dependency on assm E1 T.
+%{! Having proved the preceding lemma, the general substitution principle can be proven by first substituting E1 in for x, and then applying subst* to eliminate the dependency on assm E1 T. !}%
+    
+%{! (options removed from twelftag: import="depvar" check="true") !}%
 
-&lt;twelf import="depvar" check="true"&gt;
 subst : of E1 T
-         -&gt; (\{x:exp\}\{dx:assm x T\} of (E2 x) (T' x))
-         -&gt; of (E2 E1) (T' E1)
-         -&gt; type.
+         -> ({x:exp}{dx:assm x T} of (E2 x) (T' x))
+         -> of (E2 E1) (T' E1)
+         -> type.
 %mode subst +D1 +D2 -D3.
 
-- : subst (D1 : of E1 T) (D2 : \{x\} \{dx:assm x T\} of (E2 x) (T' x)) D2'
-     &lt;- subst* D1 (D2 E1) D2'.
+- : subst (D1 : of E1 T) (D2 : {x} {dx:assm x T} of (E2 x) (T' x)) D2'
+     <- subst* D1 (D2 E1) D2'.
 
 %worlds (assm-block) (subst _ _ _).
-%total \{\} (subst _ _ _).&lt;/twelf&gt;
+%total {} (subst _ _ _).
 
-#
+%{! #
 #
 # Remarks about adequacy
 
@@ -312,5 +321,10 @@ The reader may have concerns as to whether this proof technique affects [adequac
 This technique is similar to how the narrowing lemma was proven for POPLMark challenge 1a. However, because we are proving a substitution lemma instead of narrowing the type of a variable, we have an actual term to substitute in for the variable. Because the variable can be substituted away and does not have to be put into the LF context, this proof does not need to deal with any special worlds.
  
 
-\{\{tutorial\}\}
+\{\{tutorial\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Substitution_lemma).
 !}%

@@ -32,7 +32,7 @@ tplist	: (nat -> nat) -> type.
 tplist/z	: tplist ([n] n).
 tplist/s	: tp -> tplist N -> tplist ([n] s (N n)). 
 
-%{! A ``pat N`` is a pattern that binds (N z) variables !}%
+%{! A ``pat N`` is a pattern that binds (N z) variables. !}%
 
 pat	: (nat -> nat) -> type.
 
@@ -67,7 +67,7 @@ match/cons	: pat N -> oexp (N z)-> match -> match.
 
 
 
-%{! static semantic !}%
+%{! static semantics !}%
 
 tplist-append	: tplist N1 -> tplist N2 -> tplist ([n] N1 (N2 n)) -> type. 
 
@@ -1028,3 +1028,9 @@ preservation	: of-exp E T
 TODO: Finish commentary.
 \{\{stub\}\}
  !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Pattern_matching).
+!}%

@@ -1,6 +1,6 @@
 %%! title: "User:Rsimmons/Homework 7: Proofs In Twelf"
 
-%{! Due Wednesday, December 3, by 11:59pm. Turn in as hw07.elf in your handin directory !}%
+%{! Due Wednesday, December 3, by 11:59pm. Turn in as hw07.elf in your handin directory. !}%
 
 %%## Definition
 %%### Natural numbers
@@ -80,7 +80,7 @@ lt/s : lt (s N) (s M) <- lt N M.
 even : nat -> type.
 odd : nat -> type.
 
-%{! **_QUESTION 2:**_ Define in LF the rules for ``even`` and ``odd`` below !}%
+%{! **_QUESTION 2:**_ Define in LF the rules for ``even`` and ``odd`` below. !}%
 
 
 
@@ -213,4 +213,10 @@ By the induction hypothesis, ``n' &lt; p'``. By rule ``lt/s``, we have ``s(n') &
 
 %%#### In Twelf
 
-%{! **_QUESTION 4:**_ State and prove the above theorem in Twelf !}%
+%{! **_QUESTION 4:**_ State and prove the above theorem in Twelf. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Homework_7:_Proofs_In_Twelf).
+!}%

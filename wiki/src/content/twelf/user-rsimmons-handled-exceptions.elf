@@ -371,3 +371,9 @@ d4 : eqty (ty/mayraise T) (ty/mayraise T') -> of* E T' -> of* E T -> type.
 
 %worlds () (preservation _ _ _) (preservation* _ _ _).
 %total (E E*) (preservation E _ _) (preservation* E* _ _).
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Handled_exceptions).
+!}%

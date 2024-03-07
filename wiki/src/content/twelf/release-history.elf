@@ -1,7 +1,6 @@
 %%! title: "Release history"
 
-%{!
-This page contains links to all numbered releases of the Twelf software. Releases before 1.7.0 can be found at http://www.cs.cmu.edu/~twelf/dist/, and releases from 1.7.0 onwards can be found at http://twelf.plparty.org/releases. Other ways of getting (possibly more recent) versions of Twelf can be found on the [Download](/wiki/download/) page.
+%{! This page contains links to all numbered releases of the Twelf software. Releases before 1.7.0 can be found at http://www.cs.cmu.edu/~twelf/dist/, and releases from 1.7.0 onwards can be found at http://twelf.plparty.org/releases. Other ways of getting (possibly more recent) versions of Twelf can be found on the [Download](/wiki/download/) page.
 
 #
 # Twelf 1.7.1 (Mar 19, 2011)
@@ -44,5 +43,10 @@ Source distribution can be compiled with SML/NJ, Poly/ML and MLton under Linux, 
 # 1.2 alpha
 *[http://www.cs.cmu.edu/~twelf/dist/twelf-1-2.tar.gz twelf-1-2.tar.gz] (717KB, [http://www.cs.cmu.edu/~twelf/dist/README-1-2 README-1-2]), includes User's Guide and example suites. Requires SML'97 (preferably SML of NJ, version 110 or higher). It has been tested under Linux, SunOS, Sun/Solaris and Windows 95/98/NT.
 *[http://www.cs.cmu.edu/~twelf/dist/twelf-1-2-1.i386.rpm twelf-1-2-1.i386.rpm] (959KB), a precompiled rpm file for RedHat Linux, includes User's Guide and example suites but no source code.
-*[http://www.cs.cmu.edu/~twelf/dist/twelf-1-2.exe twelf-1-2.exe] (1,868KB), a precompiled version for Windows 95/98/NT, includes User's Guide and example suites but no source code.
+*[http://www.cs.cmu.edu/~twelf/dist/twelf-1-2.exe twelf-1-2.exe] (1,868KB), a precompiled version for Windows 95/98/NT, includes User's Guide and example suites but no source code. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Release_history).
 !}%

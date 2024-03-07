@@ -1,7 +1,6 @@
 %%! title: "Theorem prover"
 
-%{!
-The **Twelf theorem prover** is a way of specifying and automatically verifying [metatheorems](/wiki/metatheorem/) that have the form of \{\{forall\}\}\{\{exists\}\}-statements. It uses the Twelf declarations ``[%theorem](/wiki/percent-theorem/)``, ``[%prove](/wiki/percent-prove/)``, ``[%establish](/wiki/percent-establish/)``, and ``[%assert](/wiki/percent-assert/)``. The last of these is an [unsafe mode](/wiki/unsafe-mode/) operation similar to ``[%trustme](/wiki/percent-trustme/)``.
+%{! The **Twelf theorem prover** is a way of specifying and automatically verifying [metatheorems](/wiki/metatheorem/) that have the form of \{\{forall\}\}\{\{exists\}\}-statements. It uses the Twelf declarations ``[%theorem](/wiki/percent-theorem/)``, ``[%prove](/wiki/percent-prove/)``, ``[%establish](/wiki/percent-establish/)``, and ``[%assert](/wiki/percent-assert/)``. The last of these is an [unsafe mode](/wiki/unsafe-mode/) operation similar to ``[%trustme](/wiki/percent-trustme/)``.
 
 The current theorem prover is buggy, sometimes does not terminate, and does not output a total logic program that can be used to witness the \{\{forall\}\}\{\{exists\}\}-statement as described in \{\{guide|title=Proof realizations|section=62|chapter=10\}\}. Because of this, it cannot interact with the technique of verifying metatheorems by writing [totality assertions](/wiki/totality-assertion/), and its use is not recommended.
 
@@ -12,76 +11,75 @@ The current theorem prover is buggy, sometimes does not terminate, and does not 
 #
 # Object language
 
-We start with the standard presentation of the [natural numbers](/wiki/natural-numbers/) with addition. 
-
-&lt;twelf&gt;
+We start with the standard presentation of the [natural numbers](/wiki/natural-numbers/) with addition. !}%
+    
 nat : type.
-s : nat -&gt; nat.
+s : nat -> nat.
 z : nat.
 
-plus : nat -&gt; nat -&gt; nat -&gt; type.
+plus : nat -> nat -> nat -> type.
 p-z : plus z N N.
-p-s : plus (s N1) N2 (s N3) &lt;- plus N1 N2 N3.
-&lt;/twelf&gt;
+p-s : plus (s N1) N2 (s N3) <- plus N1 N2 N3.
 
-#
+%{! #
 #
 # Establishing \{\{forall\}\}\{\{exists\}\}-metatheorems with totality assertions
 
 A simple [metatheorem](/wiki/metatheorem/) about this object language is the \{\{forall\}\}\{\{exists\}\}-statement that for all natural numbers &lt;math&gt;\texttt\{\}N&lt;/math&gt;, there exists a derivation of &lt;math&gt;\texttt\{plus\}(N,0,N)&lt;/math&gt;. This translates into LF as a \{\{forall\}\}\{\{exists\}\}-statement that for all objects ``N`` with type ``nat``, there exists an object ``D`` of type ``plus N z N``. 
 
-The "usual" way of proving this kind of metatheorem in Twelf is to define a type family which represents a relation, translate the cases of the inductive proof into LF objects in that type family, and use a ``[%mode](/wiki/percent-mode/)`` directive and ``[%worlds](/wiki/percent-worlds/)`` directive to specify a [totality assertion](/wiki/totality-assertion/) that corresponds to the \{\{forall\}\}\{\{exists\}\}-statement. The totality assertion for type family ``plus-z-thm`` below establishes the \{\{forall\}\}\{\{exists\}\}-statement that is stated above.
+The "usual" way of proving this kind of metatheorem in Twelf is to define a type family which represents a relation, translate the cases of the inductive proof into LF objects in that type family, and use a ``[%mode](/wiki/percent-mode/)`` directive and ``[%worlds](/wiki/percent-worlds/)`` directive to specify a [totality assertion](/wiki/totality-assertion/) that corresponds to the \{\{forall\}\}\{\{exists\}\}-statement. The totality assertion for type family ``plus-z-thm`` below establishes the \{\{forall\}\}\{\{exists\}\}-statement that is stated above. !}%
+    
+%{! (options removed from twelftag: discard="true" check="true") !}%
 
-&lt;twelf discard="true" check="true"&gt;
-plus-z-thm : \{N: nat\} plus N z N -&gt; type.
+plus-z-thm : {N: nat} plus N z N -> type.
 
 - : plus-z-thm z p-z.
 - : plus-z-thm (s N) (p-s D)
-     &lt;- plus-z-thm N D.
+     <- plus-z-thm N D.
 
 %mode plus-z-thm +N -D.
 %worlds () (plus-z-thm _ _).
 %total T (plus-z-thm T _).
-&lt;/twelf&gt;
 
-#
+%{! #
 #
 # Establishing \{\{forall\}\}\{\{exists\}\}-metatheorems with the theorem prover
 
-The equivalent of the type family definition for ``plus-z-thm`` and the ``%mode`` declaration from the above code can be stated with a ``[%theorem](/wiki/percent-theorem/)``.
-
-&lt;twelf&gt;
-%theorem plus-z : forall \{N: nat\} 
-                  exists \{D: plus N z N\} 
+The equivalent of the type family definition for ``plus-z-thm`` and the ``%mode`` declaration from the above code can be stated with a ``[%theorem](/wiki/percent-theorem/)``. !}%
+    
+%theorem plus-z : forall {N: nat} 
+                  exists {D: plus N z N} 
                   true.
-&lt;/twelf&gt;
 
-(Side note: some versions of Twelf allow the ``%theorem`` declaration above to be used in lieu of the type family definition and ``%mode`` declaration; [User:Boyland](/wiki/user-boyland/) utilizes this in his tutorial and code examples, but it is not a supported feature and may break in future versions of Twelf!)
+%{! (Side note: some versions of Twelf allow the ``%theorem`` declaration above to be used in lieu of the type family definition and ``%mode`` declaration; [User:Boyland](/wiki/user-boyland/) utilizes this in his tutorial and code examples, but it is not a supported feature and may break in future versions of Twelf!)
 
-Given the ``%theorem`` declaration, we can ask Twelf to try to establish the metatheorem it states by using a ``[%prove](/wiki/percent-prove/)`` declaration.
+Given the ``%theorem`` declaration, we can ask Twelf to try to establish the metatheorem it states by using a ``[%prove](/wiki/percent-prove/)`` declaration. !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
 
-&lt;twelf check=decl&gt;
 %prove 5 N (plus-z N D).
-&lt;/twelf&gt;
 
-We can also include the equivalent of [implicit parameters](/wiki/implicit-and-explicit-parameters/) in our metatheorem statements, but unlike the standard method where we define a new type family, all our implicit parameters must be listed after the ``forall*`` keyword. We can then prove two more metatheorems (the second is the commutativity of addition).
-
-&lt;twelf&gt;
-%theorem plus-s : forall* \{N1: nat\}\{N2: nat\}\{N3: nat\}
-                  forall \{D1: plus N1 N2 N3\} 
-                  exists \{D2: plus N1 (s N2) (s N3)\} 
+%{! We can also include the equivalent of [implicit parameters](/wiki/implicit-and-explicit-parameters/) in our metatheorem statements, but unlike the standard method where we define a new type family, all our implicit parameters must be listed after the ``forall*`` keyword. We can then prove two more metatheorems (the second is the commutativity of addition). !}%
+    
+%theorem plus-s : forall* {N1: nat}{N2: nat}{N3: nat}
+                  forall {D1: plus N1 N2 N3} 
+                  exists {D2: plus N1 (s N2) (s N3)} 
                   true.
 %prove 5 D1 (plus-s D1 D2).
 
-%theorem plus-comm : forall* \{N1: nat\}\{N2: nat\}\{N3: nat\}
-                 forall \{D1: plus N1 N2 N3\} 
-                 exists \{D2: plus N2 N1 N3\} 
+%theorem plus-comm : forall* {N1: nat}{N2: nat}{N3: nat}
+                 forall {D1: plus N1 N2 N3} 
+                 exists {D2: plus N2 N1 N3} 
                  true.
 %prove 5 D1 (plus-comm D1 D2).
-&lt;/twelf&gt;
 
-#
+%{! #
 # See also
 
-* \{\{guide|title=Theorem Prover|chapter=10|section=57\}\}
+* \{\{guide|title=Theorem Prover|chapter=10|section=57\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Theorem_prover).
 !}%

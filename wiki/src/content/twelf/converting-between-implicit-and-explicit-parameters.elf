@@ -1,15 +1,12 @@
 %%! title: "Converting between implicit and explicit parameters"
 
-%{!
-When declaring a type family or constant, the Twelf programmer often has a choice between [implicit and explicit parameters](/wiki/implicit-and-explicit-parameters/) for some arguments. There is no reason to fret over this choice, for there is an easy technique for **converting between implicit and explicit parameters**.
+%{! When declaring a type family or constant, the Twelf programmer often has a choice between [implicit and explicit parameters](/wiki/implicit-and-explicit-parameters/) for some arguments. There is no reason to fret over this choice, for there is an easy technique for **converting between implicit and explicit parameters**.
 
-Suppose we have a language defined as follows:
-
-&lt;twelf&gt;
-
+Suppose we have a language defined as follows: !}%
+    
 exp : type.
 typ : type.
-of  : exp -&gt; typ -&gt; type.
+of  : exp -> typ -> type.
 
 0 : exp.
 1 : exp.
@@ -18,32 +15,26 @@ void : typ.
 of1 : of 1 bit.
 of0 : of 0 bit.
 
-&lt;/twelf&gt;
-
-We wish to define a translation between type derivations in this language, as a part of a source to source translation. The implicit and explicit versions are as follows:
-
-&lt;twelf noinclude="true"&gt;
+%{! We wish to define a translation between type derivations in this language, as a part of a source to source translation. The implicit and explicit versions are as follows: !}%
+    
+%{! (options removed from twelftag: noinclude="true") !}%
 
 %% implicit version
-translate-i : of M A -&gt; of M' A -&gt; type.
+translate-i : of M A -> of M' A -> type.
 %mode translate-i +D -D'.
 
 %% explicit version
-translate-e : \{m : exp\}\{a : typ\} \{m' : exp\}
-              of m a -&gt; of m' a -&gt; type.
+translate-e : {m : exp}{a : typ} {m' : exp}
+              of m a -> of m' a -> type.
 %mode translate-e +M +A -M' +D -D'.
 
-&lt;/twelf&gt;
-
-#
+%{! #
 # Defining explicit in terms of implicit
 
-Suppose we choose the implicit version and implement it, but later decide we prefer the explicit version. We can then define the explicit version in terms of the implicit one by simply leaving out arguments:
-
-&lt;twelf&gt;
-
+Suppose we choose the implicit version and implement it, but later decide we prefer the explicit version. We can then define the explicit version in terms of the implicit one by simply leaving out arguments: !}%
+    
 % implicit version
-translate-i : of M A -&gt; of M' A -&gt; type.
+translate-i : of M A -> of M' A -> type.
 %mode translate-i +D -D'.
 
 translate-i1 : translate-i of1 of0.
@@ -51,62 +42,61 @@ translate-i0 : translate-i of0 of1.
 
 
 % explicit version
-translate-e : \{m : exp\}\{a : typ\} \{m' : exp\}
-              of m a -&gt; of m' a -&gt; type.
+translate-e : {m : exp}{a : typ} {m' : exp}
+              of m a -> of m' a -> type.
 %mode translate-e +M +A -M' +D -D'.
 
-translate-e/i : translate-e M A M' D D' &lt;- translate-i D D'.
+translate-e/i : translate-e M A M' D D' <- translate-i D D'.
 
 %worlds () (translate-i _ _) (translate-e _ _ _ _ _).
 %total D (translate-i D _).
 
 %total D (translate-e _ _ _ D _).
 
-&lt;/twelf&gt;
-
-#
+%{! #
 # Defining implicit in terms of explicit
 
-Suppose we define the explicit version, and then choose to define the implicit version in terms of the explicit:
-
-&lt;twelf&gt;
-
+Suppose we define the explicit version, and then choose to define the implicit version in terms of the explicit: !}%
+    
 % explicit version
-translate2-e : \{m : exp\}\{a : typ\} \{m' : exp\}
-               of m a -&gt; of m' a -&gt; type.
+translate2-e : {m : exp}{a : typ} {m' : exp}
+               of m a -> of m' a -> type.
 %mode translate2-e +M +A -M' +D -D'.
 
 translate2-e1 : translate2-e 1 bit 0 of1 of0.
 translate2-e1 : translate2-e 0 bit 1 of0 of1.
 
 % implicit version
-translate2-i : of M A -&gt; of M' A -&gt; type.
+translate2-i : of M A -> of M' A -> type.
 %mode translate2-i +D -D'.
 
-translate2-i/e : translate2-i D D' &lt;- translate2-e _ _ _ D D'.
+translate2-i/e : translate2-i D D' <- translate2-e _ _ _ D D'.
 
 %worlds () (translate2-i _ _) (translate2-e _ _ _ _ _).
 
 %total D (translate2-e _ _ _ D _).
 %total D (translate2-i D _).
 
-&lt;/twelf&gt;
-
-Twelf is able to deduce via its term reconstruction algorithm what M, M' and A are, so this is [%mode](/wiki/percent-mode/).
+%{! Twelf is able to deduce via its term reconstruction algorithm what M, M' and A are, so this is [%mode](/wiki/percent-mode/).
 
 #
 # Using annotations
 
-Sometimes Twelf's term reconstruction algorithm is not powerful enough to automatically recover explicit parameters from implicit ones.\{\{discuss|Annotation example\}\} In general, one may use type annotations to get access to the implicit parameters to a relation. For example, we may write the ``translate2-i/e`` constant above as:
+Sometimes Twelf's term reconstruction algorithm is not powerful enough to automatically recover explicit parameters from implicit ones.\{\{discuss|Annotation example\}\} In general, one may use type annotations to get access to the implicit parameters to a relation. For example, we may write the ``translate2-i/e`` constant above as: !}%
+    
+%{! (options removed from twelftag: noinclude="true") !}%
 
-&lt;twelf noinclude="true"&gt;
-translate2-i/e : translate2-i (D : of M A) D' &lt;- translate2-e M A M' D D'.
-&lt;/twelf&gt;
+translate2-i/e : translate2-i (D : of M A) D' <- translate2-e M A M' D D'.
 
-Here we have access to the implicit inputs ``M`` and ``A``, gleaned from the dependent type of ``D``.
+%{! Here we have access to the implicit inputs ``M`` and ``A``, gleaned from the dependent type of ``D``.
 
-&lt;twelflink&gt;All code for this tutorial&lt;/twelflink&gt;.
-&lt;twelflink check="true"&gt;Twelf's output for this tutorial&lt;/twelflink&gt;.
+``&gt;All code for this tutorial``.
+`` check="true"&gt;Twelf's output for this tutorial``.
 
-\{\{stub tutorial\}\}
+\{\{stub tutorial\}\} !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Converting_between_implicit_and_explicit_parameters).
 !}%

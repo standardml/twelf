@@ -1,7 +1,6 @@
 %%! title: "What's new"
 
-%{!
-;January 17, 2015
+%{! ;January 17, 2015
 *After a year of issues stemming from the age of our old server, twelf.org has been moved to a new machine. Some features, like Twelf Live and syntax highlighting, still only exist on the [http://twelf.plparty.org old site]. Let [User:Rsimmons](/wiki/user-rsimmons/) know about any other deficiencies in the new site.
 
 ;June 10, 2013
@@ -29,13 +28,13 @@
 * After many years of new features being added only to the subversion branch, Twelf now has a new official point release! Twelf 1.7.1 contains many fixes and new features that are documented on this site, and using any version of Twelf prior to 1.7 is highly discouraged. The "development" version of Twelf in the subversion repository remains quite stable and is also recommended. Go to the [download](/wiki/download/) page to get Twelf.
 
 ;September 1, 2010
-* The Twelf Wiki has undergone an upgrade, and in the process code underlying the syntax-highlighing [TwelfTag](/wiki/twelftag/) system has been substantially rewritten and simplified. However, this meant several deprecated-but-still-used options to the &lt;nowiki&gt;&lt;twelf&gt;&lt;/nowiki&gt; tags now don't work and print error messages. Leave a note on [User_talk:Rsimmons](/wiki/user-talk-rsimmons/) if you see any weird error messages around Twelf code.
+* The Twelf Wiki has undergone an upgrade, and in the process code underlying the syntax-highlighing [TwelfTag](/wiki/twelftag/) system has been substantially rewritten and simplified. However, this meant several deprecated-but-still-used options to the (twelf) tags now don't work and print error messages. Leave a note on [User_talk:Rsimmons](/wiki/user-talk-rsimmons/) if you see any weird error messages around Twelf code.
 
 ;February 22, 2009
 * [User:Rsimmons](/wiki/user-rsimmons/) has a case study on [lax logic](/wiki/lax-logic/) that uses the [admissibility of cut](/wiki/admissibility-of-cut/) and identity show a sound and complete correspondence between two sequent calculus presentations of lax logic.
 
 ;October 1, 2008
-*  [User:Carsten](/wiki/user-carsten/) says: As a result of the work of some overly active system administrators at the ITU, the twelf mailing list was accidentally erased a few weeks ago.  Since then I have tried to reconstruct the  subscriber list with more or less success, but there are still some that I have missed.  Therefore, if you haven't received any mail from the list lately, but you expect to be on it, please resubscribe under http://mail.itu.dk/mailman/listinfo/twelf-list http://mail.itu.dk/mailman/listinfo/twelf-list]]. 
+*  [User:Carsten](/wiki/user-carsten/) says: As a result of the work of some overly active system administrators at the ITU, the twelf mailing list was accidentally erased a few weeks ago.  Since then I have tried to reconstruct the  subscriber list with more or less success, but there are still some that I have missed.  Therefore, if you haven't received any mail from the list lately, but you expect to be on it, please resubscribe under [[http://mail.itu.dk/mailman/listinfo/twelf-list http://mail.itu.dk/mailman/listinfo/twelf-list]]. 
 
 ;September 19, 2008
 * **We are running a [POPL Tutorial](/wiki/popl-tutorial/) co-located with POPL 2009.**
@@ -56,7 +55,7 @@
 * If you think up some exercises while you're learning Twelf, add them to the [Proving metatheorems:Summary: the natural numbers](/wiki/proving-metatheorems-summary-the-natural-numbers/).
 
 ;March 21, 2007
-* Official launch day! Thanks to Project:Contributors|everyone]] who has contributed so far, and welcome to new visitors.
+* Official launch day! Thanks to [[Project:Contributors|everyone]] who has contributed so far, and welcome to new visitors.
 
 ;March 16, 2007
 * [User:Drl](/wiki/user-drl/) has revised and expanded several of the [tutorials](/wiki/tutorials/), and written new ones on [catch-all case](/wiki/catch-all-case/)s, [numeric termination metrics](/wiki/numeric-termination-metrics/), and [hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/).
@@ -68,10 +67,16 @@
 * The Twelf Project wiki now supports uploading SVG images! Check out the article on [tabled logic programming](/wiki/tabled-logic-programming/) for an example of the unnecessarily beautiful illustrations this allows.
 
 **February 24, 2007**
-* [User:Rsimmons](/wiki/user-rsimmons/) has  extended the [User:Rsimmons](/wiki/user-rsimmons/) has developed a beta [http://twelf.plparty.org/builds build system] that has source, Linux binary, and Windows installer versions of "CVS Twelf."
+* [User:Rsimmons](/wiki/user-rsimmons/) has  extended the [[Project:TwelfTag|TwelfTag]] feature to facilitate using [[Project:Literate Twelf|Literate Twelf]].
+
+**January 25, 2007**
+* [User:Rsimmons](/wiki/user-rsimmons/) has developed a beta [http://twelf.plparty.org/builds build system] that has source, Linux binary, and Windows installer versions of "CVS Twelf."
 
 **December 1, 2006**
-* [User:Tom7](/wiki/user-tom7/) added a category for [User:Tom7](/wiki/user-tom7/) posted a [case studies](/wiki/case-studies/) on [Admissibility of cut](/wiki/admissibility-of-cut/).
+* [User:Tom7](/wiki/user-tom7/) added a category for [[:category:undocumented features|undocumented features]] 
+
+**October 30, 2006**
+* [User:Tom7](/wiki/user-tom7/) posted a [case studies](/wiki/case-studies/) on [Admissibility of cut](/wiki/admissibility-of-cut/).
 
 **October 20, 2006**
 * [User:JakeD](/wiki/user-jaked/) posted a [tutorials](/wiki/tutorials/) on [Strengthening](/wiki/strengthening/).
@@ -88,16 +93,21 @@
 
 **October 14, 2006**
 
-* An alpha version of "Project:AJALF|AJALF]]"-powered [Twelf Live](/wiki/twelf-live/) is online
+* An alpha version of "[[Project:AJALF|AJALF]]"-powered [Twelf Live](/wiki/twelf-live/) is online
 * [User:DanielKLee](/wiki/user-danielklee/) has started the [Ask Twelf Elf](/wiki/ask-twelf-elf/) project providing Twelf help over email
 
 **October 13, 2006**
 
-* The editor interface now has a [User:Varming](/wiki/user-varming/) has added code proving various properties of [Lily](/wiki/lily/) to the [case studies](/wiki/case-studies/).
+* The editor interface now has a [[Project:TwelfTag#Quick check|quick check]] button for Twelf code, thanks to "[[Project:AJALF|AJALF]]" technology.
+
+**October 9, 2006**
+
+* The [[Project:TwelfTag|TwelfTag]] system now allows for direct checking of code in the wiki. 
+* [User:Varming](/wiki/user-varming/) has added code proving various properties of [Lily](/wiki/lily/) to the [case studies](/wiki/case-studies/).
 
 **October 5, 2006**
 
-* [User:Tom7](/wiki/user-tom7/) posted an advanced :category:tutorials|tutorial]] on [CPS conversion](/wiki/cps-conversion/).
+* [User:Tom7](/wiki/user-tom7/) posted an advanced [[:category:tutorials|tutorial]] on [CPS conversion](/wiki/cps-conversion/).
 
 **September 30, 2006**
 
@@ -109,5 +119,10 @@
 * [Substitution lemma](/wiki/substitution-lemma/) &mdash; [User:DanielKLee](/wiki/user-danielklee/)'s thorough explanation of the different ways substitution lemmas are dealt with by Twelf.
 * [Software](/wiki/download/) &mdash; We have instructions from the Software page on downloading the development version of Twelf from the CVS repository. The CVS version of Twelf has undocumented features which are being described on the wiki, such as its capacity for working with [holes in metatheorems](/wiki/incremental-metatheorem-development/).
 
-&lt;/noinclude&gt;
+&lt;/noinclude&gt; !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/What%27s_new).
 !}%

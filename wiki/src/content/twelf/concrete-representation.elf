@@ -19,7 +19,7 @@ it back into HOAS. That said, we do not know of any practical proof that has
 required this technique.
 
 The technique of de Bruijn indices, described fully
-w:de Bruijn index|on Wikipedia]], is a popular technique
+[[w:de Bruijn index|on Wikipedia]], is a popular technique
 for concretely representing binding structures.
 This page describes a bijection between closed de Bruijn indices and closed 
 HOAS terms, and proves that bijection correct. 
@@ -104,7 +104,7 @@ lts/s : lts (s N) (lt/s D) <- lts N D.
 %worlds () (lts _ _).
 %total T (lts T _).
 
-%{! | hidden=tru !}%
+%{! | hidden=true !}%
 
 lt+-irrev : {L1: lt N1 N2} lt+ L1 L2 -> {L1': lt N1 N2} lt+ L1' L2 -> type.
 %mode lt+-irrev +L1 +L2 +L1' -L3.
@@ -755,7 +755,7 @@ be less useful in practice than the ones already proven because the
 closed world assumption makes them less general, but they more concisely
 state what was done. !}%
 
-%{! * ``exp--&gt;db`` is a total and unique relation between HOAS to de Bruijn terms, and can therefore be thought of as the function _e2d_ !}%
+%{! * ``exp--&gt;db`` is a total and unique relation between HOAS to de Bruijn terms, and can therefore be thought of as the function _e2d_. !}%
 
 exp-->db : exp -> exp^ z Et -> type.
 exp-->db/ : exp-->db E E^ 
@@ -772,7 +772,7 @@ uniq-->db : exp-->db E E1 -> exp-->db E E2 -> id-exp^ E1 E2 -> type.
 %worlds () (uniq-->db _ _ _).
 %total {} (uniq-->db _ _ _).
 
-%{! * ``db--&gt;exp`` is a total and unique relation between de Bruijn terms to HOAS, and can therefore be thought of as the function _d2e_ !}%
+%{! * ``db--&gt;exp`` is a total and unique relation between de Bruijn terms to HOAS, and can therefore be thought of as the function _d2e_. !}%
 
 db-->exp : exp^ z Et -> exp -> type.
 db-->exp/ : db-->exp E^ E
@@ -788,7 +788,7 @@ uniq-->exp : db-->exp E E1 -> db-->exp E E2 -> id-exp E1 E2 -> type.
 %worlds () (uniq-->exp _ _ _).
 %total {} (uniq-->exp _ _ _).
 
-%{! * For all closed de Bruijn terms E, _d2e_(_e2d_ E) = !}%
+%{! * For all closed de Bruijn terms E, _d2e_(_e2d_ E) = E. !}%
 
 db-->exp-->db : db-->exp E^ E -> exp-->db E E^ -> type.
 - : db-->exp-->db (db-->exp/ DE) (exp-->db/ ED C)
@@ -798,7 +798,7 @@ db-->exp-->db : db-->exp E^ E -> exp-->db E E^ -> type.
 %worlds () (db-->exp-->db _ _).
 %total {} (db-->exp-->db _ _).
 
-%{! * For all closed HOAS terms E, _e2d_ (_d2e_ E) = !}%
+%{! * For all closed HOAS terms E, _e2d_ (_d2e_ E) = E. !}%
 
 exp-->db-->exp : exp-->db E E^ -> db-->exp E^ E -> type.
 - : exp-->db-->exp (exp-->db/ ED C) (db-->exp/ DE)
@@ -825,3 +825,9 @@ Bruijn index to a HOAS representation. |check=decl !}%
      (bvar^ z lt/z) 
      (lam^ (lam^ (bvar^ z lt/z))))
      (lam^ (lam^ (bvar^ (s z) (lt/s lt/z)))))) HOAS.
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Concrete_representation).
+!}%

@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial"
 
-%{!
-&lt;!--
+%{! &lt;!--
 &lt;div style="font-size:162%;border:none;margin: 0;padding:.1em;color:#F00"&gt;**_We want your input!**_&lt;/div&gt;
 
 Help us out by filling out our handy dandy [http://spreadsheets.google.com/viewform?key=pff4VF1v6KVNcwC_c2qFAGA feedback form]!
@@ -68,12 +67,19 @@ Thanks to our sponsors:
 [http://www.mozilla.org/ Mozilla],
 [http://www.google.com/ Google].
 
-Image:POPL_Tutorial-IBM.jpg|600px]]
+[[Image:POPL_Tutorial-cmu.gif|250px]] [[Image:POPL_Tutorial-scslogo.gif]]
 
-Image:POPL Tutorial-msr.jpg]] Image:POPL Tutorial-intel.jpg|300px]]
+[[Image:POPL_Tutorial-IBM.jpg|600px]]
+
+[[Image:POPL Tutorial-msr.jpg]] [[Image:POPL Tutorial-intel.jpg|300px]]
 
 
-Image:POPL_Tutorial-docomo-logo.gif|250px]] Image:POPL Tutorial-mozilla.jpg|300px]]
+[[Image:POPL_Tutorial-docomo-logo.gif|250px]] [[Image:POPL Tutorial-mozilla.jpg|300px]]
 
-Image:POPL Tutorial-google-logo.gif]]
+[[Image:POPL Tutorial-google-logo.gif]] !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial).
 !}%

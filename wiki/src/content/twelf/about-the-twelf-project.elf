@@ -1,7 +1,6 @@
 %%! title: "About The Twelf Project"
 
-%{!
-Twelf is a research project concerned with the design, implementation, and application of logical frameworks funded by the National Science Foundation under grants CCR-9619584 and CCR-9988281 Meta-Logical Frameworks, CCR-0306313 Efficient Logical Frameworks (Principal Investigator: Frank Pfenning) and by DARPA under the contract number F196268-95-C-0050 The Fox Project: Advanced Languages for Systems Software (Principal Investigators: Robert Harper, Peter Lee, and Frank Pfenning).
+%{! Twelf is a research project concerned with the design, implementation, and application of logical frameworks funded by the National Science Foundation under grants CCR-9619584 and CCR-9988281 Meta-Logical Frameworks, CCR-0306313 Efficient Logical Frameworks (Principal Investigator: Frank Pfenning) and by DARPA under the contract number F196268-95-C-0050 The Fox Project: Advanced Languages for Systems Software (Principal Investigators: Robert Harper, Peter Lee, and Frank Pfenning).
 
 The Twelf implementation comprises
 
@@ -21,5 +20,10 @@ with major contrubtions by
 * Roberto Virga, and
 *[http://www.cs.cmu.edu/~kw/ Kevin Watkins]
 
-Twelf provides a uniform meta-language for specifying, implementing, and proving properties of programming languages and logics. Example suites include Cartesian Closed Categories and lambda-calculus, the Church-Rosser theorem for the untyped lambda-calculus, Mini-ML including type preservation and compilation, cut elimination, theory of logic programming, and Hilbert's deduction theorem.
+Twelf provides a uniform meta-language for specifying, implementing, and proving properties of programming languages and logics. Example suites include Cartesian Closed Categories and lambda-calculus, the Church-Rosser theorem for the untyped lambda-calculus, Mini-ML including type preservation and compilation, cut elimination, theory of logic programming, and Hilbert's deduction theorem. !}%
+
+%{!
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/About_The_Twelf_Project).
 !}%
