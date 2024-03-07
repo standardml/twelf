@@ -1,7 +1,6 @@
 %%! title: "Talk:Ask Twelf Elf/Archive 2"
 
-%{! #
-# two questions from a complete novice.
+%{! ## two questions from a complete novice.
 
 1 I can't find any papers comparing Coq and Twelf.  Can someone summarize the differences?
 
@@ -12,8 +11,7 @@ Thanks.
 
 : Hi Michael; thanks for your questions!  I've started answering them on the [Ask Twelf Elf:Short answers](/wiki/ask-twelf-elf-short-answers/). [User:Drl](/wiki/user-drl/) 16:43, 8 April 2007 (EDT)
 
-#
-# Forcing coverage checker to split on particular variables
+## Forcing coverage checker to split on particular variables
 
 I'm writing a proof of something that involves a relation (synchronizes-with) between
 two evaluation relations.  Evaluation is defined (basically) as a pair of two execution
@@ -116,8 +114,7 @@ eval* : {K:kind} unit -> nat -> state K -> state K -> type.
 
 :::: Glad you resolved the problem.  It would be great if you'd contribute a trouble-shooting tip about this!  [User:Drl](/wiki/user-drl/) 11:40, 22 May 2007 (EDT)
 
-#
-# Mapping HOAS isomorphically to the natural numbers
+## Mapping HOAS isomorphically to the natural numbers
 
 I need an arbitrary isomorphic mapping between terms and the natural numbers.
 Without higher-order abstract syntax, this is uninteresting grunt work.
@@ -324,8 +321,7 @@ So my challenge to Twelfers everywhere is prove
 
 : It might be worth trying something similar with this "varlevel" machinery, but I'm not sure all the induction hypotheses that are needed end up working. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 10:02, 4 October 2007 (EDT)
 
-#
-# commutativity of plus in the introduction
+## commutativity of plus in the introduction
 
 I've added a [Proving metatheorems:Natural numbers: Answers to exercises](/wiki/proving-metatheorems-natural-numbers-answers-to-exercises/) to the first problem posed in Dan's tutorial.  However, since I'm just learning Twelf now, I suspect that it could be improved, but couldn't get anything else to go through.  Could someone experienced have a look and determine if it is the best proof?
 
@@ -336,8 +332,7 @@ Any style tips would also be appreciated.  I've got a couple other exercises, wh
 :: Those solutions seem pretty good to me! The only style note I have is lemma naming. This is really a complete matter of personal preference, but similar to how I write ``plus/s: plus N M P -&gt; plus (s N) M (s P).``, I find it is more memorable to call what you called "``plus-flip``" "``plus-s``," because it's doing roughly the same thing as ``plus/s`` but in another direction (and as a metatheorem, not a constructor). Happy Twelfing! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 09:54, 4 October 2007 (EDT)
 
 %\{
-#
-# definition violation
+## definition violation
 
 
 I defined a simple dependently-typed language but when I went to prove Preservation I get this error message which is mystifying me.
@@ -459,9 +454,7 @@ preserv : of E T -> E |-> E' -> of E' T -> type.
 % of #> of nf allowed-kinds expr 
 % preserv #> of expr
 
-%{! #
-#
-# Response
+%{! ### Response
 
 This is poorly explained on the wiki right now, but when you're doing metatheorems then writing things like: !}%
     

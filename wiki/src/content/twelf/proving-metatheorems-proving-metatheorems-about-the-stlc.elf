@@ -44,8 +44,7 @@ step-app-2    : step (app E1 E2) (app E1 E2')
 step-app-beta : step (app (lam T2 ([x] E x)) E2) (E E2)
                  <- value E2.
 
-%{! #
-# Preservation
+%{! ## Preservation
 
 Here is a complete Twelf proof of preservation for the STLC: !}%
     
@@ -98,8 +97,7 @@ The ``%total`` directive asks Twelf to verify that ``preserv`` defines a total r
 * **Termination:** In all premises, the dynamic semantics derivation is a subterm of the input dynamic semantics derivation.  In this proof, it happens that the typing derivation is always smaller as well, so we could equivalently have verified totality by induction on the second argument.  
 * **Input coverage:** The inversion steps in the above reading of the proof create input-coverage-checking obligations. For example, Twelf's coverage checker justifies the inversion of the typing derivation in ``preserv-app-1`` by using index information (i.e., that the subject of the derivation is ``app E1 E2``) to show that ``of-app`` is the only way to construct an LF term of the appropriate type.  If there were another way to derive the well-typedness of an application, the inversion of the typing derivation in ``step-app-1`` would not be justified.  This would manifest itself as an input coverage error, as not all possible inputs would be derived by ``of-app``.
 
-#
-# Other theorems
+## Other theorems
 
 Other properties of the STLC are proved elsewhere on this wiki.  Several [tutorials](/wiki/tutorials/) use theorems about the STLC to illustrate various Twelf devices.  For example, proving progress for the STLC uses [output factoring](/wiki/output-factoring/); proving determinacy of the operational semantics is an example of a [uniqueness lemma](/wiki/uniqueness-lemma/).  You may wish to read these tutorials at this point.  Neither requires any more machinery than what we have already introduced; the tutorials simply show how to use Twelf in a fashion that may be somewhat subtle until you've seen it once.
 

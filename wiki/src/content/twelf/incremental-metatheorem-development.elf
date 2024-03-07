@@ -4,10 +4,9 @@
 
 The newest versions of Twelf provide a direct way to create such holes. Users of earlier versions may take advantage of a curious feature.
 
-#
-# Twelf CVS: %trustme
+## Twelf CVS: %trustme
 
-The ``[%trustme](/wiki/percent-trustme/)`` declaration instructs Twelf to run the immediately following declaration but suppress any errors that occur. It is commonly used on ``[%total](/wiki/percent-total/)`` declarations to introduce lemmas that have not yet been proved, in order to develop a proof without first proving some necessary lemmas. 
+The [``%trustme``](/wiki/percent-trustme/) declaration instructs Twelf to run the immediately following declaration but suppress any errors that occur. It is commonly used on [``%total``](/wiki/percent-total/) declarations to introduce lemmas that have not yet been proved, in order to develop a proof without first proving some necessary lemmas. 
 
 If Twelf is in [unsafe mode](/wiki/unsafe-mode/), it will accept ``%trustme`` before the ``%total`` directive of a metatheorem with an incomplete proof. Twelf will consider such metatheorems total for the purpose of the totality checks of subsequent metatheorems. The following is an example of ``%trustme`` in action. !}%
     
@@ -38,8 +37,7 @@ As of 22 September, 2006, ``%trustme`` is only available in the [Software](/wiki
 
 The %trustme declaration makes Twelf's deductions unsound, of course, so should only be thought of as a development and debugging tool.
 
-#
-# Twelf 1.5R1 and earlier
+## Twelf 1.5R1 and earlier
 
 In older versions of Twelf, the following technique can be used. In the following code, "foo" is obviously not a total relation&mdash;it has no cases at all defined. However, after Twelf tries to check the line ``%total I (foo I _).`` and fails, it will actually allow ``foo`` to be used to check ``bar``'s totality. !}%
     

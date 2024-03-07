@@ -6,14 +6,11 @@ The style you use to write Twelf code should be consistent so that it is readabl
 
 The first two sections are about whitespace & comments, which are extremely important aspects of readability. The final section is on conventions used for writing identifiers, which is less important as long as consistency is maintained within a project. The article on [naming conventions](/wiki/naming-conventions/) also considers ways of standardizing identifier names.
 
-#
-# Whitespace
+## Whitespace
 
 Proper use of whitespace, line breaks, and spacing is very important for promoting the readability of Twelf code.
 
-#
-#
-# Object language syntax
+### Object language syntax
 
 The declarations for the constants corresponding to a type for syntax of an object language should be grouped together. There should be an empty line between the declaration of the type and its constants. There should be a line break, but no empty lines, between each declaration. !}%
     
@@ -22,9 +19,7 @@ color : type.
 color/red   : color.
 color/black : color.
 
-%{! #
-#
-# Judgments
+%{! ### Judgments
 
 The declarations for the constants corresponding to the inference rules for a particular judgment should be grouped together. There should be an empty line between the declaration of the judgment and its inference rules, as well as one empty line between the declaration of two inference rules. If a [%mode](/wiki/percent-mode/) declaration is used, it should be on the line immediately following the declaration of the judgment. !}%
     
@@ -43,9 +38,7 @@ color-swap/red : color-swap color/red color/black.
 
 color-swap/black : color-swap color/black color/red.
 
-%{! #
-#
-# Metatheorems
+%{! ### Metatheorems
 
 The definitions for cases to a metatheorem should be grouped together. The ``%mode`` declaration should be on the line following the declaration of the type family for the metatheorem, with no line breaks in between. There should be an empty line following the mode declaration. There should be one empty line between each case. There should be an empty line preceding the ``%worlds`` declaration. The ``%total`` declaration should be on the following line. !}%
     
@@ -59,24 +52,19 @@ can-color-neq : {C:color} color-neq C C' -> type.
 %worlds () (color-neq _ _).
 %total {} (color-neq _ _).
 
-%{! #
-#
-# Additional guidelines
+%{! ### Additional guidelines
 
 * There should be at least 3 empty lines between any "groups", where a group is something on the scale of declarations for a type family or proof of a metatheorem. 4 or more empty lines should between super-groups of related groups, such as the proofs for a set of related lemmas.
 
 * The colons following the names of the constants for a group should all line up.
 
-* Directives such as ``[%mode](/wiki/percent-mode/)``, ``[%reduces](/wiki/percent-reduces/)``, ``[%terminates](/wiki/percent-terminates/)``, ``[%worlds](/wiki/percent-worlds/)``, ``[%total](/wiki/percent-total/)`` should be at the start of a new line. The one exception to this rule is the fixity directives such as ``[%infix](/wiki/fixity-declaration/)`` - it is often clearest to put the fixity declaration for a constructor on the same line as the declaration of that constructor.
+* Directives such as [``%mode``](/wiki/percent-mode/), [``%reduces``](/wiki/percent-reduces/), [``%terminates``](/wiki/percent-terminates/), [``%worlds``](/wiki/percent-worlds/), [``%total``](/wiki/percent-total/) should be at the start of a new line. The one exception to this rule is the fixity directives such as [``%infix``](/wiki/fixity-declaration/) - it is often clearest to put the fixity declaration for a constructor on the same line as the declaration of that constructor.
 
-#
-# Comments
+## Comments
 
 Comments are at least as important a consideration when writing Twelf code intended to be readable by others, especially when the other readers are not themselves Twelf users.  The [http://www.cis.upenn.edu/~plclub/wiki-static/cmu-twelf/1a.elf CMU POPLMark solution] contains a good representation of how comments can be used to aid comprehension of a proof.
 
-#
-#
-# Guidelines
+### Guidelines
 
 * Each file should begin with single-line comments establishing a title and authorship. If several more lines about the purpose of the file are needed, those should go into a multi-line comment immediately underneath the title/author information.
 
@@ -93,8 +81,7 @@ Comments are at least as important a consideration when writing Twelf code inten
 
 * Multi-line comments should be as free of visual cruft (borders, horizontal lines) as possible. The ``%\{   \}%`` construct should be used for most multi-line comments.
 
-#
-# Identifiers
+## Identifiers
 
 Due to the current absence of a module system for Twelf, careful identifier choice is crucial to managing the namespace of a large project. Because small projects can often grow into something quite large, we suggest thinking about a system of conventions such as the one described here from the outset. 
 
@@ -108,9 +95,7 @@ In this section, conventions will only be given as to how to structure identifie
 
 The [natural numbers](/wiki/natural-numbers/) will be used as a running example.
 
-#
-#
-# Object language syntax !}%
+### Object language syntax !}%
     
 nat : type. 
 list-nat : type.
@@ -125,10 +110,7 @@ list-nat/cons : nat -> list-nat -> list-nat.
 
 %{! (Whether a list of natural numbers should be called ``list-nat`` or ``nat-list`` is a matter left to the [naming conventions](/wiki/naming-conventions/) article.)
 
-#
-#
-#
-# Abbreviations
+#### Abbreviations
 
 The disadvantage of this representation is that identifier names can get relatively long. 
 
@@ -149,9 +131,7 @@ s = nat/s.
 
 %{! Abbreviations are probably better for large projects, because even if the abbreviated identifier gets redefined,  it appears in the unshadowed extended form in the Twelf buffer. Notational definitions are probably preferable for small projects - or projects which are being debugged - for the same reason: shorter, more informative identifiers will appear in the Twelf buffer.
 
-#
-#
-# Judgments
+### Judgments
 
 The naming conventions for judgments and their inference rules are similar to the ones for object syntax. The part after the forward slash, if it is associated with a piece of relevant syntax (i.e. ``/cons`` or ``/s``) should use the same modifier. !}%
     
@@ -163,14 +143,9 @@ plus-nat/z : plus-nat z N N.
 plus-nat/s : plus-nat (s N1) N2 (s N3)
                <- plus-nat N1 N2 N3.
 
-%{! #
-#
-# Metatheorems
+%{! ### Metatheorems
 
-#
-#
-#
-# Identifier names
+#### Identifier names
 
 Each metatheorem is given a name in Twelf. There are two ways in which someone might consider naming their metatheorems. If you are defining a metatheorem that defines an admissible rule, it may be reasonable to use the convention used for showing inference rules: !}%
     
@@ -182,10 +157,7 @@ plus-nat/z-alt : {N} plus-nat N z N -> type.
 plus-comm : plus-nat N1 N2 N3 -> plus-nat N2 N1 N3 -> type.
 %mode plus-comm +D1 -D2.
 
-%{! #
-#
-#
-# Case names
+%{! #### Case names
 
 The cases in a metatheoretic proof almost never need to be referred to, so it is common to name the labels for every individual case ``-``. This may, however, make it more difficult to correlate error messages with specific rules, and so should be done with care. !}%
     
@@ -213,8 +185,7 @@ plus-nat/z-alt : {N} plus-nat N z N -> type.
 %worlds () (plus-nat/z-alt _ _).
 %total T (plus-nat/z-alt T _).
 
-%{! #
-# Example signature !}%
+%{! ## Example signature !}%
     
 %% Demonstration of good Twelf style
 %% The Twelf Wiki authors, Febtober 19045

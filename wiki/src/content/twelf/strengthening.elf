@@ -6,8 +6,7 @@ When proving type families total using [%total](/wiki/percent-total/), strengthe
 
 In this tutorial, we'll show a proof where the need for strengthening arises. We'll define a language with locations, stores which map locations to terms in the language, and a notion of well-formedness with respect to a store (no dangling references and no loops). Then we'll define evaluation for the language, and prove that well-formed terms evaluate to well-formed terms; we will need strengthening for this proof.
 
-#
-# A little language with locations
+## A little language with locations
 
 Locations and terms: !}%
     
@@ -26,7 +25,7 @@ tm/app	: tm -> tm -> tm.
 
 %{! This is a silly little language; it has locations but no way to use them.
 
-(The ``[%name](/wiki/percent-name/)`` declarations give a prefix which Twelf uses to name unnamed variables for display; we prefix the names with ``_`` so that it's clear which variables Twelf named, and also because Twelf will rename your variables if they collide with the naming prefix, which can be very confusing.)
+(The [``%name``](/wiki/percent-name/) declarations give a prefix which Twelf uses to name unnamed variables for display; we prefix the names with ``_`` so that it's clear which variables Twelf named, and also because Twelf will rename your variables if they collide with the naming prefix, which can be very confusing.)
 
 Stores and store lookup: !}%
     
@@ -76,9 +75,7 @@ An alternative would be to directly assume ``tm-wf v S``. This example was extra
 
 However, as we will see, this approach forces us to prove a substitution lemma, which requires the strengthening lemma.
 
-#
-#
-# Evaluation and preservation
+### Evaluation and preservation
 
 Now, some evaluation semantics, and the preservation theorem: !}%
     
@@ -155,9 +152,7 @@ The ``loc`` case is why we're here: Twelf determines that ``Dlook`` can depend o
 
 Why can't ``Dlook`` and ``Dwf1`` depend on ``v`` and ``d``? We are about to give proofs, but here is the intuition: The store ``S`` has no dependencies in the declaration of the lemma, and ``st-lookup`` just walks over the store, so ``Dlook`` has no dependencies; neither does the looked-up term. Now ``tm-wf`` just walks over the term looking up locations in the store, so it also has no dependencies.
 
-#
-#
-# Strengthening lemmas
+### Strengthening lemmas
 
 Here is the first: !}%
     

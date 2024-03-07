@@ -7,23 +7,18 @@ I'm interested in using Twelf and have
 written a biased and under-informed [http://www.cs.uwm.edu/~boyland/proof/using-twelf.html tutorial] of Twelf.
 I also have defined some [https://github.com/boyland/twelf-library library signatures] for Twelf.
 
-#
-# Desired Features
+## Desired Features
 
 Here are some features that I would like to see in Twelf.
 I start with the simplest to implement (in my opinion).
 
-#
-#
-# What free variables?
+### What free variables?
 
 In Twelf, if you neglect to declare all the free variables in a theorem, you
 get the error message "Free variables In theorem."  It would be nice
 if the error message included the names of these free variables.  Update: of course Control-C Control-L will tell you all the free variables that have names. Of course, the implicit ones don't show.  A %block declaration will show you the reconstructed term; it would be nice if %theorem did too.
 
-#
-#
-# An ``exists*`` keyword
+### An ``exists*`` keyword
 
 In Twelf currently, a theorem has the form !}%
     
@@ -52,23 +47,17 @@ my-theorem : (rule V1 V2) -> ({V3} (rule2 V1 V2 V3)) -> type.
 
 %{! An ``exists*`` keyword should be a trivial addition.
 
-#
-#
-# Multiple ``%reduces`` for a type family
+### Multiple ``%reduces`` for a type family
 
 If one declares two ``%reduces`` for a type family, the first is forgotten.
 Since '%reduces` is very important for later reduction/totality checks, it would be
 very helpful to collect all that are attached.
 
-#
-#
-# Output coverage checking
+### Output coverage checking
 
 It would be desirable to have output coverage checking done at the same time as mode checking, or at least to have the ability to check output coverage before a total declaration.  I have often found it frustrating to get an output coverage error late in the process of writing a proof.  And the "covers" check doesn't include output coverage
 
-#
-#
-# Totality checker and theorem prover integration
+### Totality checker and theorem prover integration
 
 Currently the theorem prover and totality checker live in different worlds,
 and neither trusts the other.  This seems peculiar to a user of Twelf
@@ -84,20 +73,15 @@ I propose
 
 3. The ``%assert`` and ``%trustme`` declarations should have the same effect: in unsafe mode make the metatheorem trusted by both the totality checker and the theorem prover.
 
-#
-#
-# Local Type Inference
+### Local Type Inference
 
 After using Twelf for about a year and writing 100K lines of Twelf, the most frustrating and time consuming process is "debugging" coverage errors.  Because unification is bidirectional, any mistake in the middle of a theorem will cause the pattern taht one is trying to match to not be exhaustive, even though it appears to be.  It would be nice to use a system with a slightly less powerful type inference system that would prevent this long-distance effect of unification.  Pierce and Turner have defined "Local Type Inference".  It is interesting to wonder what this would mean for Twelf.
 
-#
-# Known Bugs
+## Known Bugs
 
 In decreasing order of imporance.
 
-#
-#
-# Type Reconstruction Nontermination
+### Type Reconstruction Nontermination
 Type reconstruction sometimes fails to terminate !}%
     
 xxtag : type.
@@ -149,9 +133,7 @@ appear to terminate when attempting to type it.
 
 :The bug is still is in Twelf 1.7.1+ (r1887M)
 
-#
-#
-# Coverage Checker Nontermination
+### Coverage Checker Nontermination
 
 The coverage checker sometimes fails to terminate. !}%
     
@@ -200,34 +182,26 @@ atomic-expr/add : atomic-expr (add unit unit).
 %worlds () (expr-in-atomic-expr-contradiction _ _ _).
 %total { } (expr-in-atomic-expr-contradiction _ _ _).
 
-%{! #
-#
-# Broken Invariant in Coverage Checker
+%{! ### Broken Invariant in Coverage Checker
 
 Apparently (I learned of this problem from Rob Simmons), the coverage checker
 sometimes reports a broken invariant when checking code that
 uses the explicit-context idiom.  This problem is not well understood, but manifests itself in several examples from the wiki, including [Concrete representation](/wiki/concrete-representation/) and [Tethered modal logic](/wiki/tethered-modal-logic/).
 
-#
-#
-# Coverage checker checking with functions of type A -&gt; A when A is not subordinate to itself.
+### Coverage checker checking with functions of type A -&gt; A when A is not subordinate to itself.
 
 If the coverage check, when expanding cases comes upon a term that might depend on a formal 
 parameter of the same type, it will require a case that handles such a function, even if the
 type in question in not subordinate to itself.  Such a case normally cannot be written because of freezing.
 (Example to come later).
 
-#
-#
-# Higher-Order Blocks
+### Higher-Order Blocks
 
 Again, I learned of this problem from Rob Simmons:
 If a "block" includes a higher order function, then the coverage checker doesn't work.
 No example yet.  This bug is considered low-priority.
 
-#
-#
-# Not a block
+### Not a block
 
 If you use the name of something that is not a block
 where a block is expected:
@@ -236,9 +210,7 @@ where a block is expected:
 
 then there is an "uncaught exception" rather than a helpful error message.
 
-#
-#
-# Theorem Prover Nontermination
+### Theorem Prover Nontermination
 
 The prover sometimes fails to terminate.
 See example in 
@@ -295,12 +267,9 @@ progress : (of X T) -> (not_stuck X) -> type.
 %{! The theorem prover is deprecated in Twelf, and fixing this bug is not required before producing
 a new release of Twelf.
 
-#
-# Challenges
+## Challenges
 
-#
-#
-# Is HOAS countable?
+### Is HOAS countable?
 
 A challenge: define a mapping from HOAS to the natural numbers (or equivalently to a nameless term representation) and then prove that the mapping is isomorphic _using Twelf_.  For details and sample mappings, see question on the Twelf Elf page: [Talk:Ask_Twelf_Elf](/wiki/talk-ask-twelf-elf/).
 

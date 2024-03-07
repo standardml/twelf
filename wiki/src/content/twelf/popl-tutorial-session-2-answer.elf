@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Arithmetic primitives
+## Arithmetic primitives
 
  !}%
 
@@ -22,8 +21,7 @@ add/s : add (s M) N (s P) <- add M N P.
 
 %{! 
 
-#
-# Multiplication
+## Multiplication
 
 (Interactively) First, let's write multiplication: 
 
@@ -78,17 +76,14 @@ What does this really mean? "For any two LF terms M and N in the empty
 context, there exists a term P and a deriation of ``mult M N P`` in
 the empty context."
 
-#
-# How Twelf checks assertions
+## How Twelf checks assertions
 
 Twelf proves a totality assertion for a type family such as
 ``mult`` by checking several properties.  These properties, taken
 together, constitute a proof by induction on canonical forms that the
 type family defines a total relation.
 
-#
-#
-# Mode
+### Mode
 
 Twelf checks that each constant inhabiting the type family is
 _well-moded_.  Roughly, this means that the inputs to the conclusion
@@ -156,18 +151,14 @@ mult/s : mult (s M) N Q
 	  &lt;- mult M N P.
 &lt;/twelf&gt;
 
-#
-#
-# Worlds
+### Worlds
 
 Twelf checks that each constant inhabiting the type family obeys the
 worlds declaration.  Because we are only proving theorems about closed
 terms right now, we will not run across any problems with world
 checks.  
 
-#
-#
-# Termination
+### Termination
 
 Twelf checks that each constant inhabiting the type family obeys the
 induction order specified in the ``%total`` declaration.  In each
@@ -195,9 +186,7 @@ if ``N`` were used as the induction order&mdash;the same term
 In addition to the subterm ordering on a single argument, Twelf supports
 [mutual induction](/wiki/mutual-induction/) and [[lexicographic induction]].
 
-#
-#
-# Output coverage
+### Output coverage
 
 In the definition of a type family, you may pattern-match the outputs of
 a premise.  For example, we might write
@@ -238,9 +227,7 @@ Here, we insisted that the output of the premise be the number
 [output freeness](/wiki/output-freeness/): a type family will not be judged total if you
 constrain the outputs of any premise at all in this manner.
 
-#
-#
-# Input coverage
+### Input coverage
 
 Mode, worlds, termination, and output coverage ensure that each constant
 really does cover the part of the relation indicated by its conclusion.
@@ -283,8 +270,7 @@ and coverage checking, the constants defining a type family do not need
 to follow any particular primitive recursion schema-the constants may
 pattern-match the inputs in a general manner.
 
-#
-# When Twelf checks what
+## When Twelf checks what
 
 To a first approximation, you can think of the ``%mode`` and ``%worlds`` declarations as specifying a totality assertion and the ``%total`` declaration as checking it.  This isn't exactly how Twelf works, though:
 
@@ -300,8 +286,7 @@ If any constant in a type family fails mode, worlds, or output coverage, then mo
 
 %{! 
 
-#
-# Expressions from before
+## Expressions from before
 
  !}%
 
@@ -332,8 +317,7 @@ eval/let : eval (let E1 ([x] E2 x)) A
 
 %{! 
 
-#
-# Expressions with times
+## Expressions with times
 
 We'll add syntax for 'times' and an evaluation rule
 
@@ -375,8 +359,7 @@ eval/times : eval (times E1 E2) (num N)
 
 %{! 
 
-#
-# Expressions with pairs
+## Expressions with pairs
 
  !}%
 
@@ -434,8 +417,7 @@ We get an output coverage error for ``eval-plus``.
 
 Why? Not every expression evaluates to a ``num``, e.g. ``(plus (ret (pair 6 7)) 8)``.  
 
-#
-# Typing 1
+## Typing 1
 
 We'll introduce a typing judgement.  
 
@@ -484,8 +466,7 @@ of/let : of (let E1 ([x] E2 x)) T
 
 We promised we'd stay in the empty LF context, but we don't.
 
-#
-# Typing 2a
+## Typing 2a
 
  !}%
 
@@ -529,8 +510,7 @@ of/let : of (let E1 ([x] E2 x)) T
 %worlds (valb) (of _ _).
 &lt;/twelf&gt;
 
-#
-# Typing 2
+## Typing 2
 
  !}%
 
@@ -571,8 +551,7 @@ of/let : of (let E1 ([x] E2 x)) T
 
 %{! 
 
-#
-# Typing 3
+## Typing 3
 
 &lt;twelf check="decl" name="trytotypelet"&gt;
 example : of (let (ret (num z)) ([y] (ret y))) natural 

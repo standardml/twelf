@@ -6,14 +6,9 @@ This is an extended example of a proof of correctness of mergesort for lists wit
 
 
 %{! 
-#
-#
-# Definitions
+### Definitions
 
-#
-#
-#
-# Declarative definitions
+#### Declarative definitions
 
 We must first define natural numbers, lists of natural numbers, comparison on natural numbers, and what it means for one list to be the sorted version of another.
  !}%
@@ -94,10 +89,7 @@ nat-list-declarative-sort/i	: nat-list-declarative-sort NL NL'
 				   <- nat-list-sorted NL'.
 
 %{! 
-#
-#
-#
-# Definitions used to define mergesort
+#### Definitions used to define mergesort
  !}%
 
 split	: nat-list -> nat-list -> nat-list -> type. 
@@ -144,9 +136,7 @@ mergesort/cons	: mergesort NL1 NL2
 		   <- mergesort NLB NLB'
 		   <- merge NLA' NLB' NL2. 
 
-%{! #
-#
-# Helper definitions used in proofs
+%{! ### Helper definitions used in proofs
 
 ``all-in-2 N1 N2 N3`` is a judgment that holds when all the elements in ``N1`` are in the union of ``N1`` and ``N2``/
 
@@ -619,9 +609,7 @@ mergesort-permute	: mergesort N1 N2
 %total {} (mergesort-permute _ _).
 
 
-%{! #
-#
-# Final result
+%{! ### Final result
 Showing the final result merely requires composing the two big intermediate results, namely that mergesort produces a sorted output and that mergesort's output is a permutation of the input.
 
  !}%
@@ -643,8 +631,7 @@ mergesort-correct	: mergesort N1 N2
 
 ----
 
-#
-# Equivalence of definitions of permutations
+## Equivalence of definitions of permutations
 
 We can also show that ``nat-list-permute`` under the right constraints (implied by ``nat-list-sorted`` is equivalent to a definition of permutations as a composition of swaps.
 

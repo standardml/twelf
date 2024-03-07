@@ -4,8 +4,7 @@
 
 We will define a direct style lambda calculus and its static semantics, then a CPS language and its static semantics. We will then prove that any well-formed direct style expression can be translated into a well-formed CPS expression.
 
-#
-# Direct style language
+## Direct style language
 
 We begin with a direct style lambda calculus with products, unit, and a ``let`` construct. !}%
     
@@ -79,8 +78,7 @@ oflet :
 
 %{! The type family ``of M A`` encodes the typing judgment Γ \{\{vdash\}\} M : A, and ``ofv V A`` the judgment Γ \{\{vdash\}\} V : A.
 
-#
-# CPS language
+## CPS language
 
 We then define the syntax of the CPS language that will be the target of CPS conversion: !}%
     
@@ -156,12 +154,9 @@ cov_lam : ({x} cofv x A ->
 
 %{! The type family ``cof C`` encodes the typing judgment Γ \{\{vdash\}\} C _ok_. Continuations do not return, so they do not have a type. The type family ``ofv V A`` the judgment Γ \{\{vdash\}\} V : A for CPS values V. The typing rules are straightforward.
 
-#
-# Translation
+## Translation
 
-#
-#
-# Type translation
+### Type translation
 
 We can now translate from the direct style language to the CPS language. Because a translated value will have a different type in the source and destination languages (indeed, the source and destination types are different LF types!), we start by defining a translation for the types of the source language. !}%
     
@@ -180,9 +175,7 @@ To check our work, we can verify that type translation is [%total](/wiki/percent
 %worlds () (ttoct _ _).
 %total D (ttoct D _).
 
-%{! #
-#
-# Translation relation
+%{! ### Translation relation
 
 The translation for values is a three place relation: !}%
     
@@ -248,9 +241,7 @@ tocps+ : {M  : exp}
 
 %{! The type of this relation may be more clear when we see how it is used. But before we are able to give the translation for expressions and values, we need to prove some lemmas about the type translation relation.
 
-#
-#
-# Lemmas
+### Lemmas
 
 First, we define a [equality](/wiki/equality/) relation on continuation types and prove that it is preserved when type constructors are applied: !}%
     
@@ -334,9 +325,7 @@ ttoct_gimme : {A:typ} {A':ctyp} ttoct A A' -> type.
 %total D (ceqtyp_cont D _).
 %total D (ttoct_fun D _ _).
 
-%{! #
-#
-# Term translation
+%{! ### Term translation
 
 We can now give the translation for expressions and values. We start by proving the ``tocpsv+`` and ``tocps+`` lemmas, since they are one case each: !}%
     
@@ -400,10 +389,7 @@ c_app : tocps- (app M N) (=>E WM WN) CTB _
 
 %{! The first subgoal (``ttoct_gimme``) exists to reconcile the various type translations that will occur: We will have a translation for ``A``, ``B``, and ``A =&gt; B`` which all must agree. We therefore invoke the [effectiveness lemma](/wiki/effectiveness-lemma/) on the largest type (``A =&gt; B``) and the others will be subterms. We then invoke tocps inductively to translate the function and argument expressions (we use the + version here so that we need not do equality reasoning about the type translations). The resulting typing derivation begins with the derivations for the translation of ``M`` and ``N``. Given these, it builds a pair of the argument ``wa`` and return continuation. The body of the return continuation is the outermost tail passed to the translation of the ``app``. We then end with a call to the translated function value on the pair we created.
 
-#
-#
-#
-# Binding
+#### Binding
 
 So far, everything in the source object language has been first order. We'll now translate the ``let`` construct, which is a simple binder. !}%
     
@@ -427,9 +413,7 @@ c_val : tocps- (value V) (ofvalue WV) CT _ ([c][wc] wc CV WCV)
 
 %{! It simply invokes the mutually inductive translation ``tocpsv-``, which we define next.
 
-#
-#
-# Value translation
+### Value translation
 
 Value translation is not continuation-based, so two of the three cases are very easy: !}%
     
@@ -463,8 +447,7 @@ cv_lam : tocpsv- ((=>I WM) : ofv (lam M) (A => B)) (ttoct/=> CTA CTB)
 
 %{! Recall that the ``tocpsv`` relations are between typing derivations only (the terms are implicit) but ``tocps`` takes them explicitly. Thus the first thing to notice is that we use type annotations to recover the implicit arguments so that we can pass them explicitly to ``tocps``. (This is an instance of [converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/).) As before, we then use effectiveness to translate the type ``A``. The inductive call to ``tocps`` has seven hypotheses. The first five are as in the case for ``let``, which represent the bound argument variable and its translation. The last two represent the return continuation, which will be another argument to the continuation we generate. Also notice that in this case we do not have a wildcard ``_`` for the translated term in the subgoal&mdash;we write ``(CC x' r)``&mdash;without this help Twelf's higher-order unification cannot resolve all of the constraints. (This one case is the reason that the terms cannot be implicit parameters as they are for the value translation.) The result of translation is a typing derivation for a continuation. The continuation's argument ``arg`` has type ``(A' c& (B' ccont))``; we start by projecting the first and second components of the pair. We then use the derivation for the translated body, which depends on the argument and return continuation. Its tail takes the result of the body, ``v`` and calls the continuation on that value.
 
-#
-# Metatheorem
+## Metatheorem
 
 We can now check our metatheorem, which is that these translations are total. We start by declaring [%block](/wiki/percent-block/)s for use in the [%worlds](/wiki/percent-worlds/) declarations: !}%
     
@@ -481,7 +464,7 @@ We can now check our metatheorem, which is that these translations are total. We
 
 %{! The first block corresponds to the five hypotheses we needed in the ``let`` and ``lam`` cases. The second is for the return continuation we assume in the ``lam`` case&mdash;it does not correspond to any direct style assumption so it need only be well-formed.
 
-For this proof to check we must also make world declarations for the type families ``cof``, ``cofv``, ``cval`` and ``cexp``. I believe this has to do with Twelf's overconservativity of world subsumption on third-order metatheorems, but I am not sure of the exact cause.\{\{discuss|Strange world declarations\}\} Although they are strange (and meaningless, since we do not check the totality of these type families, whose modes are all ``[%mode](/wiki/percent-mode/)``), they pose no problem here: !}%
+For this proof to check we must also make world declarations for the type families ``cof``, ``cofv``, ``cval`` and ``cexp``. I believe this has to do with Twelf's overconservativity of world subsumption on third-order metatheorems, but I am not sure of the exact cause.\{\{discuss|Strange world declarations\}\} Although they are strange (and meaningless, since we do not check the totality of these type families, whose modes are all [``%mode``](/wiki/percent-mode/)), they pose no problem here: !}%
     
 %block blockcv : block {v : cval}.
 

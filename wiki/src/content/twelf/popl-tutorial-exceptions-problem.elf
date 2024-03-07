@@ -11,8 +11,7 @@ The static semantics will be extended with rules to handle these new expressions
 The preservation and progress proofs must then be updated to
 accommodate the extensions to the language. 
 
-#
-# Syntax
+## Syntax
 
 Types:
 
@@ -50,8 +49,7 @@ handle : exp -> exp -> exp.
 
 %{! 
 
-#
-# Static semantics
+## Static semantics
 
 A judgement picking out the well-typed terms:
 
@@ -92,8 +90,7 @@ of/handle
 
 %{! 
 
-#
-# Dynamic semantics
+## Dynamic semantics
 
  !}%
 
@@ -174,8 +171,7 @@ step/handle/body-v
 
 %{! 
 
-#
-# Preservation
+## Preservation
 
 With this encoding, we have to prove preservation explicitly, as the
 type of ``step`` doesn't guarantee it.
@@ -241,8 +237,7 @@ Exercise: Give proof cases for step/handle/body, step/handle/body-v, and step/ha
 
 %{! 
 
-#
-# Progress
+## Progress
 
  !}%
 
@@ -259,9 +254,7 @@ val-or-raises-or-step must have a case for when an expression raises an exceptio
 vrs/raises : val-or-raises-or-step E <- raises E. 
 %{! 
 
-#
-#
-# [Output factoring](/wiki/output-factoring/)
+### [Output factoring](/wiki/output-factoring/)
 
  !}%
 
@@ -345,9 +338,7 @@ Exercise: Give the missing cases for when the inputs are unhandled exceptions.
    
 %{! 
 
-#
-#
-# Main theorem
+### Main theorem
 
  !}%
 

@@ -8,8 +8,7 @@
    |nextname = Arithmetic expressions with let-binding
 \}\}
 
-#
-# Rudimentary arithmetic
+## Rudimentary arithmetic
 
 In on-paper notation, the syntax of the natural numbers is given as follows:
 
@@ -29,9 +28,7 @@ s : nat -> nat.
 
 The constant ``z`` constructs a ``nat``; the constant ``s`` constructs a ``nat`` from a ``nat``.
 
-#
-#
-# Addition
+### Addition
 
 Next, we define addition as a judgement relating two natural numbers to their sum:
 
@@ -62,10 +59,7 @@ add/s : add (s M) N (s P)
 
 The first line says that the type family ``add`` relates three natural numbers.  The second line says that the first two (the addends) determine the third (the sum).  The constants ``add/z`` and ``add/s`` correspond to the inference rules above.
 
-#
-#
-#
-# Totality
+#### Totality
 
 Twelf verifies that addition is a total function on closed terms of type nat:
 
@@ -85,8 +79,7 @@ This proves a [totality assertion](/wiki/totality-assertion/) for ``add``.
 
 %{! 
 
-#
-# Simple arithmetic expressions
+## Simple arithmetic expressions
 
  !}%
 
@@ -95,9 +88,7 @@ num : nat -> exp.
 plus : exp -> exp -> exp.
 
 %{! 
-#
-#
-# Evaluation
+### Evaluation
 
 First, we define a syntactic category of answers, which in this case is
 just natural numbers:
@@ -134,9 +125,7 @@ Twelf verifies that evaluation is total:
  !}%
 
 %{! 
-#
-#
-# Solving for derivations
+### Solving for derivations
 
 We can use logic programming to [%solve](/wiki/percent-solve/) for derivations.  
 

@@ -1,7 +1,6 @@
 %%! title: "Talk:%thaw"
 
-%{! #
-# Gee that's bad
+%{! ## Gee that's bad
 
 ARGH! The current Twelf CVS allows you to !}%
     
@@ -36,7 +35,7 @@ fake : nat.
 
 :: Fixing this is a three-line patch to Twelf, but because it would break potential existing code I've asked Frank for permission to commit the patch — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 22:25, 29 December 2006 (EST)
 ::: How would it break existing code? My feeling is that %thaw should pretty much be removed from the language. It doesn't seem to have any legitimate use to me (unlike say %trustme). &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 10:18, 28 February 2007 (EST)
-:::: See ``/twelf/examples/lp/test.cfg`` for the only significant code I broke banning Thaw. If you've frozen your language of atoms and you now need more atoms, you can declare them dynamically, which is an enormous mess in this example, or you can just thaw your base atom type knowing you're justified by the way you wrote all your ``[%block](/wiki/percent-block/)`` and ``[%worlds](/wiki/percent-worlds/)`` directives. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 12:49, 28 February 2007 (EST)
+:::: See ``/twelf/examples/lp/test.cfg`` for the only significant code I broke banning Thaw. If you've frozen your language of atoms and you now need more atoms, you can declare them dynamically, which is an enormous mess in this example, or you can just thaw your base atom type knowing you're justified by the way you wrote all your [``%block``](/wiki/percent-block/) and [``%worlds``](/wiki/percent-worlds/) directives. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 12:49, 28 February 2007 (EST)
 ::::: OK, I buy that use. I'm not sure it's really an enormous mess to introduce them dynamically, but that is certainly clean to do it this way. On the other hand, maybe I should never defend a use of unsafe features that's not clearly necessary? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 14:26, 28 February 2007 (EST)
 :::::: I also would say that we shouldn't advocate it's _use_ so much, but there's a code compatibility issue; perfectly legitimate code written before autofreeze, in particular, may need extensive rewriting, whereas if that code is not crucial it's a decent hack to just thaw things. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 15:13, 28 February 2007 (EST)
 ::::::: Agreed—I meant specifically _me_ in that will I be able to sleep well at night if I support that? ;) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 16:27, 28 February 2007 (EST) !}%

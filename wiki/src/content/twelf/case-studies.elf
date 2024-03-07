@@ -4,10 +4,7 @@
 
 Feel free to add your own case studies here.  We would welcome experience reports that document not just the Twelf code you wrote but your experience writing it. (If the goal of your article is to teach a specific Twelf technique, it should instead be a [tutorials](/wiki/tutorials/), and if your Twelf code is off-site, you should instead add it to the list of [Research projects using Twelf](/wiki/research-projects-using-twelf/).)
 
-#
-#
-#
-# Beginner
+#### Beginner
 
 * [Bracket abstraction](/wiki/bracket-abstraction/), by [User:William Lovas](/wiki/user-william-lovas/)
 : A translation of the untyped lambda calculus into the SKI combinator calculus.  Bracket abstraction is defined by pattern matching over LF-level lambda abstractions, making essential use of [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
@@ -44,10 +41,7 @@ Feel free to add your own case studies here.  We would welcome experience report
 ** [natural numbers with inequality](/wiki/natural-numbers-with-inequality/), by [User:Rsimmons](/wiki/user-rsimmons/)
 ** [Dense lexicographical orderings](/wiki/lexicographical-orderings-with-density/), by [User:DanielKLee](/wiki/user-danielklee/)
 
-#
-#
-#
-# Advanced
+#### Advanced
 
 * [CPS conversion](/wiki/cps-conversion/), by [User:Tom7](/wiki/user-tom7/)
 : A type-directed conversion from direct style lambda calculus into continuation passing style.

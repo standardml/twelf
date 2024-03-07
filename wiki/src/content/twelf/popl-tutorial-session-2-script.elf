@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Arithmetic primitives
+## Arithmetic primitives
 
  !}%
 
@@ -22,8 +21,7 @@ add/s : add (s M) N (s P) <- add M N P.
 
 %{! 
 
-#
-# Multiplication
+## Multiplication
 
  !}%
 
@@ -68,8 +66,7 @@ mult'/s : mult' (s M) N Q
 
 %{! 
 
-#
-# Expressions with times, pairs
+## Expressions with times, pairs
 
 - Add syntax for times; eval is still total
 - Add syntax for pairs; eval is no longer total
@@ -121,8 +118,7 @@ eval/snd : eval (snd E) V2
 
 %{! 
 
-#
-# Typing judgement
+## Typing judgement
 
 - Write the rules, don't add typing assumption in of/let, get a world error
 - Define block, get a world subsumption error for of-val

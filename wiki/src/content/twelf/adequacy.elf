@@ -8,8 +8,7 @@ The correctness criterion for such a representation is called **adequacy**.  An 
 
 See the introductory article [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/), as well as Harper and Licata's paper &lt;ref&gt;\{\{bibtex:hl07mechanizing\}\}&lt;/ref&gt;, for example adequacy statements and proofs.
 
-#
-# References
+## References
 
 &lt;references/&gt;
 

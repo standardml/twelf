@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Nats
+## Nats
 
  !}%
 
@@ -13,8 +12,7 @@ succ : nat -> nat.
 
 %{! 
 
-#
-# Add
+## Add
 
  !}%
 
@@ -29,8 +27,7 @@ add/s : add (succ M) N (succ O)
 
 %{! 
 
-#
-# Exercise: Mult
+## Exercise: Mult
 
  !}%
 
@@ -46,8 +43,7 @@ mult/s : mult (succ M) N O'
 
 %{! 
 
-#
-# Right-hand Identity
+## Right-hand Identity
 
  !}%
 
@@ -63,8 +59,7 @@ rhzero : {M : nat} add M zero M -> type.
 
 %{! 
 
-#
-# Right-hand succ
+## Right-hand succ
 
  !}%
 
@@ -81,8 +76,7 @@ rhsucc : add M N O -> add M (succ N) (succ O) -> type.
 
 %{! 
 
-#
-# Exercise: put it all together
+## Exercise: put it all together
 
  !}%
 

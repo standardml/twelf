@@ -1,14 +1,10 @@
 %%! title: "Simplifying dynamic clauses"
 
-%{! #
-#
-# Summary
+%{! ### Summary
 
 When writing proofs about relations that introduce hypotheses, it is sometimes necessary to introduce dynamic clauses for the proof along with the hypothetical variable, to encode informal reasoning "at the variable case". In some cases, this reasoning is somewhat complicated, and can be streamlined by a judicious choice of lemma, so that the dynamic clause, while still present, is of a much simpler form, and the complicated reasoning is pushed to the top-level, where it can be more easily encoded.
 
-#
-#
-# Example
+### Example
 
 Suppose that we have lists of items, some of which may be colored red. !}%
     
@@ -58,10 +54,7 @@ mix-pres : mix L L'
 	 -> type.
 %mode mix-pres +MIX +AR -AR'.
 
-%{! #
-#
-#
-# First proof
+%{! #### First proof
 
 It can be proved in the following way: !}%
     
@@ -95,10 +88,7 @@ It can be proved in the following way: !}%
 
 %{! Writing dynamic clauses like this can be annoying, because Twelf's type reconstruction cannot be used to elide implicit &Pi;s. If we left a variable such as ``Mix`` implicitly quantified inside the dynamic clause, it would be quantified at the very outside, which would be incorrect. Moreover, some older versions of Twelf cannot check dynamic clauses that themselves have subgoals, as is the case here.
 
-#
-#
-#
-# Second proof
+#### Second proof
 
 We can instead prove the same theorem in a different way, which has the advantage of working in older verisons of Twelf, and allowing more leverage of type reconstruction in any event, simplifying the presentation.
 The technique is to introduce another lemma that makes explicit the invariant represented by the worlds declaration for the main theorem. In this case, we know that for every ``seed E`` in the context, there is a derivation ``RH`` of type ``is-red E``. !}%

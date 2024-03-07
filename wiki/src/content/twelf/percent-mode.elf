@@ -4,8 +4,7 @@
 
 The ``%mode`` declaration is an important part of the specification of a [totality assertion](/wiki/totality-assertion/). In the "for all/exists" statement about a relation, the "for all" terms are the input arguments to the relation, and the "exists" terms are its outputs.
 
-#
-# Syntax
+## Syntax
 
 A mode declaration for the family _id_ with _n_ arguments usually takes the following ("short") form:
 
@@ -20,9 +19,7 @@ plus : nat -> nat -> nat -> type.
 
 %{! The names ``N1``..``N3`` are arbitrary, but each must be distinct.
 
-#
-#
-# Full form
+### Full form
 
 The short mode declaration above only specifies the mode for explicit parameters; the modes for implicit parameters are then assigned automatically. Occasionally, one needs to use a "full" form to specify the modes of implicit parameters: !}%
     
@@ -39,12 +36,9 @@ plus : nat -> nat -> nat -> type.
 
 %{! \{\{needs|an example where the full mode specification is actually needed\}\}
 
-#
-# Mode checking
+## Mode checking
 
-#
-#
-# Basic mode checking errors
+### Basic mode checking errors
 
 Say we give a definition of the natural numbers with addition in line with the descriptions above: !}%
     
@@ -73,9 +67,7 @@ px: plus (s N1) N2 (s N)
 py: plus (s N1) N2 (s N3)
      <- plus N N2 N3.
 
-%{! #
-#
-# Ordering subgoals
+%{! ### Ordering subgoals
 
 Mode checking considers subgoals _in order_, i.e. from top to bottom when the subgoals are written out in the standard style using backwards arrows. The order of subgoals matters very much for mode checking. Say we have an identity function that maps inputs (the first position) to outputs (the second position). !}%
     
@@ -102,8 +94,7 @@ ps': plus (s N1) N2 (s N3)
 
 %{! \{\{needs|a more complete description of more interesting mode checking problems\}\}
 
-#
-# See also
+## See also
 * \{\{guide|chapter=7|section=41|title=Modes\}\}
 * \{\{proving|title=Proving totality assertions about the natural numbers\}\}, particulary the section on [Proving metatheorems:Proving_totality_assertions_about_the_natural_numbers](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/).
 

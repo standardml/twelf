@@ -6,8 +6,7 @@
 
 In Twelf, totality assertions are specified using [%mode](/wiki/percent-mode/) and [%worlds](/wiki/percent-worlds/) declarations and verified using [%total](/wiki/percent-total/) declarations.  Totality assertions are useful for verifying properties of object-language [judgment](/wiki/judgment/)s.  Additionally, Twelf's ability to verify totality assertions is used to prove general [metatheorem](/wiki/metatheorem/)s.  
 
-#
-# Example totality assertions
+## Example totality assertions
 
 Consider the following LF signature, which defined addition on natural numbers: !}%
     
@@ -40,8 +39,7 @@ The above examples consider only terms that are well-typed without mentioning LF
 
 The page on [%worlds](/wiki/percent-worlds/) presents an example totality assertion in non-empty contexts.
 
-#
-# See also
+## See also
 * This page's description of totality assertions was extracted from \{\{proving|title=Proving totality assertions about the natural numbers\}\}.  Read that introduction to learn how to prove totality assertions using Twelf, and how to use totality assertions to mechanize proofs of more general [metatheorem](/wiki/metatheorem/)s. !}%
 
 %{!

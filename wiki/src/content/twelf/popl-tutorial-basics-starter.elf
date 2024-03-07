@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Natural numbers
+## Natural numbers
 
  !}%
 
@@ -14,8 +13,7 @@ succ : nat -> nat.
 
 %{! 
 
-#
-# Addition
+## Addition
 
  !}%
 
@@ -28,9 +26,7 @@ add/s : add (succ M) N (succ P)
 
 %{! 
 
-#
-#
-# Example derivations
+### Example derivations
 
  !}%
 
@@ -40,8 +36,7 @@ add/s : add (succ M) N (succ P)
 
 %{! 
 
-#
-# Exercise: Multiplication
+## Exercise: Multiplication
 
  !}%
 
@@ -64,8 +59,7 @@ mult : nat -> nat -> nat -> type.
 
 %{! 
 
-#
-# Mode, worlds total
+## Mode, worlds total
 
  !}%
 
@@ -81,8 +75,7 @@ mult : nat -> nat -> nat -> type.
 
 %{! 
 
-#
-# Right-hand zero
+## Right-hand zero
 
  !}%
 
@@ -98,8 +91,7 @@ rhzero : {M : nat} add M zero M -> type.
 
 %{! 
 
-#
-# Right-hand succ
+## Right-hand succ
 
  !}%
 
@@ -115,8 +107,7 @@ rhsucc : add M N P -> add M (succ N) (succ P) -> type.
 
 %{! 
 
-#
-# Exercise: Prove that addition is commutative
+## Exercise: Prove that addition is commutative
 
  !}%
 

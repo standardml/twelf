@@ -11,11 +11,8 @@ In this example I will show examples of the following:
 - Correspondence between the big step semantics and the machine.
 - Complete induction on the height of a derivation.
 
-#
-# Lily - the language
-#
-#
-# Grammar
+## Lily - the language
+### Grammar
 I define the grammar for the types !}%
     
 % Lily meta theory
@@ -128,9 +125,7 @@ evs_lett : lett M N \s/ V
 %covers \s/ +M -V.
 %freeze \s/.
 
-%{! #
-#
-# Value soundness
+%{! ### Value soundness
 By now I can prove value soundness for the two evaluation relations. !}%
     
 value_soundness : M \n/ V -> value V -> type.
@@ -207,9 +202,7 @@ selfevals_unit : selfevals val_unit evs_unit.
 %freeze selfevals.
 %total V (selfevals V _).
 
-%{! #
-#
-# Equalities
+%{! ### Equalities
 I need some equalities on types and terms: !}%
     
 eqt : tp -> tp -> type.
@@ -324,9 +317,7 @@ eq_sym_rule : eq_sym eq_ref eq_ref.
 %freeze eq_sym.
 %total D (eq_sym D _).
 
-%{! #
-#
-# Determinism
+%{! ### Determinism
 Evaluation is deterministic. !}%
     
 eval_determ : M \n/ V -> M \n/ V' -> eq V V' -> type.
@@ -400,13 +391,10 @@ eq_val_rule : eq_val eq_ref V V.
 %freeze eval_trans.
 %total {} (eq_val _ _ _).
 
-%{! #
-# Frame stack semantics
+%{! ## Frame stack semantics
 The abstract machine is defined as a relation on tuples consisting of a frame stack and a term to evaluate in that stack.
 
-#
-#
-# Evaluation frames
+### Evaluation frames
 The frame stack is a stack of evaluation frames that provides a context on which we will continue evaluation after we have computed a value for the current term. !}%
     
 frame : (term -> term) -> type. %name frame F.
@@ -460,9 +448,7 @@ frameapply_cons : frameapply (cons F Fs) M M'
     
 %block blam : block {y:term}.
 
-%{! #
-#
-# Equalities on frame stacks
+%{! ### Equalities on frame stacks
 I also need some equational reasoning on frame stacks: !}%
     
 eqf : framestack -> framestack -> type.
@@ -505,10 +491,7 @@ frameapply_nil_eq_rule : frameapply_nil_eq frameapply_nil eq_ref.
 %freeze frameapply_nil_eq.
 %total {} (frameapply_nil_eq _ _).
 
-%{! #
-#
-#
-# More metatheorems about frame application !}%
+%{! #### More metatheorems about frame application !}%
     
 frameapply_exists : {Fs}{M} (frameapply Fs M M') -> type.
 %mode frameapply_exists +Fs +M -A.
@@ -532,9 +515,7 @@ frameapply_exists_cons_tapp : frameapply_exists (cons (ftapp N) Fs) M
 %freeze frameapply_exists.
 %total D (frameapply_exists D _ _).
 
-%{! #
-#
-# Frame stack evaluation
+%{! ### Frame stack evaluation
 Here I define the evaluation relation for the abstract machine. !}%
     
 --> : framestack -> term -> framestack -> term -> type.
@@ -570,9 +551,7 @@ eq_step_rule : eq_step eq_ref S S.
         <- -->* Fs M Fs'' M''.
 %freeze -->*.
 
-%{! #
-#
-# Meta theory of the abstract machine
+%{! ### Meta theory of the abstract machine
 Here are some basic properties of the abstract machine: !}%
     
 concat-->* : (-->* Fs M Fs'' M'') -> (-->* Fs'' M'' Fs' M') -> (-->* Fs M Fs' M') -> type.
@@ -629,8 +608,7 @@ frameApplyUnique_cons : frameApplyUnique (frameapply_cons FsA frameapp_app)
 %freeze frameApplyUnique.
 %total D (frameApplyUnique D _ _).
 
-%{! #
-# Correspondence between the big step semantics and the abstract machine !}%
+%{! ## Correspondence between the big step semantics and the abstract machine !}%
     
 lemma48 : {Fs} {M} (M \n/ V) -> (-->* Fs M Fs V) -> type.
 %mode lemma48 +Fs +M +E -Ss.
@@ -950,10 +928,7 @@ eq_eval_frame_rule : eq_eval_frame (FA : frameapply Fs M FsM) EV R
 %freeze eq_eval_frame.
 %total {} (eq_eval_frame _ _ _).
 
-%{! #
-#
-#
-# Termination relation on the abstract machine !}%
+%{! #### Termination relation on the abstract machine !}%
     
 frameterm : framestack -> term -> type.
 
@@ -1121,10 +1096,7 @@ frameterm_eval_rule : frameterm_eval FT EV
 
 %{! Excellent. We now know that termination in the frame stack semantics is the same as evaluation in the big step semantics. The nice thing about the termination relation is that it supplies us with an inductive description of termination.
 
-#
-#
-#
-# Termination is invariant under evaluation !}%
+#### Termination is invariant under evaluation !}%
     
 lemma413a : -->* Fs M Fs' M' -> frameterm Fs M -> frameterm Fs' M' -> type.
 %mode lemma413a +R +FT -FT'.
@@ -1195,12 +1167,8 @@ lemma413b_rule : lemma413c R FT FT'
 %freeze lemma413c.
 %total {} (lemma413c _ _ _).
 
-%{! #
-# The Lily type system
-#
-#
-#
-# Linearity
+%{! ## The Lily type system
+#### Linearity
 I encode linearity as a predicate on LF functions. Thus if linear([x].F) then we know that F is linear in x. !}%
     
 linear : (term -> term) -> type.
@@ -1381,10 +1349,7 @@ eq_linear_rule : eq_linear ([m] eq_ref) R R.
 %freeze eq_linear.
 %total {} (eq_linear _ _ _).
 
-%{! #
-#
-#
-# Typing rules !}%
+%{! #### Typing rules !}%
     
 ? : term -> tp -> type.
 % mode ? +M -T.
@@ -1436,9 +1401,7 @@ of_lett : lett M N ? T''
 
 %{! Take note of how I require functions and products to be linear.
 
-#
-#
-# Type preservation
+### Type preservation
 As we have a type system we should prove soundness of it. !}%
     
 tpres : M ? T -> M \n/ V -> V ? T -> type.
@@ -1544,9 +1507,7 @@ tpres_s_lett : % {D' : {x : term} {y : term} x ? T -> y ? T' -> N x y ? T''}
 %freeze tpres_s.
 %total D (tpres_s _ D _).
 
-%{! #
-#
-# Equalities and inversions !}%
+%{! ### Equalities and inversions !}%
     
 %block bts_tlam : block {t:tp}.
 eq_typings : M ? T -> M ? T -> type.
@@ -1624,8 +1585,7 @@ eq_val_bang_rule : eq_val_bang val_thunk (of_thunk _) eq_ref.
 %freeze eq_val_bang.
 %total {} (eq_val_bang _ _ _).
 
-%{! #
-# Abstract machine types !}%
+%{! ## Abstract machine types !}%
     
 fstp : framestack -> tp -> tp -> type.
 % mode fstp +FST +T -T'.
@@ -1686,9 +1646,7 @@ eqt_tapp_rule : eqt_tapp (of_tapp T D) D eqt_ref.
 %freeze eqt_tapp.
 %total {} (eqt_tapp _ _ _).
 
-%{! #
-#
-# Preservation
+%{! ### Preservation
 Now I can prove soundness of the type system for the frame stack semantics: !}%
     
 typed_step : (fstp Fs T T') -> M ? T -> --> Fs M Fs' M' -> (fstp Fs' T'' T') -> M' ? T'' -> type.
@@ -1742,10 +1700,7 @@ frame_pres_rule : frame_pres Ss FsTp D FsTp' D'
 %worlds () (frame_pres _ _ _ _ _).
 %total Ss (frame_pres Ss _ _ _ _).
 
-%{! #
-#
-#
-# Progress
+%{! #### Progress
 Progress and preservation seem to be in fashion.
 I will not rely on progress elsewhere. !}%
     
@@ -1818,11 +1773,8 @@ progress_lett : progress _ _ (progress_good_s evfs_lett).
 %worlds () (progress _ _ _).
 %total {} (progress _ _ _).
 
-%{! #
-# Strictness lemma
-#
-#
-# Stack manipulations
+%{! ## Strictness lemma
+### Stack manipulations
 There are two natural ways to define application of a frame stack to a term. I need them both and I need to show how they relate. As stacks are represented as lists this code is a nice example of how to prove classic theorems about lists. !}%
     
 frameapply' : framestack -> term -> term -> type.
@@ -1987,9 +1939,7 @@ frameapply_e1_rule : frameapply_e1 R FA' FA
 %freeze frameapply_e1.
 %total {} (frameapply_e1 _ _ _).
 
-%{! #
-#
-# Some degenerate lemmas
+%{! ### Some degenerate lemmas
 The next lemma is degenerate and needed to take care of other degenerate cases. !}%
     
 lem45 : {M:term -> term} ({m:term} frameapply' (Fs m) (N m) R) ->
@@ -2016,9 +1966,7 @@ lem45_letu : lem45 M ([m] frameapply'_cons (frameapp_app : frameapp (fletu (_)) 
 %freeze lem45.
 %total D (lem45 _ D _).
 
-%{! #
-#
-# Frames are linear !}%
+%{! ### Frames are linear !}%
     
 redex : term -> term -> type. %name redex R.
 % mode redex +M +M'.
@@ -2263,9 +2211,7 @@ frame_linear_tapp : frame_linear ([m] redex_tapp) _ FA LR FA' LR'
 %worlds () (frame_linear _ _ _ _ _ _).
 %total {} (frame_linear _ _ _ _ _ _).
 
-%{! #
-#
-# Termination is invariant to redexes !}%
+%{! ### Termination is invariant to redexes !}%
     
 add_redex_steps : redex M M' -> frameterm Fs M' -> frameterm Fs M -> type.
 %mode add_redex_steps +R +Ft -Ft'.
@@ -2390,9 +2336,7 @@ lem26 : {F1}{F2} ({m} frameapp (F m) m M1) -> eqf F1 F2 -> type.
 %freeze lem26.
 %total {} (lem26 _ _ _ _).
 
-%{! #
-#
-# More on linear frames !}%
+%{! ### More on linear frames !}%
     
 lem27 : relavant ([m] N) -> {Fs}{Fs'} eqf Fs Fs' -> type.
 %mode lem27 +R +Fs +Fs' -Q.
@@ -2646,14 +2590,10 @@ add_frame_letu : add_frame (fletu M) FA LR ([m] frameapply_cons (FA' m) frameapp
 %freeze add_frame.
 %total {} (add_frame _ _ _ _ _).
 
-%{! #
-#
-# Strictness lemma preparations
+%{! ### Strictness lemma preparations
 Now we are ready for the strictness lemma.
 
-#
-#
-# Height preservation
+### Height preservation
 The proof relies on complete induction on the height of a derivation which is a little troublesome in Twelf. !}%
     
 nat : type.
@@ -2733,10 +2673,7 @@ frameterm_eq_framesNum_rule : frameterm_eq_framesNum eqf_ref eq_ref Ft H Ft H.
 %worlds () (frameterm_eq_framesNum _ _ _ _ _ _).
 %total {} (frameterm_eq_framesNum _ _ _ _ _ _).
 
-%{! #
-#
-#
-# Height reducing inversions !}%
+%{! #### Height reducing inversions !}%
     
 up_app : {ft:frameterm Fs (app M1 M2)} height_ok ft (succ N) ->
          {ft':frameterm (cons (fapp M2) Fs) M1} height_ok ft' N -> type.
@@ -2808,9 +2745,7 @@ up_thunk_rule : up_thunk (frameterm_thunk F) (height_ok_thunk H) F H.
 %worlds () (up_thunk _ _ _ _).
 %total D (up_thunk D _ _ _).
 
-%{! #
-#
-# Special cases of type preservation !}%
+%{! ### Special cases of type preservation !}%
     
 types_pres_app1_s : M \s/ V -> app M N ? T -> app V N ? T -> type.
 %mode types_pres_app1_s +E +D -D'.
@@ -2872,9 +2807,7 @@ redex_rev_type_letb : redex_rev_type redex_letb (of_letb D2 (of_thunk D1)) (D2 _
 %worlds () (redex_rev_type _ _ _).
 %total {} (redex_rev_type _ _ _).
 
-%{! #
-#
-# The actual lemma !}%
+%{! ### The actual lemma !}%
     
 strictness_base : {N}{M} (N M) ? bang T -> linear N -> value (N M) -> value M -> type.
 %mode strictness_base +N +M +D +L +V -V'.

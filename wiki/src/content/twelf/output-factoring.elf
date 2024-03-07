@@ -6,8 +6,7 @@ The primary symptom of the problem is if Twelf fails when checking an %total dec
 &lt;code&gt;Totality: Output of subgoal not covered
 Output coverage error ...&lt;/code&gt;
 
-#
-# Even and odd
+## Even and odd
 
 In this section, we prove that every natural number is even or odd.  First, we define the judgements: !}%
     
@@ -27,9 +26,7 @@ even_or_odd : nat -> type.
 eoo-e : even_or_odd X <- even X.
 eoo-o : even_or_odd X <- odd X.
 
-%{! #
-#
-# Incorrect proof
+%{! ### Incorrect proof
 
 Next, we attempt the following theorem: !}%
     
@@ -56,9 +53,7 @@ aeo_odd  : always_even_or_odd (s X) (eoo-o (s-o Y))
 
 Unfortunately, Twelf's output-coverage checker does not notice this sort of multiple-constant output coverage: the output-coverage checker only accepts a relation if each constant covers all outputs of its premises.
 
-#
-#
-# Correct proof
+### Correct proof
 
 Nonetheless, we need to case-analyze this output in order to complete the proof.  How can we do so?  Well, Twelf does not allow output coverage to be split across constants, but it certainly allows **input coverage** to be split across constants.  Thus, we can solve the problem by turning an output-coverage checking problem into an input-coverage checking problem.  We do this by writing an additional helper lemma.
 
@@ -87,8 +82,7 @@ aeo_succ : always_even_or_odd (s X) D'
 %worlds () (always_even_or_odd D P). 
 %total D (always_even_or_odd D _).
 
-%{! #
-# Progress
+%{! ## Progress
 
 Another example where output factoring comes up is the progress theorem for a programming language:
 

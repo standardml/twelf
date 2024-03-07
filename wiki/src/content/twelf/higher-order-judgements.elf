@@ -2,12 +2,9 @@
 
 %{! When representing [judgment](/wiki/judgment/)s in [LF](/wiki/lf/), it is often possible to represent [hypothetical judgment](/wiki/hypothetical-judgment/)s using LF binding.  We call this representation technique**higher-order judgments_ because judgments are represented using higher-order types in LF.  Higher-order representations are advantageous because hypothetical judgment properties such as [weakening](/wiki/weakening-lemma/), [exchange](/wiki/exchange-lemma/), and [substitution](/wiki/substitution-lemma/) are inherited "for free" from the corresponding properties of LF.
 
-#
-# Example
+## Example
 
-#
-#
-# Hypothetical judgment in standard notation
+### Hypothetical judgment in standard notation
 
 As an example, we use the typing judgment for the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/).  This calculus has the following syntax:
 
@@ -36,9 +33,7 @@ This is a _hypothetical judgement_, which means that the following structural pr
 
 Hypothesis is derivable by the rule &lt;math&gt;\mbox\{of-var\}&lt;/math&gt;.  Weakening, exchange, and substitution are admissible.
 
-#
-#
-# LF representation
+### LF representation
 
 We represent the syntax of this calculus with the following LF signature: !}%
     
@@ -81,8 +76,7 @@ An LF term of this type has the form ``([x] [dx: of x T2] M)``, where ``M : of (
 
 The constants ``of-empty`` and ``of-app`` correspond to the informal inference rules of the same name.
 
-#
-# See also
+## See also
 * the [introductions to Twelf](/wiki/introductions-to-twelf/) for more discussion of higher-order representations of hypothetical judgments.
 * [Reformulating languages to use hypothetical judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/)
 * [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/)

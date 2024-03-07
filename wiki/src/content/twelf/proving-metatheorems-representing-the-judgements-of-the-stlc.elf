@@ -6,12 +6,9 @@
   | next = Proving metatheorems about the STLC
   | nextname = Proving metatheorems\}\}
 
-#
-# Static semantics
+## Static semantics
 
-#
-#
-# Informal definition
+### Informal definition
 
 The typing rules for the simply typed lambda calculus use a typing context &lt;math&gt;\texttt\{\}\gamma&lt;/math&gt; containing assumptions of the form &lt;math&gt;\mathsf\{\}x : \tau&lt;/math&gt;. Such a context is well-formed when all variables in it are distinct.
 
@@ -33,9 +30,7 @@ This is a _hypothetical judgement_, which means that the following structural pr
 
 Hypothesis is derivable by the rule &lt;math&gt;\mbox\{of-var\}&lt;/math&gt;.  Weakening, exchange, and substitution are admissible.
 
-#
-#
-# LF representation
+### LF representation
 
 In the previous section, we used LF binding to represent object-language variables.  In this section, we use LF binding to represent object-language hypothetical judgements.  The following LF signature represents the above judgement &lt;math&gt;\gamma \vdash e : \tau&lt;/math&gt; with the LF type family ``of``. !}%
     
@@ -76,9 +71,7 @@ of-lam  : of (lam T2 E) (arrow T2 T)
 
 %{! This version differs from ``of-lam`` above in that the term ``E`` is not eta-expanded.  Some consider it good Twelf style to write terms in a fully eta-expanded ([eta-long](/wiki/eta-equivalence/)) form, because (1) the eta-expanded terms are the canonical forms of LF, and (2) the eta-expansion makes the binding structure apparent in the syntax, without knowing the types of the involved constants.  On the other hand, readers who know the types of the constants may find the eta-short version easier to read.
 
-#
-#
-# Theorems for free
+### Theorems for free
 
 There are several advantages to using this higher-order representation of a hypothetical judgement, as opposed to a first-order representation where the context is treated explicitly.  
 
@@ -90,9 +83,7 @@ More importantly, this representation gives the structural properties of the hyp
 
 The term ``D1 E2 D2`` represents a derivation that the substitution ``(E E2)`` is well-typed.  (We call the LF application  ``(E E2)`` a substitution because when ``E`` is substituted by an actual term ``[x] M``, the application will reduce to ``[E2/x]M``.)
 
-#
-#
-# Adequacy
+### Adequacy
 
 The adequate theorem for typing derivations is as follows:
 
@@ -100,12 +91,9 @@ The adequate theorem for typing derivations is as follows:
 
 To prove this adequacy theorem, it is necessary to show that STLC terms and types remain adequately represented when considered in LF contexts of this form.  Intuitively, adding canonical forms of type ``of`` does not change the canonical forms of types ``tp`` and ``tm`` because STLC typing derivations cannot appear in STLC types or terms.  This kind of argument can be made precise using [subordination](/wiki/subordination/).
 
-#
-# Dynamic semantics
+## Dynamic semantics
 
-#
-#
-# Informal definition
+### Informal definition
 
 We define the dynamic semantics of the STLC by a call-by-value, left-to-right structural operational semantics on closed terms.  
 
@@ -123,9 +111,7 @@ Next, we define the operational semantics with a judgement &lt;math&gt;e \mapsto
 
 &lt;math&gt;\{e_2 \; \mathsf\{value\} \over (\lambda x:\tau.e) \, e_2 \mapsto \{e_2/x\} e \} \mbox\{step-app-beta\}&lt;/math&gt;
 
-#
-#
-# LF representation
+### LF representation
 
 These judgements are represented in LF in the usual fashion.  The closed LF terms of these types adequately represent the above judgements. !}%
     

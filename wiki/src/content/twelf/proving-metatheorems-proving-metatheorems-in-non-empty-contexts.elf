@@ -226,8 +226,7 @@ size-app   : size (app E1 E2) (s N)
 %worlds (size-block) (size _ _).
 %total E (size E _).
 
-%{! #
-# Lower bound on size of substitution: Theorem statement
+%{! ## Lower bound on size of substitution: Theorem statement
 
 We prove that substitution never decreases the size of a term.  The informal theorem statement is as follows:
 
@@ -257,8 +256,7 @@ subst-size : {E' : tm}
 %mode subst-size +E' +D1 +D2 -DL.
 %worlds (size-block) (subst-size _ _ _ _).
 
-%{! #
-# Proof attempt
+%{! ## Proof attempt
 
 For pedagogical purposes, we first present an incorrect proof attempt; the change required to fix this attempt is small.  The proof uses some straightforward lemmas about arithmetic: !}%
     
@@ -367,8 +365,7 @@ However, the totality check fails: !}%
 
 %{! This error message tells us that this proof does not cover the case for variables in the context itself.  That is, we forgot to cover the case when the size derivation is a variable (representing the use of a hypothesis) but is not the distinguished variable ``x``.
 
-#
-# Corrected proof
+## Corrected proof
 
 To fix the proof, we need to cover the case for other variables in the LF context.  But where can we put such a theorem case, since it needs to talk about the variable in the context?  The answer is that we can use LF hypotheses: we assume a case of the theorem ``subst-size`` in the LF context along with every assumption of ``x:tm,dx:size x (s z)``.  This technique works because proofs of metatheorems are just LF constants of particular types.
 
@@ -448,8 +445,7 @@ subst-size : {E' : tm}
 
 %{! The block ``ssblock`` extends ``size-block`` with a case of the theorem: when the size derivation is ``dy`` from the context, the term ``E`` must be ``[_] y``, so by inversion the derivation of ``size (([_] y) E') N'`` must be ``dy`` as well, in which case ``plus-z`` derives ``plus z (s z) (s z)``.  The only other change is that the premise of the case for ``size-lam`` adds this extra assumption to the context.  In this world, the relation is indeed total.  
 
-#
-# Correctness of the revised theorem statement
+## Correctness of the revised theorem statement
 
 We set out to prove
 
@@ -465,8 +461,7 @@ In this case, the implication holds.  The reason is that every context in ``(ssb
 
 When you recast an informal theorem statement as a Twelf theorem statement, you need to check that the world of the theorem actually yields the theorem you had in mind.  However, in a large Twelf project, this obligation is usually not very large: Usually, a Twelf proof consists of a few top-level theorems of interest and many supporting lemmas.  In this case, you only need to check that these theorems correspond to what you had in mind; the various lemmas can mean whatever they mean, as long as they are strong enough to prove the overall theorem.
 
-#
-# An even better proof
+## An even better proof
 
 Putting a case of a theorem in the context is a general technique that is useful in many circumstances.  However, in this example, we can avoid putting the theorem case in the context by using a [catch-all case](/wiki/catch-all-case/), as the tutorial on that Twelf proof device explains.  
 

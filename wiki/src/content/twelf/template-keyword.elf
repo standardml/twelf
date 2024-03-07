@@ -2,7 +2,7 @@
 
 %{! &lt;center&gt;&lt;div style="width:50em; border-width: 1px; border-style: solid; border-color:#AAFFFF; background:#EEFFFF"&gt;
 &lt;b&gt;[[:Category:keywords|Twelf keywords]]&lt;/b&gt;&lt;br/&gt;&lt;hr style="height:1px; color:#AAFFFF; background-color:#AAFFFF" /&gt;
-``[%.](/wiki/percent-eof/)
+[``%.``](/wiki/percent-eof/)
 [abbrev declaration](/wiki/abbrev-declaration/)
 [%assert](/wiki/percent-assert/)
 [%block](/wiki/percent-block/)

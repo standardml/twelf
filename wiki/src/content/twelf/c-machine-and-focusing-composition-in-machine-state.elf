@@ -24,9 +24,7 @@ top  : neg.
 
 %{! 
 
-#
-#
-# Proofs
+### Proofs
 
 To mimic direct style, we don't internalize continuation composition
 (because continuations aren't separate syntactic categories in direct
@@ -89,9 +87,7 @@ cut+   : val+ A+ -> cont+ A+ C -> exp C.
 %% internalize exp / cont composition
 compose : exp A- -> cont- A- C- -> exp C-.
 
-%{! #
-#
-# Stack Machine
+%{! ### Stack Machine
 
 Lists of continuations:
 

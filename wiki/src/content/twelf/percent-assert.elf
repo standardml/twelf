@@ -2,8 +2,7 @@
 
 %{! The **``%assert``** directive instructs the [theorem prover](/wiki/theorem-prover/) to accept a previously stated theorem as true without trying to prove that theorem. This directive is thus analogous to a ``[%trustme](/wiki/percent-trustme/)&nbsp;[%total](/wiki/percent-total/)`` directive. Because it instructs Twelf to treat something as true without a proof, Twelf must be in [unsafe mode](/wiki/unsafe-mode/) to use this directive.
 
-#
-# Example
+## Example
 
 The example from the [theorem prover](/wiki/theorem-prover/) article can be modified to use ``%assert`` instead of ``%prove`` for the two lemmas that are needed to establish the commutativity of addition (this example cannot be run on the wiki, which uses Twelf in safe mode). !}%
     
@@ -32,8 +31,7 @@ plus/s : plus (s N1) N2 (s N3) <- plus N1 N2 N3.
                  true.
 %prove 5 D1 (plus-comm D1 D2).
 
-%{! #
-# See also
+%{! ## See also
 
 * [Theorem prover](/wiki/theorem-prover/)
 * \{\{guide|title=Theorem Prover|chapter=10|section=57\}\}

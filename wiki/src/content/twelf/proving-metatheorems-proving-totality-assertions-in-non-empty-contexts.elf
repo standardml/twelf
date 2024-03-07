@@ -8,8 +8,7 @@
 
 So far, we have only proved relations total in the empty LF context.  In this section, we discuss proving totality assertions for relations in more general contexts.  As a motivating example, we define a judgement that computes the size of a STLC term.  
 
-#
-# Definition of Size
+## Definition of Size
 
 The definition of size uses the definitions of [Proving metatheorems:Representing the syntax of the natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/), [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), and [Proving metatheorems:Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) from earlier in this article. !}%
     
@@ -63,8 +62,7 @@ size-app   : size (app E1 E2) (s N)
 
 %{! The only subtlety in this judgement is that we have recast size as a hypothetical judgement: each variable ``x:tm`` in the context is assumed to have size 1.  Correspondingly, the premise of the ``lam`` case extends the context with such an assumption for the bound variable.  
 
-#
-# World Declarations
+## World Declarations
 
 We would like to assert that every term has a size.  However, because the definition of the size judgement extends the LF context, our usual worlds declaration fails: !}%
     
@@ -86,8 +84,7 @@ is, it specifies that we consider ``size`` in the [regular world](/wiki/percent-
 
 In general, Twelf permits regular world declarations of the form ``(b1 | b2 | ... | bn)*`` for blocks ``b1`` through ``bn`` defined by ``%block`` declarations.
 
-#
-# World Checking
+## World Checking
 
 Up until this point, we have focused on the role a ``%worlds`` declaration has in specifying a totality assertion.  However, just as ``%mode`` both specifies the mode of a totality assertion and mode-checks a type family, ``%worlds`` both specifies the world of a totality assertion and _world checks_ a type family.  
 
@@ -99,9 +96,7 @@ When Twelf processes a ``%worlds`` declaration, it world checks each constant in
 * the ``size`` premises of ``size-app`` do not extend the LF context, so they are in ``(size-block)*`` whenever the ambient context is.
 * the ``plus`` premise of ``size-app`` is **not** directly in a context in ``plus``'s world (the world containing only the empty context) because the ambient LF context will contain variables of type ``tm`` and ``size``.  However, the call to ``plus`` is permissible because of something called [world subsumption](/wiki/world-subsumption/).
 
-#
-#
-# Subordination and world subsumption
+### Subordination and world subsumption
 
 A context in ``(size-block)*`` has the form
 
@@ -126,8 +121,7 @@ These conditions ensure that whenever the ambient LF context is of the form spec
 
 Under this more permissive definition, the ``plus`` premise of ``size`` is deemed world-correct.
 
-#
-# Totality assertions in non-empty worlds
+## Totality assertions in non-empty worlds
 
 We now return to the role a world declaration has in specifying totality assertions.  The above mode and world declarations for ``size`` declare the following totality assertion:
 
@@ -145,8 +139,7 @@ In this case, Twelf succeeds in proving the totality of ``size``. !}%
 
 %total E (size E _).
 
-%{! #
-# Example world errors
+%{! ## Example world errors
 
 In this section, we show some example world errors.  For comparison, we collect the complete correct definition of ``size`` here: !}%
     
@@ -169,9 +162,7 @@ size-app   : size (app E1 E2) (s N)
 %worlds (size-block) (size _ _).
 %total E (size E _).
 
-%{! #
-#
-# Premise in an incorrect context
+%{! ### Premise in an incorrect context
 
 One possible world error is to write a premise whose local context extensions do not stay in the appropriate world.   For example, if we forgot the ``size`` assumption in the ``lam`` case, Twelf would report an error: !}%
     
@@ -183,9 +174,7 @@ size-lam   : size (lam _ E) (s N)
 %block size-block : block {x : tm} {_ : size x (s z)}.
 %worlds (size-block) (size _ _).
 
-%{! #
-#
-# World subsumption failure
+%{! ### World subsumption failure
 
 Another possible world error is that world subsumption could fail.  For example, if ``size`` were stated for a  world containing natural number assumptions (which of course ruins the adequacy of ``nat`` for the natural numbers), it would not be permissible to call ``plus``: !}%
     
@@ -195,9 +184,7 @@ Another possible world error is that world subsumption could fail.  For example,
 %block natblock : block {x:nat}.
 %worlds (natblock | size-block) (size _ _).
 
-%{! #
-#
-# Totality failure because of a forgotten assumption
+%{! ### Totality failure because of a forgotten assumption
 
 Finally, a type family can be world correct but fail to define a total relation if we consider the theorem in an improper world.  For example, say we had defined ``size`` as follows: !}%
     

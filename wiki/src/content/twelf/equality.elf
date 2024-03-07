@@ -19,8 +19,7 @@ In general, equality of LF terms corresponds to syntactic equality of object-lan
 
 The purpose of this article is to answer the following question: how should we internalize equality of LF terms as an LF type family?
 
-#
-# Running example: A tree structure
+## Running example: A tree structure
 
 As a running example, we use a simple tree structure: !}%
     
@@ -29,8 +28,7 @@ tree: type.
 leaf: tree.
 node: tree -> tree -> tree.
 
-%{! #
-# Identity
+%{! ## Identity
 
 The simplest way to represent equality of LF terms is with an _identity type family_.  An identity type family represents a binary relation; it is defined by one constant expressing reflexivity.  For example: !}%
     
@@ -100,8 +98,7 @@ height-respects-id : height T N
 
 %{! Each of these proofs is a one-liner: the only possible identity derivations are reflexivity, so all the trees involved are equal, and thus reflexivity derives the result.  The tutorial on [respects lemma](/wiki/respects-lemma/)s presents other examples of these metatheorems.  
 
-#
-# Alternative definition of equality: More primitive rules
+## Alternative definition of equality: More primitive rules
 
 Now, if symmetry, transitivity, congruence, and invertibility are all admissible, you might consider other sets of primitive rules.  For example, we could give a definition of equality by induction on the structure of the tree: !}%
     
@@ -130,8 +127,7 @@ eq-node-inv-1 : eq-tree T1 T1'
 eq-node-inv-2 : eq-tree T2 T2'
                  <- eq-tree (node T1 T2) (node T1' T2').
 
-%{! #
-# Which definition to use
+%{! ## Which definition to use
 
 The type families ``id`` and ``eq`` (with any of the extensions) define the same binary relation on trees.  So is there any reason to prefer one set of primitive rules to another?
 
@@ -139,8 +135,7 @@ Yes!  In either case, we must prove that other type families such as ``height`` 
 
 On the other hand, an inductive characterization like ``eq`` is useful if you are defining not equality but some other [equivalence relation](/wiki/equivalence-relation/).  
 
-#
-# Identity at multiple types
+## Identity at multiple types
 
 In general, it is necessary to define identity types not just for one type, but for all types that appear in the syntax.  For example, for trees that store natural numbers at the nodes, we would define: !}%
     
@@ -172,8 +167,7 @@ id-tree-node-cong : id-tree T1 T1'
 %worlds () (id-tree-node-cong _ _ _ _).
 %total {} (id-tree-node-cong _ _ _ _).
 
-%{! #
-# Other tutorials using equality
+%{! ## Other tutorials using equality
 
 See the tutorial on [respects lemma](/wiki/respects-lemma/)s for more detail on them.  The tutorials on [uniqueness lemma](/wiki/uniqueness-lemma/)s, [strengthening](/wiki/strengthening/) lemmas, and explicit [canonical forms lemma](/wiki/canonical-forms-lemma/)s show example applications of equality.
 

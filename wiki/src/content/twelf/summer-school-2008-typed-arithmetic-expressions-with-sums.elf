@@ -46,8 +46,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 %{! 
 
-#
-# Typed expressions
+## Typed expressions
 
  !}%
 
@@ -75,8 +74,7 @@ case : (sum T U) exp -> (T val -> V exp) -> (U val -> V exp) -> V exp.
 
 %{! 
 
-#
-# Evaluation
+## Evaluation
 
 For simplicity, take answers to be values. 
 
@@ -143,8 +141,7 @@ because it doesn't notice that the next constant,
 ``eval/case/inr``, covers the other possible output of evaluating
 ``E``.  We can fix this using a technique called [output factoring](/wiki/output-factoring/).
 
-#
-# Output factored evaluation
+## Output factored evaluation
 
  !}%
 

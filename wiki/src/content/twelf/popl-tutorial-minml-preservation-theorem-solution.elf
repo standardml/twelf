@@ -68,8 +68,7 @@ step/ifz/s : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
 
 %{! 
 
-#
-# Preservation
+## Preservation
 
  !}%
 

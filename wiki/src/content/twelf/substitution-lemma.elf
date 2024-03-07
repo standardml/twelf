@@ -3,8 +3,7 @@
 %{! Type-preserving **substitution** is the property of a hypothetical judgment that if Γ, x : A \{\{vdash\}\} M(x) : B and Γ \{\{vdash\}\} N : A, then Γ, \{\{vdash\}\} M(N) : B. In other words, if we have a well-typed term M(x) that depends on a hypothesis x of type A, and we have a well-typed term N : A, then we can substitute N for the variable x within M to produce a well-typed term that does not depend on x.
 
 Depending on how the type system of an object language is encoded, there are a number of different techniques for proving a **substitution lemma** for the language.
-#
-# Substitution via application in LF
+## Substitution via application in LF
 
 When an object language is encoded using [higher-order judgements](/wiki/higher-order-judgements/), substitution comes for free: object-language variables and typing assumptions are represented by LF lambdas, so substitution follows from LF application.
 
@@ -59,8 +58,7 @@ subst   : of E1 T
 
 Although we proved substitution as a metatheorem ``subst`` here, in practice it is unnecessary to state substitution as a lemma. The substitution can be performed via application whenever it is necessary.
 
-#
-# Substitution lemmas with a "var" rule
+## Substitution lemmas with a "var" rule
 &lt;!-- This section heading is referred to by name in following articles:
 
 Exchange lemma
@@ -167,8 +165,7 @@ In the following case, D2 has the type !}%
 %worlds (assm-block) (subst _ _ _).
 %total (D1) (subst _ D1 _).
 
-%{! #
-# Substitution lemmas with dependent types [Advanced topic]
+%{! ## Substitution lemmas with dependent types [Advanced topic]
 
 The preceding technique for showing substitution lemmas works fine for systems without dependent types. However, it would not work for a system with dependent types, because its typing assumptions could not admit exchange, in general. A recent discovery is that a similarly general technique is available for languages with dependent types and a var rule, despite the apparent absence of an exchange property. Of course, if the system has the same judgment for assumptions and typing derivations, then substitution can be performed via application in LF.
 
@@ -308,15 +305,11 @@ subst : of E1 T
 %worlds (assm-block) (subst _ _ _).
 %total {} (subst _ _ _).
 
-%{! #
-#
-# Remarks about adequacy
+%{! ### Remarks about adequacy
 
 The reader may have concerns as to whether this proof technique affects [adequacy](/wiki/adequacy/) for the object language. Although the second input to the ``subst*`` is not an adequate encoding of a typing derivation that makes a proper extension to the LF context (because it is missing an ``\{x:exp\}`` argument), the result is a valid typing derivation in the object logic. ``subst*`` is a correct lemma about LF terms of a particular form. Doing a proof of ``subst`` using ``subst*`` does not "break" the object language in any way, because 1) the deviations from adequate encodings occured only in intermediate stages of the proof and 2) the proof produces results that are adequate encodings of the object language.
 
-#
-#
-# Comparison to the POPLMark 1a narrowing proof
+### Comparison to the POPLMark 1a narrowing proof
 
 This technique is similar to how the narrowing lemma was proven for POPLMark challenge 1a. However, because we are proving a substitution lemma instead of narrowing the type of a variable, we have an actual term to substitute in for the variable. Because the variable can be substituted away and does not have to be put into the LF context, this proof does not need to deal with any special worlds.
  

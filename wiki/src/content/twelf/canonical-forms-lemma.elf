@@ -6,8 +6,7 @@ In a standard proofs of [[type safety]], the [progress](/wiki/canonical-forms-le
 
 Depending on the complexity of the type system, there are two general ways to state and prove these lemmas.  In some cases, Twelf's input coverage can give you the canonical forms lemma for free.  In other cases, you must state and prove canonical forms explicitly using [equality](/wiki/equality/).  
 
-#
-# Canonical forms lemmas for free
+## Canonical forms lemmas for free
 
 If there is only one rule through which the canonical form at a particular type can be derived, then Twelf's input coverage is actually strong enough to give you canonical forms for free via [[inversion]]. 
 
@@ -112,8 +111,7 @@ progress : of E T
 %worlds () (progress _ _).
 %total (D1) (progress D1 _).
 
-%{! #
-# Canonical forms lemmas stated using equality
+%{! ## Canonical forms lemmas stated using equality
 
 Some languages do not have the luxury of having exactly one rule through which a canonical form could be derived. This is common for languages with re-typing rules that make use of subtyping/type equality. In such languages, canonical forms lemmas must be explicitly stated and proven. The conclusion of the lemma "e is of the form ..." can be stated in a straightforward way using [shallow equality](/wiki/equality/). This example makes use of [output factoring](/wiki/output-factoring/) and [reasoning from equality](/wiki/equality/).
 

@@ -1,8 +1,7 @@
 %%! title: "POPL Tutorial/cps-problem2"
 
 %{! 
-#
-# Problem 2: Elimination of Administrative Redices
+## Problem 2: Elimination of Administrative Redices
 
 Rather than introducing the administrative redices of explicitly introducing and eliminating continuations (see [POPL Tutorial/cps-problem](/wiki/popl-tutorial-cps-problem/)), we can simply use the function from values to computations itself wherever we previously used a continuation.  Therefore, the new definition of the CPS language is obtained by replacing all instances of ccont A with (cvalue A -&gt; contra).
 | hidden="true" !}%

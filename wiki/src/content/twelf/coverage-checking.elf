@@ -2,9 +2,9 @@
 
 %{! **Coverage checking** is used to describe two analyses that Twelf needs to perform in order to verify [totality assertions](/wiki/totality-assertion/). 
 
-The first analysis, for **input coverage**, is performed by both ``[%total](/wiki/percent-total/)`` and ``[%covers](/wiki/percent-covers/)`` declarations and resembles exhaustiveness checking in a language like ML. 
+The first analysis, for **input coverage**, is performed by both [``%total``](/wiki/percent-total/) and [``%covers``](/wiki/percent-covers/) declarations and resembles exhaustiveness checking in a language like ML. 
 
-The second analysis, **output coverage**, is performed only by ``[%total](/wiki/percent-total/)`` to ensure that the outputs of subgoals are sufficiently general.  Output coverage consists of a check for incorrect constant pattern-matching and a check for [output freeness](/wiki/output-freeness/) violations.  
+The second analysis, **output coverage**, is performed only by [``%total``](/wiki/percent-total/) to ensure that the outputs of subgoals are sufficiently general.  Output coverage consists of a check for incorrect constant pattern-matching and a check for [output freeness](/wiki/output-freeness/) violations.  
 
 We will use the common example of [natural numbers](/wiki/natural-numbers/) for this example: !}%
     
@@ -15,10 +15,9 @@ nat: type.
 z: nat.
 s: nat -> nat.
 
-%{! #
-# Input coverage
+%{! ## Input coverage
 
-Input coverage is similar to exhaustiveness checking in ML, in that it ensures that your relation is prepared to accept any input that is thrown at it. We would run afoul of the input coverage checker if we tried to run a ``%covers`` or ``%total`` declaration on the relation ``half`` that halves a natural number but is undefined on odd numbers. Another example of input coverage checking can be seen at the page on ``[%covers](/wiki/percent-covers/)``. !}%
+Input coverage is similar to exhaustiveness checking in ML, in that it ensures that your relation is prepared to accept any input that is thrown at it. We would run afoul of the input coverage checker if we tried to run a ``%covers`` or ``%total`` declaration on the relation ``half`` that halves a natural number but is undefined on odd numbers. Another example of input coverage checking can be seen at the page on [``%covers``](/wiki/percent-covers/). !}%
     
 %{! (options removed from twelftag: import="nat" export="one") !}%
 
@@ -37,14 +36,11 @@ half/s : half (s (s N)) (s M)
 
 %total N (half N _).
 
-%{! #
-# Output coverage
+%{! ## Output coverage
 
 Output coverage ensures that your relation is prepared to deal with any possible term that it might be output by a [[subgoal]]. Output coverage does not have quite so obvious a counterpart in functional languages like ML; the reason is that Twelf differentiates between case-analyzing outputs and case-analyzing inputs, whereas in ML there is just one case construct.  
 
-#
-#
-# Output constant pattern-matching
+### Output constant pattern-matching
 
 Say we attempted to fix ``half`` by defining ``half`` of 1 to be 0 by adding the case ``half/1`` shown below: !}%
     
@@ -82,14 +78,11 @@ half/1 : half (s z) N
 
 %{! In many circumstances when the output coverage checker rejects a totality assertion that should, in fact, be true, a standard technique [output factoring](/wiki/output-factoring/) can deal with the problem.
 
-#
-#
-# Output freeness
+### Output freeness
 
 The other part of output coverage checking is [output freeness](/wiki/output-freeness/) checking; see its page for a definition and examples.
 
-#
-# See also
+## See also
 
 * \{\{guide|section=52|chapter=9|title=Coverage\}\}
 * [Output freeness](/wiki/output-freeness/)

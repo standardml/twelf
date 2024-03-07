@@ -5,8 +5,7 @@ MinML: call-by-value, with recursive functions, using an intrinsic encoding
  !}%
 
 %{! 
-#
-# Types
+## Types
  !}%
 
 tp : type.				%name tp T.
@@ -15,8 +14,7 @@ arr : tp -> tp -> tp.
 all : (tp -> tp) -> tp.
 
 %{! 
-#
-# Syntax / static semantics
+## Syntax / static semantics
  !}%
 
 exp : tp -> type.			%name exp E.
@@ -30,8 +28,7 @@ tfun : ({a : tp} exp (T a)) -> exp (all [a] T a).
 tapp : exp (all [a] T a) -> {T2 : tp} exp (T T2). 
 
 %{! 
-#
-# Dynamic Semantics / Preservation
+## Dynamic Semantics / Preservation
  !}%
 
 value : exp T -> type.			%name value Dval.
@@ -73,8 +70,7 @@ step/tapp/beta
    : step (tapp (tfun ([a] E a)) T) (E T).
 
 %{! 
-#
-# Progress
+## Progress
  !}%
 
 val-or-step : exp T -> type.		%name val-or-step Dvos.
@@ -82,9 +78,7 @@ vos/val : val-or-step E <- value E.
 vos/step : val-or-step E <- step E _.
 
 %{! 
-#
-#
-# Factoring lemmas
+### Factoring lemmas
 
 These are necessary for case-analyzing the results of recursive calls.
 
@@ -165,8 +159,7 @@ prog/tapp : val-or-step (E : exp (all [a] T a))
 %total {} (prog/tapp _ _ _ _).
 
 %{! 
-#
-# Main theorem
+## Main theorem
  !}%
 
 prog : {E : exp T} val-or-step E -> type. 

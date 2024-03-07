@@ -4,16 +4,14 @@
 
 If you're trying to learn Twelf from this example, you may wish to read the discussion starting in \{\{proving|title=Representing the syntax of the STLC\}\}.  That introductory guide discusses this representation of the STLC and why it works in more detail.  This page summarizes the judgements of the STLC and the corresponding LF code for reference, but does not explain them in detail.
 
-#
-# What is illustrated by this example?
+## What is illustrated by this example?
 
 There are simpler examples of LF representations (see, e.g., the [natural numbers](/wiki/natural-numbers/)). However, the STLC is a good first example of a representation that uses [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) and [higher-order judgment](/wiki/higher-order-judgements/)s.  These two representation techniques drastically simplify the process of representing and proving theorems about 
 many programming languages and logics.  The idea is that the binding structure of LF is used to represent the binding structure of the object language.  At the level of syntax, this gives [alpha-equivalence](/wiki/alpha-equivalence/) and capture-avoiding substitution "for free" from the representation.  At the level of judgements, this gives the properties of a [hypothetical judgement](/wiki/hypothetical-judgment/), such as weakening and substitution, for free.
 
 This encoding of the STLC is adapted from _Mechanizing Metatheory in a Logical Framework_&lt;ref name="hl07mechanizing"&gt;\{\{bibtex:hl07mechanizing\}\}&lt;/ref&gt;.  Section 3 of that paper exhaustively discusses the [adequacy](/wiki/adequacy/) of this encoding.
 
-#
-# Encoding of syntax
+## Encoding of syntax
 
 The types of the simply typed lambda calculus are simply the unit type and the arrow or function type.
 
@@ -32,12 +30,9 @@ empty : tm.
 app : tm -> tm -> tm.
 lam : tp -> (tm -> tm) -> tm.
 
-%{! #
-# Encoding of judgments
+%{! ## Encoding of judgments
 
-#
-#
-# Static semantics
+### Static semantics
 
 The typing rules for the simply typed lambda calculus use a typing context &lt;math&gt;\texttt\{\}\gamma&lt;/math&gt; to record the type annotations that have been encountered at lambda-bindings. 
 
@@ -61,9 +56,7 @@ of-app : of (app E1 E2) T
 
 %{! Assumptions &lt;math&gt;\texttt\{\}x:\tau&lt;/math&gt; in the typing context &lt;math&gt;\texttt\{\}\gamma&lt;/math&gt; are represented as a pair of objects ``x:tm`` and ``d:of&nbsp;x&nbsp;T`` in the LF context &lt;math&gt;\texttt\{\}\Gamma&lt;/math&gt; (``T`` is the LF representation of the type &lt;math&gt;\texttt\{\}\tau&lt;/math&gt;). This can be seen in the encoding of the judgment ``of_lam``. There is no need to write out the equivalent of the of-var rule, becuase the necessary judgment is directly assumed by the ``of-lam`` rule. This method avoids the need for a [substitution lemma](/wiki/substitution-lemma/), and the article on that subject discusses the matter further.
 
-#
-#
-# Dynamic semantics
+### Dynamic semantics
 
 We define the dynamic semantics of the STLC by a call-by-value, left-to-right structural operational semantics on closed terms.  
 
@@ -98,8 +91,7 @@ step-app-beta : step (app (lam T2 ([x] E x)) E2) (E E2)
 
 %{! You can ``&gt;see or download the full Twelf source``, which is almost exactly that of Figure 7 and Figure 13 of _Mechanizing Metatheory_ &lt;ref name="hl07mechanizing" /&gt;.  You can also `` check="true"&gt;see Twelf's output``, which is closer to the LF code in Figure 7 and Figure 10 of that paper, because it makes the [implicit parameter](/wiki/implicit-and-explicit-parameters/) explicit. Note that in Twelf's concrete syntax, curly brackets (``\{\}``) are used for pi-bindings instead of the &lt;math&gt;\Pi&lt;/math&gt; symbol.
 
-#
-# Metatheorems
+## Metatheorems
 
 Several metatheorems about this formulation of the simply typed lambda-calculus are proved on this wiki.  See, for example:
 * [Proving metatheorems:Proving metatheorems about the STLC](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/) for a proof of type preservation
@@ -108,8 +100,7 @@ Several metatheorems about this formulation of the simply typed lambda-calculus 
 * [Proving metatheorems:Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/) for a height judgement
 * [Proving metatheorems:Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) for a proof that the height of a term can only be increased by substitution.
 
-#
-# References
+## References
 
 &lt;references/&gt; !}%
 

@@ -1,16 +1,13 @@
 %%! title: "CADE Tutorial/Basic error messages"
 
-%{! #
-# How Twelf checks assertions
+%{! ## How Twelf checks assertions
 
 Twelf proves a totality assertion for a type family such as
 ``mult`` by checking several properties.  These properties, taken
 together, constitute a proof by induction on canonical forms that the
 type family defines a total relation.
 
-#
-#
-# Running Example
+### Running Example
 
 We'll start from the following code: !}%
     
@@ -42,9 +39,7 @@ mult/s : mult (succ M) N P'
 	  <- mult M N P
 	  <- add N P P'.
 
-%{! #
-#
-# Mode
+%{! ### Mode
 
 Twelf checks that each constant inhabiting the type family is
 _well-moded_.  Roughly, this means that the inputs to the conclusion
@@ -92,18 +87,14 @@ mult/s : mult (succ M) N Q
 %{! The premises are mode-checked in order; the outputs from one subgoal are
 consider ground in subsequent premises.
 
-#
-#
-# Worlds
+### Worlds
 
 Twelf checks that each constant inhabiting the type family obeys the
 worlds declaration.  Because we are only proving theorems about closed
 terms right now, we will not run across any problems with world
 checks.  
 
-#
-#
-# Termination
+### Termination
 
 Twelf checks that each constant inhabiting the type family obeys the
 induction order specified in the ``%total`` declaration.  In each
@@ -148,9 +139,7 @@ if ``N`` were used as the induction order&mdash;the same term
 %{! In addition to the subterm ordering on a single argument, Twelf supports
 [mutual induction](/wiki/mutual-induction/) and [[lexicographic induction]].
 
-#
-#
-# Output coverage
+### Output coverage
 
 In the definition of a type family, you may pattern-match the outputs of
 a premise.  For example, we might write !}%
@@ -192,9 +181,7 @@ mult/bad-output-free : mult (succ M) N zero
 [output freeness](/wiki/output-freeness/): a type family will not be judged total if you
 constrain the outputs of any premise at all in this manner.
 
-#
-#
-# Input coverage
+### Input coverage
 
 Mode, worlds, termination, and output coverage ensure that each constant
 really does cover the part of the relation indicated by its conclusion.
@@ -237,8 +224,7 @@ and coverage checking, the constants defining a type family do not need
 to follow any particular primitive recursion schema-the constants may
 pattern-match the inputs in a general manner.
 
-#
-# When Twelf checks what
+## When Twelf checks what
 
 To a first approximation, you can think of the ``%mode`` and ``%worlds`` declarations as specifying a totality assertion and the ``%total`` declaration as checking it.  This isn't exactly how Twelf works, though:
 

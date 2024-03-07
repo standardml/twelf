@@ -1,14 +1,12 @@
 %%! title: "The Twelf Project talk:Copyright"
 
-%{! #
-# CC-NC licenses
+%{! ## CC-NC licenses
 
 Can we remove the option for noncommercial cc licenses? They are incompatible with the GPL and GFDL, and so are pretty much a dead end for free content. Is there any indication that people want to use them? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:41, 13 October 2006 (EDT)
 : Some wikis are CC-NC, and it's not dead-end if there's a home for them here :). I'm not at all opposed to getting rid of some though, I just figured it was better to have the maximum number of options. There is no indication that anyone would want to use any of these, in all honesty, introducing them was merely futureproofing. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:15, 13 October 2006 (EDT)
 :: OK, point taken. Well, I'd say we should at least maximally discourage noncommercial licenses. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 17:40, 13 October 2006 (EDT)
 
-#
-# At most one tag
+## At most one tag
 
 Also, I don't see any reason why pages can't be dual- or tri-licensed. What's the idea with that restriction? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:43, 13 October 2006 (EDT)
 : Two reasons - one is just simplicity and not having eight red tags on a single page. The other is that reading licenses I got the impression that there may actually be weird legal things involved in multi-licensing that I didn't quite want to understand. The subtyping relationship of multilicensing is quite complicated and might not be reasonably understood by all editors to a page. I think if someone _did_ strongly express an opinion about wanting to actually multilicense certain pages, the issue would be different, I just couldn't imagine such an odd situation and didn't want people doing it lightly. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:18, 13 October 2006 (EDT)

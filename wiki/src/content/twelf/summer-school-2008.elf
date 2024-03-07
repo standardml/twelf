@@ -3,13 +3,11 @@
 %{! __NOTOC__
 This page contains course materials for the Twelf course at [http://www.cs.uoregon.edu/research/summerschool/summer08/ the University of Oregon Summer School on Logic and Theorem Proving in Programming Languages, July 2008].  In this course, you will learn to represent [deductive system](/wiki/object-logic/)s in [LF](/wiki/lf/) and prove [metatheorem](/wiki/metatheorem/)s about them with [About The Twelf Project](/wiki/about-the-twelf-project/).
 
-#
-# New: Feedback Form
+## New: Feedback Form
 
 Please fill out our [http://gs4080.sp.cs.cmu.edu/servlets/summerschool2008/feedback.ss feedback form]!
 
-#
-# Get Twelf
+## Get Twelf
 
 Pre-built binaries of Twelf are available for most operating systems through the [http://twelf.plparty.org/builds Twelf Night(ly)].
 * [http://twelf.plparty.org/builds/twelf-linux.tar.gz Linux (tgz)]
@@ -22,12 +20,9 @@ Otherwise:
 
 Then see [Twelf with Emacs](/wiki/twelf-with-emacs/) for the basics of interacting with Twelf.  (You can also use [Twelf without Emacs](/wiki/twelf-without-emacs/), by interacting with the Twelf server directly.)
 
-#
-# Lectures and Labs [http://www.cs.cmu.edu/~rwh/talks/UO_Summer08.pdf (slides)]
+## Lectures and Labs [http://www.cs.cmu.edu/~rwh/talks/UO_Summer08.pdf (slides)]
 
-#
-#
-# Class 1: Overview
+### Class 1: Overview
 * [Summer school 2008:Arithmetic expressions](/wiki/summer-school-2008-arithmetic-expressions/)
 * [Summer school 2008:Arithmetic expressions with let-binding](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding/)
 ** Variation: [Summer school 2008:Arithmetic expressions with call-by-value let-binding](/wiki/summer-school-2008-arithmetic-expressions-with-call-by-value-let-binding/)
@@ -37,23 +32,18 @@ Then see [Twelf with Emacs](/wiki/twelf-with-emacs/) for the basics of interacti
 
 * [Summer school 2008:Exercises 1](/wiki/summer-school-2008-exercises-1/)
 
-#
-#
-# Class 2: Representation
+### Class 2: Representation
 * [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf Mechanizing Metatheory in a Logical Framework] discusses this material in detail.
 * [Summer school 2008:Exercises 2](/wiki/summer-school-2008-exercises-2/)
 
-#
-#
-# Class 3: Mechanizing Metatheory
+### Class 3: Mechanizing Metatheory
 
 * [Summer school 2008:Type safety for MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-intrinsic-encoding/)
 * [Summer school 2008:Type safety for MinML (extrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-extrinsic-encoding/)
 
 * [Summer school 2008:Exercises 3](/wiki/summer-school-2008-exercises-3/)
 
-#
-# Additional reading
+## Additional reading
 
 * PFPL: We will use [http://www.cs.cmu.edu/~rwh/plbook/book.pdf Practical Foundations for Programming Languages] as a reference for basic PL concepts.
 * MMLF: [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf Mechanizing Metatheory in a Logical Framework] discusses LF, representation, and mechanized metatheory in technical detail.

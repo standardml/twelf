@@ -1,8 +1,7 @@
 %%! title: "POPL Tutorial/CPS Solution2"
 
 %{! 
-#
-# Problem 2: Elimination of Administrative Redices
+## Problem 2: Elimination of Administrative Redices
 
  !}%
 tp : type.

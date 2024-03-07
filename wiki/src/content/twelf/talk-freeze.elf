@@ -1,12 +1,10 @@
 %%! title: "Talk:%freeze"
 
-%{! #
-# Version
+%{! ## Version
 Does anyone know what versions freeze and autofreeze are available in? I have the impression that they are new features (being undocumented). &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 14:22, 1 December 2006 (EST)
 : I think freeze has been available since around 1.5, but it wasn't in 1.4, I'm almost certain. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 18:53, 20 December 2006 (EST)
 
-#
-# Soundness
+## Soundness
 Can unsoundness also result if there is no autofreeze? I'm not sure what Twelf's behavior was in this case. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 14:22, 1 December 2006 (EST)
 : It should - you could prove ``eq (s N) N`` implied ``absurd``, and then add a case to ``eq`` to make that theorem no longer true... — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 18:52, 20 December 2006 (EST)
 ::Certainly if it continued to accept the totality of that theorem for the new extended ``eq``. But if any worlds/total/etc. declarations were invalidated by new declarations for a type family, I think that might still be sound. Did Twelf do that? Probably not. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 00:15, 25 December 2006 (EST) !}%

@@ -6,8 +6,7 @@
   | next = Representing the syntax of the STLC
   | nextname = Higher-order representation of syntax\}\}
 
-#
-# Take-aways
+## Take-aways
 
 The three things to remember from this section are:
 
@@ -17,15 +16,13 @@ The three things to remember from this section are:
 
 At a high level, that's all there is to know about proving metatheorems with Twelf.  
 
-#
-# What's next?
+## What's next?
 
 So far, we have used only first-order LF representations (we haven't used LF variables or lambdas for anything yet).  That's reasonable, since the natural numbers and the judgements we defined about them are first-order things.  
 
 However, one of the main benefits of LF is that the above methodology scales gracefully to programming languages with binding structure.  This is the subject of the next section.
 
-#
-# Test yourself
+## Test yourself
 
 _This section is under development. If you try other examples at this point, please add them here.  If you try more advanced examples, add them to the [Proving metatheorems:Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/)._
 

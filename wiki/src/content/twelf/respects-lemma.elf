@@ -8,8 +8,7 @@ At a high level, a **respects lemma** shows that a type family or term construct
 
 Often, the relations in question are [equality](/wiki/equality/).  
 
-#
-# Example: Proving that a type family respects equality
+## Example: Proving that a type family respects equality
 
 It is often necessary to prove a respects lemma showing that a type family respects equality of its indices.  
 For example, we can define the standard equality relation ``bin-eq`` for binary numbers, the standard ``and`` relation on binary numbers, and then prove a _respects lemma_ that ``and`` respects equality: !}%
@@ -62,8 +61,7 @@ and-first-resp : bin-eq M M' -> and M N O -> and M' N O -> type.
 
 \{\{needs|an example where a respects lemma is needed\}\}
 
-#
-# Example: proving compatibility lemmas
+## Example: proving compatibility lemmas
 
 Another kind of respects lemma is a **compatibility lemma**, which states that a relation is respected by the application of term constructors. (This is also called a **congruence lemma** when the relation in question is an equivalence relation.) For example, we can prove compatibility lemmas about the constructors ``1`` and ``0``: !}%
     
@@ -102,9 +100,7 @@ notnot/0 : notnot (not/0 N1) (not/1 N2) EQ'
 
 %{! In the inductive cases of ``notnot``, we have a derivation ``EQ`` that two smaller numbers are equal, and need to use this derivation to prove that if we apply the ``1`` constructor (for each) to each of the terms, they are still equal.
 
-#
-#
-# Generalized compatibility lemmas
+### Generalized compatibility lemmas
 
 Compatibility lemmas can be generalized somewhat so that we needn't prove so many. Instead of defining the ``0-compat`` and ``1-compat`` cases separately, we can abstract over the constructor as an LF function: !}%
     

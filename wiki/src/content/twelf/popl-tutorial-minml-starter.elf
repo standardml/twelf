@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Syntax
+## Syntax
 
  !}%
 
@@ -18,10 +17,7 @@ z : exp.
 s : exp -> exp.
 
 %{! 
-#
-#
-#
-# Exercise: constant for ifz
+#### Exercise: constant for ifz
  !}%
 
 %% The syntax '% .' (without the space)
@@ -31,8 +27,7 @@ s : exp -> exp.
 
 %{! 
 
-#
-# Static semantics
+## Static semantics
 
  !}%
 
@@ -48,10 +43,7 @@ of/fn : of (fn T1 ([x] E x)) (arr T1 T2)
 	 <- ({x:exp} of x T1 -> of (E x) T2).
 
 %{! 
-#
-#
-#
-# Exercise: typing rules for s and ifz
+#### Exercise: typing rules for s and ifz
  !}%
 
 
@@ -68,12 +60,9 @@ of/fn : of (fn T1 ([x] E x)) (arr T1 T2)
 
 %{! 
 
-#
-# Dynamic semantics
+## Dynamic semantics
 
-#
-#
-# value judgement
+### value judgement
 
 
  !}%
@@ -82,10 +71,7 @@ value : exp -> type.               %name value Dval.
 
 value/fn : value (fn T ([x] E x)).
 %{! 
-#
-#
-#
-# Exercise: value rules for z and s
+#### Exercise: value rules for z and s
  !}%
 
 
@@ -96,9 +82,7 @@ value/fn : value (fn T ([x] E x)).
 
 %{! 
 
-#
-#
-# step judgement
+### step judgement
 
  !}%
 
@@ -115,10 +99,7 @@ step/app/beta : step (app (fn T ([x] E x)) E2) (E E2)
 		 <- value E2.
 
 %{! 
-#
-#
-#
-# Exercise: step rules for s and ifz
+#### Exercise: step rules for s and ifz
  !}%
 
 
@@ -128,12 +109,9 @@ step/app/beta : step (app (fn T ([x] E x)) E2) (E E2)
 
 %{! 
 
-#
-# Progress theorem
+## Progress theorem
 
-#
-#
-# Sum type for the result
+### Sum type for the result
 
  !}%
 
@@ -146,9 +124,7 @@ vos/step  : val-or-step E
 
 %{! 
 
-#
-#
-# Lemmas
+### Lemmas
 
  !}%
 
@@ -182,10 +158,7 @@ prog/app : of E1 (arr T' T)
 
 %{! 
 
-#
-#
-#
-# Exercise: lemma for s
+#### Exercise: lemma for s
 
  !}%
 
@@ -198,10 +171,7 @@ prog/app : of E1 (arr T' T)
 
 %{! 
 
-#
-#
-#
-# Exercise: lemma for ifz
+#### Exercise: lemma for ifz
 
  !}%
 
@@ -214,9 +184,7 @@ prog/app : of E1 (arr T' T)
 
 %{! 
 
-#
-#
-# Main theorem
+### Main theorem
 
  !}%
 
@@ -237,10 +205,7 @@ prog : of E T -> val-or-step E -> type.
 
 %{! 
 
-#
-#
-#
-# Exercise: cases for s and ifz
+#### Exercise: cases for s and ifz
 
  !}%
 

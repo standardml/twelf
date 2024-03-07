@@ -2,11 +2,9 @@
 
 %{! 
 
-#
-# Starter code for Session 2
+## Starter code for Session 2
 
-#
-# Arithmetic primitives
+## Arithmetic primitives
 
  !}%
 
@@ -25,8 +23,7 @@ add/s : add (s M) N (s P) <- add M N P.
 
 %{! 
 
-#
-# Expressions
+## Expressions
 
  !}%
 

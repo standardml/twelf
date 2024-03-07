@@ -2,8 +2,7 @@
 
 %{! The **admissibility of cut** (also called **cut elimination**) is one of the most important metatheorems of an [object logic](/wiki/object-logic/) sequent calculus. It is the key theorem for showing the equivalence of natural deduction and the cut-free sequent calculus, which has several corollaries, including the existence of normal forms for every natural deduction term, and the consistency of the logic. This [tutorials](/wiki/tutorials/) shows how to prove admissibility of cut for a simple intuitionistic sequent calculus in Twelf. We will make use of lexicographic orderings in the [%terminates](/wiki/percent-terminates/) argument. &lt;!-- and other tricks? --&gt;
 
-#
-# Cut
+## Cut
 
 For a sequent calculus Γ \{\{darrow\}\} C, where Γ holds hypotheses and the proposition C is the conclusion, the statement of cut is as follows: If Γ \{\{darrow\}\} A and Γ,A \{\{darrow\}\} C then Γ \{\{darrow\}\} C.
 
@@ -13,8 +12,7 @@ Often, logicians will include cut in the sequent calculus as a rule:
 
 They then prove that any proof that uses the cut rule can be transformed into a proof without cut (thus, "cut elimination"). In Twelf, it will be simpler to prove cut as a metatheorem ("admissibility of cut") over a sequent calculus with no cut rule.
 
-#
-# Sequent calculus
+## Sequent calculus
 
 Suppose we have the following sequent calculus:
 
@@ -63,8 +61,7 @@ impR : (hyp A -> conc B) ->
 
 %{! The sequent is represented as the judgment ``conc``, which is hypothetical in hypotheses ``hyp``. A rule ``init`` allows us to use a hypothesis to satisfy a conclusion.
 
-#
-# Statement and proof of cut !}%
+## Statement and proof of cut !}%
     
 cut : {A: prop} 
       {D: conc A}
@@ -77,9 +74,7 @@ cut : {A: prop}
 
 There are nominally about _n_² cases to consider in this proof; for each of the _n_ rules that can be at the bottom of ``D``, _n_ rules can be used at the bottom of ``E``. In actuality, two factors reduce the number of cases we'll make: some combinations of rules are incompatible (Twelf's excludes them via unification, so we don't even need to write them down) and some cases can be done schematically by using universal quantification.
 
-#
-#
-# Initial cuts
+### Initial cuts
 
 If either derivation is an instance of the ``init`` rule, we are done: !}%
     
@@ -94,9 +89,7 @@ If ``E`` is the ``init`` rule used to conclude ``conc C`` from ``hyp A`` (so ``A
 
 It's also possible that ``E`` is the ``init`` rule used to conclude ``conc C`` from some other hypothesis ``C`` in Γ. In this case, ``E`` doesn't use the hypothesis ``A`` at all, so ``E`` can be strengthened to produce the output derivation ``F`` which doesn't depend on ``A``. In fact, we can easily generalize this case to any derivation ``E`` that does not use the hypothesis ``A``; this is the ``closed`` case. (When we write ``([Ha] E')``, the variable ``E'``&mdash;which is implicitly quantified at the outside of the goal&mdash;cannot depend on the lambda-bound variable ``Ha``. This is how we indicate the derivation is closed with respect to its argument.)
 
-#
-#
-# Principal cuts
+### Principal cuts
 
 The most interesting cases are those where the cut formula ``A`` is concluded with a right rule in ``D``, and used with a left rule in ``E``. These are known as _principal cuts_.
 
@@ -123,9 +116,7 @@ impC : cut (imp A B) (impR ([Ha] D' Ha))
 
 %{! The ``impC`` case works in much the same way. We first cut the ``A ⊃ B`` hypothesis from both subderivations ``E1`` and ``E2``. We then have ``F1 : conc A`` and ``F2 : hyp B -&gt; conc C``. To get ``F3 : conc B`` we cut the ``hyp A`` from ``D' : hyp A -&gt; conc B`` using ``F1`` (note that in this inductive call, derivations from the "``D`` side" and "``E`` side" have switched roles!). Finally, we cut the ``hyp B`` from ``F2`` to get the result ``F``.
 
-#
-#
-# Left-commutative cuts
+### Left-commutative cuts
 
 The remainder of the cases are _commutative_ cases where we search for initial and principal cuts to apply. The first set are the _left commutative_  cases, where the rule used to derive ``D`` is a left rule. !}%
     
@@ -139,9 +130,7 @@ impLLC : cut A (impL D1 ([Hb] D2 Hb) Hi) E
 
 %{! In the ``andLLC``, ``D : conc A`` is an instance of ``andL``. We proceed by hypothesizing the ``Ha : hyp A1`` and ``Hb : hyp B1`` that ``D' : hyp A1 -&gt; hyp B1 -&gt; conc A`` depends on, so that we may cut it against ``E``. The resulting derivation ``F'`` then also depends on a ``hyp A1`` and ``hyp B1``; we wrap it with an instance of the ``andL`` rule. In these commutative cases, we find rules that do not involve the cut formula, work underneath them inductively, and then re-apply the rule to the cut-free proof we obtained. The ``impLLC`` case follows the same pattern.
 
-#
-#
-# Right-commutative cuts
+### Right-commutative cuts
 
 The _right commutative_ cuts are those where the rule at the bottom of ``E`` is not a left rule acting on the cut formula. The first two cases are where ``E`` is a right rule: !}%
     
@@ -167,8 +156,7 @@ impLRC : cut A (D : conc A) ([Ha] impL (E1 Ha) ([Hb] E2 Ha Hb) Hi)
 
 %{! The ``andLRC`` case is similar to the principal cut case ``andC``, but here the ``andL`` in ``E`` acts on some hypothesis ``Hp : and A1 B1`` instead of the cut hypothesis ``Ha : hyp A``. To proceed, we simply eliminate uses of ``Ha`` within E' inductively, and then reapply the ``andL`` rule to the resulting derivation. We follow a similar pattern for the ``impLRC`` case.
 
-#
-# The metatheorem
+## The metatheorem
 
 We can now state and check the metatheorem: that for every [ground](/wiki/ground/) arguments ``A``, ``D`` and ``E`` to the ``cut`` relation, there exists a derivation ``F`` that concludes ``C`` without using the hypothesis ``A``. Our [%worlds](/wiki/percent-worlds/) declaration for cut is only that hypotheses may appear in the context: !}%
     
@@ -184,8 +172,7 @@ We can now state and check the metatheorem: that for every [ground](/wiki/ground
 ``&gt;All code from this tutorial``. `` check="true"&gt;Twelf's output from this tutorial``.
 
 
-#
-# See also
+## See also
 
 * [Lax logic](/wiki/lax-logic/) - Cut elimination for a polarized variant of the Pfenning-Davies reconstruction of lax logic
 * [Tethered modal logic](/wiki/tethered-modal-logic/) - Cut elimination for the Pfenning-Davies reconstruction of Modal S4

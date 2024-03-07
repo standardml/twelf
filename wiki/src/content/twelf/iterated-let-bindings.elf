@@ -4,8 +4,7 @@
 
 Let with iterated bindings.
 
-#
-# Preliminaries
+## Preliminaries
  !}%
 
 nat : type.
@@ -22,8 +21,7 @@ add/s : add (s N) M (s P)
 %total M (add M _ _).
 
 %{! 
-#
-# Syntax
+## Syntax
  !}%
 
 exp   : type.
@@ -49,8 +47,7 @@ num  : nat -> exp.
 plus : exp -> exp -> exp.
 
 %{! 
-#
-# Evaluation
+## Evaluation
  !}%
 
 %% substitute the expression for the first var in each of the binds
@@ -96,8 +93,7 @@ eval : exp -> nat -> type.
 %covers eval +E1 -E2.
 
 %{! 
-#
-# Example
+## Example
  !}%
 
 %% let* x = 3

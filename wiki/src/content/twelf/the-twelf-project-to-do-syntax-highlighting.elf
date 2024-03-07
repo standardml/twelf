@@ -2,9 +2,7 @@
 
 %{! * An identifier within a lemma without a leading ``&lt;-`` is interpreted as a new keyword (is this fixable?)
 
-#
-#
-# Done
+### Done
 * &lt;strike&gt;``*`` is not recognized as part of an identifier&lt;/strike&gt; — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 13:21, 30 September 2006 (EDT)
 * &lt;strike&gt;``%block`` is not recognized as a keyword&lt;/strike&gt; — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 13:21, 30 September 2006 (EDT)
 * &lt;strike&gt;[%infix](/wiki/fixity-declaration/), [%postfix](/wiki/fixity-declaration/), [%prefix](/wiki/fixity-declaration/) not keywords. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 10:49, 5 October 2006 (EDT)&lt;/strike&gt; — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 19:06, 5 October 2006 (EDT)

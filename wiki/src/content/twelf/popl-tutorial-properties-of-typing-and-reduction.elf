@@ -3,8 +3,7 @@
 %{! This problem (or problems) involves proving three properties of typing and reduction for the language L\{num str\}
 from Bob Harper's book,  [http://www.cs.cmu.edu/~rwh/plbook/book.pdf Practical Foundations for Programming Languages].
 
-#
-# The System L\{num str\} !}%
+## The System L\{num str\} !}%
     
 % Natural numbers
 
@@ -139,8 +138,7 @@ red/let/val   : val E1
 red/let       : red E1 E1'
 		 -> red (let E1 ([x] E2 x)) (let E1' ([x] E2 x)).
 
-%{! #
-# Problem 1: Unicity of Typing !}%
+%{! ## Problem 1: Unicity of Typing !}%
     
 %%%%%%%%%%%%%%%% Lemma 9.1 (Unicity of typing) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -200,8 +198,7 @@ lemma9-1 : of E T1 -> of E T2 -> eqtyp T1 T2 -> type.
 %worlds (lemma_block) (lemma9-1 _ _ _).
 %total OjT2 (lemma9-1 _ OjT2 _).
 
-%{! #
-# Problem 2: Determinacy of Reduction !}%
+%{! ## Problem 2: Determinacy of Reduction !}%
     
 %%%%%%%%%%%%%%%% Lemma 10.1 (Determinacy of Reduction) %%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -433,8 +430,7 @@ lemma10-1 : red E E1 -> red E E2 -> eqexp E1 E2 -> type.
 %worlds () (lemma10-1 _ _ _).
 %total RjE (lemma10-1 RjE _ _).
 
-%{! #
-# Problem 3: Contextual Semantics
+%{! ## Problem 3: Contextual Semantics
 
 In this problem, we define the contextual semantics for L\{num str\} and proof that it is equivalent to (defines the same relation as) the given dynamic semantics (reduction). !}%
     
@@ -658,8 +654,7 @@ lem10-2-2 : fill EC E0 E -> instr E0 E0' -> fill EC E0' E'
 %worlds () (thm10-2-2 _ _).
 %total {} (thm10-2-2 _ _).
 
-%{! #
-# Twelf Output
+%{! ## Twelf Output
 
 The `` check="true"&gt;output`` for the above. !}%
 

@@ -4,8 +4,7 @@
 
 The **``%subord``** declaration adds edges to the [subordination](/wiki/subordination/) relation.  This declaration is currently only available in Twelf CVS\{\{discuss|Version\}\} and may not yet be available in [TwelfTag](/wiki/twelftag/). 
 
-#
-# Syntax
+## Syntax
 
 The syntax is as follows:
 
@@ -13,8 +12,7 @@ The syntax is as follows:
 
 The type families ``ti'`` will then be treated as being dependent on the type family ``ti``.
 
-#
-# Example
+## Example
 
 \{\{needs|a good concise example.\}\}
 

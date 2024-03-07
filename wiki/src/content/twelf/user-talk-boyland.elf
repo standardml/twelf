@@ -19,8 +19,7 @@ The prover sometimes fails to terminate.
 
 : The bug here, as much as anything, is that Twelf accepcts the theorem proving (``%prove``) syntax at all. I don't like it either, but it is actually not difficult or even unexpected to get the theorem prover to nonterminate. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:11, 14 May 2007 (EDT)
 
-#
-# Hoas/Natural Numbers
+## Hoas/Natural Numbers
 
 Thanks for the great page! Is it in a state where you're comfortable with me listing it from the front page? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:04, 30 January 2008 (EST)
 

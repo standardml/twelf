@@ -4,8 +4,7 @@
 
 Two examples show the use of ``%name`` - the first shows its use to give a default name for universally quantified variables, and the second example shows its use to give a default name for both universally quantified variables and bound variables.
 
-#
-# Example 1: Natural numbers
+## Example 1: Natural numbers
 
 We start with a standard presentation of unary numbers and addition: !}%
     
@@ -38,8 +37,7 @@ _ = plus/s (plus/s plus/z).
 
 _ = plus/s (plus/s plus/z).
 
-%{! #
-# Example 2: Call-by-name lambda calculus
+%{! ## Example 2: Call-by-name lambda calculus
 
 We can also use the ``%name`` declaration to define the default name for bound variables. !}%
     
@@ -72,8 +70,7 @@ _ = (step/app (step/app step/appabs)).
 
 _ = (step/app (step/app step/appabs)).
 
-%{! #
-# See also
+%{! ## See also
 * \{\{guide|chapter=3|section=5|title=Name preferences\}\}
 
 \{\{keyword|key=name\}\} !}%

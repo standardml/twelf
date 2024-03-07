@@ -1726,12 +1726,9 @@ expand_unique : expand A R M
 %worlds (rtm_block) (expand_unique _ _ _).
 %total D (expand_unique _ D _).
 
-%{! #
-# External language: syntax and judgements
+%{! ## External language: syntax and judgements
 
-#
-#
-# Syntax
+### Syntax
 
 The external language syntax is a copy of the internal language, where we additionally include canonincal terms ``M`` into atomic terms ``R``.  To preserve the modes of the typing judgements, these canonical terms are annotated with the type that they should be checked against. !}%
     
@@ -1752,9 +1749,7 @@ el_pair : el_mtm -> el_mtm -> el_mtm.
 
 %{! Modulo the placement of type annotations, this grammar lets you write any term that you can write without the syntactic stratification.  
 
-#
-#
-# Typing judgements
+### Typing judgements
 
 The typing judgements for the external language extand the judgements for canonical forms with a rule ``synth_annot`` for synthesizing the type of an annotated term.  Additionally, the rules do not force terms to be η-long. !}%
     
@@ -1799,9 +1794,7 @@ check_pair : check (el_pair M1 M2) (prod A1 A2)
 
 %{! It is possible to show that any well-typed term in a standard presentation of the λ-calculus can be translated into a term in this syntax that is well-typed by these rules.  However, we have not formulated this step here, choosing instead to take these rules as the definition of the external language.  
 
-#
-#
-# Elaboration
+### Elaboration
 
 We now define elaboration.  We define three mutually recursive elaboration judgements, one for checked terms, and two for synthesizing terms.  The two judgements for synthesizing terms differ in whether the elaboration of the synthesizing term is an atomic term or a canonical term. !}%
     
@@ -1870,12 +1863,9 @@ elab_r_to_m_snd : elab_r_to_m (el_snd ER) M2 A2
 
 %{! The inductive structure of the elaboration judgements is similar to the structure of hereditary substitution.  Elaboration uses hereditary substitution in the key rule ``elab_r_to_m_app`` to compute the canonical result of a function application.  Elaboration also uses expansion to expand atomic terms into canonical ones.
 
-#
-# External Language: Metatheory
+## External Language: Metatheory
 
-#
-#
-# Static Correctness of Elaboration
+### Static Correctness of Elaboration
 
 First, we prove that the elaboration of a well-typed term is well-typed. !}%
     
@@ -2017,9 +2007,7 @@ elab_r2m_reg : elab_r_to_m ER M A
 
 %{! The proof is a straightforward induction, using ``hsubst_m_exists`` and ``expand_exists``.  Because these two lemmas _output_ a hereditary substitution or expansion, along with the typing derivation for the result of the operation, we use uniqueness here to show well-typedness of the outputs of the hereditary substitution and expansion derivations given by elaboration.  In retrospect, we should have factored this reasoning into separate lemmas that are like ``hsubst_m_exists`` and ``expand_exists`` but take the the hereditary substitution or expansion as an input.
 
-#
-#
-# Existence of elaboration
+### Existence of elaboration
 
 We require one addtional [respects lemma](/wiki/respects-lemma/). !}%
     

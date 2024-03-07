@@ -3,8 +3,7 @@
 %{! __NOTOC__
 
 
-#
-# Ongoing to-do items
+## Ongoing to-do items
 
 \{| border="1" cellpadding="5" cellspacing="0"
 |-
@@ -22,8 +21,7 @@
 |-
 |\}
 
-#
-# Active to-do items
+## Active to-do items
 
 \{| border="1" cellpadding="5" cellspacing="0"
 |-
@@ -53,8 +51,7 @@
 |-
 |\}
 
-#
-# Wish-list items
+## Wish-list items
 
 Feel free to adopt a topic and leave the topic here if you'd like to work on it but may not have time for a bit. If you're about to start working on the project, move it to the Active items section.
 
@@ -127,8 +124,7 @@ Feel free to adopt a topic and leave the topic here if you'd like to work on it 
 
 |\}
 
-#
-# Completed items
+## Completed items
 
 \{| border="1" cellpadding="5" cellspacing="0"
 |-

@@ -1,7 +1,6 @@
 %%! title: "Summer school 2008:Exercises 3"
 
-%{! #
-# Polymorphic MinML [Summer school 2008:Type safety for polymorphic MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-polymorphic-minml-intrinsic-encoding/)
+%{! ## Polymorphic MinML [Summer school 2008:Type safety for polymorphic MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-polymorphic-minml-intrinsic-encoding/)
 
 Add explicit polymorphism to MinML and prove type safety:
 
@@ -13,8 +12,7 @@ You can start from either encoding:
 * [Summer school 2008:Type safety for MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-intrinsic-encoding/) will be easier, because it takes full advantage of dependent types.
 * [Summer school 2008:Type safety for MinML (extrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-extrinsic-encoding/) is closer to what people usually write on paper.
 
-#
-# Monadic Effects [Summer school 2008:Type safety for MinML with monadic effects](/wiki/summer-school-2008-type-safety-for-minml-with-monadic-effects/)
+## Monadic Effects [Summer school 2008:Type safety for MinML with monadic effects](/wiki/summer-school-2008-type-safety-for-minml-with-monadic-effects/)
 
 Add monadically encapsulated effects (i.e., an ``IO`` monad) to MinML, following [http://www.cs.cmu.edu/~rwh/plbook/book.pdf PFPL Chapter 39].  
 
@@ -24,8 +22,7 @@ If you're feeling ambitious, add the following specific effects [Summer school 2
 
 These primitives are simpler than full mutable references because their dynamic semantics can be given as a labeled transition system with labels ``read n`` and ``write n``---you do not need a store as part of the judgement form. 
 
-#
-# Determinacy of Evaluation
+## Determinacy of Evaluation
 
 Prove that the dynamic semantics of MinML are deterministic (every expression steps to at most one other expression).  Hint: you will need to use [equality](/wiki/equality/) to state the theorem.  See the discussion of [uniqueness lemma](/wiki/uniqueness-lemma/)s for a proof of determinacy for the simply-typed λ-calculus. !}%
 

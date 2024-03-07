@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial/cps-truefalse"
 
-%{! #
-# CPS Conversion !}%
+%{! ## CPS Conversion !}%
     
 tp : type.
 o  : tp.

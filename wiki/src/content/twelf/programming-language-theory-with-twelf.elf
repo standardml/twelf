@@ -1,7 +1,6 @@
 %%! title: "Programming language theory with Twelf"
 
-%{! #
-# Preface
+%{! ## Preface
 
 The study of programming languages generally proceeds in two parallel directions.  In one direction,
 students are introduced to several specific programming languages representing different
@@ -46,8 +45,7 @@ case of TAPL, we will be making use of some notes of Benjamin Pierce for his cou
 [http://www.seas.upenn.edu/~cis500/cis500-f07/schedule.html CIS 500], which uses the
 [http://coq.inria.fr Coq system] where we have used Twelf.
 
-#
-# Table of Contents
+## Table of Contents
 
 Part 1:  [[Introduction to Twelf]]
 - [First-order encodings](/wiki/first-order-encodings/)

@@ -1,7 +1,6 @@
 %%! title: "Talk:Incremental metatheorem development"
 
-%{! #
-# Bottom-up vs. Top-down
+%{! ## Bottom-up vs. Top-down
 
 I'm not sure if the motivation for using %trustme to maintain a bottom-up development style is completely accurate here. Without %trustme, proofs must be done in a bottom-up way. That's just how math is built up. In practice, I've seen two modes of use of %trustme. The first is to work bottom-up until you hit something that will be pretty time-consuming/hard/impossible to do, and then you %trustme that particular lemma so you can keep working bottom-up. The other, which I've seen used by a particular Twelf master who happens to have an office right next to a stairwell in a corner on the 8th floor of Wean, is to %trustme a lot of boring/uninteresting lemmas which you are pretty sure are true, and then focus on the actual hard proof, and then fill in the boring holes at some point. The second strategy is very much a top-down approach.
 --[User:DanielKLee](/wiki/user-danielklee/) 09:19, 22 September 2006 (MST)

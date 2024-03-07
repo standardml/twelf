@@ -177,7 +177,7 @@ theorem is made up of four mutually inductive theorems.
 * ``hsubst_n`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]M``.
 * ``hsubst_r`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]R`` where ``R`` has atomic type. It is basically an [output factoring](/wiki/output-factoring/) lemma that dispatches to ``hsubst_rr`` and ``hsubst_rn``.
 * ``hsubst_rr`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]R`` where the variable ``x`` is not the root of ``R``.
-* ``hsubst_rn`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]R`` where the variable ``x`` **is** the root of ``R``. This means that if we substitute ``M&lt;sub&gt;0&lt;/sub&gt;`` for x and then start reducing the use ``R``, we will get back a verification ``N``. Luckily, the type of ``N`` is known ahead of time, and so we can use this to know something about the shape of ``N``. This case makes critical use of a ``[%reduces](/wiki/percent-reduces/)`` declaration, and is also the only case where the type ``A`` is different in a recursive call. !}%
+* ``hsubst_rn`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]R`` where the variable ``x`` **is** the root of ``R``. This means that if we substitute ``M&lt;sub&gt;0&lt;/sub&gt;`` for x and then start reducing the use ``R``, we will get back a verification ``N``. Luckily, the type of ``N`` is known ahead of time, and so we can use this to know something about the shape of ``N``. This case makes critical use of a [``%reduces``](/wiki/percent-reduces/) declaration, and is also the only case where the type ``A`` is different in a recursive call. !}%
 
 hsubst_n : {A}{M₀ : verif A}{M : hyp A -> verif B} verif B -> type.
 hsubst_r : {A}{M₀ : verif A}{R : hyp A -> use (a Q)} jf_or_rm R -> verif (a Q) -> type.
@@ -229,7 +229,7 @@ hsubst_rn: {A}{B}{M₀ : verif A}{R : hyp A -> use B} reduce_me R -> verif B -> 
 
 %{! A critical part of proving termination is showing that, during the hereditary substitution process, the second argument is no larger than the first - this is why
 we are allowed to make the recursive call ``hsubst_n B&lt;sub&gt;1&lt;/sub&gt; M' N (N': verif B&lt;sub&gt;2&lt;/sub&gt;)`` in the ``&sup;E`` case of ``hsubst_rn``: we know ``A`` is no larger than ``B&lt;sub&gt;1&lt;/sub&gt; &sup; B&lt;sub&gt;2&lt;/sub&gt;``, and therefore ``B&lt;sub&gt;2&lt;/sub&gt;`` is strictly smaller.
-This is established by the following ``[%reduces](/wiki/percent-reduces/)`` declaration. !}%
+This is established by the following [``%reduces``](/wiki/percent-reduces/) declaration. !}%
 
 %reduces B <= A (hsubst_rn A B _ _ _ _).
 

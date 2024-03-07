@@ -2,9 +2,7 @@
 
 %{! hi — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 00:43, 7 October 2006 (EDT)
 
-#
-#
-# Tom7's Twelf Mystery Du Jour
+### Tom7's Twelf Mystery Du Jour
 This is the thing that curiously didn't work: !}%
     
 o : type.
@@ -53,9 +51,7 @@ lemma : {A} pred A -> eq A k -> bool -> type.
 %worlds (bb) (lemma _ _ _ _).
 %total D (lemma _ D _ _).
 
-%{! #
-#
-# Modal encoding !}%
+%{! ### Modal encoding !}%
     
 % sorts
 sort : type. %name sort S.
@@ -138,9 +134,7 @@ xlpn/↓ : xlpp (↓ N) A (⇓ (∀ [f] (Z f) ⇒ A $ f))
 xlpn/↑ : xlnp (↑ P) F (⇓ (∀ [a] (Z a) ⇒ a $ F))
           <- {a} xlpp P a (Z a).
 
-%{! #
-#
-# Looking at the equality proof
+%{! ### Looking at the equality proof
 
 A simple test of looking at the equality proof and seeing that in each case it is refl: !}%
     
@@ -156,9 +150,7 @@ look-at-eq : {A : o -> o} eq (A k) k -> type.
 %{! Does this show that you can do any decomposition you'd want to do?
 [User:Drl](/wiki/user-drl/) 18 October 2007
 
-#
-#
-# A Copy Function !}%
+### A Copy Function !}%
     
 o : type.
 eq : o -> o -> type.

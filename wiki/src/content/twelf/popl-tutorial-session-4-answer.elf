@@ -2,12 +2,9 @@
 
 %{! 
 
-#
-# Session 4: Type Preservation Answer
+## Session 4: Type Preservation Answer
 
-#
-#
-# Syntax
+### Syntax
 
  !}%
 
@@ -32,9 +29,7 @@ ifz	: exp -> exp -> (exp -> exp) -> exp.
 
 %{! 
 
-#
-#
-# Static Semantics
+### Static Semantics
 
  !}%
 
@@ -66,9 +61,7 @@ of/ifz		: of (ifz E E1 ([x] E2 x)) T
 
 %{! 
 
-#
-#
-# Dynamic Semantics
+### Dynamic Semantics
 
  !}%
 
@@ -112,9 +105,7 @@ step/ifz/s	: step (ifz (s E) E1 ([x] E2 x)) (E2 E)
 
 %{! 
 
-#
-#
-# Preservation
+### Preservation
 
  !}%
 

@@ -4,8 +4,7 @@
 
 Type safety for MinML: call-by-value, with recursive functions, in extrinsic form, with exceptions
 
-#
-# Syntax
+## Syntax
 
 Types:
 
@@ -32,8 +31,7 @@ handle : exp -> exp -> exp.
 
 %{! 
 
-#
-# Static semantics
+## Static semantics
 
 A judgement picking out the well-typed terms:
 
@@ -67,8 +65,7 @@ of/handle
 
 %{! 
 
-#
-# Dynamic semantics
+## Dynamic semantics
 
  !}%
 
@@ -140,8 +137,7 @@ step/handle/body-v
 
 %{! 
 
-#
-# Preservation
+## Preservation
 
 With this encoding, we have to prove preservation explicitly, as the
 type of ``step`` doesn't guarantee it.
@@ -217,8 +213,7 @@ pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
 
 %{! 
 
-#
-# Progress
+## Progress
 
  !}%
 
@@ -228,9 +223,7 @@ vrs/step : val-or-raises-or-step E <- step E _.
 vrs/raises : val-or-raises-or-step E <- raises E. 
 %{! 
 
-#
-#
-# [Output factoring](/wiki/output-factoring/)
+### [Output factoring](/wiki/output-factoring/)
 
  !}%
 
@@ -328,9 +321,7 @@ prog/handle
    
 %{! 
 
-#
-#
-# Main theorem
+### Main theorem
 
  !}%
 

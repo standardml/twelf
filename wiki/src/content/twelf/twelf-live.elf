@@ -6,22 +6,17 @@ http://twelf.plparty.org/live/
 
 Feel free to develop bits of Twelf code in this manner. If you plan on doing serious development with Twelf, you will probably want to eventually [download](/wiki/download/) Twelf so you can develop your Twelf code in a more private and configurable environment.
 
-#
-# Using Twelf Live
+## Using Twelf Live
 
-#
-#
-# Regular view
+### Regular view
 
 The interface for Twelf Live is fairly simple; text is entered into the "Input" window just as it would be entered into Emacs when using [Twelf with Emacs](/wiki/twelf-with-emacs/).  Hitting the "check" button causes the "Output" window to display the output of Twelf from reading the file - the screenshot below shows Twelf Live immediately after the "check" button is clicked.
 
 [[Image:TWELFLIVE-2.png]]
 
-#
-#
-# Incremental view
+### Incremental view
 
-It can be difficult, when there is a great deal of output, to see just the part that you are interested in. In this situation it is useful to use the incremental view, which is opened by clicking "open incremental view." In incremental view, Twelf will not display anything while checking the first input window (assuming there are no errors), but will display output normally while checking the second input window. This can be seen below, where Twelf only outputs the result of checking the ``[%query](/wiki/percent-query/)`` declaration.
+It can be difficult, when there is a great deal of output, to see just the part that you are interested in. In this situation it is useful to use the incremental view, which is opened by clicking "open incremental view." In incremental view, Twelf will not display anything while checking the first input window (assuming there are no errors), but will display output normally while checking the second input window. This can be seen below, where Twelf only outputs the result of checking the [``%query``](/wiki/percent-query/) declaration.
 
 [[Image:TWELFLIVE-3.png]] !}%
 

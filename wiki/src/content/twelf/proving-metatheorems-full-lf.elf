@@ -8,8 +8,7 @@
 
 In the previous section, we saw how dependently-typed LF can be used to represent object-language judgements. We now discuss dependently-typed LF in more detail.
 
-#
-# Definition of LF
+## Definition of LF
 
 Full LF has the following syntax:
 
@@ -45,14 +44,11 @@ This typing rule is how constants representing inference rules are specialized t
 
 The typing rule for family applications &lt;math&gt;\mathsf\{\}A \; M&lt;/math&gt; has a similar substitution into the result kind.
 
-#
-# Twelf conveniences
+## Twelf conveniences
 
 Twelf permits several syntactic conveniences for writing LF signatures.  The purpose of this list is to introduce you to these conveniences;  we will see examples of them later in this introduction or elsewhere on the wiki.
 
-#
-#
-# Definitions
+### Definitions
 
 In Twelf, you can define an LF constant for later use.  For example: !}%
     
@@ -83,9 +79,7 @@ even-4 : even (ss 2) = even-s 2 even-2.
 
 %{! Note that defined constants do not contribute any new inhabitants to the canonical forms of the given types.  
 
-#
-#
-# Non-canonical forms
+### Non-canonical forms
 
 Twelf permits non-canonical forms, which are treated as syntactic sugar for the associated canonical form.  Here are some examples:
 
@@ -93,9 +87,7 @@ Twelf permits non-canonical forms, which are treated as syntactic sugar for the 
 
 * [Eta-equivalence](/wiki/eta-equivalence/): the term ``s``, which has type ``nat -&gt; nat`` can be used instead of its eta-expansion ``[x] s x``.  We will discuss eta-equivalence more in the context of [Proving metatheorems:Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/)
 
-#
-#
-# Implicit arguments
+### Implicit arguments
 
 Writing out all of the parameters to a constant becomes tedious, so Twelf permits these parameters to be left implicit.  Specifically, if a variable starting with a lower-case letter is left unbound in a constant's type, Twelf reports an error.  If a variable beginning with an upper-case letter is left unbound, Twelf implicitly binds it in a ``\{N\}`` at the outside of the type.  For example, the following two ways of declaring the constant ``plus-s`` give it the same type: !}%
     
@@ -129,9 +121,7 @@ d2+1i = plus-s (plus-s plus-z).
 
 %{! The type of this term is ambiguous, but Twelf will attempt to use [unification](/wiki/unification/) to infer the most general possible type.
 
-#
-#
-# Backwards arrow
+### Backwards arrow
 
 Twelf permits a type ``A -&gt; B`` to be written ``B &lt;- A``.  This makes it easier to see the result of applying a constant to all of its arguments.  For example: !}%
     
@@ -144,9 +134,7 @@ plus-s : plus (s N1) N2 (s N3)
 
 The backwards-arrow also has implications on the logic programming operational semantics for LF, as we discuss below; the conclusion/premise terminology is consistent with the use of these words in logic programming as well.
 
-#
-#
-# Type and term inference
+### Type and term inference
 
 Twelf permits type annotations, which are written ``M:A``, on all terms.  Type annotations can be used for documentation.  Additionally, in some cases they are necessary to help guide type inference.  We can also use a type annotation to determine the type of an implicit parameter: !}%
     

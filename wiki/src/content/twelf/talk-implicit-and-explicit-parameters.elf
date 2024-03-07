@@ -1,20 +1,17 @@
 %%! title: "Talk:Implicit and explicit parameters"
 
-%{! #
-# Universal quantification
+%{! ## Universal quantification
 
 Is the implication supposed to be that only implicit parameters are universally quantified? In the type theory, both are exactly the same: Πs. I think this may be misleading. (Or is there some interpretation in logic programming that I'm missing?) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:35, 16 October 2006 (EDT)
 :: No, you're right - seems like the right way to say it is that this is two different ways to do universal quantification, in fact. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 11:26, 12 November 2006 (EST)
 
-#
-# This article or section needs a moral stand
+## This article or section needs a moral stand
 
 Is there a reason that this article doesn't say "don't use explicit parameters unless there is a good reason to; here are the only good reasons: \{termination, mode\}"? [User:Drl](/wiki/user-drl/) 20:29, 14 March 2007 (EDT)
 * Well, I think there are good stylistic reasons to use explicit parameters (much like it is sometimes good style to use explicit type annotations or explicit quantification in SML) which are hard to circumscribe. I'd rather describe it in terms of pros and cons. (And actually, I don't think [%mode](/wiki/percent-mode/) is even necessarily a good reason, since it is possible to give modes to implicit arguments.) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 21:43, 14 March 2007 (EDT)
 :* I would be inclined to agree, in that we should take "moral stands" where such are clear - don't start constants with capital letters, don't define an inductive notion of equality when what you mean is identity on LF terms. However, the article should probably say "we usually default to this style," which is what I tried to say. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 22:20, 14 March 2007 (EDT)
 
-#
-# Always prints out the parameters
+## Always prints out the parameters
 
 I don't think it's true that Twelf always prints out the implicit parameters. For example, I think that implicit parameters to parameters are not always shown? This is why sometimes you see a ``\{A:typ\}`` where ``A`` appears nowhere else. Does anyone understand the actual rules? (Jason?) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 17:01, 26 October 2007 (EDT)
 

@@ -8,8 +8,7 @@
 
 In the previous section, we saw how to ask Twelf to verify totality assertions, which are a particular form of statement one can make about a deductive system.  However, not all that many metatheorems are totality assertions about the judgements of an object language.  Moreover, even if a judgement does in fact satisfy a total assertion, the judgement often will not be written in the particular form that allows Twelf to automatically check mode, worlds, termination, and coverage.  So why are totality assertions so important?
 
-#
-# How to prove metatheorems
+## How to prove metatheorems
 
 The reason is that we can use Twelf's ability to _prove_ totality assertions to _check_ proofs of more general metatheorems.  Let's illustrate this with an example.  Say we want to prove that the sum of two even numbers is even.  More precisely, let's prove the following statement:
 
@@ -27,13 +26,10 @@ to an LF term of type ``even N3``.
 
 The key to the way we use Twelf to prove general metatheorems is that _we can represent this transformation within LF itself_.  Specifically, we represent the theorem statement as a type family, which defines a relation on the subjects of the theorem.  Then, we represent the proof as LF constants inhabiting that type family.  A proof is correct iff it defines a total relation (because the original metatheorem is implied by the totality assertion for the relation).  So we deploy Twelf's ability to verify totality assertions in order to check the proof of the metatheorem.  Thus, you already have all the tools you need to prove metatheorems with Twelf; you just need to use them in the right way.  
 
-#
-# Our first metatheorem
+## Our first metatheorem
 This will all be clearer once we do an example.
 
-#
-#
-# Representing the theorem statement
+### Representing the theorem statement
 
 We represent the above theorem statement in Twelf as a type family relating the appropriate derivations: !}%
     
@@ -51,16 +47,11 @@ The mode declaration for this type family makes the "for all" theorem subjects i
 
 The above metatheorem statement is clearly a corollary of this totality assertion.
 
-#
-#
-# Representing the proof
+### Representing the proof
 
 Next, we transcribe the informal proof of the metatheorem as LF constants of the appropriate types.  First, let's review the informal proof.
 
-#
-#
-#
-# Informal proof
+#### Informal proof
 The proof is by induction over the derivation of &lt;math&gt;\mathsf\{even\}(N_1)&lt;/math&gt;.  
 
 Case for &lt;math&gt;\overline\{\mathsf\{even\}(\mathsf\{zero\})\}&lt;/math&gt;:
@@ -77,10 +68,7 @@ In this case, &lt;math&gt;\texttt\{\}N_1&lt;/math&gt; is &lt;math&gt;\mathsf\{su
 
 to finish the case.
 
-#
-#
-#
-# LF Representation
+#### LF Representation
 
 We represent this informal proof as LF constants inhabiting the type family ``sum-evens``. We use the implicit-arguments versions of the definitions from [Proving_metatheorems:Full_LF](/wiki/proving-metatheorems-full-lf/).  There will be one constant for each case of the informal proof.  The constant corresponding to the first case is: !}%
     
@@ -122,9 +110,7 @@ Now that we have represented the proof, all that's left is to ask Twelf to verif
 * **Termination:** In the premise of the constant ``even-s``, the term ``DevenN1'`` is a subterm of the input derivation, so the termination check succeeds.  In this case, it happens that the term ``Dplus`` is also smaller, so we could have checked termination on this argument instead.  
 * **Input Coverage:** Because Twelf separates termination checking from coverage checking, the constants defining a type family may case-analyze more arguments than just the induction one.  This subsidiary case-analyses correspond to inversion steps in an informal proof.  If an inversion is not justified (e.g., if in ``sez`` there were another way to derive ``plus z N2 N3`` besides ``plus-z``), Twelf reports an input coverage error—not all possible input terms are covered.
 
-#
-#
-# Summary
+### Summary
 
 Here's the entire Twelf proof: !}%
     
@@ -169,8 +155,7 @@ ses : sum-evens
 
 %{! Note that the type annotations are only for readability of the proof; they are not necessary for Twelf to type-check the constants.
 
-#
-# What metatheorems can we prove this way?
+## What metatheorems can we prove this way?
 
 The metatheorems that can be proved in Twelf have the form
 

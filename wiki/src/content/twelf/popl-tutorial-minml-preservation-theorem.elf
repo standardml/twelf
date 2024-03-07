@@ -9,8 +9,7 @@ There is one task:
 
 The solution is [POPL Tutorial/MinML Preservation Theorem Answer](/wiki/popl-tutorial-minml-preservation-theorem-solution/).
 
-#
-# Syntax
+## Syntax
 
 Types:
 
@@ -35,8 +34,7 @@ ifz : exp -> exp -> (exp -> exp) -> exp.
 
 %{! 
 
-#
-# Static semantics
+## Static semantics
 
  !}%
 
@@ -58,8 +56,7 @@ of/ifz : of (ifz E E1 ([x] E2 x)) T
 
 %{! 
 
-#
-# Dynamic semantics
+## Dynamic semantics
 
  !}%
 
@@ -90,13 +87,9 @@ step/ifz/s : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
 
 %{! 
 
-#
-# Preservation
+## Preservation
 
-#
-#
-#
-# TASK 1: Fill in missing cases
+#### TASK 1: Fill in missing cases
 
  !}%
 

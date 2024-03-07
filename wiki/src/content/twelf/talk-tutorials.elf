@@ -1,7 +1,6 @@
 %%! title: "Talk:Tutorials"
 
-%{! #
-# Tutorials that need written
+%{! ## Tutorials that need written
 
 * Double negation translation - _Jcreed_
 * Classical logic - _Will_
@@ -12,14 +11,12 @@
 * from svn repository: ipc-taut?, systemf-bidi?
 * dklee's as-pattern trick
 
-#
-# Output factoring/freeness
+## Output factoring/freeness
 
 Output factoring/freeness _are_ similar problems - output factoring is the way you solve the fact that Twelf thinks you have a problem with output freeness, to put it simply. Do you think it's more or less confusing to have the two different tutorials and just have them perhaps refer to each other? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 01:05, 12 October 2006 (EDT)
 * Factoring is more generally a problem with output _coverage_. Output freeness is part of output coverage, but we needed to do factoring even with the unsound Twelf before the freeness check was introduced. Freeness is not documented anywhere, which is why it's important to have a page about it on the wiki. The articles should definitely be separate, IMO. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 08:34, 12 October 2006 (EDT)
 
-#
-# order?
+## order?
 
 What does everyone think about moving the proof techniques and illustrative examples up and the troubleshooting down?  Right now, when you go to this page it says to me "Twelf is hard to use; here's how you work around the trouble."
 We can compensate by outlining a path through the tutorials.
@@ -27,8 +24,7 @@ We can compensate by outlining a path through the tutorials.
 
 : Agreed. Also, we can factor things out of this page whenever it gets too large, and "troubleshooting" is a good canidate for factoring whenever that point comes. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 10:00, 24 October 2006 (EDT)
 
-#
-# What is the difference between troubleshooting and proof techniques?
+## What is the difference between troubleshooting and proof techniques?
 
 I don't understand the difference between troubleshooting and proof techniques.  At what point does "a way to fix a common problem" become a proof technique?  If we want to make any distinction at all, I propose that there should be an "Understanding error messages" section that contains articles about what went wrong, and a "proof techniques" section that tells you how to fix it (if the fix requires enough of an idiom to warrant a separate page).  In particular, I moved output factoring to the "techniques" rather than "troubleshooting", and then either someone moved it back or I screwed up the edit and forgot to delete it.  But I don't think it should be in both places, since this page should read like a table of contents, not like a list of tags.  Thoughts? [User:Drl](/wiki/user-drl/) 16:39, 13 March 2007 (EDT)
 
@@ -38,8 +34,7 @@ I don't understand the difference between troubleshooting and proof techniques. 
 
 ::: So collapse troubleshooting into proof techniques, or just some of the troubleshooting things into proof techniques (like [output factoring](/wiki/output-factoring/))? Also, I'd like to think about where we put other extended introductions (Computation and Deduction, Hints on Proving Theorems (appel), Boyland's tutorial, etc) - on this page or in a less-privlidged section in the "Introductions" page (my mind reacts negatively to all the whitespace on the introductions page, though I know this is a false reaction). — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 00:47, 15 March 2007 (EDT)
 
-#
-# the problem with the organization of this page
+## the problem with the organization of this page
 
 The problem with the organization of this page is that there are multiple ways of indexing this data: what we prove, and how we prove it.  Right now, the breakdown seems to be
 * proof techniques: here's **how** you prove this in twelf

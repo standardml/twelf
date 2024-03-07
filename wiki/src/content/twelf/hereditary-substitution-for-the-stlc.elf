@@ -28,12 +28,9 @@ The canonical forms language is described on this page; the external language an
 
 **Experience report ([User:Drl](/wiki/user-drl/)):** _This tutorial might seem like it takes a lot of Twelf code.  At the time I wrote this code, I was an experienced Twelf user and familiar with the basic ideas of the canonical forms approach.  However, I hadn't gone through the details of these proofs before (that's why I wrote the code).  That said, it took no more than a work-day to work out and formalize the metatheory the canonical forms approach (everything on this page), and no more than another day to do the elaboration on the next page._
 
-#
-# Canonical forms language: syntax and judgements
+## Canonical forms language: syntax and judgements
 
-#
-#
-# Syntax
+### Syntax
 
 We consider a calculus with function and pair types, as well as a single base type: !}%
     
@@ -64,9 +61,7 @@ pair : mtm -> mtm -> mtm.
 * Because variables are considered to be atomic terms, the body of a ``lam`` binds a variable of type ``rtm``.  This means that the substitution operation that we get "for free" from the encoding is only the substitution of an ``rtm`` for a variable; hereditary substitution defines the substitution of an  ``mtm`` for a variable.
 * The constant ``asm`` represents an injection from ``rtm`` into ``mtm``.
 
-#
-#
-# Typing judgements !}%
+### Typing judgements !}%
     
 atom : rtm -> tp -> type.
 %mode atom +X1 -X2.
@@ -109,9 +104,7 @@ canon_pair : canon (pair M1 M2) (prod A1 A2)
 
 These judgements are manifestly terminating, which we verify with the ``%terminates``.
 
-#
-#
-# Hereditary substitution
+### Hereditary substitution
 
 We define three hereditary substitution judgements:
 * ``hsubst_m M0 A0 ([x0] M) M'``: compute the canonical form ``M'`` of substituting ``M0`` for ``x0`` in ``M``.  ``A0`` should be the type of ``M0``; it is used to show that hereditary substitution is decidable.  
@@ -199,9 +192,7 @@ Other than that, the judgements ``hsubst_m`` and ``hsubst_r`` are defined in the
 
 When processing the ``%terminates`` declaration, Twelf proves that it is decidable whether or not a hereditary substitution exists: the hereditary substitution judgements define a terminating logic program.  The auxiliary ``%reduces`` proves that the result type of ``hsubst_rr`` is always a subterm of the type of the term being substituted for. This is true because ``hsubst_rr`` only applies when the cut variable is the head of a sequence of eliminations, and applying one of these elimination forms always decreases the type of the term.  With this reduces information, we check that the hereditary substitution judgements terminate by mutual lexicographic induction—mutual because we show termination for all three judgements simultaneously, and lexicographic because, in each case, the termination metric is first the type of the substituted term, and then the term being substituted into.  This metric is expressed in Twelf by writing ``\{(A0 A0' A0_) (M R R')\}``.  The curly-braces mean lexicographic induction; the parentheses mean mutual induction.
 
-#
-#
-# Expansion
+### Expansion
 
 Expansion shows that we can turn an atomic term of any type into a canonical term of that type.  It is a total judgement defined by induction on the structure of the type: !}%
     
@@ -223,17 +214,11 @@ expand_prod : expand (prod A1 A2) R (pair M1 M2)
 
 %{! In the ``expand_arrow`` case, we first expand a variable at the argument type, and then we expand the application at the result type.
 
-#
-# Canonical forms language: Metatheory
+## Canonical forms language: Metatheory
 
-#
-#
-# Hereditary substitution
+### Hereditary substitution
 
-#
-#
-#
-# Existence of hereditary substitution
+#### Existence of hereditary substitution
 
 Even though we annotated ``hsubst_rr`` with a [%reduces](/wiki/percent-reduces/) above, we will need an [effectiveness lemma](/wiki/effectiveness-lemma/) version of this [%reduces](/wiki/percent-reduces/) to use that fact in the proof below.
 
@@ -458,10 +443,7 @@ hsubst_m_exists_app : {A2}
 
 %{! As you can see, the proof is a straightforward induction, where in each case we use the appropriate factoring lemma.  In the final case of the application factoring lemma, we use the ``hsubst_rr_size`` lemma for its "side effect" of justifying the recursive call back to ``hsubst_m_exists``.  The mutual lexicographic termination metric is the same as before.
 
-#
-#
-#
-# Uniqueness of hereditary substitution
+#### Uniqueness of hereditary substitution
 
 As usual for a [uniqueness lemma](/wiki/uniqueness-lemma/), we must begin by defining the appropriate identity types: !}%
     
@@ -928,14 +910,9 @@ hsubst_rr_unique : hsubst_rr M2 A2 R M' A'
 (hsubst_rr_unique D3 _ _ _)
 (hsubst_m_unique D1 _ _).
 
-%{! #
-#
-# Expansion
+%{! ### Expansion
 
-#
-#
-#
-# Existence of expansion
+#### Existence of expansion
 
 This lemma is in part an [effectiveness lemma](/wiki/effectiveness-lemma/) for expansion, but it also shows that expansion preserves types. !}%
     
@@ -975,10 +952,7 @@ expand_exists : {A}
 %worlds (atom_block) (expand_exists _ _ _ _). 
 %total D (expand_exists D _ _ _).
 
-%{! #
-#
-#
-# Uniqueness of expansion
+%{! #### Uniqueness of expansion
 
 Uniqueness is proved by a straightforward induction using some identity lemmas: !}%
     
@@ -1022,8 +996,7 @@ expand_unique : expand A R M
 %worlds (rtm_block) (expand_unique _ _ _).
 %total D (expand_unique _ D _).
 
-%{! #
-# Elaboration
+%{! ## Elaboration
 
 In [Hereditary substitution for the STLC (part 2)](/wiki/hereditary-substitution-for-the-stlc-part-2/), we discuss elaboration.  
 

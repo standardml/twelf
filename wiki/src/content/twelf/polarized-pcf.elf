@@ -79,9 +79,7 @@ let  : exp A+ -> (val+ A+ -> exp C+) -> exp C+.
 
 %{! 
 
-#
-#
-# Step
+### Step
 
 Note that all rules are axioms.
 
@@ -124,8 +122,7 @@ step/cconv-tail  : step (cut- V- (comp- (tail K-) E))
 
 %{! 
 
-#
-# Progress
+## Progress
 
  !}%
 

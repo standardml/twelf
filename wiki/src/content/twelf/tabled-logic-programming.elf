@@ -4,7 +4,7 @@
 The operational semantics of Twelf are similar to those of Prolog, 
 a style known as _backward chaining_ or _goal-directed_ proof 
 search. **Tabled logic programming**, which uses Twelf's 
-``[%tabled](/wiki/percent-tabled/)`` and ``[%querytabled](/wiki/percent-querytabled/)`` directives to 
+[``%tabled``](/wiki/percent-tabled/) and [``%querytabled``](/wiki/percent-querytabled/) directives to 
 allow Twelf to prove theorems that might be time-consuming or 
 impossible to prove otherwise. The tabled logic programming 
 capabilities are a 
@@ -69,7 +69,7 @@ logic programming, it is difficult if not impossible to avoid
 non-terminating behavior when writing a judgment defining a 
 transitive-symmetric closure like ``path``. However, by 
 adding the directive ``[%tabled](/wiki/percent-tabled/) path``, we will be able 
-to use ``[%querytabled](/wiki/percent-querytabled/)`` directives to cause each instance 
+to use [``%querytabled``](/wiki/percent-querytabled/) directives to cause each instance 
 of ``path A B`` to be derived at most once during the course 
 of a search: the result is a query that terminates rapidly, 
 instead of not at all.
@@ -85,8 +85,8 @@ path/trans : path A B -> path B C -> path A C.
 %%## Searching the graph
 
 %{! 
-It is crucial that we use ``[%querytabled](/wiki/percent-querytabled/)`` rather than 
-``[%query](/wiki/percent-query/)`` in our queries if we wish for them to terminate. 
+It is crucial that we use [``%querytabled``](/wiki/percent-querytabled/) rather than 
+[``%query``](/wiki/percent-query/) in our queries if we wish for them to terminate. 
 Even though we ask Twelf for as many solutions as it can find, the 
 tabled proof search ensures that we can only find one proof of any 
 given path, and the path that is found is by not necessarily the shortest.

@@ -4,12 +4,11 @@
 
 The goal of this article is to teach you how to prove uniqueness lemmas in Twelf.  The only subtlety is that the statement of a uniqueness lemma requires an auxiliary definition of a judgement defining equality at the relevant types.  
 
-In this article, we refer to the "given" subjects of the judgement as _inputs_ and those subjects that are determined uniquely by the givens as _outputs_.  However, these inputs and outputs do not need to correspond with the ``[%mode](/wiki/percent-mode/)`` of the judgement: it is meaningful to prove a uniqueness lemma for a judgement that has no mode specified in Twelf.  Note that a judgement may satisfy a uniqueness lemma but not define a function: uniqueness says that the outputs are uniquely determined if they exist at all.  To know that a judgement defines a function, it is necessary to prove a corresponding [effectiveness lemma](/wiki/effectiveness-lemma/) establishing that some instance of the judgement holds for each input.  
+In this article, we refer to the "given" subjects of the judgement as _inputs_ and those subjects that are determined uniquely by the givens as _outputs_.  However, these inputs and outputs do not need to correspond with the [``%mode``](/wiki/percent-mode/) of the judgement: it is meaningful to prove a uniqueness lemma for a judgement that has no mode specified in Twelf.  Note that a judgement may satisfy a uniqueness lemma but not define a function: uniqueness says that the outputs are uniquely determined if they exist at all.  To know that a judgement defines a function, it is necessary to prove a corresponding [effectiveness lemma](/wiki/effectiveness-lemma/) establishing that some instance of the judgement holds for each input.  
 
-Sometimes a uniqueness lemma can be proven trivially by leveraging a ``[%unique](/wiki/percent-unique/)`` declaration. 
+Sometimes a uniqueness lemma can be proven trivially by leveraging a [``%unique``](/wiki/percent-unique/) declaration. 
 
-#
-# Example: Flipping bits
+## Example: Flipping bits
 
 The following is a simple example of a uniqueness lemma. First we define bits and a simple relation ``bit-flip`` that negates a bit. !}%
     
@@ -51,9 +50,7 @@ bit-flip-unique : bit-flip B1 B2
 %worlds () (bit-flip-unique _ _ _).
 %total {} (bit-flip-unique _ _ _).
 
-%{! #
-#
-# Alternate formulation
+%{! ### Alternate formulation
 
 Uniqueness can also be expressed in a less-direct but sometimes more-convenient way that is nonetheless logically equivalent to the previous theorem.
 In this theorem statement, we assume derivations whose _inputs_ are related by an identity relation, and show that the outputs are identical as well.  This theorem statement applies when we have evidence that the inputs are identical but the two derivations of the judgement in question have different types.  The proof is no more complicated than the previous formulation, because when we derive the precondition ``id-bit B1 B1'`` using ``id-bit/refl`` (the only rule we could use to derive that fact), ``B1`` and ``B1'`` are forced to be identical objects, just as they were in the previous proof. !}%
@@ -106,8 +103,7 @@ bit-flip-unique-alt : id-bit B1 B1'
 
 %{! However, this alternate formulation is equivalent to the above uniqueness lemma.  It is easy to see that this lemma implies the above, as we can always call this lemma with ``id-bit/refl``.  To prove the other direction, we can compose the above uniqueness lemma with a [respects lemma](/wiki/respects-lemma/) showing that ``bit-flip`` respects equality.  `` import=alt&gt;Here is an example`` of proving ``bit-flip-unique-alt`` using a uniqueness lemma and a respects lemma (`` import=alt check=true&gt;here is Twelf's output``).  Because the [respects lemma](/wiki/respects-lemma/) will often be necessary for other reasons, it is usually preferable to prove it and the above uniqueness lemma, rather than the composed version presented here.
 
-#
-# Bigger example: determinism of evaluation
+## Bigger example: determinism of evaluation
 
 As a slightly more-involved example of a uniqueness lemma, we can prove that the operational semantics of the simply typed λ-calculus are deterministic:
 

@@ -1,12 +1,10 @@
 %%! title: "Talk:Substitution lemma"
 
-%{! #
-# Suggestions for points that require clarification
+%{! ## Suggestions for points that require clarification
 
 Go wild. --[User:DanielKLee](/wiki/user-danielklee/) 21:07, 24 September 2006 (MST)
 
-#
-# exchange can be subtle
+## exchange can be subtle
 
 the current draft suggests that exchange is valid whenever a variable cannot occur in a subsequent type, but unfortunately this simple statement is not true in general.  the reason is that the well-formation of a subsequent type may depend on the preceding variable, even if the type itself does not involve that variable!  this would come up in situations where the equational theory of types is such as to permit deduction of equations from existence of variables of preceding types, eg x : False, y : Garbage wouldn't permit exchange if the formation of Garbage depended on knowing that x : False is a contradiction!
 
@@ -16,8 +14,7 @@ a related point is strengthening: it is NOT true in general that if a variable d
 
 : Point noted. Language modified. --[User:DanielKLee](/wiki/user-danielklee/) 21:36, 24 September 2006 (MST)
 
-#
-# on the use of catch-all cases
+## on the use of catch-all cases
 
 I want to pick a nit about the use of catch-all cases in definitions like substitution. They are no doubt convenient, since they obviate the need to introduce a base case for the new variable when recurring under a binder and save some of the associated complexity in the context blocks, but they are (IMHO) objectionable for at least two reasons, one minor and one more serious:
 

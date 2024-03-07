@@ -1,7 +1,6 @@
 %%! title: "Proving metatheorems with Twelf"
 
-%{! #
-# Is this introduction for you?
+%{! ## Is this introduction for you?
 
 The life story of a typical [deductive system](/wiki/object-logic/) goes something like this: One day, a programming language designer has an idea for a new programming language.  She writes down the language's [abstract syntax](/wiki/abstract-syntax/).  Then, she gives the syntax meaning by defining some [judgement](/wiki/judgment/)s for it, such as a type system or an operational semantics.  Next, she investigates the language's properties by proving some theorems.  Maybe she fiddles with the language some to make the desired theorems true; maybe the idea doesn't work at all and she goes on to something else.  Maybe she implements the language to try out some examples.  Eventually, if the idea works out, she writes up a paper about the language.  If it's a good idea, then she, or maybe someone who read the paper, will someday want to extend the language, or incorporate the idea into another language.
 
@@ -9,8 +8,7 @@ Twelf is a tool that assists people designing deductive systems: One day, a prog
 
 This introduction assumes that the first version of this story is somewhat familiar to you (if not, you should read a textbook such as [http://www.cis.upenn.edu/~bcpierce/tapl/ TAPL] or  [https://www.cs.cmu.edu/~rwh/pfpl/ PFPL]).  Here, you will learn the fundamentals of the Twelf version of the story.  This guide unveils Twelf in several layers.  The first layer uses a _very_ simple deductive system ([natural numbers](/wiki/natural-numbers/) with addition) to introduce the Twelf methodology.  The second layer tells the same story for a programming language with variable binding (the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/)), which is where Twelf really shines.  The third layer presents some more-interesting proofs and introduces one additional feature of Twelf, the ability to do proofs about open terms.
 
-#
-# Table of contents
+## Table of contents
 
 -First-order representations: The natural numbers 
 -# [Proving metatheorems: Representing the syntax of the natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/) 

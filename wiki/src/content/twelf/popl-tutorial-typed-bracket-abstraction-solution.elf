@@ -14,8 +14,7 @@ its reduct's translation.
 
 %{! 
 
-#
-# Syntax and static semantics
+## Syntax and static semantics
 
  !}%
 
@@ -69,8 +68,7 @@ We can use Twelf's [Abbrev_declaration](/wiki/abbrev-declaration/) and
 
 %{! 
 
-#
-# Dynamic semantics
+## Dynamic semantics
 
  !}%
 
@@ -167,8 +165,7 @@ cs-trans : cstep* N1 N2 -> cstep* N2 N3 -> cstep* N1 N3 -> type.
 
 %{! 
 
-#
-# Translation
+## Translation
 
  !}%
 
@@ -251,8 +248,7 @@ b-s : bracket ([x] capp (N1 x) (N2 x)) (capp (capp s N1') N2')
 
 %{! 
 
-#
-# Correctness of the translation
+## Correctness of the translation
 
  !}%
 

@@ -15,8 +15,7 @@ The optional arguments for &lt;nowiki&gt;``&gt;&lt;/nowiki&gt; tags are:
 
 The following document discusses the function of each of these tags.
 
-#
-# The ``(twelf)`` tag for syntax highlighting
+## The ``(twelf)`` tag for syntax highlighting
 
 The ``(twelf)`` tag itself is simple enough, it works much like an HTML &lt;nowiki&gt;&lt;pre&gt;&lt;/nowiki&gt; environment with [[Project:Syntax Highlighting|syntax highlighting]].
 
@@ -36,8 +35,7 @@ exp : type.
 
 abs : (exp -> exp) -> exp.
 
-%{! #
-# The ``(twelf)`` and ````&gt;`` tags
+%{! ## The ``(twelf)`` and ````&gt;`` tags
 
 Behind the scenes, the content of every ``(twelf)`` tag is grouped together. So if you have a series of Twelf tags that are defining a single signature, like this (continuing from the example above): !}%
     
@@ -49,9 +47,7 @@ step : exp -> exp -> type.
 
 %{! then TwelfTag, at this point in the process, has code for ``exp``, ``abs``, ``app``, and ``step`` gathered in a group (this group is named (``"main"``), though it hasn't done anything with it yet. 
 
-#
-#
-# The ````&gt;`` tag
+### The ````&gt;`` tag
 
 You can link to a collection of all the code that has been presented so far by using ````&gt;`` tags in the same way you would use ``&lt;a href=...&gt;`` tags in normal HTML code.
 
@@ -59,9 +55,7 @@ As an example, ````&gt;OMG link!````, will appear like this: ``&gt;OMG link!``, 
 
 The filenames are just the MD5 hashes of the code which they contain; the [http://twelf.plparty.org/code code directory] contains all these stored files.
 
-#
-#
-# The ``check=true`` option
+### The ``check=true`` option
 
 We are not collecting code in the background just to link to it, we're creating code so we can check it in Twelf! If you use the twelf tag with the ``check=true`` option, Twelf will execute the collected segments in Twelf and link to the output.
 
@@ -89,9 +83,7 @@ step/appabs : step (app (abs [x] E x) E') (E E').
 
 You can use ```` check=true&gt;`` to link to the Twelf output of checking the most recent code instead of just linking to that code code - so ```` check=true&gt;See?```` just duplicates the link that was automatically entered in above. `` check=true&gt;See?``. This works even if you haven't set ``check=true`` in any of your ``(twelf)`` tags; you could just avoid using the ``check=true`` option in your code in favor of causing checks only with ```` check=true&gt;``.
 
-#
-#
-# The ``check=decl`` option
+### The ``check=decl`` option
 
 If you want to concentrate on the output of the last code fragment, for instance to examine a particular case of type reconstruction, you can use the ``check=decl`` option for the Twelf tag. In the background, TwelfTag loads the previous portions of the signature on chatter 0, and then returns to the default chatter 3 to run the current code snippet. It then does some simple manipulations on Twelf's response to remove things like useless ``%% OK %%`` notices, and then inlines the result.
 
@@ -107,9 +99,7 @@ test = step/app1(step/app2 step/appabs).
 
 test = step/app1(step/app2 step/appabs).
 
-%{! #
-#
-# The ``discard=true`` option
+%{! ### The ``discard=true`` option
 
 If you add ``(twelf discard=true)`` then it will syntax highlight but will not incorporate the segment into the collected code. This is important when you want to demonstrate mistake, because otherwise Twelf will get caught up on that mistake in the future. As a result, this option is frequently used with ``check=decl``.
 
@@ -129,9 +119,7 @@ step/appabs : step E1 E2 <- step E1 E2.
 
 step/appabs : step E1 E2 <- step E1 E2.
 
-%{! #
-#
-# The ``import=`` and ``export=`` options
+%{! ### The ``import=`` and ``export=`` options
 
 This is a tricky feature that allows you to run parallel segments of code on a single page. It should be used sparingly, as otherwise it can become extremely confusing to both readers and editors. Each ``(twelf)`` tag is associated with a value, ``import``, that defines where it gets its code _from_, and a value, ``export``, that defines where it binds the concatenation of the code the previous code and the new code within the tag. 
 
@@ -188,9 +176,7 @@ nat/s : nat -> nat.
 
 `` import="natverbose"&gt;See the verbose code``
 
-#
-#
-# The ``hidden=true`` option
+### The ``hidden=true`` option
 
 You can use the ``hidden=true`` option to insert Twelf into a page without having it appear to the reader. You can't use the
 ``check`` option in conjunction with this setting, but it is quite useful in conjunction with ``import`` and ``export``.

@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Evaluation contexts, intrinsically typed
+## Evaluation contexts, intrinsically typed
 
 Twelf verifies
 - Preservation 

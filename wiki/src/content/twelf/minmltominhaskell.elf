@@ -9,8 +9,7 @@ Uses third-order coverage checking.
 
 %{! 
 
-#
-# MiniHaskell
+## MiniHaskell
 
  !}%
 
@@ -46,8 +45,7 @@ print  : | lax C -> | lax C.
 
 %{! 
 
-#
-# MinML
+## MinML
 
  !}%
 
@@ -68,8 +66,7 @@ mprint : mtrue C -> mtrue C.
 
 %{! 
 
-#
-# Translation
+## Translation
 
  !}%
 

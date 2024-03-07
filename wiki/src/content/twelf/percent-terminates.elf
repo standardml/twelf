@@ -2,14 +2,13 @@
 
 %{! A **[%terminates](/wiki/percent-terminates/)** declaration provides checks that a program will either succeed or fail in a finite amount of time when given [ground](/wiki/ground/) inputs. 
 
-A ``[%total](/wiki/percent-total/)`` declaration uses the same syntax as a ``%terminates`` declaration. 
+A [``%total``](/wiki/percent-total/) declaration uses the same syntax as a ``%terminates`` declaration. 
 
-#
-# Termination checking in Twelf
+## Termination checking in Twelf
 
 Termination is in general an undecidable problem, and so Twelf uses a simple strategy of requiring the user to define some **termination ordering**, and then checking that every recursive subgoal makes that ordering smaller. 
 
-Twelf considers a term to be smaller than another term if it can inspect the two terms to see that the first is a strict subterm or if it follows from a ``[%reduces](/wiki/percent-reduces/)`` declaration that the first is smaller. Twelf also uses [mode](/wiki/percent-mode/) information to ensure that it is reasoning about [ground](/wiki/ground/) terms.
+Twelf considers a term to be smaller than another term if it can inspect the two terms to see that the first is a strict subterm or if it follows from a [``%reduces``](/wiki/percent-reduces/) declaration that the first is smaller. Twelf also uses [mode](/wiki/percent-mode/) information to ensure that it is reasoning about [ground](/wiki/ground/) terms.
 
 A term A is only considered to be smaller than B if A is a strict subterm of B. So, for instance, ``(s (s z))``, ``(s z)``, and ``z`` are all subterms of ``(f (s (s z)) (s z))``, but ``(f z z)`` is not. 
 
@@ -20,9 +19,7 @@ nat: type.
 z: nat.
 s: nat -> nat.
 
-%{! #
-#
-# Non-ordering
+%{! ### Non-ordering
 
 The simplest termination ordering says that no termination argument is needed, because there are no recursive calls! We can write such an ordering for ``triv``, which takes a number and can either return a number one greater or one less. !}%
     
@@ -38,9 +35,7 @@ triv/: triv N (s N).
 
 %terminates {} (triv _ _).
 
-%{! #
-#
-# Simple ordering
+%{! ### Simple ordering
 
 A simple ordering says that one term always gets smaller in a subgoal, even if the other ones get larger. The first argument to ``a`` always gets smaller in this example (even though the second may get bigger). We only need to be able to reason about the first argument, but we define both to be inputs. !}%
     
@@ -57,7 +52,7 @@ a1 : a (s N1) N
 
 %terminates N (a N _).
 
-%{! Alternatively, the second argument to ``b`` always gets smaller (even though the first may stay the same), and the termination declarations capture this information. The ``*A`` in the ``[%mode](/wiki/percent-mode/)`` declaration means that we do not care whether the first argument to ``b`` is an input or an output. 
+%{! Alternatively, the second argument to ``b`` always gets smaller (even though the first may stay the same), and the termination declarations capture this information. The ``*A`` in the [``%mode``](/wiki/percent-mode/) declaration means that we do not care whether the first argument to ``b`` is an input or an output. 
 
 Notice that because we already showed ``a`` to be terminating, we can use it as a subgoal to ``b`` as long as it is only called with ground terms. !}%
     
@@ -75,9 +70,7 @@ b1 : b N (s (s M))
 
 %terminates N (b _ N).
 
-%{! #
-#
-# Simultaneous ordering
+%{! ### Simultaneous ordering
 
 We can define a relation ``c`` that non-deterministically counts three numbers down to zero: !}%
     
@@ -98,9 +91,7 @@ c3 : c N1 N2 (s N3)
 
 %terminates [N1 N2 N3] (c N1 N2 N3).
 
-%{! #
-#
-# Lexicographic ordering
+%{! ### Lexicographic ordering
 
 Lexicographic orders generalize simultaneous orders - using a lexicographic ordering we can define ``d`` in a manner similar to ``c``, but we can allow the second and third numbers to count _up_ whenever the first number counts down, and allow the third number to count up whenever the second number counts down.  However, the first number must stay constant when the second counts down, and the first and second both must stay constant when the third counts down. !}%
     
@@ -121,9 +112,7 @@ d3 : d N1 N2 (s N3)
 
 %terminates {N1 N2 N3} (d N1 N2 N3).
 
-%{! #
-#
-# Lexicographic ordering II
+%{! ### Lexicographic ordering II
 
 Another example that is (slightly) less contrived arises with lists of natural numbers. If we want to directly represent the sum of a natural number ``N`` and a list ``L``, then we can define it as follows:
 
@@ -150,9 +139,7 @@ lss : listsum (s N) L (s M) <- listsum N L M.
 
 %terminates {L N} (listsum N L M).
 
-%{! #
-#
-# Mutual, lexicographic ordering
+%{! ### Mutual, lexicographic ordering
 
 In this case, we have a program that is non-deterministic to illustrate more possibilities. We will describe a "big" lemma and a "small" lemma, each with two arguments. Twelf decides what is "big" or "small" based on the way we order things - from small to large - in the ``%terminates`` declaration below. !}%
     
@@ -201,8 +188,7 @@ argument (``A1`` and ``A2``) gets smaller. !}%
 
 %terminates {(B1 B2) (A1 A2)} (small A2 B2 _) (big A1 B1 _).
 
-%{! #
-# Troubleshooting
+%{! ## Troubleshooting
 
 The simplest example of running afoul of the Twelf termination checker is if the recursive call uses an argument unrelated to the original argument. !}%
     
@@ -214,14 +200,13 @@ e: nat -> nat -> type.
 %terminates N (e N M).
 
 %{! As the error message indicates, Twelf requires that ``M`` be less than ``N`` in the recursive call in order for termination analysis to hold, but it has
-no way of establishing this. If, for some reason, the un-fufilled termination requirement is actually true, it can often be established with a ``[%reduces](/wiki/percent-reduces/)``
+no way of establishing this. If, for some reason, the un-fufilled termination requirement is actually true, it can often be established with a [``%reduces``](/wiki/percent-reduces/)
 declaration.
 
-#
-# See also
+## See also
 
 * \{\{guide|chapter=8|section=45|title=Termination\}\}
-* ``[%total](/wiki/percent-total/)``
+* [``%total``](/wiki/percent-total/)
 * [[Lexicographic induction]]
 * [Mutual induction](/wiki/mutual-induction/) !}%
 

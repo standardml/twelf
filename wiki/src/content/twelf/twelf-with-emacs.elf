@@ -2,8 +2,7 @@
 
 %{! The preferred way to interact with Twelf is through its emacs mode, which is included in the Twelf distribution. The [Download](/wiki/download/) page has basic information for setting up Emacs mode with Twelf.
 
-#
-# Prerequisites
+## Prerequisites
 
 These instructions assume you've already [Download](/wiki/download/), and that either 
 * You used the Windows/OSX installer
@@ -12,8 +11,7 @@ These instructions assume you've already [Download](/wiki/download/), and that e
 
 These instructions should easily translate to using Subversion to get Twelf, however.
 
-#
-# Installing the Twelf emacs mode
+## Installing the Twelf emacs mode
 
 Add the following to your Emacs configuration file, which should be the file .emacs in your home directory. 
 
@@ -37,15 +35,12 @@ If you used the default Windows installer, you'll want those to lines to be
 
 Exit Emacs and restart it.
 
-#
-# How Twelf programs are divided up into files
+## How Twelf programs are divided up into files
 
 - Twelf programs should be stored in files with the ``.elf`` extension.  
 - All of the ``.elf`` files in a project are collected in a _configuration file_, typically called ``sources.cfg``.  A configuration file lists (paths to) individual ``.elf`` files in dependency order.  You can load a configuration file, which loads each ``.elf`` file in sequence.
 
-#
-#
-# Creating a .cfg file
+### Creating a .cfg file
 
 Start Emacs in some directory (for the purposes of this description, we'll assume it's ``~/tmp/twelf``. Create the **configuration file** ``sources.cfg`` with the following text in it:
 
@@ -53,9 +48,7 @@ Start Emacs in some directory (for the purposes of this description, we'll assum
 
 Save the file (by using CTRL-x CTRL-s in Emacs).
 
-#
-#
-# Creating a .elf file
+### Creating a .elf file
 
 Then create a file ``sometwelf.elf`` (by using CTRL-x CTRL-f in Emacs) and enter the following text: !}%
     
@@ -70,8 +63,7 @@ plus/s : plus N M P -> plus (s N) M (s P).
 
 %{! Save the file (by using CTRL-x CTRL-s in Emacs).
 
-#
-# Using the Twelf emacs mode
+## Using the Twelf emacs mode
 
 You use Twelf by asking it to process declarations. Twelf responds by either printing ``Server OK`` at the bottom of the screen if your declarations were processed successfully, or by popping up the twelf-server buffer if there was an error (ABORT).
 
@@ -84,9 +76,7 @@ For example, a typical use case is to load your entire project with CTRL-c CTRL-
 
 Only reloading the configuration clears the state of Twelf. Even reloading will not clear previous declarations from the file (though it will typically shadow them). This might give unexpected results if you remove a declaration and expect it to have disappeared.
 
-#
-#
-# Loading the configuration file: CTRL-c CTRL-c
+### Loading the configuration file: CTRL-c CTRL-c
 
 Assuming you still have ``sometwelf.elf`` open in emacs, hit CTRL-c CTRL-c. If ``sometwelf.elf`` has unsaved changes, you will be asked:
 
@@ -107,20 +97,15 @@ This is asking which Twelf binary you want to run; the default should already be
 
 This will process your configuration file, which in turn says to process ``sometwelf.elf``.
 
-#
-#
-# Checking an individual declaration: CTRL-c CTRL-d
+### Checking an individual declaration: CTRL-c CTRL-d
 
 Now you can type new declarations into the emacs buffer and use CTRL-c CTRL-d to load them.
 
-#
-#
-# Checking an individual file: CTRL-c CTRL-s
+### Checking an individual file: CTRL-c CTRL-s
 
 Or you can reload the file in the current window with CTRL-c CTRL-s.  You must previously have loaded a configuration file.
 
-#
-# Syntax highlighting
+## Syntax highlighting
 
 Twelf does not automatically refresh its syntax highlighting as you type.  You can manually refresh the highlighting as follows:
 
@@ -129,13 +114,11 @@ Twelf does not automatically refresh its syntax highlighting as you type.  You c
 
 For more info on the emacs mode, see \{\{guide|chapter=13|section=74|title=Emacs Interface\}\}.
 
-#
-# Hacks
+## Hacks
 
 If you use multiple frames with Emacs, ``twelf-mode`` annoyingly pops up the Twelf server buffer in the current frame, even if it is already shown in another frame. To avoid this, set ``display-buffer-reuse-frames`` to ``t``. Now, you will still have the problem that although the buffer is shown, it does not scroll to the bottom; to fix this you need to edit ``twelf.el`` and change &lt;code&gt;(get-buffer-window twelf-server-buffer)&lt;/code&gt; to &lt;code&gt;(get-buffer-window twelf-server-buffer t)&lt;/code&gt;.
 
-#
-# See also
+## See also
 * \{\{guide|chapter=13|section=74|title=Emacs Interface\}\} !}%
 
 %{!

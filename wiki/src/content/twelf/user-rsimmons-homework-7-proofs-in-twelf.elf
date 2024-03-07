@@ -4,10 +4,7 @@
 
 %%## Definition
 %%### Natural numbers
-%{! #
-#
-#
-# On paper
+%{! #### On paper
 
  n ::= z | s n
 
@@ -20,10 +17,7 @@ z : nat.
 s : nat -> nat.
 
 %%### Addition
-%{! #
-#
-#
-# On paper
+%{! #### On paper
 
  ---------------- sum/z
  sum(z,n,n)
@@ -41,10 +35,7 @@ sum/z : sum z N N.
 sum/s : sum (s N) M (s P) <- sum N M P.
 
 %%### Less-than
-%{! #
-#
-#
-# On paper
+%{! #### On paper
 
 **_QUESTION 1:**_ Give the inductive definition for the judgment ``n &lt; n'`` that corresponds to to what is defined below.
 
@@ -57,10 +48,7 @@ lt/z : lt z (s N).
 lt/s : lt (s N) (s M) <- lt N M.
 
 %%### Even/odd
-%{! #
-#
-#
-# On paper
+%{! #### On paper
 
  ---------------- even/z
  even z
@@ -87,10 +75,7 @@ odd : nat -> type.
 
 %%## Proof: Sum Commutes
 %%### Lemma:  N + 0 = N
-%{! #
-#
-#
-# On paper
+%{! #### On paper
 
 For all natural numbers ``n``, ``sum(n,z,n)``.
 
@@ -116,10 +101,7 @@ sum-ident : {N: nat} sum N z N -> type.
 %total N (sum-ident N _).
 
 %%### Lemma: N + M = P implies N + (s M) = (s P)
-%{! #
-#
-#
-# On paper
+%{! #### On paper
 
 **_QUESTION 3:**_ State the "on paper" version of the lemma below.
 
@@ -143,10 +125,7 @@ sum-incr : sum N M P -> sum N (s M) (s P) -> type.
 
 
 %%### Theorem: N + M = P implies M + N = P
-%{! #
-#
-#
-# On paper
+%{! #### On paper
 
 If ``sum(n,m,p)``, then ``sum(m,n,p)``.
 
@@ -186,10 +165,7 @@ sum-commutes : sum N M P -> sum M N P -> type.
 %total D (sum-commutes D _).
 
 %%### Theorem :  N + (s M) = P implies N &lt; P
-%{! #
-#
-#
-# On paper
+%{! #### On paper
 
 If ``sum(n,s(m),p)``, then ``n &lt; p``. Proof by induction on ``sum(n,s(m),p)``.
 

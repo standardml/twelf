@@ -1,12 +1,10 @@
 %%! title: "Talk:CPS conversion"
 
-%{! #
-# Strange world declarations
+%{! ## Strange world declarations
 
 Can anybody pinpoint the reason that Twelf requires these odd world and mode declarations? Is it a bug? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 17:51, 5 October 2006 (EDT)
 
-#
-# Termination order backwards?
+## Termination order backwards?
 
 It seems that the documentation in the guide is the opposite of what is actually implemented. With the total declaration !}%
     
@@ -20,8 +18,7 @@ It seems that the documentation in the guide is the opposite of what is actually
 
 : I was under the impression it was later theorems that can call earlier ones (at least that's how I've used it in the past). --[User:DanielKLee](/wiki/user-danielklee/) 16:48, 6 October 2006 (EDT)
 
-#
-# Twelf output
+## Twelf output
 
 The Twelf output indicates a syntax error in the example. Yay technology. --[User:DanielKLee](/wiki/user-danielklee/) 16:48, 6 October 2006 (EDT)
 : Yeah, I was gonna mention that fact at some point. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 17:19, 6 October 2006 (EDT)

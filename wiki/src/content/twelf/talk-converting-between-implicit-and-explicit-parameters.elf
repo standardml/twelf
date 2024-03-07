@@ -1,12 +1,10 @@
 %%! title: "Talk:Converting between implicit and explicit parameters"
 
-%{! #
-# Annotation example
+%{! ## Annotation example
 
 I tried for an hour to come up with a simple example where this trick is required, but I couldn't. (I've used it in much more complicated stuff, though, so it definitely comes up.) Anybody else more clever at minimal examples? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 11:47, 10 October 2006 (EDT)
 
-#
-# Using abbreviations to convert from explicit to implicit
+## Using abbreviations to convert from explicit to implicit
 
 I frequently use abbreviations to define a shortcut version of a relation omitting those extra parameters.
 Thus !}%

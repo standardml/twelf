@@ -5,8 +5,7 @@ Code from class, March 4.
 
 Translates lambda calculus into combinator calculus to illustrate non-trivial worlds.
 
-#
-# Syntax
+## Syntax
 
  !}%
 
@@ -34,8 +33,7 @@ capp : comb -> comb -> comb.
 
 %{! 
 
-#
-# Translation
+## Translation
 
  !}%
 
@@ -84,8 +82,7 @@ translate/lam : translate (lam ([x] M x)) A'
 
 %{! 
 
-#
-# Equational theory
+## Equational theory
 
 Lambda term equality was discussed only briefly.  Combinator equality was presented for the ``subst`` lemma, below.
 
@@ -157,8 +154,7 @@ ceq/trans : ceq A A'
 
 %{! 
 
-#
-# Correctness of the translation
+## Correctness of the translation
 
  !}%
 

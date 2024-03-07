@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Syntax
+## Syntax
 
  !}%
 
@@ -21,10 +20,7 @@ z : exp.
 s : exp -> exp.
 
 %{! 
-#
-#
-#
-# Exercise: constant for ifz
+#### Exercise: constant for ifz
  !}%
 
 ifz : exp -> exp -> (exp -> exp) -> exp.
@@ -35,8 +31,7 @@ ifz : exp -> exp -> (exp -> exp) -> exp.
 
 %{! 
 
-#
-# Static semantics
+## Static semantics
 
  !}%
 
@@ -52,10 +47,7 @@ of/fn : of (fn T1 ([x] E x)) (arr T1 T2)
 	 <- ({x:exp} of x T1 -> of (E x) T2).
 
 %{! 
-#
-#
-#
-# Exercise: typing rules for s and ifz
+#### Exercise: typing rules for s and ifz
  !}%
 
 of/s : of (s E) num
@@ -71,12 +63,9 @@ of/ifz : of (ifz E E0 ([x] E1 x)) T
 
 %{! 
 
-#
-# Dynamic semantics
+## Dynamic semantics
 
-#
-#
-# value judgement
+### value judgement
 
 
  !}%
@@ -85,10 +74,7 @@ value : exp -> type.               %name value Dval.
 
 value/fn : value (fn T ([x] E x)).
 %{! 
-#
-#
-#
-# Exercise: value rules for z and s
+#### Exercise: value rules for z and s
  !}%
 value/z  : value z.
 value/s  : value (s E)
@@ -96,9 +82,7 @@ value/s  : value (s E)
 
 %{! 
 
-#
-#
-# step judgement
+### step judgement
 
  !}%
 
@@ -115,10 +99,7 @@ step/app/beta : step (app (fn T ([x] E x)) E2) (E E2)
 		 <- value E2.
 
 %{! 
-#
-#
-#
-# Exercise: step rules for s and ifz
+#### Exercise: step rules for s and ifz
  !}%
 
 step/s : step (s E) (s E')
@@ -134,12 +115,9 @@ step/ifz/s   : step (ifz (s E) E0 ([x] E1 x)) (E1 E)
 
 %{! 
 
-#
-# Progress theorem
+## Progress theorem
 
-#
-#
-# Sum type for the result
+### Sum type for the result
 
  !}%
 
@@ -152,9 +130,7 @@ vos/step  : val-or-step E
 
 %{! 
 
-#
-#
-# Lemmas
+### Lemmas
 
  !}%
 
@@ -188,10 +164,7 @@ prog/app : of E1 (arr T' T)
 
 %{! 
 
-#
-#
-#
-# Exercise: lemma for s
+#### Exercise: lemma for s
 
  !}%
 
@@ -211,10 +184,7 @@ prog/s : val-or-step E -> val-or-step (s E) -> type.
 
 %{! 
 
-#
-#
-#
-# Exercise: lemma for ifz
+#### Exercise: lemma for ifz
 
  !}%
 
@@ -238,9 +208,7 @@ prog/ifz : of E num
 
 %{! 
 
-#
-#
-# Main theorem
+### Main theorem
 
  !}%
 
@@ -261,10 +229,7 @@ prog : of E T -> val-or-step E -> type.
 
 %{! 
 
-#
-#
-#
-# Exercise: cases for s and ifz
+#### Exercise: cases for s and ifz
 
  !}%
 

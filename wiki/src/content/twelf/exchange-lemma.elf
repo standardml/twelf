@@ -62,8 +62,7 @@ For example, in the [substitution lemma](/wiki/substitution-lemma/) article, exc
 - : subst D1 ([x][dx] of/lam ([y][dy] D2 x dx y dy)) (of/lam D2')
      <- ({y}{dy} subst D1 ([x][dx] D2 x dx y dy) (D2' y dy))
 
-%{! #
-# See also
+%{! ## See also
 
 * [Weakening lemma](/wiki/weakening-lemma/)
 * [Substitution lemma](/wiki/substitution-lemma/)

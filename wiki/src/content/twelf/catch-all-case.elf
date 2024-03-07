@@ -223,8 +223,7 @@ size-app   : size (app E1 E2) (s N)
 %worlds (size-block) (size _ _).
 %total E (size E _).
 
-%{! #
-# Original proof !}%
+%{! ## Original proof !}%
     
 %{! (options removed from twelftag: hidden="true") !}%
 
@@ -255,8 +254,7 @@ subst-size : {E' : tm}
 
 %{! The ``%block`` declaration includes a case of the theorem for the variable ``dy`` declared in the context.  
 
-#
-# Alternate proof using a catch-all case
+## Alternate proof using a catch-all case
 
 In this instance, it is possible to avoid putting the theorem case in the context.  How?  We instead write a catch-all case that covers the context variable case **without mentioning the context variable explicitly**: !}%
     

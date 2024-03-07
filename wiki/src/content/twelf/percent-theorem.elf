@@ -4,18 +4,15 @@
 
 \{\{needs|syntax of the declaration\}\}
 
-#
-# Use to write statements of metatheorems
+## Use to write statements of metatheorems
 
-Some people find the notation a clearer way of specifying [metatheorems](/wiki/metatheorem/); a ``%theorem`` declaration used in this style handles the type family declation and the ``[%mode](/wiki/percent-mode/)`` declaration parts of a [totality assertion](/wiki/totality-assertion/).
+Some people find the notation a clearer way of specifying [metatheorems](/wiki/metatheorem/); a ``%theorem`` declaration used in this style handles the type family declation and the [``%mode``](/wiki/percent-mode/) declaration parts of a [totality assertion](/wiki/totality-assertion/).
 
-#
-# Use with the theorem prover
+## Use with the theorem prover
 
 When using the Twelf [theorem prover](/wiki/theorem-prover/), a ``%theorem`` declaration establishes a proposition that the theorem prover may later attempt to establish. A **``%theorem``** declaration is thus somewhat analogous to the three-part specification of a [totality assertions](/wiki/totality-assertion/), the type family definition, the [%mode](/wiki/percent-mode/) declaration, and the [%worlds](/wiki/percent-worlds/) declaration. 
 
-#
-# See also
+## See also
 
 * [Theorem prover](/wiki/theorem-prover/)
 * \{\{guide|title=Theorem Prover|chapter=10|section=57\}\}

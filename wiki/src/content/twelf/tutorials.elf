@@ -10,15 +10,11 @@ Feel free to write new tutorials and add them to this page.__NOTOC__
 
 These tutorials are also gathered in the [[:Category:tutorials|tutorial category]].  
 
-#
-# Proof techniques
+## Proof techniques
 
 &lt;!-- DRL says: header 2 has too much visual weight here --&gt;
 
-#
-#
-#
-# Beginner
+#### Beginner
 
 * [Reformulating languages to use hypothetical judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/) - how to present judgements in a way that's easy to encode in LF.
 * [Holes in metatheorems](/wiki/incremental-metatheorem-development/) - how to assume lemmas while developing proofs.
@@ -32,10 +28,7 @@ These tutorials are also gathered in the [[:Category:tutorials|tutorial category
 * [Mutual induction](/wiki/mutual-induction/) - how to prove mutually inductive theorems
 * [Converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/) - how to convert between implicit and explicit quantification of the parameters of a type family.
 
-#
-#
-#
-# Advanced
+#### Advanced
 
 * [Strengthening](/wiki/strengthening/) - how to convince Twelf that a term does not depend on some assumptions.
 * Explicit termination metrics - how to use a termination metric other than the subderivation ordering.
@@ -51,8 +44,7 @@ These tutorials are also gathered in the [[:Category:tutorials|tutorial category
 * [User-defined constraint domain](/wiki/user-defined-constraint-domain/)s - how to make encodings more [Intrinsic and extrinsic encodings](/wiki/intrinsic-and-extrinsic-encodings/) by replacing predicates with indexing, and how to use Church-encodings to create special index types that are similar to constraint domains in that they admit non-trivial equations on their elements.
 For larger examples of Twelf in action, see see the [case studies](/wiki/case-studies/).
 
-#
-# Troubleshooting
+## Troubleshooting
 
 * [Error messages](/wiki/error-messages/) - brief explanations of (and remedies for) common Twelf error messages.
 * [Output freeness](/wiki/output-freeness/) - understanding a subtle part of output coverage checking.

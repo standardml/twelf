@@ -25,8 +25,7 @@ plus-z : plus z N2 N2.
 plus-s : plus (s N1) N2 (s N3)
 	  <- plus N1 N2 N3.
 
-%{! #
-# Totality assertions
+%{! ## Totality assertions
 
 &lt;!--- ENH: could be better --&gt;
 
@@ -48,8 +47,7 @@ We may prove a totality assertion by induction on canonical forms.  For example,
 
 Totality assertions for LF type families are actually more general than we have discussed so far.  The above examples consider only terms that are well-typed without mentioning LF variables. In general, it is useful to state totality assertions about all terms that are well-typed in any LF context in a particular [world](/wiki/percent-worlds/), which is a set of LF contexts.  Thus, a totality assertion is specified by both a mode declaration and a world declaration.  For the time being, we will consider totality assertions that are stated for the world containing only the empty LF context (i.e., totality assertions about closed terms), so we defer further discussion of worlds.
 
-#
-# Totality assertions in Twelf
+## Totality assertions in Twelf
 
 You can use Twelf to verify totality assertions about LF type families.  For example, to verify the totality assertion
 
@@ -67,20 +65,17 @@ you enter the following Twelf declarations: !}%
 %total N1 (plus N1 _ _).
 
 %{! Let's break down what each of these declarations means:
-* The ``[%mode](/wiki/percent-mode/)`` declaration specifies the mode of a type family&mdash;in this case, that ``N1`` and ``N2`` are universally quantified (``+``) and that ``N3`` is existentially quantified (``-``).  We will sometimes refer to the universally-quantified types as _inputs_ and the existentially-quantified types as _outputs_.  
-* The ``[%worlds](/wiki/percent-worlds/)`` declaration states the totality assertion for LF terms in the empty context, which adequately represent natural numbers and the addition judgement.  
-* The ``[%total](/wiki/percent-total/)`` declaration asks Twelf to prove the totality assertion by induction on the canonical forms ``N1`` of type ``nat``.  Note that it is the position of the variable named in the ``%total`` that determines the induction index.
+* The [``%mode``](/wiki/percent-mode/) declaration specifies the mode of a type family&mdash;in this case, that ``N1`` and ``N2`` are universally quantified (``+``) and that ``N3`` is existentially quantified (``-``).  We will sometimes refer to the universally-quantified types as _inputs_ and the existentially-quantified types as _outputs_.  
+* The [``%worlds``](/wiki/percent-worlds/) declaration states the totality assertion for LF terms in the empty context, which adequately represent natural numbers and the addition judgement.  
+* The [``%total``](/wiki/percent-total/) declaration asks Twelf to prove the totality assertion by induction on the canonical forms ``N1`` of type ``nat``.  Note that it is the position of the variable named in the ``%total`` that determines the induction index.
 
 In this case, Twelf succeeds in proving this assertion.
 
-#
-# How Twelf checks assertions
+## How Twelf checks assertions
 
 Twelf proves a totality assertion for a type family such as ``plus`` by checking several properties.  These properties, taken together, constitute a proof by induction on canonical forms that the type family defines a total relation.  
 
-#
-#
-# Mode
+### Mode
 &lt;!-- Do not change the name of this section without fixing the reference in %mode --&gt;
 Twelf checks that each constant inhabiting the type family is _well-moded_.  Roughly, this means that the inputs to the conclusion of a constant determine the inputs of the first premise, and that these together with the outputs of the first premise determine the inputs of the second premise, and so on, until the outputs of all the premises determine the outputs of the conclusion.  
 
@@ -106,15 +101,11 @@ plus-bad-mode2 : plus N1 N2 N3
 
 %{! is not well-moded&mdash;the first input to the premise is not determined by the inputs of the conclusion.
 
-#
-#
-# Worlds
+### Worlds
 
 Twelf checks that each constant inhabiting the type family obeys the worlds declaration.  Because we are only proving theorems about closed terms in this section, we will not run across any problems with world checks.  Consequently, we defer discussion of world checking until [Proving metatheorems:Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/).
 
-#
-#
-# Termination
+### Termination
 &lt;!-- so that the later total, etc. don't complain --&gt; !}%
     
 %{! (options removed from twelftag: import="base" export="mw" hidden="true") !}%
@@ -137,9 +128,7 @@ plus-s : plus (s N1) N2 (s N3)
 
 %{! In addition to the subterm ordering on a single argument, Twelf supports [mutual induction](/wiki/mutual-induction/) and [[lexicographic induction]].
 
-#
-#
-# Output coverage !}%
+### Output coverage !}%
     
 %{! (options removed from twelftag: export="m" import="base") !}%
 
@@ -169,9 +158,7 @@ plus-bad-output-freeness : plus (s N1) N2 (s N2)
 
 %{! Here, we insisted that the output of the premise be the number ``N2`` that we put in.  Twelf is very conservative in checking [output freeness](/wiki/output-freeness/): a type family will not be judged total if you constrain the outputs of any premise at all in this manner.
 
-#
-#
-# Input coverage
+### Input coverage
 
 Mode, worlds, termination, and output coverage ensure that each constant really does cover the part of the relation indicated by its conclusion.  For example, if ``plus`` passes these four checks, we know that ``plus-z`` and ``plus-s`` cover ``(z, N2, N2)`` and ``(s N1, N2, s N3)``, respectively.  What else is necessary to know that ``plus`` defines a total relation?  We need to know that all the constants inhabiting ``plus``, taken together, cover all of the inputs.  Input coverage checks exactly this.  
 
@@ -193,8 +180,7 @@ The type family ``plus`` is exhaustive, but this ``plus'`` is not.
 
 Twelf checks input coverage by [[splitting]] the input types to case-analyze the various constants that could have been used to inhabit them.  For ``plus``, Twelf splits the first ``nat`` argument ``N1``, and then checks that the cases ``plus z N2 N2`` and ``plus (s N1) N2 N3`` are covered.  Fortunately, these are exactly the cases we wrote down.  If we had case-analyzed further in the definition of the judgement (e.g., if the definition of ``plus`` case-analyzed the second argument as well), Twelf would continue splitting the input space.  Because Twelf separates termination checking and coverage checking, the constants defining a type family do not need to follow any particular primitive recursion schema—the constants may pattern-match the inputs in a general manner.
 
-#
-# When Twelf checks what
+## When Twelf checks what
 
 To a first approximation, you can think of the ``%mode`` and ``%worlds`` declarations as specifying a totality assertion and the ``%total`` declaration as checking it.  This isn't exactly how Twelf works, though:
 
@@ -206,8 +192,7 @@ This separation allows you to, for example, check that each constant in a family
 
 If any constant in a type family fails mode, worlds, or output coverage, then mode, worlds, or totality checking fails for the whole type family.  One could imagine that Twelf instead would just disregard the offending constant: it is possible that the type family as a whole satisfies a totality assertion without that constant, and, in a mathematical sense, adding additional constants never invalidates the fact a totality assertion is true of a family.    The reason Twelf does not work this way is that ``%total`` actually has a more specific meaning, as we discuss in the next section.
 
-#
-# Logic programming
+## Logic programming
 
 An LF signature can be interpreted as a logic program, where the constants defining a type family are viewed as rules for searching for derivations of that type family.  For example, we can use Twelf to add numbers as follows: !}%
     
@@ -228,8 +213,7 @@ The reason for bringing up logic programming here is that, when Twelf proves a t
 
 To start proving metatheorems, it is not necessary to have a thorough understanding of the logic programming interpretation of the LF signature.  However, the logic programming view does explain some of the specifics of what Twelf will and will not deem total.  For example, mode checking considers premises in the order that it does (rather than, say, the reverse order) because that is the order in which the logic programming engine searches for derivations.
 
-#
-# Summary
+## Summary
 
 In this section, we have seen how to ask Twelf to verify totality assertions for LF type families.  To see why we have spent so much time on totality assertions, proceed to the next section.  
 

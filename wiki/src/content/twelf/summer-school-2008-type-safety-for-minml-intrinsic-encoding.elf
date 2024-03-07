@@ -14,8 +14,7 @@ Type safety for MinML: call-by-value, with recursive functions, in intrinsic for
 
 %{! 
 
-#
-# Syntax / static semantics
+## Syntax / static semantics
 
 Types:
 
@@ -40,8 +39,7 @@ app : (arr T1 T2) exp -> T1 exp -> T2 exp.
 
 %{! 
 
-#
-# Dynamic semantics / preservation
+## Dynamic semantics / preservation
 
 Values:
 
@@ -87,8 +85,7 @@ step/app/beta-v
 
 %{! 
 
-#
-# Progress
+## Progress
 
 The sum type we return:
 
@@ -100,9 +97,7 @@ vos/step : val-or-step E <- step E _.
 
 %{! 
 
-#
-#
-# [Output factoring](/wiki/output-factoring/) lemmas
+### [Output factoring](/wiki/output-factoring/) lemmas
 
  !}%
 
@@ -160,9 +155,7 @@ prog/app
 
 %{! 
 
-#
-#
-# Main theorem
+### Main theorem
 
  !}%
 

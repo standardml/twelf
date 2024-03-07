@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Intuitionistic logic
+## Intuitionistic logic
 
  !}%
 
@@ -64,8 +63,7 @@ distdnimp : itrue (idn (iimp A B)) -> itrue (iimp (idn A) (idn B)) =
 
 %{! 
 
-#
-# Classical logic
+## Classical logic
 
  !}%
 
@@ -146,8 +144,7 @@ notimpbot (notimpbot (iffi ([x] x) ([x] x))).
    
 %{! 
 
-#
-# Double-negation translation
+## Double-negation translation
 
 This is essentially the 
 [http://en.wikipedia.org/wiki/G%C3%B6del%E2%80%93Gentzen_negative_translation Godel-Gentzen Negtive Translation].
@@ -206,9 +203,7 @@ itrue-respects-id : itrue A -> id-iprop A' A -> itrue A' -> type.
 
 %{! 
 
-#
-#
-# Double-negation elimination for the target of the translation
+### Double-negation elimination for the target of the translation
 
  !}%
 
@@ -236,8 +231,7 @@ dne : * A A' -> (itrue (inot (inot A')) -> itrue A') -> type.
 
 %{! 
 
-#
-# Soundness
+## Soundness
 
  !}%
 
@@ -451,12 +445,9 @@ sound/contra : >> contra -> itrue ibot -> type.
 
 %{! 
 
-#
-# Completeness
+## Completeness
 
-#
-#
-# Inclusion
+### Inclusion
 
 Include intuitionistic props into classical.  We need to define another
 translation because * is not total with the reverse mode (it doesn't
@@ -508,9 +499,7 @@ true-respects-id : >> true A -> id-prop A' A -> >> true A' -> type.
 
 %{! 
 
-#
-#
-# Intuitionistic truth implies classical truth
+### Intuitionistic truth implies classical truth
 
 The arguments are in a funny order because I copied from soundness. =)
 
@@ -578,9 +567,7 @@ incl :  >> true A -> *i A A' -> itrue A' -> type.
 
 %{! 
 
-#
-#
-# Round-tripping the two translations is classically equivalent
+### Round-tripping the two translations is classically equivalent
 
  !}%
 
@@ -633,9 +620,7 @@ equiv : * A A' -> *i A'' A' -> >> true (iff A A'') -> type.
 
 %{! 
 
-#
-#
-# If A* is intuitionistically true, then A is classically true
+### If A* is intuitionistically true, then A is classically true
 
  !}%
 

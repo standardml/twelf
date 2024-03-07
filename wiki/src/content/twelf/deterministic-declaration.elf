@@ -2,8 +2,7 @@
 
 %{! The **``%determinstic``** declaration influences the way [logic programming](/wiki/logic-programming/) behaves in Twelf. If a type family is deterministic, then once Twelf finds a single solution through logic programming search it cannot backtrack to find different solutions.
 
-#
-# Example: Tree search
+## Example: Tree search
 
 [[Image:Smalltree.svg|thumb|right|250px|Graphical representation of the tree ``testtree`` used in this example.]]
 We define a tree with labeled nodes, and a distinguished tree ``testtree`` !}%
@@ -20,9 +19,7 @@ leaf : label -> tree.
 
 testtree = node (node (leaf a) (leaf b)) (node (leaf c) (leaf d)).
 
-%{! #
-#
-# Searching for a leaf
+%{! ### Searching for a leaf
 
 We also define a judgment, ``findlabel``, that looks for a label at leaves of the tree. Because Twelf tries to use the first-defined rule first, the operational behavior of this is to search for the leftmost node, then to backtrack and find the next-to-leftmost node, etc. !}%
     
@@ -46,9 +43,7 @@ findlabel/right : findlabel (node T1 T2) L
 %deterministic findlabel.
 %query 1 * findlabel testtree L.
 
-%{! #
-#
-# Causing search to fail
+%{! ### Causing search to fail
 
 When using **``%deterministic``**, [[finite failure]] no longer means that no derivation can be found, becuase the deterministic search may put constraints on later results that causes them to fail. Take the ``searchfor`` predicate, which first looks up a label with ``findlabel`` and then checks to see if it is equal to some other label. !}%
     
@@ -73,8 +68,7 @@ searchfor : tree -> label -> type.
 %deterministic findlabel.
 %query 1 * P : searchfor testtree c.
 
-%{! #
-# See also
+%{! ## See also
 
 * \{\{guide|title=Deterministic Type Families|chapter=5|section=30\}\}
 * [[w:Cut (logic programming)|Cut]] on Wikipedia

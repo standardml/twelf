@@ -2,8 +2,7 @@
 
 %{! It is common to write two or more mutually recursive type families.  For example, an object language may have mutually recursive judgements, or a proof may require mutually recursive theorems.  To check the totality of mutually recursive type families, you need to usual a mutual termination metric. This tutorial presents an example of doing so.
 
-#
-# Motivating example
+## Motivating example
 
 As a motivating example, we define a simple subtyping relation on the types of a programming language.  The language includes integers, floating point numbers, and functions.  We consider ``int`` to be a subtype of ``float``, and we give the usual contravariant rule for functions: !}%
     
@@ -52,8 +51,7 @@ However, this proof is incorrect: !}%
 
 One solution would be to induct over the sum of the sizes of the two derivations, which certainly gets smaller in this case.
 
-#
-# Mutual induction
+## Mutual induction
 
 However, a simpler solution, which happens to work in this case, is to prove the transitivity theorem _twice_, once by induction on the first input, and again by induction on the second input, in a mutually inductive loop.  These two proofs will call each other in the contravariant premise, so the induction will go through.  Here's what the revised proof looks like: !}%
     

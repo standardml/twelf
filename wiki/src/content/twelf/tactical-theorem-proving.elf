@@ -109,8 +109,8 @@ mklist-stop : mklist A A refl.
 %%### Using the tactical theorem prover
 
 %{! 
-We can then use ``[Define declaration](/wiki/define-declaration/)`` and 
-``[%solve](/wiki/percent-solve/)`` to create
+We can then use [``Define declaration``](/wiki/define-declaration/) and 
+[``%solve``](/wiki/percent-solve/) to create
 a proof that (a + (b + c) + d == a + b + c + d). In order for ``mklist``
 to terminate, it must be given a [ground](/wiki/ground/) term, so we introduce a four 
 atomic terms ``a`` through ``d``. The proof ``Pf``
@@ -132,7 +132,7 @@ list' : num -> num -> type = [a][b] pf (a == b).
 
 %{! Then, we have to _justify_ each clause of the logic in the same way
 as we justified ``plus_elim2`` above. We have to write the 
-``[%clause](/wiki/percent-clause/)`` because, if we do not, then Twelf will not use the
+[``%clause``](/wiki/percent-clause/) because, if we do not, then Twelf will not use the
 definitions in logic programming search. !}%
 
 %clause

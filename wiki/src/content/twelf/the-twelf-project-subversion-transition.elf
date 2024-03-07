@@ -2,16 +2,13 @@
 
 %{! On Wednesday, April 23, 2008, the Twelf Project will switch from using CVS for its version control mechanism to using Subversion. 
 
-#
-# Primary checkout
+## Primary checkout
 
 The last version in CVS was Revision Number 1276 when the transition was prepped on April 17, 2008. Revisions between April 17 and April 23 will be manually applied by [User:Rsimmons](/wiki/user-rsimmons/).
 
 The trunk is be available from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/trunk twelf``. As of April 17, it is only available for read-only access for people with login to the old Twelf repository; after April 23, it will be open to general access.
 
-#
-#
-# Tags
+### Tags
 
 Any tag is be accessible from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/tags/&lt;BRANCH NAME&gt;``. The tags as of April 10 are the following:
 
@@ -56,9 +53,7 @@ twelf-1-5R4
 twelf-branch-meta
 twelf-poly&lt;/code&gt;
 
-#
-#
-# Branches
+### Branches
 
 Any branch is be accessible from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/branches/&lt;BRANCH NAME&gt;``. The branches as of April 10 are the following:
 

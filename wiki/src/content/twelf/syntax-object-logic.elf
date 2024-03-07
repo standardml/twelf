@@ -12,8 +12,7 @@ nat : type.
 nat/z : nat.
 nat/s : nat -> nat.
 
-%{! #
-# See also
+%{! ## See also
 
 * Read the [introductions to Twelf](/wiki/introductions-to-twelf/) to learn how to represent syntax in LF.
 * [Judgment](/wiki/judgment/)

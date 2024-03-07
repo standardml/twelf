@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Problem 1: CPS Conversion with Administrative Redices
+## Problem 1: CPS Conversion with Administrative Redices
 
 In this problem we define a translation from the following simply-typed
 λ-calculus to a language in continuation passing style (CPS).

@@ -51,8 +51,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 %{! 
 
-#
-# Raw syntax
+## Raw syntax
 
  !}%
 
@@ -72,8 +71,7 @@ let : exp -> (val -> exp) -> exp.
 
 %{! 
 
-#
-# Typing judgement on raw syntax
+## Typing judgement on raw syntax
 
  !}%
 
@@ -93,12 +91,9 @@ of : exp -> tp -> type.			%name of Dof.
 
 %{! 
 
-#
-# Evaluation
+## Evaluation
 
-#
-#
-# Answers
+### Answers
 
  !}%
 
@@ -114,9 +109,7 @@ ofa : ans -> tp -> type.		%name ofa Dofa.
 
 %{! 
 
-#
-#
-# Evaluation judgement on raw syntax
+### Evaluation judgement on raw syntax
 
  !}%
 

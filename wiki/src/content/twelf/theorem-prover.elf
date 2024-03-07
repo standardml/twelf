@@ -1,15 +1,12 @@
 %%! title: "Theorem prover"
 
-%{! The **Twelf theorem prover** is a way of specifying and automatically verifying [metatheorems](/wiki/metatheorem/) that have the form of \{\{forall\}\}\{\{exists\}\}-statements. It uses the Twelf declarations ``[%theorem](/wiki/percent-theorem/)``, ``[%prove](/wiki/percent-prove/)``, ``[%establish](/wiki/percent-establish/)``, and ``[%assert](/wiki/percent-assert/)``. The last of these is an [unsafe mode](/wiki/unsafe-mode/) operation similar to ``[%trustme](/wiki/percent-trustme/)``.
+%{! The **Twelf theorem prover** is a way of specifying and automatically verifying [metatheorems](/wiki/metatheorem/) that have the form of ∀∃-statements. It uses the Twelf declarations [``%theorem``](/wiki/percent-theorem/), [``%prove``](/wiki/percent-prove/), [``%establish``](/wiki/percent-establish/), and [``%assert``](/wiki/percent-assert/). The last of these is an [unsafe mode](/wiki/unsafe-mode/) operation similar to [``%trustme``](/wiki/percent-trustme/).
 
-The current theorem prover is buggy, sometimes does not terminate, and does not output a total logic program that can be used to witness the \{\{forall\}\}\{\{exists\}\}-statement as described in \{\{guide|title=Proof realizations|section=62|chapter=10\}\}. Because of this, it cannot interact with the technique of verifying metatheorems by writing [totality assertions](/wiki/totality-assertion/), and its use is not recommended.
+The current theorem prover is buggy, sometimes does not terminate, and does not output a total logic program that can be used to witness the ∀∃-statement as described in \{\{guide|title=Proof realizations|section=62|chapter=10\}\}. Because of this, it cannot interact with the technique of verifying metatheorems by writing [totality assertions](/wiki/totality-assertion/), and its use is not recommended.
 
-#
-# Example - commutativity of addition
+## Example - commutativity of addition
 
-#
-#
-# Object language
+### Object language
 
 We start with the standard presentation of the [natural numbers](/wiki/natural-numbers/) with addition. !}%
     
@@ -21,13 +18,11 @@ plus : nat -> nat -> nat -> type.
 p-z : plus z N N.
 p-s : plus (s N1) N2 (s N3) <- plus N1 N2 N3.
 
-%{! #
-#
-# Establishing \{\{forall\}\}\{\{exists\}\}-metatheorems with totality assertions
+%{! ### Establishing ∀∃-metatheorems with totality assertions
 
-A simple [metatheorem](/wiki/metatheorem/) about this object language is the \{\{forall\}\}\{\{exists\}\}-statement that for all natural numbers &lt;math&gt;\texttt\{\}N&lt;/math&gt;, there exists a derivation of &lt;math&gt;\texttt\{plus\}(N,0,N)&lt;/math&gt;. This translates into LF as a \{\{forall\}\}\{\{exists\}\}-statement that for all objects ``N`` with type ``nat``, there exists an object ``D`` of type ``plus N z N``. 
+A simple [metatheorem](/wiki/metatheorem/) about this object language is the ∀∃-statement that for all natural numbers &lt;math&gt;\texttt\{\}N&lt;/math&gt;, there exists a derivation of &lt;math&gt;\texttt\{plus\}(N,0,N)&lt;/math&gt;. This translates into LF as a ∀∃-statement that for all objects ``N`` with type ``nat``, there exists an object ``D`` of type ``plus N z N``. 
 
-The "usual" way of proving this kind of metatheorem in Twelf is to define a type family which represents a relation, translate the cases of the inductive proof into LF objects in that type family, and use a ``[%mode](/wiki/percent-mode/)`` directive and ``[%worlds](/wiki/percent-worlds/)`` directive to specify a [totality assertion](/wiki/totality-assertion/) that corresponds to the \{\{forall\}\}\{\{exists\}\}-statement. The totality assertion for type family ``plus-z-thm`` below establishes the \{\{forall\}\}\{\{exists\}\}-statement that is stated above. !}%
+The "usual" way of proving this kind of metatheorem in Twelf is to define a type family which represents a relation, translate the cases of the inductive proof into LF objects in that type family, and use a [``%mode``](/wiki/percent-mode/) directive and [``%worlds``](/wiki/percent-worlds/) directive to specify a [totality assertion](/wiki/totality-assertion/) that corresponds to the ∀∃-statement. The totality assertion for type family ``plus-z-thm`` below establishes the ∀∃-statement that is stated above. !}%
     
 %{! (options removed from twelftag: discard="true" check="true") !}%
 
@@ -41,11 +36,9 @@ plus-z-thm : {N: nat} plus N z N -> type.
 %worlds () (plus-z-thm _ _).
 %total T (plus-z-thm T _).
 
-%{! #
-#
-# Establishing \{\{forall\}\}\{\{exists\}\}-metatheorems with the theorem prover
+%{! ### Establishing ∀∃-metatheorems with the theorem prover
 
-The equivalent of the type family definition for ``plus-z-thm`` and the ``%mode`` declaration from the above code can be stated with a ``[%theorem](/wiki/percent-theorem/)``. !}%
+The equivalent of the type family definition for ``plus-z-thm`` and the ``%mode`` declaration from the above code can be stated with a [``%theorem``](/wiki/percent-theorem/). !}%
     
 %theorem plus-z : forall {N: nat} 
                   exists {D: plus N z N} 
@@ -53,7 +46,7 @@ The equivalent of the type family definition for ``plus-z-thm`` and the ``%mode`
 
 %{! (Side note: some versions of Twelf allow the ``%theorem`` declaration above to be used in lieu of the type family definition and ``%mode`` declaration; [User:Boyland](/wiki/user-boyland/) utilizes this in his tutorial and code examples, but it is not a supported feature and may break in future versions of Twelf!)
 
-Given the ``%theorem`` declaration, we can ask Twelf to try to establish the metatheorem it states by using a ``[%prove](/wiki/percent-prove/)`` declaration. !}%
+Given the ``%theorem`` declaration, we can ask Twelf to try to establish the metatheorem it states by using a [``%prove``](/wiki/percent-prove/) declaration. !}%
     
 %{! (options removed from twelftag: check=decl) !}%
 
@@ -73,8 +66,7 @@ Given the ``%theorem`` declaration, we can ask Twelf to try to establish the met
                  true.
 %prove 5 D1 (plus-comm D1 D2).
 
-%{! #
-# See also
+%{! ## See also
 
 * \{\{guide|title=Theorem Prover|chapter=10|section=57\}\} !}%
 

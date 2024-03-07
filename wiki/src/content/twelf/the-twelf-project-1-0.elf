@@ -2,8 +2,7 @@
 
 %{! This page is about plans for a **1.0** release of the Twelf Wiki.
 
-#
-# Press Release
+## Press Release
 
 Subject: New Twelf Wiki
 
@@ -28,16 +27,13 @@ The Twelf Wiki Team
 
 : We should either say both "encodings of and proofs about" or something like that or junk them both.  We don't want to give people the impression that it's just an LF signature. [User:Drl](/wiki/user-drl/) 09:26, 21 March 2007 (EDT)
 
-#
-# PL Party Coffee - Notes
+## PL Party Coffee - Notes
 
 The first two subsections, where things are assigned, are things that we'd like to have done by next Wednesday. Things that are unassigned will be claimed before then moved to the [[Project:To do|To do]] list at that point, if not before.
 
 Doing things off the [[Project:To do|To do]] list are also good things to do!
 
-#
-#
-# Come to the site, learn to use Twelf
+### Come to the site, learn to use Twelf
 
 * Rewriting the pointers into these things: _Tom and Dan Licata to revise_
 :* [General description of Twelf](/wiki/general-description-of-twelf/) - _Will to revise_
@@ -49,9 +45,7 @@ Doing things off the [[Project:To do|To do]] list are also good things to do!
 :* [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) - _Dan Licata_
 :* The "forest" - Case studies, Tutorials, Glossary - Redlinks to be attacked by _Aleffert_, _Spoons_ (?) and others (Also see [[Special:Wantedpages]])
 
-#
-#
-# Neat Things
+### Neat Things
 
 * &lt;strike&gt;Cut elimination - _Tom_&lt;/strike&gt;
 * Double negation translation - _Jcreed_
@@ -65,8 +59,7 @@ Doing things off the [[Project:To do|To do]] list are also good things to do!
 * Canonical forms -
 * Reverse the polarity -
 
-#
-# Tom's demands
+## Tom's demands
 
 : _DRL, on March 21, says: Peace in our time!  I claim that the vast majority of Tom's demands have been appeased._
 

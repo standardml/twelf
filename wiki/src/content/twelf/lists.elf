@@ -2,8 +2,7 @@
 
 %{! This page describes the data structure of lists as well as a large number of operations and theorems about them.
 
-#
-# Definition
+## Definition
 
 This standard definition of lists in Twelf . We first define what the list elements are: in this example they are just an arbitrary type ``elem``. This example is parametric in the type of the elements, so you can change this definition to anything you like.
 
@@ -32,8 +31,7 @@ nil : list.
 cons : elem -> list -> list.
 %freeze list.
 
-%{! #
-# Equalities
+%{! ## Equalities
 
 Equality is defined as [identity](/wiki/equality/), which makes the symmetry and transitivity proofs entirely trivial. One [congruence lemma](/wiki/respects-lemma/) needs to be defined ``eq-cong-cons``, expressing that if the tails of two lists are equal, and the heads of the lists are identical, the lists are equal. !}%
     
@@ -63,12 +61,9 @@ eq-cong-cons : {E} eq L1 L2 -> eq (cons E L1) (cons E L2) -> type.
 %worlds () (eq-cong-cons _ _ _).
 %total {} (eq-cong-cons _ _ _).
 
-%{! #
-# Reversal
+%{! ## Reversal
 There are at least two very common operations on lists: Reverse and Append. Lists form a semigroup with the opeation append &lt;math&gt;\cdot \diamonds \cdot&lt;/math&gt; and the empty list as right and left unit. If we define an operation &lt;math&gt;f(x,y) = y \diamonds x&lt;/math&gt; then reverse &lt;math&gt;(\cdot)^\top&lt;/math&gt; is an isomorphism between the semigroups (lists,&lt;math&gt;\diamonds&lt;/math&gt;,nil) and (lists,f,nil).
-#
-#
-# Definition
+### Definition
 I will use the standard logic programming way of encoding reversal. In the following ``rev`` will be a ternary relation where the first two elements are input and the third is output. The invariant is &lt;math&gt;\forall a,b,c. a^\top \bowtie b = c&lt;/math&gt;, where &lt;math&gt;\bowtie&lt;/math&gt; is concatenation, thus &lt;math&gt;a^\top=b&lt;/math&gt; is obtained by ``rev a nil b``. We will later see that &lt;math&gt;\bowtie&lt;/math&gt; can be thought of as &lt;math&gt;\diamonds&lt;/math&gt;. !}%
     
 rev : list -> list -> list -> type.
@@ -89,9 +84,7 @@ can-rev : {Ls} {Ls'} rev Ls Ls' Ls'' -> type.
 %freeze can-rev. 
 %total D (can-rev D _ _).
 
-%{! #
-#
-# Equality !}%
+%{! ### Equality !}%
     
 rev-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> rev L1 L3 L5 -> rev L2 L4 L6 -> type.
 %mode rev-eq +E1 +E2 +E3 +R1 -R2.
@@ -99,9 +92,7 @@ rev-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> rev L1 L3 L5 -> rev L2 L4 L6 -> typ
 %worlds () (rev-eq _ _ _ _ _).
 %total {} (rev-eq _ _ _ _ _).
 
-%{! #
-#
-# Determinism
+%{! ### Determinism
 As the Twelf definition only states that rev is a relation we need to prove that it indeed is a function. Namely &lt;math&gt;\forall a,b,c,d. a^\top \diamonds b = c \land a^\top \diamonds b = d \Rightarrow c = d&lt;/math&gt;. !}%
     
 rev-determ : rev Ls Ls' Ls3 -> rev Ls Ls' Ls4 -> eq Ls3 Ls4 -> type.
@@ -113,9 +104,7 @@ rev-determ : rev Ls Ls' Ls3 -> rev Ls Ls' Ls4 -> eq Ls3 Ls4 -> type.
 %freeze rev-determ.
 %total D (rev-determ D _ _).
 
-%{! #
-#
-# Double reversal
+%{! ### Double reversal
 Reverse is an isomorphism that turn out to be its own inverse.
 &lt;math&gt;\forall a,b,c. a^\top = b \land b^\top = c \Rightarrow a = c&lt;/math&gt;. !}%
     
@@ -142,9 +131,7 @@ revrev-id : rev A nil B -> rev B nil A -> type.
 %freeze revrev-id.
 %total {} (revrev-id _ _).
 
-%{! #
-#
-# Injectivity
+%{! ### Injectivity
 As reverse has an inverse it is injective &lt;math&gt;\forall a,b,c. a^\top = c \land b^\top = c \Rightarrow a = b&lt;/math&gt;. !}%
     
 rev-injective : rev Ls nil Ls' -> rev Ls'' nil Ls' -> eq Ls Ls'' -> type.
@@ -157,12 +144,9 @@ rev-injective : rev Ls nil Ls' -> rev Ls'' nil Ls' -> eq Ls Ls'' -> type.
 %freeze rev-injective.
 %total D (rev-injective D _ _).
 
-%{! #
-# Append
+%{! ## Append
 
-#
-#
-# Definition !}%
+### Definition !}%
     
 append : list -> list -> list -> type.  %name append A.
 
@@ -182,9 +166,7 @@ can-append : {L1}{L2} append L1 L2 L3 -> type.
 %worlds () (can-append _ _ _).
 %total D (can-append D _ _).
 
-%{! #
-#
-# Equality !}%
+%{! ### Equality !}%
     
 append-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> append L1 L3 L5 -> append L2 L4 L6 -> type.
 %mode append-eq +E1 +E2 +E3 +A1 -A2.
@@ -194,9 +176,7 @@ append-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> append L1 L3 L5 -> append L2 L4 
 %worlds () (append-eq _ _ _ _ _).
 %total {} (append-eq _ _ _ _ _).
 
-%{! #
-#
-# Units
+%{! ### Units
 We need to prove that ``nil`` is the right and left unit of the semigroup &lt;math&gt;\forall a. a \diamonds nil = nil \diamonds a = a&lt;/math&gt;. The later is by axiom and the former is by this lemma. !}%
     
 append-eq-nil : {L1} append L1 nil L1 -> type.
@@ -221,9 +201,7 @@ append-eq-nil : append L1 nil L2 -> eq L1 L2 -> type.
 %worlds () (append-eq-nil _ _).
 %total D (append-eq-nil D _).
 
-%{! #
-#
-# Determinism
+%{! ### Determinism
 As with reverse we need to show that append is indeed a function &lt;math&gt;\forall a,b,c,c'. a \diamonds b = c \land a \diamonds b = c' \Rightarrow c = c'&lt;/math&gt;. !}%
     
 append-determ : append L1 L2 L3 -> append L1 L2 L4 -> eq L3 L4 -> type.
@@ -237,9 +215,7 @@ append-determ : append L1 L2 L3 -> append L1 L2 L4 -> eq L3 L4 -> type.
 %worlds () (append-determ _ _ _).
 %total D (append-determ D _ _).
 
-%{! #
-#
-# Associativity
+%{! ### Associativity
 We need to prove that append is associative &lt;math&gt;\forall a,b,c.(a \diamonds b) \diamonds c = a \diamonds (b \diamonds c)&lt;/math&gt;. !}%
     
 append-assoc1 : append L1 L2 L3 -> append L3 L4 L5 -> append L2 L4 L6 -> append L1 L6 L5 -> type.
@@ -264,8 +240,7 @@ append-assoc2 : append L1 L2 L3 -> append L3 L4 L5 -> append L2 L4 L6 -> append 
 %worlds () (append-assoc2 _ _ _ _ _).
 %total {} (append-assoc2 _ _ _ _ _).
 
-%{! #
-# Append and reversal
+%{! ## Append and reversal
 I promissed to prove that ``rev`` is an isomorphism. Lets start by a few lemmas.
 First &lt;math&gt;\forall a,b,c.b^\top \bowtie (a^\top \bowtie c) = (a \diamonds b)^\top \bowtie c&lt;/math&gt;. !}%
     

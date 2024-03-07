@@ -72,8 +72,7 @@ cut  : conc B
 
 %{! 
 
-#
-# Translation: Natural Deduction to Sequent Calculus
+## Translation: Natural Deduction to Sequent Calculus
 
  !}%
 
@@ -116,8 +115,7 @@ nd-to-seq : true A -> conc A -> type.
 
 %{! 
 
-#
-# Translation: Sequent Calculus to Natural Deduction
+## Translation: Sequent Calculus to Natural Deduction
 
  !}%
 

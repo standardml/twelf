@@ -1,7 +1,7 @@
 %%! title: "%unique"
 
 %{! \{\{undocumented\}\}
-A **``%unique``** declaration attempts to automatically check whether some positions of a relation (its outputs) are uniquely determined by some other positions (its inputs). Its syntax is similar to that of ``[%mode](/wiki/percent-mode/)``, except that in addition to being able to specify an argument to be an input (``+``), an output (``-``), or unmoded (``*``), you may also specify an argument to be a unique output (``-1``).
+A **``%unique``** declaration attempts to automatically check whether some positions of a relation (its outputs) are uniquely determined by some other positions (its inputs). Its syntax is similar to that of [``%mode``](/wiki/percent-mode/), except that in addition to being able to specify an argument to be an input (``+``), an output (``-``), or unmoded (``*``), you may also specify an argument to be a unique output (``-1``).
 
 Successful ``%unique`` declarations are used to simplify [coverage checking](/wiki/coverage-checking/), and they can easily be transformed into first-class [uniqueness lemma](/wiki/uniqueness-lemma/).
 
@@ -9,8 +9,7 @@ Successful ``%unique`` declarations are used to simplify [coverage checking](/wi
 Currently there is no way to utilize the result of a successful ``%unique`` declaration and so its use is not suggested - an equivalent result can be established by a [uniqueness lemma](/wiki/uniqueness-lemma/).
 --&gt;
 
-#
-# Example
+## Example
 
 We define the oft-used example of addition of [natural numbers](/wiki/natural-numbers/): !}%
     
@@ -23,7 +22,7 @@ pz : plus z N N.
 ps : plus (s N1) N2 (s N3)
       <- plus N1 N2 N3.
 
-%{! We can then check for uniqueness using ``%unique`` (a ``[%worlds](/wiki/percent-worlds/)`` declaration is also required). !}%
+%{! We can then check for uniqueness using ``%unique`` (a [``%worlds``](/wiki/percent-worlds/) declaration is also required). !}%
     
 %{! (options removed from twelftag: check=decl discard=true) !}%
 
@@ -42,11 +41,10 @@ ps2 : plus (s N1) N2 N3
 %worlds () (plus _ _ _).
 %unique plus +N1 +N2 -1N3.
 
-%{! #
-# Mutual recursion
+%{! ## Mutual recursion
 
 Checking the uniqueness of mutually recursive predicates
-creates a problem, because uniqueness (unlike ``[%mode](/wiki/percent-mode/)``) cannot
+creates a problem, because uniqueness (unlike [``%mode``](/wiki/percent-mode/)) cannot
 be checked incrementally.  We therefore introduce a simultaneous
 form of uniqueness declarations, in analogy with other
 simultaneous declarations. !}%
@@ -67,8 +65,7 @@ d2's : div2' (s N) M
 
 %unique (div2 +N -1M) (div2' +N' -1M').
 
-%{! #
-# Coverage checking
+%{! ## Coverage checking
 
 Successful ``%unique`` declarations are taken into account to simplify certain kinds of coverage goals in [coverage checking](/wiki/coverage-checking/).  Suppose you have a goal with two hypotheses of the form
  ... \{x : a N1 ... Nk M \} ... \{y : a N1 ... Nk M' \} ...
@@ -120,8 +117,7 @@ plus-unique : plus N1 N2 M -> plus N1 N2 M' -> id M M' -> type.
 %worlds () (plus-unique _ _ _).
 %total {} (plus-unique _ _ _).
 
-%{! #
-# See also
+%{! ## See also
 
 &lt;bibtex&gt;@InProceedings\{
   editor = "K.Slind and A.Bunker and G.Gopalakrishnan",

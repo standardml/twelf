@@ -1,11 +1,10 @@
 %%! title: "Metatheorem"
 
-%{! A **metatheorem** is a theorem about an [object language](/wiki/object-logic/). This is a very general statement, but **metatheorem** is a very general term. Many interesting metatheorems can be posed as _\{\{forall\}\}\{\{exists\}\}-statements,_ and these are the kind of metatheorems that can be verified in Twelf. Another kind of metatheorem is a _[totality assertion](/wiki/totality-assertion/)_; these are more limited because any totality assertion can also be posed as a \{\{forall\}\}\{\{exists\}\}-statement. 
+%{! A **metatheorem** is a theorem about an [object language](/wiki/object-logic/). This is a very general statement, but **metatheorem** is a very general term. Many interesting metatheorems can be posed as _∀∃-statements,_ and these are the kind of metatheorems that can be verified in Twelf. Another kind of metatheorem is a _[totality assertion](/wiki/totality-assertion/)_; these are more limited because any totality assertion can also be posed as a ∀∃-statement. 
 
-Twelf can prove \{\{forall\}\}\{\{exists\}\}-metatheorems in one of two ways. The first method, the [theorem prover](/wiki/theorem-prover/), is incomplete and not currently recommended for use. It allows the user to directly specify a \{\{forall\}\}\{\{exists\}\}-statement about LF terms, and then ask Twelf to verify that statement. The other method is to write out a proof of the \{\{forall\}\}\{\{exists\}\} statement in Twelf, and then use Twelf's ability to state and verify [totality assertions](/wiki/totality-assertion/) to show that the proof is correct.
+Twelf can prove ∀∃-metatheorems in one of two ways. The first method, the [theorem prover](/wiki/theorem-prover/), is incomplete and not currently recommended for use. It allows the user to directly specify a ∀∃-statement about LF terms, and then ask Twelf to verify that statement. The other method is to write out a proof of the ∀∃ statement in Twelf, and then use Twelf's ability to state and verify [totality assertions](/wiki/totality-assertion/) to show that the proof is correct.
 
-#
-# Object language
+## Object language
 
 The object language is "the object of study": a logic, programming language, or other deductive system that the user wishes to reason about with Twelf. Simple examples of object languages are [natural numbers](/wiki/natural-numbers/) and the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/), more complex examples can be found in the [case studies](/wiki/case-studies/) or [research projects using Twelf](/wiki/research-projects-using-twelf/). Object languages like the simply-typed lambda calculus and first-order logic demonstrate the power of Twelf's [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/), but the example of natural numbers with addition is used here for its simplicity. The syntax and judgments over the natural numbers can be simply presented in [[w: Backus-Naur form| Backus-Naur form]]:
 
@@ -15,8 +14,7 @@ We then declare &lt;math&gt;\texttt\{plus\}(\textit\{nat\},\textit\{nat\},\texti
 
 &lt;math&gt;\{\qquad \over \texttt\{plus\}(0,N,N)\}\{\mbox\{p-z\}\}&lt;/math&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;math&gt;\{\texttt\{plus\}(N_1,N_2,N_3) \over \texttt\{plus\}(\texttt\{s\}(N_1),N_2,\texttt\{s\}(N_3))\}\{\mbox\{p-s\}\}&lt;/math&gt;
 
-#
-# Theorems
+## Theorems
 
 The usual interpretation of inference rules like the ones above is that we can consider some fact _A_ to be true if we can create a complete derivation that has _A_ a result. Truths that can be verified by writing a derivation are called _theorems._ If the object language is the [natural numbers](/wiki/natural-numbers/), then the following is a theorem theorem proving that 2 + 1 = 3.
 
@@ -27,29 +25,25 @@ The usual interpretation of inference rules like the ones above is that we can c
 
 Similarly, if the object language is the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/), then a theorem might state that the expression &lt;math&gt;(\lambda x : \texttt\{unit\}. x) \langle\rangle&lt;/math&gt; steps to &lt;math&gt;\texttt\{\}\langle\rangle&lt;/math&gt;. This can be shown by using the rules ``step_app_beta`` and ``value_empty``.
 
-#
-# Totality assertions
+## Totality assertions
 
 The term "metatheorem," as previously stated, is a very general term. We first want to think about a specific kind of metatheorem, a [totality assertion](/wiki/totality-assertion/). 
 
 A totality assertion for the informal deductive system presented above might be that, for any two natural numbers &lt;math&gt;\texttt\{\}N_1&lt;/math&gt; and &lt;math&gt;\texttt\{\}N_2&lt;/math&gt;, there is a natural number &lt;math&gt;\texttt\{\}N_3&lt;/math&gt; for which &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt; is derivable. This means that the judgment &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt; forms a total relation, mapping any inputs in the first and second positions of the relation to some output in the third position. Note that the output need not be unique; the totality assertion holds even if there are many such numbers.
 
-The totality assertions in Twelf establish a stronger property. The Twelf [[encoding]] of the &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt; judgment can be run as a logic program, and totality assertions that are verified by ``[%total](/wiki/percent-total/)`` directives verify that, if an encoding is run as a higher-order logic program in Twelf, it will act as a function that, given appropriate inputs, will find an output in a finite amount of time. Twelf's totality analysis is incomplete in that some relations that are total cannot be verified by a ``%total`` declaration.
+The totality assertions in Twelf establish a stronger property. The Twelf [[encoding]] of the &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt; judgment can be run as a logic program, and totality assertions that are verified by [``%total``](/wiki/percent-total/) directives verify that, if an encoding is run as a higher-order logic program in Twelf, it will act as a function that, given appropriate inputs, will find an output in a finite amount of time. Twelf's totality analysis is incomplete in that some relations that are total cannot be verified by a ``%total`` declaration.
 
 Twelf, when used in this way, can be thought of as a "theorem prover" in the limited sense that it _proves_ that a relation is total by doing a program analysis that shows that, given appropriate inputs, it produces outputs when run as a logic program in Twelf.  However, it is more common to describe Twelf as _verifying_ the totality assertions, both because Twelf does not produce a proof witness and because the analysis is not as sophisticated as most theorem proving procedures. Usually, the relations about which programmers intend to prove totality assertions are specifically constructed to be analyzable by Twelf's ``%total`` directive. These relations often correspond closely to an informal proof by structural induction of the same fact, making Twelf's process of verifying totality similar to the human process of verifying that a proof is valid.
 
-#
-# \{\{forall\}\}\{\{exists\}\}-statements
+## ∀∃-statements
 
 Totality assertions seem very limited in scope. We have merely shown that, given a judgment like &lt;math&gt;\texttt\{plus\}&lt;/math&gt;, we can interpret as the judgment as a relation from some inputs to some outputs and prove that the relation, given inputs, have rules that will always allow us to find outputs. But we can't, for instance, write a totality assertion on &lt;math&gt;\texttt\{plus\}&lt;/math&gt; that will allow us to prove that the relation is commutative or associative.
 
-The theorem "addition is commutative" can be specified more precisely like this: for all natural numbers &lt;math&gt;\texttt\{\}N_1&lt;/math&gt;, &lt;math&gt;\texttt\{\}N_2&lt;/math&gt;, &lt;math&gt;\texttt\{\}N_3&lt;/math&gt; and derivation of the judgment &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt;, there exists a derivation of the judgment &lt;math&gt;\texttt\{plus\}(N_2,N_1,N_3)&lt;/math&gt;. The previous statement, at a high level, said "for all (some things) there exist (some other things." Statement with this forms are called \{\{forall\}\}\{\{exists\}\}-statement.
+The theorem "addition is commutative" can be specified more precisely like this: for all natural numbers &lt;math&gt;\texttt\{\}N_1&lt;/math&gt;, &lt;math&gt;\texttt\{\}N_2&lt;/math&gt;, &lt;math&gt;\texttt\{\}N_3&lt;/math&gt; and derivation of the judgment &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt;, there exists a derivation of the judgment &lt;math&gt;\texttt\{plus\}(N_2,N_1,N_3)&lt;/math&gt;. The previous statement, at a high level, said "for all (some things) there exist (some other things." Statement with this forms are called ∀∃-statement.
 
 The page about Twelf's [theorem prover](/wiki/theorem-prover/) shows how the theorem prover could be used to state, and prove, this statement, but the currently recommended way of doing this is by using a totality assertion. The series of tutorials on [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) explain in detail how to do this; the remainder of this article will only give a very general view based on the notes from [http://www.cs.cmu.edu/~fp/courses/lp/lectures/18-proofs.html Lecture 18] of Frank Pfenning's course on Logic Programming.
 
-#
-#
-# Simple types
+### Simple types
 
 First, think back at our presentation of the structure of natural numbers:
 
@@ -57,9 +51,7 @@ First, think back at our presentation of the structure of natural numbers:
 
 We will now think of this BNF grammar as defining the members of the _type_ &lt;math&gt;\texttt\{\}\textit\{nat\}&lt;/math&gt;. In this view &lt;math&gt;\texttt\{\}0&lt;/math&gt; is an object of type &lt;math&gt;\textit\{nat\}&lt;/math&gt;, and &lt;math&gt;\texttt\{s\}&lt;/math&gt; is a constructor that, given an object of type &lt;math&gt;\textit\{nat\}&lt;/math&gt;, produces an object of type &lt;math&gt;\textit\{nat\}&lt;/math&gt;.
 
-#
-#
-# Proof terms
+### Proof terms
 
 Now, look back at this derivation
 
@@ -75,9 +67,7 @@ Natural numbers are objects, and we can think of derivations as objects as well:
 The proof term &lt;math&gt;\texttt\{p-s\}(\texttt\{p-s\}(\texttt\{p-z\}))&lt;/math&gt; can be thought of as having the type &lt;math&gt;\texttt\{plus\}(\texttt\{s\}(\texttt\{s\}(0)),\;\texttt\{s\}(0),\;\texttt\{s\}(\texttt\{s\}(\texttt\{s\}(0))))&lt;/math&gt;, but it can also be thought of as having the type
 &lt;math&gt;\texttt\{plus\}(\texttt\{s\}(\texttt\{s\}(0)),\;0,\;\texttt\{s\}(\texttt\{s\}(0)))&lt;/math&gt;. Remembering our analysis above, we can see that the most general type we can give the proof object &lt;math&gt;\texttt\{p-s\}(\texttt\{p-s\}(\texttt\{p-z\}))&lt;/math&gt; is &lt;math&gt;(\forall N:\textit\{nat\}.\;\texttt\{plus\}(\texttt\{s\}(\texttt\{s\}(0)),\;N,\;\texttt\{s\}(\texttt\{s\}(N))))&lt;/math&gt;.
 
-#
-#
-# Proving \{\{forall\}\}\{\{exists\}\}-statements using totality assertions
+### Proving ∀∃-statements using totality assertions
 
 Recall that when we first defined the judgment &lt;math&gt;\texttt\{plus\}&lt;/math&gt;, we mentioned the type of objects that it related:
 
@@ -89,7 +79,7 @@ We will now write a judgment that, instead of relating objects with type &lt;mat
 
 Describing the rules that define this judgment is beyond the scope of this article; see Frank Pfenning's notes [http://www.cs.cmu.edu/~fp/courses/lp/lectures/18-proofs.html notes] for a continuation of this approach, or [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) for a description that is closer to how Twelf is used in practice. However, without describing these rules, if they were written and written correctly, we could verify a totality assertion that stated that ``plus-comm`` is a total relation with derivations of &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt; as an input and derivations of &lt;math&gt;\texttt\{plus\}(N_2,N_1,N_3)&lt;/math&gt; as an output.
 
-This means that, for any three natural numbers &lt;math&gt;\texttt\{\}N_1&lt;/math&gt;, &lt;math&gt;\texttt\{\}N_2&lt;/math&gt;, and &lt;math&gt;\texttt\{\}N_3&lt;/math&gt;, and any proof object with the type &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt;, there is a proof object with type &lt;math&gt;\texttt\{plus\}(N_2,N_1,N_3)&lt;/math&gt;. This is equivalent to the \{\{forall\}\}\{\{exists\}\}-statement for the commutativity of addition that we started out with; the only difference is that we are now speaking in terms of proof objects and types instead of derivations and judgments. !}%
+This means that, for any three natural numbers &lt;math&gt;\texttt\{\}N_1&lt;/math&gt;, &lt;math&gt;\texttt\{\}N_2&lt;/math&gt;, and &lt;math&gt;\texttt\{\}N_3&lt;/math&gt;, and any proof object with the type &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt;, there is a proof object with type &lt;math&gt;\texttt\{plus\}(N_2,N_1,N_3)&lt;/math&gt;. This is equivalent to the ∀∃-statement for the commutativity of addition that we started out with; the only difference is that we are now speaking in terms of proof objects and types instead of derivations and judgments. !}%
 
 %{!
 This page was copied from the MediaWiki version of the Twelf Wiki.

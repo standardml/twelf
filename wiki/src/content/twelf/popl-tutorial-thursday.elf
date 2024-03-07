@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial/Thursday"
 
-%{! #
-# Mechanizing Metatheory with LF and Twelf
+%{! ## Mechanizing Metatheory with LF and Twelf
 
 Do you want to learn how to use [Main page](/wiki/main-page/) to specify, implement, and prove
 properties about programming languages?  
@@ -26,8 +25,7 @@ The early registration deadline is **December 19**.
 The tutorial is organized and presented by the CMU Principles of
 Programming group.
 
-#
-# Schedule ([http://www.cs.cmu.edu/~drl/tmp/lectures.pdf all slides])
+## Schedule ([http://www.cs.cmu.edu/~drl/tmp/lectures.pdf all slides])
 
 * Overview ([POPL_Tutorial/Nat](/wiki/popl-tutorial-nat/))
 ** Session A1: Representation
@@ -42,8 +40,7 @@ Programming group.
 ** Session C1: [POPL_Tutorial/Combinators session](/wiki/popl-tutorial-combinators-session/)
 ** Session C2: [POPL_Tutorial/Session 5](/wiki/popl-tutorial-session-5/)
 
-#
-# Get Twelf before the tutorial!
+## Get Twelf before the tutorial!
 
 The tutorial will be interactive, with participants writing Twelf code, so you should come with Twelf installed on your laptop.
 

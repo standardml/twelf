@@ -4,8 +4,7 @@
 
 Although this tutorial has (user-defined) constraint domains as its main theme, it touches on a lot of other topics and techniques, and so has some value as a general tutorial on Twelf.
 
-#
-# Motivation
+## Motivation
 
 We begin with some motivation (and review), which you can skip if you are interested in getting right to the examples that follow.
 
@@ -19,8 +18,7 @@ Another crucial aspect of LF from a representational standpoint is that its term
 
 We are therefore led to wonder whether we can represent such "algebras" as LF types.
 
-#
-# Example 1: Even and Odd
+## Example 1: Even and Odd
 
 We borrow our first example from the tutorial on [Output factoring](/wiki/output-factoring/): !}%
     
@@ -39,9 +37,7 @@ s-e : even (s X) <- odd X.
 
 %{! Here, ``even`` and ``odd`` are _predicates_ on ``nat`` and are defined in terms of their relation to ``s``.  The [output factoring](/wiki/output-factoring/) shows you how to prove that, under this definition, every natural number is either even or odd; the statement of the theorem requires a disjoint-union type, and the proof requires a lemma to take care of an output coverage problem.
 
-#
-#
-# An approach using indexing
+### An approach using indexing
 
 Since the subsets of even and odd natural numbers are disjoint, you might think of another approach to representing these subsets, namely, by introducing a new type of _natural number sorts_, and indexing ``nat`` by the sort: !}%
     
@@ -64,9 +60,7 @@ s : nat X -> nat (f X).
 
 %{! for some term ``f`` of type ``nat_sort -&gt; nat_sort`` with the property that ``f even`` = ``odd`` and ``f odd`` = ``even``, but again this is not possible in LF, since terms are freely generated and functional terms are parametric in their arguments (i.e., there are no destructors or case-splitting on arguments).  This approach seems to be stuck.  Or is it?
 
-#
-#
-# A constraint domain of natural-number sorts
+### A constraint domain of natural-number sorts
 
 The idea is to use a higher-order "Church-encoding" for our two-element type and to use abbreviations to "hide" the implementation of this type: !}%
     
@@ -133,14 +127,11 @@ plus : nat X -> nat Y -> nat (f X Y) -> type.
 
 %{! then at least one of the two declarations for ``plus_z`` or ``plus_s`` will no longer type-check without generating unresolved constraints.  Finally, we observe that, as compared to the definitions of even and odd in the tutorial on [output factoring](/wiki/output-factoring/), it is intrinsic in our encoding via the constraint domain ``nat_sort`` that every natural number is either even or odd, and so this is not something that needs to be proved.
 
-#
-# Example 2: Polarities
+## Example 2: Polarities
 
 For our next example, we are going to use the same constraint domain that we used in Example 1, and for a similar purpose (although we will be renaming it to suit the current situation).  Suppose that we have a language with a type system that includes a function-space operator, ``=&gt;``, along possibly with some others, such as products, sums, and type constants, and we have represented these as canonical forms of an LF type ``tp``.  We want to add an operator ``mu`` to represent _positive inductive types_.  What this means is that if we have a type expression ``F : tp -&gt; tp`` such that for any ``x : tp``, the type ``F x`` only has _positive_ occurrences of ``x`` (that is, every occurrence of ``x`` is on the left-hand side of an even number of ``=&gt;`` operators), then we want to be able to form ``mu F : tp``.  Furthermore, these are the _only_ ``mu``-types that we want to form; i.e., we want this to be an [Intrinsic and extrinsic encodings](/wiki/intrinsic-and-extrinsic-encodings/).  All of these types will have introduction and elimination forms, but for the purposes of this example, we will just focus on the types themselves.
 
-#
-#
-# An approach via predicates
+### An approach via predicates
 
 A natural approach to this problem is to try to represent the positivity condition as a predicate ``pos`` on ``tp -&gt; tp`` and to define this predicate mutually with another predicate ``neg`` on ``tp -&gt; tp``, as follows: !}%
     
@@ -217,9 +208,7 @@ mu ([x] un * un) ( %{proof}% )
 
 `` import="ex2a" check="true"&gt;See Twelf's output`` for the code above.
 
-#
-#
-# Is there an adequate intrinsic encoding?
+### Is there an adequate intrinsic encoding?
 
 So how can we achieve an adequate intrinsic encoding of μ-types?  The situation is worse than you might think:  there doesn't seem to be any hope of getting such an encoding.  We've seen that adding a catch-all case destroys adequacy, but yet we've also seen that, in representing the μ-type μ``X``. μ``Y``. ``X * Y``, we need a positivity assumption about ``X`` in order to show that ``Y`` occurs positively in ``X * Y``.  So our only hope seems to be to add it to the argument of ``mu``, thus: !}%
     
@@ -240,9 +229,7 @@ pos : ({a:tp} pos ([b] a) -> tp) -> type
 
 %{! which is circular, and we can't do 2, because to get a ``tp`` output from ``F``, we'd need first to construct something of type ``pos ([b] a)``, which is exactly the problem we were trying to solve in the first place.  So, it seems that our search for an adequate intrinsic encoding of μ-types is doomed.  Or is it?
 
-#
-#
-# Using the even/odd constraint domain
+### Using the even/odd constraint domain
 
 You may remember our original characterization of what it means for a type expression ``F : tp -&gt; tp`` to have only positive occurrences of its bound variable, namely, that every occurrence of the variable is on the left-hand side of an _even_ number of ``=&gt;`` operators.  This suggests that, in the same way that we used the ``nat_sort`` constraint domain in Example 1 as an index to ``nat`` in order to capture the even (and odd) natural numbers, we can also use it here as an index to ``tp`` to capture occurrences on the left of an even (and odd) number of ``=&gt;``s.  When we follow this idea to its logical conclusion, this is what we get: !}%
     
@@ -290,8 +277,7 @@ ex7 : pos_ind = [P] mu [x] x * (mu [y] x => y).
 
 %{! Curiously, if you remove the type ascriptions and polarity abstractions from these three ill-formed ``mu``-types, then they _do_ type-check, but only because Twelf, during type-reconstruction, abstracts a variable ``X`` of type ``t`` from these definitions and then assigns the "constant polarity" ``[t1][t2] X`` (which is its own opposite!) to the contradictory subterms.  This illustrates again the reliance of this method on the fact that the basic type ``t`` cannot have any canonical elements.
 
-#
-# Example 3: Uniform syntactic categories
+## Example 3: Uniform syntactic categories
 
 Looking over the examples from the previous two sections, you may have noticed a pattern in the method we used to achieve simplification in each case, a method that we might call _intrinsification by indexing_.  That is, we were given a type ``A`` with some unary predicates ``P`` on that type and we "intrinsified" those predicates by turning ``A`` into a type family ``A'`` that was indexed by a particular constraint domain whose elements represented those predicates; for any predicate ``P``, the elements of ``A' P`` were exactly the original elements of ``A`` that satisfied ``P``.  This opened up the possibility of giving more precise types to functions defined on ``A`` that respected the predicates, since we were are able to "track" their behavior on the indices by using definable functions in the type-hierarchy over the constraint domain.
 
@@ -299,9 +285,7 @@ Thus, in Example 1, the type ``A`` was ``nat`` and the predicates were ``even`` 
 
 We will continue to explore this theme by using a couple of examples from the typed lambda calculus and LF itself.  But first, let's look a little more carefully at the conditions under which we can expect the methods of the previous two sections to work.  Clearly, if we want there to be a bijection between ``A`` and the collection of types ``A' P`` indexed by the predicates ``P``, then the extensions of these predicates must form a partition of ``A`` (i.e., they must be pairwise disjoint and collectively exhaustive).  This may seem like a severe restriction, but there are some ways around it, as we will see shortly.  But another restriction of the method is that, if we want to give more informative types for functions defined on ``A``, these must must not only respect the predicates, but the induced functions on the indices must also be _uniform_ in the sense that they can be defined parametrically on the index.  These restrictions will become clearer as we look at more examples.
 
-#
-#
-# Simply-typed lambda calculus with values
+### Simply-typed lambda calculus with values
 
 Our next example won't actually require a constraint domain, but it nevertheless illustrates the intrinsification-by-indexing theme we are developing, and it shows how you can sometimes get around some of the limitations of the method that were discussed at the end of the previous section.  Suppose we want to represent a simply-typed call-by-value lambda-calculus with a (big-step) evaluation relation that relates arbitrary terms with their values under evaluation, and we decide to represent typed terms intrinsically and values extrinsically: !}%
     
@@ -355,18 +339,13 @@ ev-app : eval (app E1 E2) V
 
 `` import="ex3b" check="true"&gt;See Twelf's output``.
 
-#
-#
-# The syntax of Canonical LF
+### The syntax of Canonical LF
 
 In modern presentations of the LF type theory (see the glossary entry for [canonical form](/wiki/canonical-form/)s for more information), the set of syntactic objects is divided into five categories:  kinds, canonical types, atomic type families, canonical terms, and atomic terms, often denoted by the letters K, A, P, M, and R.  This stratification of syntax necessitates a similar stratification of the typing judgment (or, as we will call it, the classification judgment), the [hereditary substitution](/wiki/hereditary-substitution/) judgment, and the statements of theorems about these judgments, for example the substitution theorem.
 
 In this section, we will show how it is possible to define a constraint domain ``cat`` of _(syntactic) categories_ to allow an economical presentation of the syntax, judgments, and metatheorems of LF.  In particular, we will have one type family of terms, one classification judgment, one substitution judgment, and one substitution theorem statement, each of which is indexed by a syntactic category.  In order to achieve this unification, we will have to make use of some functions in the type hierarchy over ``cat``, much the way we did with ``add1-mod2``, ``plus-mod2``, and ``opp`` above.  To simplify the presentation for this tutorial, we will not be representing signatures, (type family or term) constants, subordination, the simple-type subscripts to hereditary substitution, or the bi-directionality of the typing judgments and substitution theorem.
 
-#
-#
-#
-# The constrain domain of syntactic categories
+#### The constrain domain of syntactic categories
 
 We first define the constraint domain, ``cat``.  There are two subtleties here.  First, because our unified classification judgment relates a syntactic object to its classifier, it will be necessary for the purpose of uniformity to introduce a category to classify kinds; we call it "unit" (letter: U) and give it a unique element ``*`` (this element might be called a "hyperkind").  Second, the hereditary substitution operation, when applied to an atomic term _R_, can produce either a canonical term or an atomic term, depending on whether the substitution variable occurs at the head of _R_ or not.  Consequently, we introduce a syntactic category to represent the disjoint union of canonical and atomic terms (letter: M+R), and we introduce two injections from M and R into M+R as term constructors.
 
@@ -386,10 +365,7 @@ t : type.
 %abbrev m+r : cat = [k][a][p][m][r][m+r][u] m+r.
 %abbrev u   : cat = [k][a][p][m][r][m+r][u] u.
 
-%{! #
-#
-#
-# Terms and term constructors
+%{! #### Terms and term constructors
 
 We can now introduce the type ``tm`` of terms, which is indexed by ``cat``, as well as the various term constructors: !}%
     
@@ -417,10 +393,7 @@ atom     : tm r -> tm m+r.                     % right injection
 
 %{! Here, we have used the standard [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) representations of binders, which in this case always abstract over atomic term variables.  We have also included explicit coercions from atomic to canonical types and terms, since we really have disjoint syntactic categories here, instead of the usual overlapping ones, so some operation is needed to move from one category to another.
 
-#
-#
-#
-# Main judgments
+#### Main judgments
 
 We come now to the main judgments, classification and substitution.  We haven't yet made any special use of the constraint domain&mdash;for everything above, we could have used an ordinary type&mdash;but this is where we will need it.  The reason is that, in order to state these judgments in a general enough way to include all of the usual stratified LF judgments, we will need to be able to track the functions that take a category to the category of objects that classifies it, as well as the function that takes a category to the category of objects that result from substitutions into it (recall the subtlety with M+R).  These are provided by the functions ``class`` and ``subst``, respectively: !}%
     
@@ -438,10 +411,7 @@ substj : (tm r -> tm X) -> tm m -> tm (subst X) -> type.
 
 %{! Here, ``classj U V`` means that ``U`` is classified by (has type, has kind, has hyperkind) ``V``, and ``substj ([x] E x) M E'`` means that ``E'`` is the result of substituting ``M`` for ``x`` in ``E``.  Also, notice that the category index of each of these judgments is _implicit_, so you won't see any categories mentioned in the rules that follow.
 
-#
-#
-#
-# Rules for classification
+#### Rules for classification
 
 We now give the encodings of the rules for classification.  For the purposes of this tutorial, it is not necessary that you study these rules in detail (unless they interest you!); just notice that Twelf is, in each case, able to infer the syntactic categories of all syntactic constituents of these rules by the using the term constructors involved, as well as the ``class`` function used to track the category of the classifier. !}%
     
@@ -486,10 +456,7 @@ canon_atom_atom : classj (atom R) A
 
 unit_unit       : classj * *.
 
-%{! #
-#
-#
-# Rules for substitution
+%{! #### Rules for substitution
 
 Similarly, we present the rules for substitution.  Just notice here that categories are inferred in the same way as with classification, with the added subtlety of the disjoint union type returned by substitutions into atomic terms: !}%
     
@@ -545,10 +512,7 @@ subst_m+r_atom  : substj ([x] atom (P x)) M0 (atom P')
 
 subst_unit_unit : substj ([x] *) M0 *.
 
-%{! #
-#
-#
-# Statement of the substitution theorem
+%{! #### Statement of the substitution theorem
 
 We finish up this example with one more illustration of the unification afforded by our constraint domain: the statement of the substitution theorem for LF.  The theorem statement involves an implicit quantification over the syntactic category.  This means, in particular, that it isn't necessary to prove this by a mutual induction over the syntactic category, as is usually the case.  (Note, however, that because of the simplifications to LF that we have used for this presentation, it won't be possible to prove the theorem in this form.) !}%
     
@@ -565,8 +529,7 @@ sub_thm : {T:tm r -> tm X} classj M0 A0
 
 %{! `` import="ex3d" check="true"&gt;See Twelf's output`` for all the code in this section.  Expansion of abbreviations is really hurting us here in this output, since ``nat`` expands to a type with seven arrows!
 
-#
-# Example 4: Lists of length _n_
+## Example 4: Lists of length _n_
 
 All of the constraint domains that we have used so far have been finite.  For our last example, we will use an infinite constraint domain to implement one of the examples from the Twelf Manual that was used to illustrate the built-in constraint domain of rational numbers.  The example defines a dependent type of lists of items, where the index is the length of the list.  It then defines an append function, using the integer addition function to track the index of the result.  We can achieve that result here by using a Church encoding of the natural numbers: !}%
     
@@ -601,8 +564,7 @@ These are statements&mdash;an equation and an implication between two equations&
 
 `` import="ex4" check="true"&gt;See Twelf's output``
 
-#
-# Conclusion
+## Conclusion
 
 The techniques described in this tutorial fit into the general category of using indexing of types instead of predicates to make encodings more intrinsic.  Our so-called user-defined constraint domains were one variety of index type that we found to be useful in this regard, since they allow us to define "tracking functions" that would be impossible to define with a free representation.
 

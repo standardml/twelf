@@ -23,8 +23,7 @@ quux_con : { A : foo } { B : foo A } quux A B
 % quux_con2 : quux A B <- A : foo <- B : foo A
 
 %{! &lt;/blockquote&gt;
-#
-# Response
+## Response
 
 I believe what you want to do is doable - you were on the right track with introducing A as an [explicit parameter](/wiki/implicit-and-explicit-parameters/) here. However, I would caution you against what you're suggesting, because - as far as I know, what you're asking requires essentially duplicating your entire program as [effectiveness lemmas](/wiki/effectiveness-lemma/).
 
@@ -99,9 +98,7 @@ This is realized in the following relation: !}%
 twoplus : {A}{B}{C}{D: plus A B C}{D': plus B A C} plus-comm D D' -> type.
 %mode twoplus +A +B -C -D -D' -D''.
 
-%{! #
-#
-# Lots of effectiveness lemmas
+%{! ### Lots of effectiveness lemmas
 
 In order to get what we want, we are going to have to encode a bunch of [effectiveness lemmas](/wiki/effectiveness-lemma/)&mdash;not having written them those may have been what was giving you trouble before. In your example you seem to indicate that the relations you were working with were not necessarily total relations from inputs to outputs - if that is the case, then you will define what could more accurately be called _effectiveness relations_. What effectiveness lemmas/relations do is express _how to build a proof witness given certain inputs_ - in some sense making the proof search process explicit rather than letting ``%solve`` handle it.
 
@@ -163,9 +160,7 @@ can-plus-succ/s : can-plus-comm (plus/s D) D'' (plus-comm/s DS DC)
 
 %{! To see all of the code with effectiveness lemmas included, ``&gt;click here``.
 
-#
-#
-# Putting together the ``twoplus`` relation
+### Putting together the ``twoplus`` relation
 
 Now that we have all the effectiveness lemmas we could ever need or want, it is relatively simple to define twoplus. Furthermore, because we established totality of ``plus`` and ``plus-comm``, it is simple to establish totality of ``twoplus``. !}%
     
@@ -181,8 +176,7 @@ twoplus/i : twoplus A B C D D' DC
 
 %{! You can ``&gt;see all the code`` or `` check="true"&gt;see Twelf's response`` to checking it.
 
-#
-# Side note about ``%define``
+## Side note about ``%define``
 
 As a side note, look at Twelf's output when we solved ``%solve B : plus-comm A C.`` It didn't allow us to see the type of ``C``, and it didn't allow us to use ``C`` later in the program. We can bind outputs of functions and use them later in the signature by using [define declaration](/wiki/define-declaration/), as the following example shows: !}%
     

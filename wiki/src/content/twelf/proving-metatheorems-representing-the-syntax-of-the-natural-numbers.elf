@@ -9,12 +9,9 @@ To use Twelf, you need to know how to represent [deductive systems](/wiki/object
 
 Our first task is to introduce LF and see how to represent the syntax of a deductive system in it. We refer to a language that we are formalizing in LF as an [object language](/wiki/object-logic/) (i.e., it is the object of our study).  In contrast, we sometimes refer to LF as the [meta-language](/wiki/meta-logic/). To keep things simple, we use the natural numbers as first example object language.
 
-#
-# Natural numbers
+## Natural numbers
 
-#
-#
-# Informal definition
+### Informal definition
 
 In informal mathematical notation ("informal" is used here in the sense of "not formalized"), the syntax of the natural numbers is defined by the following grammar:
 
@@ -22,9 +19,7 @@ In informal mathematical notation ("informal" is used here in the sense of "not 
 
 That is, &lt;math&gt;\mathsf\{zero\}&lt;/math&gt; is a natural number, and if &lt;math&gt;n&lt;/math&gt; is a natural number, then &lt;math&gt;\mathsf\{succ\}(n)&lt;/math&gt; is as well.
 
-#
-#
-# LF representation
+### LF representation
 
 LF is a typed lambda-calculus. We represent an [object language](/wiki/object-logic/) in LF by writing an LF [signature](/wiki/twelf-signature/).  A signature declares type and term constants.  For example, this LF [signature](/wiki/twelf-signature/) defines a type representing the natural numbers: !}%
     
@@ -51,9 +46,7 @@ n \gg N \over
 &lt;/math&gt;
 &lt;/center&gt;
 
-#
-#
-# Adequacy
+### Adequacy
 
 Is this a correct encoding of the natural numbers?  In the LF methodology, the correctness criterion for an encoding is called [adequacy](/wiki/adequacy/):
 

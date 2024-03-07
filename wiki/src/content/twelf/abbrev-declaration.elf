@@ -2,8 +2,7 @@
 
 %{! The **``%abbrev``** keyword can be placed before any [[definition]] in a Twelf [signature](/wiki/twelf-signature/) to cause the definition to, in the future, act as syntatic shorthand for some other term.
 
-#
-# Example
+## Example
 
 Say, for some reason, we had extremely verbose names for the syntax of the [natural numbers](/wiki/natural-numbers/). !}%
     
@@ -23,8 +22,7 @@ s   = this-is-a-long-name-for-s.
 
 three = s (s (s z)).
 
-%{! #
-# See also
+%{! ## See also
 
 * \{\{guide|title=Definitions|chapter=3|section=10\}\}
 \{\{keyword|key=abbrev\}\} !}%

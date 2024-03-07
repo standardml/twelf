@@ -8,8 +8,7 @@
 
 In this section, we discuss how to represent the syntax of a simply typed λ-calculus in LF.
 
-#
-# Representing STLC types
+## Representing STLC types
 
 We consider a λ-calculus with &lt;math&gt;\mathsf\{unit\}&lt;/math&gt; as a base type:
 
@@ -23,12 +22,9 @@ arrow : tp -> tp -> tp.
 
 %{! We leave it to the reader to formulate an appropriate encoding judgement between STLC types &lt;math&gt;\texttt\{\}\tau&lt;/math&gt; and closed LF terms of type ``tp`` and to prove that this encoding is adequate in the usual sense.  
 
-#
-# Representing STLC terms
+## Representing STLC terms
 
-#
-#
-# Informal definition
+### Informal definition
 
 The terms of the STLC are variables &lt;math&gt;\mathsf\{\}x&lt;/math&gt;, the 0-element tuple, lambda abstraction (with a type annotation), and application:
 
@@ -36,9 +32,7 @@ The terms of the STLC are variables &lt;math&gt;\mathsf\{\}x&lt;/math&gt;, the 0
 
 The variable &lt;math&gt;\mathsf\{\}x&lt;/math&gt; is considered to be bound by the expression &lt;math&gt;\lambda x :\tau . e&lt;/math&gt;.  Following standard practice, we implicitly consider terms modulo renaming of bound variables.
 
-#
-#
-# LF representation
+### LF representation
 
 We represent these terms in LF with the following signature: !}%
     
@@ -73,9 +67,7 @@ Using higher-order abstract syntax (HOAS) in this fashion makes two operations o
 * **α-equivalence**: Because LF terms are considered modulo α-renaming of bound variables, and LF bound variables are used to model object-language bound variables, the type ``tm`` represents α-equivalence classes of object-language terms.  For example, because there is no way to distinguish ``([x] app x empty)`` and ``([y] app y empty)`` in LF, so there is no way to distinguish ``lam (arrow unit unit) ([x] app x empty)`` and ``lam (arrow unit unit) ([y] app y empty)``.  
 * **capture-avoiding substitution**: an object-language substitution, written &lt;math&gt;\{e_2/x\}e&lt;/math&gt;, is modeled by an LF substitution ``[E2/x] E``.  
 
-#
-#
-# Adequacy
+### Adequacy
 
 The adequacy theorem for terms shows that the LF operations correctly implement the object-language operations:
 
@@ -93,8 +85,7 @@ In fact, the representation of STLC types remains adequate in contexts of this f
 
 Specifically, it is important that LF does not provide any elimination forms for constants.  For example, suppose LF provided a ``case`` construct for case-analyzing the terms of a type, as one would have if ``tm`` were considered to be an inductive definition within the type theory.  Then the term ``([x:tm] case x of empty =&gt; empty | ...)`` would need to be considered a canonical form of type ``tm -&gt; tm`` (without knowing what the variable stands for, there is no way to reduce the case).  However, this term does not correspond to any object-language term-with-a-free-variable, so having such a case construct would ruin the adequacy of the representation.  
 
-#
-# References
+## References
 
 &lt;references/&gt;
 

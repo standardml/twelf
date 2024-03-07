@@ -14,8 +14,7 @@ are beta-eta equal.
 
 %{! 
 
-#
-# Syntax and static semantics
+## Syntax and static semantics
 
  !}%
 
@@ -75,8 +74,7 @@ We can use Twelf's [Abbrev_declaration](/wiki/abbrev-declaration/) and
 
 %{! 
 
-#
-# Equational theory
+## Equational theory
 
  !}%
 
@@ -160,8 +158,7 @@ ceq/trans : ceq N N''
 
 %{! 
 
-#
-# Translation
+## Translation
 
  !}%
 
@@ -300,8 +297,7 @@ can-translate : {M : term A} translate M N -> type.
 
 %{! 
 
-#
-# Correctness of the translation
+## Correctness of the translation
 
  !}%
 

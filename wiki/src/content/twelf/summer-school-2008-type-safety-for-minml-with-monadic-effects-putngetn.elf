@@ -14,8 +14,7 @@ Type safety for MinML with monadic effects, with putn and getn primitives.
 
 %{! 
 
-#
-# Syntax / static semantics
+## Syntax / static semantics
 
 Types:
 
@@ -49,12 +48,9 @@ putn   : nat exp -> U command -> U command.
 
 %{! 
 
-#
-# Dynamic semantics / preservation
+## Dynamic semantics / preservation
 
-#
-#
-# Values and final states
+### Values and final states
 
  !}%
 
@@ -74,9 +70,7 @@ final/ret : final (return E)
 
 %{! 
 
-#
-#
-# Transition relation for expressions
+### Transition relation for expressions
 
  !}%
 
@@ -107,9 +101,7 @@ step/app/beta-v
 
 %{! 
 
-#
-#
-# Labelled transition relation for commands
+### Labelled transition relation for commands
 
  !}%
 
@@ -136,12 +128,9 @@ mstep/putn-put : mstep (putn E M) M (label/write (Dval : value E)).
 
 %{! 
 
-#
-# Progress
+## Progress
 
-#
-#
-# Return sums
+### Return sums
 
  !}%
 
@@ -155,9 +144,7 @@ fos/step : fin-or-mstep M <- mstep M _ _.
 
 %{! 
 
-#
-#
-# [Output factoring](/wiki/output-factoring/) lemmas
+### [Output factoring](/wiki/output-factoring/) lemmas
 
  !}%
 
@@ -215,9 +202,7 @@ prog/app
 
 %{! 
 
-#
-#
-# Progress for expressions
+### Progress for expressions
 
  !}%
 
@@ -248,9 +233,7 @@ prog : {E : T exp} val-or-step E -> type. %name prog Dprog.
 
 %{! 
 
-#
-#
-# Factoring lemmas for commands
+### Factoring lemmas for commands
 
  !}%
 
@@ -292,9 +275,7 @@ mprog/putn : val-or-step E -> {M} mstep (putn E M) M' L -> type.
 
 %{! 
 
-#
-#
-# Progress for commands
+### Progress for commands
 
 One of the factoring lemmas is mutually recursive with the main theorem:
 

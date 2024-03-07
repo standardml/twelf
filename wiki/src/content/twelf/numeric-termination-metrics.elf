@@ -4,8 +4,7 @@
 
 This tutorial presents an example of such a proof. We show a fragment of a proof of confluence for a λ-calculus with typed η-expansion.  The proof inducts on the size of a reduction derivation.  Moreover, the proof uses [%reduces](/wiki/percent-reduces/) to tell the termination checker that addends are subterms of their sum. In general, a [%reduces](/wiki/percent-reduces/) declaration is necessary whenever the computation of a numeric termination metric uses an auxiliary relation like addition or maximum.  See the tutorial on [structural termination metrics](/wiki/structural-metrics/) for another approach to termination metrics.
 
-#
-# Language Definition
+## Language Definition
 
 The syntax, typing judgement, and reduction relation for the language are straightforward: !}%
     
@@ -47,8 +46,7 @@ reduce_eta	: reduce E (lam T1 ([x] app E' x))
 
 %{! The judgement ``reduce`` defines a parallel, reflexive reduction relation with typed η-expansion.  
 
-#
-# Facts about numbers
+## Facts about numbers
 
 In the proof below, we induct on the size of a reduction derivation.  To get this induction to go through, we require some facts about addition on natural numbers.
 
@@ -139,16 +137,13 @@ sum_reduces1 : {N1:nat} {N2:nat} {N3:nat} sum N1 N2 N3 -> type.
 %total {} (sum_reduces1 _ _ _ _).
 %reduces N1 <= N3 (sum_reduces1 N1 N2 N3 _).
 
-%{! #
-# Proof of confluence
+%{! ## Proof of confluence
 
 We now show part of the proof of the diamond property for this notion of reduction.  The proof requires a metric computing the size of a reduction derivation.
 
 \{\{needs|to recreate why you need a metric\}\}
 
-#
-#
-# Definition of the metric !}%
+### Definition of the metric !}%
     
 reduce_metric : reduce E E' -> nat -> type.
 
@@ -166,9 +161,7 @@ reduce_metric_beta	: reduce_metric (reduce_beta D2 D1) (s N)
 reduce_metric_eta	: reduce_metric (reduce_eta D _) (s N)
 			   <- reduce_metric D N.
 
-%{! #
-#
-# Excerpt of the proof !}%
+%{! ### Excerpt of the proof !}%
     
 %{! (options removed from twelftag: check="true") !}%
 
@@ -229,9 +222,7 @@ In other cases, which we have elided, the termination metric gets smaller but th
 
 \{\{needs|to show one such case.\}\}
 
-#
-#
-# Cleanup
+### Cleanup
 
 We would like an overall theorem: !}%
     

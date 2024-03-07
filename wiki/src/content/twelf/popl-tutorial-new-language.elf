@@ -2,8 +2,7 @@
 
 %{! 
 
-#
-# Arithmetic Primitives
+## Arithmetic Primitives
 
  !}%
 
@@ -38,8 +37,7 @@ mult/s : mult (s M) N Q
 
 %{! 
 
-#
-# Language Syntax
+## Language Syntax
 
  !}%
 
@@ -64,8 +62,7 @@ split : exp -> (exp -> exp -> exp) -> exp.
 
 %{! 
 
-#
-# Dynamic Semantics
+## Dynamic Semantics
 
  !}%
 
@@ -133,8 +130,7 @@ step/split/pair : step (split (pair V1 V2) ([x] [y] E x y)) (E V1 V2)
 
 %{! 
 
-#
-# Static Semantics
+## Static Semantics
 
  !}%
 
@@ -172,8 +168,7 @@ of/split : of (split E ([x] [y] Ebody x y)) T
 
 %{! 
 
-#
-# Progress
+## Progress
 
  !}%
 
@@ -366,8 +361,7 @@ progress : of E T
 
 
 %{! 
-#
-# Preservation
+## Preservation
  !}%
 
 

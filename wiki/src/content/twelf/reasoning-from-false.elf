@@ -2,16 +2,14 @@
 
 %{! Twelf's coverage checker often rules out contradictory cases for you (see, for example, the [Uniqueness lemmas](/wiki/uniqueness-lemma/)).  However, you will sometimes need to reason from contradictory assumptions yourself. You can do this by declaring an _uninhabited type_, proving that certain assumptions are contradictory, and then writing lemmas that conclude anything from a term of the uninhabited type. 
 
-#
-# The uninhabited type !}%
+## The uninhabited type !}%
     
 uninhabited : type. 
 %freeze uninhabited.
 
 %{! Freezing the intentionally uninhabited type (which is also sometimes called ``void``, ``false``, or ``absurd``) is not strictly necessary, but it clarifies the programmer's intent—Twelf will signal an error if any later part of the signature introduces a term of this type.
 
-#
-# Proving contradictions
+## Proving contradictions
 
 We use some simple judgements on natural numbers to illustrate proving contradictions. !}%
     
@@ -29,9 +27,7 @@ nat-plus/z : nat-plus nat/z N N.
 nat-plus/s : nat-plus (nat/s N1) N2 (nat/s N3)
               <- nat-plus N1 N2 N3.
 
-%{! #
-#
-# Contradiction by coverage checking
+%{! ### Contradiction by coverage checking
 
 First, we prove that no number is less than zero: !}%
     
@@ -46,9 +42,7 @@ nat-less-z-uninhabited : nat-less N nat/z
 
 %{! The coverage checker accepts this proof without any cases because there are no rules for deriving ``nat-less _ nat/z``.  This is the simplest way to create a contradiction.  
 
-#
-#
-# Inductive contradictions
+### Inductive contradictions
 
 Some contradictions require an inductive argument.  For example, we can prove that if ``N1 &lt; N2`` then there is no ``N3`` such that ``N2 + N3 = N1``. !}%
     
@@ -82,8 +76,7 @@ To show that this remaining case is contradictory. we apply the inductive hypoth
 
 With this theorem, the coverage checker rules out all the base cases, so we are able to return a term of type ``uninhabited`` in the one remaining case by writing a loop.
 
-#
-# Reasoning from contradiction
+## Reasoning from contradiction
 
 Once you have a contradiction, it is easy to write a lemma that reasons from it.  For example, from ``uninhabited`` we can conclude that any two numbers are ``nat-less``: !}%
     

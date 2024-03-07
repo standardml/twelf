@@ -221,7 +221,7 @@ lt-opt-excl : lt-opt LT lt12/1 -> lt-opt LT (lt12/2 L) -> uninhabited -> type.
 %{! The representation of the untyped lambda calculus is extremely simple in
 higher-order abstract syntax; we also define congruence lemmas for lam and app.
 
-What is interesting is the ``[%block](/wiki/percent-block/)`` 
+What is interesting is the [``%block``](/wiki/percent-block/) 
 declaration of ``blocksimple``. This is a standard way of looking at the
 LF context when we are using HOAS lambda terms, but it is not the one we will 
 use in most cases. !}%
@@ -810,7 +810,7 @@ exp-->db-->exp : exp-->db E E^ -> db-->exp E^ E -> type.
 
 %%## Examples
 
-%{! It's also a good idea to run a ``[%query](/wiki/percent-query/)`` on some examples as
+%{! It's also a good idea to run a [``%query``](/wiki/percent-query/) on some examples as
 a sanity check. First, we translate the Church numeral "4," &lt;math&gt;\lambda f.\lambda x.f(f(f(f x)))&lt;/math&gt; from a
 HOAS to a de Bruijn index representation. |check=decl !}%
 

@@ -11,8 +11,7 @@ wondering when the interesting content is going to come.
 
 :: The audience you're missing are the people who have read TAPL, have written their own natural language proofs and want to write machine-checked proofs.  I'm also assuming they understand pattern-matching and logic programming at a practical level.  The article claims to address the audience but then goes on a long time about LF's type system.  Their interested in _their own_ type system, not _yours._  Sure, if they find Twelf expressive, they'll want to learn more, but to expound upon the type system before you've sold them on the usefulness is probably counter-productive.  And anyway, if they are type aficionados, they'll turn up their nose(s) at the lack of higher-order. [User:Boyland](/wiki/user-boyland/) 20:01, 26 February 2007 (EST)
 
-#
-# The third layer
+## The third layer
 
 Does this line "The third layer presents some more-interesting proofs and introduces one additional feature of Twelf, the ability to do proofs about open terms." need to be tweaked with the restructuring of the tutorial? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 20:25, 14 March 2007 (EDT) !}%
 

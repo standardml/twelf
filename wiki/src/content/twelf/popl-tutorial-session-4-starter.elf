@@ -2,12 +2,9 @@
 
 %{! 
 
-#
-# Session 4: Type Preservation Starter
+## Session 4: Type Preservation Starter
 
-#
-#
-# Syntax
+### Syntax
 
  !}%
 
@@ -32,9 +29,7 @@ Add constants for successor and ifz:
 
 %{! 
 
-#
-#
-# Static Semantics
+### Static Semantics
 
  !}%
 
@@ -61,9 +56,7 @@ Add two new typing rules for successor and ifz
 
 %{! 
 
-#
-#
-# Dynamic Semantics
+### Dynamic Semantics
 
  !}%
 
@@ -99,9 +92,7 @@ Add four more operational semantics rules for successor and ifz.
 
 %{! 
 
-#
-#
-# Preservation
+### Preservation
 
  !}%
 

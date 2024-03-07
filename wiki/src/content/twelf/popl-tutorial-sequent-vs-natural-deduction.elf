@@ -10,8 +10,7 @@ There are two tasks:
 
 The solution is [POPL Tutorial/Sequent vs Natural Deduction: Solution](/wiki/popl-tutorial-sequent-vs-natural-deduction-solution/).
 
-#
-# Syntax for Propositions
+## Syntax for Propositions
 
  !}%
 
@@ -23,8 +22,7 @@ imp : prop -> prop -> prop.
 
 %{! 
 
-#
-# Natural Deduction Inference Rules
+## Natural Deduction Inference Rules
 
 Natural deduction deals with a single judgment, &lt;math&gt;\texttt\{true\}~A&lt;/math&gt;.
 
@@ -59,8 +57,7 @@ impE  : true B
 
 %{! 
 
-#
-# Sequent Calculus
+## Sequent Calculus
 
 With the same grammar of propositions, we can define a sequent
 calculus with different judgments for the left and the right of
@@ -113,8 +110,7 @@ The natural deduction system exists in a world with arbitrary assumptions &lt;ma
 
 %{! 
 
-#
-# Translation: Natural Deduction to Sequent Calculus
+## Translation: Natural Deduction to Sequent Calculus
 
 The following (incomplete) proof establishes that whenever a proposition is true in the natural deduction system, it is derivable as a conclusion in the sequent calculus.
 
@@ -124,10 +120,7 @@ the cases for conjunction.
 The -impI case provides and example of using a theorem case. You will need
 something similar in the translation for the other direction.
 
-#
-#
-#
-# TASK 1: Fill in the three missing cases for conjunction
+#### TASK 1: Fill in the three missing cases for conjunction
 
  !}%
 
@@ -178,16 +171,12 @@ nd-to-seq : true A
 
 %{! 
 
-#
-# Translation: Sequent Calculus to Natural Deduction
+## Translation: Sequent Calculus to Natural Deduction
 
 
 The following (incomplete) proof establishes that whenever a proposition is derivable as a conclusion in the sequent calculus, it is true in the natural deduction system.
 
-#
-#
-#
-# TASK 2: Complete the theorem with cases for implication and cut
+#### TASK 2: Complete the theorem with cases for implication and cut
 
  !}%
 

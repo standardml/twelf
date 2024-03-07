@@ -4,8 +4,7 @@
 
 \{\{needs|citations of said type theories.\}\}
 
-#
-# Example
+## Example
 
 Substitution &lt;math&gt;\mathsf\{\}[M'/x]M&lt;/math&gt; of one canonical form into another does not necessarily produce a canonical result.  For example:
 
@@ -21,8 +20,7 @@ Whenever we use the notation &lt;math&gt;\mathsf\{\}[M'/x]M&lt;/math&gt; for LF,
 
 \{\{needs|an explanation of the hereditary substitution algorithm and its metatheory.\}\}
 
-#
-# See also
+## See also
 * The tutorial on [hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/) formalizes the hereditary substitution algorithm for a simply typed lambda-calculus in Twelf.
 
 \{\{stub\}\} !}%

@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial/Session 4"
 
-%{! #
-# Type preservation for MinML
+%{! ## Type preservation for MinML
 
 In this session, we will prove type preservation for MinML.
 

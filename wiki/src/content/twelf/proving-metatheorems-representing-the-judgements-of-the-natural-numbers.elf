@@ -8,12 +8,9 @@
 
 Now that we've seen how to represent the syntax of a deductive system, we turn to representing judgements.  Our first example is the judgement that a number is even.
 
-#
-# Even numbers
+## Even numbers
 
-#
-#
-# Informal definition
+### Informal definition
 
 The judgement &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; holds when &lt;math&gt;\texttt\{\}n&lt;/math&gt; is even.  It is inductively defined by the following inference rules:
 
@@ -28,9 +25,7 @@ The judgement &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; holds when &lt;math&gt
 &lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;
 
-#
-#
-# LF representation
+### LF representation
 
 In the previous sections, we saw how to represent object-language syntax as the inhabitants of LF types.  At a high level, the LF methodology for representing judgements is exactly analogous: we represent an object-language judgement with an LF type, where the inhabitants of this type correspond exactly to derivations of the judgement.
 
@@ -82,9 +77,7 @@ The term ``even-s (s (s z)) (even-s z even-z)`` represents a derivation that 4 i
 
 To summarize, dependently-typed LF refines the type level of simply-typed LF with dependent function types and families of types parametrized by LF terms.  The terms of LF remain unchanged from the grammar presented in the previous section.  These changes are sufficient for representing judgements as LF type families and derivations as LF terms.
 
-#
-#
-# Adequacy
+### Adequacy
 
 To check that this LF representation is correct ([adequacy](/wiki/adequacy/)), we must verify that there is a bijection between the derivations of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; and the LF terms of type ``even N`` where &lt;math&gt;n \gg N&lt;/math&gt;.  In particular, this LF signature adequately represents natural numbers and derivations of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; when considered in the empty LF context. It would not be adequate in contexts containing assumptions of the form ``x : nat`` (which don't correspond to any natural number) or ``d : even N`` (which don't correspond to any of the rules for deriving &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.
 
@@ -92,12 +85,9 @@ Part of establishing this bijection requires reasoning by induction on the canon
 
 \{\{needs|references to the literature\}\}
 
-#
-# Addition
+## Addition
 
-#
-#
-# Informal definition
+### Informal definition
 
 Addition can be represented as a judgement relating two natural numbers to their sum:
 
@@ -115,9 +105,7 @@ Addition can be represented as a judgement relating two natural numbers to their
 
 This judgement defines addition by induction on the first argument.
 
-#
-#
-# LF representation
+### LF representation
 
 This judgement is represented by the following LF signature: !}%
     
@@ -134,9 +122,7 @@ plus-s : {N1:nat} {N2:nat} {N3:nat} plus N1 N2 N3 -> plus (s N1) N2 (s N3).
 
 which has type ``plus (s (s z)) (s z) (s (s (s z)))``, represents a derivation that 2 + 1 = 3.
 
-#
-#
-# Adequacy
+### Adequacy
 
 To check correctness of this representation, we must verify that there is a bijection between derivations of &lt;math&gt;\mathsf\{plus\}(n_1,n_2,n_3)&lt;/math&gt; and LF terms of type
 ``plus N1 N2 N3`` where &lt;math&gt;n_i \gg N_i&lt;/math&gt;.  Once again, the definition of the encoding judgement and the adequacy proof are simple.

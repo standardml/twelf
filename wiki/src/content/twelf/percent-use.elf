@@ -2,10 +2,9 @@
 
 %{! A **``%use``** directive adds a [constraint domain](/wiki/constraint-domain/) to the current Twelf [signature](/wiki/twelf-signature/). 
 
-Like some other directives, for instance ``[%clause](/wiki/percent-clause/)``, it is incompatible with Twelf's ability to verify [totality assertions](/wiki/totality-assertion/) and [metatheorems](/wiki/metatheorem/).
+Like some other directives, for instance [``%clause``](/wiki/percent-clause/), it is incompatible with Twelf's ability to verify [totality assertions](/wiki/totality-assertion/) and [metatheorems](/wiki/metatheorem/).
 
-#
-# See also
+## See also
 
 * [Constraint domains](/wiki/constraint-domain/)
 * \{\{guide|chapter=6|section=32|title=Constraint domains\}\}

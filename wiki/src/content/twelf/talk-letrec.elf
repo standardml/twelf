@@ -1,7 +1,6 @@
 %%! title: "Talk:Letrec"
 
-%{! #
-# Different formalism?
+%{! ## Different formalism?
 
 The formalism on the current page is probably the right thing to do for "real-world binding", since it's closest to the actual syntax that people will have in mind.  
 

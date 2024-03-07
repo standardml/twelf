@@ -8,13 +8,11 @@ The RSS feed for recent changes will show edits made on this page, so don't say 
 * Discussing strategies for releaseing the wiki on an unsuspecting world (that's what this page is for)
 
 
-#
-# Contest?
+## Contest?
 
 There are some discussions it might be useful to have in this written-down forum on the [Elves_talk:Main_Page](/wiki/elves-talk-main-page/), for instance the idea of having a contest of some sort.
 
-#
-# Things You &lt;strike&gt;Can't&lt;/strike&gt; Can Do In Twelf
+## Things You &lt;strike&gt;Can't&lt;/strike&gt; Can Do In Twelf
 
 We talked about in the meeting some of the bits we'd need for having there be some recognizable activity going on. This whole setup comes attached to a [[http://redundancymanman.org/wordpress/ blog]] for which we have lots of RSS subscribable goodness. We need to come up with topics (perhaps over at the talk page?) and get people to write things with a rough completion date. People should probably write in the POPGroup namespace and then move stuff into the main namespace when we put notice up on the blog. Note that the completion date could be long before we put it on the blog, but having estimated completion dates will help plan if/how the blog will work.
 
@@ -22,9 +20,7 @@ We talked about in the meeting some of the bits we'd need for having there be so
 * Context Subtyping --- Rob and Dan Lee --- September 14?
 * Closure Conversion --- ? (karl) --- ?
 
-#
-#
-# Other ideas
+### Other ideas
 
 * **Logical Relations Arguments** - _logical relations arguments cannot be carried out (except via heavy encodings)_ [http://fling-l.seas.upenn.edu/~plclub/cgi-bin/poplmark/index.php?title=Submission_from_Carnegie_Mellon]
 * **Coinduction** - I'm not even certain what coinduction _is_, but the poplmark submissions page says _the status of coinduction is uncertain_ [http://fling-l.seas.upenn.edu/~plclub/cgi-bin/poplmark/index.php?title=Submission_from_Carnegie_Mellon]

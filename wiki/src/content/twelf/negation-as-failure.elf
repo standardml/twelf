@@ -5,9 +5,7 @@ Negation as failure. It is possible to do negation-as-failure using Twelf's [log
  !}%
 
 %{! 
-#
-#
-# Definitions
+### Definitions
 
 Natural numbers and booleans.
  !}%
@@ -51,9 +49,7 @@ isfalse/i	: isfalse false.
 
 
 %{! 
-#
-#
-# Coding negation-as-failure
+### Coding negation-as-failure
 
 We define a logic program that when given two numbers returns ``true`` if the first is less than the second, and ``false`` otherwise. We use ``%deterministic`` to make the logic programming engine commit to the first solution it finds. 
  !}%

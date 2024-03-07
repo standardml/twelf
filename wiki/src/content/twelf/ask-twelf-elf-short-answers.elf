@@ -2,8 +2,7 @@
 
 %{! This page collects short answers to [Talk:Ask Twelf Elf](/wiki/talk-ask-twelf-elf/) people asked.  These answers have not (yet) been made into their own pages, but feel free to fork a page off if you want to give a more thorough answer to a question.
 
-#
-# Comparing Coq and Twelf
+## Comparing Coq and Twelf
 
 Michael Fortson asks: _I can't find any papers comparing Coq and Twelf.  Can someone summarize the differences?_
 
@@ -23,7 +22,7 @@ This is a hard question to answer in any comprehensive manner, since there are l
 
 * The Coq proofs that I've seen consist mostly of tactical proof scripts that instruct Coq how to find the proof term that you're trying to create.  
 
-**Differences in what's provable (in theory):**  Twelf's metatheorem apparatus only checks proofs of \{\{forall\}\}\{\{exists\}\}-statements, so there are some theorems you can't use it to check.
+**Differences in what's provable (in theory):**  Twelf's metatheorem apparatus only checks proofs of ∀∃-statements, so there are some theorems you can't use it to check.
 
 **Differences in what's provable (in practice):**  Of course, the theoretical limits don't tell you much about what people are actually able to do in their day-to-day work.  See the page of [Research projects using Twelf](/wiki/research-projects-using-twelf/) for some examples on the Twelf side of things; there are lots of Coq examples on the Web as well.  
 
@@ -34,8 +33,7 @@ This is not intended to be a fair or comprehensive answer to your question, but 
 Also, you should read the Appel and Leroy list machine benchmark paper that's linked from the [documentation](/wiki/documentation/) page. It compares Twelf and Coq on a simple example (note that the example doesn't use [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) or [higher-order judgements](/wiki/higher-order-judgements/), so it's not even a case where Twelf really shines).   
 [User:Drl](/wiki/user-drl/) 16:40, 8 April 2007 (EDT)
 
-#
-# Different ways of using Twelf
+## Different ways of using Twelf
 
 Michael Fortson asks: _Can you explain the vast difference in style between the examples shown on this site and what is done by Andrew Appel at Princeton?  The two styles seem as if they are two completely different languages!_
 

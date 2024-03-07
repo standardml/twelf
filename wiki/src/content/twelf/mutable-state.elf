@@ -12,12 +12,9 @@ Chapter 2 of [User:Rsimmons](/wiki/user-rsimmons/) undergraduate thesis,&lt;ref&
  note =   \{Undergraduate Senior Thesis 18679\},
 \}&lt;/bibtex&gt;&lt;/ref&gt; which contains more commentary—this account includes a simple extension, the ability to update state. That  account is in turn based on Pierce's description in TAPL.&lt;ref&gt;\{\{bibtex:pierce02tapl\}\}&lt;/ref&gt;  This example can be seen as an extension of the one from the tutorial on [strengthening](/wiki/strengthening/); that example defines a language with references but no way to use them.
 
-#
-# Language definition
+## Language definition
 
-#
-#
-# Natural numbers
+### Natural numbers
 
 First we need [natural numbers](/wiki/natural-numbers/), which we will use in the object language 
 to represent both locations and actual numbers (this is why we define 
@@ -38,9 +35,7 @@ sum-s : sum (s N1) N2 (s N3)
 
 
 %{! 
-#
-#
-# Syntax
+### Syntax
 
 Using this we can define the syntax of the language; natural numbers will be 
 used both for locations (which the programmer cannot access) and as numbers, 
@@ -68,9 +63,7 @@ loc : location -> exp.
 let : exp -> (exp -> exp) -> exp. 
 
 %{! 
-#
-#
-# Types
+### Types
 
 Because we do not have functions, our language has a very simple language of types, only integers and references to other types.
  !}%
@@ -80,9 +73,7 @@ int-tp : tp.
 ref-tp : tp -> tp. 
 
 %{! 
-#
-#
-# Lists
+### Lists
 
 We will represent the store as a list of expressions, and define several 
 operations on lists—projecting the _n_th element from a list, appending a new element to the end of a list, updating the _n_th element of the list, and having a list that is the subset of another list. We also define a similar list of types that is omitted.
@@ -166,9 +157,7 @@ lists to represent stores and type lists to represent store typings.
 %abbrev storetp = tplist. 
 
 %{! 
-#
-#
-# Values and evaluation
+### Values and evaluation
 
 The predicate ``isval`` 
  !}%
@@ -219,9 +208,7 @@ e-let : eval S (let E EF) S (EF E)
 
 
 %{! 
-#
-#
-# Typing judgment
+### Typing judgment
 
 As we do in the article on [strengthening](/wiki/strengthening/), we need to define a separate 
 judgment ``var-of`` that we will use to represent hypothetical typing
@@ -297,9 +284,7 @@ run-end : run S E S E.
 %%## Language theory
 
 %{! 
-#
-#
-# Effectiveness lemmas
+### Effectiveness lemmas
 
 We need a few [effectiveness lemmas](/wiki/effectiveness-lemma/) that show that the ``sum`` and ``append`` judgments are always derivable. 
 
@@ -421,9 +406,7 @@ update-lemma : isval E
 
 
 %{! 
-#
-#
-# Progress
+### Progress
 
 Progress, as usual, relies on an auxillary notion of what it means for an
 expression to not be stuck that is captured by the judgement ``notstuck``,
@@ -541,9 +524,7 @@ prog-let : progress (t-let _ T) TS NS
 %total T (progress T TS NS). 
 
 %{! 
-#
-#
-# Substitution
+### Substitution
 
 As in the article on [strengthening](/wiki/strengthening/), progress will need to appeal to a simple substitution lemma.
  !}%
@@ -575,9 +556,7 @@ sub-var : substitute ([x][v: var-of x Tp] t-var v) T* T*.
 
 
 %{! 
-#
-#
-# Weakening
+### Weakening
 
 In order to be able to evaluate reference cells, we need to be able to show 
 that adding new things to the store typing will leave all current programs 
@@ -621,9 +600,7 @@ weak-s : weakening-list (tl-s TL T) S (tl-s TL’ T’)
 %total T (weakening-list T S T’). 
 
 %{! 
-#
-#
-# Preservation
+### Preservation
 
  !}%
 
@@ -707,8 +684,7 @@ safe-step : safety T ST (run-step R E) NS
 
 
 %{! 
-#
-# Example
+## Example
 
 We will define the following simple program as ``prog1``, and use Twelf's [logic programming](/wiki/logic-programming/) abilities to actually run the typechecker ``of E T`` and multi-step evaluation ``run S E S' E'``. Because ``gets`` returns the result of the assignment in the same way C does, &lt;math&gt;\texttt\{\}y&lt;/math&gt; should have the same value as &lt;math&gt;\texttt\{\}!x&lt;/math&gt; at the end of the program, namely 4.
 
@@ -725,7 +701,7 @@ let (gets x (! x + n (s z)))
 ! x + n (s z).
 
 
-%{! We can typecheck the program (in the empty store typing ``nil-tp``). The syntax we use for ``[%query](/wiki/percent-query/)`` indicates that we only expect there to be one solution (because type checking should be syntax directed): |check=decl !}%
+%{! We can typecheck the program (in the empty store typing ``nil-tp``). The syntax we use for [``%query``](/wiki/percent-query/) indicates that we only expect there to be one solution (because type checking should be syntax directed): |check=decl !}%
 
 %query 1 * (of nil-tp prog1 T).
 

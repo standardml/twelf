@@ -4,8 +4,7 @@
 
 An abstract syntax tree is _abstract_ because it is a mathematical object that has certain structure by its very nature. For instance, in first-order abstract syntax (FOAS) trees, as commonly used in compilers, the tree structure implies the subexpression relation, meaning that no parentheses are required to disambiguate programs (as they are in the [[concrete syntax]]). HOAS exposes additional structure: the relationship between variables and their binding sites. In FOAS representations, a variable is typically represented with an identifier and the relation between binding site and use is indicated by the use of the _same_ identifier. FOAS representations thus need to formalize the rules of identifier lookup, and often need to formalize other conventions of language metatheory, such as [alpha-equivalence](/wiki/alpha-equivalence/), [weakening](/wiki/weakening-lemma/), [exchange](/wiki/exchange-lemma/), and type-preserving [substitution](/wiki/substitution-lemma/). When it can be used, HOAS is powerful because the metalanguage can provide these properties for free, reducing the amount of boilerplate code in an encoding.
 
-#
-# Example
+## Example
 For example, LF has a λ construct, which has arrow (→) type. A first-order encoding of an object language construct ``let`` might be (using Twelf syntax): !}%
     
 exp : type.
@@ -33,8 +32,7 @@ let (plus 1 2) ([y] plus y 3)
 
 Because this technique reuses the mechanism of the meta-language to encode a concept in the object language, it is generally only applicable when the meta-language and object-language notions of binding coincide. This is often the case, but not always: for instance, it is unlikely that a HOAS encoding of dynamic scope such as in Lisp would be possible in a statically-scoped language like LF.
 
-#
-# See also
+## See also
 * [Higher-order judgment](/wiki/higher-order-judgements/)s: a related LF representation technique, in which object-language [hypothetical judgment](/wiki/hypothetical-judgment/)s are represented using LF binding.
 * [Equality](/wiki/equality/): when an object language is represented using HOAS, equality of LF terms corresponds with [alpha-equivalence](/wiki/alpha-equivalence/) of object language terms. !}%
 

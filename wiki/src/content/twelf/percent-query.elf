@@ -13,8 +13,7 @@ This meaning that some possible queries will always fail:
 * ``%query 6 6 ...`` means the same thing as ``%query * 6 ...``, because both mean "try six times, and find a solution every time"
 * ``%query * * ...`` will either keep coming up with more solutions forever (and will therefore not terminatie) or it will eventually fail to come up with a solution and so will fail.
 
-#
-# Example
+## Example
 
 We will use the example of list membership to demonstrate ``%query`` because there may be multiple ways to find an element in a list (if that element occurs multiple times). !}%
     
@@ -46,11 +45,9 @@ member/skip : member A (B , L)
 %query 8 0 member c sample-list.   % Try zero times (the query isn't even run)
 %query 3 * member a sample-list.   % Fails because there are more than 3 solutions
 
-%{! #
-#
-# Getting output from ``%query``
+%{! ### Getting output from ``%query``
 
-Unlike ``[%solve](/wiki/percent-solve/)``, ``%query`` declarations do not allow you to insert the output of a query into the [signature](/wiki/twelf-signature/). However, you can inspect the output in the Twelf buffer. For example, if we leave the first argument of ``%query`` as a [[metavariable]], the following query will output the first two elements it finds in the list (the first two elements in the list). !}%
+Unlike [``%solve``](/wiki/percent-solve/), ``%query`` declarations do not allow you to insert the output of a query into the [signature](/wiki/twelf-signature/). However, you can inspect the output in the Twelf buffer. For example, if we leave the first argument of ``%query`` as a [[metavariable]], the following query will output the first two elements it finds in the list (the first two elements in the list). !}%
     
 %{! (options removed from twelftag: check=decl) !}%
 
@@ -62,8 +59,7 @@ Unlike ``[%solve](/wiki/percent-solve/)``, ``%query`` declarations do not allow 
 
 %query * 2 D : member b sample-list.
 
-%{! #
-# See also
+%{! ## See also
 
 * \{\{guide|chapter=5|section=23|title=Query Declaration\}\}
 \{\{keyword|key=query\}\} !}%

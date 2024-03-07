@@ -1,13 +1,11 @@
 %%! title: "Talk:Ask Twelf Elf"
 
-%{! #
-# Archives
+%{! ## Archives
 
 * [Talk:Ask Twelf Elf/Archive 1](/wiki/talk-ask-twelf-elf-archive-1/) (October 2006-March 2007)
 * [Talk:Ask Twelf Elf/Archive 2](/wiki/talk-ask-twelf-elf-archive-2/) (April 2007-October 2007)
 
-#
-# LF representation of complete development
+## LF representation of complete development
 
 Consider pure lambda terms:
 
@@ -56,8 +54,7 @@ Thanks,
 
 : Hi Randy.  This is a great question.  I've started a tutorial answering it: [Working with higher-order judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/).  Feel free to discuss the tutorial on its [Talk:Working with higher-order judgements](/wiki/talk-reformulating-languages-to-use-hypothetical-judgements/) if it's at all unclear.  [User:Drl](/wiki/user-drl/) 15:07, 28 February 2008 (EST)
 
-#
-# Question Regarding Explicit LF Specification Generation
+## Question Regarding Explicit LF Specification Generation
 
 Question: can Twelf produce a fully explicit LF specification from one that is not fully explicit?  By "fully explicit", I mean one that needs no further term reconstruction (all type parameters are explicitly bound).  Twelf-sml's Print.sgn is close, but doesn't provide explicit (or even original) %solve or %query directives (nor would I expect it to, as that is not the function's purpose).  As a note, Print.sgn places terms declared as infix in head position, which is fine for my use.
 
@@ -65,8 +62,7 @@ The reason I am interested in such functionality is that I want to perform some 
 
 Thanks!
 
-#
-# Queries with non-empty contexts?
+## Queries with non-empty contexts?
 
 Is it possible to use pi-types in the in the goals for %query? The example below shows what I'm trying to do. Since the workaround using a dummy type family works it does not seem to be an inherent limitation in the logic programming engine...
 This is Twelf 1.5R1, Mar 8, 2005 (tabling). !}%
@@ -105,8 +101,7 @@ dummy1 : dummy T
 	     of (app x y) T.
 %query 1 1 dummy T.
 
-%{! #
-# normalization theorems?
+%{! ## normalization theorems?
 
 Hello, 
 
@@ -120,8 +115,7 @@ Thanks,
 : See [Hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/) for an example of normalization of the simply-typed lambda calculus. The common way of stating theorems in Twelf does not extend to logical relations arguments defined by induction on a type; however, see [[http://www.twelf.org/slr/ Structural Logical Relations]] for a slightly different way to encode these in Twelf (as it currently exists).
 — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 02:26, 12 October 2008 (EDT)
 
-#
-# More exercises.
+## More exercises.
 
 Dear Elves,
 
@@ -265,8 +259,7 @@ sos : sum-odds (odd-s OddN1) OddN2 (plus-s (plus-s PlusN1N2N3)) (even-s EvenN3)
 %total D (sum-odds D _ _ _).
 Answer: ==================================================================
 
-#
-# %Undefine
+## %Undefine
 
 Is there a way to do the 'opposite' of %abbrev in Twelf? 
 Consider the following definition of 'and':
@@ -282,10 +275,9 @@ I'm working on an automated prover based on Felty's and Appel's ideas and
 unnecessary expansion causes the prover to terminate with unintelligible output,
 whenever it fails to prove something. (The prover outputs all unfinished goals.)
 
-:: Hey! Feel free to contact us by email, I can give you a bit of advice depending on what your precise goals are. I think in Twelf the way of doing this is probably ``[%clause](/wiki/percent-clause/)``, but it turns out to be a bit messy to do things that way. I discuss two styles of Appel & Felty style proving in the article on [tactical theorem proving](/wiki/tactical-theorem-proving/). — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 09:56, 2 February 2009 (EST)
+:: Hey! Feel free to contact us by email, I can give you a bit of advice depending on what your precise goals are. I think in Twelf the way of doing this is probably [``%clause``](/wiki/percent-clause/), but it turns out to be a bit messy to do things that way. I discuss two styles of Appel & Felty style proving in the article on [tactical theorem proving](/wiki/tactical-theorem-proving/). — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 09:56, 2 February 2009 (EST)
 
-#
-# hypothetical judgments vs judgments with premises
+## hypothetical judgments vs judgments with premises
 
 I am having trouble understanding when hypothetical judgments can be used in place of judgments with premises.
 In the code segment below, the two queries at the bottom look logically equivalent, but Twelf only finds a solution for one of the queries.
@@ -321,8 +313,7 @@ sample-list : list = j , j , nil.
 % Solution NOT found this query:
 %query 1 1 Z : {x:neq i j} notin i sample-list.
 
-%{! #
-# proving things about an intensional property
+%{! ## proving things about an intensional property
 
 I find it easy to prove a Twelf metatheorem that an extensional definiton satsifies certain intensional properties.
 For example, suppose I define some relation P |- Q using extensional rules (like a sequent calculus).
@@ -415,8 +406,7 @@ somel : ({n:nat} (hyp (F n) -> conc H)) -> hyp (form/exists F) -> conc H.
 
 : After some discussion with Karl Crary, it seems that the best solution is to define an empty relation, define some trustme "metatheorems" that express the desired properties and then prove all theorems in a context (worlds) with a variable of the empty relation.  This ensures that Twelf will not split on the empty relation. [User:Boyland](/wiki/user-boyland/) 15:26, 20 February 2010 (EST)
 
-#
-# Negative premises
+## Negative premises
 
 I'm attempting to express the operational semantics of concurrent calculi like CCS in Twelf, but the inference rules for these calculi often require negative premises. I was wondering if such a thing is possible in Twelf.
 
@@ -457,8 +447,7 @@ hide-rule: {A:label} {P1:proc} {P2:proc} trans P1 A P2 -> A != B -> trans (P1 \ 
 
 :: Unfortunately, no: you'll have to define the != judgement inductively yourself, by giving a case for each pair of non-equal labels (and then you may need to prove that A != A is a contradiction).  But we're working on [http://www.cs.cmu.edu/~drl/pubs/lh09unibind/lh09unibind.pdf a framework where you could express this directly], so thanks for the example!  [User:Drl](/wiki/user-drl/) 14:28, 4 May 2009 (EDT)
 
-#
-# Coverage checking
+## Coverage checking
 
 I am having trouble understanding the behavior of the coverage checker on this example, a snippet of a dependently-typed functional language encoding:
 &lt;code&gt;
@@ -535,13 +524,11 @@ app/_ : body (app F V) (t@ C) E'
 &lt;/code&gt;
 : Now this coverage checks! [[User:Noam|Noam]] 00:58, 20 September 2009 (EDT)
 
-#
-# Twelf User Manual
+## Twelf User Manual
 
 Is the user manual for Twelf version 1.5 available? I only noticed that for version 1.4 on Twelf Web site.
 
-#
-# freezing violation: X would depend on Y
+## freezing violation: X would depend on Y
 
 Occasionally the Twelf type checker will generate variables of type such as term -&gt; nat and then complain that nat would depend on term in that case.  I find this error message frustrating since (1) I didn't create this variable -- it was generated from an implicit underscore, (2) Since nat does NOT depend on term (e.g.), then why does Twelf generate the dependency, and (3) Just because we have a value of type term -&gt; nat, it doesn't mean that nat depends on term, but rather that the function must ignore its argument.  
 
@@ -674,8 +661,7 @@ lookup/!= :
 %{! :: This code checks fine with the online version of Twelf.  It must be a problem with Twelf-CVS.
 :: Update: The code still fails with the latest truck from SVN.  So it seems the online twelf checker has a different version than twelf-CVS/SVN.  older? [User:Boyland](/wiki/user-boyland/) 18:17, 22 February 2010 (EST)
 
-#
-# Termination and %mode
+## Termination and %mode
 
 Hi Twelf Elf: I've just started getting into twelf and have been working my way through Frank Pfenning's Computation and Deduction notes  (http://www.cs.cmu.edu/~fp/courses/comp-ded/handouts/cd.pdf). I got so far as trying to get twelf to confirm that doubling 2 yields 4, but it gets stuck. (I'm also using the latest release of twelf, not the nightly build version.)
 
@@ -719,7 +705,7 @@ exp : type.
 
 Hi Robby! Glad you're using Twelf. I'd definitely encourage you to use the "nightly build" - it's currently very stable and has lots of improvements (and fewer bugs) than the last release. Also, it's a good idea to sign your comment with four tildes &lt;nowiki&gt;~~~~&lt;/nowiki&gt; 
 
-Anyway - I had a hunch, that turned out to be right, that the right thing to do was to write a ``[%mode](/wiki/percent-mode/)`` declaration ``%mode eval +E -V.``, which basically means "it makes sense to run ``eval`` as a function with input ``E`` and output ``V``. Sure enough, it complains about both the rule ``ev_case_s`` and ``ev_app``. If I reorder the premises so it no longer complains, the two rules look like this: !}%
+Anyway - I had a hunch, that turned out to be right, that the right thing to do was to write a [``%mode``](/wiki/percent-mode/) declaration ``%mode eval +E -V.``, which basically means "it makes sense to run ``eval`` as a function with input ``E`` and output ``V``. Sure enough, it complains about both the rule ``ev_case_s`` and ``ev_app``. If I reorder the premises so it no longer complains, the two rules look like this: !}%
     
 ev_case_s : eval (E3 V1) V
          -> eval E1 (s V1)
@@ -793,13 +779,11 @@ And yes, I do know how to run things without knowing the answer; of course it al
 
 I think this wiki has email turned off, actually. To understand the effect of %mode  you might find it helpful to read some general stuff about logic programming, which is where a lot of the intuition behind proving metatheorems comes from. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 12:11, 4 November 2010 (EDT)
 
-#
-# POPL tutorial slides location?
+## POPL tutorial slides location?
 
 The slides linked to from [POPL Tutorial](/wiki/popl-tutorial/) are 404. I tried to use Google to find the slides, but it was no help. [[User:Jbapple|Jbapple]] 15:09, 15 January 2011 (EST)
 
-#
-# Twelf 1.7.1 ?
+## Twelf 1.7.1 ?
 
 It seems Twelf 1.7.1 is released, but the documentation still seems to be at 1.4
 (with some wiki pages for 1.5 additions.)
@@ -810,8 +794,7 @@ It seems Twelf 1.7.1 is released, but the documentation still seems to be at 1.4
 
 :: I don't know of any plans to do so (I think the wiki is now, for better or worse, the primary documentation). We should probably go through the wiki and turn some of the tags indicating "this is a SVN-only feature" to tags indicating "this is a Twelf 1.7 feature," though. There is a [revision history](/wiki/release-history/) on the wiki. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:33, 24 August 2011 (EDT)
 
-#
-# Problem to find an induction metric
+## Problem to find an induction metric
 
 I would like to prove that if two numbers are the same, e.g., N0 = N1, then, if I set the K-th position of a list to N0, or to N1, I get the same resulting list. The proof is not obvious to me because I cannot, in this case, do induction on the derivation rules of lists. I have these signatures for numbers: !}%
     
@@ -862,8 +845,7 @@ eq_set : eq N N' -> set L (value N') V L' -> set L (value N) V L' -> eq-list L L
 
 %{! :: Does that help at all? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:55, 18 June 2012 (EDT)
 
-#
-# trouble with twelf server
+## trouble with twelf server
 
 Hi,
 
@@ -880,8 +862,7 @@ J. Dominguez
 
 :: Sorry for not noticing this before; the MLton-compiled binary depends on the GMP BigNum library, which you should be able to get with apt-get on ubuntu. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:52, 18 June 2012 (EDT)
 
-#
-# How to prove totality in this case?
+## How to prove totality in this case?
 
 I am formalizing a programming language. One of the things I need is a conditional statement and prove its totality (this is needed for dynamic semantics, that has to search through an associative list, and the keys have decidable equality). I can do a simple one, like this:
 
@@ -951,8 +932,7 @@ Thanks! Andrej Bauer (please notify me by email about the answer at Andrej.Bauer
 &lt;/pre&gt;
 : [User:Boyland](/wiki/user-boyland/) 15:28, 5 June 2013 (EDT)
 
-#
-# %reduces not as smart as what is done in %total, it seems
+## %reduces not as smart as what is done in %total, it seems
 
 I don't see a way to prove %reduces through a lambda abstraction,
 although, it appears that %total checking is able to reason about
@@ -1027,8 +1007,7 @@ height/app : height (app T1 T2) (s N3)
 %worlds (hb) (height _ _).
 %total (T) (height T _).
 
-%{! #
-# dictionary in which keys are variable names
+%{! ## dictionary in which keys are variable names
 
 Dear Elfs,
 
@@ -1069,13 +1048,11 @@ Thierry
 :The big problem is "inequality".  It's very difficult to determine if two variables are equal or not in Twelf.
 :[User:Boyland](/wiki/user-boyland/) 11:02, 13 January 2014 (EST)
 
-#
-# Twelf bug reports?
+## Twelf bug reports?
 
 Is Twelf still being maintained?  I have a (BIG) example where type reconstruction doesn't terminate in Twelf 1.7.1+ (r1887M).  Is anyone interested in bug reports?
 
-#
-# Syntax highlighting for IntelliJ IDEA
+## Syntax highlighting for IntelliJ IDEA
 
 Good evening Twelf Elf, 
 
@@ -1092,8 +1069,7 @@ Sorry, I could not find a publicly editable notice board. Is there a place where
 
 [[User:Ali|Ali]] 02:23, 19 August 2014 (EDT)
 
-#
-# Problems with pages
+## Problems with pages
 
 See for example [Lax logic](/wiki/lax-logic/) where errors reported with: "Failed to parse (PNG conversion failed; check for correct installation of latex, dvips, gs, and convert)" occur very frequently.
 
@@ -1102,8 +1078,7 @@ See for example [Lax logic](/wiki/lax-logic/) where errors reported with: "Faile
 I don't see the problem.  Perhaps (1) it has been rsolved, or (2) it may be browser related?
 [User:Boyland](/wiki/user-boyland/) ([User talk:Boyland](/wiki/user-talk-boyland/)) 21:00, 21 October 2016 (UTC)
 
-#
-# Can’t solve obvious goal or is it me?
+## Can’t solve obvious goal or is it me?
 
 I’m new to Twelf (have to see it matches what I’m planning to do).
 
@@ -1124,8 +1099,7 @@ It fails. While if `sum/s` is changed from `sum/s : sum M (s N) (s S) &lt;- sum 
 
 Unless I’m wrong, the goal should be as much solvable is both case. Is this me missing something?
 
-#
-# Twelf pre-built Mac OS distro needs update
+## Twelf pre-built Mac OS distro needs update
 
 Dear Twelf Elves,
 

@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial/cps-ctp"
 
-%{! #
-# CPS conversion with target types !}%
+%{! ## CPS conversion with target types !}%
     
 %% Source types
 

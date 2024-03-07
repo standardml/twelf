@@ -1,11 +1,10 @@
 %%! title: "Constraint domain"
 
-%{! A **constraint domain**, also called a **Twelf(X) extension**, is an extension to Twelf that allow users to work easily with an object, such as the integers, that can be tedious or inefficient to explicitly formalize within Twelf. Constraint domains are introduced with the ``[%use](/wiki/percent-use/)`` declaration.
+%{! A **constraint domain**, also called a **Twelf(X) extension**, is an extension to Twelf that allow users to work easily with an object, such as the integers, that can be tedious or inefficient to explicitly formalize within Twelf. Constraint domains are introduced with the [``%use``](/wiki/percent-use/) declaration.
 
 You should never use [constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/) in the same signature, but they are useful when using Twelf as a logic programming system or when reasoning _in_ an [object language](/wiki/object-logic/). This document shows brief examples of each of the constraint domains, which are treated more formally in the chapter on \{\{guide|chapter=6|section=32|title=constraint domains\}\}.
 
-#
-# Rational numbers with equality: ``%use equality/rationals``
+## Rational numbers with equality: ``%use equality/rationals``
 
 The rational numbers with equality add a new type family, ``rational``, and operators for rational addition, subtraction, multiplication, and negation. !}%
     
@@ -26,8 +25,7 @@ mynum = 1/4 + ~ 9/2.
 eq : rational -> rational -> type.
 eq/is : eq X X.
 
-%{! #
-# Rational numbers with inequality: ``%use inequality/rationals``
+%{! ## Rational numbers with inequality: ``%use inequality/rationals``
 
 This declaration introduces everything introduced by ``%use equality/rationals``, as well as ways to check for !}%
     
@@ -43,8 +41,7 @@ more-than-two : rational -> rational -> type.
 more-than-two/i : more-than-two R1 R2
                    <- R1 + R2 > 2.
 
-%{! #
-# Integers with equality: ``%use equality/integers``
+%{! ## Integers with equality: ``%use equality/integers``
 
 The introduction of integers with equality looks similar to the introduction of rationals with equality, but with a different type family, ``integer``. !}%
     
@@ -52,8 +49,7 @@ The introduction of integers with equality looks similar to the introduction of 
 
 %use equality/integers.
 
-%{! #
-# Integers with inequality: ``%use inequality/integers``
+%{! ## Integers with inequality: ``%use inequality/integers``
 
 The introduction of integers with inequality is a good bit shorter than the introduction of rationals with inequality, because Twelf can take advantage of the facts like ``X + 1 &gt; Y`` iff ``X &gt;= Y``. !}%
     
@@ -61,8 +57,7 @@ The introduction of integers with inequality is a good bit shorter than the intr
 
 %use inequality/integers.
 
-%{! #
-# Strings: ``%use equality/strings``
+%{! ## Strings: ``%use equality/strings``
 
 This constraint domain allows Twelf to include strings of characters. !}%
     
@@ -76,8 +71,7 @@ This constraint domain allows Twelf to include strings of characters. !}%
 
 mystring = "Hello" ++ " " ++ "World" ++ "!".
 
-%{! #
-# 32-bit integers: ``%use word32.``
+%{! ## 32-bit integers: ``%use word32.``
 
 The ``word32`` extension behaves very differently than the others - operators are relations, not functions, and so Twelf does not simplify their application away. !}%
     
@@ -93,9 +87,8 @@ myproof = 3+15.
 
 %solve _ : prove+ 92 _ 105 _.
 
-%{! #
-# See also
-* ``[%use](/wiki/percent-use/)``
+%{! ## See also
+* [``%use``](/wiki/percent-use/)
 * \{\{guide|chapter=6|section=32|title=Constraint domains\}\} !}%
 
 %{!

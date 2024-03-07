@@ -7,30 +7,25 @@
 You've got admin rights, btw. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:02, 23 October 2006 (EDT)
 
 
-#
-# Sidebar
+## Sidebar
 
 You might be interested in editing the [Mediawiki:sidebar](/wiki/mediawiki-sidebar/). — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:51, 23 October 2006 (EDT)
 
-#
-# Oh yeah
+## Oh yeah
 
 You did write one of those papers-about-twelf things, now didn't you? :-) — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:50, 20 March 2007 (EDT)
 
-#
-# Aite
+## Aite
 
 I'm showering, driving to school, and emailing! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 09:18, 21 March 2007 (EDT)
 
-#
-# Some small feature requests (didn't want to lose track of these completely)
+## Some small feature requests (didn't want to lose track of these completely)
 
 * %reduces under a binder (comes up, e.g. in [strengthening](/wiki/strengthening/)).  When you know (forall x. A x &lt; B), you could at least conclude A &lt; B when x doesn't occur, which as I recall is enough for this example.
 * new emacs mode with karl's macros
 * for world violations, move some of the info that gets printed on higher chatter to the default, so it's easier to debug
 
-#
-# Example (which Adam did much &lt;strike&gt;better&lt;/strike&gt; slower than me) !}%
+## Example (which Adam did much &lt;strike&gt;better&lt;/strike&gt; slower than me) !}%
     
 tp : type.
 unit : tp.
@@ -72,9 +67,7 @@ thm : of (lam [x] (app x x)) T -> false -> type.
 %worlds (ofb) (thm X Y).
 %total {} (thm X Y).
 
-%{! #
-#
-# Any var, not just the last one !}%
+%{! ### Any var, not just the last one !}%
     
 tp : type.                                                                                                                                                                        ar : tp -> tp -> tp. %infix right 10 ar.                                                                                                                                          
 b : tp.                                                                                                                                                                           
@@ -111,9 +104,7 @@ boo_lam : boo X (of_app D1 D2) B
 %worlds (varBlock) (boo _ _ _).                                                                                                                                                   
 %total {} (boo _ _ _).
 
-%{! #
-#
-# Delphin Version by Adam
+%{! ### Delphin Version by Adam
 
 &lt;code&gt;
 sig &lt;tp : type&gt; %name A t                                                                                                                                                         

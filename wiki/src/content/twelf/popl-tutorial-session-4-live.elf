@@ -5,8 +5,7 @@
 **_Please fill [https://spreadsheets.google.com/viewform?key=p0-89EvFXQhUXF827jjk_Dg feedback form]**_
 
 
-#
-# Syntax
+## Syntax
 
  !}%
 
@@ -35,8 +34,7 @@ ifz : exp -> exp -> (exp -> exp) -> exp.
 
 %{! 
 
-#
-# Typing
+## Typing
 
  !}%
 
@@ -96,8 +94,7 @@ of/ifz : of (ifz E E0 ([x] Es x)) T
 
 %{! 
 
-#
-# Operational semantics
+## Operational semantics
 
  !}%
 
@@ -165,8 +162,7 @@ step/ifz/s : step
 
 %{! 
 
-#
-# Proof of type preservation
+## Proof of type preservation
 
 If   e : T
 and  step e e'

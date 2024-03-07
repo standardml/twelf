@@ -46,8 +46,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 %{! 
 
-#
-# Typed expressions
+## Typed expressions
 
 Add a type for disjoint sums:
 

@@ -1,7 +1,6 @@
 %%! title: "POPL Tutorial/Saturday"
 
-%{! #
-# Notes from Saturday
+%{! ## Notes from Saturday
 
 Please fill out our &lt;big&gt;**_[https://spreadsheets.google.com/viewform?key=p0-89EvFXQhUXF827jjk_Dg feedback form]**_&lt;/big&gt;.
 
@@ -9,8 +8,7 @@ If you have questions, you can email a TA at ``twelfelf@gmail.com``.
 
 Check out [POPL Tutorial/Session 5](/wiki/popl-tutorial-session-5/)'s material: do some practice problems, email us feedback.
 
-#
-# Mechanizing Metatheory with LF and Twelf
+## Mechanizing Metatheory with LF and Twelf
 
 Do you want to learn how to use [Main page](/wiki/main-page/) to specify, implement, and prove
 properties about programming languages?  
@@ -35,8 +33,7 @@ The early registration deadline is **December 19**.
 The tutorial is organized and presented by the CMU Principles of
 Programming group.
 
-#
-# Schedule
+## Schedule
 
 * Session 1 (11AM-noon): [http://www.cs.cmu.edu/~drl/tmp/twelflectures.pdf Overview of LF and Twelf]
 * Session 2 (12:15-1:15PM): [POPL_Tutorial/Session 2](/wiki/popl-tutorial-session-2/)
@@ -45,8 +42,7 @@ Programming group.
 * Session 4 (3:00PM-4:30PM): [POPL_Tutorial/Session 4](/wiki/popl-tutorial-session-4/)
 * Session 5 (4:45PM-6:15PM): [POPL_Tutorial/Session 5](/wiki/popl-tutorial-session-5/)
 
-#
-# Get Twelf before the tutorial!
+## Get Twelf before the tutorial!
 
 The tutorial will be interactive, with participants writing Twelf code, so you should come with Twelf installed on your laptop.
 

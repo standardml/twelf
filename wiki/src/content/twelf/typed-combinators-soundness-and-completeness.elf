@@ -14,8 +14,7 @@ are beta-eta equal, and vice versa.
 
 %{! 
 
-#
-# Syntax and static semantics
+## Syntax and static semantics
 
  !}%
 
@@ -84,8 +83,7 @@ syntax for application.
 
 %{! 
 
-#
-# Equational theory
+## Equational theory
 
  !}%
 
@@ -176,8 +174,7 @@ ceq/trans : ceq N N''
 
 %{! 
 
-#
-# Translation
+## Translation
 
  !}%
 
@@ -316,8 +313,7 @@ can-translate : {M : term A} translate M N -> type.
 
 %{! 
 
-#
-# Correctness of the translation
+## Correctness of the translation
 
  !}%
 
@@ -517,8 +513,7 @@ simulate : translate M N -> translate M' N' -> teq M M' -> ceq N N' -> type.
 
 %{! 
 
-#
-# Backward translation
+## Backward translation
 
 To show completeness we exhibit a backward translation---called
 "reification"---taking combinators to lambda terms, and show that
@@ -675,8 +670,7 @@ strengthen-reify : ({x} {y} reify y x -> reify N (M! x))
 
 %{! 
 
-#
-# Correctness of the backward translation
+## Correctness of the backward translation
 
 Our main technique for showing completeness is to show that every translation
 of ``M`` has a reification to an equivalent ``M'``.  First, we show

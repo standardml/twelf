@@ -1,10 +1,9 @@
 %%! title: "%freeze"
 
 %{! \{\{undocumented|article\}\}
-The **``%freeze``** declaration _freezes_ a set of type families. A frozen family cannot be extended: new constants at that type cannot be added, nor can the [subordination](/wiki/subordination/) relation be extended such that the family could depend on other types. The ``[%thaw](/wiki/percent-thaw/)`` declaration can be used to reenable the extension of a type family.
+The **``%freeze``** declaration _freezes_ a set of type families. A frozen family cannot be extended: new constants at that type cannot be added, nor can the [subordination](/wiki/subordination/) relation be extended such that the family could depend on other types. The [``%thaw``](/wiki/percent-thaw/) declaration can be used to reenable the extension of a type family.
 
-#
-# Syntax
+## Syntax
 
 The syntax is as follows:
 
@@ -12,8 +11,7 @@ The syntax is as follows:
 
 The type families ``t1``&ndash;``tn`` are frozen.
 
-#
-# Example
+## Example
 
 Suppose we define addition in the natural way: !}%
     
@@ -61,10 +59,9 @@ okay : (plus _ _ _ -> thing) -> type.
 
 %{! Because types are automatically frozen in common cases (see below), one may occasionally need to induce subordination relations in anticipation of code that follows freezing. This can be done as in the type ``oops`` above, before using ``%freeze`` or metatheory like ``%worlds``.
 
-#
-# Autofreeze
+## Autofreeze
 
-Twelf CVS\{\{discuss|Version\}\} automatically freezes any family for which there has been a ``[%worlds](/wiki/percent-worlds/)`` declaration. This prevents mistakes where a metatheorem is proved for a type family but then that type family is extended, invalidating the theorem.\{\{discuss|Soundness\}\}
+Twelf CVS\{\{discuss|Version\}\} automatically freezes any family for which there has been a [``%worlds``](/wiki/percent-worlds/) declaration. This prevents mistakes where a metatheorem is proved for a type family but then that type family is extended, invalidating the theorem.\{\{discuss|Soundness\}\}
 
 \{\{keyword|key=freeze\}\} !}%
 

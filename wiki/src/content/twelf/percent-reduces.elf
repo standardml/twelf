@@ -4,8 +4,7 @@
 
 The **``%reduces``** declaration checks a specified subderivation relationship between two derivations in a judgment. Once a ``%reduces`` relationship has been established for a judgment, the termination checker can use that information to verify that inductive calls are always on smaller derivations. Its primary use is for termination checking in inductive proofs that induct on the output of some other judgment, rather than directly on a subderivation.
 
-#
-# Example !}%
+## Example !}%
     
 nat : type.
 
@@ -60,14 +59,12 @@ Twelf also permits the relations ``&lt;=`` and ``=`` to be established via ``%re
 &lt;!-- maybe these should be in see also? -Tom --&gt;
 A good example of making use of ``%reduces`` information in another proof is available in the tutorial on [division over the natural numbers](/wiki/division-over-the-natural-numbers/). An extended version of this example is in [using nat-less with %reduces](/wiki/using-nat-less-with-reduces/).
 
-#
-# See also
+## See also
 * \{\{guide|chapter=8|section=47|title=%reduces declaration\}\}
 
 \{\{keyword|key=reduces\}\}
 
-#
-# Headline text !}%
+## Headline text !}%
 
 %{!
 This page was copied from the MediaWiki version of the Twelf Wiki.

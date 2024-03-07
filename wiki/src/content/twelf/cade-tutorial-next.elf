@@ -4,14 +4,12 @@
 
 We strongly recommend that you work on some of the following exercises: you'll get a flavor for the experience of defining systems and proving theorems in Twelf.  If we have time at the end of the tutorial, we'll break into small groups and you can pick an interesting problem or two to work on.  If you get stuck, ask a TA!  Refer to the solutions to check your work (though Server OK from Twelf should be assurance enough!)  Feel free to ask us for help during the rest of the conference. 
 
-#
-# Beginner problems (Recommended)
+## Beginner problems (Recommended)
 * [POPL Tutorial/MinML Preservation Theorem](/wiki/popl-tutorial-minml-preservation-theorem/) -- Prove type preservation for MinML. ([POPL Tutorial/MinML Preservation Theorem Answer](/wiki/popl-tutorial-minml-preservation-theorem-solution/))
 * [POPL Tutorial/Sequent vs Natural Deduction](/wiki/popl-tutorial-sequent-vs-natural-deduction/) -- Prove the logical equivalence of Gentzen's intuitionistic sequent calculus and intuitionistic natural deduction. ([POPL Tutorial/Sequent vs Natural Deduction: Solution](/wiki/popl-tutorial-sequent-vs-natural-deduction-solution/))
 * [POPL Tutorial/Big step, small step](/wiki/popl-tutorial-big-step-small-step/) -- Prove the operational equivalence of the big-step and small-step views of operational semantics.  ([POPL Tutorial/Big step, small step: Solution](/wiki/popl-tutorial-big-step-small-step-solution/))
 
-#
-# Intermediate problems
+## Intermediate problems
 * [POPL Tutorial/cps-problem](/wiki/popl-tutorial-cps-problem/) -- Define an algorithm for converting lambda terms to continuation-passing style ([POPL Tutorial/CPS Solutions](/wiki/popl-tutorial-cps-solutions/))
 * [POPL Tutorial/cps-problem2](/wiki/popl-tutorial-cps-problem2/) -- Define a higher-order variant of the CPS conversion that never creates administrative redexes ([POPL Tutorial/CPS Solution2](/wiki/popl-tutorial-cps-solution2/))
 * [POPL Tutorial/Church Rosser (Problem)](/wiki/popl-tutorial-church-rosser-problem/) -- Prove Church and Rosser's seminal result via a Diamond Lemma for the untyped lambda calculus. ([POPL Tutorial/Church Rosser](/wiki/church-rosser-w-identity-reduction/))

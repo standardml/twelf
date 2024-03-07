@@ -8,8 +8,7 @@ There are two reasons to prove an effectiveness lemma:
 
 We discuss these motivations in more detail after presenting an example effectiveness lemma.
 
-#
-# Example effectiveness lemma
+## Example effectiveness lemma
 
 Consider the relation that negates a bit: !}%
     
@@ -53,8 +52,7 @@ can-bit-flip : {B:bit}
 %{! When processing the ``%total``, Twelf verifies the following totality assertion:
 : For all ``B : bit``, there exists a ``B' : bit`` and ``D : bit-flip B B'`` and a ``D' : can-bit-flip B D``.
 
-#
-# Motivating scenario
+## Motivating scenario
 
 This particular example is clearly not motivated by the first consideration mentioned above, as Twelf was able to prove the totality assertion directly.  For such an example, see the tutorial on [structural metrics](/wiki/structural-metrics/).
 

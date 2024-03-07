@@ -2,14 +2,9 @@
 
 %{! The fact that the LF type theory uses only unrestricted assumptions has led some to assume that it cannot encode substructural logics such as linear logic.  In fact, LF admits a very elegant encoding of linear logic, given below.  The key idea is a judgement used to enforce the linear use of each linear assumption.
 
-#
-#
-# The Encoding
+### The Encoding
 
-#
-#
-#
-# Syntax !}%
+#### Syntax !}%
     
 %{! (options removed from twelftag: hidden="true") !}%
 
@@ -64,10 +59,7 @@ star	: term
 leto	: term -> term -> term
 	= [t1] [t2] letb t1 ([x] t2).
 
-%{! #
-#
-#
-# Linearity
+%{! #### Linearity
 
 Linearity is enforced by employing a linearity judgement for each linear assumption.  The linearity judgement ensures that a variable is used linearly (roughly speaking, exactly once) within its scope.  (For an example of its use, see the rule ``of/lam`` for linear lambda abstraction below, which ensures that its argument is used linearly within its body.) !}%
     
@@ -148,10 +140,7 @@ linear/leto2	: linear ([x] leto M1 (M2 x))
 		   <- linear M2
 		= [d] linear/letb2 ([y] d).
 
-%{! #
-#
-#
-# Typing rules
+%{! #### Typing rules
 
 The typing rules are standard for linear logic, except that they must check that the linearity invariants are maintained.  Thus, the typing rule for any construct that binds a linear variable (``lam``, for example) has a premise (or premises) ensuring that such variable(s) are used linearly in their scope.  However, ``letb``, which binds an unrestricted variable, does not check for linear usage of that variable. !}%
     
@@ -225,9 +214,7 @@ of/leto		: of (leto M1 M2) T
 		   <- of M2 T
 		= [d2] [d1] of/letb ([x] [d] d2) d1.
 
-%{! #
-#
-# Subject Reduction
+%{! ### Subject Reduction
 
 As a metatheoretic example, we may prove the subject reduction property using this encoding.  First we define the relevant worlds: !}%
     

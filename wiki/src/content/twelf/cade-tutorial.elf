@@ -6,8 +6,7 @@
 Help us out by filling out our handy dandy [http://spreadsheets.google.com/viewform?key=pff4VF1v6KVNcwC_c2qFAGA feedback form]!
 --&gt;
 
-#
-# Mechanizing Metatheory with LF and Twelf
+## Mechanizing Metatheory with LF and Twelf
 
 Do you want to learn how to use [Main page](/wiki/main-page/) to specify, implement, and prove
 properties about programming languages?  
@@ -28,8 +27,7 @@ languages, and experience reading, writing, and debugging Twelf proofs.
                                                                                                                                                             
 The tutorial is organized and jointly presented by the the IT University of Copenhagen and the CMU  Principles of Programming group.  The presenters and TAs at CADE will be Taus Brock-Nannestad, Chris Martens, and Carsten Schürmann.
 
-#
-# Schedule
+## Schedule
 
 The tutorial will begin at **9:00AM**. Get [http://www.demtech.dk/raw-attachment/wiki/News/lectures.pdf the slides]!
 
@@ -40,8 +38,7 @@ The tutorial will begin at **9:00AM**. Get [http://www.demtech.dk/raw-attachment
 
 There will be a coffee break at 10:30AM.
 
-#
-# Get Twelf before the tutorial!
+## Get Twelf before the tutorial!
 
 The tutorial will be interactive, with participants writing Twelf code, so you should come with Twelf installed on your laptop.
 
@@ -53,8 +50,7 @@ Otherwise:
 
 Then see [Twelf with Emacs](/wiki/twelf-with-emacs/) for the basics of interacting with Twelf.  (You can also use [Twelf without Emacs](/wiki/twelf-without-emacs/), by interacting with the Twelf server directly.)
 
-#
-# Sponsors
+## Sponsors
 
 Thanks to our sponsors: 
 [http://www.cs.cmu.edu Carnegie Mellon School of Computer Science],

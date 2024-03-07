@@ -2,8 +2,7 @@
 
 %{! This page contains answers to the exercises listed [Proving metatheorems:Summary: the natural numbers](/wiki/proving-metatheorems-summary-the-natural-numbers/).  If you've solved an exercise that isn't answered on this page, or if you have a different solution to an exercise, please add it here.
 
-#
-# Commutativity of Addition
+## Commutativity of Addition
 
 _State and prove a metatheorem showing that ``plus`` is commutative._ !}%
     
@@ -89,12 +88,9 @@ pcs : plus-commutes
 %worlds () (plus-commutes _ _).
 %total D (plus-commutes D _).
 
-%{! #
-# Even/odd numbers and addition
+%{! ## Even/odd numbers and addition
 
-#
-#
-# Define the odd numbers !}%
+### Define the odd numbers !}%
     
 %{! (options removed from twelftag: import="pluscommute") !}%
 
@@ -102,9 +98,7 @@ odd   : nat -> type.
 odd-1 : odd (s z).
 odd-s : odd N -> odd (s (s N)).
 
-%{! #
-#
-# The successor of an even number is an odd number, and vice versa !}%
+%{! ### The successor of an even number is an odd number, and vice versa !}%
     
 %{! (options removed from twelftag: import="pluscommute") !}%
 
@@ -130,9 +124,7 @@ sos : succ-odd (odd-s OddA) (even-s EvenA)
 %worlds () (succ-odd _ _).
 %total D (succ-odd D _).
 
-%{! #
-#
-# The sum of an even and an odd number is odd !}%
+%{! ### The sum of an even and an odd number is odd !}%
     
 %{! (options removed from twelftag: import="pluscommute") !}%
 
@@ -151,9 +143,7 @@ seos : sum-even-odd
 %worlds () (sum-even-odd _ _ _ _).
 %total D (sum-even-odd D _ _ _).
 
-%{! #
-#
-# The sum of an odd plus an even number is odd !}%
+%{! ### The sum of an odd plus an even number is odd !}%
     
 %{! (options removed from twelftag: import="pluscommute") !}%
 
@@ -191,9 +181,7 @@ soe : sum-odd-even
 %worlds () (sum-odd-even _ _ _ _).
 %total D (sum-odd-even D _ _ _).
 
-%{! #
-#
-# The sum of two odd numbers is even !}%
+%{! ### The sum of two odd numbers is even !}%
     
 %{! (options removed from twelftag: import="pluscommute" check="true") !}%
 

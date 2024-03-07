@@ -21,8 +21,7 @@ d : a.
 x : a = (b + c) * d. %% The parenthesis are necessary here
 y : a = b + (c * d). %% This means the same thing as b + c * d.
 
-%{! #
-# See also
+%{! ## See also
 * \{\{guide|chapter=3|section=11|title=Operator Declaration\}\}
 
 \{\{keyword|key=Fixity declaration\}\}

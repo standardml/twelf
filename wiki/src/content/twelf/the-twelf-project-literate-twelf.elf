@@ -2,22 +2,18 @@
 
 %{! The Literate Twelf extension is a relatively simple modification of [TwelfTag](/wiki/twelftag/) intended to facilitate both offline editing, as well as direct use, of pages on this wiki. Literate Twelf pages interperet text inside of multi-line comments as are automatically run through Twelf by the Literate Twelf extension, and Twelf's output ("%% OK %%" or "%% ABORT %%") is displayed in a box at the top of the page.
 
-#
-# Using Literate Twelf
+## Using Literate Twelf
 
 If a file on the wiki starts with the string ``%\{``, a preprocesser is invoked that (essentially) turns all instances of ``%\{`` to ``(/twelf)`` and all instances of ``\}%`` into ``(twelf)``, transforming the Twelf file with comments into a Mediawiki file with escaped TwelfTag sequences. 
 
 Furthermore, if a pipe characther ``|`` appears on the same line as the ``\}%`` symbol, the text between the ``|`` and the ``\}%`` will be interpreted as options to the (twelf) tag.
 
-#
-#
-# Limitations
+### Limitations
 
 * Multi-line comments cannot be nested within a Literate Twelf file.
 * Section editing is disabled for Literate Twelf files on the wiki, as this could potentially lead to unpredictable results.
 
-#
-# Demo
+## Demo
 
 The following Literate Twelf page is demonstrated [[Project:Literate Twelf/Sample Page|here]]. Notice that because a ``|`` appears on the second line, the comment cannot be closed on that line or the entire segment ``Literate Twelf]].`` would be interpreted as TwelfTag options.
 

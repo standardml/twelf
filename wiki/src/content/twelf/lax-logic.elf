@@ -49,7 +49,7 @@ id/refl : id M M.
 Each atomic proposition has a defined polarity (``pos`` or ``neg``), 
 though this is mostly irrelevant in the target logic and totally irrelevant in 
 the source logic. Every theorem we prove will assume a universe of arbitrary
-atomic propositions of both polarities, so every ``[%worlds](/wiki/percent-worlds/)`` 
+atomic propositions of both polarities, so every [``%worlds``](/wiki/percent-worlds/) 
 declaration will include at least the blocks ``bl_atmpos`` (positive
 atomic propositions) and ``bl_atmneg`` (negative atomic propositions). !}%
 
@@ -132,10 +132,7 @@ Our left conjunction rule: &lt;math&gt;\frac\{\Gamma, A \wedge B, A, B \vdash \D
 With those caveats, we will continue to consider our source logic, presented
 here, to have the essential character of Fairtlough and Mendler's. 
 
-#
-#
-#
-# Rules on paper
+#### Rules on paper
 
 &lt;center&gt;&lt;math&gt;\frac
 \{~~~\}
@@ -316,10 +313,7 @@ any need for a [structural metric](/wiki/structural-metrics/) like we used befor
 idconc : conc C -> conc C' -> type.
 idconc/refl : idconc D D.
 
-%{! #
-#
-#
-# Rules on paper
+%{! #### Rules on paper
 
 &lt;center&gt;&lt;math&gt;\frac
 \{~~~\}

@@ -54,9 +54,7 @@ The Twelf server, besides being able to check Twelf source files for type-correc
 * Also as part of a Twelf source file, you can use a ``%solve`` directive to search for an element of a given type and define an identifier to be the first such element found.  You can also, with an accompanying ``%define`` directive, define identifiers to be the elements that get substituted for particular logic variables in the satisfying solution.
 See the Twelf [User's Guide](/wiki/users-guide/) for more information on interacting with the Twelf server using the top-level loop.  Here we will give some examples of using ``%query``, ``%solve``, and ``%define``.  
 
-#
-#
-# The ``%query`` directive
+### The ``%query`` directive
 
 The format of a ``%query`` declaration is ``%query``&nbsp;_solns_&nbsp;_tries_&nbsp;_type_, where _solns_ is the expected number of solutions, _tries_ is a limit to the number of solutions that will be listed (or "``*``" if there is no limit), and _type_ is the type, possibly containing logic variables, of which Twelf will search for elements.  Of course, it only makes sense to speak of elements of real types, without free variables&mdash;we call them _ground_ types&mdash;but the point is that, searching for elements of the given type using the declarations in the signature will cause these logic variables to be instantiated to particular terms, and it is discovering these substitutions that are the main purpose of the ``%query`` declaration.  Here are some examples: !}%
     
@@ -68,9 +66,7 @@ The format of a ``%query`` declaration is ``%query``&nbsp;_solns_&nbsp;_tries_&n
 %query 7 7 dat X Y.              % Check that "dat X Y" has exactly seven solutions
 %query 1 * dat X X.              % Look for at least one solution to "dat X X", FAILS!
 
-%{! #
-#
-# The ``%solve`` and ``%define`` directives
+%{! ### The ``%solve`` and ``%define`` directives
 
 The format of a ``%solve`` declaration is ``%solve``&nbsp;_ident_&nbsp;``:``&nbsp;_type_.  This directive will search for a solution to the query (i.e., an element of the type) _type_, and define _ident_ to be this element.  Any logic variables in _type_ will be instantiated, and you can seen them in the type when Twelf echoes the definition in its output, but they are not reported separately, as they are with the ``%query`` directive.  If you want to capture these instantiations of free variables as definitions, you can prefix the ``%solve`` directive with one or more ``%define`` directives, the format of which is ``%define``&nbsp;_ident_&nbsp;``=``&nbsp;_var_&nbsp;``:``&nbsp;_type_, where _ident_ is the identifier to be defined, _var_ is the free variable in the subsequent ``%solve`` declaration whose instantiation you want to capture, and _type_ is the type of that variable.  Please note that the ``%define`` directives do not end in a period ("``.``") but are the beginning part of a single ``%solve`` directive.  Here are some examples, the first of which repeats the definition of ``dat_sunday`` above, except that Twelf figures out the element (or "evidence") itself: !}%
     
@@ -89,9 +85,7 @@ The format of a ``%solve`` declaration is ``%solve``&nbsp;_ident_&nbsp;``:``&nbs
 
 %{! In the first ``%solve``, the identifier ``dat_sunday`` gets bound to ``dat_def&nbsp;next_day_sun&nbsp;next_day_mon``.  In the second, ``X`` gets instantiated to ``wednesday`` (which we can see in the type ``dat&nbsp;monday&nbsp;wednesday``) and ``dat_monday`` gets bound to ``dat_def&nbsp;next_day_mon&nbsp;next_day_tue``.  In the next query, ``d`` gets bound to ``thursday``, since this is what ``X`` gets instantiated to in the ``%solve``, and ``dat_tuesday`` gets bound to ``dat_def&nbsp;next_day_tue&nbsp;next_day_wed``.  Finally, in the last query, ``X`` and ``Y`` get instantiated to ``saturday`` and ``monday`` respectively, and ``first_day`` and ``second_day`` get bound to these, while ``dat_first_second`` gets bound to ``dat_def&nbsp;next_day_sat&nbsp;next_day_sun``.
 
-#
-#
-# Operational Semantics
+### Operational Semantics
 
 Let's look more closely at what Twelf does to solve a query, for this will clarify the operational meaning of a Twelf signature (see Section 5.5 of the [User's Guide](/wiki/users-guide/) for more information).  First, some terminology.  A _goal_ is a type, possibly involving free variables, for which we are interested in finding an element.  There are three kinds of goal:
 * an _atomic_ goal, which is a fully-applied type family, i.e., a type constructor with a declaration like ``a&nbsp;:&nbsp;B1&nbsp;-&gt;&nbsp;...&nbsp;-&gt;&nbsp;Bm&nbsp;-&gt;&nbsp;type`` applied to ``m`` terms, such as ``a&nbsp;M1&nbsp;...&nbsp;Mm``, resulting in a type;

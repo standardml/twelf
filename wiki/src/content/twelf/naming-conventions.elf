@@ -4,12 +4,9 @@
 
 These are **naming conventions** for Twelf code. This article should be considered an appendix to/chapter of the [style guide](/wiki/twelf-style-guide/).
 
-#
-# Syntax
+## Syntax
 
-#
-#
-# The uninhabited type
+### The uninhabited type
 
 Defining an uninhabited type is important for [reasoning from false](/wiki/reasoning-from-false/) - however, the name of that type varies from user to user, with ``void``, ``false``, and ``absurd`` perhaps being the most common.
 
@@ -17,12 +14,9 @@ Standard usage is to use ``void``, and to freeze the type immediately after its 
     
 void : type. %freeze void.
 
-%{! #
-# Judgments
+%{! ## Judgments
 
-#
-#
-# Factored judgments
+### Factored judgments
 
 [Factoring](/wiki/output-factoring/) is a technique used to reduce backtracking. If a rule does some computation, it might then sends the result to another rule that continues based on the output of its computation. The style introduced here works well with factoring - if you are creating "helper judgment," just replace the forward slash in the primary [judgment](/wiki/judgment/) with a hyphen to come up with the name. !}%
     
@@ -39,9 +33,7 @@ eval/branch-if-nil : eval S1 S2
                       <- do-some-computation-on-state S1 L
                       <- eval-branch-if-nil L S1 S2.
 
-%{! #
-#
-# Introduction rules
+%{! ### Introduction rules
 
 If a type family is inhabited by exactly one rule, it is recommended to use ``i`` (short for introduction) as the case name for the lone inference rule. For example, the [identity](/wiki/equality/) (syntactic equality) [relation](/wiki/relation/) for natural numbers would be defined in the following way. !}%
     
@@ -51,9 +43,7 @@ seq-nat/i : seq-nat N N.
 
 %{! This also applies to pieces of syntax in the [object language](/wiki/object-logic/), but it appears less frequently there.
 
-#
-#
-# A note on word order
+### A note on word order
 
 Here as in the previous section, there is a legitimate case for reversing the word order, calling a list of natural numbers ``nat-list`` instead of ``list-nat`` on the other, and for calling the three-place relation implementing addition of natural numbers ``nat-plus`` instead of ``plus-nat``
 
@@ -61,17 +51,12 @@ The construction that is not used here looks more like declarations would look w
 
 Internal consistancy is most important here, but the construction ``(structure)-(object)`` for syntax (i.e. ``list-nat``) and ``(adjective/verb/operation)-(object)`` (i.e. ``wellformed-env``, ``sort-list``, or ``plus-nat``) is preferred.
 
-#
-#
-# Different types of equality
+### Different types of equality
 
 
-#
-# Metatheorems
+## Metatheorems
 
-#
-#
-# Metatheorem names
+### Metatheorem names
 
 One way to think about a naming strategy for many metatheorems is that many simple theorems act like admissibility arguments for other rules. For instance, imagine an alternate form of ``plus-nat/z`` that has the zero in the _second_ place instead of the first. It might be written like this if it were a real definition: !}%
     
@@ -83,9 +68,7 @@ plus-nat-z-alt : {N} plus-nat N z N -> type.
 
 %{! Beyond that suggestion, the properties that we wish to prove about our inference rules vary to the point where some measure of consistency is the only reasonable guideline.
 
-#
-#
-# ``can-`` and ``-unique`` metatheorems
+### ``can-`` and ``-unique`` metatheorems
 
 A judgment behaves like a function (in the meta-logical sense) on particular "input" derivations if it satisfies two properties. The first is that given the "input" derivations, the judgment can be derived, i.e. an [effectiveness lemma](/wiki/effectiveness-lemma/). The second is that given two derivations of the judgments with the same "input" derivations, the results are actually the same, i.e. a [uniqueness lemma](/wiki/uniqueness-lemma/). It is common practice to name the metatheorems proving the first property ``can-judgmentname`` and the second property ``judgmentname-unique``. !}%
     

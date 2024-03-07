@@ -2,8 +2,7 @@
 
 %{! The **natural numbers** are the numbers 0, 1, 2, etc. The term is generally used to indicate a specific technique of representing natural numbers as either zero or the successor of some other natural number - 0, s(0), s(s(0)), etc - as in [[w:Peano arithmetic|Peano arithmetic]], a technique also sometimes referred to as **unary numbers.**
 
-#
-# Natural numbers in Twelf
+## Natural numbers in Twelf
 
 Natural numbers in Twelf are usually defined in a similar way. Mathematically, natural numbers can be defined as zero or the successor of some other natural number:
 
@@ -17,8 +16,7 @@ s: nat -> nat.
 
 %{! The first line declares that ``nat`` is a type. The second line declares ``z`` (zero) to be an object of type ``nat``, and the third line declars ``s`` (successor) to be a type constructor that takes an object ``N`` of type ``nat`` and produces another object ``(s N)`` of type ``nat``.
 
-#
-# Addition of natural numbers in Twelf
+## Addition of natural numbers in Twelf
 
 The addition of these natural numbers is defined by the judgment &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt;, where &lt;math&gt;N_1&lt;/math&gt;, &lt;math&gt;N_2&lt;/math&gt;, and &lt;math&gt;N_3&lt;/math&gt; are natural numbers. In the definition below, capital letters stand for metavariables that can range over all natural numbers. 
 
@@ -51,15 +49,13 @@ This can be represented in Twelf by applying the type constructor ``p-s`` to the
 
 2+1=3 : plus (s (s z)) (s z) (s (s (s z))) = p-s (p-s p-z).
 
-%{! #
-# See also
+%{! ## See also
 
 * [Natural numbers with inequality](/wiki/natural-numbers-with-inequality/)
 * [Division over the natural numbers](/wiki/division-over-the-natural-numbers/)
 * [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/), which uses natural numbers as an example, and also discusses the [adequacy](/wiki/adequacy/) of the encoding.
 
-#
-# External link
+## External link
 
 * [http://en.wikipedia.org/wiki/Natural_numbers Natural numbers at Wikipedia] !}%
 

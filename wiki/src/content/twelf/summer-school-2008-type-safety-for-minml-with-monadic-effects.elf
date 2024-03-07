@@ -14,8 +14,7 @@ Type safety for MinML with monadic effects
 
 %{! 
 
-#
-# Syntax / static semantics
+## Syntax / static semantics
 
 Types:
 
@@ -50,12 +49,9 @@ let    : (circle T) exp -> (T exp -> U command) -> U command.
 
 %{! 
 
-#
-# Dynamic semantics / preservation
+## Dynamic semantics / preservation
 
-#
-#
-# Values and final states
+### Values and final states
 
  !}%
 
@@ -75,9 +71,7 @@ final/ret : final (return E)
 
 %{! 
 
-#
-#
-# Transition relation for expressions
+### Transition relation for expressions
 
  !}%
 
@@ -108,9 +102,7 @@ step/app/beta-v
 
 %{! 
 
-#
-#
-# Transition relation for commands
+### Transition relation for commands
 
  !}%
 
@@ -128,17 +120,14 @@ mstep/let-beta : mstep (let (comp (return E)) ([x] M x)) (M E)
 
 %{! 
 
-#
-# Progress
+## Progress
 
 The progress theorem for expressions does not require a corresponding
 theorem for commands, because commands are suspended inside expressions
 (``comp M`` is always a value).  We prove progress for expressions
 first, and for commands below.
 
-#
-#
-# Return sums
+### Return sums
 
  !}%
 
@@ -152,9 +141,7 @@ fos/step : fin-or-mstep M <- mstep M _ .
 
 %{! 
 
-#
-#
-# [Output factoring](/wiki/output-factoring/) lemmas
+### [Output factoring](/wiki/output-factoring/) lemmas
 
  !}%
 
@@ -212,9 +199,7 @@ prog/app
 
 %{! 
 
-#
-#
-# Progress for expressions
+### Progress for expressions
 
  !}%
 
@@ -245,9 +230,7 @@ prog : {E : T exp} val-or-step E -> type. %name prog Dprog.
 
 %{! 
 
-#
-#
-# Factoring lemmas for commands
+### Factoring lemmas for commands
 
  !}%
 
@@ -280,9 +263,7 @@ mprog/let-comp : fin-or-mstep (M1 : T command) -> {M2 : (T exp -> U command) } m
 
 %{! 
 
-#
-#
-# Progress for commands
+### Progress for commands
 
 The factoring lemma for ``let`` is is mutually recursive with the
 main theorem---when the ``let``-bound expression is ``comp

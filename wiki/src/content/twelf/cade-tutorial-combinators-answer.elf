@@ -3,8 +3,7 @@
 %{! 
 Adapted from the case study on [Typed combinators soundness and completeness](/wiki/typed-combinators-soundness-and-completeness/).
 
-#
-# Syntax
+## Syntax
 
  !}%
 
@@ -32,8 +31,7 @@ capp : comb -> comb -> comb.
 
 %{! 
 
-#
-# Translation
+## Translation
 
  !}%
 
@@ -82,8 +80,7 @@ translate/lam : translate (lam ([x] M x)) A'
 
 %{! 
 
-#
-# Equational theory
+## Equational theory
 
  !}%
 
@@ -153,8 +150,7 @@ ceq/trans : ceq A A'
 
 %{! 
 
-#
-# Correctness of the translation
+## Correctness of the translation
 
  !}%
 

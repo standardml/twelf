@@ -8,8 +8,7 @@
    |nonext= 
 \}\}
 
-#
-# Syntax
+## Syntax
 
 Types:
 
@@ -36,8 +35,7 @@ tapp : tm -> tp -> tm.
 
 %{! 
 
-#
-# Static semantics
+## Static semantics
 
  !}%
 
@@ -55,8 +53,7 @@ of-tapp : of (tapp E T2) (T T2)
 
 %{! 
 
-#
-# Dynamic semantics
+## Dynamic semantics
 
  !}%
 

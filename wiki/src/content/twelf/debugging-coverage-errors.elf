@@ -2,12 +2,9 @@
 
 %{! This page lists techniques for debugging [input coverage](/wiki/coverage-checking/) and [output coverage](/wiki/coverage-checking/) errors.
 
-#
-# Debugging input coverage errors by adding type annotations
+## Debugging input coverage errors by adding type annotations
 
-#
-#
-# Motivating example
+### Motivating example
 
 As a motivating example, we define a simple subtyping relation on the types of a programming language.  The language includes integers, floating point numbers, and functions.  We consider ``int`` to be a subtype of ``float``, and we give the usual contravariant rule for functions: !}%
     
@@ -50,9 +47,7 @@ sub-trans : sub T1 T2 -> sub T2 T3 -> sub T1 T3 -> type.
 %{! Twelf reports an input coverage error: we didn't cover the case for ``sub-arrow`` against ``sub-arrow``.  
 We think: "But I wrote a case for ``sub-arrow`` against ``sub-arrow`` right up there!  What do you mean I didn't cover it?!"
 
-#
-#
-# Debugging technique
+### Debugging technique
 
 What Twelf is saying is that we didn't cover the **general** case for ``sub-arrow`` against ``sub-arrow``.  That is, the inferred type of the constant ``-arrow`` must be less general than required.   One way to figure out the problem is to read the type of the constant: !}%
     
@@ -108,9 +103,7 @@ As you may have figured out already, the problem is that the first recursive cal
 
 %{! In this example, this "fix" itself creates some termination trouble; see the article on [mutual induction](/wiki/mutual-induction/) for a completed proof.  But the broken proof illustrates a useful technique for coverage checking.  
 
-#
-#
-# A Messy Example
+### A Messy Example
 
 In the previous example, adding types to some variables caused a coverage error to be converted into a type error.
 But a complex case may have many many variables.  Coverage errors can be very hard to find in this case.
@@ -254,30 +247,23 @@ Now when you check the declaration (Control-C Control-D), the coverage error wil
 
 The details are irrelevant except to show that even (especially!) long proofs can use this technique.
 
-#
-#
-# Summary
+### Summary
 
 If you encounter an input coverage error on a case you thought you covered, the problem is most likely that the constant you wrote has a less general type than you think.  It can be helpful to read the type of constant, looking for variables that Twelf unified.  Additionally, you can start introducing type annotations on the inputs to prevent Twelf from unifying the implicit parameters; this turns the input coverage error into a type error on the constant itself.  If you comment out parts of the constant, such as outputs or later premises, you can find the exact premise that causes the type error, and get Twelf to give a more specific error message.  This will help you figure out what mistake you made.
 
-#
-# Unusual Situations
+## Unusual Situations
 
 The input coverage checker has limitations.  This section describes some of them.
 You won't encounter these symptoms unless you are using higher-order judgments.
 
-#
-#
-# Nontermination
+### Nontermination
 
 Occasionally, the input coverage checker does not terminate.  If chatter is set to six, you see the infinite loop progressing.
 Otherwise, it simply hangs.  This happens sporadically when the input coverage checker attempts to split
 on a variable of higher-order  (functional) type.  It usually happens when there is a coverage error.  Use chatter 6
 to determine where the problem is.
 
-#
-#
-# Inactive Splits
+### Inactive Splits
 
 Occasionally, the coverage checker "refuses" to split on a variable (i.e. enumerate its cases) even
 though doing so would determine that there are no cases to consider, in other words that

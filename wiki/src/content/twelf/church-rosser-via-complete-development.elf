@@ -10,8 +10,7 @@ metatheorems in [regular worlds](/wiki/percent-worlds/): we use several differen
 transport theorems between them.
  !}%
 
-%{! #
-# Syntax and judgements
+%{! ## Syntax and judgements
 
 First, we define the syntax of the language, along with parallel reduction and complete development.  
 See [Reformulating languages to use hypothetical judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/) for a discussion of these judgements and their encodings.
@@ -90,9 +89,7 @@ Thus, we define a block that includes all the assumptions in both ``=&gt;b`` and
 
 %%## Diamond property of parallel reduction
 
-%{! #
-#
-# Every term either is or isn't a lambda
+%{! ### Every term either is or isn't a lambda
 
 As a lemma, we need to prove that every term either is or is not a lambda.
 
@@ -126,9 +123,7 @@ Thus, we arrive at:
 %worlds (decideb) (decide _ _).
 %total E (decide E _).
 
-%{! #
-#
-# Complete development is total
+%{! ### Complete development is total
 
 To prove the diamond property, we need to know that every term is reducible under complete-development.  
 First, we prove a lemma showing that an application reduces if its components do:
@@ -201,9 +196,7 @@ so Twelf permits this world subsumption.  That is, ``decide`` is only concerned 
 influence those types.
  !}%
 
-%{! #
-#
-# Substituting reductions into parallel reduction
+%{! ### Substituting reductions into parallel reduction
 
 We also need to show that the substitution of a reduction is the reduction of the substitution.
 To prove this lemma, we distinguish cases on an LF function representing the 
@@ -248,9 +241,7 @@ we use the block containing only parallel reduction assumptions:
 %worlds (=>b) (subst _ _ _).
 %total D (subst D _ _).
 
-%{! #
-#
-# The triangle property
+%{! ### The triangle property
 
 The key lemma in this proof is that given a split of parallel reduction on one side and
 complete development on the other, there is a parallel reduction on the other side
@@ -356,9 +347,7 @@ to the **beta-reduction** of the right-hand side, but there the proof breaks dow
  !}%
 
 
-%{! #
-#
-# The diamond property
+%{! ### The diamond property
 
 We prove the diamond property by first generating a parallel reduction for ``M`` and 
 then making two triangles, which complete the square.
@@ -399,14 +388,11 @@ the context.
 %worlds (diab) (dia _ _ _ _).
 %total {} (dia _ _ _ _).
 
-%{! #
-# Other properties of complete development
+%{! ## Other properties of complete development
 
 To complete the development of complete development, we can prove two other simple lemmas.
 
-#
-#
-# Soundness of complete development wrt parallel reduction
+### Soundness of complete development wrt parallel reduction
 
 First, every complete development reduction is a parallel reduction: 
 we simply forget the proof of the side condition on the application rule.
@@ -445,9 +431,7 @@ as well as a theorem case, so we extend ``=&gt;&==&gt;b`` as follows:
 %worlds (soundb) (sound _ _).
 %total D (sound D _).
 
-%{! #
-#
-# Complete development is deterministic
+%{! ### Complete development is deterministic
 
 Finally, we can show that complete development is derministic.
 

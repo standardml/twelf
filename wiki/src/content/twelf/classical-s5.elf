@@ -4,8 +4,7 @@
 
 Twelf excels for this kind of proof. The only difficulty is that the most natural definition of falsehood assumptions leads to a third-order relation, which Twelf's termination checker did not support at the time this code was developed. Instead, we have an explicit substitution theorem for such assumptions.
 
-#
-# Natural deduction !}%
+## Natural deduction !}%
     
 %% Classical Judgmental S5
 %% Tom Murphy VII
@@ -76,8 +75,7 @@ throw :     A @ W ->
 
 %{! In order for some propositions to exist, we may wish to declare some world constant. Otherwise, our metatheorems may be vacuously true due to empty quantification. Alternatively, we choose to prove our metatheorems with respect to a (LF level) [regular world](/wiki/percent-worlds/) where (object language) hypothetical worlds may occur in the context. See the declaration of ``blockw`` below.
 
-#
-# Sequent calculus !}%
+## Sequent calculus !}%
     
 %%% Sequent calculus
 
@@ -130,8 +128,7 @@ contra : true A W -> false A W -> #.
 
 _|_T : true _|_ W -> #.
 
-%{! #
-# Cut elimination !}%
+%{! ## Cut elimination !}%
     
 % admissibility of excluded middle (cut)
 
@@ -332,8 +329,7 @@ x_& : xm (A & B) W ([&t] &T ([at][bt] D1 &t at bt) &t)
 
 %total {A [D E]} (xm A W D E F).
 
-%{! #
-# Natural deduction to sequent calculus
+%{! ## Natural deduction to sequent calculus
 
 The admissibility of excluded middle allows us to straightforwardly translate natural deduction proofs to sequent calculus proofs. The theorem we prove is that if Γ;Δ \{\{vdash\}\} A @ W then Γ # A * W, Δ. Operationally, we can think of this as follows: if we have a program of type _A_, then we can pass the result of that program to a continuation expecting _A_ to get a contradiction. !}%
     
@@ -460,8 +456,7 @@ ns-throw : ndseq (throw D K) ([cf'] F AF)
 %total D (contfalse D F).
 %total D (ndseq D F).
 
-%{! #
-# Continuation substitution
+%{! ## Continuation substitution
 
 We must prove a substitution theorem for falsehood assumptions, because we did not use the most [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) encoding for them. Nonetheless, the theorem is interesting. It says that if we have a term _M_ with a hypothesis for a (true) term of type _A_, and we have a term _N_ with a hypothesis for a (false) continuation expecting type _A_, then our substitution operation can substitute M into N to satisfy the hypothesis. _M_ must be well-typed at all types and all worlds.
 &lt;!-- explanation could be better, but it is pretty subtle... --&gt; !}%
@@ -554,8 +549,7 @@ xs-throwhit  : xs D ([u] throw (E u) u) (D B W' F)
 % xs are not substantially different than if it is checked
 % alone (there are just some extra unrelated additions)
 
-%{! #
-# Sequent calculus to natural deduction
+%{! ## Sequent calculus to natural deduction
 
 With substitution defined, we can now translate sequent calculus proofs back into C5 natural deduction. The theorem we prove is that if Γ # Δ then ∀C. ∀ω. Γ; Δ \{\{vdash\}\} C @ ω. !}%
     

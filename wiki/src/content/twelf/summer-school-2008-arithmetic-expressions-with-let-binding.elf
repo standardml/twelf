@@ -31,12 +31,9 @@ add/s : add (s M) N (s P) <- add M N P.
 
 %{! 
 
-#
-# Arithmetic expressions with let-binding
+## Arithmetic expressions with let-binding
 
-#
-#
-# Syntax
+### Syntax
 
 First, the syntax:
 
@@ -59,9 +56,7 @@ type ``(exp -&gt; exp)``.
 
 %{! 
 
-#
-#
-# Evaluation, using substitution
+### Evaluation, using substitution
 
  !}%
 

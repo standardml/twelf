@@ -4,15 +4,13 @@
 
 This is a bibliography collected by Frank Pfenning on the LF logical framework, the logic programming language Elf which is based on LF, and the Twelf meta-logical framework (which includes an implementation of Elf). It is a selection of papers from a more general bibliography on logical frameworks. Papers with known URLs in the World-Wide Web have been annotated with their location and can be previewed or retrieved directly. Corrections, additions, and new URL's for papers and implementations are welcome.
 
-#
-# Basic References
+## Basic References
 
 * For the [LF](/wiki/lf/): R. Harper, F. Honsell, and G. Plotkin, [http://www.cs.cmu.edu/~twelf/elf-bib.html#Harper93jacm A Framework for Defining Logics].
 * For the Elf language: F. Pfenning, [http://www.cs.cmu.edu/~twelf/elf-bib.html#Pfenning91lf Logic Programming in the LF Logical Framework].
 * For the Twelf implementation: [http://www.cs.cmu.edu/~twelf/elf-bib.html#Pfenning99cade System description: Twelf - a meta-logical framework for deductive systems].
 
-#
-# Full Bibliography
+## Full Bibliography
 
 - Penny Anderson. Program Derivation by Proof Transformation. PhD thesis, Carnegie Mellon University, October 1993. Available as Technical Report CMU-CS-93-206. [ftp://babar.inria.fr/pub/croap/anderson/thesis Available electronically].
 - Penny Anderson. Program extraction in a logical framework setting. In Frank Pfenning, editor, Proceedings of the 5th International Conference on Logic Programming and Automated Reasoning, pages 144-158, Kiev, Ukraine, July 1994. Springer-Verlag LNAI 822.

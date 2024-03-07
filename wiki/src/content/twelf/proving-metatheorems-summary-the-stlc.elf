@@ -5,8 +5,7 @@
   | prev = Proving metatheorems in non-empty contexts
   | prevname = Proving metatheorems in non-empty contexts\}\}
 
-#
-# Take-aways
+## Take-aways
 
 The lessons you should take from this section are:
 
@@ -14,13 +13,11 @@ The lessons you should take from this section are:
 - World declarations permit totality assertions about type families in non-empty contexts.
 - Such totality assertions can be used to prove general metatheorems about object-language entities that are represented using higher-order LF encodings.  
 
-#
-# What's next?
+## What's next?
 
 Now that you've made it through this introduction, you have the basic tools you need to start proving metatheorems with Twelf.  You've seen all of the basic machinery that Twelf provides, and you are in a good position to understand the other documentation on this wiki.  Your next step should be to read some of the [tutorials](/wiki/tutorials/), which describe clever modes of use of the techniques we have talked about here, or to read some of the [case studies](/wiki/case-studies/), which describe interesting applications of Twelf.
 
-#
-# Test yourself
+## Test yourself
 
 _This section is under development; if you try other examples at this point, please add them here._
 

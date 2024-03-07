@@ -76,8 +76,7 @@ two   = s one : nat.     % or: two   = s (s 0) : nat.
 three = s two : nat.     % or: three = s (s (s 0)) : nat.
 four  = s three : nat.   % or: four  = s (s (s (s 0))) : nat.  etc.
 
-%{! #
-# Type families
+%{! ## Type families
 
 The type ``nat_list`` from the previous subsection has as elements _all_ lists of natural numbers, of all lengths.  However, we can refine this type, replacing it with an infinite collection of types \{L&lt;sub&gt;0&lt;/sub&gt;, L&lt;sub&gt;1&lt;/sub&gt;, L&lt;sub&gt;2&lt;/sub&gt;, ...\}, where for each natural number _n_, the type L&lt;sub&gt;_n_&lt;/sub&gt; consists of all natural number lists _of length n_.  Thus L&lt;sub&gt;0&lt;/sub&gt; has only the element ``nil``; L&lt;sub&gt;1&lt;/sub&gt; contains exactly the one-element lists ``cons 0 nil``,&nbsp; ``cons (s 0) nil``,&nbsp; ``cons (s (s 0)) nil``,&nbsp; etc.; L&lt;sub&gt;2&lt;/sub&gt; contains exactly the two-element lists, and so on, and the ``cons`` operator becomes an infinite family of operators \{``cons``&lt;sub&gt;0&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;0&lt;/sub&gt; &rarr; L&lt;sub&gt;1&lt;/sub&gt;, ``cons``&lt;sub&gt;1&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;1&lt;/sub&gt; &rarr; L&lt;sub&gt;2&lt;/sub&gt;, ``cons``&lt;sub&gt;2&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;2&lt;/sub&gt; &rarr; L&lt;sub&gt;3&lt;/sub&gt;, ...\}.  This is how we could define each of these types and operations separately in Twelf: !}%
     
@@ -145,8 +144,7 @@ cons : nat -> nat_list N -> nat_list (s N).
  cons 0 (cons 1 (cons 2 nil)),
 just as it was before we refined ``nat_list`` into a type family indexed by length.  Twelf is automatically supplying the correct first arguments to each instance of ``cons``, using the following reasoning.  The type of ``nil`` is ``nat_list 0``, so the missing argument of ``cons`` in ``cons 2 nil`` must be ``0``, the type of this expression being ``nat_list (s 0)``.  But then the missing argument in the middle instance of ``cons`` has to be ``s 0``, making the type of the expression ``cons 1 (cons 2 nil)`` be ``nat_list (s 0)``.  Finally, that means that the missing argument in the first instance of ``cons`` has to be ``s (s 0)``, and so the complete term can be reconstructed.  As we shall see, this kind of reconstruction is the rule, rather than the exception, and it makes working with Twelf much easier that it would without it.
 
-#
-# Representing relations and functions
+## Representing relations and functions
 
 A crucial feature of Twelf is that we can use it to represent not only data structures but also the logic we use to reason about them.  Ordinary predicate logic is built up from primitive predicates and relations using logical connectives such as "and", "or", and "implies", and quantifiers such as "for all" and "there exists".  In Twelf, we us a computational interpretation of logic based on the so-called "Propositions as Types" principle, meaning that we represent statements in our logic as types (or type families), and proofs of these statements as elements of the associated types.  This has two important consequences:  (1) the logic and reasoning methods we can use are somewhat restricted (technically, we are restricted to the &forall;&exist; fragment, and our reasoning must be _Intuitionistic_ or _constructive_, about which we will have more to say later), and (2) propositions, being types, are themselves data structures that can therefore be reasoned about in Twelf, allowing us to iterate the process of representation and reasoning to any desired level.
 

@@ -7,8 +7,7 @@ When Twelf [%total](/wiki/percent-total/), it checks that the output of each pre
 
 Prior to Twelf 1.5, output freeness checking was not implemented, allowing some false metatheorems to check. 
 
-#
-# Simple example
+## Simple example
 
 As a first output freeness violation, consider the following buggy definition of the addition relation on natural numbers: !}%
     
@@ -42,8 +41,7 @@ Thus, Twelf reports an output coverage error on this constant when we attempt to
 
 %{! Twelf reports an output freeness error: the output metavariable ``N`` occurs previously because ``N`` is an input to the relation.
 
-#
-# Uniqueness example
+## Uniqueness example
 
 It is common to encounter output freeness errors when working with relations that have unique outputs.  For example, consider a correct definition of ``add``: !}%
     
@@ -84,8 +82,7 @@ add2 : nat -> nat -> type.
 
 This example, where we explicitly repeat a premise, is clearly avoidable.  However, analogous situations do come up in practice, and to work around them, you must prove and use the [uniqueness lemma](/wiki/uniqueness-lemma/) explicitly.  
 
-#
-# Non-free implicit outputs
+## Non-free implicit outputs
 
 Another common source of output freeness errors is constraining implicit outputs that appear in the types of other outputs.
 

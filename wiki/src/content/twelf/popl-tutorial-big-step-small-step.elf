@@ -15,8 +15,7 @@ There are five tasks:
 
 The solution is [POPL Tutorial/Big step, small step: Solution](/wiki/popl-tutorial-big-step-small-step-solution/).
 
-#
-# Syntax
+## Syntax
 
 Types:
 
@@ -42,8 +41,7 @@ ifz : exp -> exp -> (exp -> exp) -> exp.
 
 %{! 
 
-#
-# Small-step dynamic semantics
+## Small-step dynamic semantics
 
  !}%
 
@@ -74,9 +72,7 @@ step/ifz/s : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
 
 %{! 
 
-#
-#
-# Multi-step
+### Multi-step
 
  !}%
 
@@ -105,8 +101,7 @@ using transitivity.
 
 %{! 
 
-#
-# Big-step dynamic semantics
+## Big-step dynamic semantics
 
  !}%
 
@@ -130,15 +125,12 @@ eval/app : eval (app E1 E2) V
 
 %{! 
 
-#
-# Lemmas
+## Lemmas
 
 There are two easy lemmas we'll need later that relate evaluation to
 the value judgement from above.
 
-#
-#
-# Evaluation returns a value
+### Evaluation returns a value
 
  !}%
 
@@ -169,9 +161,7 @@ eval-val : eval E V -> value V -> type.
 
 %{! 
 
-#
-#
-# Values evaluate to themselves
+### Values evaluate to themselves
 
  !}%
 
@@ -190,16 +180,13 @@ val-eval : value V -> eval V V -> type.
 
 %{! 
 
-#
-# Big-step implies multi-step
+## Big-step implies multi-step
 
 Our first main theorem is to show that big-step evaluation implies
 multi-step evaluation, i.e. that if ``eval E V`` then ``step*
 E V``.
 
-#
-#
-# Compatibility lemmas
+### Compatibility lemmas
 
 To prove this, we'll need some compatibility lemmas for multi-step
 transition which say that multi-step transitions in a sub-term of a
@@ -266,17 +253,12 @@ step*/app/arg : step* E2 E2' -> value V1 -> step* (app V1 E2) (app V1 E2')
 
 
 %{! 
-#
-#
-# Main theorem
+### Main theorem
 
 Now we can prove our first main theorem by induction on the derivation
 of ``eval E V`` using the multi-step compatibility lemmas above.
 
-#
-#
-#
-# TASK 2: Fill in the missing cases of the theorem
+#### TASK 2: Fill in the missing cases of the theorem
 
  !}%
 
@@ -320,12 +302,9 @@ eval-multi : eval E V -> step* E V -> type.
 
 %{! 
 
-#
-# Multi-step implies big step
+## Multi-step implies big step
 
-#
-#
-# Left-linearized multi-step
+### Left-linearized multi-step
 
 For the reverse direction, it turns out we'd rather have the inductive
 definition of the multi-step relation be a little bit different. We call
@@ -384,9 +363,7 @@ multi-step** : step* E E' -> step** E E' -> type.
 
 %{! 
 
-#
-#
-# Expansion lemma
+### Expansion lemma
 
 The main lemma is that evaluation is closed under single-step expansion.
 This is a key lemma in the proof that evaluation in the small-step
@@ -395,10 +372,7 @@ semantics implies evaluation in the big-step evaluation.
 We proceed by induction on the second derivation, the derivation
 that ``step E E'``.
 
-#
-#
-#
-# TASK 3: Prove the three missing cases of the expansion lemma
+#### TASK 3: Prove the three missing cases of the expansion lemma
 
  !}%
 
@@ -477,9 +451,7 @@ expansion : eval E' V -> step E E' -> eval E V -> type.
 
 %{! 
 
-#
-#
-# Main theorem
+### Main theorem
 
 Now we will use our "more convienent" left-linearized multi-step definition
 and induct over it in order to prove the forward direction of our primary
@@ -489,10 +461,7 @@ The proof is by induction on the derivation that ``step** E V``,
 using closure under single-step expansion. There are only two cases
 due to the simple definition of ``step**``.
 
-#
-#
-#
-# TASK 4: Prove main theorem in the forward direction
+#### TASK 4: Prove main theorem in the forward direction
 
  !}%
 
@@ -507,18 +476,13 @@ multi**-eval : step** E V -> value V -> eval E V -> type.
 
 %{! 
 
-#
-#
-# Corollary
+### Corollary
 
 Using one of the theorems we proved about left-linearized multi-step, 
 we can easly show the final result; our proof needs to have only one case
 and does not use induction.
 
-#
-#
-#
-# TASK 5: Complete proof by composing previous lemmas
+#### TASK 5: Complete proof by composing previous lemmas
 
  !}%
 

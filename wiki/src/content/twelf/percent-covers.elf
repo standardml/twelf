@@ -1,11 +1,10 @@
 %%! title: "%covers"
 
-%{! A **``%covers``** declaration checks [input coverage](/wiki/coverage-checking/) for a type family, which is one of the two kinds of [coverage checking](/wiki/coverage-checking/) that Twelf performs. Running a ``[%total](/wiki/percent-total/)`` declaration checks input coverage as well as [output coverage](/wiki/coverage-checking/).
+%{! A **``%covers``** declaration checks [input coverage](/wiki/coverage-checking/) for a type family, which is one of the two kinds of [coverage checking](/wiki/coverage-checking/) that Twelf performs. Running a [``%total``](/wiki/percent-total/) declaration checks input coverage as well as [output coverage](/wiki/coverage-checking/).
 
 The ``%covers`` declaration essentially checks that your type family does an ML-style exhaustive match on its inputs; this does not establish that running your program will succeed, or even terminate!
 
-#
-# Example
+## Example
 
 For this example, we define a type ``elem`` with three elements, ``a``, ``b``, ``c``, and a relation ``rel`` with three positions. We will then use ``%covers`` to check coverage on this relation given a number of different ways of assigning positions as either inputs or outputs. !}%
     
@@ -43,8 +42,7 @@ rel3 : rel c c c <- rel c a c.
 
 %covers rel +X1 +X2 -X3.
 
-%{! #
-# Limitations
+%{! ## Limitations
 
 Coverage checking is a weak test; it only checks that at least one constant will immediately apply during proof search. For example, the following program coverage checks: !}%
     
@@ -82,8 +80,7 @@ cf : zero X 0
 
 %total D (zero D _).
 
-%{! #
-# See also
+%{! ## See also
 
 * \{\{guide|chapter=9|section=54|title=Input Coverage\}\}
 * [Input coverage](/wiki/coverage-checking/)

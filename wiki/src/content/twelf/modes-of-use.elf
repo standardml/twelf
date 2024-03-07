@@ -11,8 +11,7 @@ Twelf is a very flexible system that lends itself to a wide variety of [deductiv
 Most large projects integrate several of these modes of use. There are some limitations to this integration, particularly in that the [constraint domains](/wiki/constraint-domain/) and [[type level definitions]] cannot be used in projects that want to prove [metatheorems](/wiki/metatheorem/). 
 
 
-#
-# A framework for defining logics
+## A framework for defining logics
 
 The "theorem style" use of Twelf described in Andrew Appel's notes defines a deductive system, typically a **logic**: first a set of propositions (propositions often have type ``o`` for historical reasons), and then axioms about how propositions can be proven. Appel's FPCC project uses higher-order logic, but here we define a much simpler propositional logic.
 
@@ -68,8 +67,7 @@ example-abc: pf (A and B) ->
 %{! Even this logic allows us to prove a number of interesting theorems; the definition of a more complex logic (without much commentary)  can be found at [Zermelo Frankel](/wiki/zermelo-frankel/).
 
 
-#
-# Proving properties about deductive systems
+## Proving properties about deductive systems
 
 The "metatheorem style" use of Twelf defines a deductive system, typically a **programming language**: first the abstract syntax of the language, and then the static and dynamic semantics. Here is an example of a simple lambda calculus with product types (we don't define the dynamic semantics here, see \{\{proving|title=Representing the judgements of the STLC\}\} for a similar example). 
  !}%
@@ -128,9 +126,7 @@ step : exp -> exp -> type.
 Having defined this programming language, we are generally interested in proving [metatheorems](/wiki/metatheorem/) relating that programming language to a particular dynamic semantics - showing, for instance, that a certain evaluation strategy will preserve the type of the terms it evaluates, and that if a closed can be given a type, it can either be reduced or it is already a value. We also may be interested in using the [logic programming](/wiki/logic-programming/) engine of Twelf to _run_ our typing judgments as a logic program, giving our language a reference type checker.
 
 
-#
-#
-# Discussion
+### Discussion
 
 
 

@@ -1,7 +1,6 @@
 %%! title: "Talk:Respects lemma"
 
-%{! #
-# Not general enough
+%{! ## Not general enough
 
 I don't know if we are defining _congruence lemma_ or if we're taking the definition from somewhere else, but I think that this definition is perhaps needlessly specialized. In almost any system these lemmas must concern more than just a single relation R. For instance: !}%
     
@@ -35,8 +34,7 @@ Moreover, all of these are instances of what Karl and Tom and probably others ca
 ::: Is this statment closer to what you're looking for, and does the distinction between the two definitions make sense? Should I change the &lt;math&gt;f&lt;/math&gt; to a &lt;math&gt;\mathcal\{R\}&lt;/math&gt; for the [respects lemma](/wiki/respects-lemma/) comment? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 03:00, 21 October 2006 (EDT)
 :::: I'm being bold and rewriting it. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 10:53, 1 November 2006 (EST)
 
-#
-# Why is compatibility a respects lemma?
+## Why is compatibility a respects lemma?
 
 I don't understand why compatibility is a respects lemma?  What relation is being shown to respect bin-eq in !}%
     
@@ -66,8 +64,7 @@ The way I'd tell the overall story is this:
 [User:Drl](/wiki/user-drl/) 18:01, 2 November 2006 (EST)
 :::I think you should look at the [equality](/wiki/equality/) page to incorporate that story, but this page isn't about equality... (?) &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 13:38, 3 November 2006 (EST)
 
-#
-# Fixing this, uniqueness, etc.
+## Fixing this, uniqueness, etc.
 
 Most of these **... lemma** articles don't hold together. I've grepped through a lot of the TALT code, and Tom is right that code (at least in ``iequalities.thm``) supports the idea that ``value-cont`` above is a "respects lemma". 
 

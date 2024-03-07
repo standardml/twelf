@@ -1,6 +1,6 @@
 %%! title: "Ground"
 
-%{! A term is **ground** if it does not contain any existential ([unification](/wiki/unification/)) variables. For example, we can make the following [%solve](/wiki/percent-solve/) on ``[natural numbers](/wiki/natural-numbers/)``: !}%
+%{! A term is **ground** if it does not contain any existential ([unification](/wiki/unification/)) variables. For example, we can make the following [%solve](/wiki/percent-solve/) on [``natural numbers``](/wiki/natural-numbers/): !}%
     
 %{! (options removed from twelftag: hidden="true") !}%
 

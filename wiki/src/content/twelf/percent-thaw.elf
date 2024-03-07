@@ -18,8 +18,7 @@ s : nat -> nat.
 % Now I can define a wacky new natural number
 q : nat.
 
-%{! #
-# See also
+%{! ## See also
 
 * [Auto-freezing](/wiki/percent-freeze/)
 \{\{keyword|key=thaw\}\} !}%

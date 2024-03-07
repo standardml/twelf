@@ -28,8 +28,7 @@ translate-e : {m : exp}{a : typ} {m' : exp}
               of m a -> of m' a -> type.
 %mode translate-e +M +A -M' +D -D'.
 
-%{! #
-# Defining explicit in terms of implicit
+%{! ## Defining explicit in terms of implicit
 
 Suppose we choose the implicit version and implement it, but later decide we prefer the explicit version. We can then define the explicit version in terms of the implicit one by simply leaving out arguments: !}%
     
@@ -53,8 +52,7 @@ translate-e/i : translate-e M A M' D D' <- translate-i D D'.
 
 %total D (translate-e _ _ _ D _).
 
-%{! #
-# Defining implicit in terms of explicit
+%{! ## Defining implicit in terms of explicit
 
 Suppose we define the explicit version, and then choose to define the implicit version in terms of the explicit: !}%
     
@@ -79,8 +77,7 @@ translate2-i/e : translate2-i D D' <- translate2-e _ _ _ D D'.
 
 %{! Twelf is able to deduce via its term reconstruction algorithm what M, M' and A are, so this is [%mode](/wiki/percent-mode/).
 
-#
-# Using annotations
+## Using annotations
 
 Sometimes Twelf's term reconstruction algorithm is not powerful enough to automatically recover explicit parameters from implicit ones.\{\{discuss|Annotation example\}\} In general, one may use type annotations to get access to the implicit parameters to a relation. For example, we may write the ``translate2-i/e`` constant above as: !}%
     
