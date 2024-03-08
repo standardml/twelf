@@ -8,19 +8,19 @@ This code uses an uninhabited type, "void", in order to express
 [proofs by reductio ad absurdum](/wiki/reasoning-from-false/).
  !}%
 
-%%## Syntax
+%{! ## Syntax !}%
 
-%%### Natural numbers
+%{! ### Natural numbers !}%
 
 nat: type.
 z: nat.
 s: nat -> nat.
 
-%%### The uninhabited type
+%{! ### The uninhabited type !}%
 
 void: type. %freeze void.
 
-%%### Constants
+%{! ### Constants !}%
 
 0 = z.
 1 = s 0.
@@ -51,9 +51,9 @@ void: type. %freeze void.
 25 = s 24.
 
 
-%%## Equality and inequality
+%{! ## Equality and inequality !}%
 
-%%### Definitions
+%{! ### Definitions !}%
 
 %% equality
 id-nat	    : nat -> nat -> type.
@@ -82,9 +82,9 @@ neq-nat/lt : neq-nat N1 N2
 
 
 
-%%### Theorems
+%{! ### Theorems !}%
 
-%%#### False implies anything
+%{! #### False implies anything !}%
 
 false-imp-id-nat : void -> {N1}{N2} id-nat N1 N2 -> type.
 %mode false-imp-id-nat +X +N1 +N2 -D. 
@@ -114,7 +114,7 @@ false-imp-leq-nat : void -> {N1}{N2} leq-nat N1 N2 -> type.
 
 
 
-%%#### Basic properties
+%{! #### Basic properties !}%
 
 lt-nat-succ : {N} lt-nat N (s N) -> type.
 %mode lt-nat-succ +N -D.
@@ -126,7 +126,7 @@ lt-nat-succ : {N} lt-nat N (s N) -> type.
 %worlds () (lt-nat-succ _ _).
 %total T (lt-nat-succ T _).
 
-%%#### Reflexivity and symmetry
+%{! #### Reflexivity and symmetry !}%
 
 id-nat/symm : id-nat N1 N2 -> id-nat N2 N1 -> type.
 %mode id-nat/symm +D1 -D2.
@@ -183,7 +183,7 @@ leq-nat/trans : leq-nat N1 N2 -> leq-nat N2 N3 -> leq-nat N1 N3 -> type.
 %total {} (leq-nat/trans _ _ _).
 
 
-%%#### Respects lemmas
+%{! #### Respects lemmas !}%
 
 %{! This is an instance of the generalization technique
 described in the page on [respects lemma](/wiki/respects-lemma/)s. !}%
@@ -244,7 +244,7 @@ neq-nat-resp : id-nat N1 N1'
 %worlds () (neq-nat-resp _ _ _ _).
 %total {} (neq-nat-resp _ _ _ _).
 
-%%#### Contradictions
+%{! #### Contradictions !}%
 
 lt-nat-contr : lt-nat N N -> void -> type.
 %mode lt-nat-contr +D -F.
@@ -294,7 +294,7 @@ lt-leq-nat-contr : lt-nat N1 N2 -> leq-nat N2 N1 -> void -> type.
 
 
 
-%%#### Dichotomy
+%{! #### Dichotomy !}%
 
 %{! The property that any two numbers are comparable by lt, eq, or lt
 the other way around. Because leq and neq are defined in terms of lt and eq,

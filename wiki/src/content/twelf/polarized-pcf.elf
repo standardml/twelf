@@ -11,7 +11,7 @@ Polarized PCF with a stack machine semantics
 
  !}%
 
-%%## Syntax
+%{! ## Syntax !}%
 
 pos : type.
 neg : type.
@@ -160,9 +160,9 @@ progress : {E : exp A+} ok E -> type.
 %total {} (progress _ _).
 
 
-%%## EL
+%{! ## EL !}%
 
-%%### Syntax
+%{! ### Syntax !}%
 
 etp : type.				%name etp T.
 enat : etp.
@@ -180,7 +180,7 @@ estreamfix : ((estream T) eexp -> (estream T) eexp) -> (estream T) eexp.
 ehead : (estream T) eexp -> T eexp.
 etail : (estream T) eexp -> (estream T) eexp.
 
-%%### Completeness of focusing
+%{! ### Completeness of focusing !}%
 
 poltp : etp -> pos -> type.
 %mode poltp +X1 -X2.

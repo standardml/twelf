@@ -4,20 +4,20 @@
 Some natural numbers; a demo of [[Project:Literate Twelf|Literate Twelf]]. 
  !}%
  
-%%## Syntax
+%{! ## Syntax !}%
  
 nat: type.
 z : nat.
 s : nat -> nat. 
 
-%%## Judgments
+%{! ## Judgments !}%
  
-%%### Equality
+%{! ### Equality !}%
  
 id-nat : nat -> nat -> type.
 id-nat/refl : id-nat N N.
  
-%%### Addition === |
+%{! ### Addition === | !}%
  
 plus : nat -> nat -> nat -> type.
 plus/z : plus z N N.

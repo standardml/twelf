@@ -1,6 +1,6 @@
 %%! title: "Weak focusing"
 
-%%## Polarized logic
+%{! ## Polarized logic !}%
 
 polarity : type.			%name polarity S.
 pos : polarity.
@@ -21,9 +21,9 @@ down : prop neg -> prop pos.
 
 
 
-%%## Sequent calculus for polarized logic
+%{! ## Sequent calculus for polarized logic !}%
 
-%%### Logic definition
+%{! ### Logic definition !}%
 
 %{! 
 A sequent is written
@@ -67,9 +67,9 @@ downR : conc N
 %worlds (bl_atmpos | bl_atmneg | bl_hyp)
   (hyp A) (conc C).
 
-%%## Focused sequent calculus
+%{! ## Focused sequent calculus !}%
 
-%%### Logic definition
+%{! ### Logic definition !}%
 
 %{! 
 Neutral sequent:
@@ -139,7 +139,7 @@ downL' : (lfoc N N')
 %worlds (bl_atmpos | bl_atmneg | bl_left)
   (left P) (conseq C).  % = (right N) (left N N') (rfoc P).
 
-%%### Cut admissibility
+%{! ### Cut admissibility !}%
 
 cut< : {N} lfoc N' N -> (lfoc N NC) -> lfoc N' NC -> type.
 cut- : {N} right N -> (lfoc N NC) -> right NC -> type.
@@ -148,12 +148,12 @@ cut+ : {P} rfoc P -> (left P -> conseq C) -> conseq C -> type.
 %mode cut- +N +D +E -F.
 %mode cut+ +P +D +E -F.
 
-%%#### Identity cuts
+%{! #### Identity cuts !}%
 
 - : cut+ (atom Qp) (initR' D) ([l] initR' l) (initR' D).
 - : cut< (atom Qn) (initL') (initL') (initL').
 
-%%#### Principal cuts
+%{! #### Principal cuts !}%
 
 - : cut- (up P) (upR' (D : rfoc P)) (upL' (E : left P -> right N)) F
      <- cut+ P D E (F : right N).
@@ -190,7 +190,7 @@ cut+ : {P} rfoc P -> (left P -> conseq C) -> conseq C -> type.
      <- cut+ N E1 D1 (F1 : right P)
      <- cut- P F1 E2 (F : right NC).
 
-%%#### Left commutative cuts
+%{! #### Left commutative cuts !}%
 
 - : cut< N (upL' D) E (upL' F)
      <- ({l1} cut- N (D l1) E (F l1)).
@@ -204,7 +204,7 @@ cut+ : {P} rfoc P -> (left P -> conseq C) -> conseq C -> type.
 - : cut< N (-oL' D1 D2) E (-oL' D1 F2)
      <- cut< N D2 E F2.
 
-%%#### Right commutative cuts
+%{! #### Right commutative cuts !}%
 
 - : cut+ P D ([l] initR' L) (initR' L).
 - : cut+ P D ([l] initL') (initL').
@@ -246,7 +246,7 @@ cut+ : {P} rfoc P -> (left P -> conseq C) -> conseq C -> type.
 (cut+ N2 D2 E2 _)
 (cut- P3 D3 E3 _).
 
-%%#### Corollary - unfocused cut
+%{! #### Corollary - unfocused cut !}%
 
 cut-unfoc+ : right (up P) -> (left P -> right N) -> right N -> type.
 %mode cut-unfoc+ +D +E -F.
@@ -268,9 +268,9 @@ cut-unfoc- : right A -> (left (down A) -> right C) -> right C -> type.
 
 
 
-%%### Identity
+%{! ### Identity !}%
 
-%%#### Eta expansion lemmas
+%{! #### Eta expansion lemmas !}%
 
 eta- : {N:prop neg} ({N':prop neg} lfoc N N' -> right N') -> right N -> type.
 eta+ : {P:prop pos} (rfoc P -> right N') -> (left P -> right N') -> type.
@@ -308,7 +308,7 @@ eta+ : {P:prop pos} (rfoc P -> right N') -> (left P -> right N') -> type.
 %total (N P) (eta- N _ _) (eta+ P _ _).
 
 
-%%#### Identity corollaries
+%{! #### Identity corollaries !}%
 
 idp : {P:prop pos} (left P -> right (up P)) -> type.
 %mode idp +P -R.
@@ -329,7 +329,7 @@ idn : {N:prop neg} (left (down N) -> right N) -> type.
 
 
 
-%%## Soundness
+%{! ## Soundness !}%
 
 sdR : right N -> conc N -> type.
 sd+ : rfoc P -> conc P -> type.
@@ -382,9 +382,9 @@ sdL : left P -> hyp P -> type.
 
 
 
-%%## Completeness
+%{! ## Completeness !}%
 
-%%### Unfocused admissibility
+%{! ### Unfocused admissibility !}%
 
 adm*R : right (up P1) -> right (up P2) -> right (up (P1 * P2)) -> type.
 %mode adm*R +R1 +R2 -R.
@@ -440,7 +440,7 @@ adm-oL : right (up P1)
 %worlds (bl_atmpos | bl_atmneg | bl_left) (adm-oL _ _ _).
 %total [] (adm-oL _ _ _).
 
-%%### Completeness
+%{! ### Completeness !}%
 
 cph+ : hyp P -> left P -> type.
 cph- : hyp N -> left (down N) -> type.
@@ -535,7 +535,7 @@ cp+ : conc P -> right (up P) -> type.
 %total (Dn Dp) (cp- Dn _) (cp+ Dp _).
 
 
-%%## Translating into focused logic
+%{! ## Translating into focused logic !}%
 
 %{! A simple proof which is isomorphic in the unfocused and
 focused system, establishing ``|- a * b -o b * a``
@@ -555,7 +555,7 @@ d0 : {a:atm pos} {b:atm pos} conc (' a * ' b -o up (' b * ' a))
 
 %query 1 * {a}{b} cp- (d0 a b) (R0 a b).
 
-%%### Reducing the number of proofs
+%{! ### Reducing the number of proofs !}%
 
 %{! This first example is already in "focused form" - invertible rules
 are applied only "before" upR is applied to prove 
@@ -581,7 +581,7 @@ unfocused proofs. |check=decl !}%
 
 
 
-%%### Forward and backward chaining
+%{! ### Forward and backward chaining !}%
 
 %{! Finally, consder the following unfocused sequent proof. The proof
 proceeds in what we generally consider a "forward-chaining" manner, using

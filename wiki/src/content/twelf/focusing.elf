@@ -9,7 +9,7 @@ big: type.
 s: small.
 b: small -> big.
 
-%%## Syntax
+%{! ## Syntax !}%
 
 pol: type. %name pol P.
 +: pol.
@@ -51,7 +51,7 @@ pos: type. %name pos Inv.
 ,: typ + -> pos -> pos. %infix right 3 ,.
 
 
-%%## Sequent calculus
+%{! ## Sequent calculus !}%
 
 seqform: type. %name seqform Form.
 exp: seqform -> type. %name exp E z.
@@ -89,7 +89,7 @@ suspnormalF: seqform -> type.
 snr: suspnormalF (rfoc A+).
 snl: suspnormalF (hasleft _ U) <- suspnormal U. 
 
-%%#### Values
+%{! #### Values !}%
 
 %{! 
 ``V ::= z | thunk N | inl V | inr V | ⟨⟩+ | ⟨V1,V2⟩+`` 
@@ -104,7 +104,7 @@ dnR: term # (A- inv) -> value (dn A-).
 top+R: value top+.
 *R: value A+ -> value B+ -> value (A+ * B+).
 
-%%#### Terms
+%{! #### Terms !}%
 
 %{! 
 ``M ::= ret V | x &bull; Sp | ⟨z⟩.N | x.N | abort | [N1, N2] | ⟨⟩.N | ×N | ⟨N⟩ | \{N\} | &lambda;N | ⟨⟩- | ⟨N1,N2⟩-`` 
@@ -124,7 +124,7 @@ upR: term # (A+ true) -> term # (up A+ inv).
 top-R: term # (top- inv).
 /\R: term # (A- inv) -> term # (B- inv) -> term # (A- /\ B- inv).
 
-%%#### Spines
+%{! #### Spines !}%
 
 %{! 
 ``Sp ::= nil | pm N | V;Sp | &pi;1;Sp | &pi;2;Sp`` 
@@ -136,7 +136,7 @@ upL: stable Suc -> term (A+ , #) Suc -> spine (up A+) Suc.
 /\L1: spine A- Suc -> spine (A- /\ B-) Suc.
 /\L2: spine B- Suc -> spine (A- /\ B-) Suc.
 
-%%#### Negative focal substitution
+%{! #### Negative focal substitution !}%
 
 %{! Our encoding gives us positive focal substitution for free - it's
 very natural to describe suspended propsitions ``⟨A+⟩`` in the
@@ -184,7 +184,7 @@ subst-: stable U
 %total E (subst- _ E _ _).
 
 
-%%## Cut admissibility
+%{! ## Cut admissibility !}%
 
 %{! Cut admissibility has a couple of mutually inductive theorems, but
 no more than is absolutely necessary given the syntactic classes we're
@@ -239,7 +239,7 @@ lsubst: {A+} big
 
 %mode lsubst +A +S +Pf +E +N -E'.
 
-%%#### Principal substitution/cuts
+%{! #### Principal substitution/cuts !}%
 
 %{! ``(V &bull; N) = N' `` !}%
 
@@ -277,7 +277,7 @@ lsubst: {A+} big
 /: cut- (A- /\ B-) S Pf (/\R N1 N2) (/\L2 Sp) N'
   <- cut- B- S Pf N2 Sp (N': term # U).
 
-%%#### Rightist substitution (right commutative cuts)
+%{! #### Rightist substitution (right commutative cuts) !}%
 
 %{! ``[[M/x]]V = V' `` !}%
 
@@ -361,7 +361,7 @@ lsubst: {A+} big
 /: rsubst A- S (snl Pf) M ([x] /\L2 (Sp x)) (/\L2 Sp')
   <- rsubst A- S (snl Pf) M ([x] Sp x) (Sp': spine B2- U).
 
-%%#### Leftist substitution (left commutative cuts)
+%{! #### Leftist substitution (left commutative cuts) !}%
 
 %{! ``&lt;&lt;M&gt;&gt;N = M' `` !}%
 
@@ -404,7 +404,7 @@ lsubst: {A+} big
 /: lsubst A+ S Pf (/\L2 Sp) N (/\L2 Sp')
   <- lsubst A+ S Pf Sp N (Sp': spine B2- U).
 
-%%#### Wrap-up
+%{! #### Wrap-up !}%
 
 %worlds (gamma_suspnormal)
   (cut+ _ _ _ _ _ _)
@@ -443,7 +443,7 @@ derivation (the "left" derivation). !}%
   (rsubst A3 S3 _ _  ER _)
   (lsubst A4 S4 _ EL _  _).
 
-%%## Expansion
+%{! ## Expansion !}%
 
 expand+: {A+} (value A+ -> term Inv U) -> term (A+ , Inv) U -> type.
 expand-: {A-} term # (A- susp) -> term # (A- inv) -> type.
@@ -518,7 +518,7 @@ identity+: term (A+ , #) (A+ true) -> type.
 %total [] (identity+ _).       
 
 
-%%## Unfocused admissibility
+%{! ## Unfocused admissibility !}%
 
 %{! The key lemmas for establishing the completeness of the focused
 sequent calculus are the "unfocused admissibility" lemmas, which
@@ -529,7 +529,7 @@ These lemmas are all provable by use of the cut and identity
 principles; while the proofs are hardly straightforward, they share 
 a certain high-level structure. !}%
 
-%%#### Initial rules
+%{! #### Initial rules !}%
 
 adm-initsusp-: (hyp (c Q) -> term # (c Q susp)) -> type.
 %mode +{Q} -{N: hyp (c Q) -> term # (c Q susp)} adm-initsusp- N.
@@ -563,7 +563,7 @@ adm-init+: (hyp (up (c Q)) -> term # (c Q true)) -> type.
 %worlds (gamma_suspnormal) (adm-init+ _).
 %total [] (adm-init+ _).
 
-%%#### Disjunction
+%{! #### Disjunction !}%
 
 adm-botL: stable U -> (hyp (up bot) -> term # U) -> type.
 %mode adm-botL +Pf -N'.
@@ -621,7 +621,7 @@ adm-\/L: suspstable U
 %total [] (adm-\/L _ _ _ _).
     
 
-%%#### Positive conjunction
+%{! #### Positive conjunction !}%
 
 adm-top+R: term # (top+ true) -> type.
 %mode adm-top+R -N'.
@@ -684,7 +684,7 @@ adm-*L: suspstable U
 %worlds (gamma_suspnormal) (adm-*L _ _ _).
 %total [] (adm-*L _ _ _).
 
-%%#### Implication
+%{! #### Implication !}%
 
 adm-=>R: (hyp (up A+) -> term # (dn B- true))
        -> term # (dn (A+ => B-) true)
@@ -734,7 +734,7 @@ adm-=>L: suspstable U
 %worlds (gamma_suspnormal) (adm-=>L _ _ _ _).
 %total [] (adm-=>L _ _ _ _).
 
-%%#### Negative conjunction
+%{! #### Negative conjunction !}%
 
 adm-top-R: term # (dn top- true) -> type.
 %mode adm-top-R -N'.
@@ -802,9 +802,9 @@ adm-/\L2: suspnormal U
 %total [] (adm-/\L2 _ _ _).
 
 
-%%## Unfocused system
+%{! ## Unfocused system !}%
 
-%%#### Syntax
+%{! #### Syntax !}%
 
 prop: type. %name prop P.
 a: atom P -> prop.
@@ -818,7 +818,7 @@ props: type. %name props Psi.
 ##: props.
 ;: prop -> props -> props. %infix right 3 ;.
 
-%%#### Erasure
+%{! #### Erasure !}%
 
 %{! The judgment ``t P A`` relates unpolarized propositions ``P`` and
 polarized propositions ``A``. The judgment can be effectively run as
@@ -861,7 +861,7 @@ tV: tseq (rfoc A+) ## P <- t A+ P.
 tN: tseq (hasleft (ininv Inv) U) Psi Q <- tU U Q <- tInv Inv Psi.
 tS: tseq (hasleft (infoc A-) U) (P ; ##) Q <- tU U Q <- t A- P.
 
-%%#### Shift removal
+%{! #### Shift removal !}%
 
 %{! There may be a more elegant way to do this, but the last missing
 piece of our unfocused admissibility lemma - the last thing we need to
@@ -937,7 +937,7 @@ lshifty: t A P
 %total T (lshifty T _ _ _).
 
 
-%%#### Sequent rules
+%{! #### Sequent rules !}%
 
 left: prop -> type. %name left H. 
 right: prop -> type. %name right D.
@@ -984,7 +984,7 @@ id: right P -> right P -> type.
 refl: id D D.
 
 
-%%## De-focalization (soundness)
+%{! ## De-focalization (soundness) !}%
 
 %{! Soundness is established in a context where each polarized
 hypothesis is mapped to its erasure. !}%
@@ -1127,7 +1127,7 @@ sound-andL: {Psi} left (and P1 P2)
 %total (E) (sound E _ _).
 
 
-%%## Focalization (completeness)
+%{! ## Focalization (completeness) !}%
 
 %{! Completeness is established in a context where each erased
 hypothesis is mapped to some polarization. This is the almost same,
@@ -1165,7 +1165,7 @@ complete: stable U -> right P -> tU U P -> term # U -> type.
 %mode complete +S +D +T -N.
 
 
-%%#### Initial rules
+%{! #### Initial rules !}%
 
 comp-init-susp: 
   not-doubleshifted A'
@@ -1232,7 +1232,7 @@ comp-init:
   <- completehyp H (TH: t Aleft (a Q)) (HypRes: completehyp_res Aleft)
   <- comp-init TH HypRes NDright T' M.
 
-%%#### Disjunction
+%{! #### Disjunction !}%
 
 comp-ffL: stable U 
   -> not-doubleshifted A' 
@@ -1305,7 +1305,7 @@ comp-orL: stable U
   <- lshifty TH TH' ND NS
   <- comp-orL Pf (orL D1 D2 H) refl ND TH' T M.
 
-%%#### Conjunction
+%{! #### Conjunction !}%
 
 comp-ttR: {D: right tt} id D ttR
   -> not-doubleshifted A'
@@ -1401,7 +1401,7 @@ comp-andL2: stable U
   <- lshifty TH TH' ND NS
   <- comp-andL2 Pf (andL2 D2 H) refl ND TH' T M.
 
-%%#### Implication
+%{! #### Implication !}%
 
 comp-impR: {D: right (imp P1 P2)} id D (impR D1)
   -> not-doubleshifted A'
@@ -1465,7 +1465,7 @@ comp-impL: stable U
 
 
 
-%%## Inheriting the focused calculus's metatheory
+%{! ## Inheriting the focused calculus's metatheory !}%
 
 %{! We need the existance of some polarization strategy; we intentionally pick
 a middling, undistinghished sort of translation that translates everything as
@@ -1527,7 +1527,7 @@ unfocused-identity: (left P -> right P) -> type.
 %total [] (unfocused-identity _).
 
 
-%%## Running the theorems
+%{! ## Running the theorems !}%
 
 %{! Here are two unfocused derivations of (p /\ q) =&gt; (r /\ s) =&gt; (p /\ t). !}%
 

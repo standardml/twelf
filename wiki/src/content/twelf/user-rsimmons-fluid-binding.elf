@@ -1,6 +1,6 @@
 %%! title: "User:Rsimmons/Fluid binding"
 
-%%## Fluid variable sets
+%{! ## Fluid variable sets !}%
 
 uninhabited : type.
 fluid : type.
@@ -8,7 +8,7 @@ fluids : type.
 # : fluids. 
 , : fluid -> fluids -> fluids. %infix right 10 ,.
 
-%%### Individual fluid variables
+%{! ### Individual fluid variables !}%
 
 %{! We treat typing rules as if there are *no* concrete fluid variables,
 but we have to define specific fluid variables for the dynamic semantics. !}%
@@ -67,7 +67,7 @@ exclusive-fluid : eqfluid A B -> neqfluid A B -> uninhabited -> type.
 %worlds () (exclusive-fluid _ _ _).
 %total {} (exclusive-fluid _ _ _).
 
-%%### Operations on sets of fluid variables
+%{! ### Operations on sets of fluid variables !}%
 
 in : fluid -> fluids -> type.
 in/z : in A (A , As).
@@ -82,7 +82,7 @@ merge/z : merge # Bs Bs.
 merge/s : merge (A , As) Bs (A , Cs)
            <- merge As Bs Cs.
 
-%%### Structural properties
+%{! ### Structural properties !}%
 
 in-subset : in A Bs -> subset Bs Cs -> in A Cs -> type.
 - : in-subset in/z (subset/s In Sub : subset (A , Bs) Cs) In.
@@ -171,21 +171,21 @@ merge-subset1 : merge As Bs Cs -> subset As Cs -> type.
 
 
 
-%%## Syntax
+%{! ## Syntax !}%
 
-%%### Types
+%{! ### Types !}%
 
 ty : type.
 ty/nat : ty.                    % nat
 ty/arrow : ty -> ty -> ty.      % tau1 tau2
 ty/mayuse : ty -> fluids -> ty. % [C] tau
 
-%%#### Type equality
+%{! #### Type equality !}%
 
 eqty : ty -> ty -> type.
 eqty/refl : eqty T T.
 
-%%#### Individual fluid types
+%{! #### Individual fluid types !}%
 
 fluidty : fluid -> ty -> type.
 %block ftyblock : some {T: ty} block {f: fluid} {d: fluidty f T}.
@@ -207,7 +207,7 @@ fluidty-uniq : fluidty A T -> fluidty A T' -> eqty T T' -> type.
 %worlds () (fluidty-uniq _ _ _). 
 %total {} (fluidty-uniq _ _ _).
 
-%%### Terms
+%{! ### Terms !}%
 
 tm : type.
 tm/lam : ty -> (tm -> tm) -> tm.
@@ -222,12 +222,12 @@ tm/susp : tm -> tm.
 tm/unsusp : tm -> tm.
 tm/let : tm -> ty -> (tm -> tm) -> tm = [e][t][f] tm/app (tm/lam t f) e.
 
-%%#### Term equality
+%{! #### Term equality !}%
 
 eqtm : tm -> tm -> type.
 eqtm/refl : eqtm E E.
 
-%%### Values
+%{! ### Values !}%
 
 v : tm -> type.
 v/lam : v (tm/lam T ([x] E x)).
@@ -235,7 +235,7 @@ v/z : v tm/z.
 v/s : v E -> v (tm/s E).
 v/susp : v (tm/susp E).
 
-%%### Frames and stacks
+%{! ### Frames and stacks !}%
 
 frame : type.
 -- : type.
@@ -253,7 +253,7 @@ stack : type.
 emp : stack.
 ; : frame -> stack -> stack. %infix right 10 ;.
 
-%%### Machine States
+%{! ### Machine States !}%
 
 state : type.
 
@@ -263,7 +263,7 @@ state : type.
 
 
 
-%%## Static semantics
+%{! ## Static semantics !}%
 
 of : tm -> ty -> fluids -> type.   % May access the mentioned fluids
 
@@ -313,9 +313,9 @@ ok<< : ofstack K T Bs -> of E T Bs -> {V: v E} ok (<< K E V).
 
 
 
-%%## Dynamic semantics
+%{! ## Dynamic semantics !}%
 
-%%### Deep binding lookup
+%{! ### Deep binding lookup !}%
 
 lookup : fluid -> stack -> {t: tm} v t -> type.
 lookup/app1 : lookup F K Val Dv -> lookup F (f/app1 --- E2 ; K)        Val Dv.
@@ -328,7 +328,7 @@ lookup/hit  : eqfluid A B -> lookup A (f/fluid-bind B Val Dv ; K) Val Dv.
 lookup/miss : neqfluid A B -> lookup A K Val Dv  
  -> lookup A (f/fluid-bind B _ _ ; K) Val Dv.
 
-%%### Small-step evaluation
+%{! ### Small-step evaluation !}%
 
 step : state -> state -> type.
 step/lam   : step
@@ -385,15 +385,15 @@ step/ususpr: step
               (>> K E).
 
 
-%%## Progress
+%{! ## Progress !}%
 
-%%### Not stuck
+%{! ### Not stuck !}%
 
 nstuck : state -> type.
 nstuck/step  : step E E' -> nstuck E.
 nstuck/final : nstuck (<< emp V DV).
 
-%%### First deep stack access theorem
+%{! ### First deep stack access theorem !}%
 
 access-stack : in A Bs  
                 -> ofstack K T Bs 
@@ -459,7 +459,7 @@ read-stack : eq-or-in A B Cs
 
 
 
-%%### Canonical Forms
+%{! ### Canonical Forms !}%
 
 canon-arrow : of E1 (ty/arrow T1 T2) Bs 
                -> v E1
@@ -494,7 +494,7 @@ canon-mayuse : of E1 (ty/mayuse T As) Bs
 %total T (canon-mayuse T _ _).
 
 
-%%### Progress
+%{! ### Progress !}%
 
 progress>> : ofstack K T Bs 
               -> of E T Bs
@@ -583,9 +583,9 @@ progress : ok S -> nstuck S -> type.
 %worlds () (progress _ _).
 %total {} (progress _ _).
 
-%%## Preservation
+%{! ## Preservation !}%
 
-%%### Second deep stack access theorem
+%{! ### Second deep stack access theorem !}%
 
 access-stack' : in A Bs  
                 -> ofstack K T Bs 
@@ -649,7 +649,7 @@ read-stack' : eq-or-in A B Cs
 %worlds () (access-stack' _ _ _ _ _) (read-stack' _ _ _ _ _ _ _).
 %total (T S) (access-stack' _ T _ _ _) (read-stack' _ _ _ S _ _ _).
 
-%%### Effect-free value theorem
+%{! ### Effect-free value theorem !}%
 
 %{! Yipes! This is actually a complicated induction principle, because we need
 to induct on two things at once - either the typing derivation or the
@@ -670,7 +670,7 @@ effect-value : v E -> of E T Bs -> of E T # -> type.
 
 
 
-%%### Inversion
+%{! ### Inversion !}%
 
 inv-lam : of (tm/lam T1 ([x] E x)) T Bs 
            -> eqty T (ty/arrow T1 T2)
@@ -850,7 +850,7 @@ invf-fluid-bind : ofstack (f/fluid-bind A E Dv ; K) T Bs
 %worlds () (invf-fluid-bind _ _ _).
 %total T (invf-fluid-bind T _ _).
 
-%%### Preservation
+%{! ### Preservation !}%
 
 preservation : step S S' -> ok S -> ok S' -> type.
 %mode preservation +A +B -C.

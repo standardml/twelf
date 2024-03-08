@@ -1,8 +1,8 @@
 %%! title: "User:Rsimmons/Handled exceptions"
 
-%%## Syntax
+%{! ## Syntax !}%
 
-%%### Types
+%{! ### Types !}%
 
 ty : type.
 ty/nat : ty.               % nat
@@ -14,12 +14,12 @@ Here, we'll just use nat. !}%
 
 ty/exn = ty/nat.
 
-%%#### Type equality
+%{! #### Type equality !}%
 
 eqty : ty -> ty -> type.
 eqty/refl : eqty T T.
 
-%%### Terms
+%{! ### Terms !}%
 
 tm : type.
 tm/lam : ty -> (tm -> tm) -> tm.
@@ -36,7 +36,7 @@ tm/let : tm -> ty -> (tm -> tm) -> tm = [e][t][f] tm/app (tm/lam t f) e.
 
 
 
-%%## Static semantics
+%{! ## Static semantics !}%
 
 of : tm -> ty -> type.   % Will not throw exceptions
 of* : tm -> ty -> type.  % May or may not throw exceptions
@@ -64,9 +64,9 @@ of*/handle : of* E T -> ({x} of x ty/exn -> of* (E' x) T)
 of*/unsusp : of* E (ty/mayraise T) -> of* (tm/unsusp E) T.
 
 
-%%## Dynamic semantics
+%{! ## Dynamic semantics !}%
 
-%%### Values
+%{! ### Values !}%
 
 v : tm -> type.
 v/lam : v (tm/lam T ([x] E x)).
@@ -74,7 +74,7 @@ v/z : v tm/z.
 v/s : v E -> v (tm/s E).
 v/susp : v (tm/susp E).
 
-%%### Small-step evaluation
+%{! ### Small-step evaluation !}%
 
 step : tm -> tm -> type.
 step/app1   : step E1 E1' -> step (tm/app E1 E2) (tm/app E1' E2).
@@ -100,9 +100,9 @@ step/unsuspx: v E -> step (tm/unsusp (tm/raise E)) (tm/raise E).
 
 
 
-%%## Progress
+%{! ## Progress !}%
 
-%%### Not stuck
+%{! ### Not stuck !}%
 
 nstuck : tm -> type.
 nstuck/step  : step E E' -> nstuck E.
@@ -118,7 +118,7 @@ ns-weaken : nstuck E -> nstuck* E -> type.
 - : ns-weaken (nstuck/value V) (nstuck*/value V).
 %mode ns-weaken +A -B. %worlds () (ns-weaken _ _). %total {} (ns-weaken _ _).
 
-%%### Mobile value
+%{! ### Mobile value !}%
 
 %{! This theorem really isn't as interesting as its name makes
 it sound, though it is necessary in one place. Otherwise,
@@ -132,7 +132,7 @@ mobile : v E -> of* E T -> of E T -> type.
 - : mobile v/susp (of*/weaken (of/susp T)) (of/susp T).
 %mode mobile +A +B -C. %worlds () (mobile _ _ _). %total T (mobile T _ _).
 
-%%### Progress
+%{! ### Progress !}%
 
 progress : of E T -> nstuck E -> type.
 progress* : of* E T -> nstuck* E -> type.
@@ -217,9 +217,9 @@ p8 : of* E (ty/mayraise T) -> nstuck* E -> nstuck* (tm/unsusp E) -> type.
 %total (T T*) (progress T _) (progress* T* _).
 
 
-%%## Preservation
+%{! ## Preservation !}%
 
-%%### Inversion
+%{! ### Inversion !}%
 
 inv-lam : of* (tm/lam T' E) T
            -> ({x} of x T' -> of (E x) T'') -> eqty T (ty/arrow T' T'') -> type.
@@ -265,14 +265,14 @@ inv-unsusp : of* (tm/unsusp E) T -> of* E (ty/mayraise T) -> type.
 - : inv-unsusp (of*/unsusp T) T.
 %mode inv-unsusp +A -B. %worlds () (inv-unsusp _ _). %total {} (inv-unsusp _ _).
 
-%%### Preservation
+%{! ### Preservation !}%
 
 preservation: step E E' -> of E T -> of E' T -> type.
 preservation*: step E E' -> of* E T -> of* E' T -> type.
 %mode preservation +A +B -C.
 %mode preservation* +A +B -C.
 
-%%#### Application
+%{! #### Application !}%
 
 - : preservation (step/app1 E) (of/app T1 T2) (of/app T1' T2)
      <- preservation E T1 T1'.
@@ -298,7 +298,7 @@ q2 : eqty (ty/arrow T3 T4) (ty/arrow T1 T5)
      <- inv-app T T1 T2* <- mobile V T2* T2 
      <- inv-lam T1 F Eq <- q2 Eq F T2 Tres.
 
-%%#### Natural numbers
+%{! #### Natural numbers !}%
 
 - : preservation (step/s E) (of/s T) (of/s T') <- preservation E T T'.
 - : preservation (step/if E) (of/if T T1 T2) (of/if T' T1 T2)
@@ -329,7 +329,7 @@ q3 : of* (tm/raise E) ty/nat -> eqty TN ty/nat -> of* (tm/raise E) TN -> type.
      <- inv-if DTif DT _ _
      <- inv-raise DT DTexn.
 
-%%#### Fix/raise/handle
+%{! #### Fix/raise/handle !}%
 
 - : preservation (step/fix) (of/fix F) (F _ (of/fix F)).
 - : preservation (step/handle E) (of/handle T* T) (of/handle T'* T)

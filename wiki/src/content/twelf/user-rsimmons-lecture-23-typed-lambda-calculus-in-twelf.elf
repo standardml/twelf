@@ -1,6 +1,6 @@
 %%! title: "User:Rsimmons/Lecture 23: Typed Lambda Calculus in Twelf"
 
-%%## Syntax
+%{! ## Syntax !}%
 %{! 
 
 We have a programming language that we started last time that we want to represent in Twelf. First the types "on paper:"
@@ -38,7 +38,7 @@ Note that there is no case for "variables" ``x``.
 
  !}%
 
-%%## Static semantics (typing rules)
+%{! ## Static semantics (typing rules) !}%
 %{! 
 
 The old judgment for typing was ``e : τ`` - in other words, it was a two-place relation that took an expression and a type. We will describe this in Twelf as ``of``.
@@ -87,7 +87,7 @@ of/lam : of (lam T ([x] E x)) (arrow T T')
   <- ({x: exp} of x T -> of (E x) T').
 
 
-%%### Example derivation
+%{! ### Example derivation !}%
 %{! On paper:
 
  -------------------- hyp
@@ -111,7 +111,7 @@ _ = of/lam ([x: exp] [d: of x unit] d) : of (lam unit ([x] x)) (arrow unit unit)
 %{! The absolutely correct observation made about this in class was that **Hypotheticals in the object language are represented as functions in the metalanguage.** !}%
 
 
-%%## Dynamic semantics (evaluation rules)
+%{! ## Dynamic semantics (evaluation rules) !}%
 %{! 
 
 First, values ``e value``:
@@ -162,7 +162,7 @@ step/applam : step (app (lam T ([x] E x)) E2) (E E2)
   <- value E2.
 
 
-%%## Coda: Type Safety
+%{! ## Coda: Type Safety !}%
 %{! 
 
 [Last time](/wiki/user-rsimmons-homework-7-proofs-in-twelf/), we used the commutativity of addition to write a logic program that took in a term of type ``sum N1 N2 N3&lt;/tT&gt; and produced a term of type ``sum N2 N1 N3``. In other words, we proved this theorem:

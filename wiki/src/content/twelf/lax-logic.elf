@@ -29,7 +29,7 @@ arbitrary number of shift operations.
 
 &lt;br/&gt; !}%
 
-%%## Preliminaries
+%{! ## Preliminaries !}%
 
 %{! We will be [using a metric](/wiki/structural-metrics/) to make certain arguments about translation
 simpler - we can think of this metric as a tree ``T`` that is either
@@ -60,7 +60,7 @@ atm : polarity -> type.                 %name atm Q q.
 %block bl_atmpos : block {qp:atm pos}.
 %block bl_atmneg : block {qn:atm neg}.
 
-%%## Fairtlough and Mendler's lax logic
+%{! ## Fairtlough and Mendler's lax logic !}%
 
 %{! Fairtlough and Mendler's presentation of lax logic has a slight
 inconsistancy: the logic's syntax is defined as 
@@ -82,7 +82,7 @@ not'   : prop' -> prop'.
 circ'  : prop' -> prop'.
 ff'    : prop' = not' tt'.
 
-%%### Sequent calculus
+%{! ### Sequent calculus !}%
 
 %{! Fairtlough and Mendler present a Genzen-style intuitionstic sequent
 calculus for propositional lax logic in terms of sequents
@@ -197,7 +197,7 @@ here, to have the essential character of Fairtlough and Mendler's.
 \{\Gamma \vdash M\}
 \{weakR\}&lt;/math&gt;&lt;/center&gt; !}%
 
-%%#### Rules in Twelf
+%{! #### Rules in Twelf !}%
 
 trueR' : true' o tt'.
 % no trueL'
@@ -245,7 +245,7 @@ weakR' : # T -> true' (x T) M.
  (conc' T M). % = (# T) (true' T A)
 
 
-%%## Polarized judgmental lax logic
+%{! ## Polarized judgmental lax logic !}%
 
 %{! Polarized lax logic loses the &lt;math&gt;\neg&lt;/math&gt; but distinguishes
 between two different kinds of conjunction, &lt;math&gt;\wedge^+&lt;/math&gt; and 
@@ -285,7 +285,7 @@ top : prop neg.
 -o : prop pos -> prop neg -> prop neg.  %infix right 6 -o.
 circ : prop pos -> prop neg.
 
-%%### Sequent calculus
+%{! ### Sequent calculus !}%
 
 %{! Our assumptions are, as before, represented by LF variables, this time
 of type ``hyp A``. !}%
@@ -408,7 +408,7 @@ idconc/refl : idconc D D.
 \{\Gamma, \{\bigcirc\}P \vdash A~lax\}
 \{\bigcirc\}L&lt;/math&gt;&lt;/center&gt; !}%
 
-%%#### Rules in Twelf
+%{! #### Rules in Twelf !}%
 
 init+ : hyp (atom Qp) -> true (atom (Qp: atm pos)).
 init- : hyp (atom Qn) -> true (atom (Qn: atm neg)).
@@ -470,7 +470,7 @@ circL : (hyp P -> lax A)
 
 %worlds (bl_atmpos | bl_atmneg | bl_hyp) (hyp A) (conc J).
 
-%%## Translation
+%{! ## Translation !}%
 
 %{! Now we can define a nondeterminstic translation between our variant of
 Fairtlough and Mendler's propositional lax logic and our target logic,
@@ -479,7 +479,7 @@ captures the structure of the term in the target logic (in fact, it would
 be worth seeing if we could use the term in the target logic in lieu of
 the metric.) !}%
 
-%%### Propositions
+%{! ### Propositions !}%
 
 %{! The intent of the first relation we define is to be maximally general, which
 means that the ``t+-`` and ``t-+`` rules can add an arbitrary 
@@ -514,7 +514,7 @@ t+circ : trans T M pos P -> trans (x T) (circ' M) neg (circ P).
 
 %worlds (bl_atmpos | bl_atmneg) (trans _ _ _ _).
 
-%%### Conclusions
+%{! ### Conclusions !}%
 
 %{! We additionally define translation between right-hand-sides
 ``D`` in the source logic and judgments ``J`` in the target 
@@ -529,7 +529,7 @@ tclax : trans-conc T (conc-true' (circ' M)) (conc-lax A)
 
 %worlds (bl_atmpos | bl_atmneg) (trans-conc _ _ _).
 
-%%### Hypotheses
+%{! ### Hypotheses !}%
 
 %{! When we are showing soundness and completeness, we will need
 to know that for every hypothesis in the \{source, target\} logic we have
@@ -565,7 +565,7 @@ trans-complhyp : hyp' A -> trans Mt A S C -> hyp C -> type.
 %worlds (bl_atmpos | bl_atmneg | bl_trans-complhyp)  (trans-complhyp _ _ _).
 %total [] (trans-complhyp _ _ _).
 
-%%### Correspondence
+%{! ### Correspondence !}%
 
 %{! A corollary to the  theorem we will state below will say "If
 &lt;math&gt;\vdash A~true&lt;/math&gt; and &lt;math&gt;M~\texttt\{trans\}~A&lt;/math&gt;, then 
@@ -647,7 +647,7 @@ can-trans-conc : {D} trans-conc T D J -> type.
 %total A (can-trans-conc A _).
 
 
-%%## Metatheory of the target logic
+%{! ## Metatheory of the target logic !}%
 
 %{! The correctness of translation will rest on the standard metatheoretic
 results: the _identity principle_ and the _admissibility of cut_. Note 
@@ -655,7 +655,7 @@ that we could have added a ``cut`` and ``id`` rule to the target
 logic, but we still would have eventually needed to do the work in this 
 section in order to have confidence that our target logic was reasonable. !}%
 
-%%### Identity
+%{! ### Identity !}%
 
 %{! For all propositions &lt;math&gt;A&lt;/math&gt;, there exists a derivation of
 &lt;math&gt;A \vdash A~true&lt;/math&gt;. 
@@ -692,7 +692,7 @@ identity : {A} (hyp A -> true A) -> type.
 %worlds (bl_atmpos | bl_atmneg | bl_hyp) (identity _ _).
 %total T (identity T _).
 
-%%### Cut admissibility
+%{! ### Cut admissibility !}%
 
 %{! There are two cut principles which must be proven simultaneously;
 ``cut`` is the main theorem, and ``lcut`` is the cut principle
@@ -713,7 +713,7 @@ lcut : {A} lax A -> (hyp A -> lax C) -> lax C -> type.
 %mode cut +A +D +E -F.
 %mode lcut +A +D +E -F.
 
-%%#### Principal cuts
+%{! #### Principal cuts !}%
 
 - : cut (atom Q) (init+ H) ([h] init+ h) (init+ H).
 - : cut (atom Q) (init- H) ([h] init- h) (init- H).
@@ -762,7 +762,7 @@ lcut : {A} lax A -> (hyp A -> lax C) -> lax C -> type.
      <- ({h': hyp P} cut (circ P) (circR D) ([h] E h h') (F h': lax C))
      <- lcut P D ([h'] F h') G.
 
-%%#### Left commutative cuts
+%{! #### Left commutative cuts !}%
 
 - : lcut P (laxR (D: true P)) E F
      <- cut P D E F.
@@ -784,7 +784,7 @@ lcut : {A} lax A -> (hyp A -> lax C) -> lax C -> type.
      <- {h'} cut A (D2 h') E (F2 h').
 
 
-%%#### Monadic left commutative cuts
+%{! #### Monadic left commutative cuts !}%
 
 - : lcut A (circL ([h] D h) H) E (circL ([h] F h) H)
      <- {h'} lcut A (D h') E (F h').
@@ -805,7 +805,7 @@ lcut : {A} lax A -> (hyp A -> lax C) -> lax C -> type.
 - : lcut A (-oL D1 D2 H) E (-oL D1 F2 H)
      <- {h'} lcut A (D2 h') E (F2 h').
 
-%%#### Right commutative cuts
+%{! #### Right commutative cuts !}%
 
 - : cut A D ([h] init+ H) (init+ H).
 - : cut A D ([h] init- H) (init- H).
@@ -851,7 +851,7 @@ lcut : {A} lax A -> (hyp A -> lax C) -> lax C -> type.
 - : cut A D ([h] circL ([h'] E h h') H) (circL ([h'] F h') H)
      <- {h'} cut A D ([h] E h h') (F h').
 
-%%#### Monadic right commutive cuts
+%{! #### Monadic right commutive cuts !}%
 
 - : lcut A D ([h] upL ([h'] E h h') H) (upL F H)
      <- {h'} lcut A D ([h] E h h') (F h'). 
@@ -871,7 +871,7 @@ lcut : {A} lax A -> (hyp A -> lax C) -> lax C -> type.
 %total {(A1 A2) [(D1 D2) (E1 E2)]} (cut A1 D1 E1 F1) (lcut A2 D2 E2 F2).
 
 
-%%### Inversion lemmas
+%{! ### Inversion lemmas !}%
 
 %{! Proving invertability is an application of both cut and identity; it
 establishes that that for some rules, whenver the conclusion is true then
@@ -959,9 +959,9 @@ invcircL : (hyp (circ P) -> lax C) -> (hyp P -> lax C) -> type.
      <- identity P (E: hyp P -> true P)
      <- {h': hyp P} cut (circ P) (circR (laxR (E h'))) ([h] D h) (F h').
 
-%%## Correctness of translation
+%{! ## Correctness of translation !}%
 
-%%### Equivalence
+%{! ### Equivalence !}%
 
 %{! This is an interesting theorem, because it captures the idea that the
 translation, while nondeterminstic (a single source logic proposition 
@@ -1133,7 +1133,7 @@ trans-equivX: trans _ M _ A1 -> true A1 -> trans _ M _ A2 -> true A2 -> type.
   (trans-equiv _ _ _ _) (trans-equivX _ _ _ _).
 %total [(T1 T2) (S1 S2)] (trans-equiv T1 _ S1 _) (trans-equivX S2 _ T2 _).
 
-%%### Soundness
+%{! ### Soundness !}%
 
 %{! * If &lt;math&gt;\Gamma \vdash J&lt;/math&gt; and &lt;math&gt;\Gamma'~\texttt\{trans\}~\Gamma&lt;/math&gt; and &lt;math&gt;\Delta~\texttt\{trans\}~J&lt;/math&gt;, then &lt;math&gt;\Gamma' \vdash \Delta&lt;/math&gt; (``trans-sound``)
 
@@ -1296,7 +1296,7 @@ trans-imp : {D: conc C}
   (trans-sound _ _ _) (trans-imp _ _ _ _ _ _).
 %total (D E) (trans-imp E _ _ _ _ _) (trans-sound D _ _).
 
-%%### Completeness
+%{! ### Completeness !}%
 
 %{! * If &lt;math&gt;\Gamma' \vdash \Delta&lt;/math&gt; and &lt;math&gt;\Gamma'~\texttt\{trans\}~\Gamma&lt;/math&gt; and &lt;math&gt;\Delta~\texttt\{trans\}~J&lt;/math&gt;, then &lt;math&gt;\Gamma \vdash J&lt;/math&gt;.
 
@@ -1315,7 +1315,7 @@ trans-compl : {Td}{Tt}
    = [d: conc' Td D][t: trans-conc Tt D J][e: conc J] 
       trans-compl Td Tt d t e.
 
-%%#### Shifts
+%{! #### Shifts !}%
 
 - : trans-compl' D (tc (t+- T)) (upR E) 
      <- trans-compl' D (tc T) E.
@@ -1323,12 +1323,12 @@ trans-compl : {Td}{Tt}
 - : trans-compl' D (tc (t-+ T)) (downR E)
      <- trans-compl' D (tc T) E.
 
-%%#### Truth
+%{! #### Truth !}%
 
 - : trans-compl' trueR' (tc t+true) 1R.
 - : trans-compl' trueR' (tc t-true) topR.
 
-%%#### Conjunction
+%{! #### Conjunction !}%
 
 - : trans-compl' (/\R' D1 D2) (tc (t+and T1 T2)) (*R E1 E2)
      <- trans-compl' D1 (tc T1) E1
@@ -1365,7 +1365,7 @@ trans-andL : {TD}{Th} id TD (x Td)
      <- trans-complhyp H' Th (H: hyp A)
      <- trans-andL _ _ id/refl D T Th (E: hyp A -> conc D').
 
-%%#### Disjunction
+%{! #### Disjunction !}%
 
 - : trans-compl' (\/R1' (D: true' Tt M1)) (tc (t+or T1 _)) (+R1 E)
      <- trans-compl' D (tc T1) E.
@@ -1393,7 +1393,7 @@ trans-orL : {TD}{Th} id (TD) (Td1 | Td2)
      <- trans-complhyp H' Th H
      <- trans-orL _ _ id/refl D1 D2 T Th E.
 
-%%#### Implication
+%{! #### Implication !}%
 
 - : trans-compl' (=>R' (D: hyp' M1 -> true' Tt M2)) (tc (t-imp T1 T2)) (-oR E)
      <- ({h'}{h} trans-complhyp h' T1 h
@@ -1420,7 +1420,7 @@ trans-impL : {TD}{Th} id TD (Td1 | Td2)
      <- trans-complhyp H' Th (H: hyp A)
      <- trans-impL _ _ id/refl D1 D2 T Th E.
 
-%%#### Negation
+%{! #### Negation !}%
 
 - : trans-compl' (notR' (D: hyp' tt' -> # _)) (tc t+false) G
      <- ({h'}{h} trans-complhyp h' t+true h
@@ -1449,7 +1449,7 @@ trans-notL : {TD}{Tt} id TD (x Td)
      <- trans-complhyp H' Th (H: hyp A)
      <- trans-notL _ _ id/refl D Th E.
 
-%%#### Lax modality
+%{! #### Lax modality !}%
 
 - : trans-compl' (circR' D) (tc (t+circ T)) (circR (laxR E))
      <- trans-compl' D (tc T) E.
@@ -1480,7 +1480,7 @@ trans-circL : {TD}{Th} id TD (x Td)
      <- trans-complhyp H' Th (H: hyp A)
      <- trans-circL _ _ id/refl D T Th E.
 
-%%#### Structural Rules
+%{! #### Structural Rules !}%
 
 %{! For translating a cut, we need to come up with a translation of a source
 logc expression to a target logic expression; we have already established

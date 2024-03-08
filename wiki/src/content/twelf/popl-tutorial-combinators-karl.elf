@@ -1,6 +1,6 @@
 %%! title: "POPL Tutorial/Combinators (karl)"
 
-%%## Lambda Terms
+%{! ## Lambda Terms !}%
 
 exp : type.  %name exp E.
 
@@ -10,7 +10,7 @@ app : exp -> exp -> exp.
 
 
 
-%%## Reduction
+%{! ## Reduction !}%
 
 reduce : exp -> exp -> type.
 
@@ -33,7 +33,7 @@ reduce/beta	: reduce (app (lam ([x] E1 x)) E2) (E1 E2).
 
 
 
-%%## Combinators
+%{! ## Combinators !}%
 
 s : exp = lam ([a] lam ([b] lam ([x] app (app a x) (app b x)))).
 
@@ -44,7 +44,7 @@ i : exp = lam ([x] x).
 
 
 
-%%## Bracket Abstraction
+%{! ## Bracket Abstraction !}%
 
 abstract : (exp -> exp) -> exp -> type.
 %mode abstract +E -E'.
@@ -75,7 +75,7 @@ translate/app	: translate (app E1 E2) (app E1' E2')
 
 
 
-%%## Soundness
+%{! ## Soundness !}%
 
 abstract-sound : abstract ([x] E x) E'
 %%
@@ -173,7 +173,7 @@ translate-sound : translate E E'
 
 
 
-%%## Completeness
+%{! ## Completeness !}%
 
 clean : exp -> type.
 

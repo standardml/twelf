@@ -32,7 +32,7 @@ in the [verifications and uses](/wiki/verifications-and-uses/) example, in this 
 a sort-of zipper data structure that allows us to "pull out" the
 head variable from the inside of a term. !}%
 
-%%## Defining pseudo-zippers
+%{! ## Defining pseudo-zippers !}%
 
 %{! A [[w:zipper|zipper data structure]] is a way of describing paths into
 complex structures. A "real" zipper over an atomic term has the structure of a 
@@ -60,7 +60,7 @@ we would not only expose the head variable ``x`` but would make
 ``N&lt;sub&gt;1&lt;/sub&gt;`` the "least deeply nested" subterm and make
 ``N&lt;sub&gt;3&lt;/sub&gt;`` the "most deeply nested" subterm. !}%
 
-%%## Zipping and unzipping
+%{! ## Zipping and unzipping !}%
 
 %{! We need to both show that we can zip and unzip a ``use`` into
 a ``use'``, and vice versa. These two proofs are essentially the
@@ -89,7 +89,7 @@ rezip : hyp A -> zip A B -> use B -> type.
 %worlds (bl_atom | bl_hyp) (rezip _ _ _).
 %total Z (rezip _ Z _).
 
-%%## Global soundness
+%{! ## Global soundness !}%
 
 hsubst_n  : {A}    verif A -> (hyp A -> verif B)    -> verif B -> type.
 hsubst_r  : {A}    verif A -> (hyp A -> use' (a Q)) -> verif (a Q) -> type.
@@ -142,7 +142,7 @@ hsubst_rn : {A}{B} verif A -> (hyp A -> zip A B)    -> verif B -> type.
 
 %reduces B <= A (hsubst_rn A B _ _ _).
 
-%%## Failure of termination checking
+%{! ## Failure of termination checking !}%
 
 %{! The fact that our representation uses both proofs ``use A`` and
 proofs ``use' A`` means that we will run afowl of Twelf's termination

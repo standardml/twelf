@@ -269,7 +269,7 @@ of-store : storetp -> store -> type.
 	     <- of-list TL EL TL. 
 
 
-%%### Multi-step evaluation
+%{! ### Multi-step evaluation !}%
 
 run : store -> exp 
 	    -> store -> exp -> type. 
@@ -281,7 +281,7 @@ run-end : run S E S E.
 
 
 
-%%## Language theory
+%{! ## Language theory !}%
 
 %{! 
 ### Effectiveness lemmas
@@ -309,7 +309,7 @@ can-append-exp : {EL:explist}{E:exp} append-exp EL E EL' N -> type.
 %total T (can-append-exp T _ _).
 
 
-%%### Other auxillary lemmas
+%{! ### Other auxillary lemmas !}%
 
 of-projection : of-list ST EL TL 
 		 -> proj-tp TL N T 
@@ -666,7 +666,7 @@ pres-e-let : preservation (t-let F T’) ST (e-let V) S T ST
 
 
 
-%%### Safety
+%{! ### Safety !}%
 
 safety : of ST E T 
 	  -> of-store ST S 

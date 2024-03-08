@@ -4,7 +4,7 @@
 C Machine and Focusing
  !}%
 
-%%## Syntax
+%{! ## Syntax !}%
 
 pos : type.  %name pos A+.
 neg : type.  %name neg A-.
@@ -77,9 +77,9 @@ cut-   : val- A- -> cont- A- C -> exp C.
 %block valb : some {A} block {x : val+ A}.
 %worlds (valb) (cont+ _ _) (cont- _ _) (val+ _) (exp _) (val- _).
 
-%%## Operational Semantics
+%{! ## Operational Semantics !}%
 
-%%### Composition
+%{! ### Composition !}%
 
 comp+- : cont+ A+ B- -> cont- B- C- -> cont+ A+ C- -> type.
 %mode comp+- +K1 +K2 -K3.
@@ -132,7 +132,7 @@ comp--/id : comp-- id- K2 K2.
 %worlds (valb) (comp+- _ _ _) (comp-- _ _ _) (compe- _ _ _).
 %total (D1 D2 D3) (comp+- D1 _ _) (comp-- D3 _ _) (compe- D2 _ _).
 
-%%### Stack Machine
+%{! ### Stack Machine !}%
 
 %% the sum type that you'd define for progress is
 %% (val C) + (exp C)

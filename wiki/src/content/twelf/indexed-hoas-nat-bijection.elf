@@ -1,6 +1,6 @@
 %%! title: "Indexed HOAS nat bijection"
 
-%%# Bijection from indexed HOAS to natural numbers
+%{! # Bijection from indexed HOAS to natural numbers !}%
 
 %{! 
 This file shows an *indexed* HOAS term type and a mapping from these
@@ -14834,11 +14834,11 @@ add/+ : lookup M N C -> update M N (s C) M' -> add M N M'.
 
 
 
-%%## Definitions
+%{! ## Definitions !}%
 
 
 
-%%### The syntax
+%{! ### The syntax !}%
 
 %{! 
 Here we define multi-arity functions that are typed to avoid 
@@ -14872,7 +14872,7 @@ rec : (term (s N) -> term (s N)) -> term (s N).
 
 
 
-%%### Equality
+%{! ### Equality !}%
 
 
 eq : term N1 -> term N2 -> type.
@@ -14882,7 +14882,7 @@ eq/ : eq T T.
 
 
 
-%%### Variable levels
+%{! ### Variable levels !}%
 
 %{! 
 As with the non-indexed case, 
@@ -14902,7 +14902,7 @@ varadjlevel : term N -> nat -> nat -> type.
 
 
 
-%%### Mapping
+%{! ### Mapping !}%
 
 %{! 
 The bijection from terms to nat is called "tonat".    There
@@ -14976,7 +14976,7 @@ tonat/rec :
 
 
 
-%%### Utility lemmas
+%{! ### Utility lemmas !}%
 
 %{! 
 The following theorems prove obvious simple things about the
@@ -15046,7 +15046,7 @@ John Boyland's library signatures.
 
 
 
-%%## Proof of totality of tonat
+%{! ## Proof of totality of tonat !}%
 
 %{! 
 As with the non-indexed case, proving totality is
@@ -15065,10 +15065,10 @@ The multisets add extra paremeters but the basic structure is the same.
 
 
 
-%%### Auxiliary definitions
+%{! ### Auxiliary definitions !}%
 
 
-%%#### raw variables
+%{! #### raw variables !}%
 
 %{! 
 A variable is raw if we haven't verified that it has a level in range.
@@ -15091,7 +15091,7 @@ israw/lam : israw (lam _) false.
 israw/rec : israw (rec _) false.
 
 
-%%#### case analysis
+%{! #### case analysis !}%
 
 %{! 
 We case analysis terms with two cases for variables.
@@ -15132,7 +15132,7 @@ case/raw : rawvar V -> case _ V.
 
 
 
-%%### Theorems about auxiliary definitions
+%{! ### Theorems about auxiliary definitions !}%
 
 
 
@@ -15299,7 +15299,7 @@ This works almost the same as for non-indexed terms.
 
 
 
-%%### Main theorem
+%{! ### Main theorem !}%
 
 %{! 
 We are ready now to prove totality of the relation.
@@ -15364,7 +15364,7 @@ to push through totality.
 
 
 
-%%## Proof of the determinicity of the mapping
+%{! ## Proof of the determinicity of the mapping !}%
 
 %{! 
 As with the non-indexed case, this aspect is easy to prove.
@@ -15372,7 +15372,7 @@ As with the non-indexed case, this aspect is easy to prove.
 
 
 
-%%### Auxiliary theorems
+%{! ### Auxiliary theorems !}%
 
 
 %{! 
@@ -15406,7 +15406,7 @@ The proofs are trivial: Twelf can accept them from the context alone.
 
 
 
-%%### Main Theorem
+%{! ### Main Theorem !}%
 
 
 %theorem tonat-deterministic :
@@ -15496,14 +15496,14 @@ The proofs are trivial: Twelf can accept them from the context alone.
 
 
 
-%%## Proving that the mapping is onto.
+%{! ## Proving that the mapping is onto. !}%
 
 %{! 
 Again, this aspect has the same structure as with non-indexed terms.
  !}%
 
 
-%%### Auxiliary definitions
+%{! ### Auxiliary definitions !}%
 
 
 
@@ -15528,7 +15528,7 @@ upto/+ :
 
 
 
-%%### Lemmas about regular definitions
+%{! ### Lemmas about regular definitions !}%
 
 
 %theorem term-inhabited :
@@ -15546,7 +15546,7 @@ upto/+ :
 
 
 
-%%### Theorems about auxiliary definitions
+%{! ### Theorems about auxiliary definitions !}%
 
 
 %{! 
@@ -15610,7 +15610,7 @@ that a variable is always available.
 
 
 
-%%### Main theorem
+%{! ### Main theorem !}%
 
 %{! 
 We prove the main result using two lemmas that do the case
@@ -15823,7 +15823,7 @@ for strong induction over the natural numbers.
 
 
 
-%%## Proof that mapping is "one to one"
+%{! ## Proof that mapping is "one to one" !}%
 
 %{! 
 As with the simple HOAS syntax, this is the hardest of the four theorems 
@@ -15855,7 +15855,7 @@ levels.
 
 
 
-%%### Auxiliary definitions
+%{! ### Auxiliary definitions !}%
 
 
 %{! 
@@ -15868,7 +15868,7 @@ the original var level and the term level.
 		      block {v:term n} {vl:varadjlevel v m (s l)}.
 
 
-%%#### Equality (permitting variables with the same level).
+%{! #### Equality (permitting variables with the same level). !}%
 
 %{! 
 Some variables are are bound with levels, others are not given levels.
@@ -15912,7 +15912,7 @@ eql/var :
     eql* N A MS V1 V2.
 
 
-%%#### Measure of eql sizes.
+%{! #### Measure of eql sizes. !}%
 
 %{! 
 We use this measure to be able to prove termination.
@@ -15973,7 +15973,7 @@ eqlsize/rec2 :
 eqlsize/var : eqlsize (eql/var _ _ _) z (s z) z.
 
 
-%%#### Copied definitions
+%{! #### Copied definitions !}%
 
 %{! 
 As with the non-indexed case, we need to use an alternate form
@@ -16054,7 +16054,7 @@ eqlsize'/var : eqlsize' (eql'/var _ _ _) z (s z) z.
 
 
 
-%%### Theorems about auxiliary definitions
+%{! ### Theorems about auxiliary definitions !}%
 
 %{! 
 Some of the lemmas that would normally belong here are
@@ -16122,7 +16122,7 @@ proved later when we have more blocks available.
 
 
 
-%%### Shifting varlevels down
+%{! ### Shifting varlevels down !}%
 
 %{! 
 Now as with the non-indexed case, we shift variable levels down.
@@ -16630,7 +16630,7 @@ fake : type.
 
 
 
-%%### Removing variable levels altogether
+%{! ### Removing variable levels altogether !}%
 
 %{! 
 The following blocks are used when we remove the level for
@@ -17003,7 +17003,7 @@ never put var levels in the context.
 %total { } (eql-implies-eq _ _).
 
 
-%%### Main Theorem
+%{! ### Main Theorem !}%
 
 %{! 
 Finally the statement of the main theorem of this section.

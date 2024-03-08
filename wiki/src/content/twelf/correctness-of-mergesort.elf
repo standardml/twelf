@@ -156,7 +156,7 @@ all-in-2/cons-2	: all-in-2 (nat-list/cons N NL) NL1 NL2
 		   <- in-nat-list N NL2
 		   <- all-in-2 NL NL1 NL2.
 
-%%### Proof that mergesort returns a sorted result
+%{! ### Proof that mergesort returns a sorted result !}%
 
 nat-less-trans	: nat-less N1 N2
 		   -> nat-less N2 N3
@@ -242,7 +242,7 @@ mergesort-sorted	: mergesort NL NL'
 
 
 
-%%### Proof that mergesort returns a permutation of the input
+%{! ### Proof that mergesort returns a permutation of the input !}%
 
 all-in-2-wkn-l	: {N}
 		   all-in-2 NL NA NB

@@ -1,6 +1,6 @@
 %%! title: "Church-Rosser (w/ catch-all case)"
 
-%%## Syntax
+%{! ## Syntax !}%
 
 exp : type.  %name exp E.
 lam : (exp -> exp) -> exp.
@@ -16,7 +16,7 @@ context with arbitrary expression variables.
 %block exps : block {x: exp}.
 %worlds (exps) (exp).
 
-%%## Reduction
+%{! ## Reduction !}%
 %{! 
 
 We can reduce under binders and 
@@ -52,7 +52,7 @@ reduce/beta : reduce (app (lam E1) E2) (E1' E2')
 %worlds (exps_red) (reduce _ _).
 %total E (reduce E _).
 
-%%### Reduction is reflexive
+%{! ### Reduction is reflexive !}%
 %{! 
 
 We will need to know later that reduction is reflexive. It is an easy
@@ -79,7 +79,7 @@ identity : {E} reduce E E -> type.
 %worlds (exps_id) (identity _ _).
 %total T (identity T _).
 
-%%## Substitution
+%{! ## Substitution !}%
 %{! 
 
 The substitution theorem says that if we have a term ``e`` with 
@@ -157,7 +157,7 @@ is the catch-all case), then that first argument is the answer.
 %worlds (exps_red) (substitute _ _ _).
 %total D (substitute D _ _).
 
-%%## The Diamond Property
+%{! ## The Diamond Property !}%
 %{! 
 
 Now we come to the interesting part: the diamond property.
@@ -178,7 +178,7 @@ common E' such that ``E1`` and ``E2`` both reduce to it.
 diamond : reduce E E1 -> reduce E E2 -> reduce E1 E' -> reduce E2 E' -> type.
 %mode diamond +X1 +X2 -X3 -X4.
 
-%%### Identity
+%{! ### Identity !}%
 %{! 
 
 If either case is the identity, then we are done. 
@@ -200,7 +200,7 @@ If either case is the identity, then we are done.
      (ID' : reduce E1 E1) D
      <- identity E1 ID'.
 
-%%### Lambda-Lambda
+%{! ### Lambda-Lambda !}%
 %{! 
 
 If both cases are reductions under a binder, we pull the result straight 
@@ -233,7 +233,7 @@ Twelf will, of course, not allow this sloppiness.
           (D1' x redx : reduce (E1 x) (E' x))
           (D2' x redx : reduce (E2 x) (E' x))).
 
-%%### Application-Application
+%{! ### Application-Application !}%
 %{! 
 
 If both cases are applications, we pull the result straight from the 
@@ -263,7 +263,7 @@ induction hypothesis.
           (D1b' : reduce E1b Eb') 
           (D2b' : reduce E2b Eb').
 
-%%### Beta-Beta
+%{! ### Beta-Beta !}%
 %{! 
 
 If both cases are beta reductions, we get the result from performing two 
@@ -302,7 +302,7 @@ substitutions.
      <- substitute D2a' D2b'
           (D2   : reduce (E2a E2b) (Ea' Eb')).
 
-%%### Beta-Application
+%{! ### Beta-Application !}%
 %{! 
 
 If the left-hand side is a β-reduction 
@@ -346,7 +346,7 @@ The first subcase:
      <- substitute D1a' D1b' 
           (D1   : reduce (E1a E1b) (Ea' Eb')).
 
-%%### Application-Beta
+%{! ### Application-Beta !}%
 %{! 
 
 If the right-hand hand side is a β-reduction but the left-hand side is not, we 

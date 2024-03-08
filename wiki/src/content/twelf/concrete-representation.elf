@@ -50,7 +50,7 @@ structural metric it corresponds to, but in this example the intrinsic
 approach made the proofs simpler.
 \}% %\{ !}%
 
-%%## Preliminaries
+%{! ## Preliminaries !}%
 
 %{! We will need the ability to use [reasoning from false](/wiki/reasoning-from-false/) at one place
 to avoid a spurious case that [coverage checking](/wiki/coverage-checking/) does not deal with
@@ -216,7 +216,7 @@ lt-opt-excl : lt-opt LT lt12/1 -> lt-opt LT (lt12/2 L) -> uninhabited -> type.
 %total T (lt-opt-excl T _ _).
 
 
-%%## HOAS lambda terms
+%{! ## HOAS lambda terms !}%
 
 %{! The representation of the untyped lambda calculus is extremely simple in
 higher-order abstract syntax; we also define congruence lemmas for lam and app.
@@ -290,9 +290,9 @@ can-case/app : can-case (app E1 E2) (case/app) .
 %worlds (blockcases) (can-case _ _).
 %total T (can-case T _). 
 
-%%## de Bruijn lambda terms
+%{! ## de Bruijn lambda terms !}%
 
-%%### Structural metric: Trees
+%{! ### Structural metric: Trees !}%
 
 %{! In order for the totality proof for the de Bruijn to HOAS translation to go
 through, we will need to show that there is a metric by which ``unbind``
@@ -327,7 +327,7 @@ id-etree/lam-cong : id-etree E E'
 %worlds () (id-etree/lam-cong _ _).
 %total {} (id-etree/lam-cong _ _).
 
-%%### Encoding terms
+%{! ### Encoding terms !}%
 
 %{! We choose an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of de Bruijn terms so that every term
 that passes the LF type checker is well-formed - in particular, a term
@@ -381,7 +381,7 @@ id-lam^-cong : id-exp^ E E' -> id-exp^ (lam^ E) (lam^ E') -> type.
 %worlds (blockvar) (id-lam^-cong _ _).
 %total {} (id-lam^-cong _ _).
 
-%%### Binding and unbinding
+%{! ### Binding and unbinding !}%
 
 %{! The key operations on de Bruijn terms are a binding and unbinding
 operation - essentially, bind takes a free (HOAS) variable and makes it
@@ -447,7 +447,7 @@ unbind/lam : unbind (lam^ E1) ([v][iv] lam^ (E1' v iv))
 %worlds (blockvar) (unbind _ _).
 %total T (unbind T _).
 
-%%### Properties of bind and unbind
+%{! ### Properties of bind and unbind !}%
 
 %{! Now we will show that bind and unbind are inverses of each other,
 which mirrors the proof we will eventually prove about the ``exp-&gt;db``
@@ -581,7 +581,7 @@ lem : {Eb: {v} isvar v -> exp^ N Et} {Eb': {v} isvar v -> exp^ N Et}
 %total T (unbind-bind T _).  %{}%
 
 
-%%## Relating HOAS and de Bruijn representations
+%{! ## Relating HOAS and de Bruijn representations !}%
 
 %{! This is the penultimate section. What we want to prove, ultimately, is
 a bijection between _closed_ HOAS terms and _closed_ de Bruijn terms;
@@ -592,7 +592,7 @@ Doing so requires reasoning with the structural metric, using the complex
 theorem about closed terms in the next session will be simpler, but will use 
 the more complex lemmas from this section. !}%
 
-%%### HOAS to de Bruijn
+%{! ### HOAS to de Bruijn !}%
 
 %{! It is here that we will need to use the ``blockcases`` block description
 discussed above; even though it makes the translation more complicated, we
@@ -641,7 +641,7 @@ uniq->db : exp->db E2 C Et E^
 %worlds (blockcases) (uniq->db _ _ _ _).
 %total T (uniq->db T _ _ _).
 
-%%### de Bruijn to HOAS
+%{! ### de Bruijn to HOAS !}%
 
 %{! It is here that we will need to use the ``etree`` [structural metric](/wiki/structural-metrics/)
 to provide a usable termination argument for ``db-&gt;exp``. !}%
@@ -685,7 +685,7 @@ uniq->exp : id-exp^ E^ E^'
 %total T (uniq->exp _ T _ _).
 
 
-%%### Composition: HOAS -&gt; de Bruijn -&gt; HOAS
+%{! ### Composition: HOAS -&gt; de Bruijn -&gt; HOAS !}%
 
 inverseEDE : exp->db E C Et E^ -> db->exp Et E^ E C -> type.
 %mode inverseEDE +ED -DE.
@@ -702,7 +702,7 @@ inverseEDE : exp->db E C Et E^ -> db->exp Et E^ E C -> type.
 %worlds (blockcases) (inverseEDE _ _).
 %total T (inverseEDE T _). %{}%
 
-%%### Composition: de Bruijn -&gt; HOAS -&gt; de Bruijn
+%{! ### Composition: de Bruijn -&gt; HOAS -&gt; de Bruijn !}%
 
 %{! We need one last trick in order to make this proof go through in the
 opposite direction; we will need an effectiveness lemma on top of an
@@ -746,7 +746,7 @@ inverseDED : db->exp Et E^ E C -> exp->db E C Et E^ -> type.
 %worlds (blockcancases) (inverseDED _ _).   
 %total T (inverseDED T _). %{}%
 
-%%## Wrapping up
+%{! ## Wrapping up !}%
 
 %{! The one step that remains is to perform the above four steps for a
 simpler theorem statement in a closed world, since ultimately what we 
@@ -808,7 +808,7 @@ exp-->db-->exp : exp-->db E E^ -> db-->exp E^ E -> type.
 %total {} (exp-->db-->exp _ _). %{}%
 
 
-%%## Examples
+%{! ## Examples !}%
 
 %{! It's also a good idea to run a [``%query``](/wiki/percent-query/) on some examples as
 a sanity check. First, we translate the Church numeral "4," &lt;math&gt;\lambda f.\lambda x.f(f(f(f x)))&lt;/math&gt; from a

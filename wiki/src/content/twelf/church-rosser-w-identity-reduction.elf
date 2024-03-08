@@ -1,6 +1,6 @@
 %%! title: "Church-Rosser (w/ identity reduction)"
 
-%%## Syntax
+%{! ## Syntax !}%
 
 exp : type.  %name exp E.
 lam : (exp -> exp) -> exp.
@@ -17,7 +17,7 @@ will need for this exercise.
 %block exps : block {x: exp}.
 
 
-%%## Reduction
+%{! ## Reduction !}%
 %{! 
 
 We can always reduce an expression to itself (which means that we don't 
@@ -50,7 +50,7 @@ reduce/beta : reduce (app (lam E1) E2) (E1' E2')
 
 %worlds (exps) (reduce _ _).
 
-%%## Substitution
+%{! ## Substitution !}%
 %{! 
 
 The first substitution theorem says that if we have a term ``e1`` with 
@@ -122,7 +122,7 @@ substitute2
 %worlds (exps) (substitute2 _ _ _).
 %total D (substitute2 D _ _).
 
-%%## The Diamond Property
+%{! ## The Diamond Property !}%
 %{! 
 
 Now we come to the interesting part: the diamond property.
@@ -143,7 +143,7 @@ common E' such that ``E1`` and ``E2`` both reduce to it.
 diamond : reduce E E1 -> reduce E E2 -> reduce E1 E' -> reduce E2 E' -> type.
 %mode diamond +X1 +X2 -X3 -X4.
 
-%%### Identity
+%{! ### Identity !}%
 %{! 
 
 If either case is the identity, then we are done. 
@@ -161,7 +161,7 @@ If either case is the identity, then we are done.
 - : diamond reduce/id D D reduce/id.
 - : diamond D reduce/id reduce/id D.
 
-%%### Lambda-Lambda
+%{! ### Lambda-Lambda !}%
 %{! 
 
 If both cases are reductions under a binder, we pull the result straight 
@@ -193,7 +193,7 @@ Twelf will, of course, not allow this sloppiness.
           (D1' x : reduce (E1 x) (E' x))
           (D2' x : reduce (E2 x) (E' x))).
 
-%%### Application-Application
+%{! ### Application-Application !}%
 %{! 
 
 If both cases are applications, we pull the result straight from the 
@@ -223,7 +223,7 @@ induction hypothesis.
           (D1b' : reduce E1b Eb') 
           (D2b' : reduce E2b Eb').
 
-%%### Beta-Beta
+%{! ### Beta-Beta !}%
 %{! 
 
 If both cases are beta reductions, we get the result from performing two 
@@ -261,7 +261,7 @@ substitutions.
      <- substitute2 D2a' D2b'
           (D2     : reduce (E2a E2b) (Ea' Eb')).
 
-%%### Beta-Application
+%{! ### Beta-Application !}%
 %{! 
 
 If the left-hand side is a β-reduction 
@@ -342,7 +342,7 @@ The second subcase:
           (D1     : reduce (E1a E1b) (E1a Eb')).
 
 
-%%### Application-Beta
+%{! ### Application-Beta !}%
 %{! 
 
 If the right-hand hand side is a β-reduction but the left-hand side is not, we 

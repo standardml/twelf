@@ -117,8 +117,8 @@ val-eval : value V -> eval V V -> type.
 %worlds () (val-eval _ _).
 %total D (val-eval D _).
 
-%%## Big-step implies multi-step
-%%### Compatibility lemmas === |hidden=true
+%{! ## Big-step implies multi-step !}%
+%{! ### Compatibility lemmas === |hidden=true !}%
 
 step*/s : step* E E' -> step* (s E) (s E') -> type.
 %mode step*/s +D* -D*s.
@@ -163,7 +163,7 @@ step*/app/fn : step* E1 E1' -> step* (app E1 E2) (app E1' E2) -> type.
 %worlds () (step*/app/fn _ _).
 %total D (step*/app/fn D _).
 
-%%#### TASK 1: Fill in the cases of the unfinished compatibility proof
+%{! #### TASK 1: Fill in the cases of the unfinished compatibility proof !}%
 
 step*/app/arg : step* E2 E2' -> value V1 -> step* (app V1 E2) (app V1 E2')
                  -> type.
@@ -184,8 +184,8 @@ step*/app/arg : step* E2 E2' -> value V1 -> step* (app V1 E2) (app V1 E2')
 
 %{! |hidden=true !}%
 
-%%### Main theorem
-%%#### TASK 2: Fill in the missing cases of the theorem
+%{! ### Main theorem !}%
+%{! #### TASK 2: Fill in the missing cases of the theorem !}%
 
 eval-multi : eval E V -> step* E V -> type.
 %mode eval-multi +D -D*.
@@ -237,7 +237,7 @@ eval-multi : eval E V -> step* E V -> type.
 %total D (eval-multi D _).
 
 
-%%## Multi-step implies big step == |hidden=true
+%{! ## Multi-step implies big step == |hidden=true !}%
 
 step** : exp -> exp -> type.            %name step** Dstep**.
 
@@ -273,9 +273,9 @@ multi-step** : step* E E' -> step** E E' -> type.
 %total D (multi-step** D _).
 
 
-%%### Expansion lemma
+%{! ### Expansion lemma !}%
 
-%%#### TASK 3: Prove the three missing cases of the expansion lemma
+%{! #### TASK 3: Prove the three missing cases of the expansion lemma !}%
 
 expansion : eval E' V -> step E E' -> eval E V -> type.
 %mode expansion +D1 +D2 -D3.
@@ -357,9 +357,9 @@ expansion : eval E' V -> step E E' -> eval E V -> type.
 %total D (expansion _ D _).
 
 
-%%### Main theorem
+%{! ### Main theorem !}%
 
-%%#### TASK 4: Prove main theorem in the forward direction
+%{! #### TASK 4: Prove main theorem in the forward direction !}%
 
 multi**-eval : step** E V -> value V -> eval E V -> type.
 %mode multi**-eval +D1 +D2 -D3.
@@ -376,7 +376,7 @@ multi**-eval : step** E V -> value V -> eval E V -> type.
 %worlds () (multi**-eval _ _ _).
 %total D (multi**-eval D _ _).
 
-%%#### TASK 5: Complete proof by composing previous lemmas
+%{! #### TASK 5: Complete proof by composing previous lemmas !}%
 
 multi-eval : step* E V -> value V -> eval E V -> type.
 %mode multi-eval +D1 +D2 -D3.

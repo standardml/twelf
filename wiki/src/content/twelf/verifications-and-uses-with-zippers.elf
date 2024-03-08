@@ -9,7 +9,7 @@ N&lt;sub&gt;3&lt;/sub&gt;)`` in the natural deduction system is
 ``atm x (⊃E (⊃E (⊃E end N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;) N&lt;sub&gt;3&lt;/sub&gt;)`` in this version of "natural deduction" - the form of proofs stays the same
 with the exception that the head variable ``x`` has been pulled out into the front. !}%
 
-%%## Propositions and rules
+%{! ## Propositions and rules !}%
 
 prop : type.
 atom : type.
@@ -32,7 +32,7 @@ atm : hyp A -> use A (a Q) -> verif (a Q).
 ∧E₁ : use A (B₁ ∧ B₂) -> use A B₁.
 ∧E₂ : use A (B₁ ∧ B₂) -> use A B₂.
 
-%%## Global completeness
+%{! ## Global completeness !}%
 
 %{! Because we have changed the logic, the η-expansion theorem has changed somewhat. Recall that, in the pure system of [verifications and uses](/wiki/verifications-and-uses/), the statement of global completeness/η-expansion was that, for all ``A``, we can verify the truth of ``A`` in any context where we can use the fact that ``A`` is true. In this system, however, we don't ever use ``A`` in a vacuum - we always take a hypothesis of ``B`` and then prove that, given ``B``, we can use ``A``.
 The eta expansion theorem reflects this: it says that, for any ``A``, given an arbitrary ``B`` that we have hypothesized to be true and a proof
@@ -62,7 +62,7 @@ eta : {A} ({B} hyp B -> use B A -> verif A) -> type.
 
 %solve _ : {q1}{q2}{q3} eta ((a q1 ⊃ a q2) ⊃ a q3) (X q1 q2 q3).
 
-%%## Global soundness
+%{! ## Global soundness !}%
 
 %{! The real benefit of this modified natural deduction system is that we no longer need to take any detours to prove the hereditary substitution theorem: when we reach
 the ``atm`` case where we must verify an atomic proposition by using a proof of its truth, we know exactly what hypothesis we are using. If the

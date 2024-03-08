@@ -240,7 +240,7 @@ step*/app/fn : step* E1 E1' -> step* (app E1 E2) (app E1' E2) -> type.
 %worlds () (step*/app/fn _ _).
 %total D (step*/app/fn D _).
 
-%%#### TASK 1: Fill in the cases of the unfinished compatibility proof
+%{! #### TASK 1: Fill in the cases of the unfinished compatibility proof !}%
 
 step*/app/arg : step* E2 E2' -> value V1 -> step* (app V1 E2) (app V1 E2')
                  -> type.

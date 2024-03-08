@@ -8,7 +8,7 @@ be written that may still be able to prove many theorems. This article
 defines two approaches to writing these tactical theorem provers.
  !}%
 
-%%## Logic definition
+%{! ## Logic definition !}%
 
 %{! 
 When we introduce numbers with addition on this wiki (see for example
@@ -64,9 +64,9 @@ plus_elim2 : pf (N1 + N2 == N1' + N2) -> pf (N1 == N1') =
   [p1 : pf (N1 + N2 == N1' + N2)] 
   plus_elim1 (trans (trans plus_comm p1) plus_comm).
 
-%%## Tactical theorem proving
+%{! ## Tactical theorem proving !}%
 
-%%### Motivation: "flattening" a numeric formula
+%{! ### Motivation: "flattening" a numeric formula !}%
 %{! 
 Say we want to define a predicate ``mklist`` that takes some numeric 
 formula ``num`` and applies associativity exhaustively to "flatten" 
@@ -86,7 +86,7 @@ list-step : list (A + C) (B + C)
 	     <- list A B.
 list-stop : list A A.
 
-%%### Returning a proof of equality
+%{! ### Returning a proof of equality !}%
 
 %{! 
 The operation of ``list`` may seem a bit mysterious - how
@@ -106,7 +106,7 @@ mklist-step : mklist (A + C) (B + C) (plus_cong Pf refl)
 		<- mklist A B (Pf: pf (A == B)).
 mklist-stop : mklist A A refl.
 
-%%### Using the tactical theorem prover
+%{! ### Using the tactical theorem prover !}%
 
 %{! 
 We can then use [``%define``](/wiki/define-declaration/) and 
@@ -122,7 +122,7 @@ must be explicitly allowed to rely on those terms, which is why
 %solve _ : {a}{b}{c}{d} mklist (a + (b + c) + d) _ (Pf a b c d).
 
 
-%%## Tactics with ``%clause``
+%{! ## Tactics with ``%clause`` !}%
 
 %{! Another way to achieve the same goal is to _define_ ``(list A B)``
 as ``(pf (A == B))``, which we do for ``list'`` below. !}%

@@ -1,6 +1,6 @@
 %%! title: "POPL Tutorial/Cost semantics"
 
-%%## Syntax
+%{! ## Syntax !}%
 
 tp : type.				%name tp T.
 tunit : tp.
@@ -11,7 +11,7 @@ unit : exp.
 fun : tp -> tp -> (exp -> exp -> exp) -> exp.
 app : exp -> exp -> exp.
 
-%%## Series-parallel graphs
+%{! ## Series-parallel graphs !}%
 
 graph : type.
 0 : graph.
@@ -25,7 +25,7 @@ nat : type.
 z : nat.
 s : nat -> nat.
 
-%%### Size of graphs
+%{! ### Size of graphs !}%
 
 plus : nat -> nat -> nat -> type.
 plus/z : plus z N N.
@@ -45,7 +45,7 @@ sizeof/* : sizeof (G1 * G2) C3
           <- sizeof G2 C2
           <- plus C2 C1 C3.
 
-%%### Depth of graphs
+%{! ### Depth of graphs !}%
 
 max : nat -> nat -> nat -> type.
 
@@ -70,7 +70,7 @@ depthof/* : depthof (G1 * G2) C
           <- depthof G2 C2
           <- max C1 C2 C.
 
-%%## Cost Semantics
+%{! ## Cost Semantics !}%
 
 evcost : exp -> exp -> graph -> type. 
 
@@ -86,7 +86,7 @@ evcost/app
        <- evcost E2 V2 G2
        <- evcost (E (fun T1 T2 ([f][x] E f x)) V2) V G.
 
-%%## Sequential Evaluation
+%{! ## Sequential Evaluation !}%
 
 value : exp -> type.			%name value Dval.
 %mode value +E.
@@ -120,7 +120,7 @@ steps/trans : steps E E'' (s C)
     <- step E E'
     <- steps E' E'' C.
 
-%%## Parallel Evaluation
+%{! ## Parallel Evaluation !}%
 
 pstep : exp -> exp -> type.
 
@@ -152,7 +152,7 @@ psteps/trans : psteps E E'' (s C)
           <- pstep E E'
           <- psteps E' E'' C.
 
-%%### Cost of parallel evaluation
+%{! ### Cost of parallel evaluation !}%
 
 par_app 
    :  max C1 C2 Cmax 
@@ -260,7 +260,7 @@ schedule_parallel
 %worlds () (schedule_parallel _ _ _ _).
 %total T (schedule_parallel T _ _ _).
 
-%%### Random Plus Lemmas
+%{! ### Random Plus Lemmas !}%
 
 plus_lemma : plus (s N1) N2 N3
 	      -> plus N1 (s N2) N3
@@ -330,7 +330,7 @@ plus_commute : plus N1 N2 N3
 
 
 
-%%### Cost of sequential evaluation
+%{! ### Cost of sequential evaluation !}%
 
 
 

@@ -1,6 +1,6 @@
 %%! title: "User:Rsimmons/CR2"
 
-%%## Syntax
+%{! ## Syntax !}%
 
 exp : type.  %name exp E.
 lam : (exp -> exp) -> exp.
@@ -16,7 +16,7 @@ context with arbitrary expression variables.
 %block exps : block {x: exp}.
 %worlds (exps) (exp).
 
-%%## Reduction
+%{! ## Reduction !}%
 %{! 
 
 We can reduce under binders and 
@@ -53,7 +53,7 @@ reduce/beta : reduce (app (lam E1) E2) (E1' E2')
 %worlds (exps_id) (reduce _ _).
 %total E (reduce E _).
 
-%%## Substitution
+%{! ## Substitution !}%
 %{! 
 
 The substitution theorem says that if we have a term ``e`` with 

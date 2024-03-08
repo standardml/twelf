@@ -29,9 +29,9 @@ on an undirected graphs.
 
  !}%
 
-%%## Defining the graph
+%{! ## Defining the graph !}%
 
-%%### Nodes
+%{! ### Nodes !}%
 
 node : type.
 
@@ -44,7 +44,7 @@ f : node.
 g : node.
 h : node.
 
-%%### Edges
+%{! ### Edges !}%
 
 %{! While we will consider edges in our graph to be undirected,
 we will only define the edge in one, arbitrary, direction. !}%
@@ -61,7 +61,7 @@ de : edge d e.
 df : edge d f.
 fg : edge f g.
 
-%%### Paths in the graph
+%{! ### Paths in the graph !}%
 
 %{! 
 This is normally where we would get into trouble; in standard 
@@ -82,7 +82,7 @@ path/link : edge A B -> path A B.
 path/refl : path A B -> path B A.
 path/trans : path A B -> path B C -> path A C.
 
-%%## Searching the graph
+%{! ## Searching the graph !}%
 
 %{! 
 It is crucial that we use [``%querytabled``](/wiki/percent-querytabled/) rather than 

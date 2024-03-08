@@ -22,7 +22,7 @@ given well-typed inputs, the function is actually total. That view is helpful wh
 systems, [[bidirectional type checking]], or the implementation of a logical framework, but
 certain problems can be greatly simplified when we think of terms as intrinsically typed. !}%
 
-%%## Propositions and rules
+%{! ## Propositions and rules !}%
 
 %{! The following is a straightforward representation of a natural deduction
 system with verifications and uses, with one exception: in most presentations, 
@@ -52,7 +52,7 @@ atm : use (a Q) -> verif (a Q).
 ∧E₁ : use (A ∧ B) -> use A.
 ∧E₂ : use (A ∧ B) -> use B.
 
-%%## Global completeness
+%{! ## Global completeness !}%
 
 %{! The global completeness (or η-expansion) theorem for the logic of verifications and uses
 is expressed by the  theorem: if we can use a proof that use ``A`` under certain assumptions, then
@@ -75,7 +75,7 @@ eta : {A : prop} (use A -> verif A) -> type.
 %worlds (bl_atom | bl_hyp) (eta _ _).
 %total A (eta A _).
 
-%%## Detour
+%{! ## Detour !}%
 
 %{! Before we proceed to global soundness, we
 have to deal with the core annoyance of doing things 
@@ -167,7 +167,7 @@ lem : jf_or_rm ([x] R x) -> jf_or_rm ([x] ∧E₂ (R x)) -> type.
 
 %{! One way to avoid this ugly detour is to use [[spine form]], another way is considered in the page on [verifications and uses with zippers](/wiki/verifications-and-uses-with-zippers/). !}%
 
-%%## Global soundness
+%{! ## Global soundness !}%
 
 %{! Showing that every (hyp A -&gt; use B) always either is ``just_fine``
 or needs hereditary substitution to ``reduce_me`` is the entirety of the 

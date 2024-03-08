@@ -28,7 +28,7 @@ app : trm -> trm -> trm.
 %block trmb : block {x : trm}.
 %worlds (trmb) (trm).
 
-%%### Parallel reduction
+%{! ### Parallel reduction !}%
 
 => : trm -> trm -> type.  %infix none 10 =>.
 %mode => +M -N.
@@ -48,7 +48,7 @@ app : trm -> trm -> trm.
 
 %{! Note that Twelf can prove that parallel reduction is total automatically! !}%
 
-%%### Complete development
+%{! ### Complete development !}%
 
 notlam : trm -> type.
 %mode notlam +M.
@@ -87,7 +87,7 @@ Thus, we define a block that includes all the assumptions in both ``=&gt;b`` and
 		  {nlx : notlam x} 
 		  {cdx : x ==> x} .
 
-%%## Diamond property of parallel reduction
+%{! ## Diamond property of parallel reduction !}%
 
 %{! ### Every term either is or isn't a lambda
 

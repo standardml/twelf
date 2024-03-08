@@ -16,12 +16,10 @@ Here's a simple Twelf wiki file:
     or `s N`, the successor of the natural number `z`. !}%
     
     nat : type.
-    
 
     %%## Level two heading
 
     %{! !}%
-
 
 A wiki Twelf file begins with a series of lines beginning with `%%!` that
 directly become the frontmatter of the output file.

@@ -2,7 +2,7 @@
 
 %{! The **TwelfTag** system is a way of adding Twelf code directly into the Twelf Project Wiki. This page gives an introduction to TwelfTag for readers. The page [[Project:TwelfTag]] has information about TwelfTag for editors, and the [Twelf Live](/wiki/twelf-live/) system provides a more interactive way of using Twelf with on this website. !}%
 
-%%## Syntax highlighting
+%{! ## Syntax highlighting !}%
 
 %{! The most basic function of TwelfTag is to highlight Twelf code much the same way that [Emacs](/wiki/twelf-with-emacs/) does. Names are red, and metavariables (free variables) are in blue.
  !}%
@@ -18,7 +18,7 @@ lr/nil : list-reverse nil L L.
 lr/cons : list-reverse (cons E L1) L2 L3
            <- list-reverse L1 (cons E L2) L3.
 
-%%## Showing Twelf's response
+%{! ## Showing Twelf's response !}%
 
 %{! When Twelf checks a piece of code, it produces some output that represents Twelf's reconstruction of that code and a message (``%% OK %%`` or ``%% ABORT %%``) that signals whether it was successful. Sometimes it is helpful to show Twelf's response in an article, and TwelfTag can do this too, showing Twelf's response in green. |check=decl !}%
 

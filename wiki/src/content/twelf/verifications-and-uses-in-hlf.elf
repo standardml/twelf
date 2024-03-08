@@ -10,7 +10,7 @@ This code is primarily here so it can be referenced by a [http://requestforlogic
 
 %hlf.
 
-%%## Propositions and rules
+%{! ## Propositions and rules !}%
 
 prop : type.
 atom : type.
@@ -35,7 +35,7 @@ atm : hyp A -> (use A -o use (a Q)) -> verif (a Q).
 %block bl_use : some {A : prop} block {α}{x : use A α}.
 %worlds (bl_atom | bl_hyp | bl_use) (verif _ _) (use _ _) (hyp _ _).
 
-%%## Global completeness
+%{! ## Global completeness !}%
 
 eta : {A} ({B} hyp B -> (use B -o use A) -> verif A) -> type.
 %mode eta +A -B.
@@ -59,7 +59,7 @@ eta : {A} ({B} hyp B -> (use B -o use A) -> verif A) -> type.
 %solve s : {q}{r}{s} eta (a q ⊃ a r ⊃ a s) (X q r s).
 %solve s : {q}{r}{s} eta ((a q ⊃ a r) ⊃ a s) (X q r s).
 
-%%## Global soundness
+%{! ## Global soundness !}%
 
 hsubst_n  : {A}    verif A -> (hyp A -> verif B)        -> verif B -> type.
 hsubst_rr : {A}    verif A -> (hyp A -> use C -o use B) -> (use C -o use B) -> type.

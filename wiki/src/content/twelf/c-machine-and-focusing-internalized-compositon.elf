@@ -4,7 +4,7 @@
 C Machine and Focusing
  !}%
 
-%%## Syntax
+%{! ## Syntax !}%
 
 pos : type.  %name pos A+.
 neg : type.  %name neg A-.
@@ -77,7 +77,7 @@ cut-   : val- A- -> cont- A- C -> exp C.
 
 compe- : exp A- -> cont- A- C- -> exp C-.
 
-%%### Stack Machine
+%{! ### Stack Machine !}%
 
 %% the sum type that you'd define for progress is
 %% (val C) + (exp C)

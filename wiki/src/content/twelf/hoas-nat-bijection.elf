@@ -1,8 +1,8 @@
 %%! title: "HOAS nat bijection"
 
-%%# Bijection from HOAS to natural numbers
+%{! # Bijection from HOAS to natural numbers !}%
     
-%%## Preliminaries
+%{! ## Preliminaries !}%
 
 %{! 
 This file shows a simple HOAS term type and a mapping from these
@@ -7205,11 +7205,11 @@ nat2pair : nat -> pair -> type = [N] [P] pair2nat P N.
 
 
 
-%%## Definitions
+%{! ## Definitions !}%
 
 
 
-%%### The syntax
+%{! ### The syntax !}%
 
 %{! 
 The HOAS defined here is uninteresting.  There isn't even any way to use
@@ -7231,7 +7231,7 @@ f : (t -> t) -> t.
 
 
 
-%%### Equality
+%{! ### Equality !}%
 
 
 eq : t -> t -> type.
@@ -7241,7 +7241,7 @@ eq/ : eq T T.
 
 
 
-%%### Variable levels
+%{! ### Variable levels !}%
 
 %{! 
 A variable level is the (nonzero) natural number for a variable.
@@ -7255,7 +7255,7 @@ varlevel : t -> nat -> type.
 
 
 
-%%### Mapping
+%{! ### Mapping !}%
 
 %{! 
 The bijection from t to nat is called "tonat".  In its more general
@@ -7291,7 +7291,7 @@ tonat/f :
 
 
 
-%%### Utility lemmas
+%{! ### Utility lemmas !}%
 
 %{! 
 The following theorems prove obvious simple things about the
@@ -7335,7 +7335,7 @@ John Boyland's library signatures.
 
 
 
-%%## Proof of totality of tonat
+%{! ## Proof of totality of tonat !}%
 
 %{! 
 The difficulty here is that we need to prove that when
@@ -7360,10 +7360,10 @@ in general.
 
 
 
-%%### Auxiliary definitions
+%{! ### Auxiliary definitions !}%
 
 
-%%#### raw variables
+%{! #### raw variables !}%
 
 %{! 
 A variable is raw if we haven't verified that it has a level in range.
@@ -7382,7 +7382,7 @@ israw/b : israw (b _) false.
 israw/f : israw (f _) false.
 
 
-%%#### case analysis
+%{! #### case analysis !}%
 
 %{! 
 We case analysis terms with two cases for variables.
@@ -7405,7 +7405,7 @@ case/raw : rawvar V -> case N V.
 
 
 
-%%### Theorems about auxiliary definitions
+%{! ### Theorems about auxiliary definitions !}%
 
 %{! 
 What follows first is a theorem that says that in a context where 
@@ -7540,7 +7540,7 @@ the context for this theorem.
 
 
 
-%%### Main theorem
+%{! ### Main theorem !}%
 
 %{! 
 We are ready now to prove totality of the relation.
@@ -7590,7 +7590,7 @@ to push through totality.
 
 
 
-%%## Proof of the determinicity of the mapping
+%{! ## Proof of the determinicity of the mapping !}%
 
 %{! 
 In this section, we prove that tonat gives only one value 
@@ -7606,7 +7606,7 @@ in a functional style.
 
 
 
-%%### Auxiliary theorems
+%{! ### Auxiliary theorems !}%
 
 
 %{! 
@@ -7640,7 +7640,7 @@ The proofs are trivial: Twelf can accept them from the context alone.
 
 
 
-%%### Main Theorem
+%{! ### Main Theorem !}%
 
 
 %theorem tonat-deterministic :
@@ -7687,7 +7687,7 @@ The proofs are trivial: Twelf can accept them from the context alone.
 
 
 
-%%## Proving that the mapping is onto.
+%{! ## Proving that the mapping is onto. !}%
 
 %{! 
 Here we use the mathematical term "onto": a function is "onto" if 
@@ -7702,7 +7702,7 @@ the nesting level.
  !}%
 
 
-%%### Auxiliary definitions
+%{! ### Auxiliary definitions !}%
 
 
 
@@ -7725,10 +7725,10 @@ upto/s : upto N -> varlevel V (s N) -> upto (s N).
 
 
 
-%%### Theorems about auxiliary definitions
+%{! ### Theorems about auxiliary definitions !}%
 
 
-%%#### The obvious lemma that makes use of the main purpose of the relation:
+%{! #### The obvious lemma that makes use of the main purpose of the relation: !}%
 
 %theorem upto-implies-varlevel :
 	forall* {N} {L}
@@ -7751,7 +7751,7 @@ upto/s : upto N -> varlevel V (s N) -> upto (s N).
 
 
 
-%%### Main theorem
+%{! ### Main theorem !}%
 
 %{! 
 We prove the main result using two lemmas that do the case
@@ -7851,7 +7851,7 @@ for strong induction over the natural numbers.
 
 
 
-%%## Proof that mapping is "one to one"
+%{! ## Proof that mapping is "one to one" !}%
 
 %{! 
 This is the most involved proof.  The sketch is that we first prove
@@ -7865,10 +7865,10 @@ the "outside", each time reducing the level of the remaining variables.
 
 
 
-%%### Auxiliary definitions
+%{! ### Auxiliary definitions !}%
 
 
-%%#### Equality (permitting variables with the same level).
+%{! #### Equality (permitting variables with the same level). !}%
 
 eql* : nat -> t -> t -> type.
 
@@ -7888,7 +7888,7 @@ eql/f2 : ({v:t} {vl:varlevel v (s N)} (eql* (s N) (F1 v) (F2 v))) ->
 eql/v : varlevel V1 L -> varlevel V2 L -> eql* N V1 V2.
 
 
-%%#### Measure of eql sizes.
+%{! #### Measure of eql sizes. !}%
 
 %{! 
 We use this measure to be able to prove termination.
@@ -7913,7 +7913,7 @@ eqlsize/f2 : ({v} {vl} eqlsize (E v vl) N) ->
 eqlsize/v : eqlsize (eql/v _ _) z.
 
 
-%%#### Copied definitions
+%{! #### Copied definitions !}%
 
 %{! 
 It turns out that switching variables to an earlier level
@@ -7957,7 +7957,7 @@ eqlsize'/v : eqlsize' (eql'/v _ _) z.
 
 
 
-%%### Theorems about auxiliary definitions
+%{! ### Theorems about auxiliary definitions !}%
 
 
 %theorem false-implies-eql :
@@ -8252,7 +8252,7 @@ never put var levels in the context.
 %total { } (eql-implies-eq _ _).
 
 
-%%### Main Theorem
+%{! ### Main Theorem !}%
 
 %{! 
 Finally the statement of the main theorem of this section.

@@ -4,7 +4,7 @@
 The big algebraic software is a [tactical theorem prover](/wiki/tactical-theorem-proving/) written as a Twelf [logic program](/wiki/logic-programming/) by [Rob](/wiki/user-rsimmons/) at Princeton University as part of the Foundational Proof Carrying Code system. It is quite inefficient due to the fact that it doesn't try to order variables. The [http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Libraries.UsingTheRingSolver RingSolver] in the Agda standard library is an example of a more efficient solver.
  !}%
 
-%%## Preexisting logic
+%{! ## Preexisting logic !}%
 
 %{! In the Princeton FPCC project where this was developed, many of the definitions below were more general (for instance, equality was on anything, not just numbers) and many things stated here as axioms were lemmas that had corresponding proofs. These are just the definitions and lemmas that were used within the solver. !}%
 
@@ -132,7 +132,7 @@ cancel_-a+b+a' : pf (neg A + (B + A) == B) =
   trans assoc_plus cancel_-a+b+a.
 
 
-%%## Parts of the solver
+%{! ## Parts of the solver !}%
 
 nomatch = zero.
 match = one.
@@ -141,7 +141,7 @@ listify  : tnum -> tnum -> tnum -> type = [a][pos][neg] pf (a == pos - neg).
 %deterministic listify.
 %mode listify +A -Pos -Neg.
 
-%%### Normalization
+%{! ### Normalization !}%
 
 plusify  : tnum -> tnum -> tnum -> type = 
   [a][x][y] pf (a == x - y).
@@ -159,7 +159,7 @@ catchtimes : tnum -> tnum -> tnum -> tnum -> tnum -> tnum -> tnum -> type =
 %deterministic catchtimes.
 %mode catchtimes +A +B +X +Y +Sign -Pos -Neg.
 
-%%### Matching
+%{! ### Matching !}%
 
 trim : tnum -> tnum -> tnum -> tnum -> type
   = [a][b][c][d] pf (a - b == c - d).
@@ -176,7 +176,7 @@ rearrange : tnum -> tnum -> tnum -> tnum -> type
 %deterministic rearrange.
 %mode rearrange +A +B +C +D.
 
-%%### Main solver interface
+%{! ### Main solver interface !}%
 
 algebra_solver : tform -> type = [a] pf a.
 %deterministic algebra_solver.
@@ -194,11 +194,11 @@ algebra_times_hint : tnum -> type = [a] pf (a == a).
 %mode algebra_times_hint -Hint.
 
 
-%%## Implementation
+%{! ## Implementation !}%
 
-%%### Normalization
+%{! ### Normalization !}%
 
-%%#### Listify
+%{! #### Listify !}%
 
 %{! Decomposes equations into list form ``0 + (1 * A * B * C) + D - E + (1 * F * G) +...`` !}%
 
@@ -211,7 +211,7 @@ listify_imp : listify A Pos Neg
 
 
 
-%%#### Timesify
+%{! #### Timesify !}%
 
 %{! ``timesify B X S Z`` - Creates a one-terminated list ``(1 * A * B * C * ...)``
 
@@ -267,7 +267,7 @@ timesify_end_one : timesify one one one one = refl.
 
 
 
-%%#### Catchtimes
+%{! #### Catchtimes !}%
 %{! ``catchtimes A B X Y Sign Pos Neg`` - unravels to the correct sign
 * A - The as-yet unprocessed bit of the equation
 * B - The single term that was passed to timesify
@@ -340,7 +340,7 @@ catch_break : catchtimes A B X (P + Q) one Pos Neg
 
 
 
-%%#### Plusify
+%{! #### Plusify !}%
 %{! ``plusify`` - Creates a zero-termiated list (0 + A + B + C +...) !}%
 
 %clause
@@ -433,7 +433,7 @@ plusify_zero : plusify zero zero zero = symm plus_inv.
 
 
 
-%%#### Testing
+%{! #### Testing !}%
 
 %solve __P : {a}{b} listify (a * (b - one)) _ _.
 %solve __P : {a} listify (succ a * pred a) _ _. % 
@@ -461,9 +461,9 @@ plusify_zero : plusify zero zero zero = symm plus_inv.
 
 
 
-%%### Matching
+%{! ### Matching !}%
 
-%%#### Trim
+%{! #### Trim !}%
 
 %{! TRIM - takes two lists, and makes a single pass at removing items from the
 first list and putting them in the second list. Fails unless at least one
@@ -508,7 +508,7 @@ trim_step2 : trim A (B + C) X (Y + C) <- trim A B X Y =
 
 
 
-%%#### Findarr_mult
+%{! #### Findarr_mult !}%
 
 % FINDARR_MULT - more complex than trim, cycles through a product to 
 % Uses a quadratic algorithm, but in most cases the length of the proof
@@ -561,7 +561,7 @@ fam_one : findarr_mult X one Y match
 
 
 
-%%#### Rearrange
+%{! #### Rearrange !}%
 
 % REARRANGE
 % Handles the finishing steps of the solver
@@ -835,7 +835,7 @@ solver_gt : algebra_solver (A < B imp C < D)
               <- algebra_solver (C >= D imp A >= B) = 
   [p1] imp_i [p2] not_ein p2 (imp_e p1).
 
-%%## Test cases for the solver
+%{! ## Test cases for the solver !}%
 
 %solve __P : {a}{b}{c} algebra_solver (a > b imp a + c > c + b).
 
