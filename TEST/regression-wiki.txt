@@ -1,1 +1,1 @@
-test ../wiki/src/content/twelf/big-algebraic-solver.elf
+test ../wiki/src/content/twelf/big-algebraic-solver.cfg

@@ -57,6 +57,7 @@ $TIME ../bin/twelf-regression regression-public.txt
 endgroup
 
 startgroup "Running Twelf Wiki literate examples"
+echo "big-algebraic-solver.elf" > ../wiki/src/content/twelf/big-algebraic-solver.cfg
 $TIME ../bin/twelf-regression regression-wiki.txt
 endgroup
 
