@@ -25,7 +25,7 @@ const header = [];
 let lineNum = 0;
 const input = readFileSync(inputFile).toString("utf-8").split("\n");
 while (lineNum < input.length && input[lineNum].startsWith("%%! ")) {
-  header.push(input[0].slice(4) + "\n");
+  header.push(input[lineNum].slice(4) + "\n");
   lineNum += 1;
 }
 
@@ -122,6 +122,8 @@ for (; lineNum < input.length; lineNum++) {
           "# Error line " + lineNum + ", found unmatched `end checked`"
         );
       }
+      state = { ...state, subtype: null };
+      continue;
     }
 
     /* Check for the end of a Twelf section */

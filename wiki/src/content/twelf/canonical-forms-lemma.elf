@@ -1,18 +1,19 @@
 %%! title: "Canonical forms lemma"
+%%! tags: ["tutorial"]
 
-%{! :_This article is about proving an [object language](/wiki/object-logic/) lemma. For the notion of canonical form within LF itself, see [canonical form](/wiki/canonical-form/)._
+%{!
 
-In a standard proofs of [[type safety]], the [progress](/wiki/canonical-forms-lemma/) theorem requires **canonical forms** lemmas about the values in a language. These lemmas are usually in the form "If e is a value and \{\{vdash\}\} e : T, then e is of some form appropriate for T". A specific example would be "If e is a value and \{\{vdash\}\} e : T1 → T2, then e is of the form λx:T1.e'".
+_This article is about proving an [object language](/wiki/object-logic/) lemma. For the notion of canonical form within LF itself, see [canonical form](/wiki/canonical-form/)._
+
+In a standard proofs of <Todo>type safety</Todo>, the [progress](/wiki/canonical-forms-lemma/) theorem requires **canonical forms** lemmas about the values in a language. These lemmas are usually in the form "If e is a value and \{\{vdash\}\} e : T, then e is of some form appropriate for T". A specific example would be "If e is a value and \{\{vdash\}\} e : T1 → T2, then e is of the form λx:T1.e'".
 
 Depending on the complexity of the type system, there are two general ways to state and prove these lemmas.  In some cases, Twelf's input coverage can give you the canonical forms lemma for free.  In other cases, you must state and prove canonical forms explicitly using [equality](/wiki/equality/).  
 
 ## Canonical forms lemmas for free
 
-If there is only one rule through which the canonical form at a particular type can be derived, then Twelf's input coverage is actually strong enough to give you canonical forms for free via [[inversion]]. 
+If there is only one rule through which the canonical form at a particular type can be derived, then Twelf's input coverage is actually strong enough to give you canonical forms for free via <Todo>inversion</Todo>. 
 
 Consider the following language: !}%
-    
-%{! (options removed from twelftag: import="free-judgements") !}%
 
 tp : type.
 tp/unit  : tp.
@@ -65,10 +66,9 @@ notstuck/val  : notstuck E
 notstuck/step : notstuck E
                  <- step E E'.
 
-%{! To prove progress for this language, we use an [output factoring](/wiki/output-factoring/) lemma that collects the post-inductive-call reasoning in the application case: !}%
-    
-%{! (options removed from twelftag: export="free" import="free-judgements") !}%
+%{! To prove progress for this language, we use an [output factoring](/wiki/output-factoring/) lemma that collects the post-inductive-call reasoning in the application case:
 
+```twelf
 progress-exp/app : notstuck E1
                     -> notstuck E2
                     -> of E1 (tp/arrow _ _)
@@ -87,13 +87,13 @@ progress-exp/app : notstuck E1
 
 %worlds () (progress-exp/app _ _ _ _).
 %total {} (progress-exp/app _ _ _ _).
+```
 
-%{! In the final case, we use inversion to assert that ``E1`` is a value in the form of a lambda. Because we also pass in a typing derivation that says E1 is of an arrow type, Twelf's input coverage verifies that the only time ``E1`` is a value and has an arrow type is when it is a lambda. Because the type system is simple enough that Twelf can figure out that the only values of arrow type are lambdas, we get canonical forms "for free".
+In the final case, we use inversion to assert that ``E1`` is a value in the form of a lambda. Because we also pass in a typing derivation that says E1 is of an arrow type, Twelf's input coverage verifies that the only time ``E1`` is a value and has an arrow type is when it is a lambda. Because the type system is simple enough that Twelf can figure out that the only values of arrow type are lambdas, we get canonical forms "for free".
 
-It is then simple to complete the proof of progress: !}%
+It is then simple to complete the proof of progress: 
     
-%{! (options removed from twelftag: import="free" check=true) !}%
-
+```twelf
 progress : of E T
             -> notstuck E
             -> type.
@@ -110,15 +110,14 @@ progress : of E T
 
 %worlds () (progress _ _).
 %total (D1) (progress D1 _).
+```
 
-%{! ## Canonical forms lemmas stated using equality
+## Canonical forms lemmas stated using equality
 
 Some languages do not have the luxury of having exactly one rule through which a canonical form could be derived. This is common for languages with re-typing rules that make use of subtyping/type equality. In such languages, canonical forms lemmas must be explicitly stated and proven. The conclusion of the lemma "e is of the form ..." can be stated in a straightforward way using [shallow equality](/wiki/equality/). This example makes use of [output factoring](/wiki/output-factoring/) and [reasoning from equality](/wiki/equality/).
 
 For example, we extend the above language with a trivial notion of subtyping. It is equivalent to syntactic equality on types. The purpose of this tutorial is to illustrate how to state/prove canonical forms lemmas when subtyping/equality are part of the type system, and this trivial notion is enough to motivate the discussion. !}%
     
-%{! (options removed from twelftag: import="free-judgements" export="equality-judgements") !}%
-
 tp-sub  : tp -> tp -> type.
 
 tp-sub/unit  : tp-sub tp/unit tp/unit.
@@ -133,8 +132,6 @@ of/sub  : of E1 T2
 
 %{! Now, we state and prove the canonical forms lemma explicitly.  In the theorem statement, we use the syntactic equality judgement as an output in order to state "E1 is of the form (exp/lam T E)". !}%
     
-%{! (options removed from twelftag: import="equality-judgements" export="equality") !}%
-
 seq-exp : exp -> exp -> type.
 seq-exp/i : seq-exp E E. 
 
@@ -154,7 +151,6 @@ cfl-tp/arrow    : val E1
 
 %{! Next, we define a helper lemma for showing that (exp/app E1 E2) is notstuck when E1 is of the form (exp/lam T E) and E2 is a value.  We use this lemma because we get the derivation of (seq-exp E1 (exp/lam T E)) as the output of the canonical forms lemma. If we were to try to invert the derivation as an output, we would cause Twelf's coverage checker to fail. So instead, we call a helper lemma with the equality derivation as an input. Because the derivation is an input, we can safely apply inversion on it. !}%
     
-%{! (options removed from twelftag: import="equality") !}%
 
 progress-exp/app-beta : seq-exp E1 (exp/lam T E)
                          -> val E2
@@ -169,8 +165,6 @@ progress-exp/app-beta : seq-exp E1 (exp/lam T E)
 
 %{! Next, we prove the output factoring lemma: !}%
     
-%{! (options removed from twelftag: import="equality") !}%
-
 progress-exp/app : notstuck E1
                     -> notstuck E2
                     -> of E1 (tp/arrow _ _)
@@ -186,8 +180,6 @@ progress-exp/app : notstuck E1
 
 %{! Because there is more than one way to derive that a value that has an arrow type, we must use the canonical forms lemma we have just proven. To make use of the equality we get out of the canonical forms lemma, we call the special helper lemma progress-exp/app-beta. !}%
     
-%{! (options removed from twelftag: import="equality" check=true) !}%
-
 - : progress-exp/app (notstuck/val V) (notstuck/val V2) D1
      NS
      <- cfl-tp/arrow V D1 DQ
@@ -198,8 +190,6 @@ progress-exp/app : notstuck E1
 
 %{! Finally, we prove the overall progress theorem as before. !}%
     
-%{! (options removed from twelftag: import="equality" check=true) !}%
-
 progress : of E T
             -> notstuck E
             -> type.
@@ -224,9 +214,6 @@ progress : of E T
 
 Note: There is actually a very subtle way to prove ``progress-exp/app`` using canonical forms lemmas "for free". However, explicitly stating and proving the canonical forms lemma is the more robust strategy in general.
 
-\{\{tutorial\}\} !}%
-
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
