@@ -1,7 +1,8 @@
 %%! title: "Computation and Deduction 2009/20090415"
 
-%{! Code from class, April 15. !}%
+%{! Code from class, April 15.
 
+```twelf
 nat : type. %name nat N.
 
 0 : nat.
@@ -149,7 +150,7 @@ esubst : ({x} append (cons G1 x A) G2 (G x))
      ([x] ofe/closed (DofM x : of (M x) B))
      (ofe/closed (DofM N)).
 
-%{! 
+%{
 - : esubst
      (Dappend : (\{x\} append (cons G1 x A) G2 (G x)))
      (Dappend' : append G1 G2 G')
@@ -162,13 +163,13 @@ esubst : ({x} append (cons G1 x A) G2 (G x))
 	   (append/cons Dappend')
 	   (ordered/cons (_ : bounded (G x) y))
 	   _ _ _).
-!}%
+}%
 	
 
 %worlds (bind) (esubst _ _ _ _ _ _).
 %total D (esubst _ _ _ _ D _).
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

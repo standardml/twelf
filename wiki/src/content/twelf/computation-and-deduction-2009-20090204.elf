@@ -1,7 +1,8 @@
 %%! title: "Computation and Deduction 2009/20090204"
 
-%{! Code from class, February 4 !}%
+%{! Code from class, February 4 
 
+```twelf
 tp : type.  %name tp T.
 
 num : tp.
@@ -139,8 +140,8 @@ progress : of E T -> unstuck E -> type.
 
 %worlds () (progress _ _).
 %total D (progress D _).
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

@@ -4,8 +4,7 @@
 
 Support code for March 4 guest lecture on worlds-checking and combinators.
 
-!}%
-
+```twelf
 % combinator equality
 
 ceq : comb -> comb -> type.
@@ -35,8 +34,8 @@ ceq/trans : ceq A A'
              <- ceq B A'.
 
 %worlds (comb-block) (ceq _ _).
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

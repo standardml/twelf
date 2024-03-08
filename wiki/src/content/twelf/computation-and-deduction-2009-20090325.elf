@@ -1,7 +1,8 @@
 %%! title: "Computation and Deduction 2009/20090325"
 
-%{! Code from class, March 25. !}%
+%{! Code from class, March 25. 
 
+```twelf
 tp : type.
 
 tensor : tp -> tp -> tp.
@@ -122,8 +123,8 @@ linear/abort2 : linear ([x] abort M).
 
 of/abort : of (abort M) C
 	<- of M 0.
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

@@ -1,7 +1,8 @@
 %%! title: "Computation and Deduction 2009/20090318"
 
-%{! Code from class, March 18. !}%
+%{! Code from class, March 18. 
 
+```twelf
 ttp : type. %name ttp T.
 
 tnum : ttp.
@@ -264,8 +265,8 @@ correct' : trans E T V -> ttrans T T' -> tof V (tnot (tnot T')) -> type.
 
 %worlds (transbind) (correct _ _ _) (correct' _ _ _).
 %total (D D') (correct D _ _) (correct' D' _ _).
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

@@ -1,7 +1,8 @@
 %%! title: "Computation and Deduction 2009/20090427"
 
-%{! Code from class, April 27. !}%
+%{! Code from class, April 27.
 
+```twelf
 false : type.
 
 nat : type. %name nat N.
@@ -500,8 +501,8 @@ subst : ({x} of x T1 -> of (E1 x) T2)
 
 %worlds (bind) (subst _ _ _).
 %total {} (subst _ _ _).
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

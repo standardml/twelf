@@ -1,7 +1,8 @@
 %%! title: "Computation and Deduction 2009/20090401"
 
-%{! Code from class, April 1. !}%
+%{! Code from class, April 1. 
 
+```twelf
 tp : type.  %name tp A.
 
 tensor : tp -> tp -> tp.
@@ -243,8 +244,8 @@ sr : of M A -> reduce M M' -> of M' A -> type.
 
 %worlds (bind) (sr _ _ _).
 %total D1 (sr _ D1 _).
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
