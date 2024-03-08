@@ -1,7 +1,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLinksValidator from "starlight-links-validator";
-import wikiRedirects from "./wiki-redirects.json"
+import wikiRedirects from "./wiki-redirects.json";
 
 const KATEX_JS = {
   type: "module",
@@ -25,6 +25,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "The Twelf Project",
+      logo: { src: "./src/assets/mediumelf.png" },
       plugins: [starlightLinksValidator()],
       description: "Home of the Twelf programming language",
       social: {
