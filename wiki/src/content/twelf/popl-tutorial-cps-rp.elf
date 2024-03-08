@@ -137,6 +137,7 @@ cpse+/i	: cpse+ E D1 E''
 %total (E V E') (cps E _ _) (cpse V _ _) (cpse+ E' _ _).
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/cps-rp).

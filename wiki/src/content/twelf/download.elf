@@ -65,6 +65,7 @@ These commands will download all of the Twelf source code into a directory calle
 Links to older software versions are available from the [revision history](/wiki/release-history/) page, but use of any version earlier than 1.7.0, especially when working with metatheorems, is highly discouraged. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Download).

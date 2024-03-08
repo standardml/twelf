@@ -71,6 +71,7 @@ Given the ``%theorem`` declaration, we can ask Twelf to try to establish the met
 * \{\{guide|title=Theorem Prover|chapter=10|section=57\}\} !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Theorem_prover).

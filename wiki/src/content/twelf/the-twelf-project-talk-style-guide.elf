@@ -39,6 +39,7 @@ What I put under "Word usage" seems to fit with my understanding, the terminolog
 It might be helpful, for instance, to say that the theorem prover produces output (a logic program) that witnesses the ∀∃-statement's totality, and a totality assertion checker could verfiy the totality of the logic program produced. I don't feel like this terminology is incompatible with the idea that Twelf's totality assertion checker is doing theorem proving. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 03:19, 29 December 2006 (EST) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project_talk:Style_guide).

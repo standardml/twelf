@@ -139,6 +139,7 @@ cut/rinv/topR : cut/rinv A TM RI ([x] topR) topR.
 %{!  !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/ConstructiveSemantics).

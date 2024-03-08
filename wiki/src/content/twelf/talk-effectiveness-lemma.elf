@@ -17,6 +17,7 @@ An effectiveness lemma says that some relation is in fact an algorithm (hence "e
 :: I agree: effectiveness lemmas are just a workaround for limitations of Twelf.  When you do a %total for, say, plus, Twelf proves "for all N1, N2, there exists an N3 and D:plus N1 N2 N3".   When you do a %total for plus-effective, Twelf proves "for all N1, N2, there exist N3 and D:plus N1 N2 N3 and D':plus-effective N1 N2 N3 D D'".   The only reason to do this is to work around the fact that Twelf won't let you name the output of a subgoal.  [User:Drl](/wiki/user-drl/) 12:09, 1 March 2007 (EST) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Effectiveness_lemma).

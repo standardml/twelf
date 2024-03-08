@@ -17,6 +17,7 @@ We strongly recommend that you work on some of the following exercises: you'll g
 * [POPL Tutorial/Typed bracket abstraction](/wiki/popl-tutorial-typed-bracket-abstraction/) -- Explore the relation between the simply-typed lambda calculus and combinatory logic using Curry's classic bracket abstraction algorithm.  ([POPL Tutorial/Typed bracket abstraction (solution)](/wiki/popl-tutorial-typed-bracket-abstraction-solution/)) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Next).

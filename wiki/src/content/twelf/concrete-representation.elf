@@ -827,6 +827,7 @@ Bruijn index to a HOAS representation. |check=decl !}%
      (lam^ (lam^ (bvar^ (s z) (lt/s lt/z)))))) HOAS.
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Concrete_representation).

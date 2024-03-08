@@ -110,6 +110,7 @@ The next section of this introduction describes one new piece of Twelf machinery
   | nextname = Proving totality assertions in non-empty contexts\}\} !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_metatheorems_about_the_STLC).

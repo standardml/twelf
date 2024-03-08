@@ -321,6 +321,7 @@ cag_copy : cag (big/ M) A D ([h] copy (E h) ACC h) F
        (ca M A D E _).
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Tethered_modal_logic).

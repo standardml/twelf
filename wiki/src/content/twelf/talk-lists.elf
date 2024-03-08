@@ -29,6 +29,7 @@ Twelf doesn't like \{\{\{list : type -&gt; type.\}\}\} very much.  Is there a si
 :: The short answer is no; Twelf is not polymorphic because making it so would complicate Twelf's ability to deal with [metatheorems](/wiki/metatheorem/). Depending on what it is you want to do, however, there are any number of techniques that can be used to do what you want to do (though some of them probably fall into the "nasty encoding tricks" category). — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 07:19, 10 August 2007 (EDT) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Lists).

@@ -50,6 +50,7 @@ deriv : of (app (lam unit ([x] x)) mt) unit =
 :: For now, I added a couple of blurbs about eta-expansion (and definitions, too) [Proving metatheorems:Full LF](/wiki/proving-metatheorems-full-lf/) and [Proving metatheorems:Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/).  Thanks for the suggestions!  I'd appreciate any other comments like this as you work though the article.  [User:Drl](/wiki/user-drl/) 14:13, 13 April 2007 (EDT) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems_talk:Representing_the_judgements_of_the_STLC).

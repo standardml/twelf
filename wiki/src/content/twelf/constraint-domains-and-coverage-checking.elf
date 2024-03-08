@@ -82,6 +82,7 @@ If we modify our worlds declaration to specify that there may be some ``word32``
 why constraint domains and metatheorem declarations like ``%covers`` and ``%total`` should never be used in the same signature. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Constraint_domains_and_coverage_checking).

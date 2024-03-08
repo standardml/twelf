@@ -659,6 +659,7 @@ lem10-2-2 : fill EC E0 E -> instr E0 E0' -> fill EC E0' E'
 The `` check="true"&gt;output`` for the above. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Properties_of_Typing_and_Reduction).

@@ -36,6 +36,7 @@ step/raise : step unit (abort/2 A).
 %{! :: What's the difference between an implicit argument and an implicit parameter? Or you mean, it always prints out the implicit Π bindings, but never the implicit occurrences? Anyway, yes, I think this is a good example. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 18:47, 28 October 2007 (EDT) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Implicit_and_explicit_parameters).

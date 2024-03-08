@@ -506,6 +506,7 @@ simulate' : translate M N -> translate M' N' -> teq M M' -> ceq N N' -> type.
 %total D (simulate' _ _ D _).
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Typed_bracket_abstraction_with_equivalence).

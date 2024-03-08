@@ -969,6 +969,7 @@ ex_30 : pf (A < zero) -> pf (B >= zero) -> pf (C * A >= A * (D + zero)) ->
 pf (B * C * one <= B * D) = [p1][p2][p3] imp_e (ex_29 A B C D refl p1 refl p2) p3.
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Big_algebraic_solver).

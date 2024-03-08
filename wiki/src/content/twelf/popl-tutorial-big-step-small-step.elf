@@ -495,6 +495,7 @@ multi-eval : step* E V -> value V -> eval E V -> type.
 %total {} (multi-eval _ _ _).
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Big_step,_small_step).

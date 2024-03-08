@@ -37,6 +37,7 @@ Because this technique reuses the mechanism of the meta-language to encode a con
 * [Equality](/wiki/equality/): when an object language is represented using HOAS, equality of LF terms corresponds with [alpha-equivalence](/wiki/alpha-equivalence/) of object language terms. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Higher-order_abstract_syntax).

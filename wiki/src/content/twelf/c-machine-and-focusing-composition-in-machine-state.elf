@@ -162,6 +162,7 @@ step/cut+    : step (st- (cut+ V K) Ks)
 %total D (step D _).
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/C_machine_and_focusing_(composition_in_machine_state)).

@@ -89,6 +89,7 @@ times/_ : apply times M N P <- mult M N P.
 %{! ``&gt;All code from this tutorial``. `` check="true"&gt;Twelf's output from this tutorial``. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Iterated_inductive_definitions_and_defunctionalization).

@@ -192,6 +192,7 @@ By the induction hypothesis, ``n' &lt; p'``. By rule ``lt/s``, we have ``s(n') &
 %{! **_QUESTION 4:**_ State and prove the above theorem in Twelf. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Homework_7:_Proofs_In_Twelf).

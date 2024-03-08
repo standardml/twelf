@@ -111,6 +111,7 @@ Twelf also maintains a list of equational _constraints_ that arise during unific
 Note, again, that this method is very similar to the method Prolog uses to solve a query.  The main difference is that each clause that gets used in a search results in its constructor becoming part of the partial term that is being constructed, so that when the search succeeds, we not only have an instantiation of the free variables in the query but also a term of the given type. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Signatures_as_logic_programs).

@@ -380,6 +380,7 @@ have to do the same case in reverse; we omit the graphic.
 %total D1 (diamond D1 D2 _ _).
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Church-Rosser_(w/_catch-all_case)).

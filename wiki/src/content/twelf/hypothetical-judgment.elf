@@ -31,6 +31,7 @@ taut : true (P ==> P)= imp/intro ([ptrue : true P] ptrue).
 %{! Within the scope of the function argument to ``imp/intro``, we assume that we have a proof of ``P true`` (which we creatively named ``ptrue``). This assumption lets us show that ``P true`` holds, and that lets us show that ``(P ==&gt; P) true``. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Hypothetical_judgment).

@@ -58,6 +58,7 @@ Thoughts on what's best?  I think I'm in favor of the current organization, wher
 ::: I think you're right---let's move the whole illustrative examples section (including data structures) to the case studies.  I do think we should then make a beginner/advanced distinction on the case studies page, since some of them are more accessible and more heavily commented than others.  This will simplify the organization considerably (tutorial for **how**, case study for **this**).  Just because of the length, I'm thinking we should maintain separate pages, rather than moving the case studies here. [User:Drl](/wiki/user-drl/) 17:40, 16 March 2007 (EDT) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Tutorials).

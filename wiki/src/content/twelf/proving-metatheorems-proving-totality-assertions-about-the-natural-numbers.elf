@@ -224,6 +224,7 @@ In this section, we have seen how to ask Twelf to verify totality assertions for
   | prevname = Full LF\}\} !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_totality_assertions_about_the_natural_numbers).

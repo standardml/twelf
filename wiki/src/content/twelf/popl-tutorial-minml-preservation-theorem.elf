@@ -102,6 +102,7 @@ pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
 %total Dstep (pres Dstep _ _).
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/MinML_Preservation_Theorem).

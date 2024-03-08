@@ -296,6 +296,7 @@ append-rev : rev L1 L2 L3 -> rev LA LB LC -> append LC L3 LT -> rev L2 L1 L3' ->
 \{\{case study\}\} !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Lists).

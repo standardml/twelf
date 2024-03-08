@@ -35,6 +35,7 @@ This simplifies the proof of "sound" too.
 :: Actually, there's one downside to this reformulation: in the original version, Twelf can prove =&gt; total automatically, but in the new version, it gets tripped up by the inversion that if (lam M) =&gt; N then N is (lam N1).  I changed the definition back because I want to let Twelf prove this totality for me in [Church-Rosser via Complete Development](/wiki/church-rosser-via-complete-development/), and I want the code here to stay synchronized with that.  [User:Drl](/wiki/user-drl/) 10:34, 4 March 2008 (EST) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Reformulating_languages_to_use_hypothetical_judgements).

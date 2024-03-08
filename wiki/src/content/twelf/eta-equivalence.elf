@@ -19,6 +19,7 @@ In logics and typed calculi, eta-equivalence is usually oriented to the left yie
 Eta-expansion transforms an arbitrary proof of a proposition into a proof that introduces the proposition's principal connective.  A term with no sub-terms that can be eta-expanded without introducing [beta-equivalence](/wiki/beta-equivalence/) is said to be _eta-long_.  Being eta-long is one aspect of being [canonical forms](/wiki/canonical-form/). !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Eta-equivalence).

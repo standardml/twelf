@@ -204,6 +204,7 @@ Finally, a word about **functions**.  Although we've encoded ``next_day`` and ``
 Here is a link to a ``&gt;file containing the Twelf declarations`` given so far, where, in the case of ``cons`` and ``dat_def``, we have chosen the versions that omitted the quantifiers.  Let's look at `` check="true"&gt;Twelf's output`` for these declarations.  As Twelf checks each declaration for type-correctness, it echoes the declaration in its output, including any reconstructed quantifiers, as you can see in the declarations of ``cons`` and ``dat_def``.  Notice that a couple of identifiers (``nil`` and ``cons``) were declared more than once; in this case, Twelf remembers only the last declaration for each identifier, silently replacing any previous declarations. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/First-order_encodings).

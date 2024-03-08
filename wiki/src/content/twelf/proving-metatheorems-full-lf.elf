@@ -155,6 +155,7 @@ d2+1e' = plus-s _ _ _ (plus-s _ _ _ (plus-z (s z))).
   | nextname = Proving totality assertions\}\} !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Full_LF).

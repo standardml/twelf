@@ -8,6 +8,7 @@ I just realized after writing the examples, that to make canonical forms seem re
 I just also realized there is a way to do progress for the second type system and still get CFLs for free. GAH. Not sure whether I should do a third example to show it off, or just pretend it doesn't exist to make the second example still seem relevant. --[User:DanielKLee](/wiki/user-danielklee/) 19:05, 30 September 2006 (EDT) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Canonical_forms_lemma).

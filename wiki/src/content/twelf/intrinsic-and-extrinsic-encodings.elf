@@ -112,6 +112,7 @@ bind : {M : map} {K : key} value -> key-not-in-map K M -> map.
 For an example of an intrinsic encoding, see [CPS conversion](/wiki/cps-conversion/), where the distinction between values and expressions is encoded intrinsically, and where all terms are manifestly well-typed. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Intrinsic_and_extrinsic_encodings).

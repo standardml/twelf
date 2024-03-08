@@ -190,6 +190,7 @@ preservation : of E T -> step E E' -> of E' T -> type.
 %{! Thus ends today's lesson. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Lecture_23:_Typed_Lambda_Calculus_in_Twelf).

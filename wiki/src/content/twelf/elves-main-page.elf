@@ -28,6 +28,7 @@ We talked about in the meeting some of the bits we'd need for having there be so
 * **Orderd Linear Logic/Type system** - Unanswered question from The Twelf Wiki: _How do I represent an ordered linear logic or type system in Twelf?_ [http://fp.logosphere.cs.cmu.edu/twelf/?n=Main.Questions] !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Elves:Main_Page).

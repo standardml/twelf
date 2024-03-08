@@ -10,6 +10,7 @@ I'm not sure if the motivation for using %trustme to maintain a bottom-up develo
 :: Yeah, I think that's where the confusion is. I think of the main result being at the "top", and being built up from the smaller ones "below" it, like a tree. --[User:DanielKLee](/wiki/user-danielklee/) 10:30, 23 September 2006 (MST) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Incremental_metatheorem_development).

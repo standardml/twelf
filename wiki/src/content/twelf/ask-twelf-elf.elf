@@ -18,6 +18,7 @@ Some responses to questions turn into other forms of [documentation](/wiki/docum
 * [Concrete representations](/wiki/concrete-representation/) - [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) is a convenient way to approach languages with binding, but it is possible to imagine a problem where manipulating a fully concrete object without binding is simpler. In these cases, it is possible to establish a bijection between your HOAS terms and de Bruijn versions of the same terms. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Ask_Twelf_Elf).

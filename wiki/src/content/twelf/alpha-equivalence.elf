@@ -15,6 +15,7 @@ Alpha-equivalence generalizes in a straightforward manner to any term language w
 Twelf's notion of term equality respects alpha-equivalence; when an object-language is represented using [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/), the representation enjoys alpha-equivalence for free. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Alpha-equivalence).

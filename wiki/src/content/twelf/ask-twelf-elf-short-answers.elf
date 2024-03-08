@@ -46,6 +46,7 @@ However, there are ways of using Twelf that don't use the metatheorem features a
 I don't have much experience using Twelf in this style; others (e.g., [User:Rsimmons](/wiki/user-rsimmons/)) can say more.  Someone should write an article about why you might want to reason within your own logic encoded in LF instead of using the metatheorem features.  However, I recommend that beginners start by learning how to use Twelf's metatheorem features, since they provide a very useful logic for reasoning about programming languages and logics. [User:Drl](/wiki/user-drl/) 15:28, 8 April 2007 (EDT) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Ask_Twelf_Elf:Short_answers).

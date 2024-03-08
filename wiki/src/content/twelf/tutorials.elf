@@ -52,6 +52,7 @@ For larger examples of Twelf in action, see see the [case studies](/wiki/case-st
 * [Constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/) - in general, you can't use them in the same [signature](/wiki/twelf-signature/). !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Tutorials).

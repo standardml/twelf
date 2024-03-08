@@ -1556,6 +1556,7 @@ use inversion lemmas (and lax cut, in the second case) to get what we need.
  (trans-circL D6 T6 _ _ _ _ _).
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Lax_logic).

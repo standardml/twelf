@@ -171,6 +171,7 @@ To those abbrev-sceptics, it makes a difference because identifiers (like "eq") 
 :::: Regarding the need the reload a whole buffer to export an additional thing; in my current code where I use this convention, I use a perl script to export *everything*.  Regarding ` vs. / vs -: I also use '-' as a word separator in theorems.  I don't want / since I want something that can clearly be substituted with ``.`` (the character shouldn't be overloaded) when real modules arrive.  (It seems modules have been heralded since 2001.  What's their status?).  [User:Boyland](/wiki/user-boyland/) 20:50, 12 March 2007 (EDT) !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Twelf_style_guide).

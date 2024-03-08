@@ -7,6 +7,7 @@
 _Add product types (&lt;math&gt;\tau_1 \times \tau_2&lt;/math&gt;) to the STLC and extend the proof of preservation to cover this new type._ !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:STLC:_Answers_to_exercises).

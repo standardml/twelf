@@ -215,6 +215,7 @@ variables ``x:tm`` in the LF context.  A total relation must cover both the LF c
   | prevname = Proving metatheorems\}\} !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_totality_assertions_in_non-empty_contexts).

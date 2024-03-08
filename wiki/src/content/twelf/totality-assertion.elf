@@ -43,6 +43,7 @@ The page on [%worlds](/wiki/percent-worlds/) presents an example totality assert
 * This page's description of totality assertions was extracted from \{\{proving|title=Proving totality assertions about the natural numbers\}\}.  Read that introduction to learn how to prove totality assertions using Twelf, and how to use totality assertions to mechanize proofs of more general [metatheorem](/wiki/metatheorem/)s. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Totality_assertion).

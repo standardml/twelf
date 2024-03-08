@@ -9,6 +9,7 @@ If all Twelf had were the features we've introduced so far, it would still be a 
 The totality check subsumes termination, but it has a couple of additional elements: **input coverage** and **output coverage**.  Input coverage involves checking whether there are enough clauses for the constructor to match any possible combination of inputs; we then say that all possible inputs are _covered_.  Output coverage involves checking that certain assumptions made about the form of outputs from "subroutine" calls are justified.  Let's now take a look at these checks in more detail and see some examples. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Signature_checking).

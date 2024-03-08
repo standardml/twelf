@@ -82,6 +82,7 @@ Describing the rules that define this judgment is beyond the scope of this artic
 This means that, for any three natural numbers &lt;math&gt;\texttt\{\}N_1&lt;/math&gt;, &lt;math&gt;\texttt\{\}N_2&lt;/math&gt;, and &lt;math&gt;\texttt\{\}N_3&lt;/math&gt;, and any proof object with the type &lt;math&gt;\texttt\{plus\}(N_1,N_2,N_3)&lt;/math&gt;, there is a proof object with type &lt;math&gt;\texttt\{plus\}(N_2,N_1,N_3)&lt;/math&gt;. This is equivalent to the ∀∃-statement for the commutativity of addition that we started out with; the only difference is that we are now speaking in terms of proof objects and types instead of derivations and judgments. !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Metatheorem).

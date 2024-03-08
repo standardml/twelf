@@ -35,6 +35,7 @@ TwelfTag has the ability to link, inside a page, to the code that has been shown
 For some pages, including this one, the page itself is written in valid Twelf that is then automatically transformed into an article. Pages written in this way look exactly like other pages, but they have a note at the top of the article that reports on Twelf's status after reading the file - <tt>%% OK %%</tt> means everything checked out, and <tt>%% ABORT %%</tt> means that there was a problem - and links to both the code and Twelf's response. More information on writing articles with this feature can be found at the page on [[Project:Literate Twelf|Literate Twelf]].
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/TwelfTag).

@@ -8,6 +8,7 @@
 &lt;noinclude&gt;This template should only be used by the [[Project:Literate Twelf|Literate Twelf]] extension as a header for pages created by the Literate Twelf pre-processor&lt;/noinclude&gt; !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Literatetwelf).

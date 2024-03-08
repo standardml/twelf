@@ -122,6 +122,7 @@ If you use multiple frames with Emacs, ``twelf-mode`` annoyingly pops up the Twe
 * \{\{guide|chapter=13|section=74|title=Emacs Interface\}\} !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Twelf_with_Emacs).

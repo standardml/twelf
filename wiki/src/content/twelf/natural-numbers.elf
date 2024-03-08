@@ -6,8 +6,7 @@
 
 Natural numbers in Twelf are usually defined in a similar way. Mathematically, natural numbers can be defined as zero or the successor of some other natural number:
 
-&lt;math&gt;\texttt\{\}n ::= 0 \,|\, \texttt\{s\}(n)&lt;/math&gt;
-
+<Latex formula={`\\mathtt{n} ::= 0 \\mid \\mathtt{s}(n)`}/>
 This representation translates easily into Twelf: !}%
     
 nat: type.
@@ -60,6 +59,7 @@ This can be represented in Twelf by applying the type constructor ``p-s`` to the
 * [http://en.wikipedia.org/wiki/Natural_numbers Natural numbers at Wikipedia] !}%
 
 %{!
+-----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Natural_numbers).
