@@ -198,7 +198,6 @@ EvenN3)
 %worlds () (sum-odds _ _ _ _).
 %total D (sum-odds D _ _ _).
 
-%{!  !}%
 
 %{!
 -----

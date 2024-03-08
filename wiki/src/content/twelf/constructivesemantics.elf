@@ -136,7 +136,6 @@ cut/rinv/topR : cut/rinv A TM RI ([x] topR) topR.
 (cut/rinv A N2 RI PFRI1 PFRI2)
 (cut/pc A' N3 RI' LF RI'').
 
-%{!  !}%
 
 %{!
 -----

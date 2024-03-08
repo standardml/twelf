@@ -1,3 +1,61 @@
+/*
+
+This file parses  ./src/content/twelf/*.elf files in the directory into the
+./src/content/docs/wiki/*.mdx files that are actually understood by the Astro
+Starlight extension. The goal is for this to be a fairly minimal state machine
+that someone could code up again in an hour or so to retarget the wiki's .elf
+files to a new markdown-ish target in the future.
+
+### High level structure of a Twelf wiki file
+
+Here's a simple Twelf wiki file:
+
+    %%! title: A simple Twelf wiki file
+
+    %{! Here's code that defines the natural numbers: either zero `z`
+    or `s N`, the successor of the natural number `z`. !}%
+    
+    nat : type.
+    
+
+    %%## Level two heading
+
+    %{! !}%
+
+
+A wiki Twelf file begins with a series of lines beginning with `%%!` that
+directly become the frontmatter of the output file.
+
+Then, the rest of the parser turns the file "inside out", making special
+comments --- beginning with %{! at the beginning of a line and ending with
+!}% at the end of a line --- into Markdown text, and turning everything else
+into Twelf.
+
+### Recognized behavior within Markdown sections
+
+Within Markdown sections, centered math is recognized as
+
+    ```math
+    \bigvee_i \mathcal{C}_i
+    ```
+
+It's possible to display syntax-highlighted Twelf code that doesn't appear
+in the regular flow of the document:
+
+    ```twelf
+    % Don't do this:
+    loop : type.
+    fix : loop <- loop.
+    %solve x : loop.
+    ```
+
+It's also possible to display checked Twelf code that 
+
+*/
+
+
+
+
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { argv, exit, stderr } from "process";
 
@@ -14,7 +72,11 @@ if (!existsSync(inputFile)) {
   exit(1);
 }
 
-/* == Parse out header == */
+/* Parse out header
+
+A 
+
+*/
 
 const header = [];
 let lineNum = 0;

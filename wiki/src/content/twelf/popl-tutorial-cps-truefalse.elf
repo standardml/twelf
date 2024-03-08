@@ -47,7 +47,6 @@ cpse/ret : cpse (ret (V:value A)) ([c:ccont A] cthrow c V')
 %worlds (cpsb) (cps _ _) (cpse _ _).
 %total (E V) (cps E _) (cpse V _).
 
-%{!  !}%
 
 %{!
 -----

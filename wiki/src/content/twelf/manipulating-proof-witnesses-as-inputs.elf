@@ -188,7 +188,6 @@ As a side note, look at Twelf's output when we solved ``%solve B : plus-comm A C
 
 test = plus/s deriv2.
 
-%{!  !}%
 
 %{!
 -----

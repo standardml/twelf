@@ -54,7 +54,6 @@ cpse/inj : cpse (inj (V:v A)) ([c:cv (cnot A)] throw V' c)
 %worlds (cpsb) (cps _ _) (cpse _ _).
 %total (E V) (cps E _) (cpse V _).
 
-%{!  !}%
 
 %{!
 -----

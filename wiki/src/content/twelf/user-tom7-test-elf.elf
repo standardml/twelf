@@ -19,7 +19,6 @@ yes : theorem.
 %worlds () (theorem).
 %total {} (theorem).
 
-%{!  !}%
 
 %{!
 -----

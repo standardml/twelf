@@ -254,7 +254,6 @@ isvalue-implies-typed : isvalue E -> typed E T -> type.
 %worlds () (isvalue-implies-typed _ _).
 %total T (isvalue-implies-typed T _).
 
-%{!  !}%
 
 %{!
 -----

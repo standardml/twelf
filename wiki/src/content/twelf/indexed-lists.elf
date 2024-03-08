@@ -95,7 +95,6 @@ rev_injective_rule : rev_injective (R : rev Ls (nil Tp) Ls') R' Q
 %freeze rev_injective.
 %total D (rev_injective D _ _).
 
-%{!  !}%
 
 %{!
 -----

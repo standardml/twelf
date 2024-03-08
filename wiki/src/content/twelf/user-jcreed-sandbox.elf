@@ -419,7 +419,6 @@ Abort1 : expOf A B int = shift [k] ! return (val+ n1 snil).
 %query 1 * run (Times (S S Z) (Shift [k] Plus (S Z) (EApp k (EApp k (EApp k (S Z)))))) N5.       % N5 = 9
 %query 1 * run (App (V (Fn [x] Plus (V x) (S Z))) (S Z)) N6.    % N6 = 2
 
-%{!  !}%
 
 %{!
 -----
