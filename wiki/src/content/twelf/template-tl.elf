@@ -2,7 +2,7 @@
 
 %{! &lt;nowiki&gt;\{\{&lt;/nowiki&gt;[[Template:\{\{\{1\}\}\}|\{\{\{1\}\}\}]]&lt;nowiki&gt;\}\}&lt;/nowiki&gt;&lt;noinclude&gt;
 
-This template can be used for linking to other templates in expository text. For instance, to link to [Template:vdash](/wiki/template-vdash/), write &lt;nowiki&gt;\{\{tl|vdash\}\}&lt;/nowiki&gt;, which renders as &lt;nowiki&gt;\{\{&lt;/nowiki&gt;[Template:vdash](/wiki/template-vdash/)&lt;nowiki&gt;\}\}&lt;/nowiki&gt;.
+This template can be used for linking to other templates in expository text. For instance, to link to [Template:vdash](/wiki/template-vdash/), write &lt;nowiki&gt;\{\{tl|vdash\}\}&lt;/nowiki&gt;, which renders as &lt;nowiki&gt;\{\{&lt;/nowiki&gt;[vdash](/wiki/template-vdash/)&lt;nowiki&gt;\}\}&lt;/nowiki&gt;.
 
 &lt;/noinclude&gt; !}%
 

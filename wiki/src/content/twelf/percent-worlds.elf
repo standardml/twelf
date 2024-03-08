@@ -23,11 +23,11 @@ msz : max (s N) z (s N).
 mss : max (s N1) (s N2) (s N)
       <- max N1 N2 N.
 
-%{! As discussed in the introduction article on [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), the type ``nat`` in this signature [adequacy](/wiki/adequacy/) represents the natural numbers only if the LF context does not contain variables of type ``nat``.
+%{! As discussed in the introduction article on [Representing the judgments of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), the type ``nat`` in this signature [adequately](/wiki/adequacy/) represents the natural numbers only if the LF context does not contain variables of type ``nat``.
 
 ### Totality of ``max`` in the empty context
 
-The judgement ``max`` defined in this signature is a [%total](/wiki/percent-total/) relation on natural numbers, or LF terms of type ``nat`` in the empty LF context.  We specify this totality assertion in Twelf with the following declarations: !}%
+The judgement ``max`` defined in this signature is a [total](/wiki/percent-total/) relation on natural numbers, or LF terms of type ``nat`` in the empty LF context.  We specify this totality assertion in Twelf with the following declarations: !}%
     
 %{! (options removed from twelftag: check=true export="maxtotal") !}%
 
@@ -88,7 +88,7 @@ height/app : height (app E1 E2) (s N)
               <- height E2 N2 
               <- max N1 N2 N.
 
-%{! If we try to declare ``height`` to be defined in the closed world, as we did for ``max``, Twelf will fail with a ``World violation`` [error messages](/wiki/error-messages/): !}%
+%{! If we try to declare ``height`` to be defined in the closed world, as we did for ``max``, Twelf will fail with a ``World violation`` [error message](/wiki/error-messages/): !}%
     
 %{! (options removed from twelftag: import="height" discard=true check=decl) !}%
 

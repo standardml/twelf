@@ -24,7 +24,7 @@ export default defineConfig({
   redirects: wikiRedirects,
   integrations: [
     starlight({
-      title: "The Twelf Project",
+      title: "Twelf",
       logo: { src: "./src/assets/mediumelf.png" },
       plugins: [starlightLinksValidator()],
       description: "Home of the Twelf programming language",

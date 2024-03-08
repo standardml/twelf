@@ -8,7 +8,7 @@
   |nonext=
 \}\}
 
-Arithmetic expressions with pairs and sums.  (This solution involves [output factoring](/wiki/output-factoring/), but no [Equality](/wiki/equality/).  Dan posted a [Summer_school_2008:Typed_arithmetic_expressions_with_sums](/wiki/summer-school-2008-typed-arithmetic-expressions-with-sums/), and Chris posted a [Summer_school_2008:Alternate_typed_arithmetic_expressions_with_sums](/wiki/summer-school-2008-alternate-typed-arithmetic-expressions-with-sums/).)
+Arithmetic expressions with pairs and sums.  (This solution involves [output factoring](/wiki/output-factoring/), but no [identity types](/wiki/equality/).  Dan posted a [solution involving identity types](/wiki/summer-school-2008-typed-arithmetic-expressions-with-sums/), and Chris posted a [solution that avoids output factoring](/wiki/summer-school-2008-alternate-typed-arithmetic-expressions-with-sums/).)
 
 Numbers and strings are unchanged.
 

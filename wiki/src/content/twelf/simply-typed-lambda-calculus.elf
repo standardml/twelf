@@ -89,16 +89,16 @@ step-app-2 : step (app E1 E2) (app E1 E2')
 step-app-beta : step (app (lam T2 ([x] E x)) E2) (E E2)
                  <- value E2.
 
-%{! You can ``&gt;see or download the full Twelf source``, which is almost exactly that of Figure 7 and Figure 13 of _Mechanizing Metatheory_ &lt;ref name="hl07mechanizing" /&gt;.  You can also `` check="true"&gt;see Twelf's output``, which is closer to the LF code in Figure 7 and Figure 10 of that paper, because it makes the [implicit parameter](/wiki/implicit-and-explicit-parameters/) explicit. Note that in Twelf's concrete syntax, curly brackets (``\{\}``) are used for pi-bindings instead of the &lt;math&gt;\Pi&lt;/math&gt; symbol.
+%{! You can ``&gt;see or download the full Twelf source``, which is almost exactly that of Figure 7 and Figure 13 of _Mechanizing Metatheory_ &lt;ref name="hl07mechanizing" /&gt;.  You can also `` check="true"&gt;see Twelf's output``, which is closer to the LF code in Figure 7 and Figure 10 of that paper, because it makes the [implicit parameters](/wiki/implicit-and-explicit-parameters/) explicit. Note that in Twelf's concrete syntax, curly brackets (``\{\}``) are used for pi-bindings instead of the &lt;math&gt;\Pi&lt;/math&gt; symbol.
 
 ## Metatheorems
 
 Several metatheorems about this formulation of the simply typed lambda-calculus are proved on this wiki.  See, for example:
-* [Proving metatheorems:Proving metatheorems about the STLC](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/) for a proof of type preservation
+* [Proving metatheorems about the STLC](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/) for a proof of type preservation
 * [Output factoring](/wiki/output-factoring/) for a proof of progress
 * [Uniqueness lemma](/wiki/uniqueness-lemma/)s for a proof of determinacy of the operational semantics
-* [Proving metatheorems:Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/) for a height judgement
-* [Proving metatheorems:Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) for a proof that the height of a term can only be increased by substitution.
+* [Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/) for a height judgement
+* [Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) for a proof that the height of a term can only be increased by substitution.
 
 ## References
 

@@ -1,7 +1,7 @@
 %%! title: "Output freeness"
 
 %{! \{\{undocumented\}\}
-When Twelf [%total](/wiki/percent-total/), it checks that the output of each premise of each constant can never fail to unify with an output that is actually produced.  This is called [output coverage](/wiki/coverage-checking/) checking.  One way in which a premise can fail output coverage checking is if its output is a metavariable that is constrained by appearing elsewhere in the constant.  
+When Twelf [proves that an LF type family defines a total relation](/wiki/percent-total/), it checks that the output of each premise of each constant can never fail to unify with an output that is actually produced.  This is called [output coverage](/wiki/coverage-checking/) checking.  One way in which a premise can fail output coverage checking is if its output is a metavariable that is constrained by appearing elsewhere in the constant.  
 
 **Output freeness checking** ensures that no outputs are constrained in such a manner.  More precisely, the output freeness check ensures that a metavariable in an output position does not occur in any previous input or output (where "previous" is the same order used in [%mode](/wiki/percent-mode/) checking—i.e., the search order of the [logic programming](/wiki/logic-programming/) operational semantics).  
 

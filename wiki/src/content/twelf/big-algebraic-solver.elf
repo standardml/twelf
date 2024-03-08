@@ -1,7 +1,7 @@
 %%! title: "Big algebraic solver"
 
 %{! 
-The big algebraic software is a [tactical theorem proving](/wiki/tactical-theorem-proving/) written as a Twelf [logic program](/wiki/logic-programming/) by [User:Rsimmons](/wiki/user-rsimmons/) at Princeton University as part of the Foundational Proof Carrying Code system. It is quite inefficient due to the fact that it doesn't try to order variables. The [http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Libraries.UsingTheRingSolver RingSolver] in the Agda standard library is an example of a more efficient solver.
+The big algebraic software is a [tactical theorem prover](/wiki/tactical-theorem-proving/) written as a Twelf [logic program](/wiki/logic-programming/) by [Rob](/wiki/user-rsimmons/) at Princeton University as part of the Foundational Proof Carrying Code system. It is quite inefficient due to the fact that it doesn't try to order variables. The [http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Libraries.UsingTheRingSolver RingSolver] in the Agda standard library is an example of a more efficient solver.
  !}%
 
 %%## Preexisting logic

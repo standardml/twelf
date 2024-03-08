@@ -11,14 +11,14 @@ The links on this page are grouped into two rough categories: larger projects (e
 * [http://www.cs.princeton.edu/sip/projects/pcc/ Proof Carrying Code] - scaling up the idea of Proof Carrying Code to real programming languages, using a logic encoded in Twelf's dependent type system.
 * [http://www.cs.cmu.edu/~self/ The SeLF Project] - encodings of security policies and proofs of security properties for the [http://www.ece.cmu.edu/~grey/ Grey project].
 * [http://www.cs.cmu.edu/~dklee/tslf/ Mechanizing the Metatheory of Standard ML] - a formalization of Standard ML and verification of its metatheory in Twelf. 
-* [http://tom7.org/proposal/ Modal Types for Mobile Code] - [User:Tom7](/wiki/user-tom7/)'s Ph.D. thesis project
+* [http://tom7.org/proposal/ Modal Types for Mobile Code] - [Tom](/wiki/user-tom7/)'s Ph.D. thesis project
 * [https://trac.omdoc.org/LATIN LATIN] - a project aimed at the creation of a large library of logics and logic translations supported by a web-scalable infrastructure
 
 #### Smaller projects
 
-* [http://www.cs.cmu.edu/~drl/pubs/lh05dmlproofs-tr/lh05dmlproofs-tr.pdf Dependent Types for ML] - A paper by [User:drl](/wiki/user-drl/) and [[User:rwh|Bob Harper]] about enriching an ML-like type system with a form of dependent types.  Much of the metatheory of the language is mechanized in Twelf.  
+* [http://www.cs.cmu.edu/~drl/pubs/lh05dmlproofs-tr/lh05dmlproofs-tr.pdf Dependent Types for ML] - A paper by [Dan Licata](/wiki/user-drl/) and [[User:rwh|Bob Harper]] about enriching an ML-like type system with a form of dependent types.  Much of the metatheory of the language is mechanized in Twelf.  
 * [http://www.cs.cornell.edu/people/fluet/twelf/index.html Substructural Languages] - Twelf code from some of Matthew Fluet's papers on substructural languages.
-* [http://www.cs.cmu.edu/~jdonham/aml-proof/ Self-Adjusting Computation] - [User:JakeD](/wiki/user-jaked/) formalization of a consistency proof of non-deterministic semantics.
+* [http://www.cs.cmu.edu/~jdonham/aml-proof/ Self-Adjusting Computation] - [Jake Donham's](/wiki/user-jaked/) formalization of a consistency proof of non-deterministic semantics.
 * [http://www.cs.cmu.edu/~joshuad/papers/intcomp/ Elaborating Intersection and Union Types] — [[User:Joshua|Joshua Dunfield]]'s proofs about an elaboration semantics.
 
 ## Related projects

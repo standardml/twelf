@@ -127,7 +127,7 @@ Twelf verifies that evaluation is total:
 %{! 
 ### Solving for derivations
 
-We can use logic programming to [%solve](/wiki/percent-solve/) for derivations.  
+We can use logic programming to [solve](/wiki/percent-solve/) for derivations.  
 
  !}%
 

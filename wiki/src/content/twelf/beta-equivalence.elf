@@ -16,7 +16,7 @@ Beta-equivalence is usually oriented to the right yielding a notion of _beta-red
 
 &lt;math&gt;(\lambda x\{:\}A.\, e_1)\ e_2 \Longrightarrow_\beta [e_2/x] e_1&lt;/math&gt;
 
-The term on the left-hand side of the &lt;math&gt;\texttt\{\}\beta&lt;/math&gt; axiom is called a _beta-redex_, and the term on the right-hand side is its _beta-reduct_.  A term with no beta-redexes is called _beta-normal_.  Being beta-normal is one aspect of being [canonical form](/wiki/canonical-form/). !}%
+The term on the left-hand side of the &lt;math&gt;\texttt\{\}\beta&lt;/math&gt; axiom is called a _beta-redex_, and the term on the right-hand side is its _beta-reduct_.  A term with no beta-redexes is called _beta-normal_.  Being beta-normal is one aspect of being [canonical](/wiki/canonical-form/). !}%
 
 %{!
 -----

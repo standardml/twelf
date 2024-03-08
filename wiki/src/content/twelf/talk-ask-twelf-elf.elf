@@ -2,8 +2,8 @@
 
 %{! ## Archives
 
-* [Talk:Ask Twelf Elf/Archive 1](/wiki/talk-ask-twelf-elf-archive-1/) (October 2006-March 2007)
-* [Talk:Ask Twelf Elf/Archive 2](/wiki/talk-ask-twelf-elf-archive-2/) (April 2007-October 2007)
+* [Archive 1](/wiki/talk-ask-twelf-elf-archive-1/) (October 2006-March 2007)
+* [Archive 2](/wiki/talk-ask-twelf-elf-archive-2/) (April 2007-October 2007)
 
 ## LF representation of complete development
 
@@ -52,7 +52,7 @@ Thanks,
 [[User:Rpollack|Rpollack]] 10:16, 28 February 2008 (EST) Randy
 
 
-: Hi Randy.  This is a great question.  I've started a tutorial answering it: [Working with higher-order judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/).  Feel free to discuss the tutorial on its [Talk:Working with higher-order judgements](/wiki/talk-reformulating-languages-to-use-hypothetical-judgements/) if it's at all unclear.  [User:Drl](/wiki/user-drl/) 15:07, 28 February 2008 (EST)
+: Hi Randy.  This is a great question.  I've started a tutorial answering it: [Working with higher-order judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/).  Feel free to discuss the tutorial on its [talk page](/wiki/talk-reformulating-languages-to-use-hypothetical-judgements/) if it's at all unclear.  [Drl](/wiki/user-drl/) 15:07, 28 February 2008 (EST)
 
 ## Question Regarding Explicit LF Specification Generation
 
@@ -113,7 +113,7 @@ Thanks,
  Andrei Popescu
 
 : See [Hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/) for an example of normalization of the simply-typed lambda calculus. The common way of stating theorems in Twelf does not extend to logical relations arguments defined by induction on a type; however, see [[http://www.twelf.org/slr/ Structural Logical Relations]] for a slightly different way to encode these in Twelf (as it currently exists).
-— [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 02:26, 12 October 2008 (EDT)
+— [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 02:26, 12 October 2008 (EDT)
 
 ## More exercises.
 
@@ -275,7 +275,7 @@ I'm working on an automated prover based on Felty's and Appel's ideas and
 unnecessary expansion causes the prover to terminate with unintelligible output,
 whenever it fails to prove something. (The prover outputs all unfinished goals.)
 
-:: Hey! Feel free to contact us by email, I can give you a bit of advice depending on what your precise goals are. I think in Twelf the way of doing this is probably [``%clause``](/wiki/percent-clause/), but it turns out to be a bit messy to do things that way. I discuss two styles of Appel & Felty style proving in the article on [tactical theorem proving](/wiki/tactical-theorem-proving/). — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 09:56, 2 February 2009 (EST)
+:: Hey! Feel free to contact us by email, I can give you a bit of advice depending on what your precise goals are. I think in Twelf the way of doing this is probably [``%clause``](/wiki/percent-clause/), but it turns out to be a bit messy to do things that way. I discuss two styles of Appel & Felty style proving in the article on [tactical theorem proving](/wiki/tactical-theorem-proving/). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 09:56, 2 February 2009 (EST)
 
 ## hypothetical judgments vs judgments with premises
 
@@ -326,11 +326,11 @@ But now I want to prove some theorems such as P |= Q and Q |= R implies Q |= R.
 But I don't know how to express this idea in Twelf.  This question must come up a lot.
 Can you point me to a tutorial on it?
 
-[User:Boyland](/wiki/user-boyland/) 16:29, 27 February 2009 (EST)
+[Boyland](/wiki/user-boyland/) 16:29, 27 February 2009 (EST)
 
-: I'm not sure I know a way to express this without using a heavy structural-logical-relations-style formulation - it's outside of the forall-exists fragment if you expand the definitions. However, it seems that whenever such a property would be _needed_ in a proof you could acquire it by calling the theorem you described twice - is that not the case? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 22:36, 1 March 2009 (EST)
+: I'm not sure I know a way to express this without using a heavy structural-logical-relations-style formulation - it's outside of the forall-exists fragment if you expand the definitions. However, it seems that whenever such a property would be _needed_ in a proof you could acquire it by calling the theorem you described twice - is that not the case? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 22:36, 1 March 2009 (EST)
 
-:: Yes, if I needed transitivity, it can easily be proved at that point. But I'm going to try to prove a host of theorems like A * B |= B * A  (which can be rephrased with |=) and P |= Q, A |= B implies P * A |= Q * B which cannot be easily rephrased.  Can you point me to the cleanest tutorial on logical relations? [User:Boyland](/wiki/user-boyland/) 13:57, 2 March 2009 (EST)
+:: Yes, if I needed transitivity, it can easily be proved at that point. But I'm going to try to prove a host of theorems like A * B |= B * A  (which can be rephrased with |=) and P |= Q, A |= B implies P * A |= Q * B which cannot be easily rephrased.  Can you point me to the cleanest tutorial on logical relations? [Boyland](/wiki/user-boyland/) 13:57, 2 March 2009 (EST)
 
 : An interesting side-note.  I tried phrasing |= in Twelf anyway using !}%
     
@@ -338,17 +338,17 @@ implies : term -> term -> type.
 
 implies/def : ({s} models s P -> models s Q) -> implies P Q.
 
-%{! This works great for proving transitivity, but is terrible at proving anything else, like A * B |= B * A. [User:Boyland](/wiki/user-boyland/) 13:57, 2 March 2009 (EST)
+%{! This works great for proving transitivity, but is terrible at proving anything else, like A * B |= B * A. [Boyland](/wiki/user-boyland/) 13:57, 2 March 2009 (EST)
 
-:: It seems like you want a computational function, not an LF function; I'm working on a framework that would provide you with that: [http://www.cs.cmu.edu/~rwh/papers/unibind/short.pdf A Universe of Binding and Computation].  Would "mixed datatypes" in the sense of the introduction of that paper be useful in your definition of "|="? [User:Drl](/wiki/user-drl/) 19:33, 3 March 2009 (EST)
+:: It seems like you want a computational function, not an LF function; I'm working on a framework that would provide you with that: [http://www.cs.cmu.edu/~rwh/papers/unibind/short.pdf A Universe of Binding and Computation].  Would "mixed datatypes" in the sense of the introduction of that paper be useful in your definition of "|="? [Drl](/wiki/user-drl/) 19:33, 3 March 2009 (EST)
 
-::: Yes, that is what I need, but it seems not to be part of Twelf! [User:Boyland](/wiki/user-boyland/) 22:25, 7 July 2009 (EDT)
+::: Yes, that is what I need, but it seems not to be part of Twelf! [Boyland](/wiki/user-boyland/) 22:25, 7 July 2009 (EDT)
 
 : A further update: I started working through the structural logical relations paper and got the impression I needed to design a simple sequent calculus with atomic rules specific to my application and then prove a cut elimination theorem (or cut admissibility theorem).  I did this (and learned a bit more about cut elimination).  But then when I went further, I think I bumped into a show stopper: the relation P |= Q includes universal quantification over heaps and thus with the normal Twelf  way, hypothetical heaps. The problem is that I have a lot of theorems about heaps (e.g., associativity of heap addition) and as far as I can understand, none of them will work if there might be a hypothetical heap in the context.
 
 : To be a little more concrete: suppose one has a nat type and a plus operation with an effectiveness lemma.  Suppose one further has a simple assertion language expressed in a sequent calculus with an atomic rule (form/plus N1 N2 N3) defined as true precisely when (plus N1 N2 N3) is true.  Now if I try to form the assertion:forall N exists N2:(form/plus N N N2) , then I cannot use my effectiveness lemma, right?  The "solution" is to put every single theorem one needs about nats into the context whenever one has a hypothetical nat.  Is this right?  If so, this approach seems useless.
 
-: I guess the problem is that Twelf doesn't "know" that this hypothetical value must be of one of the declared forms (z or s) if it is ever substituted.  I wonder why Twelf doesn't have this ability. Would it make the logic unsound? [User:Boyland](/wiki/user-boyland/) 22:25, 7 July 2009 (EDT)
+: I guess the problem is that Twelf doesn't "know" that this hypothetical value must be of one of the declared forms (z or s) if it is ever substituted.  I wonder why Twelf doesn't have this ability. Would it make the logic unsound? [Boyland](/wiki/user-boyland/) 22:25, 7 July 2009 (EDT)
 
 ::I tried this out in Twelf and got the expected worlds violation:(this code requires my nat.elf "library" signature) !}%
     
@@ -404,7 +404,7 @@ somel : ({n:nat} (hyp (F n) -> conc H)) -> hyp (form/exists F) -> conc H.
 
 %{! ::: It makes sense that this is rejected in Twelf, because the "function" (N2 n) has no ability to be expressed in LF.  But this does mean that the limitation of Twelf's metatheorems is a live issue: not put to rest by the "Structural Logical Relations" paper.
 
-: After some discussion with Karl Crary, it seems that the best solution is to define an empty relation, define some trustme "metatheorems" that express the desired properties and then prove all theorems in a context (worlds) with a variable of the empty relation.  This ensures that Twelf will not split on the empty relation. [User:Boyland](/wiki/user-boyland/) 15:26, 20 February 2010 (EST)
+: After some discussion with Karl Crary, it seems that the best solution is to define an empty relation, define some trustme "metatheorems" that express the desired properties and then prove all theorems in a context (worlds) with a variable of the empty relation.  This ensures that Twelf will not split on the empty relation. [Boyland](/wiki/user-boyland/) 15:26, 20 February 2010 (EST)
 
 ## Negative premises
 
@@ -445,7 +445,7 @@ hide-rule: {A:label} {P1:proc} {P2:proc} trans P1 A P2 -> A != B -> trans (P1 \ 
 
 %{! where A != B is meant to be inequality of labels. Is there a simple way of encoding such negative premise?
 
-:: Unfortunately, no: you'll have to define the != judgement inductively yourself, by giving a case for each pair of non-equal labels (and then you may need to prove that A != A is a contradiction).  But we're working on [http://www.cs.cmu.edu/~drl/pubs/lh09unibind/lh09unibind.pdf a framework where you could express this directly], so thanks for the example!  [User:Drl](/wiki/user-drl/) 14:28, 4 May 2009 (EDT)
+:: Unfortunately, no: you'll have to define the != judgement inductively yourself, by giving a case for each pair of non-equal labels (and then you may need to prove that A != A is a contradiction).  But we're working on [http://www.cs.cmu.edu/~drl/pubs/lh09unibind/lh09unibind.pdf a framework where you could express this directly], so thanks for the example!  [Drl](/wiki/user-drl/) 14:28, 4 May 2009 (EDT)
 
 ## Coverage checking
 
@@ -509,7 +509,7 @@ app/_ : body (app F V) C E'
 &lt;/code&gt;
 Any ideas? Thanks, [[User:Noam|Noam]] 07:43, 19 September 2009 (EDT)
 
-: Okay now I see that the problem is [Debugging_coverage_errors](/wiki/debugging-coverage-errors/). I don't quite understand what the suggested workaround is (is there an example somewhere?), but I figured out something, which may or may not amount to the same thing...
+: Okay now I see that the problem is [Inactive Splits](/wiki/debugging-coverage-errors/). I don't quite understand what the suggested workaround is (is there an example somewhere?), but I figured out something, which may or may not amount to the same thing...
 
 : Begin by defining a tp to internalize the LF application:
 &lt;code&gt;
@@ -538,7 +538,7 @@ When totality succeeds, I conclude that the theorem is done, but if I read the t
 
 BTW: I'm using latest CVS Twelf (1.5R3) which apparently has been frozen for a few years.  Is this a bug that has since been fixed?
 
-If it would be helpful, I can try to generate a small example which causes this behavior.[User:Boyland](/wiki/user-boyland/) 15:37, 20 February 2010 (EST)
+If it would be helpful, I can try to generate a small example which causes this behavior.[Boyland](/wiki/user-boyland/) 15:37, 20 February 2010 (EST)
 
 :Here is a relatively small example that indicates the problem: !}%
     
@@ -659,7 +659,7 @@ lookup/!= :
 %total (L) (lookup-count-independent L _ _ _ _).
 
 %{! :: This code checks fine with the online version of Twelf.  It must be a problem with Twelf-CVS.
-:: Update: The code still fails with the latest truck from SVN.  So it seems the online twelf checker has a different version than twelf-CVS/SVN.  older? [User:Boyland](/wiki/user-boyland/) 18:17, 22 February 2010 (EST)
+:: Update: The code still fails with the latest truck from SVN.  So it seems the online twelf checker has a different version than twelf-CVS/SVN.  older? [Boyland](/wiki/user-boyland/) 18:17, 22 February 2010 (EST)
 
 ## Termination and %mode
 
@@ -726,7 +726,7 @@ ev_app : eval (app E1 E2) V
          <- eval E2 V2 
          <- eval (F V2) V.
 
-%{! Good luck learning Twelf, let us know if we can help you in the future! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:04, 1 November 2010 (EDT)
+%{! Good luck learning Twelf, let us know if we can help you in the future! — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:04, 1 November 2010 (EDT)
 -------
 
 Also, you can use this to run programs even if you don't know the answer: !}%
@@ -765,7 +765,7 @@ double : exp =
 
 %query 1 1 eval (app double (app double (app double (s (s (s z)))))) V.
 
-%{! `` import=modequestion&gt;See the corrected Twelf code along with this query`` — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:14, 1 November 2010 (EDT)
+%{! `` import=modequestion&gt;See the corrected Twelf code along with this query`` — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:14, 1 November 2010 (EDT)
 
 -------
 
@@ -777,7 +777,7 @@ And yes, I do know how to run things without knowing the answer; of course it al
 
 -------
 
-I think this wiki has email turned off, actually. To understand the effect of %mode  you might find it helpful to read some general stuff about logic programming, which is where a lot of the intuition behind proving metatheorems comes from. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 12:11, 4 November 2010 (EDT)
+I think this wiki has email turned off, actually. To understand the effect of %mode  you might find it helpful to read some general stuff about logic programming, which is where a lot of the intuition behind proving metatheorems comes from. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 12:11, 4 November 2010 (EDT)
 
 ## POPL tutorial slides location?
 
@@ -792,7 +792,7 @@ It seems Twelf 1.7.1 is released, but the documentation still seems to be at 1.4
 
 (2) Any plans to update the 1.4 documentation?
 
-:: I don't know of any plans to do so (I think the wiki is now, for better or worse, the primary documentation). We should probably go through the wiki and turn some of the tags indicating "this is a SVN-only feature" to tags indicating "this is a Twelf 1.7 feature," though. There is a [revision history](/wiki/release-history/) on the wiki. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:33, 24 August 2011 (EDT)
+:: I don't know of any plans to do so (I think the wiki is now, for better or worse, the primary documentation). We should probably go through the wiki and turn some of the tags indicating "this is a SVN-only feature" to tags indicating "this is a Twelf 1.7 feature," though. There is a [revision history](/wiki/release-history/) on the wiki. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 21:33, 24 August 2011 (EDT)
 
 ## Problem to find an induction metric
 
@@ -843,7 +843,7 @@ eq_set_z : eq_set eq_z Set Set.
 eq_set : eq N N' -> set L (value N') V L' -> set L (value N) V L' -> eq-list L L' -> type.
         %mode eq_set +Eq +Set' +Set -Eq'.
 
-%{! :: Does that help at all? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:55, 18 June 2012 (EDT)
+%{! :: Does that help at all? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:55, 18 June 2012 (EDT)
 
 ## trouble with twelf server
 
@@ -860,7 +860,7 @@ Looking forward to hear from you,
 J. Dominguez
 
 
-:: Sorry for not noticing this before; the MLton-compiled binary depends on the GMP BigNum library, which you should be able to get with apt-get on ubuntu. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:52, 18 June 2012 (EDT)
+:: Sorry for not noticing this before; the MLton-compiled binary depends on the GMP BigNum library, which you should be able to get with apt-get on ubuntu. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:52, 18 June 2012 (EDT)
 
 ## How to prove totality in this case?
 
@@ -930,7 +930,7 @@ Thanks! Andrej Bauer (please notify me by email about the answer at Andrej.Bauer
 &lt;pre&gt;
 %worlds () (expr) (comp).
 &lt;/pre&gt;
-: [User:Boyland](/wiki/user-boyland/) 15:28, 5 June 2013 (EDT)
+: [Boyland](/wiki/user-boyland/) 15:28, 5 June 2013 (EDT)
 
 ## %reduces not as smart as what is done in %total, it seems
 
@@ -965,11 +965,11 @@ Reduction violation:
 Pi (T) &lt;= (F x) ---&gt; (T) &lt;= (lam ([x:t] F x))
 
 Is there a workaround to this problem?
-[User:Boyland](/wiki/user-boyland/) 05:07, 3 October 2013 (EDT)
+[Boyland](/wiki/user-boyland/) 05:07, 3 October 2013 (EDT)
 
 :: What's an example where this works for %total?
 
-Here's one that checks just fine: [User:Boyland](/wiki/user-boyland/) 08:51, 11 October 2013 (EDT) !}%
+Here's one that checks just fine: [Boyland](/wiki/user-boyland/) 08:51, 11 October 2013 (EDT) !}%
     
 nat : type.
 
@@ -1046,7 +1046,7 @@ Thierry
 :If you implement explicit (non-LF) variables, then as you say, you need to define substitution etc yourself, which is a pain.  But you can use the set/map types in my Twelf library.
 :Otherwise, trying to implement a true ("adequate") map from variables to sets of labels is very tricky.  It can be done but will pollute your context with tons of extra things.  See [HOAS nat bijection](/wiki/hoas-nat-bijection/).
 :The big problem is "inequality".  It's very difficult to determine if two variables are equal or not in Twelf.
-:[User:Boyland](/wiki/user-boyland/) 11:02, 13 January 2014 (EST)
+:[Boyland](/wiki/user-boyland/) 11:02, 13 January 2014 (EST)
 
 ## Twelf bug reports?
 
@@ -1076,7 +1076,7 @@ See for example [Lax logic](/wiki/lax-logic/) where errors reported with: "Faile
 [[User:Fairflow|Fairflow]] 04:11, 9 December 2014 (EST)
 
 I don't see the problem.  Perhaps (1) it has been rsolved, or (2) it may be browser related?
-[User:Boyland](/wiki/user-boyland/) ([User talk:Boyland](/wiki/user-talk-boyland/)) 21:00, 21 October 2016 (UTC)
+[Boyland](/wiki/user-boyland/) ([talk](/wiki/user-talk-boyland/)) 21:00, 21 October 2016 (UTC)
 
 ## Can’t solve obvious goal or is it me?
 

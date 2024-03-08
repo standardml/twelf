@@ -1,6 +1,6 @@
 %%! title: "Classical S5"
 
-%{! This [case studies](/wiki/case-studies/) concerns the formalization of the [modal logic](/wiki/modal-logic/) **Classical S5** in the particular way it is done in _[http://www.cs.cmu.edu/~tom7/papers/csl05-19-distributed.pdf Distributed Control Flow with Classical Modal Logic]_ (Murphy, Harper, Crary; CSL 2005). The natural deduction calculus **C5** is a nonstandard variation on the "obvious" classical S5 natural deduction which we chose for its operational interpretation, so that it can be used as a programming language. In the Twelf code below we prove that that C5 is equivalent to the "obvious" S5 by proving it equivalent to a standard [admissibility of cut](/wiki/admissibility-of-cut/) sequent calculus for classical S5.
+%{! This [case study](/wiki/case-studies/) concerns the formalization of the [modal logic](/wiki/modal-logic/) **Classical S5** in the particular way it is done in _[http://www.cs.cmu.edu/~tom7/papers/csl05-19-distributed.pdf Distributed Control Flow with Classical Modal Logic]_ (Murphy, Harper, Crary; CSL 2005). The natural deduction calculus **C5** is a nonstandard variation on the "obvious" classical S5 natural deduction which we chose for its operational interpretation, so that it can be used as a programming language. In the Twelf code below we prove that that C5 is equivalent to the "obvious" S5 by proving it equivalent to a standard [cut-free](/wiki/admissibility-of-cut/) sequent calculus for classical S5.
 
 Twelf excels for this kind of proof. The only difficulty is that the most natural definition of falsehood assumptions leads to a third-order relation, which Twelf's termination checker did not support at the time this code was developed. Instead, we have an explicit substitution theorem for such assumptions.
 
@@ -135,7 +135,7 @@ _|_T : true _|_ W -> #.
 xm : {A:prop} {W:world} (true A W -> #) -> (false A W -> #) -> # -> type.
 %mode xm +A +W +D +E -F.
 
-%{! Cut elimination for a classical sequent calculus is the law of the excluded middle: If in some ambient context, the assumption that ``A`` is true is contradictory, and the assumption that ``A`` is false is also contradictory, then the ambient context is also contradictory. The proof proceeds mostly like [cut elimination](/wiki/admissibility-of-cut/). !}%
+%{! Cut elimination for a classical sequent calculus is the law of the excluded middle: If in some ambient context, the assumption that ``A`` is true is contradictory, and the assumption that ``A`` is false is also contradictory, then the ambient context is also contradictory. The proof proceeds mostly like [cut elimination for intuitionistic logic](/wiki/admissibility-of-cut/). !}%
     
 % initial cuts
 xt_init : xm A W ([xt] contra xt D) ([xf] E xf) (E D).
@@ -688,7 +688,7 @@ sn-?F : seqnd (?F ([af'] D af') F?)
 	          ([a*'] F1 a*' cc ww)
 	          (FF cc ww)).
 
-%{! Finally, we can declare the [%worlds](/wiki/percent-worlds/) for our metatheorems and ask Twelf to check them: !}%
+%{! Finally, we can declare the [worlds](/wiki/percent-worlds/) for our metatheorems and ask Twelf to check them: !}%
     
 % for xs
 %block blocku : some {A : prop} {W : world}

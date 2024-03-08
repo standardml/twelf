@@ -44,10 +44,10 @@ deriv : of (app (lam unit ([x] x)) mt) unit =
 
 %{! : Definitions aren't really that useful when you're specifying a language or proving theorems about it (unless you want to name some derived forms), but they are nice for doing examples.  
 
-: Does that answer make sense? [User:Drl](/wiki/user-drl/) 10:57, 13 April 2007 (EDT)
+: Does that answer make sense? [Drl](/wiki/user-drl/) 10:57, 13 April 2007 (EDT)
 : PS: Feel free to make yourself an account on the wiki if you don't want to sign questions like this with your IP address.
 
-:: For now, I added a couple of blurbs about eta-expansion (and definitions, too) [Proving metatheorems:Full LF](/wiki/proving-metatheorems-full-lf/) and [Proving metatheorems:Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/).  Thanks for the suggestions!  I'd appreciate any other comments like this as you work though the article.  [User:Drl](/wiki/user-drl/) 14:13, 13 April 2007 (EDT) !}%
+:: For now, I added a couple of blurbs about eta-expansion (and definitions, too) [here](/wiki/proving-metatheorems-full-lf/) and [here](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/).  Thanks for the suggestions!  I'd appreciate any other comments like this as you work though the article.  [Drl](/wiki/user-drl/) 14:13, 13 April 2007 (EDT) !}%
 
 %{!
 -----

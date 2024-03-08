@@ -165,7 +165,7 @@ step/applam : step (app (lam T ([x] E x)) E2) (E E2)
 %%## Coda: Type Safety
 %{! 
 
-[User:Rsimmons/Lecture 22: Proofs In Twelf](/wiki/user-rsimmons-homework-7-proofs-in-twelf/), we used the commutativity of addition to write a logic program that took in a term of type ``sum N1 N2 N3&lt;/tT&gt; and produced a term of type ``sum N2 N1 N3``. In other words, we proved this theorem:
+[Last time](/wiki/user-rsimmons-homework-7-proofs-in-twelf/), we used the commutativity of addition to write a logic program that took in a term of type ``sum N1 N2 N3&lt;/tT&gt; and produced a term of type ``sum N2 N1 N3``. In other words, we proved this theorem:
 
 **_Sum commutes**_: if ``sum(n&lt;sub&gt;1&lt;/sub&gt;, n&lt;sub&gt;2&lt;/sub&gt;, n&lt;sub&gt;3&lt;/sub&gt;)`` then ``sum(n&lt;sub&gt;1&lt;/sub&gt;, n&lt;sub&gt;1&lt;/sub&gt;, n&lt;sub&gt;1&lt;/sub&gt;)``
 

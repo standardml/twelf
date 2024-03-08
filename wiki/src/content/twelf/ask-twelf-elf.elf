@@ -3,7 +3,7 @@
 %{! If you have a question about Twelf, you can [http://twelf.org/w/index.php?title=Talk:Ask_Twelf_Elf&action=edit&section=new leave a message] on this wiki! 
 If you have a question that you do not want to ask publicly, you can [mailto:twelfelf@gmail.com Ask Twelf Elf] by email.  You should get a reply within 48 hours. Probably sooner. If your question involves diagnosing a particular piece of code, it is very helpful if you can send in enough code that we can re-produce the issue on our own machines.
 
-At any given time, the spirit of Twelf Elf possesses the body of someone knowledgeable with Twelf. Twelf Elf regularly rotates who he possesses, in order to avoid exhausting the poor person. Twelf Elf reserves the right to re-work interesting replies into content for the Wiki. E-mail the Twelf Elf or post a message on the [Talk:Ask Twelf Elf](/wiki/talk-ask-twelf-elf/) for this page if you would like to volunteer to join the Twelf Elf rotation.
+At any given time, the spirit of Twelf Elf possesses the body of someone knowledgeable with Twelf. Twelf Elf regularly rotates who he possesses, in order to avoid exhausting the poor person. Twelf Elf reserves the right to re-work interesting replies into content for the Wiki. E-mail the Twelf Elf or post a message on the [talk](/wiki/talk-ask-twelf-elf/) for this page if you would like to volunteer to join the Twelf Elf rotation.
 
 ## Interesting responses
 
@@ -11,7 +11,7 @@ At any given time, the spirit of Twelf Elf possesses the body of someone knowled
 
 Some responses to questions turn into other forms of [documentation](/wiki/documentation/); the rest are collected here.
 
-* [Ask Twelf Elf:Short answers](/wiki/ask-twelf-elf-short-answers/) - collected answers that have not (yet) been turned into their own pages.
+* [Short Answers](/wiki/ask-twelf-elf-short-answers/) - collected answers that have not (yet) been turned into their own pages.
 
 * [Manipulating proof witnesses](/wiki/manipulating-proof-witnesses-as-inputs/) - running a [``%solve``](/wiki/percent-solve/) creates a proof object if it is successful. But what if you want to manipulate such proof objects within the context of a single ``%solve``? The cost of the ability to do this is writing a bunch of [effectiveness lemmas](/wiki/effectiveness-lemma/) - in this case, if you were working with relations which were not total functions, they could be called _effectiveness relations._
 

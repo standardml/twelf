@@ -2,7 +2,7 @@
 
 %{! A **``%block``** declaration names a **block**, which is a partial description of an LF context. Blocks are composed into [regular worlds](/wiki/percent-worlds/) with [``%worlds``](/wiki/percent-worlds/) declarations, which describe the complete set of possible contexts for a type family. This description of the context is an important part of the [adequacy](/wiki/adequacy/) of the [metatheorem](/wiki/metatheorem/) established by a [``%total``](/wiki/percent-total/) declaration.
 
-A ``%block`` declaration acts more like a definition than other keywords, which generally cause Twelf to _do_ something rather than _define_ something. The obvious exception to this is [define declaration](/wiki/define-declaration/).
+A ``%block`` declaration acts more like a definition than other keywords, which generally cause Twelf to _do_ something rather than _define_ something. The obvious exception to this is [%define](/wiki/define-declaration/).
 
 
 ## Sample ``%block`` declarations

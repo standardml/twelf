@@ -1,7 +1,7 @@
 %%! title: "Summer school 2008"
 
 %{! __NOTOC__
-This page contains course materials for the Twelf course at [http://www.cs.uoregon.edu/research/summerschool/summer08/ the University of Oregon Summer School on Logic and Theorem Proving in Programming Languages, July 2008].  In this course, you will learn to represent [deductive system](/wiki/object-logic/)s in [LF](/wiki/lf/) and prove [metatheorem](/wiki/metatheorem/)s about them with [About The Twelf Project](/wiki/about-the-twelf-project/).
+This page contains course materials for the Twelf course at [http://www.cs.uoregon.edu/research/summerschool/summer08/ the University of Oregon Summer School on Logic and Theorem Proving in Programming Languages, July 2008].  In this course, you will learn to represent [deductive system](/wiki/object-logic/)s in [LF](/wiki/lf/) and prove [metatheorem](/wiki/metatheorem/)s about them with [Twelf](/wiki/about-the-twelf-project/).
 
 ## New: Feedback Form
 
@@ -23,25 +23,25 @@ Then see [Twelf with Emacs](/wiki/twelf-with-emacs/) for the basics of interacti
 ## Lectures and Labs [http://www.cs.cmu.edu/~rwh/talks/UO_Summer08.pdf (slides)]
 
 ### Class 1: Overview
-* [Summer school 2008:Arithmetic expressions](/wiki/summer-school-2008-arithmetic-expressions/)
-* [Summer school 2008:Arithmetic expressions with let-binding](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding/)
-** Variation: [Summer school 2008:Arithmetic expressions with call-by-value let-binding](/wiki/summer-school-2008-arithmetic-expressions-with-call-by-value-let-binding/)
-** Variation: [Summer school 2008:Arithmetic expressions with let-binding (hypothetical evaluation)](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding-hypothetical-evaluation/)
-* [Summer school 2008:Typed arithmetic expressions](/wiki/summer-school-2008-typed-arithmetic-expressions/)
-** Variation: [Summer school 2008:Typed arithmetic expressions (extrinsic encoding)](/wiki/summer-school-2008-typed-arithmetic-expressions-extrinsic-encoding/)
+* [Arithmetic expressions](/wiki/summer-school-2008-arithmetic-expressions/)
+* [Arithmetic expressions with let-binding](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding/)
+** Variation: [Call-by-value let-binding syntax](/wiki/summer-school-2008-arithmetic-expressions-with-call-by-value-let-binding/)
+** Variation: [Defining evaluation with a hypothetical judgement](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding-hypothetical-evaluation/)
+* [Typed arithmetic expressions](/wiki/summer-school-2008-typed-arithmetic-expressions/)
+** Variation: [Typed arithmetic expressions (extrinsic encoding)](/wiki/summer-school-2008-typed-arithmetic-expressions-extrinsic-encoding/)
 
-* [Summer school 2008:Exercises 1](/wiki/summer-school-2008-exercises-1/)
+* [Exercises 1](/wiki/summer-school-2008-exercises-1/)
 
 ### Class 2: Representation
 * [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf Mechanizing Metatheory in a Logical Framework] discusses this material in detail.
-* [Summer school 2008:Exercises 2](/wiki/summer-school-2008-exercises-2/)
+* [Exercises 2](/wiki/summer-school-2008-exercises-2/)
 
 ### Class 3: Mechanizing Metatheory
 
-* [Summer school 2008:Type safety for MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-intrinsic-encoding/)
-* [Summer school 2008:Type safety for MinML (extrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-extrinsic-encoding/)
+* [Type safety for MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-intrinsic-encoding/)
+* [Type safety for MinML (extrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-extrinsic-encoding/)
 
-* [Summer school 2008:Exercises 3](/wiki/summer-school-2008-exercises-3/)
+* [Exercises 3](/wiki/summer-school-2008-exercises-3/)
 
 ## Additional reading
 

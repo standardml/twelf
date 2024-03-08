@@ -10,7 +10,7 @@ to implement two cases of the diamond lemma - the
 You will be able to uncomment the ``%total`` at the end when you are 
 done.
 
-The solution is [POPL Tutorial/Church Rosser](/wiki/church-rosser-w-identity-reduction/).
+The solution is [here](/wiki/church-rosser-w-identity-reduction/).
 
  !}%
 

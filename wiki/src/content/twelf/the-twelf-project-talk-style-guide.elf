@@ -2,23 +2,23 @@
 
 %{! ## Metalemma vs. metatheorem
 
-I propose we always use _metatheorem_ when talking about the ``%total``ity of relations, and only use the word "lemma" when speaking informally. The distinction between metatheorem and metalemma is needless, in my opinion, and may lead to confusion if people assume they are technically different. (Incidentally, I moved holes in Metalemmas to [holes in metatheorems](/wiki/incremental-metatheorem-development/) since the holes usually aren't _in_ the lemmas, the holes _are_ the (standins for) lemmas. Thoughts? &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 07:03, 12 September 2006 (MST)
+I propose we always use _metatheorem_ when talking about the ``%total``ity of relations, and only use the word "lemma" when speaking informally. The distinction between metatheorem and metalemma is needless, in my opinion, and may lead to confusion if people assume they are technically different. (Incidentally, I moved holes in Metalemmas to [holes in metatheorems](/wiki/incremental-metatheorem-development/) since the holes usually aren't _in_ the lemmas, the holes _are_ the (standins for) lemmas. Thoughts? &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 07:03, 12 September 2006 (MST)
 
-: I think that makes sense. So then, if you need ``thm-a`` and ``thm-b`` to prove ``thm-f``, then all of them are metatheorems but the first two are also metalemmas in that they are lemmas of ``thm-f``? — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 10:34, 12 September 2006 (MST)
-:: Yes, that's what I meant, though I'd also say we just avoid the word _metalemma_ altogether. Since it would be our own new terminology, people might mistakenly believe that it has a distinct meaning from _metatheorem_ and that the distinction is important. I don't have a strong feeling on this, though, if somebody thinks that the distinction _is_ important. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 11:12, 12 September 2006 (MST)
+: I think that makes sense. So then, if you need ``thm-a`` and ``thm-b`` to prove ``thm-f``, then all of them are metatheorems but the first two are also metalemmas in that they are lemmas of ``thm-f``? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:34, 12 September 2006 (MST)
+:: Yes, that's what I meant, though I'd also say we just avoid the word _metalemma_ altogether. Since it would be our own new terminology, people might mistakenly believe that it has a distinct meaning from _metatheorem_ and that the distinction is important. I don't have a strong feeling on this, though, if somebody thinks that the distinction _is_ important. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 11:12, 12 September 2006 (MST)
 
 ## What are Twelf users called?
 
 Is a Twelf user a "programmer", "prover", "logician", "mathematician", "researcher", or "user"?
 :_Suppose the _____ wants to create a hole in his metatheorem._
 
-&nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 07:26, 12 September 2006 (MST)
+&nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 07:26, 12 September 2006 (MST)
 
-:: Twelfer? If that's to hokey, I'd go with "user" or "Twelf user" — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 10:31, 12 September 2006 (MST)
+:: Twelfer? If that's to hokey, I'd go with "user" or "Twelf user" — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:31, 12 September 2006 (MST)
 
 ## Metasyntactic variables
 
-Sometimes in examples on the Wiki it is useful to come up with "dummy" names for relations or constants. How attached are you guys to the practice of using "foo" and "bar" and "baz" and other classic [[:w:metasyntactic variable|metasyntactic variable]]s? Personally I find these annoying for reasons that essentially amount to taste, but I know that others (like Bob) hate them too. Somehow it seems to cheapen any example by making it feel like it should be Perl or something. My suggestion is to use variables like "thm" or "a", "b", "c". On the other hand, having the tone of the Twelf Wiki be more jargon-y might turn more people on to the project. Anyway, just putting the thought out there. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 07:51, 12 September 2006 (MST)
+Sometimes in examples on the Wiki it is useful to come up with "dummy" names for relations or constants. How attached are you guys to the practice of using "foo" and "bar" and "baz" and other classic [[:w:metasyntactic variable|metasyntactic variable]]s? Personally I find these annoying for reasons that essentially amount to taste, but I know that others (like Bob) hate them too. Somehow it seems to cheapen any example by making it feel like it should be Perl or something. My suggestion is to use variables like "thm" or "a", "b", "c". On the other hand, having the tone of the Twelf Wiki be more jargon-y might turn more people on to the project. Anyway, just putting the thought out there. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 07:51, 12 September 2006 (MST)
 
 : I agree that we should avoid silly metasyntactic variables when doing so doesn't buy us anything I think another way to handle the issue is to assume a general understanding of certain concrete examples - using "nat" and "plus-nat" is clearly preferable to using "foo." Another alternative I favor is to use "conversational names" - for instance, to rewrite Karl's code from the bottom of the [factoring](/wiki/output-factoring/) article: !}%
     
@@ -30,13 +30,13 @@ my-case2 : relation A B C
     <- long-drawn-out-computation A B D
     <- another-long-computation A B (inexhaustive-match/two C).
 
-%{! : I remember how was SO CONFUSED learning some early language (it might, in fact, have been Perl - or QBASIC) because I kept trying to understand the meaning of the "$foo" keyword. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 18:48, 22 September 2006 (MST)
+%{! : I remember how was SO CONFUSED learning some early language (it might, in fact, have been Perl - or QBASIC) because I kept trying to understand the meaning of the "$foo" keyword. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 18:48, 22 September 2006 (MST)
 
 ## Metatheorem terminology/word usage
 
 What I put under "Word usage" seems to fit with my understanding, the terminology in _Mechanizing Metatheory in a Logical Framework,_ and my understanding of consensus the last time we at least started debating it. The reason I recommend _verify_ instead of _prove_ to describe the interplay of a [``%total``](/wiki/percent-total/) directive and a totality assertion is that I realized using _prove_ gains a lot of ambiguity in a hypothetical system with interplay between a [theorem prover](/wiki/theorem-prover/) and the current [totality assertion](/wiki/totality-assertion/) checke. 
 
-It might be helpful, for instance, to say that the theorem prover produces output (a logic program) that witnesses the ∀∃-statement's totality, and a totality assertion checker could verfiy the totality of the logic program produced. I don't feel like this terminology is incompatible with the idea that Twelf's totality assertion checker is doing theorem proving. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 03:19, 29 December 2006 (EST) !}%
+It might be helpful, for instance, to say that the theorem prover produces output (a logic program) that witnesses the ∀∃-statement's totality, and a totality assertion checker could verfiy the totality of the logic program produced. I don't feel like this terminology is incompatible with the idea that Twelf's totality assertion checker is doing theorem proving. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 03:19, 29 December 2006 (EST) !}%
 
 %{!
 -----

@@ -109,7 +109,7 @@ mklist-stop : mklist A A refl.
 %%### Using the tactical theorem prover
 
 %{! 
-We can then use [``Define declaration``](/wiki/define-declaration/) and 
+We can then use [``%define``](/wiki/define-declaration/) and 
 [``%solve``](/wiki/percent-solve/) to create
 a proof that (a + (b + c) + d == a + b + c + d). In order for ``mklist``
 to terminate, it must be given a [ground](/wiki/ground/) term, so we introduce a four 

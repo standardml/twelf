@@ -2,7 +2,7 @@
 
 %{! In many circumstances, it is necessary to represent **equality** of LF terms as a relation.  
 
-One such circumstance is when we wish to prove a [uniqueness lemma](/wiki/uniqueness-lemma/) showing that an object-language judgement determines some outputs uniquely.  For example, consider the [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/).  To state this uniqueness lemma, we must define a judgement ``eq N N'`` representing equality of natural numbers.  Then the theorem is stated as follows: !}%
+One such circumstance is when we wish to prove a [uniqueness lemma](/wiki/uniqueness-lemma/) showing that an object-language judgement determines some outputs uniquely.  For example, consider the [addition judgement on natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/).  To state this uniqueness lemma, we must define a judgement ``eq N N'`` representing equality of natural numbers.  Then the theorem is stated as follows: !}%
     
 %{! (options removed from twelftag: discard=true) !}%
 

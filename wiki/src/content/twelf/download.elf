@@ -1,6 +1,6 @@
 %%! title: "Download"
 
-%{! The current version of Twelf is 1.7.1. You can also [Twelf Live](/wiki/twelf-live/) in your browser.
+%{! The current version of Twelf is 1.7.1. You can also [try Twelf live](/wiki/twelf-live/) in your browser.
 
 * [http://twelf.org/releases/twelf-src-1.7.1.tar.gz twelf-src-1.7.1.tar.gz] - Source distribution, can be built with MLton or SML/NJ
 * [http://twelf.org/releases/twelf-linux-1.7.1.tar.gz twelf-linux-1.7.1.tar.gz] - Pre-built distribution for Linux
@@ -45,7 +45,7 @@ When using the Windows installer, the default directory is ``C:\Program Files\Tw
 
 #### Twelf Night(ly)
 
-The [http://twelf.plparty.org/builds Twelf Night(ly)] system is regularly updated with OSX and Linux binary distributions, and includes the output of an extensive test suite. Before you download from Twelf Night(ly), check the log messages and make sure nothing seems out of the ordinary. If anything seems wrong, or if the Windows binary is out of date, contact [User:Rsimmons](/wiki/user-rsimmons/) who maintains the system.
+The [http://twelf.plparty.org/builds Twelf Night(ly)] system is regularly updated with OSX and Linux binary distributions, and includes the output of an extensive test suite. Before you download from Twelf Night(ly), check the log messages and make sure nothing seems out of the ordinary. If anything seems wrong, or if the Windows binary is out of date, contact [Rob](/wiki/user-rsimmons/) who maintains the system.
 
 #### Twelf Subversion
 &lt;!-- If you change this subheading's title, make sure you also change the articles that link to this section specifically:

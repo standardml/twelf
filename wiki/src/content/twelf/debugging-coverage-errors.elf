@@ -107,7 +107,7 @@ As you may have figured out already, the problem is that the first recursive cal
 
 In the previous example, adding types to some variables caused a coverage error to be converted into a type error.
 But a complex case may have many many variables.  Coverage errors can be very hard to find in this case.
-In the following situation (from [User:Boyland](/wiki/user-boyland/)), it is shown how to leverage the Twelf server to do most
+In the following situation (from [me=John Boyland](/wiki/user-boyland/)), it is shown how to leverage the Twelf server to do most
 of the work.  Suppose (and this happened to me), one has a coverage error that "should" have been covered by the following horrendous case:
 &lt;pre&gt;
 - : wk-is/L ES 

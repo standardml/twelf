@@ -39,7 +39,7 @@ even-s  : {N:nat} even N -> even (s (s N)).
 
 The first term constant, ``even-z``, has type ``even z``.  This constant represents the derivation that consists of the first inference rule above, which concludes &lt;math&gt;\mathsf\{even\}(\mathsf\{zero\})&lt;/math&gt;.  
 
-The second term constant ``even-s``, corresponds to the second inference rule above, which, for any &lt;math&gt;\texttt\{\}n&lt;/math&gt;, constructs a derivation of &lt;math&gt;\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(n)))&lt;/math&gt; from a derivation of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.  To encode this inference rule, the constant ``even-s`` is given a [dependent type](/wiki/dependent-types/).  
+The second term constant ``even-s``, corresponds to the second inference rule above, which, for any &lt;math&gt;\texttt\{\}n&lt;/math&gt;, constructs a derivation of &lt;math&gt;\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(n)))&lt;/math&gt; from a derivation of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.  To encode this inference rule, the constant ``even-s`` is given a [dependent function type](/wiki/dependent-types/).  
 
 For example, the LF term
 &lt;!-- syntax highlighting looks weird when it's not actually Twelf code --&gt;
@@ -60,7 +60,7 @@ The term ``even-s (s (s z)) (even-s z even-z)`` represents a derivation that 4 i
 
 ## See also
 
-* [Hypothetical judgement](/wiki/hypothetical-judgment/)s can be represented in LF in a [higher-order judgement](/wiki/higher-order-judgements/) manner, using LF binding to represent hypotheses.  
+* [Hypothetical judgement](/wiki/hypothetical-judgment/)s can be represented in LF in a [higher-order](/wiki/higher-order-judgements/) manner, using LF binding to represent hypotheses.  
 * The [introductions to Twelf](/wiki/introductions-to-twelf/) discuss how judgments are represented in LF in more detail.
 
 \{\{stub\}\} !}%

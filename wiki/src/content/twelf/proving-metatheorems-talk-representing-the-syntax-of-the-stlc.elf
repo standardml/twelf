@@ -1,7 +1,7 @@
 %%! title: "Proving metatheorems talk:Representing the syntax of the STLC"
 
 %{! why do you call the inhabitant of the unit type "the empty pair"? shouldn't it rather be "the empty tuple"? in my opinion, pairs always have two components and can not be empty.
-:: Seems reasonable! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 21:23, 21 April 2010 (EDT) !}%
+:: Seems reasonable! — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 21:23, 21 April 2010 (EDT) !}%
 
 %{!
 -----

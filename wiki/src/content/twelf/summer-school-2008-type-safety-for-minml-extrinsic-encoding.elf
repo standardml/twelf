@@ -172,7 +172,7 @@ vos/step : val-or-step E <- step E _.
 
 %{! 
 
-### [Output factoring](/wiki/output-factoring/)
+### [Factoring lemmas](/wiki/output-factoring/)
 
  !}%
 

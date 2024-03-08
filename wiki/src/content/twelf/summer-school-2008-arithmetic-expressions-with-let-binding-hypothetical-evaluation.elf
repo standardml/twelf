@@ -69,7 +69,7 @@ eval/let
 
 %{! 
 
-``eval/let`` deserves some explanation: the second recursive call says that we evaluate ``(E2 x)`` in an extended LF context.  In particular, we extend the context with ``x:val``, a variable ranging over values, and a derivation of ``eval (ret x) A1``.  In the scope of these assumptions, the expression ``ret x`` therefore evaluates to ``A1``.  In the terminology of [http://www.cs.cmu.edu/~rwh/plbook/book.pdf Practical Foundations for Programming Languages], ``eval`` is a [hypothetical judgement](/wiki/hypothetical-judgment/) (because we add ``eval`` assumptions to the context) and general (because we add variables to the context) judgement. The context of ``eval`` is represented by the LF context, a technique called [higher-order judgements](/wiki/higher-order-judgements/).  
+``eval/let`` deserves some explanation: the second recursive call says that we evaluate ``(E2 x)`` in an extended LF context.  In particular, we extend the context with ``x:val``, a variable ranging over values, and a derivation of ``eval (ret x) A1``.  In the scope of these assumptions, the expression ``ret x`` therefore evaluates to ``A1``.  In the terminology of [http://www.cs.cmu.edu/~rwh/plbook/book.pdf Practical Foundations for Programming Languages], ``eval`` is a [hypothetical](/wiki/hypothetical-judgment/) (because we add ``eval`` assumptions to the context) and general (because we add variables to the context) judgement. The context of ``eval`` is represented by the LF context, a technique called [higher-order judgements](/wiki/higher-order-judgements/).  
 
 ### Totality in non-empty worlds
 

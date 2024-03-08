@@ -2,57 +2,57 @@
 
 %{! The following **case studies** present interesting applications of Twelf.  Some of these case studies use proof techniques that are explained in the [tutorials](/wiki/tutorials/), so you may wish to read those first.  
 
-Feel free to add your own case studies here.  We would welcome experience reports that document not just the Twelf code you wrote but your experience writing it. (If the goal of your article is to teach a specific Twelf technique, it should instead be a [tutorials](/wiki/tutorials/), and if your Twelf code is off-site, you should instead add it to the list of [Research projects using Twelf](/wiki/research-projects-using-twelf/).)
+Feel free to add your own case studies here.  We would welcome experience reports that document not just the Twelf code you wrote but your experience writing it. (If the goal of your article is to teach a specific Twelf technique, it should instead be a [tutorial](/wiki/tutorials/), and if your Twelf code is off-site, you should instead add it to the list of [Research projects using Twelf](/wiki/research-projects-using-twelf/).)
 
 #### Beginner
 
-* [Bracket abstraction](/wiki/bracket-abstraction/), by [User:William Lovas](/wiki/user-william-lovas/)
+* [Bracket abstraction](/wiki/bracket-abstraction/), by [William Lovas](/wiki/user-william-lovas/)
 : A translation of the untyped lambda calculus into the SKI combinator calculus.  Bracket abstraction is defined by pattern matching over LF-level lambda abstractions, making essential use of [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
 
-* [Typed combinators soundness and completeness](/wiki/typed-combinators-soundness-and-completeness/), by [User:William Lovas](/wiki/user-william-lovas/)
-: A translation of the simply-typed lambda calculus into the SKI combinator calculus.  The translation is shown correct by showing that it preserves and reflects full beta-eta equality.  This case study uses uses [Intrinsic and extrinsic encodings](/wiki/intrinsic-and-extrinsic-encodings/) and [regular worlds](/wiki/percent-worlds/). (Roughly an extended version of the above [bracket abstraction](/wiki/bracket-abstraction/) case study.)
+* [Typed combinators soundness and completeness](/wiki/typed-combinators-soundness-and-completeness/), by [William Lovas](/wiki/user-william-lovas/)
+: A translation of the simply-typed lambda calculus into the SKI combinator calculus.  The translation is shown correct by showing that it preserves and reflects full beta-eta equality.  This case study uses uses [intrinsic typing](/wiki/intrinsic-and-extrinsic-encodings/) and [open worlds](/wiki/percent-worlds/). (Roughly an extended version of the above [bracket abstraction](/wiki/bracket-abstraction/) case study.)
 
-* [Division over the natural numbers](/wiki/division-over-the-natural-numbers/), by [User:DanielKLee](/wiki/user-danielklee/)
+* [Division over the natural numbers](/wiki/division-over-the-natural-numbers/), by [Daniel K. Lee](/wiki/user-danielklee/)
 : A study of the encoding of division over the natural numbers. The definition is shown to be "correct" in a number of ways, including termination of division by a non-zero number and correctness with respect to multiplication. The former involves a use of ``%reduces`` for strong induction.
 
-* [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/), by [User:drl](/wiki/user-drl/)
+* [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/), by [Dan Licata](/wiki/user-drl/)
 : Takahashi's proof of the diamond property of parallel reduction.  This case study includes lots of examples of theorems in [regular world](/wiki/percent-worlds/)s.
 
-* [Admissibility of cut](/wiki/admissibility-of-cut/), by [User:Tom7](/wiki/user-tom7/)
-: A proof of an important theorem about an intuitionistic sequent calculus. Uses lexicographic [%terminates](/wiki/percent-terminates/) orderings.
+* [Admissibility of cut](/wiki/admissibility-of-cut/), by [Tom Murphy VII](/wiki/user-tom7/)
+: A proof of an important theorem about an intuitionistic sequent calculus. Uses lexicographic [termination](/wiki/percent-terminates/) orderings.
 
-* [Hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/), by [User:drl](/wiki/user-drl/) 
+* [Hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/), by [Dan Licata](/wiki/user-drl/) 
 : The above proof of cut admissibility recast as an algorithm for normalizing λ-terms.  Uses many of the proof techniques explained in the [tutorials](/wiki/tutorials/).
 
-* [Double-negation translation](/wiki/double-negation-translation/), by [User:drl](/wiki/user-drl/) 
+* [Double-negation translation](/wiki/double-negation-translation/), by [Dan Licata](/wiki/user-drl/) 
 : The Godel-Gentzen negative translation of classical logic into intuitionistic logic.
 
-* [Linear logic](/wiki/linear-logic/), by [User:Crary](/wiki/user-crary/) 
+* [Linear logic](/wiki/linear-logic/), by [Karl Crary](/wiki/user-crary/) 
 : An encoding of linear logic that uses a judgment to enforce linearity, along with a proof of subject reduction for it.
 
-* [Mutable state](/wiki/mutable-state/), by [User:Rsimmons](/wiki/user-rsimmons/)
+* [Mutable state](/wiki/mutable-state/), by [Robert J. Simmons](/wiki/user-rsimmons/)
 : Encoding a simple imperative language with state.
 
 * [Zermelo Frankel](/wiki/zermelo-frankel/), by Daniel Wang
 : A particular encoding of ZF set theory in Twelf
 
 * Twelf Data structures:
-** [heterogeneous lists](/wiki/lists/), by [User:Varming](/wiki/user-varming/)
-** [natural numbers with inequality](/wiki/natural-numbers-with-inequality/), by [User:Rsimmons](/wiki/user-rsimmons/)
-** [Dense lexicographical orderings](/wiki/lexicographical-orderings-with-density/), by [User:DanielKLee](/wiki/user-danielklee/)
+** [Lists](/wiki/lists/), by [Carsten Varming](/wiki/user-varming/)
+** [Unary natural numbers with inequality](/wiki/natural-numbers-with-inequality/), by [Robert J. Simmons](/wiki/user-rsimmons/)
+** [Dense lexicographical orderings](/wiki/lexicographical-orderings-with-density/), by [Daniel K. Lee](/wiki/user-danielklee/)
 
 #### Advanced
 
-* [CPS conversion](/wiki/cps-conversion/), by [User:Tom7](/wiki/user-tom7/)
+* [CPS conversion](/wiki/cps-conversion/), by [Tom Murphy VII](/wiki/user-tom7/)
 : A type-directed conversion from direct style lambda calculus into continuation passing style.
 
-* [Classical S5](/wiki/classical-s5/), by [User:Tom7](/wiki/user-tom7/)
+* [Classical S5](/wiki/classical-s5/), by [Tom Murphy VII](/wiki/user-tom7/)
 : A proof that a non-standard natural deduction for the modal logic Classical S5 is equivalent to the standard cut-free sequent calculus.
 
-* [Lily](/wiki/lily/), by [User:Varming](/wiki/user-varming/)
+* [Lily](/wiki/lily/), by [Carsten Varming](/wiki/user-varming/)
 : An encoding of a polymorphic linear lambda calculus with fixed points in LF, and a metatheorem proving that ground contextual equivalence with respect to a call-by-name semantics coincides with ground contextual equivalence with respect to a call-by-value semantics.
 
-* [Lax logic](/wiki/lax-logic/), by [User:Rsimmons](/wiki/user-rsimmons/)
+* [Lax logic](/wiki/lax-logic/), by [Robert J. Simmons](/wiki/user-rsimmons/)
 : Establishing the correspondence between two different presentations of propositional lax logic and showing soundness and completeness of the two systems, in the process establishing cut and identity. !}%
 
 %{!

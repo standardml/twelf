@@ -2,7 +2,7 @@
 
 %{! : _This page describes the canonical forms of the LF type theory.  You might also be looking for the [canonical forms lemma](/wiki/canonical-forms-lemma/) used to prove the [progress](/wiki/canonical-forms-lemma/) theorem about a programming language.
 
-**Canonical forms** are terms in a type theory that are both [beta-equivalence](/wiki/beta-equivalence/) and [eta-equivalence](/wiki/eta-equivalence/).
+**Canonical forms** are terms in a type theory that are both [β-normal](/wiki/beta-equivalence/) and [η-long](/wiki/eta-equivalence/).
 
 The [LF](/wiki/lf/) type theory is defined so that all well-typed terms are **canonical forms**.  This is useful because the LF methodology for representing object languages consists of creating an isomorphic representation of the object language as the canonical forms of particular LF types.  Defining the type theory with only canonical forms  uses an algorithm called [hereditary substitution](/wiki/hereditary-substitution/).   
 

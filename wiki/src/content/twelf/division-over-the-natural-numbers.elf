@@ -1,6 +1,6 @@
 %%! title: "Division over the natural numbers"
 
-%{! This is a [case studies](/wiki/case-studies/) about **division over the natural numbers**. A number of arithmetic operations over the natural numbers will be defined, including division. The ultimate goal is to prove properties normally associated with division hold. Twelf muscles flexed in this study include [reasoning from false](/wiki/reasoning-from-false/) and using the [%reduces](/wiki/percent-reduces/) directive to use strong induction in a proof.
+%{! This is a [case study](/wiki/case-studies/) about **division over the natural numbers**. A number of arithmetic operations over the natural numbers will be defined, including division. The ultimate goal is to prove properties normally associated with division hold. Twelf muscles flexed in this study include [reasoning from false](/wiki/reasoning-from-false/) and using the [%reduces](/wiki/percent-reduces/) directive to use strong induction in a proof.
 
 First the "false" type and natural numbers are defined. !}%
     

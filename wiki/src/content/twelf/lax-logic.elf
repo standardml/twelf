@@ -1169,7 +1169,7 @@ By the induction hypothesis we have
 &lt;math&gt;\Gamma' \vdash \mathsf\{false\}&lt;/math&gt;, 
 which we have defined to be &lt;math&gt;\Gamma' \vdash \neg \mathsf\{true\}&lt;/math&gt;. 
 We need to prove, however, &lt;math&gt;\Gamma' \vdash&lt;/math&gt;. Let 
-[User:Rsimmons](/wiki/user-rsimmons/) know if I'm wrong, but the only way I could figure out
+[me](/wiki/user-rsimmons/) know if I'm wrong, but the only way I could figure out
 how to do this was by using the cut rule in the source logic, which means
 that we do _not_ get cut elimination "for free" in the source logic by virtue
 of cut admissibility in the target logic.

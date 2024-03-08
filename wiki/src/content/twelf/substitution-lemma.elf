@@ -5,7 +5,7 @@
 Depending on how the type system of an object language is encoded, there are a number of different techniques for proving a **substitution lemma** for the language.
 ## Substitution via application in LF
 
-When an object language is encoded using [higher-order judgements](/wiki/higher-order-judgements/), substitution comes for free: object-language variables and typing assumptions are represented by LF lambdas, so substitution follows from LF application.
+When an object language is encoded using [higher-order representations of hypothetical judgements](/wiki/higher-order-judgements/), substitution comes for free: object-language variables and typing assumptions are represented by LF lambdas, so substitution follows from LF application.
 
 Consider the following encoding of a simply typed λ-calculus: !}%
     

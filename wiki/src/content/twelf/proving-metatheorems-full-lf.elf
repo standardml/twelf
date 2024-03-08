@@ -85,7 +85,7 @@ Twelf permits non-canonical forms, which are treated as syntactic sugar for the 
 
 * [Beta-equivalence](/wiki/beta-equivalence/): the term ``ss 2``, which, if we expand the definitions, reads ``([x] (s (s x))) (s (s z))``, has the canonical form ``s (s (s (s z)))``.  As an optimization, Twelf tries not to expand definitions, but the defined form should be thought of as another way of writing the expanded canonical form.
 
-* [Eta-equivalence](/wiki/eta-equivalence/): the term ``s``, which has type ``nat -&gt; nat`` can be used instead of its eta-expansion ``[x] s x``.  We will discuss eta-equivalence more in the context of [Proving metatheorems:Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/)
+* [Eta-equivalence](/wiki/eta-equivalence/): the term ``s``, which has type ``nat -&gt; nat`` can be used instead of its eta-expansion ``[x] s x``.  We will discuss eta-equivalence more in the context of [higher-order representations.](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/)
 
 ### Implicit arguments
 

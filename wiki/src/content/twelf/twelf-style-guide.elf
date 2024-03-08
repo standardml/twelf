@@ -68,7 +68,7 @@ Comments are at least as important a consideration when writing Twelf code inten
 
 * Each file should begin with single-line comments establishing a title and authorship. If several more lines about the purpose of the file are needed, those should go into a multi-line comment immediately underneath the title/author information.
 
-* Single line comments should annotate most "groups" and "super-groups" explaining, briefly, their purpose. They should be associated with a relatively strong visual indicator that is consistent across the file, such as one of the following. Be conscious of the interaction of your comment style with the [Twelf with Emacs](/wiki/twelf-with-emacs/) syntax highlighting – some comment styles which use percent signs at the end and the beginning of a line cause the syntax highlighting to behave unpredictably. !}%
+* Single line comments should annotate most "groups" and "super-groups" explaining, briefly, their purpose. They should be associated with a relatively strong visual indicator that is consistent across the file, such as one of the following. Be conscious of the interaction of your comment style with the [Twelf Emacs mode](/wiki/twelf-with-emacs/) syntax highlighting – some comment styles which use percent signs at the end and the beginning of a line cause the syntax highlighting to behave unpredictably. !}%
     
 %%%%% Syntax %%%%%
 % ===== Type system ===== 
@@ -87,7 +87,7 @@ Due to the current absence of a module system for Twelf, careful identifier choi
 
 The names of constants and [type families](/wiki/type-family/) should _always_ begin with a lower case letter. Type families should only contain lower-case letters, numbers, and dashes ("-") which are used to separate words in an identifier, as in ``this-is-my-neat-proof``. The other options using underscores (as in ``this_is_my_neat_proof``), an option that is often used but which is currently generally avoided. Using ``camelCase`` is generally to be avoided: it is easier to distinguish an [implicit parameter](/wiki/implicit-and-explicit-parameters/) from a constant if only implicit parameters use capital letters.
 
-[Implicit parameter](/wiki/implicit-and-explicit-parameters/) must be capitalized; when using [explicit parameter](/wiki/implicit-and-explicit-parameters/)it is sometimes clearer to capitalize them, but it is often more clear and less error-prone to make explicit parameters lower case.
+[Implicit parameters](/wiki/implicit-and-explicit-parameters/) must be capitalized; when using [explicit parameters](/wiki/implicit-and-explicit-parameters/)it is sometimes clearer to capitalize them, but it is often more clear and less error-prone to make explicit parameters lower case.
 
 Twelf code can generally be sorted into one of three categories: **[object logic syntax](/wiki/syntax-object-logic/)**, **[judgments](/wiki/judgment/)** about the object logic syntax and other judgments, and **[metatheorem](/wiki/metatheorem/)s** about the object logic. Each of the three categories has distinct style conventions.
 

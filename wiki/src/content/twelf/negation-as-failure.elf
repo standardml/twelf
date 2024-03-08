@@ -1,7 +1,7 @@
 %%! title: "Negation as failure"
 
 %{! 
-Negation as failure. It is possible to do negation-as-failure using Twelf's [logic programming](/wiki/logic-programming/) engine, with the use of [deterministic declaration](/wiki/deterministic-declaration/). As an example, we will define logic programs to compute the less-than and greater-than-or-equal-to functions. The less-than function will be defined in a standard way. The greater-than-or-equal-to function will be defined using a negation-as-failure interpretation of the less-function.
+Negation as failure. It is possible to do negation-as-failure using Twelf's [logic programming](/wiki/logic-programming/) engine, with the use of [%deterministic](/wiki/deterministic-declaration/). As an example, we will define logic programs to compute the less-than and greater-than-or-equal-to functions. The less-than function will be defined in a standard way. The greater-than-or-equal-to function will be defined using a negation-as-failure interpretation of the less-function.
  !}%
 
 %{! 

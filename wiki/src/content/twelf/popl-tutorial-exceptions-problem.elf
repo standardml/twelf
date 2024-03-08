@@ -254,7 +254,7 @@ val-or-raises-or-step must have a case for when an expression raises an exceptio
 vrs/raises : val-or-raises-or-step E <- raises E. 
 %{! 
 
-### [Output factoring](/wiki/output-factoring/)
+### [Factoring lemmas](/wiki/output-factoring/)
 
  !}%
 

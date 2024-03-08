@@ -92,7 +92,7 @@ ceq/trans : ceq A A'
 %{! 
 
 
-[POPL Tutorial/Combinators session (answers)](/wiki/popl-tutorial-combinators-session-answers/)
+[Solution](/wiki/popl-tutorial-combinators-session-answers/)
 
  !}%
 

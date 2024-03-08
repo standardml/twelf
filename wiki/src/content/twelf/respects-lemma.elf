@@ -1,12 +1,12 @@
 %%! title: "Respects lemma"
 
-%{! _You should read the tutorial on [equality](/wiki/equality/) before reading this one._
+%{! _You should read the tutorial on [representing equality of LF terms as a type family](/wiki/equality/) before reading this one._
 
 At a high level, a **respects lemma** shows that a type family or term constructor "respects" some relations on its arguments.  Specifically, we use the term _respects lemma_ to refer to:
 - a lemma proving that the indices to a type family "respect" some relations on those indices, in the sense that inhabitation of the type family is preserved by replacing related indices.  
 - a **compatibility lemma** for a term constructor ``f``, which states that if some relations hold for some arguments, then a relation holds for ``f`` applied to those arguments.
 
-Often, the relations in question are [equality](/wiki/equality/).  
+Often, the relations in question are [equality of LF terms](/wiki/equality/).  
 
 ## Example: Proving that a type family respects equality
 

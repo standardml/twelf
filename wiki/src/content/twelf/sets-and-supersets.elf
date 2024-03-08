@@ -1,6 +1,6 @@
 %%! title: "Sets and supersets"
 
-%{! \{\{needs|this is really about multisets encoded as lists . s/set/multiset/g. BTW didn't I author the part to do with reflexivity? [User:Varming](/wiki/user-varming/) 03:52, 13 October 2006 (EDT)\}\}
+%{! \{\{needs|this is really about multisets encoded as lists . s/set/multiset/g. BTW didn't I author the part to do with reflexivity? [Varming](/wiki/user-varming/) 03:52, 13 October 2006 (EDT)\}\}
 \{\{needs|editing for context and tone\}\}
 
 This is a simplification of your concept further to take away the need for subtyping. I think this is essentially as simple as you can get, and from here you can do one of two things:

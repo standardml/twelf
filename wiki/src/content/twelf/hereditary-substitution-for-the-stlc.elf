@@ -24,9 +24,9 @@ This example brings together a number of Twelf proof techniques:
 * [catch-all case](/wiki/catch-all-case/)s.
 You may wish to read the individual tutorials on these techniques before reading this example.
  
-The canonical forms language is described on this page; the external language and elaboration are described on the [Hereditary substitution for the STLC (part 2)](/wiki/hereditary-substitution-for-the-stlc-part-2/).  
+The canonical forms language is described on this page; the external language and elaboration are described on the [next page](/wiki/hereditary-substitution-for-the-stlc-part-2/).  
 
-**Experience report ([User:Drl](/wiki/user-drl/)):** _This tutorial might seem like it takes a lot of Twelf code.  At the time I wrote this code, I was an experienced Twelf user and familiar with the basic ideas of the canonical forms approach.  However, I hadn't gone through the details of these proofs before (that's why I wrote the code).  That said, it took no more than a work-day to work out and formalize the metatheory the canonical forms approach (everything on this page), and no more than another day to do the elaboration on the next page._
+**Experience report ([DRL](/wiki/user-drl/)):** _This tutorial might seem like it takes a lot of Twelf code.  At the time I wrote this code, I was an experienced Twelf user and familiar with the basic ideas of the canonical forms approach.  However, I hadn't gone through the details of these proofs before (that's why I wrote the code).  That said, it took no more than a work-day to work out and formalize the metatheory the canonical forms approach (everything on this page), and no more than another day to do the elaboration on the next page._
 
 ## Canonical forms language: syntax and judgements
 
@@ -615,7 +615,7 @@ id/mtm_asm_cong : id/rtm R R'
 %worlds (rtm_block) (id/mtm_asm_cong _ _).
 %total {} (id/mtm_asm_cong _ _).
 
-%{! The hardest part of proving uniqueness of hereditary substitution is proving that the rules ``hsubst_m_r`` and ``hsubst_m_rr`` are mutually exclusive.  We do by using [reasoning from false](/wiki/reasoning-from-false/). !}%
+%{! The hardest part of proving uniqueness of hereditary substitution is proving that the rules ``hsubst_m_r`` and ``hsubst_m_rr`` are mutually exclusive.  We do by using [reasoning with contradiction](/wiki/reasoning-from-false/). !}%
     
 false : type.
 %freeze false.
@@ -998,7 +998,7 @@ expand_unique : expand A R M
 
 %{! ## Elaboration
 
-In [Hereditary substitution for the STLC (part 2)](/wiki/hereditary-substitution-for-the-stlc-part-2/), we discuss elaboration.  
+In [part 2](/wiki/hereditary-substitution-for-the-stlc-part-2/), we discuss elaboration.  
 
 The complete Twelf code for this tutorial contains the identity lemmas that we elided above.
 

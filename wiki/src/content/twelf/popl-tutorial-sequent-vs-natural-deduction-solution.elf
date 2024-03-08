@@ -1,6 +1,6 @@
 %%! title: "POPL Tutorial/Sequent vs Natural Deduction: Solution"
 
-%{! This is the solution to [POPL Tutorial/Sequent vs Natural Deduction](/wiki/popl-tutorial-sequent-vs-natural-deduction/).
+%{! This is the solution to [this exercise](/wiki/popl-tutorial-sequent-vs-natural-deduction/).
 |hidden = true !}%
 
 %% Syntax for Propositions %%

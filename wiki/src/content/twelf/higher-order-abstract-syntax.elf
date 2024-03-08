@@ -34,7 +34,7 @@ Because this technique reuses the mechanism of the meta-language to encode a con
 
 ## See also
 * [Higher-order judgment](/wiki/higher-order-judgements/)s: a related LF representation technique, in which object-language [hypothetical judgment](/wiki/hypothetical-judgment/)s are represented using LF binding.
-* [Equality](/wiki/equality/): when an object language is represented using HOAS, equality of LF terms corresponds with [alpha-equivalence](/wiki/alpha-equivalence/) of object language terms. !}%
+* [Equality](/wiki/equality/): when an object language is represented using HOAS, equality of LF terms corresponds with [α-equivalence](/wiki/alpha-equivalence/) of object language terms. !}%
 
 %{!
 -----

@@ -1,6 +1,6 @@
 %%! title: "Theorem prover"
 
-%{! The **Twelf theorem prover** is a way of specifying and automatically verifying [metatheorems](/wiki/metatheorem/) that have the form of ∀∃-statements. It uses the Twelf declarations [``%theorem``](/wiki/percent-theorem/), [``%prove``](/wiki/percent-prove/), [``%establish``](/wiki/percent-establish/), and [``%assert``](/wiki/percent-assert/). The last of these is an [unsafe mode](/wiki/unsafe-mode/) operation similar to [``%trustme``](/wiki/percent-trustme/).
+%{! The **Twelf theorem prover** is a way of specifying and automatically verifying [metatheorems](/wiki/metatheorem/) that have the form of ∀∃-statements. It uses the Twelf declarations [``%theorem``](/wiki/percent-theorem/), [``%prove``](/wiki/percent-prove/), [``%establish``](/wiki/percent-establish/), and [``%assert``](/wiki/percent-assert/). The last of these is an [unsafe](/wiki/unsafe-mode/) operation similar to [``%trustme``](/wiki/percent-trustme/).
 
 The current theorem prover is buggy, sometimes does not terminate, and does not output a total logic program that can be used to witness the ∀∃-statement as described in \{\{guide|title=Proof realizations|section=62|chapter=10\}\}. Because of this, it cannot interact with the technique of verifying metatheorems by writing [totality assertions](/wiki/totality-assertion/), and its use is not recommended.
 
@@ -44,7 +44,7 @@ The equivalent of the type family definition for ``plus-z-thm`` and the ``%mode`
                   exists {D: plus N z N} 
                   true.
 
-%{! (Side note: some versions of Twelf allow the ``%theorem`` declaration above to be used in lieu of the type family definition and ``%mode`` declaration; [User:Boyland](/wiki/user-boyland/) utilizes this in his tutorial and code examples, but it is not a supported feature and may break in future versions of Twelf!)
+%{! (Side note: some versions of Twelf allow the ``%theorem`` declaration above to be used in lieu of the type family definition and ``%mode`` declaration; [John Boyland](/wiki/user-boyland/) utilizes this in his tutorial and code examples, but it is not a supported feature and may break in future versions of Twelf!)
 
 Given the ``%theorem`` declaration, we can ask Twelf to try to establish the metatheorem it states by using a [``%prove``](/wiki/percent-prove/) declaration. !}%
     

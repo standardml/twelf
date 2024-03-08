@@ -24,9 +24,9 @@ However, one of the main benefits of LF is that the above methodology scales gra
 
 ## Test yourself
 
-_This section is under development. If you try other examples at this point, please add them here.  If you try more advanced examples, add them to the [Proving metatheorems:Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/)._
+_This section is under development. If you try other examples at this point, please add them here.  If you try more advanced examples, add them to the [next section](/wiki/proving-metatheorems-summary-the-stlc/)._
 
-Before going on to the next section, you may wish to test yourself with the following exercises.  Then see the [Proving metatheorems: Natural numbers: Answers to exercises](/wiki/proving-metatheorems-natural-numbers-answers-to-exercises/).
+Before going on to the next section, you may wish to test yourself with the following exercises.  Then see the [answers](/wiki/proving-metatheorems-natural-numbers-answers-to-exercises/).
 
 - State and prove a metatheorem showing that ``plus`` is commutative.
 - Define the odd numbers with a judgement analogous to the ``even`` judgement defined above. 

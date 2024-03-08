@@ -2,7 +2,7 @@
 
 %{! **Weakening** is the property of a hypothetical judgment that if Γ \{\{vdash\}\} J, then Γ, A \{\{vdash\}\} J. That is, if a judgment holds in a context Γ, then it holds in Γ extended with additional hypotheses. Weakening holds for most logics, but its absence is central to the formulation of substructural logics such as [linear logic](/wiki/linear-logic/).
 
-Often, we represent an an object-language hypothetical judgement by [higher-order judgements](/wiki/higher-order-judgements/).  When a judgement is represented in such a fashion, weakening comes "for free" from the LF representation.  In particular, we may weaken a derivation by wrapping LF lambdas around it.
+Often, we represent an an object-language hypothetical judgement by [using LF binding to model hypotheses](/wiki/higher-order-judgements/).  When a judgement is represented in such a fashion, weakening comes "for free" from the LF representation.  In particular, we may weaken a derivation by wrapping LF lambdas around it.
 
 For example, consider the following simply typed λ-calculus: !}%
     

@@ -3,7 +3,7 @@
 %{! We use the term **effectiveness lemma** for a lemma that explicitly proves a [totality assertion](/wiki/totality-assertion/) for an LF type family using another LF type family.  
 
 There are two reasons to prove an effectiveness lemma:
-- A type family may satisfy a totality assertion but not be written in such a way that Twelf can verify its totality automatically with a [%total](/wiki/percent-total/) declaration.  For example, justifying the induction might require an [structural metrics](/wiki/structural-metrics/), or knowing that the type family covers all possible inputs might require some sophisticated reasoning (such as [reasoning from false](/wiki/reasoning-from-false/)).
+- A type family may satisfy a totality assertion but not be written in such a way that Twelf can verify its totality automatically with a [%total](/wiki/percent-total/) declaration.  For example, justifying the induction might require an [explicit termination metric](/wiki/structural-metrics/), or knowing that the type family covers all possible inputs might require some sophisticated reasoning (such as [reasoning from false](/wiki/reasoning-from-false/)).
 - As an artifact of the way totality checking works, it is sometimes necessary to prove an effectiveness lemma even when Twelf has already verified the corresponding [%total](/wiki/percent-total/) declaration.  
 
 We discuss these motivations in more detail after presenting an example effectiveness lemma.
@@ -54,7 +54,7 @@ can-bit-flip : {B:bit}
 
 ## Motivating scenario
 
-This particular example is clearly not motivated by the first consideration mentioned above, as Twelf was able to prove the totality assertion directly.  For such an example, see the tutorial on [structural metrics](/wiki/structural-metrics/).
+This particular example is clearly not motivated by the first consideration mentioned above, as Twelf was able to prove the totality assertion directly.  For such an example, see the tutorial on [explicit termination metrics](/wiki/structural-metrics/).
 
 However, this effectiveness lemma is motivated by the second consideration, as the following example demonstrates.  Consider a programming language that includes primitive bits and a negation operation on them: !}%
     

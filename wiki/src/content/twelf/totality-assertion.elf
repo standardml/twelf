@@ -1,6 +1,6 @@
 %%! title: "Totality assertion"
 
-%{! A **totality assertion** is one type of [metatheorem](/wiki/metatheorem/) about [LF](/wiki/lf/) [type family](/wiki/type-family/).  A totality assertion for a type family ``a`` is specified by designating some arguments of the type family as inputs and the remaining arguments as outputs, and by specifying a set of LF contexts.  Then the totality assertion for the type family is the following proposition:
+%{! A **totality assertion** is one type of [metatheorem](/wiki/metatheorem/) about [LF](/wiki/lf/) [type families](/wiki/type-family/).  A totality assertion for a type family ``a`` is specified by designating some arguments of the type family as inputs and the remaining arguments as outputs, and by specifying a set of LF contexts.  Then the totality assertion for the type family is the following proposition:
 
 : For all contexts Γ, for all inputs ``M`` in Γ, there exist outputs ``N`` in Γ such that the type ``a M N`` is inhabited in Γ.
 
@@ -21,7 +21,7 @@ plus-s : plus (s N1) N2 (s N3)
 
 %{! A type family such as ``plus`` defines a relation among its indices, where indices are related iff their instance of the family is inhabited by an LF term.  For example, ``plus`` defines a relation between three terms of type ``nat``.  The terms (``s (s z)``, ``s z``, ``s (s (s z))``) are related by this relation (because 2 + 1 = 3), but the terms (``z``, ``s z``, ``s (s (s z))``) are not.
 
-Totality assertions are one class of statements about LF type families. A totality assertion for a type family is specified by designating some index positions as inputs and others positions as outputs.  We call this specification the [%mode](/wiki/percent-mode/) of the totality assertion.  Given a mode specification, the totality assertion asserts that for all inputs, there exist outputs that stand in the relation. Using ``plus`` as an example, if we designate the first two positions as inputs and the third position as an output, this specifies the following totality assertion:
+Totality assertions are one class of statements about LF type families. A totality assertion for a type family is specified by designating some index positions as inputs and others positions as outputs.  We call this specification the [mode](/wiki/percent-mode/) of the totality assertion.  Given a mode specification, the totality assertion asserts that for all inputs, there exist outputs that stand in the relation. Using ``plus`` as an example, if we designate the first two positions as inputs and the third position as an output, this specifies the following totality assertion:
 
 : For all ``N1:nat`` and ``N2:nat``, there exist ``N3:nat`` and ``D:plus N1 N2 N3``.
 
@@ -35,7 +35,7 @@ A totality assertion for an LF type family corresponds with the standard notion 
 
 We may prove a totality assertion by induction on [canonical forms](/wiki/canonical-form/).  For example, we can prove the first above totality assertion by induction on ``N1:nat``.  
 
-The above examples consider only terms that are well-typed without mentioning LF variables. In general, it is useful to state totality assertions about all terms that are well-typed in any LF context in a particular [world](/wiki/percent-worlds/), which is a set of LF contexts.  Thus, a totality assertion is specified by both a mode declaration and a [%worlds](/wiki/percent-worlds/).  
+The above examples consider only terms that are well-typed without mentioning LF variables. In general, it is useful to state totality assertions about all terms that are well-typed in any LF context in a particular [world](/wiki/percent-worlds/), which is a set of LF contexts.  Thus, a totality assertion is specified by both a mode declaration and a [world declaration](/wiki/percent-worlds/).  
 
 The page on [%worlds](/wiki/percent-worlds/) presents an example totality assertion in non-empty contexts.
 

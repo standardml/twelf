@@ -4,7 +4,7 @@
 This article presents a simple language with mutable state—it has 
 ``let``-statements but, unlike many other examples such as the 
 [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/), it does not have functions, though this is for simplicity and is not an inherent limitation. It is based on 
-Chapter 2 of [User:Rsimmons](/wiki/user-rsimmons/) undergraduate thesis,&lt;ref&gt;&lt;bibtex&gt;@TechReport\{simmons05thesis,
+Chapter 2 of [Rob Simmons's](/wiki/user-rsimmons/) undergraduate thesis,&lt;ref&gt;&lt;bibtex&gt;@TechReport\{simmons05thesis,
  author =       \{Robert J. Simmons\},
  title =        \{Twelf as a Unified Framework for Language Formalization and Implementation\},
  Institution =  \{Princeton University\},

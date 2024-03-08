@@ -1,6 +1,6 @@
 %%! title: "Summer school 2008:Exercises 3"
 
-%{! ## Polymorphic MinML [Summer school 2008:Type safety for polymorphic MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-polymorphic-minml-intrinsic-encoding/)
+%{! ## Polymorphic MinML [(solution)](/wiki/summer-school-2008-type-safety-for-polymorphic-minml-intrinsic-encoding/)
 
 Add explicit polymorphism to MinML and prove type safety:
 
@@ -9,14 +9,14 @@ Add explicit polymorphism to MinML and prove type safety:
 - Extend the type safety proof to cover the new cases.
 
 You can start from either encoding:
-* [Summer school 2008:Type safety for MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-intrinsic-encoding/) will be easier, because it takes full advantage of dependent types.
-* [Summer school 2008:Type safety for MinML (extrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-extrinsic-encoding/) is closer to what people usually write on paper.
+* [The intrinsic encoding](/wiki/summer-school-2008-type-safety-for-minml-intrinsic-encoding/) will be easier, because it takes full advantage of dependent types.
+* [The extrinsic encoding](/wiki/summer-school-2008-type-safety-for-minml-extrinsic-encoding/) is closer to what people usually write on paper.
 
-## Monadic Effects [Summer school 2008:Type safety for MinML with monadic effects](/wiki/summer-school-2008-type-safety-for-minml-with-monadic-effects/)
+## Monadic Effects [(solution)](/wiki/summer-school-2008-type-safety-for-minml-with-monadic-effects/)
 
 Add monadically encapsulated effects (i.e., an ``IO`` monad) to MinML, following [http://www.cs.cmu.edu/~rwh/plbook/book.pdf PFPL Chapter 39].  
 
-If you're feeling ambitious, add the following specific effects [Summer school 2008:Type safety for MinML with monadic effects (putngetn)](/wiki/summer-school-2008-type-safety-for-minml-with-monadic-effects-putngetn/):
+If you're feeling ambitious, add the following specific effects [(solution)](/wiki/summer-school-2008-type-safety-for-minml-with-monadic-effects-putngetn/):
 * ``getn ; x.m`` reads a natural number from an input buffer (i.e., stdin).  ``x`` stands for the number in ``m``.
 * ``putn(e) ; m`` writes a natural number, the value of ``e`` to an output buffer (i.e., stdout).  
 

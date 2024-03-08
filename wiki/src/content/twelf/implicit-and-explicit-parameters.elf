@@ -34,7 +34,7 @@ translate-i : of M A -> of M' A -> type.
 
 %{! ### Explicit parameters
 
-Note that in this example we use slightly bad [style guide](/wiki/twelf-style-guide/), capitalizing our bound variables ``M``, ``A``, and ``M'``. !}%
+Note that in this example we use slightly bad [style](/wiki/twelf-style-guide/), capitalizing our bound variables ``M``, ``A``, and ``M'``. !}%
     
 %{! (options removed from twelftag: discard=true check=decl) !}%
 

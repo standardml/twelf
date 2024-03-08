@@ -1,7 +1,7 @@
 %%! title: "Talk:%covers"
 
 %{! ## ``%partial``
-If you're interested in a ``%covers`` that "does the right thing" (input, output, freeness, and checking of other type families in subgoals), I have a simple implementation of the ``%partial`` declaration. This declaration does the same thing as ``%total`` but does not perform the totality check. From it you get a "partial correctness" property: a ``%partial`` relation will either search forever or it will succeed. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 22:41, 17 October 2007 (EDT) !}%
+If you're interested in a ``%covers`` that "does the right thing" (input, output, freeness, and checking of other type families in subgoals), I have a simple implementation of the ``%partial`` declaration. This declaration does the same thing as ``%total`` but does not perform the totality check. From it you get a "partial correctness" property: a ``%partial`` relation will either search forever or it will succeed. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 22:41, 17 October 2007 (EDT) !}%
 
 %{!
 -----

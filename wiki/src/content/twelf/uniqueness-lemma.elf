@@ -1,6 +1,6 @@
 %%! title: "Uniqueness lemma"
 
-%{! Many judgements of an object language have the property that, given some subjects of the judgement, the other subjects are determined uniquely.  For example: The [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/) on natural numbers has the property that the two addends determine the sum uniquely.  A typing judgement for a programming language may have the property that a term has at most one type.  The operational semantics of a programming language may have the property that a term steps to at most one other term.  We refer to a metatheorem that establishes such a property a **uniqueness lemma**.  
+%{! Many judgements of an object language have the property that, given some subjects of the judgement, the other subjects are determined uniquely.  For example: The [addition judgement](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/) on natural numbers has the property that the two addends determine the sum uniquely.  A typing judgement for a programming language may have the property that a term has at most one type.  The operational semantics of a programming language may have the property that a term steps to at most one other term.  We refer to a metatheorem that establishes such a property a **uniqueness lemma**.  
 
 The goal of this article is to teach you how to prove uniqueness lemmas in Twelf.  The only subtlety is that the statement of a uniqueness lemma requires an auxiliary definition of a judgement defining equality at the relevant types.  
 
@@ -111,7 +111,7 @@ As a slightly more-involved example of a uniqueness lemma, we can prove that the
 
 Here, equality of terms means syntactic identity modulo α-equivalence
 
-This proof reuses the formulation of the STLC from [Proving metatheorems:Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/); see that article for a description of the language and its operational semantics.  We recap the signature for the STLC here: !}%
+This proof reuses the formulation of the STLC from [Proving metatheorems with Twelf](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/); see that article for a description of the language and its operational semantics.  We recap the signature for the STLC here: !}%
     
 %% Syntax
 tp    : type.

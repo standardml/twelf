@@ -5,7 +5,7 @@
   |nonext=
 \}\}
 
-## System F [Summer school 2008:Encoding of System F](/wiki/summer-school-2008-encoding-of-system-f/)
+## System F [(solution)](/wiki/summer-school-2008-encoding-of-system-f/)
 
 - Give an LF encoding of System F (the polymorphic lambda-calculus). Use [http://www.cs.cmu.edu/~rwh/plbook/book.pdf PFPL Chapter 25 as the on-paper definition].  
 - Prove adequacy.  You may want to follow the adequacy proof in [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf MMLF], section 3.2, page 21.

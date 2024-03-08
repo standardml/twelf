@@ -271,9 +271,9 @@ a new release of Twelf.
 
 ### Is HOAS countable?
 
-A challenge: define a mapping from HOAS to the natural numbers (or equivalently to a nameless term representation) and then prove that the mapping is isomorphic _using Twelf_.  For details and sample mappings, see question on the Twelf Elf page: [Talk:Ask_Twelf_Elf](/wiki/talk-ask-twelf-elf/).
+A challenge: define a mapping from HOAS to the natural numbers (or equivalently to a nameless term representation) and then prove that the mapping is isomorphic _using Twelf_.  For details and sample mappings, see question on the Twelf Elf page: [Talk:Ask_Twelf_Elf#Mapping_HOAS_isomorphically_to_the_natural_numbers](/wiki/talk-ask-twelf-elf/).
 
-Update: [User:Rsimmons](/wiki/user-rsimmons/) has posted a solution ([Concrete_representation](/wiki/concrete-representation/)) that defines a mapping between HOAS and nameless terms and proves that it is bijective.
+Update: [Rob](/wiki/user-rsimmons/) has posted a solution ([Concrete_representation](/wiki/concrete-representation/)) that defines a mapping between HOAS and nameless terms and proves that it is bijective.
 (I asked for an "isomorphic" mapping between HOAS and natural numbers, but should have said "bijective mapping.")  Thanks Rob!
 
 My personal challenge is to write a general technique for generating bijective mappings (with proof) between many kinds of terms and natural numbers.
@@ -285,7 +285,7 @@ example [Indexed HOAS nat bijection](/wiki/indexed-hoas-nat-bijection/) that han
 
 Success: I have implemented a bijection generator. See http://www.cs.uwm.edu/~boyland/papers/map-natural.html
 
-:: Cool! — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 02:08, 12 December 2010 (EST) !}%
+:: Cool! — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 02:08, 12 December 2010 (EST) !}%
 
 %{!
 -----

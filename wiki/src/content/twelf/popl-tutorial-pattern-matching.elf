@@ -500,7 +500,7 @@ preservation	: of-exp E T
 %total (D1) (preservation _ D1 _).
 
 %{! 
---[User:DanielKLee](/wiki/user-danielklee/) 01:46, 11 October 2007 (EDT)
+--[DanielKLee](/wiki/user-danielklee/) 01:46, 11 October 2007 (EDT)
 
 TODO: Finish commentary.
 \{\{stub\}\}

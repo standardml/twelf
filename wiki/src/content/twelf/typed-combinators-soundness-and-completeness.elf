@@ -7,7 +7,7 @@ combinator calculus.  The correctness of the translation is proven in the
 following sense: if a two terms are beta-eta equal, then their translations
 are beta-eta equal, and vice versa.
 
-[User:William Lovas](/wiki/user-william-lovas/)
+[William Lovas](/wiki/user-william-lovas/)
 
  !}%
 
@@ -28,7 +28,7 @@ apparent limitation, we can translate any lambda-calculus term to an
 operationally and logically related combinator term.
 
 Note that since we're using an
-[intrinsic and extrinsic encodings](/wiki/intrinsic-and-extrinsic-encodings/), these syntax
+[intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/), these syntax
 definitions double as definitions of the languages' static semantics.
 
 By working over intrinsically typed terms, we can regard our theorems as
@@ -68,8 +68,8 @@ capp : comb (A => B) -> comb A -> comb B.
 
 %{! 
 
-We can use Twelf's [Abbrev_declaration](/wiki/abbrev-declaration/) and
-[Fixity declaration](/wiki/fixity-declaration/) to specify convenient infix
+We can use Twelf's [abbreviation mechanism](/wiki/abbrev-declaration/) and
+[fixity declarations](/wiki/fixity-declaration/) to specify convenient infix
 syntax for application.
 
  !}%

@@ -1,7 +1,7 @@
 %%! title: "Talk:Output freeness"
 
-%{! This topic was on the other wiki as well: http://fp.logosphere.cs.cmu.edu/twelf/?n=Answers.Freeness . It's by Geoff Washburn, not me, so if you include a lot from that file you'll need to add a &lt;nowiki&gt;\{\{license-by-sa\}\}&lt;/nowiki&gt; tag. — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 16:57, 7 September 2006 (MST)
-* Oops, I didn't notice that. Well, my MIT-license version seems to have all the same info, so I don't think there's any need to import it, though perhaps the example could be a little simpler. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 06:54, 11 September 2006 (MST)
+%{! This topic was on the other wiki as well: http://fp.logosphere.cs.cmu.edu/twelf/?n=Answers.Freeness . It's by Geoff Washburn, not me, so if you include a lot from that file you'll need to add a &lt;nowiki&gt;\{\{license-by-sa\}\}&lt;/nowiki&gt; tag. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:57, 7 September 2006 (MST)
+* Oops, I didn't notice that. Well, my MIT-license version seems to have all the same info, so I don't think there's any need to import it, though perhaps the example could be a little simpler. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 06:54, 11 September 2006 (MST)
 
 ## How does output coverage differ from output freeness?
 
@@ -42,7 +42,7 @@ ft/z : fake-thm z
 %total D (ff D _).
 %total [] (fake-thm _).
 
-%{! ::: &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 16:58, 26 October 2006 (EDT) !}%
+%{! ::: &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 16:58, 26 October 2006 (EDT) !}%
 
 %{!
 -----

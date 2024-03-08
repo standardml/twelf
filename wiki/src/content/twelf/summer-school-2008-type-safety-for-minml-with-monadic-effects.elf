@@ -141,7 +141,7 @@ fos/step : fin-or-mstep M <- mstep M _ .
 
 %{! 
 
-### [Output factoring](/wiki/output-factoring/) lemmas
+### [Factoring](/wiki/output-factoring/) lemmas
 
  !}%
 

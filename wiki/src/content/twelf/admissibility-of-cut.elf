@@ -1,6 +1,6 @@
 %%! title: "Admissibility of cut"
 
-%{! The **admissibility of cut** (also called **cut elimination**) is one of the most important metatheorems of an [object logic](/wiki/object-logic/) sequent calculus. It is the key theorem for showing the equivalence of natural deduction and the cut-free sequent calculus, which has several corollaries, including the existence of normal forms for every natural deduction term, and the consistency of the logic. This [tutorials](/wiki/tutorials/) shows how to prove admissibility of cut for a simple intuitionistic sequent calculus in Twelf. We will make use of lexicographic orderings in the [%terminates](/wiki/percent-terminates/) argument. &lt;!-- and other tricks? --&gt;
+%{! The **admissibility of cut** (also called **cut elimination**) is one of the most important metatheorems of an [object logic](/wiki/object-logic/) sequent calculus. It is the key theorem for showing the equivalence of natural deduction and the cut-free sequent calculus, which has several corollaries, including the existence of normal forms for every natural deduction term, and the consistency of the logic. This [tutorial](/wiki/tutorials/) shows how to prove admissibility of cut for a simple intuitionistic sequent calculus in Twelf. We will make use of lexicographic orderings in the [termination](/wiki/percent-terminates/) argument. &lt;!-- and other tricks? --&gt;
 
 ## Cut
 

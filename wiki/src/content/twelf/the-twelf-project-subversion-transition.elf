@@ -4,7 +4,7 @@
 
 ## Primary checkout
 
-The last version in CVS was Revision Number 1276 when the transition was prepped on April 17, 2008. Revisions between April 17 and April 23 will be manually applied by [User:Rsimmons](/wiki/user-rsimmons/).
+The last version in CVS was Revision Number 1276 when the transition was prepped on April 17, 2008. Revisions between April 17 and April 23 will be manually applied by [Rob](/wiki/user-rsimmons/).
 
 The trunk is be available from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/trunk twelf``. As of April 17, it is only available for read-only access for people with login to the old Twelf repository; after April 23, it will be open to general access.
 

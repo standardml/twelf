@@ -10,7 +10,7 @@
 
 Arithmetic expressions with pairs and sums, where the answer type is values.
 
-For an alternate version of sums that doesn't involve output factoring, see [Summer school 2008:Alternate typed arithmetic expressions with sums](/wiki/summer-school-2008-alternate-typed-arithmetic-expressions-with-sums/).  For a version that uses output factoring but avoids identity types, see [Summer school 2008:Typed arithmetic expressions with sums 2](/wiki/summer-school-2008-typed-arithmetic-expressions-with-sums-2/).
+For an alternate version of sums that doesn't involve output factoring, see [Chris's solution](/wiki/summer-school-2008-alternate-typed-arithmetic-expressions-with-sums/).  For a version that uses output factoring but avoids identity types, see [William's solution](/wiki/summer-school-2008-typed-arithmetic-expressions-with-sums-2/).
 
  !}%
 
@@ -245,7 +245,7 @@ called with.  Thus, when we call back to ``eval'`` from
 We make this invariant evident to Twelf as follows:
 - when ``eval'`` calls ``eval'-case``, we pass in the original expression ``(case E E1 E2)`` that ``eval'`` was called with
 - this argument is used as termination metric for ``eval-case'``
-- we constrain this position to be a case-analysis using an [equality](/wiki/equality/), so that we don't have extraneous cases to consider.  
+- we constrain this position to be a case-analysis using an [identity type](/wiki/equality/), so that we don't have extraneous cases to consider.  
 
 This explains the somewhat-convoluted code above.  
 

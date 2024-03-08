@@ -170,7 +170,7 @@ ttoct/=> : ttoct (A => B) ((A' c& (B' ccont)) ccont)
 
 %{! The family ``ttoct A A'`` ("typ to ctyp") encodes the type translation, which is often written using [[:w:Dana Scott|Scott brackets]] like &lt;nowiki&gt;[[A]]&lt;/nowiki&gt;. The unit type and product types simply translate recursively into their correspondents in the CPS types. An arrow type A → B translates into (A' c& (B' ccont)) ccont. That is, a function is translated into a continuation that expects the (translated) argument paired with a return continuation for the (translated) result.
 
-To check our work, we can verify that type translation is [%total](/wiki/percent-total/). This result will not be important to our main theorem, but every type should certainly have a translation and it is an easy way to check for mistakes early. !}%
+To check our work, we can verify that type translation is [total](/wiki/percent-total/). This result will not be important to our main theorem, but every type should certainly have a translation and it is an easy way to check for mistakes early. !}%
     
 %worlds () (ttoct _ _).
 %total D (ttoct D _).
@@ -187,7 +187,7 @@ tocpsv+ : {WV  : ofv V A}
 
 %{! ``WV`` is a value typing derivation in the source language. Our translation will be type-directed, translating typing derivations to typing derivations. The terms, which are in the types of the typing derivations, can easily be recovered (in fact, they are [implicit parameter](/wiki/implicit-and-explicit-parameters/)s in this judgment). The middle place in the relation is the translation of the type; this is necessary to ensure that the translated value has the appropriate translated type.
 
-Sometimes it is necessary for the type translation to be an [%mode](/wiki/percent-mode/) of the relation, and sometimes it is necessary for it to be an input. As is standard for translations between languages, we will need to use the [[reversing the polarity]] technique to give two versions of this relation with two different modes. The second one is identical except for the mode of the middle argument: !}%
+Sometimes it is necessary for the type translation to be an [output](/wiki/percent-mode/) of the relation, and sometimes it is necessary for it to be an input. As is standard for translations between languages, we will need to use the [[reversing the polarity]] technique to give two versions of this relation with two different modes. The second one is identical except for the mode of the middle argument: !}%
     
 tocpsv- : {WV  : ofv V A}
 	  {CT  : ttoct A CA}
@@ -243,7 +243,7 @@ tocps+ : {M  : exp}
 
 ### Lemmas
 
-First, we define a [equality](/wiki/equality/) relation on continuation types and prove that it is preserved when type constructors are applied: !}%
+First, we define a [shallow equality](/wiki/equality/) relation on continuation types and prove that it is preserved when type constructors are applied: !}%
     
 ceqtyp : ctyp -> ctyp -> type.
 ceqtyp_ : ceqtyp A A.
@@ -283,7 +283,7 @@ wcc_resp : {WCC :
 
 wcc_resp_ : wcc_resp D ceqtyp_ D.
 
-%{! It is also necessary that the type translation relation ``ttoct`` be a [function (relation)](/wiki/function/). That means we must prove a [uniqueness lemma](/wiki/uniqueness-lemma/) and [effectiveness lemma](/wiki/effectiveness-lemma/) for it. !}%
+%{! It is also necessary that the type translation relation ``ttoct`` be a [function](/wiki/function/). That means we must prove a [uniqueness lemma](/wiki/uniqueness-lemma/) and [effectiveness lemma](/wiki/effectiveness-lemma/) for it. !}%
     
 % uniqueness
 ttoct_fun : ttoct A A' -> ttoct A A'' -> ceqtyp A' A'' -> type.
@@ -358,7 +358,7 @@ c_snd : tocps- (snd M) (&E2 WM) CT _
                  F _ ([v][wv] co_snd wv wc))
      <- tocps- M WM (ttoct/& _ CT) _ F.
 
-%{! To translate the expression ``fst M``, we inductively translate the argument. It must have type ``A & B`` and so the only case for translating it is ``ttoct/&``, so this subgoal [output coverage](/wiki/coverage-checking/). We return the translation for ``A``, called ``CT``. We must then build the continuation expression and its typing derivation. The expression is parameterized by a ``tail`` that takes the result of the ``fst`` operation, so the tail has type ``cval -&gt; cexp``. The resulting term first evaluates ``M`` by invoking its translation ``CC`` on a tail we write; that tail takes ``v``, the pair value, performs ``cfst`` on it and binds the result to ``a``. It finishes by invoking the outer ``tail`` argument on that projected first component.
+%{! To translate the expression ``fst M``, we inductively translate the argument. It must have type ``A & B`` and so the only case for translating it is ``ttoct/&``, so this subgoal [covers all outputs](/wiki/coverage-checking/). We return the translation for ``A``, called ``CT``. We must then build the continuation expression and its typing derivation. The expression is parameterized by a ``tail`` that takes the result of the ``fst`` operation, so the tail has type ``cval -&gt; cexp``. The resulting term first evaluates ``M`` by invoking its translation ``CC`` on a tail we write; that tail takes ``v``, the pair value, performs ``cfst`` on it and binds the result to ``a``. It finishes by invoking the outer ``tail`` argument on that projected first component.
 
 The parameterized typing derivation is similar. It takes a tail ``c`` and a typing derivation for the tail, ``wc``. The derivation starts with the typing for the translation of ``M``, which is represented by the function ``F``. We apply ``F`` to the actual tail we produce&mdash;Twelf can deduce what this is by [unification](/wiki/unification/), so we just write ``_`` to avoid repeating ourselves. The second argument is the typing derivation for that tail; it takes a variable ``v`` representing the result of evaluating ``M`` and a typing derivation for it ``wv``. The derivation consists simply of the typing rule for ``c_fst`` applied to the well-formedness of its argument and the code that follows, both of which we get from arguments.
 
@@ -449,7 +449,7 @@ cv_lam : tocpsv- ((=>I WM) : ofv (lam M) (A => B)) (ttoct/=> CTA CTB)
 
 ## Metatheorem
 
-We can now check our metatheorem, which is that these translations are total. We start by declaring [%block](/wiki/percent-block/)s for use in the [%worlds](/wiki/percent-worlds/) declarations: !}%
+We can now check our metatheorem, which is that these translations are total. We start by declaring [block](/wiki/percent-block/)s for use in the [%worlds](/wiki/percent-worlds/) declarations: !}%
     
 %block blockcvar : 
               some {A : typ} {A' : ctyp} {CTA : ttoct A A'}
@@ -464,7 +464,7 @@ We can now check our metatheorem, which is that these translations are total. We
 
 %{! The first block corresponds to the five hypotheses we needed in the ``let`` and ``lam`` cases. The second is for the return continuation we assume in the ``lam`` case&mdash;it does not correspond to any direct style assumption so it need only be well-formed.
 
-For this proof to check we must also make world declarations for the type families ``cof``, ``cofv``, ``cval`` and ``cexp``. I believe this has to do with Twelf's overconservativity of world subsumption on third-order metatheorems, but I am not sure of the exact cause.\{\{discuss|Strange world declarations\}\} Although they are strange (and meaningless, since we do not check the totality of these type families, whose modes are all [``%mode``](/wiki/percent-mode/)), they pose no problem here: !}%
+For this proof to check we must also make world declarations for the type families ``cof``, ``cofv``, ``cval`` and ``cexp``. I believe this has to do with Twelf's overconservativity of world subsumption on third-order metatheorems, but I am not sure of the exact cause.\{\{discuss|Strange world declarations\}\} Although they are strange (and meaningless, since we do not check the totality of these type families, whose modes are all [``*``](/wiki/percent-mode/)), they pose no problem here: !}%
     
 %block blockcv : block {v : cval}.
 

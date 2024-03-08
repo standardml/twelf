@@ -2,15 +2,15 @@
 
 %{! ## Mechanizing Metatheory with LF and Twelf
 
-Do you want to learn how to use [Main page](/wiki/main-page/) to specify, implement, and prove
+Do you want to learn how to use [Twelf](/wiki/main-page/) to specify, implement, and prove
 properties about programming languages?  
 
 Come to the Twelf tutorial on **January 19, 2009**, co-located with POPL 2009, in
 **Savannah, Georgia**.
 
 Learn to:
-* Represent [deductive systems](/wiki/object-logic/) in [LF](/wiki/lf/)
-* Prove [metatheorem](/wiki/metatheorem/)s with [Main page](/wiki/main-page/)
+* Represent [languages and logics](/wiki/object-logic/) in [LF](/wiki/lf/)
+* Prove [metatheorem](/wiki/metatheorem/)s with [Twelf](/wiki/main-page/)
 under the helpful guidance of Twelf experts.  
 
 The tutorial will be a highly interactive introduction to LF and Twelf
@@ -27,18 +27,18 @@ Programming group.
 
 ## Schedule ([http://www.cs.cmu.edu/~drl/tmp/lectures.pdf all slides])
 
-* Overview ([POPL_Tutorial/Nat](/wiki/popl-tutorial-nat/))
+* Overview ([Answers](/wiki/popl-tutorial-nat/))
 ** Session A1: Representation
-** Session A2: Totality ([POPL_Tutorial/Session_2_Answer](/wiki/popl-tutorial-session-2-answer/))
+** Session A2: Totality ([notes](/wiki/popl-tutorial-session-2-answer/))
 ** Session A3: Metatheory
 
-* Languages ([POPL_Tutorial/MinML](/wiki/popl-tutorial-minml/))
+* Languages ([Answers](/wiki/popl-tutorial-minml/))
 ** Session B1: Representation and adequacy
 ** Session B2: Metatheory
 
 * Advanced examples
-** Session C1: [POPL_Tutorial/Combinators session](/wiki/popl-tutorial-combinators-session/)
-** Session C2: [POPL_Tutorial/Session 5](/wiki/popl-tutorial-session-5/)
+** Session C1: [Combinators](/wiki/popl-tutorial-combinators-session/)
+** Session C2: [Work on exercies](/wiki/popl-tutorial-session-5/)
 
 ## Get Twelf before the tutorial!
 

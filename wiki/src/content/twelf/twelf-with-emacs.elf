@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-These instructions assume you've already [Download](/wiki/download/), and that either 
+These instructions assume you've already [downloaded Twelf](/wiki/download/), and that either 
 * You used the Windows/OSX installer
 * You downloaded a pre-compiled tarball
 * You downloaded a source tarball and have already built Twelf

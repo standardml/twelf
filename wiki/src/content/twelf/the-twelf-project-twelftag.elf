@@ -1,6 +1,6 @@
 %%! title: "The Twelf Project:TwelfTag"
 
-%{! TwelfTag is [User:Rsimmons](/wiki/user-rsimmons/) system for non-interactively checking Twelf code. This is a guide to TwelfTag for contributors; if you are a reader, then [TwelfTag](/wiki/twelftag/) may be more helpful. While [Twelf Live](/wiki/twelf-live/) allows people to interact with signatures, TwelfTag is designed for writing and checking code for use in wiki articles.
+%{! TwelfTag is [Rob's](/wiki/user-rsimmons/) system for non-interactively checking Twelf code. This is a guide to TwelfTag for contributors; if you are a reader, then [this article](/wiki/twelftag/) may be more helpful. While [Twelf Live](/wiki/twelf-live/) allows people to interact with signatures, TwelfTag is designed for writing and checking code for use in wiki articles.
 
 Neither the (twelf) tag nor the &lt;nowiki&gt;``&gt;&lt;/nowiki&gt; tag have any required arguments. The optional arguments for (twelf) tags are:
 * ``check=\{true|false|decl\}`` (default ``false``) - cannot be used when hidden=true

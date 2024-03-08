@@ -50,7 +50,7 @@ family to define the types of two term constants.
 
 The first term constant, ``even-z``, has type ``even z``.  This constant represents the derivation that consists of the first inference rule above, which concludes &lt;math&gt;\mathsf\{even\}(\mathsf\{zero\})&lt;/math&gt;.  
 
-The second term constant ``even-s``, corresponds to the second inference rule above, which, for any &lt;math&gt;\texttt\{\}n&lt;/math&gt;, constructs a derivation of &lt;math&gt;\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(n)))&lt;/math&gt; from a derivation of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.  To encode this inference rule, the constant ``even-s`` is given a [dependent type](/wiki/dependent-types/).  
+The second term constant ``even-s``, corresponds to the second inference rule above, which, for any &lt;math&gt;\texttt\{\}n&lt;/math&gt;, constructs a derivation of &lt;math&gt;\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(n)))&lt;/math&gt; from a derivation of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.  To encode this inference rule, the constant ``even-s`` is given a [dependent function type](/wiki/dependent-types/).  
 
 The syntax ``\{x:A1\} A2`` represents a dependent function type, which is a generalization of the ordinary function type ``A1 -&gt; A2`` that allows the argument term ``x`` to appear in ``A2``.  We write the ordinary function type ``-&gt;`` as a synonym when the argument is not free in the result type (i.e., ``A1 -&gt; A2`` means ``\{_:A1\} A2``).  Just as with the ordinary function type, LF terms of dependent function type can be applied to a term of the argument type to form a new term.
 
@@ -79,7 +79,7 @@ To summarize, dependently-typed LF refines the type level of simply-typed LF wit
 
 ### Adequacy
 
-To check that this LF representation is correct ([adequacy](/wiki/adequacy/)), we must verify that there is a bijection between the derivations of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; and the LF terms of type ``even N`` where &lt;math&gt;n \gg N&lt;/math&gt;.  In particular, this LF signature adequately represents natural numbers and derivations of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; when considered in the empty LF context. It would not be adequate in contexts containing assumptions of the form ``x : nat`` (which don't correspond to any natural number) or ``d : even N`` (which don't correspond to any of the rules for deriving &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.
+To check that this LF representation is correct ([adequate](/wiki/adequacy/)), we must verify that there is a bijection between the derivations of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; and the LF terms of type ``even N`` where &lt;math&gt;n \gg N&lt;/math&gt;.  In particular, this LF signature adequately represents natural numbers and derivations of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; when considered in the empty LF context. It would not be adequate in contexts containing assumptions of the form ``x : nat`` (which don't correspond to any natural number) or ``d : even N`` (which don't correspond to any of the rules for deriving &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.
 
 Part of establishing this bijection requires reasoning by induction on the canonical forms of type ``even N``, which corresponds to rule induction on the informal judgement.  The definition of the encoding and the proof of adequacy are simple; interested readers are referred to the literature for examples.
 

@@ -223,7 +223,7 @@ vrs/step : val-or-raises-or-step E <- step E _.
 vrs/raises : val-or-raises-or-step E <- raises E. 
 %{! 
 
-### [Output factoring](/wiki/output-factoring/)
+### [Factoring lemmas](/wiki/output-factoring/)
 
  !}%
 

@@ -41,13 +41,13 @@ These tutorials are also gathered in the [[:Category:tutorials|tutorial category
 ** [Exchange](/wiki/exchange-lemma/) 
 ** [Substitution](/wiki/substitution-lemma/)
 * [Evaluation contexts](/wiki/evaluation-contexts/) - how to represent evaluation contexts as LF functions
-* [User-defined constraint domain](/wiki/user-defined-constraint-domain/)s - how to make encodings more [Intrinsic and extrinsic encodings](/wiki/intrinsic-and-extrinsic-encodings/) by replacing predicates with indexing, and how to use Church-encodings to create special index types that are similar to constraint domains in that they admit non-trivial equations on their elements.
+* [User-defined constraint domain](/wiki/user-defined-constraint-domain/)s - how to make encodings more [intrinsic](/wiki/intrinsic-and-extrinsic-encodings/) by replacing predicates with indexing, and how to use Church-encodings to create special index types that are similar to constraint domains in that they admit non-trivial equations on their elements.
 For larger examples of Twelf in action, see see the [case studies](/wiki/case-studies/).
 
 ## Troubleshooting
 
 * [Error messages](/wiki/error-messages/) - brief explanations of (and remedies for) common Twelf error messages.
-* [Output freeness](/wiki/output-freeness/) - understanding a subtle part of output coverage checking.
+* [Understanding output freeness](/wiki/output-freeness/) - understanding a subtle part of output coverage checking.
 * [Debugging coverage errors](/wiki/debugging-coverage-errors/) - techniques for finding coverage errors.
 * [Constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/) - in general, you can't use them in the same [signature](/wiki/twelf-signature/). !}%
 

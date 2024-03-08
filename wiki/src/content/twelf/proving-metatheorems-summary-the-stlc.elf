@@ -21,7 +21,7 @@ Now that you've made it through this introduction, you have the basic tools you 
 
 _This section is under development; if you try other examples at this point, please add them here._
 
-Before going on to the next section, you may wish to test yourself with the following exercises.  Then see the [Proving metatheorems: STLC: Answers to exercises](/wiki/proving-metatheorems-stlc-answers-to-exercises/).
+Before going on to the next section, you may wish to test yourself with the following exercises.  Then see the [answers](/wiki/proving-metatheorems-stlc-answers-to-exercises/).
 
 - Add product types (&lt;math&gt;\tau_1 \times \tau_2&lt;/math&gt;) to the STLC and extend the proof of preservation to cover this new type.
 - _Add your exercises here!_

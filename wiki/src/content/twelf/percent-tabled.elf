@@ -1,6 +1,6 @@
 %%! title: "%tabled"
 
-%{! The ``**%tabled**`` directive informs Twelf's [tabled logic programming](/wiki/tabled-logic-programming/) engine to record derivations for a certain type family _at most once_ during a query started with a [``%querytabled``](/wiki/percent-querytabled/) directive. It is therefore a bit like [``Deterministic declaration``](/wiki/deterministic-declaration/) in that it changes Twelf's search behavior for a single type family.
+%{! The ``**%tabled**`` directive informs Twelf's [tabled logic programming](/wiki/tabled-logic-programming/) engine to record derivations for a certain type family _at most once_ during a query started with a [``%querytabled``](/wiki/percent-querytabled/) directive. It is therefore a bit like [``%deterministic``](/wiki/deterministic-declaration/) in that it changes Twelf's search behavior for a single type family.
 
 ## See also
 

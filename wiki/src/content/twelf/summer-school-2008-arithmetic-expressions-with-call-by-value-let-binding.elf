@@ -59,7 +59,7 @@ Note that the ``let``-bound variable stands for a value.
 ## Evaluation, using substitution
 
 As before, the type of answers includes only numerals.  The code for
-evaluation is exactly the same as [Summer school 2008:Arithmetic expressions with let-binding](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding/).  
+evaluation is exactly the same as [before](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding/).  
 
  !}%
 

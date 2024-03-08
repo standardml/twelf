@@ -2,19 +2,19 @@
 
 %{! Shouldn't "i.e., it is the specialization of the inference rule to &lt;math&gt;N = \mathsf\{zero\}&lt;/math&gt;" read "i.e., it is the specialization of the inference rule to &lt;math&gt;n = \mathsf\{zero\}&lt;/math&gt;", since only a small &lt;math&gt;n&lt;/math&gt; appears in the judgements?
 
-: Fixed.  Thanks again! If you like, feel free to fix typos like this directly in the text. [User:Drl](/wiki/user-drl/) 11:30, 18 April 2007 (EDT)
+: Fixed.  Thanks again! If you like, feel free to fix typos like this directly in the text. [Drl](/wiki/user-drl/) 11:30, 18 April 2007 (EDT)
 
 ## %worlds
 
 The [%worlds](/wiki/percent-worlds/) page said
 
 &lt;blockquote&gt;
-As discussed in the introduction article on [[Proving metatheorems:Representing the judgments of the natural numbers|Representing the judgments of the natural numbers]], the type ``nat`` in this signature [adequacy](/wiki/adequacy/) represents the natural numbers only if the LF context does not contain variables of type ``nat``.
+As discussed in the introduction article on [[Proving metatheorems:Representing the judgments of the natural numbers|Representing the judgments of the natural numbers]], the type ``nat`` in this signature [adequately](/wiki/adequacy/) represents the natural numbers only if the LF context does not contain variables of type ``nat``.
 &lt;/blockquote&gt;
 
 This page doesn't mention that now, but I would be very grateful if it did!
 
-: Fixed--thanks! [User:Drl](/wiki/user-drl/) 17:16, 25 July 2008 (EDT) !}%
+: Fixed--thanks! [Drl](/wiki/user-drl/) 17:16, 25 July 2008 (EDT) !}%
 
 %{!
 -----

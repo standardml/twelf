@@ -7,7 +7,7 @@ This template places a discussion link in an article. The link takes the user to
 
 :&lt;nowiki&gt;\{\{discuss|&lt;/nowiki&gt;_description of issue_&lt;nowiki&gt;\}\}&lt;/nowiki&gt;
 
-where _description of issue_ is an informative section header for the talk page. You should then create that section on the talk page. The link looks like this.[Talk:Main Page](/wiki/talk-main-page/)
+where _description of issue_ is an informative section header for the talk page. You should then create that section on the talk page. The link looks like this.[&lt;sup&gt;[?]&lt;/sup&gt;](/wiki/talk-main-page/)
 
 &lt;/noinclude&gt; !}%
 

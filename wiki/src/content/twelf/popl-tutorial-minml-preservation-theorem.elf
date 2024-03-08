@@ -7,7 +7,7 @@ In this exercise, we prove the preservation theorem for the MinML langauge we wo
 There is one task:
 * Complete the cases of the preservation theorem
 
-The solution is [POPL Tutorial/MinML Preservation Theorem Answer](/wiki/popl-tutorial-minml-preservation-theorem-solution/).
+The solution is [here](/wiki/popl-tutorial-minml-preservation-theorem-solution/).
 
 ## Syntax
 

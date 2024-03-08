@@ -3,7 +3,7 @@
 %{! \{\{undocumented\}\}
 A **``%unique``** declaration attempts to automatically check whether some positions of a relation (its outputs) are uniquely determined by some other positions (its inputs). Its syntax is similar to that of [``%mode``](/wiki/percent-mode/), except that in addition to being able to specify an argument to be an input (``+``), an output (``-``), or unmoded (``*``), you may also specify an argument to be a unique output (``-1``).
 
-Successful ``%unique`` declarations are used to simplify [coverage checking](/wiki/coverage-checking/), and they can easily be transformed into first-class [uniqueness lemma](/wiki/uniqueness-lemma/).
+Successful ``%unique`` declarations are used to simplify [coverage checking](/wiki/coverage-checking/), and they can easily be transformed into first-class [uniqueness lemmas](/wiki/uniqueness-lemma/).
 
 &lt;!--
 Currently there is no way to utilize the result of a successful ``%unique`` declaration and so its use is not suggested - an equivalent result can be established by a [uniqueness lemma](/wiki/uniqueness-lemma/).

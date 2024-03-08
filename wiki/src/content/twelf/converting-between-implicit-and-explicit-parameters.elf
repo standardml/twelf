@@ -75,7 +75,7 @@ translate2-i/e : translate2-i D D' <- translate2-e _ _ _ D D'.
 %total D (translate2-e _ _ _ D _).
 %total D (translate2-i D _).
 
-%{! Twelf is able to deduce via its term reconstruction algorithm what M, M' and A are, so this is [%mode](/wiki/percent-mode/).
+%{! Twelf is able to deduce via its term reconstruction algorithm what M, M' and A are, so this is [well-moded](/wiki/percent-mode/).
 
 ## Using annotations
 

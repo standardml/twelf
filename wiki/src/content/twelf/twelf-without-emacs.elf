@@ -1,6 +1,6 @@
 %%! title: "Twelf without Emacs"
 
-%{! First, you should read up on [Twelf with Emacs](/wiki/twelf-with-emacs/), to understand [Twelf with Emacs](/wiki/twelf-with-emacs/) and how one interacts with those files.  Then, instead of using emacs, you can run the ``twelf-server`` command directly from your shell and interact with your files using the following commands.  (You may find it convenient to run ``twelf-server`` under some readline wrapper program like ``rlwrap`` or ``ledit`` to get command-line editing and history.)
+%{! First, you should read up on [Twelf with Emacs](/wiki/twelf-with-emacs/), to understand [how Twelf programs are divided up into files](/wiki/twelf-with-emacs/) and how one interacts with those files.  Then, instead of using emacs, you can run the ``twelf-server`` command directly from your shell and interact with your files using the following commands.  (You may find it convenient to run ``twelf-server`` under some readline wrapper program like ``rlwrap`` or ``ledit`` to get command-line editing and history.)
 
 ### Loading the configuration file
 

@@ -2,7 +2,7 @@
 
 %{! ## Name
 
-Wow, that's weird. As near as I can tell, it's because 'de' (and also maybe 'f') are hex characters, so %25de is being interpreted as malformed unicode or something like that. I'm going to move to [define declaration](/wiki/define-declaration/) though, because the space is pretty weird for an article title. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 09:42, 14 October 2006 (EDT) !}%
+Wow, that's weird. As near as I can tell, it's because 'de' (and also maybe 'f') are hex characters, so %25de is being interpreted as malformed unicode or something like that. I'm going to move to [define declaration](/wiki/define-declaration/) though, because the space is pretty weird for an article title. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 09:42, 14 October 2006 (EDT) !}%
 
 %{!
 -----

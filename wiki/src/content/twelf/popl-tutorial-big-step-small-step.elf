@@ -13,7 +13,7 @@ There are five tasks:
 * Prove the forward direction (small-step evaluation implies big-step evaluation) for a "convienent" definition of multi-step.
 * Prove the forward direction for the original definition of multi-step.
 
-The solution is [POPL Tutorial/Big step, small step: Solution](/wiki/popl-tutorial-big-step-small-step-solution/).
+The solution is [here](/wiki/popl-tutorial-big-step-small-step-solution/).
 
 ## Syntax
 

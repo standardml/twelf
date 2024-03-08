@@ -1,6 +1,6 @@
 %%! title: "Reasoning from false"
 
-%{! Twelf's coverage checker often rules out contradictory cases for you (see, for example, the [Uniqueness lemmas](/wiki/uniqueness-lemma/)).  However, you will sometimes need to reason from contradictory assumptions yourself. You can do this by declaring an _uninhabited type_, proving that certain assumptions are contradictory, and then writing lemmas that conclude anything from a term of the uninhabited type. 
+%{! Twelf's coverage checker often rules out contradictory cases for you (see, for example, the [proof of determinacy for the simply typed λ-calculus](/wiki/uniqueness-lemma/)).  However, you will sometimes need to reason from contradictory assumptions yourself. You can do this by declaring an _uninhabited type_, proving that certain assumptions are contradictory, and then writing lemmas that conclude anything from a term of the uninhabited type. 
 
 ## The uninhabited type !}%
     

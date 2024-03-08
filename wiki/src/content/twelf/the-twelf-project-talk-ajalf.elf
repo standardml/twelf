@@ -1,8 +1,8 @@
 %%! title: "The Twelf Project talk:AJALF"
 
-%{! AJALF deserves its own article. My guess is it's AJAX + Twelf server? This is also a good place to acknowledge the people who brought this sweet technology to us. It's been Jcreed, Tom7 and Rob, right? --[User:DanielKLee](/wiki/user-danielklee/) 20:29, 15 October 2006 (EDT)
-: See, my only problem with this is that we need to recognize the fact that we're, on most levels, kidding - Tom advocated for AJALF instead of my suggestion of AJAT because AJALF sounded more fundamentally ridiculous. (and the meaning of the acronym is Async. Javascript and LF, as opposed to Async. Javascript and XML)  — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 20:50, 15 October 2006 (EDT)
-::Since it's only of use to developers, I moved it to the project namespace. But it's probably a good idea to leave notes on how it works, so that someone can maintain what we did. &nbsp;&mdash;&nbsp;[User:Tom7](/wiki/user-tom7/) 21:09, 15 October 2006 (EDT) !}%
+%{! AJALF deserves its own article. My guess is it's AJAX + Twelf server? This is also a good place to acknowledge the people who brought this sweet technology to us. It's been Jcreed, Tom7 and Rob, right? --[DanielKLee](/wiki/user-danielklee/) 20:29, 15 October 2006 (EDT)
+: See, my only problem with this is that we need to recognize the fact that we're, on most levels, kidding - Tom advocated for AJALF instead of my suggestion of AJAT because AJALF sounded more fundamentally ridiculous. (and the meaning of the acronym is Async. Javascript and LF, as opposed to Async. Javascript and XML)  — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 20:50, 15 October 2006 (EDT)
+::Since it's only of use to developers, I moved it to the project namespace. But it's probably a good idea to leave notes on how it works, so that someone can maintain what we did. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 21:09, 15 October 2006 (EDT) !}%
 
 %{!
 -----

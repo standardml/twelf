@@ -6,7 +6,7 @@ This is a bibliography collected by Frank Pfenning on the LF logical framework, 
 
 ## Basic References
 
-* For the [LF](/wiki/lf/): R. Harper, F. Honsell, and G. Plotkin, [http://www.cs.cmu.edu/~twelf/elf-bib.html#Harper93jacm A Framework for Defining Logics].
+* For the [LF logical framework](/wiki/lf/): R. Harper, F. Honsell, and G. Plotkin, [http://www.cs.cmu.edu/~twelf/elf-bib.html#Harper93jacm A Framework for Defining Logics].
 * For the Elf language: F. Pfenning, [http://www.cs.cmu.edu/~twelf/elf-bib.html#Pfenning91lf Logic Programming in the LF Logical Framework].
 * For the Twelf implementation: [http://www.cs.cmu.edu/~twelf/elf-bib.html#Pfenning99cade System description: Twelf - a meta-logical framework for deductive systems].
 

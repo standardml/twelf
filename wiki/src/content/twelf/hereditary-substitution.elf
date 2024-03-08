@@ -10,7 +10,7 @@ Substitution &lt;math&gt;\mathsf\{\}[M'/x]M&lt;/math&gt; of one canonical form i
 
 &lt;math&gt;\mathsf\{\}[\lambda y.y/x](x \; z)  \; = \;(\lambda y.y) \; z&lt;/math&gt;
 
-Even though both terms are canonical forms, the result is [beta-equivalence](/wiki/beta-equivalence/).  
+Even though both terms are canonical forms, the result is [beta-reducible](/wiki/beta-equivalence/).  
 
 However, _hereditary substitution_ directly computes the canonical result of an ordinary substitution.  When ordinary substitution would return a non-canonical form, hereditary substitution continues to reduce by substituting the argument into the body of the function.  In the above example, the hereditary substitution 
 

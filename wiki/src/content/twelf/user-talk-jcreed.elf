@@ -1,6 +1,6 @@
 %%! title: "User talk:Jcreed"
 
-%{! hi — [User:rsimmons](/wiki/user-rsimmons/) (and his [User talk:rsimmons](/wiki/user-talk-rsimmons/)) 00:43, 7 October 2006 (EDT)
+%{! hi — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 00:43, 7 October 2006 (EDT)
 
 ### Tom7's Twelf Mystery Du Jour
 This is the thing that curiously didn't work: !}%
@@ -148,7 +148,7 @@ look-at-eq : {A : o -> o} eq (A k) k -> type.
 %total {} (look-at-eq _ _).
 
 %{! Does this show that you can do any decomposition you'd want to do?
-[User:Drl](/wiki/user-drl/) 18 October 2007
+[Drl](/wiki/user-drl/) 18 October 2007
 
 ### A Copy Function !}%
     
@@ -186,7 +186,7 @@ copy :  src k -> dst k -> type.
 %worlds (b) (copy _ _).
 %total D (copy D _).
 
-%{! [User:Jcreed](/wiki/user-jcreed/) 15:15, 18 October 2007 (EDT) !}%
+%{! [Jcreed](/wiki/user-jcreed/) 15:15, 18 October 2007 (EDT) !}%
 
 %{!
 -----

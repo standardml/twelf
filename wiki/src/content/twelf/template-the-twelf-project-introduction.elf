@@ -1,6 +1,6 @@
 %%! title: "Template:The Twelf Project/Introduction"
 
-%{! [About The Twelf Project](/wiki/about-the-twelf-project/) is a language used to specify, implement, and prove properties of _deductive systems_ such as programming languages and logics.  Large [research projects using Twelf](/wiki/research-projects-using-twelf/) include the TALT typed assembly language, a foundational proof-carrying-code system, and a type safety proof for Standard ML.  
+%{! [Twelf](/wiki/about-the-twelf-project/) is a language used to specify, implement, and prove properties of _deductive systems_ such as programming languages and logics.  Large [research projects using Twelf](/wiki/research-projects-using-twelf/) include the TALT typed assembly language, a foundational proof-carrying-code system, and a type safety proof for Standard ML.  
 
 Visitors without a technical background are encouraged to read the [general description of Twelf](/wiki/general-description-of-twelf/).
 

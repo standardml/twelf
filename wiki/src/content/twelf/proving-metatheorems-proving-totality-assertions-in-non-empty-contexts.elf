@@ -10,7 +10,7 @@ So far, we have only proved relations total in the empty LF context.  In this se
 
 ## Definition of Size
 
-The definition of size uses the definitions of [Proving metatheorems:Representing the syntax of the natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/), [Proving metatheorems:Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), and [Proving metatheorems:Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) from earlier in this article. !}%
+The definition of size uses the definitions of [natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/), [addition judgement](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), and [STLC term syntax](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) from earlier in this article. !}%
     
 %{! (options removed from twelftag: export="syntax" hidden="true") !}%
 

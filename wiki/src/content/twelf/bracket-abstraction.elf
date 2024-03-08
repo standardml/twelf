@@ -6,7 +6,7 @@ combinators.  The correctness of the translation is proven in the following
 sense: if a term steps to a reduct, its translation multi-steps to its
 reduct's translation.
 
-[User:William Lovas](/wiki/user-william-lovas/)
+[William Lovas](/wiki/user-william-lovas/)
  !}%
 
 

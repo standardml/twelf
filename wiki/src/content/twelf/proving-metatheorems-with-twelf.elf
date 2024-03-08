@@ -11,20 +11,20 @@ This introduction assumes that the first version of this story is somewhat famil
 ## Table of contents
 
 -First-order representations: The natural numbers 
--# [Proving metatheorems: Representing the syntax of the natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/) 
--# [Proving metatheorems: Simply typed LF](/wiki/proving-metatheorems-simply-typed-lf/)
--# [Proving metatheorems: Representing the judgements of the natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/) 
--# [Proving metatheorems: Full LF](/wiki/proving-metatheorems-full-lf/)
--# [Proving metatheorems: Proving totality assertions about the natural numbers](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/)
--# [Proving metatheorems: Proving metatheorems about the natural numbers](/wiki/proving-metatheorems-proving-metatheorems-about-the-natural-numbers/) 
--# [Proving metatheorems: Summary: the natural numbers](/wiki/proving-metatheorems-summary-the-natural-numbers/) ([Proving metatheorems: Natural numbers: Answers to exercises](/wiki/proving-metatheorems-natural-numbers-answers-to-exercises/))
+-# [Representing syntax](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/) 
+-# [Simply typed LF](/wiki/proving-metatheorems-simply-typed-lf/)
+-# [Representing judgements](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/) 
+-# [Full LF](/wiki/proving-metatheorems-full-lf/)
+-# [Proving totality assertions](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/)
+-# [Proving metatheorems](/wiki/proving-metatheorems-proving-metatheorems-about-the-natural-numbers/) 
+-# [Summary](/wiki/proving-metatheorems-summary-the-natural-numbers/) ([Answers to exercises](/wiki/proving-metatheorems-natural-numbers-answers-to-exercises/))
 -Higher-order representations: The STLC
--# [Proving metatheorems: Representing the syntax of the STLC](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/)
--# [Proving metatheorems: Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/)
--# [Proving metatheorems: Proving metatheorems about the STLC](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/)
--# [Proving metatheorems: Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/)
--# [Proving metatheorems: Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/)
--# [Proving metatheorems: Summary: the STLC](/wiki/proving-metatheorems-summary-the-stlc/) ([Proving metatheorems: STLC: Answers to exercises](/wiki/proving-metatheorems-stlc-answers-to-exercises/)) !}%
+-# [Representing syntax](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/)
+-# [Representing judgements](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/)
+-# [Proving metatheorems](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/)
+-# [Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/)
+-# [Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/)
+-# [Summary](/wiki/proving-metatheorems-summary-the-stlc/) ([Answers to exercises](/wiki/proving-metatheorems-stlc-answers-to-exercises/)) !}%
 
 %{!
 -----

@@ -8,15 +8,15 @@ Help us out by filling out our handy dandy [http://spreadsheets.google.com/viewf
 
 ## Mechanizing Metatheory with LF and Twelf
 
-Do you want to learn how to use [Main page](/wiki/main-page/) to specify, implement, and prove
+Do you want to learn how to use [Twelf](/wiki/main-page/) to specify, implement, and prove
 properties about programming languages?  
 
 Come to the Twelf tutorial on **January 19, 2009**, co-located with POPL 2009, in
 **Savannah, Georgia**.
 
 Learn to:
-* Represent [deductive systems](/wiki/object-logic/) in [LF](/wiki/lf/)
-* Prove [metatheorem](/wiki/metatheorem/)s with [Main page](/wiki/main-page/)
+* Represent [languages and logics](/wiki/object-logic/) in [LF](/wiki/lf/)
+* Prove [metatheorem](/wiki/metatheorem/)s with [Twelf](/wiki/main-page/)
 under the helpful guidance of Twelf experts.  
 
 The tutorial will be a highly interactive introduction to LF and Twelf
@@ -33,10 +33,10 @@ The tutorial is organized and presented by the CMU Principles of Programming gro
 
 The tutorial will begin at **9:00AM**. Get [http://twelf.plparty.org/tutorialslides/lectures.pdf the slides]!
 
-* Part 1: [POPL_Tutorial/Basics](/wiki/popl-tutorial-basics/)
-* Part 2: [POPL_Tutorial/MinML](/wiki/popl-tutorial-minml/)
-* Part 3: [POPL_Tutorial/Combinators](/wiki/popl-tutorial-combinators/)
-* Coda: [POPL_Tutorial/Next](/wiki/popl-tutorial-next/)
+* Part 1: [Basic Twelf Skills](/wiki/popl-tutorial-basics/)
+* Part 2: [Mechanizing MinML](/wiki/popl-tutorial-minml/)
+* Part 3: [Combinators: Worlds and Adequacy](/wiki/popl-tutorial-combinators/)
+* Coda: [What's next?](/wiki/popl-tutorial-next/)
 
 There will be a morning coffee break (10AM), lunch (12:30PM-1:30PM), and an afternoon coffee break (3PM).
 
@@ -44,7 +44,7 @@ There will be a morning coffee break (10AM), lunch (12:30PM-1:30PM), and an afte
 
 The tutorial will be interactive, with participants writing Twelf code, so you should come with Twelf installed on your laptop.
 
-Pre-built binaries of Twelf are available for most operating systems: see the [Download](/wiki/download/).
+Pre-built binaries of Twelf are available for most operating systems: see the [download page](/wiki/download/).
 
 Otherwise:
 * you can build Twelf from the [http://twelf.plparty.org/builds/twelf-src.tar.gz source tarball].  You will need [http://www.mlton.org MLton] or [http://www.smlnj.org sml/nj]. 

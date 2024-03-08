@@ -64,7 +64,7 @@ Some examples may help clarify the intended representation:
 
 \{\{needs|examples\}\}
 
-**Eta-expansion.** As we mentioned [Proving metatheorems:Full LF](/wiki/proving-metatheorems-full-lf/), Twelf permits programmers to write non-eta-expanded terms, which it treats as syntactic sugar for their eta-expansions.  For example, we could equivalently have written: !}%
+**Eta-expansion.** As we mentioned [before](/wiki/proving-metatheorems-full-lf/), Twelf permits programmers to write non-eta-expanded terms, which it treats as syntactic sugar for their eta-expansions.  For example, we could equivalently have written: !}%
     
 of-lam  : of (lam T2 E) (arrow T2 T)
             <- ...
