@@ -1,58 +1,7 @@
 /*
-
-This file parses  ./src/content/twelf/*.elf files in the directory into the
-./src/content/docs/wiki/*.mdx files that are actually understood by the Astro
-Starlight extension. The goal is for this to be a fairly minimal state machine
-that someone could code up again in an hour or so to retarget the wiki's .elf
-files to a new markdown-ish target in the future.
-
-### High level structure of a Twelf wiki file
-
-Here's a simple Twelf wiki file:
-
-    %%! title: A simple Twelf wiki file
-
-    %{! Here's code that defines the natural numbers: either zero `z`
-    or `s N`, the successor of the natural number `z`. !}%
-    
-    nat : type.
-
-    %%## Level two heading
-
-    %{! !}%
-
-A wiki Twelf file begins with a series of lines beginning with `%%!` that
-directly become the frontmatter of the output file.
-
-Then, the rest of the parser turns the file "inside out", making special
-comments --- beginning with %{! at the beginning of a line and ending with
-!}% at the end of a line --- into Markdown text, and turning everything else
-into Twelf.
-
-### Recognized behavior within Markdown sections
-
-Within Markdown sections, centered math is recognized as
-
-    ```math
-    \bigvee_i \mathcal{C}_i
-    ```
-
-It's possible to display syntax-highlighted Twelf code that doesn't appear
-in the regular flow of the document:
-
-    ```twelf
-    % Don't do this:
-    loop : type.
-    fix : loop <- loop.
-    %solve x : loop.
-    ```
-
-It's also possible to display checked Twelf code that 
-
+See wiki/src/content/docs/wiki-syntax.md for an explanation of
+the Wiki Twelf format that this file is parsing
 */
-
-
-
 
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { argv, exit, stderr } from "process";
@@ -70,11 +19,7 @@ if (!existsSync(inputFile)) {
   exit(1);
 }
 
-/* Parse out header
-
-A 
-
-*/
+/* Parse out header */
 
 const header = [];
 let lineNum = 0;
@@ -84,29 +29,48 @@ while (lineNum < input.length && input[lineNum].startsWith("%%! ")) {
   lineNum += 1;
 }
 
-/* == Parse out body == */
+/* Parse out body */
 
 let body = [];
-let state = { type: "twelf", accum: [] };
+let twelfcontext = [];
+
+/*
+type State
+  = { type: "twelf", subtype: null | "hidden" | "checked", accum: string list }
+  | { type: "markdown-block", subtype: "math" | "twelf" | "checkedtwelf", accum: string list }
+  | { type: "markdown" }
+*/
+let state = { type: "twelf", subtype: null, accum: [] };
+
+function escapeBacktickEnv(twelfcode) {
+  return twelfcode.replaceAll("\\", "\\\\").replaceAll("`", "\\`");
+}
+
+function mutablyTrimEmptyLines(lines) {
+  while (lines.length > 0 && lines[0].trim() === "") {
+    lines.shift();
+  }
+  while (lines.length > 0 && lines[lines.length - 1].trim() === "") {
+    lines.pop();
+  }
+}
 
 // Precondition: state.type === "twelf"
-function reduceTwelfAccum() {
-  while (state.accum.length > 0 && state.accum[0].trim() === "") {
-    state.accum.shift();
-  }
-  while (
-    state.accum.length > 0 &&
-    state.accum[state.accum.length - 1].trim() === ""
-  ) {
-    state.accum.pop();
-  }
+function reduceTwelfAccum(checked = false) {
+  mutablyTrimEmptyLines(state.accum);
   if (state.accum.length === 0) {
     // Do nothing
   } else {
     body.push(
       "",
-      "<Twelf code={`" +
-        state.accum.join("\n").replaceAll("\\", "\\\\").replaceAll("`", "\\`") +
+      "<Twelf " +
+        (checked
+          ? "checked context={`" +
+            escapeBacktickEnv(twelfcontext.join("\n")) +
+            "`} "
+          : "") +
+        "code={`" +
+        escapeBacktickEnv(state.accum.join("\n")) +
         "`}/>",
       ""
     );
@@ -117,15 +81,90 @@ function reduceTwelfAccum() {
 for (; lineNum < input.length; lineNum++) {
   let line = input[lineNum];
   if (state.type === "twelf") {
-    if (line.startsWith("%%#") || line.startsWith("%%!")) {
+    /* Handle recognized special behavior within Twelf sections */
+    if (line.trim() === "%{!! begin hidden !!}%") {
       reduceTwelfAccum();
-      body.push(line.slice(2));
+      if (state.subtype !== null) {
+        body.push(
+          "# Error line " +
+            lineNum +
+            ", found `begin hidden` within " +
+            state.subtype
+        );
+      }
+      state = { ...state, subtype: "hidden" };
       continue;
     }
+    if (line.trim() === "%{!! end hidden !!}%") {
+      if (state.subtype !== "hidden") {
+        body.push("# Error line " + lineNum + ", found unmatched `end hidden`");
+      }
+      state = { ...state, subtype: null };
+      continue;
+    }
+    if (line.trim() === "%{!! begin checked !!}%") {
+      reduceTwelfAccum();
+      if (state.subtype !== null) {
+        body.push(
+          "# Error line " +
+            lineNum +
+            ", found `begin checked` within " +
+            state.subtype
+        );
+      }
+      state = { ...state, subtype: "checked" };
+      continue;
+    }
+    if (line.trim() === "%{!! end checked !!}%") {
+      reduceTwelfAccum(true);
+      if (state.subtype !== "checked") {
+        body.push(
+          "# Error line " + lineNum + ", found unmatched `end checked`"
+        );
+      }
+    }
+
+    /* Check for the end of a Twelf section */
     if (line.startsWith("%{!")) {
       reduceTwelfAccum();
+      if (state.subtype !== null) {
+        body.push(
+          "# Error line " +
+            lineNum +
+            ", expected end for previous `begin " +
+            state.subtype +
+            "`"
+        );
+      }
       state = { type: "markdown" };
       line = line.slice(3).trimStart();
+      // FALLTHROUGH TO MARKDOWN PROCESSING SECTION
+    } else {
+      twelfcontext.push(line);
+      state.accum.push(line);
+      continue;
+    }
+  }
+
+  if (state.type === "markdown-block") {
+    if (line.trimEnd() === "```") {
+      if (state.subtype === "twelf") {
+        reduceTwelfAccum();
+      } else if (state.subtype === "checkedtwelf") {
+        reduceTwelfAccum(true);
+      } else {
+        mutablyTrimEmptyLines(state.accum);
+        body.push(
+          "",
+          "<KatexBlock " +
+            "formula={`" +
+            escapeBacktickEnv(state.accum.join("\n")) +
+            "`}/>",
+          ""
+        );
+      }
+      state = { type: "markdown" };
+      continue;
     } else {
       state.accum.push(line);
       continue;
@@ -135,7 +174,13 @@ for (; lineNum < input.length; lineNum++) {
   // state.type === "markdown"
   if (line.endsWith("!}%")) {
     body.push(line.slice(0, line.length - 3).trimEnd());
-    state = { type: "twelf", accum: [] };
+    state = { type: "twelf", subtype: null, accum: [] };
+  } else if (line.trimEnd() === "```math") {
+    state = { type: "markdown-block", subtype: "math", accum: [] };
+  } else if (line.trimEnd() === "```twelf") {
+    state = { type: "markdown-block", subtype: "twelf", accum: [] };
+  } else if (line.trimEnd() === "```checkedtwelf") {
+    state = { type: "markdown-block", subtype: "checkedtwelf", accum: [] };
   } else {
     body.push(line);
   }
@@ -146,7 +191,7 @@ for (; lineNum < input.length; lineNum++) {
 const output = `---
 ${header.join("")}---
 
-import Latex from "../../../components/Latex.astro";
+import KatexBlock from "../../../components/Latex.astro";
 import Twelf from "../../../components/Twelf.astro";
 
 {/* AUTOMATICALLY GENERATED FROM A .ELF FILE */}
