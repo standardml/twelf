@@ -9,8 +9,8 @@ and [extended markdown](https://mdxjs.com/) files (`.mdx`).
 All the files under the `/wiki/` prefix on this website are written as
 Wiki Twelf files, which are also valid Twelf files with the `.elf` extension,
 in the `/wiki/src/content/twelf/` directory of the Twelf repository. When
-building the website, the script `/wiki/elf-to-mdx.mjs` takes these Wiki
-Twelf files and creates files in the `/wiki/src/content/docs/wiki/*.mdx`
+building the website, the converter script `/wiki/elf-to-mdx.mjs` takes these
+Wiki Twelf files and creates files in the `/wiki/src/content/docs/wiki/*.mdx`
 directory that are actually what the static site generator sees.
 
 The goal is for the converter to be a fairly minimal state machine that
@@ -35,7 +35,7 @@ Here's a simple Twelf wiki file:
     %{! The [`%freeze`](/wiki/percent-freeze) declaration freezes. !}%
     %freeze nat.
 
-This will get turned by the `./wiki/elf-to-mdx.mjs` script into the following
+This will get turned by the `/wiki/elf-to-mdx.mjs` script into the following
 extended markdown file that the Astro Starlight SSG understands.
 
     ---

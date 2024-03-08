@@ -59,7 +59,7 @@ function mutablyTrimEmptyLines(lines) {
 function reduceTwelfAccum(checked = false) {
   mutablyTrimEmptyLines(state.accum);
   if (state.accum.length === 0) {
-    // Do nothing
+    body.push("");
   } else {
     body.push(
       "",
@@ -186,6 +186,12 @@ for (; lineNum < input.length; lineNum++) {
   }
 }
 
+if (state.type === "twelf") {
+  reduceTwelfAccum();
+} else {
+  body.push("# Error: unclosed wiki-comment at end of file");
+}
+
 /* == Write to file == */
 
 const output = `---
@@ -193,6 +199,8 @@ ${header.join("")}---
 
 import KatexBlock from "../../../components/Latex.astro";
 import Twelf from "../../../components/Twelf.astro";
+import Guide from "../../../components/Guide.astro";
+import Keyword from "../../../components/Keyword.astro";
 
 {/* AUTOMATICALLY GENERATED FROM A .ELF FILE */}
 {/* DO NOT EDIT */}

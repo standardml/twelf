@@ -4,9 +4,9 @@
 
 ## Example
 
-The following example shows a simple Twelf declaration at top, and the text below it [in green](/wiki/twelftag/) shows the response from Twelf. Notice that the last three lines are not considered by Twelf, because it stops reading input when it reaches the ``%.`` keyword. !}%
-    
-%{! (options removed from twelftag: check=decl) !}%
+The following example shows a simple Twelf declaration at top, and the text below it [in green](/wiki/twelftag/) shows the response from Twelf. Notice that the last three lines are not considered by Twelf, because it stops reading input when it reaches the ``%.`` keyword. 
+
+```checkedtwelf
 
 nat : type.
 
@@ -16,14 +16,15 @@ This line will not be checked.
 Neither will anything else that gets put after the %.
 %total T (pretendlemma T _ _).
 
-%{! ## See also
-* \{\{guide|chapter=2|section=4|title=Lexical Conventions\}\}
+```
 
-\{\{keyword|key=.\}\} !}%
+## See also
+* <Guide chapter="2" section="4">Lexical Conventions</Guide>
 
-%{!
+<Keyword name="."/>
+
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+You can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25.).
 !}%
