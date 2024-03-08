@@ -19,5 +19,6 @@ const newly = lines.map((line, i: number) => i%2 === 0 ? line : `<span style="co
 
 <!-- pre set:text={JSON.stringify(newly)} / -->
 <pre set:html={newly.join('\n')} />
+{Astro.props.checked ? "(placeholder for twelf's feedback)" : null}
 <!-- pre set:html={text} /-->
 <!-- pre set:html={response} /-->
