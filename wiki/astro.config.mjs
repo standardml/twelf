@@ -24,7 +24,34 @@ export default defineConfig({
       // editLink: { baseUrl: 'TODO' },
       head: [{ tag: "link", attrs: KATEX_CSS }],
       sidebar: [
-        { label: "Home", link: "/" } /*,
+        { label: "About", link: "/wiki/about-the-twelf-project/" },
+        { label: "Download", link: "/wiki/download/" },
+        { label: "Documentation", link: "/wiki/documentation/" },
+        {
+          label: "Contributing",
+          link: "/wiki/the-twelf-project-contributing/",
+        },
+        {
+          label: "Learn Twelf",
+          items: [
+            { label: "Introductions", link: "/wiki/introductions-to-twelf/" },
+            { label: "Tutorials", link: "/wiki/tutorials/" },
+            { label: "Case studies", link: "/wiki/case-studies/" },
+            { label: "Twelf glossary", link: "/wiki/twelf-glossary/" },
+          ],
+        },
+        {
+          label: "Reference",
+          items: [
+            { label: "LF bibliography", link: "/wiki/bibliography-of-lf/" },
+            {
+              label: "Research with Twelf",
+              link: "/wiki/research-projects-using-twelf/",
+            },
+          ],
+        },
+
+        /*,
         { label: "The Twelf Project" },
         { label: "Download" },
         {
@@ -42,7 +69,7 @@ export default defineConfig({
             { label: "LF Bibliography" },
             { label: "Research with Twelf" },
           ],
-        }, */,
+        }, */
       ],
     }),
   ],
