@@ -13,7 +13,7 @@ The solution is [here](/wiki/popl-tutorial-minml-preservation-theorem-solution/)
 
 Types:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 nat : tp.
@@ -23,7 +23,7 @@ arr : tp -> tp -> tp.
 
 Expressions
 
- !}%
+!}%
 
 exp : type.				%name exp E.
 fn : tp -> (exp -> exp) -> exp.
@@ -36,7 +36,7 @@ ifz : exp -> exp -> (exp -> exp) -> exp.
 
 ## Static semantics
 
- !}%
+!}%
 
 of : exp -> tp -> type.			%name of Dof.
 %mode of +E -T.
@@ -58,7 +58,7 @@ of/ifz : of (ifz E E1 ([x] E2 x)) T
 
 ## Dynamic semantics
 
- !}%
+!}%
 
 value : exp -> type.			%name value Dval.
 %mode value +E.
@@ -91,7 +91,7 @@ step/ifz/s : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
 
 #### TASK 1: Fill in missing cases
 
- !}%
+!}%
 
 pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
 %mode pres +Dstep +Dof -Dof.

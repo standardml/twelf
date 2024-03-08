@@ -6,7 +6,7 @@
 
 ## Arithmetic primitives
 
- !}%
+!}%
 
 nat : type.  
 z : nat.
@@ -25,7 +25,7 @@ add/s : add (s M) N (s P) <- add M N P.
 
 ## Expressions
 
- !}%
+!}%
 
 val : type.
 num : nat -> val.

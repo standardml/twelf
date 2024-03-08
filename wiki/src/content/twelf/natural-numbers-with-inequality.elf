@@ -6,7 +6,7 @@ in particular the TALT project.
 There is no arithmetic, just the theory of inequality.
 This code uses an uninhabited type, "void", in order to express
 [proofs by reductio ad absurdum](/wiki/reasoning-from-false/).
- !}%
+!}%
 
 %{! ## Syntax !}%
 

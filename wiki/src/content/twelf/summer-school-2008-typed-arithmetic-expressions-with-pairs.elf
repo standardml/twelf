@@ -50,7 +50,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 Add a type for products:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 number : tp.
@@ -61,7 +61,7 @@ prod   : tp -> tp -> tp.
 
 Add pairs as a value, projections as expressions:
 
- !}%
+!}%
 
 val : tp -> type.			%name val V.  %postfix 1 val.
 num : nat -> number val.
@@ -82,7 +82,7 @@ For simplicity, take answers to be values.
 
 And we add cases to eval:
 
- !}%
+!}%
 
 eval : T exp -> T val -> type.
 %mode eval +E1 -E2.
@@ -126,7 +126,7 @@ eval/snd
   |nonext=
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

@@ -35,7 +35,7 @@ arbitrary number of shift operations.
 simpler - we can think of this metric as a tree ``T`` that is either
 a leaf (``o``), a parent with one child tree (``x T``), or a parent
 with two child trees (``T1 | T2``). 
- !}%
+!}%
 
 metric : type.                          %name metric T.
 o : metric.
@@ -1191,7 +1191,7 @@ of cut admissibility in the target logic.
 This awkwardness is a result of the slight mismatch between falsehood in 
 the target logic and contradiction in the source logic, and is part of
 the reason we didn't include falsehood as a primitive in the source logic. 
- !}%
+!}%
 
 trans-init : trans Mt A' S (atom Q) -> hyp' A' -> hyp' (atom' Q) -> type.
 - : trans-init tatom H H.
@@ -1520,7 +1520,7 @@ get out of the translation isn't exactly what we want, we need
 &lt;math&gt;\Gamma \vdash \{\bigcirc\}P~true&lt;/math&gt; or 
 &lt;math&gt;\Gamma \vdash \{\bigcirc\}\{\downarrow\}N~true&lt;/math&gt;. However, we can 
 use inversion lemmas (and lax cut, in the second case) to get what we need.
- !}%
+!}%
 
 - : trans-compl' (id' (H': hyp' (circ' M))) (tclax (T: trans _ M pos Pm)) F
      <- trans-complhyp H' Th (H: hyp P)

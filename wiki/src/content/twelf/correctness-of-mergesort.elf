@@ -2,7 +2,7 @@
 
 %{! 
 This is an extended example of a proof of correctness of mergesort for lists without duplicates. In particular, it is an example of showing that an implementation of sorting (mergesort) matches up with a declarative definition that relates a list to its sort (i.e. the sorted list is a permutation of the unsorted list). 
- !}%
+!}%
 
 
 %{! 
@@ -11,7 +11,7 @@ This is an extended example of a proof of correctness of mergesort for lists wit
 #### Declarative definitions
 
 We must first define natural numbers, lists of natural numbers, comparison on natural numbers, and what it means for one list to be the sorted version of another.
- !}%
+!}%
 
 nat : type.
 
@@ -72,7 +72,7 @@ all-in-nat-list/cons	: all-in-nat-list (nat-list/cons N NL) NL'
 
 %{! 
 For the purposes of this proof, we use a set-theoretic extensional definition of permutation, where two lists are permutations of each other if they contain the same set of elements. This is only a proper definition of permutation if we assume both lists contain no duplicates. This invariant is baked into both our definition of sorted and our definition of mergesort. 
- !}%
+!}%
 
 nat-list-permute	: nat-list -> nat-list -> type. 
 
@@ -90,7 +90,7 @@ nat-list-declarative-sort/i	: nat-list-declarative-sort NL NL'
 
 %{! 
 #### Definitions used to define mergesort
- !}%
+!}%
 
 split	: nat-list -> nat-list -> nat-list -> type. 
 
@@ -140,7 +140,7 @@ mergesort/cons	: mergesort NL1 NL2
 
 ``all-in-2 N1 N2 N3`` is a judgment that holds when all the elements in ``N1`` are in the union of ``N1`` and ``N2``/
 
- !}%
+!}%
 
 % all-in-2 N1 N2 N3, everything in N1 is either in N2 or N3
 
@@ -612,7 +612,7 @@ mergesort-permute	: mergesort N1 N2
 %{! ### Final result
 Showing the final result merely requires composing the two big intermediate results, namely that mergesort produces a sorted output and that mergesort's output is a permutation of the input.
 
- !}%
+!}%
 
 mergesort-correct	: mergesort N1 N2
 			   -> nat-list-declarative-sort N1 N2
@@ -637,7 +637,7 @@ We can also show that ``nat-list-permute`` under the right constraints (implied 
 
 Note: Maybe this should be its own article?
 
- !}%
+!}%
 
 
 all-in-nat-list-trans	: all-in-nat-list N1 N2
@@ -1019,7 +1019,7 @@ all-in-no-dups-permutes	: {N}
 TODO: Finish commentary on the proof. 
 
 \{\{stub\}\}
- !}%
+!}%
 
 %{!
 -----

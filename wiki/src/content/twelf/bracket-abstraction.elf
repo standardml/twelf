@@ -7,7 +7,7 @@ sense: if a term steps to a reduct, its translation multi-steps to its
 reduct's translation.
 
 [William Lovas](/wiki/user-william-lovas/)
- !}%
+!}%
 
 
 %{! ---- !}%
@@ -16,7 +16,7 @@ reduct's translation.
 First we define the syntax of the two languages.  ``term`` is the
 type of untyped lambda-calculus terms; ``cterm`` is the type of
 untyped combinator terms.
- !}%
+!}%
 
 term : type.    %name term M x.
 
@@ -45,7 +45,7 @@ capp : cterm -> cterm -> cterm.
 Then we define reduction relations on both languages.  ``step`` is the
 single-step reduction relation on lambda terms; ``cstep`` is the
 single-step reduction relation on combinator terms.
- !}%
+!}%
  
 step : term -> term -> type.
 
@@ -75,7 +75,7 @@ We also define multi-step reduction on combinator terms.
 
 Our simulation will relate single-step derivations in the lambda-calculus
 to multi-step derivations on the translated terms.
- !}%
+!}%
 
 cstep* : cterm -> cterm -> type.
 
@@ -89,7 +89,7 @@ cs-nil  : cstep* N N.
 %{! 
 We can pre-emptively prove some compatibility lemmas about multi-step
 reduction.
- !}%
+!}%
 
 cs-1* : cstep* N1 N1' -> cstep* (capp N1 N2) (capp N1' N2) -> type.
 %mode +{N1:cterm} +{N1':cterm} +{N2:cterm}
@@ -132,7 +132,7 @@ We can now define our translation in the standard way.  Bracket abstraction
 is represented by a judgement relating LF-level abstractions in the combinator
 language to closed combinator terms.  This is essentially 
 [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
- !}%
+!}%
 
 trans : term -> cterm -> type.
 bracket : (cterm -> cterm) -> cterm -> type.
@@ -160,7 +160,7 @@ b-s : bracket ([x] capp (N1 x) (N2 x)) (capp (capp s N1') N2')
 %{! 
 First, we prove the correctness of bracket abstraction itself:
 the application of a bracket abstraction reduces to a substitution.
- !}%
+!}%
 
 subst : bracket ([x] N x) N' -> {N0} cstep* (capp N' N0) (N N0) -> type.
 %mode subst +B +N0 -CS.
@@ -196,7 +196,7 @@ Then, we can prove simulation, the correctness of translation, by a
 straightforward induction on single-step derivations in the lambda-calculus,
 using the correctness of bracket abstraction as a lemma in the case of a
 beta-reduction.
- !}%
+!}%
 
 simulate : step M M' -> trans M N -> trans M' N' -> cstep* N N' -> type.
 %mode simulate +S +T -T' -CS.
@@ -205,7 +205,7 @@ simulate : step M M' -> trans M N -> trans M' N' -> cstep* N N' -> type.
 NB: in this step, on paper, you have to prove two compositionality lemmas.
 In Twelf, using higher-order abstract syntax, we get them for free -- see
 (T1 _ _ T2) output.
- !}%
+!}%
 - : simulate s-β (t-app T2 (t-lam B1 T1)) (T1 _ _ T2) CS
      <- subst B1 N2 CS.
 

@@ -2,13 +2,13 @@
 
 %{! 
 Negation as failure. It is possible to do negation-as-failure using Twelf's [logic programming](/wiki/logic-programming/) engine, with the use of [%deterministic](/wiki/deterministic-declaration/). As an example, we will define logic programs to compute the less-than and greater-than-or-equal-to functions. The less-than function will be defined in a standard way. The greater-than-or-equal-to function will be defined using a negation-as-failure interpretation of the less-function.
- !}%
+!}%
 
 %{! 
 ### Definitions
 
 Natural numbers and booleans.
- !}%
+!}%
 
 nat	: type. 
 
@@ -26,7 +26,7 @@ false	: bool.
 
 %{! 
 ``less`` is defined inductively in the standard way.
- !}%
+!}%
 
 less	: nat -> nat -> type. 
 %mode less +D1 +D2. 
@@ -38,7 +38,7 @@ less/s	: less (s N1) (s N2)
 
 %{! 
 We will need a judgment that tests whether a boolean is ``false`` in order to use negation-as-failure.
- !}%
+!}%
 
 
 isfalse	: bool -> type. 
@@ -52,7 +52,7 @@ isfalse/i	: isfalse false.
 ### Coding negation-as-failure
 
 We define a logic program that when given two numbers returns ``true`` if the first is less than the second, and ``false`` otherwise. We use ``%deterministic`` to make the logic programming engine commit to the first solution it finds. 
- !}%
+!}%
 
 less-bool	: nat -> nat -> bool -> type. 
 %mode less-bool +D1 +D2 -D3. 
@@ -60,20 +60,20 @@ less-bool	: nat -> nat -> bool -> type.
 
 %{! 
 Because the ``less-bool/true`` case is first, it will attempt to find a proof that the first number is less than the second. 
- !}%
+!}%
 less-bool/true	: less-bool N1 N2 true
 		   <- less N1 N2. 
 
 %{! 
 Because of the ``%deterministic`` declaration, when searching for a proof of ``less N1 N2 B``, only executes when ``less-bool/true`` fails. However, because of pattern matching a search for a proof of ``less N1 N2 false`` always succeeds. 
- !}%
+!}%
 
 less-bool/false	: less-bool N1 N2 false. 
 
 
 %{! 
 We will now define ``gte`` using ``less-bool``. It has only one rule, which makes a call to ``less-bool N1 N2 B``. It is important to make sure that the result ``B`` is not directly identified as ``false`` so that it executes ``less-bool`` in the appropriate order. We use the call to ``isfalse B`` to verify that the output really is ``false``.
- !}%
+!}%
 
 gte	: nat -> nat -> type. 
 %mode gte +D1 +D2. 
@@ -84,7 +84,7 @@ gte/i	: gte N1 N2
 
 %{! 
 We can use a number of ``%solve`` declarations to test our ``less`` and ``gte`` judgments. 
- !}%
+!}%
 
 %solve deriv : less (s z) (s (s z)).
 %solve deriv1 : gte (s (s z)) (s z).
@@ -99,7 +99,7 @@ It is important to note that while these definitions work as intended as logic p
 
 \{\{stub\}\}
 
- !}%
+!}%
 
 %{!
 -----

@@ -4,7 +4,7 @@
 
 ## Modally-Propositional Logic
 
- !}%
+!}%
 
 world : type.  %name world W.
 world1 : world.

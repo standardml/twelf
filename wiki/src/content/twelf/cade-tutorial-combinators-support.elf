@@ -5,7 +5,7 @@ Adapted from the case study on [Typed combinators soundness and completeness](/w
 
 ## Syntax
 
- !}%
+!}%
 
 % lambda calculus
 
@@ -30,7 +30,7 @@ capp : comb -> comb -> comb.
 
 ## Translation
 
- !}%
+!}%
 
 % bracket abstraction
 % XXX fill in
@@ -43,7 +43,7 @@ capp : comb -> comb -> comb.
 
 ## Equational theory
 
- !}%
+!}%
 
 % lambda term equality
 
@@ -84,7 +84,7 @@ ceq/trans : ceq A A'
 
 ## Correctness of the translation
 
- !}%
+!}%
 
 % substitution lemma
 % XXX fill in

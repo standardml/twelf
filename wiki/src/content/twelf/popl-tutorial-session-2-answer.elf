@@ -4,7 +4,7 @@
 
 ## Arithmetic primitives
 
- !}%
+!}%
 
 nat : type.  
 z : nat.
@@ -27,7 +27,7 @@ add/s : add (s M) N (s P) <- add M N P.
 
 Answer:
 
- !}%
+!}%
 
 mult : nat -> nat -> nat -> type.
 
@@ -45,7 +45,7 @@ arguments are outputs?
 
 Answer:
 
- !}%
+!}%
 
 %mode mult +M +N -P.
 
@@ -55,7 +55,7 @@ Answer:
 
 Next the world:
 
- !}%
+!}%
 
 %worlds () (mult _ _ _).
 
@@ -66,7 +66,7 @@ This means we consider terms of type mult in the empty LF context only.
 Finally, we ask Twelf to check that it is total by induction over the
 first argument:
 
- !}%
+!}%
 
 %total M (mult M _ _).
 
@@ -282,13 +282,13 @@ This separation allows you to, for example, check that each constant in a family
 
 If any constant in a type family fails mode, worlds, or output coverage, then mode, worlds, or totality checking fails for the whole type family.  One could imagine that Twelf instead would just disregard the offending constant: it is possible that the type family as a whole satisfies a totality assertion without that constant, and, in a mathematical sense, adding additional constants never invalidates the fact a totality assertion is true of a family.    The reason Twelf does not work this way is that ``%total`` actually has a more specific meaning, as we discuss in the next section.
 
- !}%
+!}%
 
 %{! 
 
 ## Expressions from before
 
- !}%
+!}%
 
 val : type.
 num : nat -> val.
@@ -321,7 +321,7 @@ eval/let : eval (let E1 ([x] E2 x)) A
 
 We'll add syntax for 'times' and an evaluation rule
 
- !}%
+!}%
 
 val : type.
 num : nat -> val.
@@ -361,7 +361,7 @@ eval/times : eval (times E1 E2) (num N)
 
 ## Expressions with pairs
 
- !}%
+!}%
 
 val : type.
 num  : nat -> val.
@@ -421,7 +421,7 @@ Why? Not every expression evaluates to a ``num``, e.g. ``(plus (ret (pair 6 7)) 
 
 We'll introduce a typing judgement.  
 
- !}%
+!}%
 
 tp : type.
 natural : tp.
@@ -468,7 +468,7 @@ We promised we'd stay in the empty LF context, but we don't.
 
 ## Typing 2a
 
- !}%
+!}%
 
 %% relates a value to a type.
 of-val : val -> tp -> type.
@@ -512,7 +512,7 @@ of/let : of (let E1 ([x] E2 x)) T
 
 ## Typing 2
 
- !}%
+!}%
 
 %% relates a value to a type.
 of-val : val -> tp -> type.
@@ -560,7 +560,7 @@ example : of (let (ret (num z)) ([y] (ret y))) natural
 
 We need a derivation of  ``of-val x natural``!
 
- !}%
+!}%
 
 of-val : val -> tp -> type.
 

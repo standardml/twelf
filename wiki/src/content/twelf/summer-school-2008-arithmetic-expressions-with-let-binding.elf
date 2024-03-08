@@ -37,7 +37,7 @@ add/s : add (s M) N (s P) <- add M N P.
 
 First, the syntax:
 
- !}%
+!}%
 
 exp : type.				%name exp E.
 num : nat -> exp.
@@ -52,13 +52,13 @@ represented by ``let e_1 ([x] e_2)``; an LF variable is used to
 represent the bound-variable.  So the body of the ``let`` has LF
 type ``(exp -&gt; exp)``.
 
- !}%
+!}%
 
 %{! 
 
 ### Evaluation, using substitution
 
- !}%
+!}%
 
 ans : type.				%name ans A.
 anum : nat -> ans.
@@ -90,7 +90,7 @@ Twelf cannot prove this total without some help, because it's not
 obvious that the substitution instance ``(E2 (num N))`` is smaller
 than the input expression.
 
- !}%
+!}%
 
 %worlds () (eval _ _).
 
@@ -118,7 +118,7 @@ At this point, you should explore one or both of these variations, and then proc
   |nextname=Arithmetic expressions with call-by-value let-binding
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

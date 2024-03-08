@@ -53,7 +53,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 ## Raw syntax
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 number : tp.
@@ -73,7 +73,7 @@ let : exp -> (val -> exp) -> exp.
 
 ## Typing judgement on raw syntax
 
- !}%
+!}%
 
 ofv : val -> tp -> type.		%name ofv Dofv.
 %mode ofv +V -T.
@@ -95,7 +95,7 @@ of : exp -> tp -> type.			%name of Dof.
 
 ### Answers
 
- !}%
+!}%
 
 ans : type.				%name ans A.
 anum : nat -> ans.
@@ -111,7 +111,7 @@ ofa : ans -> tp -> type.		%name ofa Dofa.
 
 ### Evaluation judgement on raw syntax
 
- !}%
+!}%
 
 eval : exp -> ans -> type.
 %mode eval +E1 -E2.
@@ -144,7 +144,7 @@ eval/let
 Evaluation is not total because of run-time type errors!  (e.g., try
 appending two numbers).  
 
- !}%
+!}%
 
 %worlds () (eval _ _).
 
@@ -163,7 +163,7 @@ Twelf gives this error, refering to the first recursive call of ``eval/plus``.
    |nextname=Exercises 1
    \}\}
 
- !}%
+!}%
 
 %{!
 -----

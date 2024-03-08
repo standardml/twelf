@@ -37,7 +37,7 @@ First, we define a type of ``open values``, which are either a
 numeral or a variable.  Numerals are represented by a constant
 ``num``; variables are represented by LF variables.  
 
- !}%
+!}%
 
 val : type.		%name val V.
 num : nat -> val.
@@ -45,7 +45,7 @@ num : nat -> val.
 %{! 
 Next, we define expressions, with a constant ``ret`` including
 values into expressions.
- !}%
+!}%
 
 exp : type.             %name exp E.
 ret : val -> exp.
@@ -61,7 +61,7 @@ Note that the ``let``-bound variable stands for a value.
 As before, the type of answers includes only numerals.  The code for
 evaluation is exactly the same as [before](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding/).  
 
- !}%
+!}%
 
 ans : type.				%name ans A.
 anum : nat -> ans.
@@ -87,7 +87,7 @@ eval/let
 
 But now, Twelf can prove evaluation total:
 
- !}%
+!}%
 
 %worlds () (eval _ _).
 %total E (eval E _).
@@ -110,7 +110,7 @@ variable = 1.
    |next=Arithmetic expressions with let-binding (hypothetical evaluation)
    |nextname=Defining evaluation with a hypothetical judgement\}\}
 
- !}%
+!}%
 
 %{!
 -----

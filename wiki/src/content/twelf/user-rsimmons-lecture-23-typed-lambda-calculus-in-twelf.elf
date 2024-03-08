@@ -9,7 +9,7 @@ We have a programming language that we started last time that we want to represe
 
 ... and then, we can see those types in Twelf:
 
- !}%
+!}%
 
 tp : type.
 
@@ -24,7 +24,7 @@ Next, the terms "on paper:"
 
 ... and in Twelf:
 
- !}%
+!}%
 
 exp : type.
 
@@ -36,14 +36,14 @@ app : exp -> exp -> exp.
 
 Note that there is no case for "variables" ``x``. 
 
- !}%
+!}%
 
 %{! ## Static semantics (typing rules) !}%
 %{! 
 
 The old judgment for typing was ``e : τ`` - in other words, it was a two-place relation that took an expression and a type. We will describe this in Twelf as ``of``.
 
- !}%
+!}%
 
 of : exp -> tp -> type.
 
@@ -54,7 +54,7 @@ Okay - now we need to describe this rule:
  -------- of/star
  * : unit
 
- !}%
+!}%
 
 of/star : of * unit.
 
@@ -67,7 +67,7 @@ Next we describe the more interesting rule for application:
  e&lt;sub&gt;2&lt;/sub&gt; : τ
  ------------ of/app
  e&lt;sub&gt;1&lt;/sub&gt; e&lt;sub&gt;2&lt;/sub&gt; : τ'
- !}%
+!}%
 
 of/app : of (app E1 E2) T
   <- of E1 (arrow T T')
@@ -81,7 +81,7 @@ The rule for abstractions uses a hypothetical! We're going to pull this off by u
  --------------- of/lam
  λx:τ.e : τ → τ'
 
- !}%
+!}%
 
 of/lam : of (lam T ([x] E x)) (arrow T T')
   <- ({x: exp} of x T -> of (E x) T').
@@ -122,7 +122,7 @@ First, values ``e value``:
  ------------ value/lam
  λx:τ.e value
 
- !}%
+!}%
 
 value : exp -> type.
 
@@ -147,7 +147,7 @@ Next, evaluation rules ``e -&gt; e``
  --------------------- step/applam
  (λx:τ.e) e&lt;sub&gt;2&lt;/sub&gt; -&gt; e&lt;sub&gt;1&lt;/sub&gt; e'&lt;sub&gt;2&lt;/sub&gt;
 
- !}%
+!}%
 
 step : exp -> exp -> type.
 
@@ -182,7 +182,7 @@ So we an prove this theorem:
 
 ...by writing this in Twelf and proving it to be a total relation:
 
- !}%
+!}%
 
 preservation : of E T -> step E E' -> of E' T -> type.
 %mode preservation +D1 +D2 -D2.

@@ -4,7 +4,7 @@
 
 ## Nats
 
- !}%
+!}%
 
 nat  : type.
 zero : nat.
@@ -14,7 +14,7 @@ succ : nat -> nat.
 
 ## Add
 
- !}%
+!}%
 
 add : nat -> nat -> nat -> type.
 add/z : add zero N N.
@@ -29,7 +29,7 @@ add/s : add (succ M) N (succ O)
 
 ## Exercise: Mult
 
- !}%
+!}%
 
 mult : nat -> nat -> nat -> type.
 mult/z : mult zero N zero.
@@ -45,7 +45,7 @@ mult/s : mult (succ M) N O'
 
 ## Right-hand Identity
 
- !}%
+!}%
 
 rhzero : {M : nat} add M zero M -> type.
 %mode rhzero +M -D.
@@ -61,7 +61,7 @@ rhzero : {M : nat} add M zero M -> type.
 
 ## Right-hand succ
 
- !}%
+!}%
 
 rhsucc : add M N O -> add M (succ N) (succ O) -> type.
 %mode rhsucc +D1 -D2.
@@ -78,7 +78,7 @@ rhsucc : add M N O -> add M (succ N) (succ O) -> type.
 
 ## Exercise: put it all together
 
- !}%
+!}%
 
 commute : add M N O -> add N M O -> type.
 %mode commute +D1 -D2.

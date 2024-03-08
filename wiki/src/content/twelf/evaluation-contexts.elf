@@ -9,7 +9,7 @@ Twelf verifies
 - Progress
 - Determinacy of factoring/step (using [%unique](/wiki/percent-unique/))
 
- !}%
+!}%
 
 tp : type.
 b : tp.

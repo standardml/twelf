@@ -6,7 +6,7 @@ to do proof search by the fixed search strategy of Twelf's
 [logic programming](/wiki/logic-programming/) engine. In these cases, tactical theorem provers can 
 be written that may still be able to prove many theorems. This article
 defines two approaches to writing these tactical theorem provers.
- !}%
+!}%
 
 %{! ## Logic definition !}%
 
@@ -21,7 +21,7 @@ as a primitive operation.
 We define a type for numbers ``num``, and then make addition a
 primitive operation. We also define propositions; the only proposition we 
 define here is equality of two numbers.
- !}%
+!}%
 
 num : type. %name num N.
 + : num -> num -> num. %infix left 10 +.
@@ -37,7 +37,7 @@ We can create a valid proposition that may be obviously untrue; for instance,
 we create ``pf``, which is a particular little logic which
 will allow us to prove a large number of theorems about addition based
 on a small number of axioms. Eight axioms are defined below:
- !}%
+!}%
 
 pf : prop -> type.
 
@@ -58,7 +58,7 @@ We [freeze](/wiki/percent-freeze/) the type family ``pf`` to prevent any more
 axioms from being defined,
 but we can still define (many!) more theorems using the axioms (for instance,
 the complement to ``plus_elim1``.
- !}%
+!}%
 
 plus_elim2 : pf (N1 + N2 == N1' + N2) -> pf (N1 == N1') = 
   [p1 : pf (N1 + N2 == N1' + N2)] 
@@ -75,7 +75,7 @@ into ``(a + b + c + d)`` - addition was defined to be left-associative,
 so this is the same as ``(((a + b) + c) + d)``.
 
 The ``list`` type family below will do this when run as a logic program.
- !}%
+!}%
 
 list : num -> num -> type.
 %mode list +A -B.
@@ -95,7 +95,7 @@ Twelf's [dependent types](/wiki/dependent-types/), we can define a new type fami
 which operates in the same way but returns a proof that the two numeric
 formulas are equal. We do **not** prove that the second 
 formula is flattened, just that it is equal to the first formula.
- !}%
+!}%
 
 mklist : {A}{B} pf (A == B) -> type.
 %mode mklist +A -B -Pf.

@@ -162,7 +162,7 @@ esubst : ({x} append (cons G1 x A) G2 (G x))
 	   (append/cons Dappend')
 	   (ordered/cons (_ : bounded (G x) y))
 	   _ _ _).
- !}%
+!}%
 	
 
 %worlds (bind) (esubst _ _ _ _ _ _).

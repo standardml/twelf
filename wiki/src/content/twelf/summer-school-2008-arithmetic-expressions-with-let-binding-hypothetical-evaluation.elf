@@ -35,7 +35,7 @@ We use the call-by-value syntax for expressions here.
 
 Values, expressions, answers, and the first two cases of evaluation are as before:
 
- !}%
+!}%
 
 val : type.				%name val V.
 num : nat -> val.
@@ -92,7 +92,7 @@ for some ``A1, ... , An``.
 We do this by 
 - defining a block ``eval_block`` describing that pattern
 - stating ``eval`` for a world containing contexts made up of ``eval_block``s
- !}%
+!}%
 
 %block eval_block : some {A:ans} block {x:val} {_:eval (ret x) A}.
 %worlds (eval_block) (eval _ _).
@@ -101,7 +101,7 @@ We do this by
 
 Now Twelf can verify the totality of ``eval``:
 
- !}%
+!}%
 
 %total E (eval E _).
 
@@ -112,7 +112,7 @@ Now Twelf can verify the totality of ``eval``:
    |prevname=Call-by-value let-binding syntax
    |next=Typed arithmetic expressions
    |nextname=Typed arithmetic expressions\}\}
- !}%
+!}%
 
 %{!
 -----

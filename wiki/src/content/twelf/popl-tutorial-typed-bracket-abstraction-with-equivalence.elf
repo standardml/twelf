@@ -9,14 +9,14 @@ are beta-eta equal.
 
 [William Lovas](/wiki/user-william-lovas/)
 
- !}%
+!}%
 
 
 %{! 
 
 ## Syntax and static semantics
 
- !}%
+!}%
 
 %{! 
 
@@ -31,7 +31,7 @@ Note that since we're using an
 [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/), these syntax
 definitions double as definitions of the languages' static semantics.
 
- !}%
+!}%
 
 tp : type.              %name tp A a.
 
@@ -64,7 +64,7 @@ capp : comb (A => B) -> comb A -> comb B.
 We can use Twelf's [abbreviation mechanism](/wiki/abbrev-declaration/) and
 [fixity declarations](/wiki/fixity-declaration/) to obtain some cute syntax.
 
- !}%
+!}%
 
 %abbrev @ = app.
 %infix left 10 @.
@@ -76,7 +76,7 @@ We can use Twelf's [abbreviation mechanism](/wiki/abbrev-declaration/) and
 
 ## Equational theory
 
- !}%
+!}%
 
 %{! 
 
@@ -86,7 +86,7 @@ equality for combinator terms.  In both cases, the equality relation
 amounts to beta-eta equivalence.  (We use extensionality instead of a
 rule based on eta-expansion.)
 
- !}%
+!}%
 
 % definitional equality on terms (better name?)
 teq : term A -> term A -> type.
@@ -160,7 +160,7 @@ ceq/trans : ceq N N''
 
 ## Translation
 
- !}%
+!}%
 
 %{! 
 
@@ -203,7 +203,7 @@ relating LF-level abstractions in the combinator language to closed combinator
 terms, ``bracket ([x] N x) N``.  This definition is essentially an
 instance of [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
 
- !}%
+!}%
 
 translate : term A -> comb A -> type.
 %mode translate +M -N.
@@ -225,7 +225,7 @@ with a lambda-term variable, a combinator-term variable, and an assumption
 that the one translates to the other.  See the ``%worlds`` declaration
 below.
 
- !}%
+!}%
 t/lam : translate (lam [x] M x) N*
          <- ({x:term A} {y:comb A} translate x y -> translate (M x) (N y))
          <- bracket ([y] N y) N*.
@@ -250,7 +250,7 @@ b/s : bracket ([x] capp (N1 x) (N2 x)) (capp (capp s N1') N2')
 
 Both relations are effective (though we cannot use this fact in proofs).
 
- !}%
+!}%
 
 %total N (bracket N _).
 %total M (translate M _).
@@ -259,7 +259,7 @@ Both relations are effective (though we cannot use this fact in proofs).
 
 Instead, we need effectiveness lemmas.  XXX explain this better...
 
- !}%
+!}%
 
 can-bracket : {N : comb A -> comb B} bracket N N* -> type.
 %mode can-bracket +N -Dbrack.
@@ -299,14 +299,14 @@ can-translate : {M : term A} translate M N -> type.
 
 ## Correctness of the translation
 
- !}%
+!}%
 
 %{! 
 
 First, we prove the correctness of bracket abstraction itself:
 the application of a bracket abstraction reduces to a substitution.
 
- !}%
+!}%
 
 subst : bracket ([x] N x) N* -> {N0} ceq (capp N* N0) (N N0) -> type.
 %mode subst +B +X -CS.
@@ -341,7 +341,7 @@ subst : bracket ([x] N x) N* -> {N0} ceq (capp N* N0) (N N0) -> type.
 Next, we need to know that the translation of a term is unique up to
 equivalence.
 
- !}%
+!}%
 
 translate-unique : translate M N -> translate M N' -> ceq N N' -> type.
 %mode translate-unique +Dt1 +Dt2 -Deq.
@@ -393,7 +393,7 @@ straightforward induction on equality derivations in the lambda-calculus,
 using the correctness of bracket abstraction as a lemma in the case of a
 beta-reduction.
 
- !}%
+!}%
 
 simulate' : translate M N -> translate M' N' -> teq M M' -> ceq N N' -> type.
 %mode simulate' +Dt +Dt' +Deq -Dceq.

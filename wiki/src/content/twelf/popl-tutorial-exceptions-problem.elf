@@ -15,7 +15,7 @@ accommodate the extensions to the language.
 
 Types:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 nat : tp.
@@ -25,7 +25,7 @@ arr : tp -> tp -> tp.
 
 Raw expressions, which admit ill-typed terms
 
- !}%
+!}%
 
 exp : type.				%name exp E.
 z : exp.
@@ -42,7 +42,7 @@ The second, (handle E1 E2), is a term that executes E1. If E1
 evaluates to a value V, then (handle E1 E2) evaluates to V. If E1
 raises an exception, then the handler E2 is executed. 
 
- !}%
+!}%
 
 raise : tp -> exp.
 handle : exp -> exp -> exp. 
@@ -53,7 +53,7 @@ handle : exp -> exp -> exp.
 
 A judgement picking out the well-typed terms:
 
- !}%
+!}%
 
 of : exp -> tp -> type.			%name of Dof.
 %mode of +E -T.
@@ -79,7 +79,7 @@ of/app
 
 The following are the new typing rules for (raise T) and (handle E1 E2).
 
- !}%
+!}%
 
 of/raise
    : of (raise T) T.
@@ -92,7 +92,7 @@ of/handle
 
 ## Dynamic semantics
 
- !}%
+!}%
 
 value : exp -> type.			%name value Dval.
 %mode value +E.
@@ -116,7 +116,7 @@ raises/app/arg
 
 %{! 
 Exercise: Give two rules, raises/s and raises/ifz, that propogate raises through the (s E) and (ifz E1 E2 E3) expressions. 
- !}%
+!}%
 
 
 step : exp -> exp -> type.		%name step Dstep.
@@ -151,7 +151,7 @@ expression. There is one rule for stepping the body, another rule for
 handling a raised exception, and a third rule for when the body is a
 value. 
 
- !}%
+!}%
 
 step/handle/body
    : step
@@ -176,7 +176,7 @@ step/handle/body-v
 With this encoding, we have to prove preservation explicitly, as the
 type of ``step`` doesn't guarantee it.
 
- !}%
+!}%
 
 pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
 %mode pres +Dstep +Dof -Dof.
@@ -230,7 +230,7 @@ pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
 
 Exercise: Give proof cases for step/handle/body, step/handle/body-v, and step/handle/raise.
 
- !}%
+!}%
 
 %worlds () (pres Dstep Dof Dof').
 %total Dstep (pres Dstep _ _).
@@ -239,7 +239,7 @@ Exercise: Give proof cases for step/handle/body, step/handle/body-v, and step/ha
 
 ## Progress
 
- !}%
+!}%
 
 val-or-raises-or-step : exp -> type.		%name val-or-raises-or-step Dvrs.
 vrs/val : val-or-raises-or-step E <- value E.
@@ -249,14 +249,14 @@ vrs/step : val-or-raises-or-step E <- step E _.
 
 val-or-raises-or-step must have a case for when an expression raises an exception. 
 
- !}%
+!}%
 
 vrs/raises : val-or-raises-or-step E <- raises E. 
 %{! 
 
 ### [Factoring lemmas](/wiki/output-factoring/)
 
- !}%
+!}%
 
 prog/s
    : val-or-raises-or-step E -> val-or-raises-or-step (s E) -> type.
@@ -274,7 +274,7 @@ prog/s
 
 A new case for when the input is an unhandled exception must be provided. 
 
- !}%
+!}%
 
 - : prog/s
      (vrs/raises Draises)
@@ -330,7 +330,7 @@ prog/app
 
 Exercise: Give the missing cases for when the inputs are unhandled exceptions.
 
- !}%
+!}%
 
 %worlds () (prog/app _ _ _ _).
 %total {} (prog/app _ _ _ _).
@@ -340,7 +340,7 @@ Exercise: Give the missing cases for when the inputs are unhandled exceptions.
 
 ### Main theorem
 
- !}%
+!}%
 
 prog : of E T -> val-or-raises-or-step E -> type. %name prog Dprog.
 %mode prog +Dof -Dvrs.
@@ -366,7 +366,7 @@ prog : of E T -> val-or-raises-or-step E -> type. %name prog Dprog.
 
 Exercise: Give the missing cases for of/handle and of/raise. It may be necessary to use a factoring lemma in the solution for the case corresponding to of/handle. 
 
- !}%
+!}%
 
 %worlds () (prog _ _).
 %total Dof (prog Dof _).

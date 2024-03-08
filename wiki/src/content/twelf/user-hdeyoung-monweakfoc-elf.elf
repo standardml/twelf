@@ -2,7 +2,7 @@
 
 %{! 
 Completeness
- !}%
+!}%
 
 pol : type.  %name pol S.
 

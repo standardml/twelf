@@ -2,7 +2,7 @@
 
 %{! 
 C Machine and Focusing
- !}%
+!}%
 
 %{! ## Syntax !}%
 
@@ -35,7 +35,7 @@ distinguish the redices.
 Unlike higher-order focusing, neutral sequents are "pos entails neg",
 and the shifts hand around until we choose to focus on a formula.
 
- !}%
+!}%
 
 val+  : pos -> type.
 cont- : neg -> conc -> type.
@@ -91,7 +91,7 @@ compose : exp A- -> cont- A- C- -> exp C-.
 
 Lists of continuations:
 
- !}%
+!}%
 
 conts- : neg -> conc -> type.
 conts-/cons : cont- A B -> conts- B C -> conts- A C.
@@ -106,7 +106,7 @@ Machine states are basically expressions, except (1) they have lists of
 continuations in place of continuations and (2) they distinguish
 exp/cont composition states from negative redex states.
 
- !}%
+!}%
 
 state : conc -> type.
 done  : val- A -> state A.                %% answer
@@ -121,7 +121,7 @@ let's just abuse exp C for this sum and write the operational semantics
 as the progress proof.  The only downside is that you can't tell whether
 an expression took a real step towards a value or already was a value.
 
- !}%
+!}%
 
 step : state C -> state C -> type.
 %mode step +S1 -S2.

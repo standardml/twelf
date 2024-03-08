@@ -19,7 +19,7 @@ Chapter 2 of [Rob Simmons's](/wiki/user-rsimmons/) undergraduate thesis,&lt;ref&
 First we need [natural numbers](/wiki/natural-numbers/), which we will use in the object language 
 to represent both locations and actual numbers (this is why we define 
 ``sum`` as well.)
- !}%
+!}%
 
 nat : type.
 z : nat. 
@@ -50,7 +50,7 @@ be added.
 * ``gets E1 E2`` - updating a reference cell, &lt;math&gt;\texttt\{\}e_1 := e_2&lt;/math&gt;
 * ``loc L`` - locations (not available to the programmer), &lt;math&gt;\mathsf\{loc\}(l)&lt;/math&gt;, where &lt;math&gt;\texttt\{\}l&lt;/math&gt; is an abstract location.
 * ``let E1 ([x] E2 x)`` - let statements &lt;math&gt;\mathsf\{let~\} x = e_1 \mathsf\{~in~\} e_2&lt;/math&gt;
- !}%
+!}%
 
 %abbrev location = nat. 
 exp : type. 
@@ -66,7 +66,7 @@ let : exp -> (exp -> exp) -> exp.
 ### Types
 
 Because we do not have functions, our language has a very simple language of types, only integers and references to other types.
- !}%
+!}%
 
 tp : type. 
 int-tp : tp. 
@@ -77,7 +77,7 @@ ref-tp : tp -> tp.
 
 We will represent the store as a list of expressions, and define several 
 operations on lists—projecting the _n_th element from a list, appending a new element to the end of a list, updating the _n_th element of the list, and having a list that is the subset of another list. We also define a similar list of types that is omitted.
- !}%
+!}%
 
 explist : type. 
 
@@ -151,7 +151,7 @@ update-tp-s : update-tp (T $tp TL) (s N) T' (T $tp TL')
 %{! 
 We create abbreviations to indicate that we are using expression
 lists to represent stores and type lists to represent store typings.
- !}%
+!}%
 
 %abbrev store = explist. 
 %abbrev storetp = tplist. 
@@ -160,7 +160,7 @@ lists to represent stores and type lists to represent store typings.
 ### Values and evaluation
 
 The predicate ``isval`` 
- !}%
+!}%
 
 isval : exp -> type. 
 %mode isval +E. 
@@ -215,7 +215,7 @@ judgment ``var-of`` that we will use to represent hypothetical typing
 judgments—the hypothetical judgment simply associates an expression with 
 a type, whereas the typing judgment ``of`` associates an expression with
 a type in a specific store typing.
- !}%
+!}%
 
 var-of : exp -> tp -> type. 
 %mode var-of +E -T. 
@@ -261,7 +261,7 @@ to a well-formed type. This requirement is expressed by the [block](/wiki/percen
 %{! 
 We also define a judgment ``of-store``, that expresses a store being
 well-typed and containing only values.
- !}%
+!}%
 
 of-store : storetp -> store -> type. 
 &of-store : of-store TL EL 
@@ -289,7 +289,7 @@ run-end : run S E S E.
 We need a few [effectiveness lemmas](/wiki/effectiveness-lemma/) that show that the ``sum`` and ``append`` judgments are always derivable. 
 
 The ``can-update`` theorem is slightly different, establishing that if a particular store has a particular type, then any index that has a corresponding type can be updated.
- !}%
+!}%
 
 can-sum : {A: nat}{B: nat} sum A B C -> type. 
 %mode can-sum +A +B -SUM. 
@@ -412,7 +412,7 @@ Progress, as usual, relies on an auxillary notion of what it means for an
 expression to not be stuck that is captured by the judgement ``notstuck``,
 which states that in a certain store ``S`` an expression ``E`` is 
 either a value or can take a step.
- !}%
+!}%
 
 notstuck : store -> exp -> type. 
 ns-steps : notstuck S E 
@@ -527,7 +527,7 @@ prog-let : progress (t-let _ T) TS NS
 ### Substitution
 
 As in the article on [strengthening](/wiki/strengthening/), progress will need to appeal to a simple substitution lemma.
- !}%
+!}%
 
 substitute : ({x} var-of x Tp -> of ST (EF x) T) 
 	      -> of ST E Tp 
@@ -561,7 +561,7 @@ sub-var : substitute ([x][v: var-of x Tp] t-var v) T* T*.
 In order to be able to evaluate reference cells, we need to be able to show 
 that adding new things to the store typing will leave all current programs 
 well-typed. The only interesting case is ``weak-loc``.
- !}%
+!}%
 
 weakening : of ST E T -> subset-tp ST ST’ -> of ST’ E T -> type. 
 %mode weakening +T +SUB -T’. 
@@ -602,7 +602,7 @@ weak-s : weakening-list (tl-s TL T) S (tl-s TL’ T’)
 %{! 
 ### Preservation
 
- !}%
+!}%
 
 preservation : of ST E T 
 		-> of-store ST S 
@@ -691,7 +691,7 @@ We will define the following simple program as ``prog1``, and use Twelf's [logic
 &lt;math&gt;\begin\{array\}\{l\}\mathsf\{let~\}x = \mathsf\{ref\}(2 + 1) \mathsf\{~in\}\\
 \mathsf\{let~\}y = x := !x + 1\mathsf\{~in~\}\\
 !x + 1\end\{array\}&lt;/math&gt;
- !}%
+!}%
 
 prog1 = 
 let (ref (n (s (s z)) + n (s z))) 

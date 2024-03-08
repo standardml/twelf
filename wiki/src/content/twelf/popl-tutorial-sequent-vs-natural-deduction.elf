@@ -12,7 +12,7 @@ The solution is [here](/wiki/popl-tutorial-sequent-vs-natural-deduction-solution
 
 ## Syntax for Propositions
 
- !}%
+!}%
 
 prop : type.  %name prop A.
 
@@ -26,7 +26,7 @@ imp : prop -> prop -> prop.
 
 Natural deduction deals with a single judgment, &lt;math&gt;\texttt\{true\}~A&lt;/math&gt;.
 
- !}%
+!}%
 
 true : prop -> type.
 
@@ -34,7 +34,7 @@ true : prop -> type.
 
 Six rules describe a natural deduction system for the language considered here.
 
- !}%
+!}%
 
 topI  : true top.
 
@@ -63,7 +63,7 @@ With the same grammar of propositions, we can define a sequent
 calculus with different judgments for the left and the right of
 the sequent (&lt;math&gt;\texttt\{hyp\}~A&lt;/math&gt; for the left and &lt;math&gt;\texttt\{conc\}~A&lt;/math&gt; for the right).
 
- !}%
+!}%
 
 hyp : prop -> type.
 
@@ -75,7 +75,7 @@ This particular sequent calculus includes the cut rule. We can show
 separately that it is possible to eliminate all uses of cut by proving
 the [admissibility of cut](/wiki/admissibility-of-cut/).
 
- !}%
+!}%
 
 init : conc A
         <- hyp A.
@@ -104,7 +104,7 @@ cut  : conc B
 
 The natural deduction system exists in a world with arbitrary assumptions &lt;math&gt;\texttt\{hyp\}~A&lt;/math&gt;.
 
- !}%
+!}%
 
 %block bhyp : some {A : prop} block {H : hyp A}.
 
@@ -122,7 +122,7 @@ something similar in the translation for the other direction.
 
 #### TASK 1: Fill in the three missing cases for conjunction
 
- !}%
+!}%
 
 nd-to-seq : true A 
              -> conc A
@@ -178,7 +178,7 @@ The following (incomplete) proof establishes that whenever a proposition is deri
 
 #### TASK 2: Complete the theorem with cases for implication and cut
 
- !}%
+!}%
 
 hyp-to-true : hyp A -> true A -> type.
 %mode hyp-to-true +X1 -X2.
@@ -245,7 +245,7 @@ seq-to-nd : conc A -> true A -> type.
 
 %{! 
 [Solution](/wiki/popl-tutorial-sequent-vs-natural-deduction-solution/)
- !}%
+!}%
 
 %{!
 -----

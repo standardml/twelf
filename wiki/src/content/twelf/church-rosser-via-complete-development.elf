@@ -8,7 +8,7 @@ Information and Computation 118(1), 1995) makes use of a auxilary relation calle
 developement.  This case study is a good example of proving
 metatheorems in [regular worlds](/wiki/percent-worlds/): we use several different worlds, and
 transport theorems between them.
- !}%
+!}%
 
 %{! ## Syntax and judgements
 
@@ -19,7 +19,7 @@ beta-reduction rule to take precedence over it.
 Thus, a single step of complete development contracts all beta-redices in the left-hand term one step.
 Consequently, all beta-redices must be reduced away before a term can take a reflexivity step.
 
- !}%
+!}%
 
 trm : type.
 lam : (trm -> trm) -> trm.
@@ -80,7 +80,7 @@ but we will prove this fact ourselves below. !}%
 %{! 
 Below, we will want to work in a world where both parallel reduction and complete development exist.  
 Thus, we define a block that includes all the assumptions in both ``=&gt;b`` and ``==&gt;b``:
- !}%
+!}%
 %block =>&==>b : block 
 		  {x : trm} 
 		  {prx : x => x}
@@ -93,7 +93,7 @@ Thus, we define a block that includes all the assumptions in both ``=&gt;b`` and
 
 As a lemma, we need to prove that every term either is or is not a lambda.
 
- !}%
+!}%
 
 lam-or-not : trm -> type.
 lam-or-not/lam : lam-or-not (lam _).
@@ -114,7 +114,7 @@ However, to prove the theorem, we need to cover the case of ``decide`` for varia
 do by putting a case in the LF context.  
 (See [Proving metatheorems: Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) for a discussion of this technique.)
 Thus, we arrive at:
- !}%
+!}%
 
 %block decideb : block 
 		{x : trm} 
@@ -128,7 +128,7 @@ Thus, we arrive at:
 To prove the diamond property, we need to know that every term is reducible under complete-development.  
 First, we prove a lemma showing that an application reduces if its components do:
 
- !}%
+!}%
 
 ==>-tot/app : lam-or-not E1 -> E1 ==> E1' -> E2 ==> E2' -> (app E1 E2) ==> E'' -> type.
 %mode ==>-tot/app +D0 +D1 +D2 -D3.
@@ -151,7 +151,7 @@ First, we prove a lemma showing that an application reduces if its components do
 %{! 
 Note that the world ``==&gt;b`` is the minimal one in which both ``==&gt;`` and ``lam-or-not`` make sense,
 so it is the most appropriate world to use here.
- !}%
+!}%
 
 ==>-tot : {E : trm} E ==> E' -> type.
 %mode ==>-tot +E -D.
@@ -174,7 +174,7 @@ This lemma at least needs the assumptions in ``==&gt;b`` for complete developmen
 Additionally, because the above case uses ``decide`` as a lemma, we need to ensure that its assumptions are in 
 the world we choose here.  Additionally, to show that variables reduce, we need a theorem case in the context.
 Thus, we arrive at the following block:
- !}%
+!}%
 
 %block ==>totb : block 
 		  {x : trm} 
@@ -194,7 +194,7 @@ contexts made up of ``decideb`` blocks?  In general, extending the context could
 so Twelf permits this world subsumption.  That is, ``decide`` is only concerned with ``trm``s and derivations of
 ``notlam`` and derivations of ``decide`` itself, and neither ``==&gt;`` nor ``==&gt;-tot`` assumptions 
 influence those types.
- !}%
+!}%
 
 %{! ### Substituting reductions into parallel reduction
 
@@ -202,7 +202,7 @@ We also need to show that the substitution of a reduction is the reduction of th
 To prove this lemma, we distinguish cases on an LF function representing the 
 hypothetical derivation:
 
- !}%
+!}%
 
 subst : ({x : trm} x => x -> (M x => M' x))
 	 -> (N => N')
@@ -237,7 +237,7 @@ subst : ({x : trm} x => x -> (M x => M' x))
 %{! 
 Because this theorem is property only of parallel reduction, 
 we use the block containing only parallel reduction assumptions:
- !}%
+!}%
 %worlds (=>b) (subst _ _ _).
 %total D (subst D _ _).
 
@@ -247,7 +247,7 @@ The key lemma in this proof is that given a split of parallel reduction on one s
 complete development on the other, there is a parallel reduction on the other side
 of the triangle:
 
- !}%
+!}%
 
 tri : (M ==> M') -> (M => M'') -> (M'' => M') -> type.
 %mode tri +X1 +X2 -X3.
@@ -310,7 +310,7 @@ tri : (M ==> M') -> (M => M'') -> (M'' => M') -> type.
 %{! The best world for this proof is the one where both parallel reduction
 and complete development exist, and we don't need any additional assumptions
 for the proof, so this is the world we use:
- !}%
+!}%
 
 %worlds (=>&==>b) (tri _ _ _).
 %total D (tri D _ _).
@@ -344,7 +344,7 @@ From the inductive hypotheses, we know that ``M_ x =&gt; M' x`` for all ``x`` an
 However, we need to prove that ``M_ N_ =&gt; app (lam M') N'``.  By ``subst``, we can get that the left-hand side reduces
 to the **beta-reduction** of the right-hand side, but there the proof breaks down.
 
- !}%
+!}%
 
 
 %{! ### The diamond property
@@ -352,7 +352,7 @@ to the **beta-reduction** of the right-hand side, but there the proof breaks dow
 We prove the diamond property by first generating a parallel reduction for ``M`` and 
 then making two triangles, which complete the square.
 
- !}%
+!}%
 
 dia : (M => M') -> (M => M'') -> (M' => N) -> (M'' => N) -> type.
 %mode dia +X1 +X2 -X3 -X4.
@@ -375,7 +375,7 @@ This is the block ``=&gt;&==&gt;b`` extended with the theorem cases for
 Twelf verifies the world subsumption showing that 
 ``==&gt;-tot`` and ``tri`` remain true under such extensions of 
 the context.
- !}%
+!}%
 
 %block diab : block 
 	       {x : trm} 
@@ -397,7 +397,7 @@ To complete the development of complete development, we can prove two other simp
 First, every complete development reduction is a parallel reduction: 
 we simply forget the proof of the side condition on the application rule.
 
- !}%
+!}%
 
 sound : E ==> E' -> E => E' -> type.
 %mode sound +X1 -X2.
@@ -421,7 +421,7 @@ sound : E ==> E' -> E => E' -> type.
 
 %{! For this theorem, we need both complete development and parallel reduction,
 as well as a theorem case, so we extend ``=&gt;&==&gt;b`` as follows:
- !}%
+!}%
 
 %block soundb : block 
 		 {x : trm} {nlx : notlam x} 
@@ -435,7 +435,7 @@ as well as a theorem case, so we extend ``=&gt;&==&gt;b`` as follows:
 
 Finally, we can show that complete development is derministic.
 
- !}%
+!}%
 
 id : trm -> trm -> type.
 refl : id E E.
@@ -490,14 +490,14 @@ id-func : ({x : trm} id (E x) (E' x))
 Twelf rules out the off-diagonal cases for us.  For example, an ``app`` vs. ``beta`` 
 case would have a contradictory derivation of ``notlam (lam _)`` as an argument to ``==&gt;/app``.
 
- !}%
+!}%
 
 %worlds (==>b) (==>-det _ _ _).
 %total D (==>-det D _ _).
 
 %{! 
 \{\{case study\}\}
- !}%
+!}%
 
 %{!
 -----

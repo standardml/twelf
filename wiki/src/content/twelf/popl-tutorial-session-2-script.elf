@@ -4,7 +4,7 @@
 
 ## Arithmetic primitives
 
- !}%
+!}%
 
 nat : type.  
 z : nat.
@@ -23,7 +23,7 @@ add/s : add (s M) N (s P) <- add M N P.
 
 ## Multiplication
 
- !}%
+!}%
 
 mult : nat -> nat -> nat -> type.
 
@@ -71,7 +71,7 @@ mult'/s : mult' (s M) N Q
 - Add syntax for times; eval is still total
 - Add syntax for pairs; eval is no longer total
 
- !}%
+!}%
 
 val : type.
 num  : nat -> val.
@@ -128,7 +128,7 @@ eval/snd : eval (snd E) V2
 
 Finished product:
 
- !}%
+!}%
 
 tp : type.
 natural : tp.

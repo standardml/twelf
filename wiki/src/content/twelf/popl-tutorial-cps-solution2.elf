@@ -3,7 +3,7 @@
 %{! 
 ## Problem 2: Elimination of Administrative Redices
 
- !}%
+!}%
 tp : type.
 o : tp.
 => : tp -> tp -> tp.           %infix right 3 =>.
@@ -46,7 +46,7 @@ cpse/ret : cpse (ret (V:value A)) ([c:(cvalue A -> contra)] c V')
 %worlds (cpsb) (cps _ _) (cpse _ _).
 %total (E V) (cps E _) (cpse V _).
 %{! 
- !}%
+!}%
 
 %{!
 -----

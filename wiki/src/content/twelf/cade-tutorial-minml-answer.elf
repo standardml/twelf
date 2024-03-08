@@ -4,7 +4,7 @@
 
 ## Syntax
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 num : tp.
@@ -21,7 +21,7 @@ s : exp -> exp.
 
 %{! 
 #### Exercise: constant for ifz
- !}%
+!}%
 
 ifz : exp -> exp -> (exp -> exp) -> exp.
 
@@ -33,7 +33,7 @@ ifz : exp -> exp -> (exp -> exp) -> exp.
 
 ## Static semantics
 
- !}%
+!}%
 
 of : exp -> tp -> type.                %name of Dof.
 
@@ -48,7 +48,7 @@ of/fn : of (fn T1 ([x] E x)) (arr T1 T2)
 
 %{! 
 #### Exercise: typing rules for s and ifz
- !}%
+!}%
 
 of/s : of (s E) num
 	<- of E num.
@@ -68,14 +68,14 @@ of/ifz : of (ifz E E0 ([x] E1 x)) T
 ### value judgement
 
 
- !}%
+!}%
 
 value : exp -> type.               %name value Dval.
 
 value/fn : value (fn T ([x] E x)).
 %{! 
 #### Exercise: value rules for z and s
- !}%
+!}%
 value/z  : value z.
 value/s  : value (s E)
 	    <- value E.
@@ -84,7 +84,7 @@ value/s  : value (s E)
 
 ### step judgement
 
- !}%
+!}%
 
 step : exp -> exp -> type.        %name step Dstep.
 
@@ -100,7 +100,7 @@ step/app/beta : step (app (fn T ([x] E x)) E2) (E E2)
 
 %{! 
 #### Exercise: step rules for s and ifz
- !}%
+!}%
 
 step/s : step (s E) (s E')
 	  <- step E E'.
@@ -119,7 +119,7 @@ step/ifz/s   : step (ifz (s E) E0 ([x] E1 x)) (E1 E)
 
 ### Sum type for the result
 
- !}%
+!}%
 
 val-or-step : exp -> type.        %name val-or-step Dvos.
 
@@ -132,7 +132,7 @@ vos/step  : val-or-step E
 
 ### Lemmas
 
- !}%
+!}%
 
 prog/app : of E1 (arr T' T) 
 	    -> val-or-step E1
@@ -166,7 +166,7 @@ prog/app : of E1 (arr T' T)
 
 #### Exercise: lemma for s
 
- !}%
+!}%
 
 prog/s : val-or-step E -> val-or-step (s E) -> type.
 %mode prog/s +Dvos1 -Dvos2.
@@ -186,7 +186,7 @@ prog/s : val-or-step E -> val-or-step (s E) -> type.
 
 #### Exercise: lemma for ifz
 
- !}%
+!}%
 
 prog/ifz : of E num
  	    -> {E0:exp} 
@@ -210,7 +210,7 @@ prog/ifz : of E num
 
 ### Main theorem
 
- !}%
+!}%
 
 prog : of E T -> val-or-step E -> type.
 %mode prog +Dof -Dvos.
@@ -231,7 +231,7 @@ prog : of E T -> val-or-step E -> type.
 
 #### Exercise: cases for s and ifz
 
- !}%
+!}%
 
 - : prog (of/s (D : of E num)) DvosS
      <- prog D (Dvos : val-or-step E)

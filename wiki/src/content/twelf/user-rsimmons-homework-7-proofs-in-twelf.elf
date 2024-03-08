@@ -8,7 +8,7 @@
 
  n ::= z | s n
 
- !}%
+!}%
 
 %{! #### In Twelf !}%
 
@@ -26,7 +26,7 @@ s : nat -> nat.
  ---------------- sum/s
  sum(s(n),m,s(p))
 
- !}%
+!}%
 
 %{! #### In Twelf !}%
 
@@ -39,7 +39,7 @@ sum/s : sum (s N) M (s P) <- sum N M P.
 
 **_QUESTION 1:**_ Give the inductive definition for the judgment ``n &lt; n'`` that corresponds to to what is defined below.
 
- !}%
+!}%
 
 %{! #### In Twelf !}%
 
@@ -61,7 +61,7 @@ lt/s : lt (s N) (s M) <- lt N M.
  ---------------- odd/s
  odd s(n)
 
- !}%
+!}%
 
 %{! #### In Twelf !}%
 
@@ -85,7 +85,7 @@ Case ``n=z``. We need to show ``sum(z,z,z)``, which we can show by rule ``sum/z`
 
 Case ``n=s(n')``. We need to show ``sum(s(n'),z,s(n'))``. By the induction hypothesis, ``sum(n',z,n')``. By rule ``sum/s``, we have ``sum(s(n'),z,s(n'))``.
 
- !}%
+!}%
 
 %{! #### In Twelf !}%
 
@@ -105,7 +105,7 @@ sum-ident : {N: nat} sum N z N -> type.
 
 **_QUESTION 3:**_ State the "on paper" version of the lemma below.
 
- !}%
+!}%
 
 %{! #### In Twelf !}%
 
@@ -147,7 +147,7 @@ To show: ``sum(m,s(n'),s(p'))``.
 
 By the induction hypothesis, ``sum(m,n',p')``. By the second lemma, ``sum(m,s(n'),s(p'))``.
 
- !}%
+!}%
 
 %{! #### In Twelf !}%
 
@@ -185,7 +185,7 @@ To show: ``s(n') &lt; s(p')``.
 
 By the induction hypothesis, ``n' &lt; p'``. By rule ``lt/s``, we have ``s(n') &lt; s(p')``.
 
- !}%
+!}%
 
 %{! #### In Twelf !}%
 

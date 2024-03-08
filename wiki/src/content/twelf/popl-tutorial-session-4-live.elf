@@ -7,7 +7,7 @@
 
 ## Syntax
 
- !}%
+!}%
 
 %% Types:
 
@@ -36,7 +36,7 @@ ifz : exp -> exp -> (exp -> exp) -> exp.
 
 ## Typing
 
- !}%
+!}%
 
 %% Note: not total!  Not all terms are well-typed
 %% Don't need mode, worlds right now.
@@ -81,7 +81,7 @@ e0 : T
 x exp , x : nat |- e1 : T
 --------------------------
 ifz(e,e0,x.e1) : T
- !}%
+!}%
 
 of/s : of (s E) nat
 	<- of E nat.
@@ -96,7 +96,7 @@ of/ifz : of (ifz E E0 ([x] Es x)) T
 
 ## Operational semantics
 
- !}%
+!}%
 
 %% Which expressions are values?
 %% Use a predicate
@@ -177,7 +177,7 @@ Relate: e : T  and  step e e'  to  e' : T
 
 Key idea: define total relations
 
- !}%
+!}%
 
 %% Type family:
 

@@ -15,7 +15,7 @@ Next, we add another base type besides numbers.
 
 Natural numbers and addition are the same as before:
 
- !}%
+!}%
 
 nat : type.             %name nat M.
 z : nat.
@@ -36,7 +36,7 @@ add/s : add (s M) N (s P) <- add M N P.
 
 Strings and append are analogous
 
- !}%
+!}%
 
 char : type.				%name char X.
 a : char.
@@ -61,7 +61,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 There are two types:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 number : tp.
@@ -75,7 +75,7 @@ and work directly with typing derivations. This works well for
 simply-typed languages, where the raw syntax for well-typed terms is
 isomorphic to its typing derivations.
 
- !}%
+!}%
 
 val : tp -> type.			%name val V.  %postfix 1 val.
 num : nat -> number val.
@@ -91,7 +91,7 @@ let : T exp -> (T val -> U exp) -> U exp.
 
 Answers are typed as well:
 
- !}%
+!}%
 
 ans : tp -> type.			%name ans A.  %postfix 1 ans.
 anum : nat -> number ans.
@@ -105,7 +105,7 @@ guaranteeing type preservation.
 Because of Twelf's implicit argument mechanism, the cases for numbers
 and let-binding are unchanged.
 
- !}%
+!}%
 
 eval : T exp -> T ans -> type.
 %mode eval +E1 -E2.
@@ -152,7 +152,7 @@ Note: in this example ``ans`` is isomorphic to ``val``, so we can simplify thing
   |nextname=Typed arithmetic expressions (extrinsic encoding)
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

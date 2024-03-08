@@ -10,7 +10,7 @@
 
 Type safety for MinML with monadic effects, with putn and getn primitives.
 
- !}%
+!}%
 
 %{! 
 
@@ -18,7 +18,7 @@ Type safety for MinML with monadic effects, with putn and getn primitives.
 
 Types:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 nat : tp.
@@ -29,7 +29,7 @@ circle : tp -> tp.
 
 Typed expressions (i.e., typing derivations):
 
- !}%
+!}%
 
 exp  : tp -> type.			%name exp E.  %postfix 1 exp.
 command : tp -> type.			%name command M.  %postfix 1 command.
@@ -52,7 +52,7 @@ putn   : nat exp -> U command -> U command.
 
 ### Values and final states
 
- !}%
+!}%
 
 value : T exp -> type.			%name value Dval.
 %mode value +E.
@@ -72,7 +72,7 @@ final/ret : final (return E)
 
 ### Transition relation for expressions
 
- !}%
+!}%
 
 step : T exp -> T exp -> type.		%name step Dstep.
 %mode step +E1 -E2.
@@ -103,7 +103,7 @@ step/app/beta-v
 
 ### Labelled transition relation for commands
 
- !}%
+!}%
 
 label : type.  %name label L.
 label/read  : (value (N : nat exp)) -> label.
@@ -132,7 +132,7 @@ mstep/putn-put : mstep (putn E M) M (label/write (Dval : value E)).
 
 ### Return sums
 
- !}%
+!}%
 
 val-or-step : T exp -> type.		%name val-or-step Dvos.
 vos/val : val-or-step E <- value E.
@@ -146,7 +146,7 @@ fos/step : fin-or-mstep M <- mstep M _ _.
 
 ### [Factoring](/wiki/output-factoring/) lemmas
 
- !}%
+!}%
 
 prog/s
    : val-or-step E -> val-or-step (s E) -> type.
@@ -204,7 +204,7 @@ prog/app
 
 ### Progress for expressions
 
- !}%
+!}%
 
 prog : {E : T exp} val-or-step E -> type. %name prog Dprog.
 %mode prog +E -Dvos.
@@ -235,7 +235,7 @@ prog : {E : T exp} val-or-step E -> type. %name prog Dprog.
 
 ### Factoring lemmas for commands
 
- !}%
+!}%
 
 mprog/ret : val-or-step E -> fin-or-mstep (return E) -> type.
 %mode mprog/ret +X1 -X2.
@@ -279,7 +279,7 @@ mprog/putn : val-or-step E -> {M} mstep (putn E M) M' L -> type.
 
 One of the factoring lemmas is mutually recursive with the main theorem:
 
- !}%
+!}%
 
 mprog/let : {E : (circle T) exp} val-or-step E -> {M : (T exp -> U command) } mstep (let E M) M' L -> type.
 %mode mprog/let +X1 +X2 +X3 -X4.
@@ -329,7 +329,7 @@ And thus we have proved type safety for MinML with monadic effects!
   |nonext=
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

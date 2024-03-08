@@ -27,7 +27,7 @@ definition of subtyping that uses transitivity.
 This article will use as its example a path-finding algorithm 
 on an undirected graphs. 
 
- !}%
+!}%
 
 %{! ## Defining the graph !}%
 
@@ -73,7 +73,7 @@ to use [``%querytabled``](/wiki/percent-querytabled/) directives to cause each i
 of ``path A B`` to be derived at most once during the course 
 of a search: the result is a query that terminates rapidly, 
 instead of not at all.
- !}%
+!}%
 
 path : node -> node -> type.
 %tabled path.

@@ -9,14 +9,14 @@ its reduct's translation.
 
 [William Lovas](/wiki/user-william-lovas/)
 
- !}%
+!}%
 
 
 %{! 
 
 ## Syntax and static semantics
 
- !}%
+!}%
 
 %{! 
 
@@ -31,7 +31,7 @@ Note that since we're using an
 [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/), these syntax
 definitions double as definitions of the languages' static semantics.
 
- !}%
+!}%
 
 tp : type.
 
@@ -58,7 +58,7 @@ capp : cterm (A => B) -> cterm A -> cterm B.
 We can use Twelf's [abbreviation mechanism](/wiki/abbrev-declaration/) and
 [fixity declarations](/wiki/fixity-declaration/) to obtain some cute syntax.
 
- !}%
+!}%
 
 %abbrev @ = app.
 %infix left 10 @.
@@ -70,7 +70,7 @@ We can use Twelf's [abbreviation mechanism](/wiki/abbrev-declaration/) and
 
 ## Dynamic semantics
 
- !}%
+!}%
 
 %{! 
 
@@ -79,7 +79,7 @@ single-step reduction relation on lambda terms; ``cstep`` is the
 single-step reduction relation on combinator terms.  For lambda-calculus
 terms, we do not reduce under binders.
 
- !}%
+!}%
 
 step : term A -> term A -> type.
 
@@ -111,7 +111,7 @@ We also define multi-step reduction on combinator terms.
 Our simulation will relate single-step derivations in the lambda-calculus
 to multi-step derivations on the translated terms.
 
- !}%
+!}%
 
 cstep* : cterm A -> cterm A -> type.
 
@@ -127,7 +127,7 @@ cs-nil  : cstep* N N.
 We can pre-emptively prove some compatibility lemmas about multi-step
 reduction.
 
- !}%
+!}%
 
 cs-1* : cstep* N1 N1' -> cstep* (capp N1 N2) (capp N1' N2) -> type.
 %mode +{A:tp} +{B:tp} +{N1:cterm (A => B)} +{N1':cterm (A => B)} +{N2:cterm A}
@@ -167,7 +167,7 @@ cs-trans : cstep* N1 N2 -> cstep* N2 N3 -> cstep* N1 N3 -> type.
 
 ## Translation
 
- !}%
+!}%
 
 %{! 
 
@@ -210,7 +210,7 @@ relating LF-level abstractions in the combinator language to closed combinator
 terms, ``bracket ([x] N x) N``.  This definition is essentially an
 instance of [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
 
- !}%
+!}%
 
 trans : term A -> cterm A -> type.
 bracket : (cterm A -> cterm B) -> cterm (A => B) -> type.
@@ -227,7 +227,7 @@ with a lambda-term variable, a combinator-term variable, and an assumption
 that the one translates to the other.  See the ``%worlds`` declaration
 below.
 
- !}%
+!}%
 t-lam : trans (lam [x] M x) N'
          <- ({x:term A} {y:cterm A} trans x y -> trans (M x) (N y))
          <- bracket ([y] N y) N'.
@@ -250,14 +250,14 @@ b-s : bracket ([x] capp (N1 x) (N2 x)) (capp (capp s N1') N2')
 
 ## Correctness of the translation
 
- !}%
+!}%
 
 %{! 
 
 First, we prove the correctness of bracket abstraction itself:
 the application of a bracket abstraction reduces to a substitution.
 
- !}%
+!}%
 
 subst : bracket ([x] N x) N' -> {N0} cstep* (capp N' N0) (N N0) -> type.
 %mode subst +B +N0 -CS.
@@ -287,7 +287,7 @@ straightforward induction on single-step derivations in the lambda-calculus,
 using the correctness of bracket abstraction as a lemma in the case of a
 beta-reduction.
 
- !}%
+!}%
 
 simulate : step M M' -> trans M N -> trans M' N' -> cstep* N N' -> type.
 %mode simulate +S +T -T' -CS.
@@ -298,7 +298,7 @@ NB: in this step, on paper, you have to prove two compositionality lemmas.
 in Twelf, using higher-order abstract syntax, we get them for free -- see
 (T1 _ _ T2) output.
 
- !}%
+!}%
 - : simulate s-beta (t-app T2 (t-lam B1 T1)) (T1 _ _ T2) CS
      <- subst B1 N2 CS.
 

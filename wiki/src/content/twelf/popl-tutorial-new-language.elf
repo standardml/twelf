@@ -4,7 +4,7 @@
 
 ## Arithmetic Primitives
 
- !}%
+!}%
 
 nat : type.  
 z : nat.
@@ -39,7 +39,7 @@ mult/s : mult (s M) N Q
 
 ## Language Syntax
 
- !}%
+!}%
 
 tp : type.
 
@@ -64,7 +64,7 @@ split : exp -> (exp -> exp -> exp) -> exp.
 
 ## Dynamic Semantics
 
- !}%
+!}%
 
 value : exp -> type.
 step : exp -> exp -> type.
@@ -132,7 +132,7 @@ step/split/pair : step (split (pair V1 V2) ([x] [y] E x y)) (E V1 V2)
 
 ## Static Semantics
 
- !}%
+!}%
 
 of : exp -> tp -> type.
 
@@ -170,7 +170,7 @@ of/split : of (split E ([x] [y] Ebody x y)) T
 
 ## Progress
 
- !}%
+!}%
 
 notstuck : exp -> type.
 
@@ -362,7 +362,7 @@ progress : of E T
 
 %{! 
 ## Preservation
- !}%
+!}%
 
 
 preservation	: of E1 T1

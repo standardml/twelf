@@ -15,7 +15,7 @@ Unless you want to do this whole assignment in [Twelf Live](/wiki/twelf-live/), 
 
 **_Handing in:**_ Place the file ``hw06.elf`` in your handin directory by midnight on **_Monday, November 24**_
 
- !}%
+!}%
 
 %{! ## Part 1: Natural Numbers !}%
 
@@ -48,7 +48,7 @@ Our approach to inductively defining an effective relation is to describe the lo
 
 %{! 
 **Addition:** _n+m=p_ is defined by induction on _n_. If _n = 0_ then _n+m=m_, and if _n = n'+1_ and _n'+m=p_, then _n+m=p+1_. 
- !}%
+!}%
 
 sum : nat -> nat -> nat -> type.
 %mode sum +N +M -P.
@@ -62,7 +62,7 @@ sum/s : sum (s N') M (s P)
 
 %{! 
 **Multiplication:** _n×m=p_ is defined by induction on _n_. If _n = 0_, then _n×m=0_, and if _n = n'+1_ and _n'×m=p_, then _n×m=m+p_.
- !}%
+!}%
 
 mult : nat -> nat -> nat -> type.
 %mode mult +N +M -P.
@@ -77,7 +77,7 @@ mult/s : mult (s N') M P'
 
 %{! 
 **Exponentiation:** _n^m=p_ is defined by induction on _m_ (**not** _n_). If _m = 0_, then _n^m=1_, and if _m = m'+1_ and _n^m'=p_, then _n^m=n*p_.
- !}%
+!}%
 
 pow : nat -> nat -> nat -> type.
 %mode pow +N +M -P.

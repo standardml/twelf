@@ -201,6 +201,7 @@ import KatexBlock from "../../../components/Latex.astro";
 import Twelf from "../../../components/Twelf.astro";
 import Guide from "../../../components/Guide.astro";
 import Keyword from "../../../components/Keyword.astro";
+import Todo from "../../../components/Todo.astro";
 
 {/* AUTOMATICALLY GENERATED FROM A .ELF FILE */}
 {/* DO NOT EDIT */}

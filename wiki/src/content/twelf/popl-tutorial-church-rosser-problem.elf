@@ -12,7 +12,7 @@ done.
 
 The solution is [here](/wiki/church-rosser-w-identity-reduction/).
 
- !}%
+!}%
 
 %{! ## Syntax !}%
 
@@ -26,7 +26,7 @@ When we use this ``%block``, it expresses that we can be working in a
 context with arbitrary expression variables. This will be the only world we 
 will need for this exercise. 
 
- !}%
+!}%
 
 %block exps : block {x: exp}.
 
@@ -45,7 +45,7 @@ we can return ``[eb'/x]ea'``, the substitution of ``eb'`` into
 The ``%worlds`` explicitly states that we will be reducing in a setting 
 with free variables. 
 
- !}%
+!}%
 
 reduce : exp -> exp -> type.
 
@@ -80,7 +80,7 @@ variable, and all other cases are covered.
 
 The proof is by induction on the structure of the term with the free variable.
 
- !}%
+!}%
 
 substitute1 : {E1:exp -> exp} reduce E2 E2' -> reduce (E1 E2) (E1 E2') -> type.
 %mode substitute1 +X1 +X2 -X3.
@@ -110,7 +110,7 @@ Proof is by induction on the structure of the reduction of ``e1`` to
 ``e1'``. We call to the ``substitute1`` lemma 
 when we "bottom out" at the reflexive case ``reduce/id``.
 
- !}%
+!}%
 
 substitute2 
    : ({x:exp} reduce (E1 x) (E1' x)) 
@@ -152,7 +152,7 @@ Now we come to the interesting part: the diamond property.
 If ``E`` reduces to both ``E1``, and ``E2``, then there is a 
 common E' such that ``E1`` and ``E2`` both reduce to it.
 
- !}%
+!}%
 
 diamond : reduce E E1 -> reduce E E2 -> reduce E1 E' -> reduce E2 E' -> type.
 %mode diamond +X1 +X2 -X3 -X4.
@@ -170,7 +170,7 @@ If either case is the identity, then we are done.
  e=&gt;e2 \ / e2=&gt;e2   e1=&gt;e1\ / e=&gt;e1
         e2                 E1
 
- !}%
+!}%
 
 - : diamond reduce/id D D reduce/id.
 - : diamond D reduce/id reduce/id D.
@@ -195,7 +195,7 @@ Note the oversimplification being made in the graphical presentation, in that
 the subterms and sub-derivations are not clearly shown to have a free variable.
 Twelf will, of course, not allow this sloppiness.
 
- !}%
+!}%
 
 - : diamond 
      (reduce/lam (D1 : {x: exp} reduce (E x) (E1 x))
@@ -222,7 +222,7 @@ induction hypothesis.
  reduce/app      \     /  reduce/app
  D1b' D1a'        \   /   D2b' D2a'
                  ea' eb'
- !}%
+!}%
 
 %% WRITE THIS CASE
 
@@ -241,7 +241,7 @@ substitutions.
  substitute      \   /  substitute
  D1b' into D1a'   \ /   D2b' into D2a'
               [eb'/x]ea
- !}%
+!}%
 
 - : diamond 
      (reduce/beta 
@@ -290,7 +290,7 @@ The first subcase:
  D1b' into D2a'  \   /  D2b' D2a'      
                   \ /   
                [eb'/x]ea'              
- !}%
+!}%
 
 %% WRITE THIS CASE
 
@@ -309,7 +309,7 @@ The second subcase:
  D1b' into e1a   \   /  D2b' D1a   
                   \ /   
                [eb'/x]e1a        
- !}%
+!}%
 
 - : diamond
      (reduce/beta 
@@ -335,7 +335,7 @@ If the right-hand hand side is a β-reduction but the left-hand side is not, we
 have to do the same two cases in reverse; we omit the graphics for those 
 two cases as they are symmetric.
 
- !}%
+!}%
 
 - : diamond
      (reduce/app 

@@ -10,7 +10,7 @@
 
 Type safety for MinML: call-by-value, with recursive functions, in intrinsic form
 
- !}%
+!}%
 
 %{! 
 
@@ -18,7 +18,7 @@ Type safety for MinML: call-by-value, with recursive functions, in intrinsic for
 
 Types:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 nat : tp.
@@ -28,7 +28,7 @@ arr : tp -> tp -> tp.
 
 Typed expressions (i.e., typing derivations):
 
- !}%
+!}%
 
 exp : tp -> type.			%name exp E.  %postfix 1 exp.
 z : nat exp.
@@ -43,7 +43,7 @@ app : (arr T1 T2) exp -> T1 exp -> T2 exp.
 
 Values:
 
- !}%
+!}%
 
 value : T exp -> type.			%name value Dval.
 %mode value +E.
@@ -56,7 +56,7 @@ value/fun : value (fun _ _ _).
 
 Transition relation:
 
- !}%
+!}%
 
 step : T exp -> T exp -> type.		%name step Dstep.
 %mode step +E1 -E2.
@@ -89,7 +89,7 @@ step/app/beta-v
 
 The sum type we return:
 
- !}%
+!}%
 
 val-or-step : T exp -> type.		%name val-or-step Dvos.
 vos/val : val-or-step E <- value E.
@@ -99,7 +99,7 @@ vos/step : val-or-step E <- step E _.
 
 ### [Factoring](/wiki/output-factoring/) lemmas
 
- !}%
+!}%
 
 prog/s
    : val-or-step E -> val-or-step (s E) -> type.
@@ -157,7 +157,7 @@ prog/app
 
 ### Main theorem
 
- !}%
+!}%
 
 prog : {E : T exp} val-or-step E -> type. %name prog Dprog.
 %mode prog +E -Dvos.
@@ -192,7 +192,7 @@ And thus we have proved type safety for MinML!
   |nextname=Type safety for MinML (extrinsic encoding)
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

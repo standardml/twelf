@@ -50,7 +50,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 Add a type for disjoint sums:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 number : tp.
@@ -62,7 +62,7 @@ sum    : tp -> tp -> tp.
 
 Add injections as values, and case as an expression.
 
- !}%
+!}%
 
 val : tp -> type.			%name val V.  %postfix 1 val.
 num : nat -> number val.
@@ -81,7 +81,7 @@ snd : (prod T U) exp -> U exp.
 
 %{! 
 For technical reasons, we bundle the branches of the case into a separate term with type ``cases``; this makes the termination order more evident to Twelf.  An element of "cases T U V" is the branches for a "sum T U" whose result has tp "V".
- !}%
+!}%
 cases : tp -> tp -> tp -> type.
 cases/i : (T val -> V exp) -> (U val -> V exp) -> cases T U V.
 case : (sum T U) exp -> cases T U V -> V exp.
@@ -90,7 +90,7 @@ case : (sum T U) exp -> cases T U V -> V exp.
 
 Add eval cases for case.
 
- !}%
+!}%
 
 eval : T exp -> T val -> type.
 %mode eval +E1 -E2.
@@ -125,7 +125,7 @@ eval/snd
 
 %{! 
 For "case" evaluation, we need an auxiliary relation "evalcase" to branch on inl vs. inr ([output factoring](/wiki/output-factoring/)).
- !}%
+!}%
 evalcase : (sum T U) val -> cases T U S -> S val -> type.
 %mode evalcase +V +Cases -A.
 
@@ -144,7 +144,7 @@ evalcase/inr
 
 %{! 
 Then we use [mutual induction](/wiki/mutual-induction/) to show evaluation total.
- !}%
+!}%
 %worlds () (eval _ _) (evalcase _ _ _).
 %total (E Cases) (eval E _) (evalcase _ Cases _).
 
@@ -156,7 +156,7 @@ Then we use [mutual induction](/wiki/mutual-induction/) to show evaluation total
   |nonext=
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

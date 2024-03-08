@@ -15,7 +15,7 @@ Most large projects integrate several of these modes of use. There are some limi
 
 The "theorem style" use of Twelf described in Andrew Appel's notes defines a deductive system, typically a **logic**: first a set of propositions (propositions often have type ``o`` for historical reasons), and then axioms about how propositions can be proven. Appel's FPCC project uses higher-order logic, but here we define a much simpler propositional logic.
 
- !}%
+!}%
 
 o : type.
 
@@ -70,7 +70,7 @@ example-abc: pf (A and B) ->
 ## Proving properties about deductive systems
 
 The "metatheorem style" use of Twelf defines a deductive system, typically a **programming language**: first the abstract syntax of the language, and then the static and dynamic semantics. Here is an example of a simple lambda calculus with product types (we don't define the dynamic semantics here, see \{\{proving|title=Representing the judgements of the STLC\}\} for a similar example). 
- !}%
+!}%
 
 
 exp : type.
@@ -130,7 +130,7 @@ Having defined this programming language, we are generally interested in proving
 
 
 
- !}%
+!}%
 
 %{!
 -----

@@ -5,7 +5,7 @@
 %{! ## Syntax highlighting !}%
 
 %{! The most basic function of TwelfTag is to highlight Twelf code much the same way that [Emacs](/wiki/twelf-with-emacs/) does. Names are red, and metavariables (free variables) are in blue.
- !}%
+!}%
 
 elem : type.
 

@@ -4,7 +4,7 @@
 
 ## Problem 1: CPS Conversion with Administrative Redices
 
- !}%
+!}%
 tp : type.
 o  : tp.
 => : tp -> tp -> tp.           %infix right 3 =>.
@@ -52,7 +52,7 @@ cpse/ret : cpse (ret (V:value A)) ([c:ccont A] cthrow c V')
 
 %{! 
 See [POPL Tutorial/CPS_Solution2](/wiki/popl-tutorial-cps-solution2/) for the solution to the second CPS problem.
- !}%
+!}%
 
 %{!
 -----

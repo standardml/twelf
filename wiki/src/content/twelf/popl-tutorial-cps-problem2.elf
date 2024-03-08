@@ -28,7 +28,7 @@ clam   : (cvalue A -> (cvalue B -> contra) -> contra) -> cvalue (A => B).
 Notice that we no longer need terms for continuations as they are implicitly represented by the functions from values to contradictions.
 
 For this problem, write the translation to this version of the CPS language:
- !}%
+!}%
 cps : value A -> cvalue A -> type.
 %mode cps +X1 -X2.
 
@@ -36,7 +36,7 @@ cpse : exp A -> ((cvalue A -> contra) -> contra) -> type.
 %mode cpse +X1 -X2.
 %{! 
 The code for this problem should be similar to the code from the previous problem except that the introduction of continuations with cfalsei and their elimination with throw is replaced by Twelf function introduction and application.
- !}%
+!}%
 
 %{!
 -----

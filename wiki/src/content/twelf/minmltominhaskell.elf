@@ -5,13 +5,13 @@
 Translation from MinML (unencapsulated effects) to MiniHaskell (monadic effects).
 Uses third-order coverage checking.
 
- !}%
+!}%
 
 %{! 
 
 ## MiniHaskell
 
- !}%
+!}%
 
 tp : type.
 
@@ -47,7 +47,7 @@ print  : | lax C -> | lax C.
 
 ## MinML
 
- !}%
+!}%
 
 mtp : type.
 
@@ -68,7 +68,7 @@ mprint : mtrue C -> mtrue C.
 
 ## Translation
 
- !}%
+!}%
 
 tptrans : mtp -> tp -> type.
 %mode tptrans +A -B.

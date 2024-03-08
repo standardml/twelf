@@ -7,7 +7,7 @@ Translates lambda calculus into combinator calculus to illustrate non-trivial wo
 
 ## Syntax
 
- !}%
+!}%
 
 % lambda calculus
 
@@ -35,7 +35,7 @@ capp : comb -> comb -> comb.
 
 ## Translation
 
- !}%
+!}%
 
 % bracket abstraction
 
@@ -86,7 +86,7 @@ translate/lam : translate (lam ([x] M x)) A'
 
 Lambda term equality was discussed only briefly.  Combinator equality was presented for the ``subst`` lemma, below.
 
- !}%
+!}%
 
 % lambda term equality
 
@@ -156,7 +156,7 @@ ceq/trans : ceq A A'
 
 ## Correctness of the translation
 
- !}%
+!}%
 
 % substitution lemma
 

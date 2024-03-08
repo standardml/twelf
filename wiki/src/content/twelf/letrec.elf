@@ -23,7 +23,7 @@ explist	: nat -> type.
 
 %{! 
 oexplist N M, is a list of M expressions with N bound variables
- !}%
+!}%
 oexplist: nat -> nat -> type. 
 
 
@@ -580,7 +580,7 @@ preservation	: of-exp E T
 TODO: commentary.
 
 \{\{stub\}\}
- !}%
+!}%
 
 %{!
 -----

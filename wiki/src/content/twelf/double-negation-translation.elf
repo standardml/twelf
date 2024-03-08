@@ -4,7 +4,7 @@
 
 ## Intuitionistic logic
 
- !}%
+!}%
 
 iprop : type.  %name iprop A'.
 
@@ -65,7 +65,7 @@ distdnimp : itrue (idn (iimp A B)) -> itrue (iimp (idn A) (idn B)) =
 
 ## Classical logic
 
- !}%
+!}%
 
 prop : type.  %name prop A.
 
@@ -149,7 +149,7 @@ notimpbot (notimpbot (iffi ([x] x) ([x] x))).
 This is essentially the 
 [http://en.wikipedia.org/wiki/G%C3%B6del%E2%80%93Gentzen_negative_translation Godel-Gentzen Negtive Translation].
 It differs only by De Morgan laws that are provable intuitionistically.  
- !}%
+!}%
 
 * : prop -> iprop -> type.
 %mode * +A -A'.
@@ -205,7 +205,7 @@ itrue-respects-id : itrue A -> id-iprop A' A -> itrue A' -> type.
 
 ### Double-negation elimination for the target of the translation
 
- !}%
+!}%
 
 dne : * A A' -> (itrue (inot (inot A')) -> itrue A') -> type.
 %mode dne +X1 -X2.
@@ -233,7 +233,7 @@ dne : * A A' -> (itrue (inot (inot A')) -> itrue A') -> type.
 
 ## Soundness
 
- !}%
+!}%
 
 sound/true : >> true A -> * A A' -> itrue A' -> type.
 %mode sound/true +X1 +X2 -X3.
@@ -453,7 +453,7 @@ Include intuitionistic props into classical.  We need to define another
 translation because * is not total with the reverse mode (it doesn't
 translate atoms).
 
- !}%
+!}%
 
 *i : prop -> iprop -> type.
 %mode *i -A +A'.
@@ -503,7 +503,7 @@ true-respects-id : >> true A -> id-prop A' A -> >> true A' -> type.
 
 The arguments are in a funny order because I copied from soundness. =)
 
- !}%
+!}%
 
 incl :  >> true A -> *i A A' -> itrue A' -> type.
 %mode incl -X1 +X2 +X3.
@@ -569,7 +569,7 @@ incl :  >> true A -> *i A A' -> itrue A' -> type.
 
 ### Round-tripping the two translations is classically equivalent
 
- !}%
+!}%
 
 equiv : * A A' -> *i A'' A' -> >> true (iff A A'') -> type.
 %mode equiv +X1 +X2 -X3.
@@ -622,7 +622,7 @@ equiv : * A A' -> *i A'' A' -> >> true (iff A A'') -> type.
 
 ### If A* is intuitionistically true, then A is classically true
 
- !}%
+!}%
 
 comp : itrue A' -> * A A' -> >> true A -> type.
 %mode comp +X1 +X2 -X3. 

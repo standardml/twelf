@@ -2,11 +2,11 @@
 
 %{! 
 MinML: call-by-value, with recursive functions, using an intrinsic encoding
- !}%
+!}%
 
 %{! 
 ## Types
- !}%
+!}%
 
 tp : type.				%name tp T.
 nat : tp.
@@ -15,7 +15,7 @@ all : (tp -> tp) -> tp.
 
 %{! 
 ## Syntax / static semantics
- !}%
+!}%
 
 exp : tp -> type.			%name exp E.
 
@@ -29,7 +29,7 @@ tapp : exp (all [a] T a) -> {T2 : tp} exp (T T2).
 
 %{! 
 ## Dynamic Semantics / Preservation
- !}%
+!}%
 
 value : exp T -> type.			%name value Dval.
 %mode value +E.
@@ -71,7 +71,7 @@ step/tapp/beta
 
 %{! 
 ## Progress
- !}%
+!}%
 
 val-or-step : exp T -> type.		%name val-or-step Dvos.
 vos/val : val-or-step E <- value E.
@@ -82,7 +82,7 @@ vos/step : val-or-step E <- step E _.
 
 These are necessary for case-analyzing the results of recursive calls.
 
- !}%
+!}%
 
 prog/s
    : val-or-step E -> val-or-step (s E) -> type.
@@ -160,7 +160,7 @@ prog/tapp : val-or-step (E : exp (all [a] T a))
 
 %{! 
 ## Main theorem
- !}%
+!}%
 
 prog : {E : exp T} val-or-step E -> type. 
 %mode prog +Dof -Dvos.
@@ -193,7 +193,7 @@ prog : {E : exp T} val-or-step E -> type.
 
 %{! 
 And thus we have proved type safety for MinML with polymorphism!
- !}%
+!}%
 
 %{!
 -----

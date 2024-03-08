@@ -12,7 +12,7 @@
 
 Types:
 
- !}%
+!}%
 
 tp : type.  
 
@@ -23,7 +23,7 @@ forall : (tp -> tp) -> tp.
 
 Terms: 
 
- !}%
+!}%
 
 tm : type. 
 
@@ -37,7 +37,7 @@ tapp : tm -> tp -> tm.
 
 ## Static semantics
 
- !}%
+!}%
 
 of : tm -> tp -> type.
 
@@ -55,7 +55,7 @@ of-tapp : of (tapp E T2) (T T2)
 
 ## Dynamic semantics
 
- !}%
+!}%
 
 value    : tm -> type.
 value-fn : value (fn A E).
@@ -85,7 +85,7 @@ step-tapp-beta : step (tapp (tfn ([u:tp] E u)) T2) (E T2).
 \}\}
 
 
- !}%
+!}%
 
 %{!
 -----

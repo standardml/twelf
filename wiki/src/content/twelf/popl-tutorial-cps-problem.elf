@@ -7,7 +7,7 @@
 In this problem we define a translation from the following simply-typed
 λ-calculus to a language in continuation passing style (CPS).
 
- !}%
+!}%
 
 tp : type.
 o  : tp.
@@ -25,7 +25,7 @@ ret   : value A -> exp A.
 
 The terms are divided into expressions and values as in the previous exercise, but there is also an injection of values into expressions.  We define the language so that an expression or value of type A will have the type exp A or value A, respectively.  We will initially define a translation into the following CPS language.
 
- !}%
+!}%
 
 contra : type.
 cvalue : tp -> type.
@@ -45,7 +45,7 @@ A value of type A =&gt; B can be interpreted as proofs of (not (A and (not B))).
 
 It remains to define a translation from the source to the target language:
 
- !}%
+!}%
 cps : value A -> cvalue A -> type.
 %mode cps +X1 -X2.
 
@@ -58,7 +58,7 @@ We translate values in the source language to values in the target language of t
 
 When you complete this problem you can learn another technique in the second part: [POPL Tutorial/cps-problem2](/wiki/popl-tutorial-cps-problem2/)
 
- !}%
+!}%
 
 %{!
 -----

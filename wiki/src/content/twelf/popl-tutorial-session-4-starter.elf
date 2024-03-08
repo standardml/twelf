@@ -6,7 +6,7 @@
 
 ### Syntax
 
- !}%
+!}%
 
 tp : type.  %name tp T.
 
@@ -25,13 +25,13 @@ TASK 1:
 
 Add constants for successor and ifz:
 
- !}%
+!}%
 
 %{! 
 
 ### Static Semantics
 
- !}%
+!}%
 
 of : exp -> tp -> type.  %name of Dof.
 
@@ -51,14 +51,14 @@ TASK 2:
 
 Add two new typing rules for successor and ifz
 
- !}%
+!}%
 
 
 %{! 
 
 ### Dynamic Semantics
 
- !}%
+!}%
 
 value : exp -> type.  %name value Dval.
 
@@ -66,7 +66,7 @@ value/z		: value z.
 
 %{! 
 Task 3a: Add a value rule for successor
- !}%
+!}%
 
 value/fun	: value (fun _ _ _).
 
@@ -88,13 +88,13 @@ TASK 3:
 
 Add four more operational semantics rules for successor and ifz.
 
- !}%
+!}%
 
 %{! 
 
 ### Preservation
 
- !}%
+!}%
 
 
 preservation : of E T
@@ -141,7 +141,7 @@ preservation : of E T
 
 %{! 
 TASK 4: Finish the proof!
- !}%
+!}%
 
 %worlds () (preservation _ _ _).
 %total D (preservation _ D _).

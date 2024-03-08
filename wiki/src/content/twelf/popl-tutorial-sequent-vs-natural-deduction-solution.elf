@@ -74,7 +74,7 @@ cut  : conc B
 
 ## Translation: Natural Deduction to Sequent Calculus
 
- !}%
+!}%
 
 nd-to-seq : true A -> conc A -> type.
 %mode nd-to-seq +X1 -X2.
@@ -117,7 +117,7 @@ nd-to-seq : true A -> conc A -> type.
 
 ## Translation: Sequent Calculus to Natural Deduction
 
- !}%
+!}%
 
 hyp-to-true : hyp A -> true A -> type.
 %mode hyp-to-true +X1 -X2.

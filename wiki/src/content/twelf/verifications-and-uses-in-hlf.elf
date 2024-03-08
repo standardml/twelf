@@ -6,7 +6,7 @@ created by Jason Reed as part of his Ph.D. Thesis,
 little box to the right says "Status: %% ABORT %%," in other words. The example on [verifications and uses with zippers](/wiki/verifications-and-uses-with-zippers/) has essentially the same content but actually works in non-HLF extended Twelf.
 
 This code is primarily here so it can be referenced by a [http://requestforlogic.blogspot.com/2010/09/natural-deduction-and-sequent-calculus.html blog post] by [Rob](/wiki/user-rsimmons/). 
- !}%
+!}%
 
 %hlf.
 

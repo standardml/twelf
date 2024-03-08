@@ -29,7 +29,7 @@ down : prop neg -> prop pos.
 A sequent is written
  h1: hyp A1, ..., hn: hyp An |- conc A 
  A1, ..., An |- A
- !}%
+!}%
 
 hyp : prop S -> type.                   %name hyp H h.
 conc : prop S -> type.                  %name conc D.
@@ -87,7 +87,7 @@ Right-focused sequent:
 These can be generically expressed as:
  l1:left P1, ..., ln:left Pn |- conseq C
  P1, ..., Pn |- C
- !}%
+!}%
 
 left : prop pos -> type.                %name left L l.
 

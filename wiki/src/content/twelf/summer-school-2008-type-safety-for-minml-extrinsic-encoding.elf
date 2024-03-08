@@ -15,7 +15,7 @@ Type safety for MinML: call-by-value, with recursive functions, in extrinsic for
 
 Types:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 nat : tp.
@@ -25,7 +25,7 @@ arr : tp -> tp -> tp.
 
 Raw expressions, which admit ill-typed terms
 
- !}%
+!}%
 
 exp : type.				%name exp E.
 z : exp.
@@ -40,7 +40,7 @@ app : exp -> exp -> exp.
 
 A judgement picking out the well-typed terms:
 
- !}%
+!}%
 
 of : exp -> tp -> type.			%name of Dof.
 %mode of +E -T.
@@ -66,7 +66,7 @@ of/app
 
 ## Dynamic semantics
 
- !}%
+!}%
 
 value : exp -> type.			%name value Dval.
 %mode value +E.
@@ -107,7 +107,7 @@ step/app/beta-v
 With this encoding, we have to prove preservation explicitly, as the
 type of ``step`` doesn't guarantee it.
 
- !}%
+!}%
 
 pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
 %mode pres +Dstep +Dof -Dof.
@@ -164,7 +164,7 @@ pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
 
 ## Progress
 
- !}%
+!}%
 
 val-or-step : exp -> type.		%name val-or-step Dvos.
 vos/val : val-or-step E <- value E.
@@ -174,7 +174,7 @@ vos/step : val-or-step E <- step E _.
 
 ### [Factoring lemmas](/wiki/output-factoring/)
 
- !}%
+!}%
 
 prog/s
    : val-or-step E -> val-or-step (s E) -> type.
@@ -238,7 +238,7 @@ prog/app
 
 ### Main theorem
 
- !}%
+!}%
 
 prog : of E T -> val-or-step E -> type. %name prog Dprog.
 %mode prog +Dof -Dvos.
@@ -269,7 +269,7 @@ And thus we have proved type safety for minml!
 
 ## Examples
 
- !}%
+!}%
 
 %abbrev plus : exp = 
   fun nat (arr nat nat) 
@@ -323,7 +323,7 @@ stepv/s : stepv E E''
   |nextname=Exercises 3
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

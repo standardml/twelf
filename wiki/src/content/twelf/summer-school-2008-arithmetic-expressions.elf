@@ -18,7 +18,7 @@ That is, &lt;math&gt;\mathsf\{z\}&lt;/math&gt; is a natural number, and if &lt;m
 
 We represent natural numbers as an LF type ``nat`` with two constants generating LF terms of that type:
 
- !}%
+!}%
 
 nat : type.             %name nat M.
 z : nat.
@@ -46,7 +46,7 @@ Next, we define addition as a judgement relating two natural numbers to their su
 
 This judgement is represented in LF as follows:
 
- !}%
+!}%
 
 add : nat -> nat -> nat -> type.
 %mode add +M +N -P.
@@ -63,7 +63,7 @@ The first line says that the type family ``add`` relates three natural numbers. 
 
 Twelf verifies that addition is a total function on closed terms of type nat:
 
- !}%
+!}%
 
 %worlds () (add _ _ _).
 %total M (add M _ _).
@@ -75,13 +75,13 @@ The declarations should be read as follows:
 * [%total](/wiki/percent-total/): For all ``M`` and ``N``, there exists a ``P`` such that ``add M N P`` is derivable.
 
 This proves a [totality assertion](/wiki/totality-assertion/) for ``add``.
- !}%
+!}%
 
 %{! 
 
 ## Simple arithmetic expressions
 
- !}%
+!}%
 
 exp : type.             %name exp E.
 num : nat -> exp.
@@ -93,14 +93,14 @@ plus : exp -> exp -> exp.
 First, we define a syntactic category of answers, which in this case is
 just natural numbers:
 
- !}%
+!}%
 
 ans : type.				%name ans A.
 anum : nat -> ans.
 
 %{! 
 Next, we define the evaluation judgement relating an expression to an answer.
- !}%
+!}%
 
 eval : exp -> ans -> type.		%name eval Deval.
 %mode eval +E1 -E2.
@@ -122,14 +122,14 @@ Twelf verifies that evaluation is total:
 * the mode declaration says that the expression is an input, and the answer is an output.
 * the worlds declaration says that we're only considering closed expressions
 * the total declaration asks Twelf to verify that ``eval`` defines a total relation from closed expressions to closed answers.  
- !}%
+!}%
 
 %{! 
 ### Solving for derivations
 
 We can use logic programming to [solve](/wiki/percent-solve/) for derivations.  
 
- !}%
+!}%
 
 two : nat = (s (s z)).
 %solve _ : add two two N.
@@ -146,7 +146,7 @@ two_exp : exp = num two.
    |nextname = Arithmetic expressions with let-binding
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

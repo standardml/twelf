@@ -9,7 +9,7 @@ Polarized PCF with a stack machine semantics
 - Proves completeness of focusing, so you can see what direct-style terms mean
 - Does purely negative stream using (non-canonical) negative continuation variables; completeness of focusing does some sort of CPS conversion
 
- !}%
+!}%
 
 %{! ## Syntax !}%
 
@@ -83,7 +83,7 @@ let  : exp A+ -> (val+ A+ -> exp C+) -> exp C+.
 
 Note that all rules are axioms.
 
- !}%
+!}%
 
 step : exp A+ -> exp A+ -> type.
 %mode step +X1 -X2.
@@ -124,7 +124,7 @@ step/cconv-tail  : step (cut- V- (comp- (tail K-) E))
 
 ## Progress
 
- !}%
+!}%
 
 ok : exp A+ -> type.
 ok/final : ok (ret V+).

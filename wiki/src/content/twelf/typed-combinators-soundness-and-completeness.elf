@@ -9,14 +9,14 @@ are beta-eta equal, and vice versa.
 
 [William Lovas](/wiki/user-william-lovas/)
 
- !}%
+!}%
 
 
 %{! 
 
 ## Syntax and static semantics
 
- !}%
+!}%
 
 %{! 
 
@@ -36,7 +36,7 @@ theorems comparing a natural deduction presentation of propositional logic
 with a Hilbert-style axiomatic presentation, but none of the theorems depend
 on types, and would hold equally well of untyped terms.
 
- !}%
+!}%
 
 tp : type.              %name tp A a.
 
@@ -72,7 +72,7 @@ We can use Twelf's [abbreviation mechanism](/wiki/abbrev-declaration/) and
 [fixity declarations](/wiki/fixity-declaration/) to specify convenient infix
 syntax for application.
 
- !}%
+!}%
 
 %abbrev @ = app.
 %infix left 10 @.
@@ -85,7 +85,7 @@ syntax for application.
 
 ## Equational theory
 
- !}%
+!}%
 
 %{! 
 
@@ -95,7 +95,7 @@ equality for combinator terms.  In both cases, the equality relation
 amounts to beta-eta equivalence.  (We use extensionality instead of a
 rule based on eta-expansion.)
 
- !}%
+!}%
 
 % definitional equality on terms
 teq : term A -> term A -> type.
@@ -129,7 +129,7 @@ eq/trans : teq M M''
 
 Infix syntax for transitivity is convenient when building derivations.
 
- !}%
+!}%
 
 %abbrev ; : teq N N' -> teq N' N'' -> teq N N'' = [d1] [d2] eq/trans d1 d2.
 %infix right 5 ;.
@@ -176,7 +176,7 @@ ceq/trans : ceq N N''
 
 ## Translation
 
- !}%
+!}%
 
 %{! 
 
@@ -219,7 +219,7 @@ relating LF-level abstractions in the combinator language to closed combinator
 terms, ``bracket ([x] N x) N``.  This definition is essentially an
 instance of [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
 
- !}%
+!}%
 
 translate : term A -> comb A -> type.
 %mode translate +M -N.
@@ -241,7 +241,7 @@ with a lambda-term variable, a combinator-term variable, and an assumption
 that the one translates to the other.  See the ``%worlds`` declaration
 below.  (The block ``trans-block`` will form the basis of later blocks.)
 
- !}%
+!}%
 t/lam : translate (lam [x] M x) N*
          <- ({x:term A} {y:comb A} translate x y -> translate (M x) (N y))
          <- bracket ([y] N y) N*.
@@ -267,7 +267,7 @@ b/s : bracket ([y] capp (N1 y) (N2 y)) (capp (capp s N1*) N2*)
 
 Both relations are effective, though we cannot use this fact in proofs.
 
- !}%
+!}%
 
 %total N (bracket N _).
 %total M (translate M _).
@@ -276,7 +276,7 @@ Both relations are effective, though we cannot use this fact in proofs.
 
 Instead, we need explicitly prove effectiveness lemmas.
 
- !}%
+!}%
 
 can-bracket : {N : comb A -> comb B} bracket N N* -> type.
 %mode can-bracket +N -Dbrack.
@@ -315,14 +315,14 @@ can-translate : {M : term A} translate M N -> type.
 
 ## Correctness of the translation
 
- !}%
+!}%
 
 %{! 
 
 First, we prove the correctness of bracket abstraction itself: the
 application of a bracket abstraction is equivalent to a substitution.
 
- !}%
+!}%
 
 subst : bracket ([x] N x) N* -> {N0} ceq (capp N* N0) (N N0) -> type.
 %mode subst +B +X -CS.
@@ -357,7 +357,7 @@ subst : bracket ([x] N x) N* -> {N0} ceq (capp N* N0) (N N0) -> type.
 Next, we need to know that the translation of a term is unique up to
 equivalence.
 
- !}%
+!}%
 
 translate-unique : translate M N -> translate M N' -> ceq N N' -> type.
 %mode translate-unique +Dt1 +Dt2 -Deq.
@@ -408,7 +408,7 @@ straightforward induction on equality derivations in the lambda-calculus,
 using the correctness of bracket abstraction as a lemma in the case of a
 beta-reduction.
 
- !}%
+!}%
 
 simulate : translate M N -> translate M' N' -> teq M M' -> ceq N N' -> type.
 %mode simulate +Dt +Dt' +Deq -Dceq.
@@ -523,7 +523,7 @@ to the original input term.
 Reification just replaces combinators with their definitions as
 lambda terms.
 
- !}%
+!}%
 
 reify : comb A -> term A -> type.       %name reify Dreify dreify.
 %mode reify +N -M.
@@ -542,7 +542,7 @@ We consider reification in any world with free variables as long as there's
 a combinator variable for each lambda-term variable and an appropriate
 correspondence between them.
 
- !}%
+!}%
 
 %block reify-block
             : some {A:tp}
@@ -555,7 +555,7 @@ correspondence between them.
 Twelf can verify that reification is total and that the result is unique
 up to identity,
 
- !}%
+!}%
 
 %total N (reify N _).
 %unique reify +N -M.
@@ -568,7 +568,7 @@ ourselves.
 The theorem ``can-reify`` shows the effectiveness of reification by
 constructing a ``reify`` derivation for any given combinator ``N``.
 
- !}%
+!}%
 
 can-reify : {N : comb A} reify N M -> type.
 %mode can-reify +N -Dreify.
@@ -586,7 +586,7 @@ Note the use of a _theorem case_ in the block for ``can-reify``:
 since we prove reification with respect to an open world, we have to include
 proofs for the free variable cases.
 
- !}%
+!}%
 
 %block can-reify-block
             : some {A:tp}
@@ -602,7 +602,7 @@ The theorem ``reify-unique`` shows the uniqueness of reification.
 For convenience, we demonstrate only that reifications are unique up to
 term equivalence.
 
- !}%
+!}%
 
 reify-unique : reify N M -> reify N M' -> teq M M' -> type.
 %mode reify-unique +Dreify1 +Dreify2 -Deq.
@@ -630,7 +630,7 @@ reify-unique : reify N M -> reify N M' -> teq M M' -> type.
 The reification of a closed combinator term is a closed lambda-term, but
 we require the following strengthening lemma to show that this is the case.
 
- !}%
+!}%
 
 strengthen-reify : ({x} {y} reify y x -> reify N (M! x))
                     %%
@@ -677,7 +677,7 @@ of ``M`` has a reification to an equivalent ``M'``.  First, we show
 the following lemma, which says that bracket abstractions reify to lambda
 abstractions.
 
- !}%
+!}%
 
 bracket-reify : bracket ([y] N y) N*
                  -> ({x} {y} reify y x -> reify (N y) (M x))
@@ -698,7 +698,7 @@ In the case where bracket abstraction returns an application of the K
 combinator to a closed term, we require our strengthening lemma to show
 that the result of reification is also closed.
 
- !}%
+!}%
 
 - : bracket-reify (b/k : bracket ([y] N) (k @@ N))
                   ([x] [y] [dreify: reify y x]
@@ -717,7 +717,7 @@ that the result of reification is also closed.
 The case for reifying an application of the S combinator is tedious, but
 straightforward.
 
- !}%
+!}%
 
 - : bracket-reify (b/s (Dbrack2 : bracket ([y] N2 y) N2*)
                        (Dbrack1 : bracket ([y] N1 y) N1*)
@@ -763,7 +763,7 @@ straightforward.
 Now we can prove that every translation reifies to an equivalent term,
 appealing to the above bracket abstraction lemma in the ``lam`` case.
 
- !}%
+!}%
 
 translate-reify : translate M N -> reify N M' -> teq M M' -> type.
 %mode translate-reify +Dt -Dr -Deq.
@@ -825,7 +825,7 @@ Next, we prove a theorem similar to our earlier ``simulate`` theorem,
 but for reification: given two reification derivations from equivalent inputs,
 their outputs are equivalent.
 
- !}%
+!}%
 
 reify-simulate : reify N M -> reify N' M' -> ceq N N' -> teq M M' -> type.
 %mode reify-simulate +Dreify +Dreify' +Dceq -Deq.
@@ -943,7 +943,7 @@ Given two translations, we get reifications for both.  By the above simulation
 theorem, we show that the reifications must be equal.  Then the desired result
 follows by transitivity.
 
- !}%
+!}%
 
 complete : translate M N -> translate M' N' -> ceq N N' -> teq M M' -> type.
 %mode complete +Dtrans +Dtrans' +Dceq -Deq.
@@ -961,7 +961,7 @@ complete : translate M N -> translate M' N' -> ceq N N' -> teq M M' -> type.
 We can also make a copy of ``simulate`` called ``sound``, in order
 to be able check it in the same world as ``complete``.
 
- !}%
+!}%
 
 sound : translate M N -> translate M' N' -> teq M M' -> ceq N N' -> type.
 %mode sound +Dtrans +Dtrans' +Deq -Dceq.
@@ -983,7 +983,7 @@ these new translation and reification assumptions.
 Note that for world subsumption to work correctly, it was necessary to always
 state x and y in the same order, even in the reification theorems.
 
- !}%
+!}%
 
 %block master-block
             : some {A:tp}

@@ -29,7 +29,7 @@ up my challenge to write bijections involving HOAS terms.  However,
 I go against his explicit advice in using the "%theorem" syntax
 extensively which I find much more clear that the "preferred" Twelf
 way of purity.
- !}%
+!}%
 
 
 %{! | hidden=true !}%
@@ -7215,7 +7215,7 @@ nat2pair : nat -> pair -> type = [N] [P] pair2nat P N.
 The HOAS defined here is uninteresting.  There isn't even any way to use
 more than one variable (although the proofs use techniques that can 
 handle any number of variables).
- !}%
+!}%
 
 
 t : type.
@@ -7246,7 +7246,7 @@ eq/ : eq T T.
 %{! 
 A variable level is the (nonzero) natural number for a variable.
 This value is used to determine the mapping for a variable.
- !}%
+!}%
 
 
 varlevel : t -> nat -> type.
@@ -7261,7 +7261,7 @@ varlevel : t -> nat -> type.
 The bijection from t to nat is called "tonat".  In its more general
 form the relation takes a natural number indicating how deep we are
 inside functions.
- !}%
+!}%
 
 
 tonat* : nat -> t -> nat -> type.
@@ -7297,7 +7297,7 @@ tonat/f :
 The following theorems prove obvious simple things about the
 basic relations.  They following the conventions established in
 John Boyland's library signatures.
- !}%
+!}%
 
 
 %theorem false-implies-varlevel :
@@ -7356,7 +7356,7 @@ We package this approach up into an auxiliary relation that incidentally
 makes it easy to capture variables in case analysis.  This makes
 for a wordy series of proofs.  Perhaps we can get rid of 'case'
 in general.
- !}%
+!}%
 
 
 
@@ -7368,7 +7368,7 @@ in general.
 %{! 
 A variable is raw if we haven't verified that it has a level in range.
 Non variables are not raw.
- !}%
+!}%
 
 israw : t -> bool -> type.
 
@@ -7388,7 +7388,7 @@ israw/f : israw (f _) false.
 We case analysis terms with two cases for variables.
 The raw case is used only internally and can be ignored in
 "clients" that don't use israw.
- !}%
+!}%
 
 case : nat -> t -> type.
 
@@ -7422,7 +7422,7 @@ circular dependency.  (Again, the idea from Rob Simmons.)
 For some reason, unlike Rob's examples and the later instances in
 this file, I need to add israw to the fake dependencies as well.
 The definition "fake" is never used again.  It has no "meaning."
- !}%
+!}%
 
 
 %theorem israw-total* :
@@ -7452,7 +7452,7 @@ fake : type.
 The following theorem handles one variable converting it from raw to
 handle a level that is in the required range.  This is an important
 technique for handle variables in Twelf: one at a time.
- !}%
+!}%
 
 %theorem var-gets-level :
 	forall* {N} {T} {L}
@@ -7498,7 +7498,7 @@ be tested for rawness, we recurse while the variable is assumed raw.
 Once this is done, we convert the variable into one with a level
 using "var-gets-level".  Note that the var levels don't go into 
 the context for this theorem.
- !}%
+!}%
 
 %theorem case-total* :
 	forall	{T}
@@ -7546,7 +7546,7 @@ the context for this theorem.
 We are ready now to prove totality of the relation.
 We case the term first and then have everything we need
 to push through totality.
- !}%
+!}%
 
 
 %theorem tonat-total* :
@@ -7602,7 +7602,7 @@ might refer to the "one2one" aspect, proved later.)
 This aspect is much easier to prove that any of the others.
 That probably reflects the fact that the relation was written 
 in a functional style.
- !}%
+!}%
 
 
 
@@ -7612,7 +7612,7 @@ in a functional style.
 %{! 
 We prove that variable levels are "unique" and that they are never zero.
 The proofs are trivial: Twelf can accept them from the context alone.
- !}%
+!}%
 
 
 %theorem varlevel-deterministic :
@@ -7699,7 +7699,7 @@ reverse mapping has a variable associated with it.  We do this using a
 helper relation, as opposed to putting something in the context, since 
 as explained earlier, the context is useless to connect variables with 
 the nesting level.
- !}%
+!}%
 
 
 %{! ### Auxiliary definitions !}%
@@ -7713,7 +7713,7 @@ is not itself in the context.  This is rather rare in my limited
 experience.
 
 upto N says that we have a variable for all levels 1..N.
- !}%
+!}%
 
 
 upto : nat -> type.
@@ -7760,7 +7760,7 @@ parity.  (In general, one would use a divisor counting all
 cases that are recursive.)  The proofs are long but simply
 arithmetic manipulation.  Proving termination uses meta-gt
 for strong induction over the natural numbers.
- !}%
+!}%
 
 
 %theorem tonat-onto* :
@@ -7861,7 +7861,7 @@ they are the same.  Of course, there is only one variable for each level,
 which means that the terms are truly identical.  But this is impossible
 to express in the context.  Instead, we chip away at the variables from
 the "outside", each time reducing the level of the remaining variables.
- !}%
+!}%
 
 
 
@@ -7895,7 +7895,7 @@ We use this measure to be able to prove termination.
 We need eqlsize/v = eqlsize/eq, eqlsize/f1 = eqlsize/f2.
 (Less than is ok in each case but would require that we
 rephrase the lemmas.)
- !}%
+!}%
 
 eqlsize : (eql* N T1 T2) -> nat -> type.
 
@@ -7921,7 +7921,7 @@ will cause mixup (because we need to have both the old
 and new levels in the context at the same time) unless
 we use a different definition.  For that reason, we define
 alternatives for varlevel, eql and eqlsize.
- !}%
+!}%
 
 varlevel' : t -> nat -> type.
 
@@ -7999,7 +7999,7 @@ eqlsize'/v : eqlsize' (eql'/v _ _) z.
 The following block is used when we remove the outmost variable:
 all other variables are at least level 2.  "blockvar2"
 makes this context explicit.
- !}%
+!}%
 
 %block blockvar2 : some {l} block {v} {vl:varlevel v (s (s l))}.
 
@@ -8053,7 +8053,7 @@ in context itself and add fake dependencies.
 
 Adding to the complexity is the fact that we need to track the
 size of the equality rules for termination proof (later).
- !}%
+!}%
 
 
 %theorem varlevel-shifts-down :
@@ -8156,7 +8156,7 @@ fake : type.
 
 %{! 
 Now we put these two parts in one that hides the alternative definitions.
- !}%
+!}%
 
 %theorem shift-varlevel :
 	forall* {N} {T1} {T2} {S}
@@ -8178,7 +8178,7 @@ Now we put these two parts in one that hides the alternative definitions.
 The following two theorems relate structural equality with
 identity based equality.  One of them is called "Leibnitz" equality,
 I have heard, but apparently haven't remembered which one.
- !}%
+!}%
 
 
 %theorem b-preserves-eq :
@@ -8210,7 +8210,7 @@ Next the main lemma that says we can avoid looking at varlevels in checking
 equality.  We remove the outside variable, shift remaining variables,
 and then recurse (hence the need for tracking eqlsize).  Note that we
 never put var levels in the context.
- !}%
+!}%
 
 %theorem eql-implies-eq :
 	forall* {T1} {T2}
@@ -8263,7 +8263,7 @@ cases cannot be distinguished by Twelf's case analysis.
 It also uses the "divrem" part of the nat signature extensively
 as well as theorems about plus and times.  The proofs of the cases are
 uninteresting arithmetic fiddling.
- !}%
+!}%
 
 
 %theorem tonat-one2one :

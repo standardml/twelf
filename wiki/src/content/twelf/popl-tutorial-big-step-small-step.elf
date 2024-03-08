@@ -19,7 +19,7 @@ The solution is [here](/wiki/popl-tutorial-big-step-small-step-solution/).
 
 Types:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 nat : tp.
@@ -29,7 +29,7 @@ arr : tp -> tp -> tp.
 
 Expressions
 
- !}%
+!}%
 
 exp : type.				%name exp E.
 fn : tp -> (exp -> exp) -> exp.
@@ -43,7 +43,7 @@ ifz : exp -> exp -> (exp -> exp) -> exp.
 
 ## Small-step dynamic semantics
 
- !}%
+!}%
 
 value : exp -> type.			%name value Dval.
 %mode value +E.
@@ -74,7 +74,7 @@ step/ifz/s : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
 
 ### Multi-step
 
- !}%
+!}%
 
 step* : exp -> exp -> type.             %name step* Dstep*.
 
@@ -91,7 +91,7 @@ We can define ``D1 @ D2`` to be an abbreviation for ``step*/trans
 D1 D2``.  This is convenient for chaining together several derivations
 using transitivity.
 
- !}%
+!}%
 
 %abbrev @ : step* E E' -> step* E' E'' -> step* E E''
           = [d1] [d2] step*/trans d1 d2.
@@ -103,7 +103,7 @@ using transitivity.
 
 ## Big-step dynamic semantics
 
- !}%
+!}%
 
 eval : exp -> exp -> type.              %name eval Deval.
 
@@ -132,7 +132,7 @@ the value judgement from above.
 
 ### Evaluation returns a value
 
- !}%
+!}%
 
 eval-val : eval E V -> value V -> type.
 %mode eval-val +D1 -D2.
@@ -163,7 +163,7 @@ eval-val : eval E V -> value V -> type.
 
 ### Values evaluate to themselves
 
- !}%
+!}%
 
 val-eval : value V -> eval V V -> type.
 %mode val-eval +Dval -Dev.
@@ -195,7 +195,7 @@ term can be bubbled up to the term itself.
 Each argument proceeds by induction on the derivation that
 ``step* E E'``.
 
- !}%
+!}%
 
 step*/s : step* E E' -> step* (s E) (s E') -> type.
 %mode step*/s +D* -D*s.
@@ -260,7 +260,7 @@ of ``eval E V`` using the multi-step compatibility lemmas above.
 
 #### TASK 2: Fill in the missing cases of the theorem
 
- !}%
+!}%
 
 eval-multi : eval E V -> step* E V -> type.
 %mode eval-multi +D -D*.
@@ -311,7 +311,7 @@ definition of the multi-step relation be a little bit different. We call
 the more convienent direction "left-linearlized multi-step" and
 prove it equivlaent to the previous definition of multi-step.
 
- !}%
+!}%
 
 step** : exp -> exp -> type.            %name step** Dstep**.
 
@@ -325,7 +325,7 @@ step**/cons : step** E E''
 Lemma: Multi-step implies linearized multi-step.  This is tantamount
 to showing that transitivity is admissible for linearized derivations.
 
- !}%
+!}%
 
 step**/trans : step** E E' -> step** E' E'' -> step** E E'' -> type.
 %mode step**/trans +D1 +D2 -D3.
@@ -345,7 +345,7 @@ step**/trans : step** E E' -> step** E' E'' -> step** E E'' -> type.
 Lemma: Multi-step implies linearized multi-step.  This is tantamount
 to showing that transitivity is admissible for linearized derivations.
 
- !}%
+!}%
 
 multi-step** : step* E E' -> step** E E' -> type.
 %mode multi-step** +D* -D**.
@@ -374,7 +374,7 @@ that ``step E E'``.
 
 #### TASK 3: Prove the three missing cases of the expansion lemma
 
- !}%
+!}%
 
 expansion : eval E' V -> step E E' -> eval E V -> type.
 %mode expansion +D1 +D2 -D3.
@@ -463,7 +463,7 @@ due to the simple definition of ``step**``.
 
 #### TASK 4: Prove main theorem in the forward direction
 
- !}%
+!}%
 
 multi**-eval : step** E V -> value V -> eval E V -> type.
 %mode multi**-eval +D1 +D2 -D3.
@@ -484,7 +484,7 @@ and does not use induction.
 
 #### TASK 5: Complete proof by composing previous lemmas
 
- !}%
+!}%
 
 multi-eval : step* E V -> value V -> eval E V -> type.
 %mode multi-eval +D1 +D2 -D3.

@@ -11,7 +11,7 @@ app : exp -> exp -> exp.
 When we use this ``%block``, it expresses that we can be working in a 
 context with arbitrary expression variables. 
 
- !}%
+!}%
 
 %block exps : block {x: exp}.
 %worlds (exps) (exp).
@@ -32,7 +32,7 @@ explicitly states that we will be reducing in a setting
 with free variables, with the invariant that every variable is added
 with the invariant that it can evaluate to itself.
 
- !}%
+!}%
 
 reduce : exp -> exp -> type.
 %mode reduce +E -E'.
@@ -63,7 +63,7 @@ then ``[e&lt;sub&gt;arg&lt;/sub&gt;/x]e`` reduces to ``[e'&lt;sub&gt;arg&lt;/sub
 
 The proof is by induction on the structure of the term with the free variable.
 
- !}%
+!}%
 
 substitute 
    : ({x: exp} reduce x x -> reduce (E x) (E' x))
@@ -79,7 +79,7 @@ The "variable case" of our lemma is one where the first argument is
 ``x``. In this case, we will need to insert into the context the lemma
 that, if 
 
- !}%
+!}%
 
 %block exp_subst 
    : block {x: exp}{idx: reduce x x}

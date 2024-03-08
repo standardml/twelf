@@ -4,7 +4,7 @@
 
 ## Syntax
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 num : tp.
@@ -18,7 +18,7 @@ s : exp -> exp.
 
 %{! 
 #### Exercise: constant for ifz
- !}%
+!}%
 
 %% The syntax '% .' (without the space)
 %% causes Twelf to stop processing the file at this point
@@ -29,7 +29,7 @@ s : exp -> exp.
 
 ## Static semantics
 
- !}%
+!}%
 
 of : exp -> tp -> type.                %name of Dof.
 
@@ -44,7 +44,7 @@ of/fn : of (fn T1 ([x] E x)) (arr T1 T2)
 
 %{! 
 #### Exercise: typing rules for s and ifz
- !}%
+!}%
 
 
 
@@ -65,14 +65,14 @@ of/fn : of (fn T1 ([x] E x)) (arr T1 T2)
 ### value judgement
 
 
- !}%
+!}%
 
 value : exp -> type.               %name value Dval.
 
 value/fn : value (fn T ([x] E x)).
 %{! 
 #### Exercise: value rules for z and s
- !}%
+!}%
 
 
 
@@ -84,7 +84,7 @@ value/fn : value (fn T ([x] E x)).
 
 ### step judgement
 
- !}%
+!}%
 
 step : exp -> exp -> type.        %name step Dstep.
 
@@ -100,7 +100,7 @@ step/app/beta : step (app (fn T ([x] E x)) E2) (E E2)
 
 %{! 
 #### Exercise: step rules for s and ifz
- !}%
+!}%
 
 
 
@@ -113,7 +113,7 @@ step/app/beta : step (app (fn T ([x] E x)) E2) (E E2)
 
 ### Sum type for the result
 
- !}%
+!}%
 
 val-or-step : exp -> type.        %name val-or-step Dvos.
 
@@ -126,7 +126,7 @@ vos/step  : val-or-step E
 
 ### Lemmas
 
- !}%
+!}%
 
 prog/app : of E1 (arr T' T) 
 	    -> val-or-step E1
@@ -160,7 +160,7 @@ prog/app : of E1 (arr T' T)
 
 #### Exercise: lemma for s
 
- !}%
+!}%
 
 
 
@@ -173,7 +173,7 @@ prog/app : of E1 (arr T' T)
 
 #### Exercise: lemma for ifz
 
- !}%
+!}%
 
 
 
@@ -186,7 +186,7 @@ prog/app : of E1 (arr T' T)
 
 ### Main theorem
 
- !}%
+!}%
 
 prog : of E T -> val-or-step E -> type.
 %mode prog +Dof -Dvos.
@@ -207,7 +207,7 @@ prog : of E T -> val-or-step E -> type.
 
 #### Exercise: cases for s and ifz
 
- !}%
+!}%
 
 
 

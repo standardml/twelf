@@ -11,7 +11,7 @@ This file shows some of the extensions needed to handle indexed HOAS
 terms above and beyond those of "regular" HOAS terms (which is the topic of
 the [HOAS_nat_bijection] page).  In the comments here, I emphasize those 
 different aspects rather than repeat the same discussion.
- !}%
+!}%
 
 %{! | hidden = true !}%
 % contents included from ../library/std.elf
@@ -14850,7 +14850,7 @@ technical issues.  It would still change al he arithmetic parts of
 the proofs dramatically.  For this reason, I would like to
 implement a tool that would generate such proofs for any HOAS family
 of terms.
- !}%
+!}%
 
 
 term : nat -> type.
@@ -14889,7 +14889,7 @@ As with the non-indexed case,
 a variable level is the (nonzero) natural number for a variable.
 But unlike before 'varlevel' is now an abbreviation for a more
 complex relation that permits adjustment of the index level.
- !}%
+!}%
 
 
 varadjlevel : term N -> nat -> nat -> type.
@@ -14926,7 +14926,7 @@ for variables, where (unlike before) VN depends on the index.
 Ignoring variables, `lit' takes the veen numbers and `app' takes the odd
 numbers for the 0-indexed terms.  For the nonzero-indexed terms, app
 takes the odd numbers (of course) and lam and rec share the even numbers.
- !}%
+!}%
 
 
 tonat* : {N} multiset -> term N -> nat -> type.
@@ -14982,7 +14982,7 @@ tonat/rec :
 The following theorems prove obvious simple things about the
 basic relations.  They following the conventions established in
 John Boyland's library signatures.
- !}%
+!}%
 
 
 %theorem false-implies-eq :
@@ -15061,7 +15061,7 @@ no way to connect the context with the current nesting level.
 For this proof, I generalized/extended the "case" technique
 to handle indexed variables.  The proof is almost the same.
 The multisets add extra paremeters but the basic structure is the same.
- !}%
+!}%
 
 
 
@@ -15073,7 +15073,7 @@ The multisets add extra paremeters but the basic structure is the same.
 %{! 
 A variable is raw if we haven't verified that it has a level in range.
 Non variables are not raw.
- !}%
+!}%
 
 israw* : {N} term N -> bool -> type.
 
@@ -15097,7 +15097,7 @@ israw/rec : israw (rec _) false.
 We case analysis terms with two cases for variables.
 The raw case is used only internally and can be ignored in
 "clients" that don't use israw.
- !}%
+!}%
 
 case* : {N} multiset -> term N -> type.
 
@@ -15169,7 +15169,7 @@ technique for handle variables in Twelf: one at a time.  Unlike the
 one2one theorem (see later), we don't have to do extraordinary things
 to handle having multiple types.  (Although we do need some extra lemmas
 to ahndle facts about multisets.)
- !}%
+!}%
 
 %theorem var-gets-level :
 	forall* {M} {N} {VN} {T:term M -> term N} {L} {MS}
@@ -15241,7 +15241,7 @@ to ahndle facts about multisets.)
 %{! 
 We are now ready to prove that we can always "case" a term.
 This works almost the same as for non-indexed terms.
- !}%
+!}%
 
 %theorem case-total* :
 	forall* {N}
@@ -15305,7 +15305,7 @@ This works almost the same as for non-indexed terms.
 We are ready now to prove totality of the relation.
 We case the term first and then have everything we need
 to push through totality.
- !}%
+!}%
 
 
 %theorem tonat-total* :
@@ -15368,7 +15368,7 @@ to push through totality.
 
 %{! 
 As with the non-indexed case, this aspect is easy to prove.
- !}%
+!}%
 
 
 
@@ -15378,7 +15378,7 @@ As with the non-indexed case, this aspect is easy to prove.
 %{! 
 We prove that variable levels are "unique" and that they are never zero.
 The proofs are trivial: Twelf can accept them from the context alone.
- !}%
+!}%
 
 
 %theorem varlevel-deterministic :
@@ -15500,7 +15500,7 @@ The proofs are trivial: Twelf can accept them from the context alone.
 
 %{! 
 Again, this aspect has the same structure as with non-indexed terms.
- !}%
+!}%
 
 
 %{! ### Auxiliary definitions !}%
@@ -15511,7 +15511,7 @@ Again, this aspect has the same structure as with non-indexed terms.
 We define a relation that builds on the context relation.
 In the non-indexed case, it took a nat, here it takes the
 multiset representing the levels of variables in the context.
- !}%
+!}%
 
 
 upto : multiset -> type.
@@ -15552,7 +15552,7 @@ upto/+ :
 %{! 
 The obvious lemma that makes use of the main purpose of the relation:
 that a variable is always available.
- !}%
+!}%
 
 %theorem upto-implies-varlevel :
 	forall* {MS} {N} {L} {FN}
@@ -15619,7 +15619,7 @@ parity.  (In general, one would use a divisor counting all
 cases that are recursive.)  The proofs are long but simply
 arithmetic manipulation.  Proving termination uses meta-gt
 for strong induction over the natural numbers.
- !}%
+!}%
 
 
 %theorem tonat-onto* :
@@ -15851,7 +15851,7 @@ for non-indexed terms while removing all variables of adjusted index
 zero (M = z).  Then when these are all removed, we can adjust the indices 
 one more step until there are no more variables of any index needing
 levels.
- !}%
+!}%
 
 
 
@@ -15862,7 +15862,7 @@ levels.
 In this section, we use the full generality of varadjlevel
 because we need to recurse in two different directions:
 the original var level and the term level.
- !}%
+!}%
 
 %block blockvaradj : some {m} {n} {l}
 		      block {v:term n} {vl:varadjlevel v m (s l)}.
@@ -15877,7 +15877,7 @@ The lam1 and rec1 cases use variables that don't need levels, whereas
 the lam2, rec2 cases handle variables that still need level.
 We also take a natural number A that indicates the minimum term level
 that will be used.  Notice that lam2 is only legal while A is still zero.
- !}%
+!}%
 
 eql* : {N} {A:nat} multiset -> term N -> term N -> type.
 
@@ -15940,7 +15940,7 @@ at indices eventually terminates: M is the maximum adjusted
 index used.  Once M drops to zero, it means no variables
 need levels for equality and we can convert to an 'eq' proof
 easily.
- !}%
+!}%
 
 eqlsize : (eql* A N MS T1 T2) -> nat -> nat -> nat -> type.
 
@@ -15979,7 +15979,7 @@ eqlsize/var : eqlsize (eql/var _ _ _) z (s z) z.
 As with the non-indexed case, we need to use an alternate form
 for levels as we shift them down or adjust them down.
 (Remember there are two dimensions to a level!)
- !}%
+!}%
 
 
 varadjlevel' : term N -> nat -> nat -> type.
@@ -16059,7 +16059,7 @@ eqlsize'/var : eqlsize' (eql'/var _ _ _) z (s z) z.
 %{! 
 Some of the lemmas that would normally belong here are
 proved later when we have more blocks available.
- !}%
+!}%
 
 
 %theorem false-implies-eql :
@@ -16134,7 +16134,7 @@ over.  Instead we handle a double context "noshift" that handles
 both directions.  That's because when these lemmas are used
 to shift levels down, the outer context may have non-zero (adjusted)
 index that will need to handle being shifted in both directions.
- !}%
+!}%
 
 
 %theorem varlevel-zero-shifts-down :
@@ -16338,7 +16338,7 @@ fake : type.
 
 %{! 
 Now we put these two parts into one that hides the alternative definitions.
- !}%
+!}%
 
 %theorem shift-varlevel :
 	forall* {N} {A} {M0} {M1} {T1} {T2} {S} {MN} {MM}
@@ -16362,7 +16362,7 @@ Now the whole reason for the two stage var-levels:
 we have a lemma that says we can adjust the M of
 all variables down if the minimum varlevel used is greater than zero.
 First we need some helper lemmas and the ubiquitous blocks.
- !}%
+!}%
 
 %theorem varlevel-adjusts-down :
 	forall* {N} {V:term N} {M} {L}
@@ -16638,7 +16638,7 @@ the outermost (level 1) variable of adjusted index zero.
 All other variables are at least level 2 or non-zero adjusted index.  
 "blockvar2" and "blockvaradj" makes this context explicit.
 (I probably could substitute noshift for blockvaradj
- !}%
+!}%
 
 
 %block blockvar2 : some {l} {n}  
@@ -16739,7 +16739,7 @@ All other variables are at least level 2 or non-zero adjusted index.
 %{! 
 We now have the machinery needed to get rid of all level 0 variables
 in one recursive sweep.
- !}%
+!}%
 
 %theorem remove-zero-index-vars :
 	forall* {N} {A} {MS} {T1} {T2} {MN} {MM}
@@ -16908,7 +16908,7 @@ Next the main lemma that says we can avoid looking at varlevels in checking
 equality.  We remove the outside variable, shift remaining variables,
 and then recurse (hence the need for tracking eqlsize).  Note that we
 never put var levels in the context.
- !}%
+!}%
 
 %theorem eql-implies-eq :
 	forall* {N} {T1:term N} {T2:term N}
@@ -17014,7 +17014,7 @@ cases cannot be distinguished by Twelf's case analysis.
 It also uses the "divrem" part of the nat signature extensively
 as well as theorems about plus and times.  The proofs of the cases are
 uninteresting arithmetic fiddling.
- !}%
+!}%
 
 
 %theorem tonat-one2one :

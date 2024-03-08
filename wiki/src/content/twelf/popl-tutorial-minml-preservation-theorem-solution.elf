@@ -70,7 +70,7 @@ step/ifz/s : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
 
 ## Preservation
 
- !}%
+!}%
 
 pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
 %mode pres +Dstep +Dof -Dof.

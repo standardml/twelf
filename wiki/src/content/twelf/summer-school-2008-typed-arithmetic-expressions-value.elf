@@ -10,7 +10,7 @@
 
 Arithmetic expressions, where the answer type is values. 
 
- !}%
+!}%
 
 nat : type.             %name nat M.
 z : nat.
@@ -46,7 +46,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 ## Typed expressions
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 number : tp.
@@ -66,7 +66,7 @@ let : T exp -> (T val -> U exp) -> U exp.
 
 For simplicity, take answers to be values. 
 
- !}%
+!}%
 
 eval : T exp -> T val -> type.
 %mode eval +E1 -E2.
@@ -102,7 +102,7 @@ eval/let
   |nonext=
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

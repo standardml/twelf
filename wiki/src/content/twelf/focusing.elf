@@ -96,7 +96,7 @@ snl: suspnormalF (hasleft _ U) <- suspnormal U.
 
 The rule ``id+`` corresponding to the proof term ``z`` comes for free
 from LF.  
- !}%
+!}%
 
 dnR: term # (A- inv) -> value (dn A-).
 \/R1: value A+ -> value (A+ \/ B+).
@@ -108,7 +108,7 @@ top+R: value top+.
 
 %{! 
 ``M ::= ret V | x &bull; Sp | ⟨z⟩.N | x.N | abort | [N1, N2] | ⟨⟩.N | ×N | ⟨N⟩ | \{N\} | &lambda;N | ⟨⟩- | ⟨N1,N2⟩-`` 
- !}%
+!}%
 
 focR: value A+ -> term # (A+ true).
 focL: stable Suc -> hyp A- -> spine A- Suc -> term # Suc.
@@ -128,7 +128,7 @@ top-R: term # (top- inv).
 
 %{! 
 ``Sp ::= nil | pm N | V;Sp | &pi;1;Sp | &pi;2;Sp`` 
- !}%
+!}%
 
 id-: spine A- (A- susp).
 upL: stable Suc -> term (A+ , #) Suc -> spine (up A+) Suc.

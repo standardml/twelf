@@ -50,7 +50,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 Add a type for disjoint sums:
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 number : tp.
@@ -63,7 +63,7 @@ sum    : tp -> tp -> tp.
 Add injections as values, and case as an expression. Note that you can only case on a value.  This makes evaluation slightly easier; 
 for versions with expression-case as a primitive; see the above alternate solutions.
 
- !}%
+!}%
 
 val : tp -> type.			%name val V.  %postfix 1 val.
 num : nat -> number val.
@@ -85,7 +85,7 @@ case : (sum T U) val -> (T val -> V exp) -> (U val -> V exp) -> V exp.
 
 Note that if we want to case on an expression, we can let-bind it:
 
- !}%
+!}%
 
 ecase : (sum T U) exp -> (T val -> V exp) -> (U val -> V exp) -> V exp 
             = [esum] [e1] [e2] (let esum ([x] case x e1 e2)).
@@ -94,7 +94,7 @@ ecase : (sum T U) exp -> (T val -> V exp) -> (U val -> V exp) -> V exp
 
 Add eval cases for case.
 
- !}%
+!}%
 
 eval : T exp -> T val -> type.
 %mode eval +E1 -E2.
@@ -146,7 +146,7 @@ eval/case2
   |nonext=
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

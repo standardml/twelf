@@ -6,7 +6,7 @@
 
 ### Syntax
 
- !}%
+!}%
 
 tp : type.  %name tp T.
 
@@ -22,7 +22,7 @@ app	: exp -> exp -> exp.
 
 %{! 
 TASK 1:
- !}%
+!}%
 
 s	: exp -> exp.
 ifz	: exp -> exp -> (exp -> exp) -> exp.
@@ -31,7 +31,7 @@ ifz	: exp -> exp -> (exp -> exp) -> exp.
 
 ### Static Semantics
 
- !}%
+!}%
 
 of : exp -> tp -> type.  %name of Dof.
 
@@ -48,7 +48,7 @@ of/app		: of (app E1 E2) T'
 
 %{! 
 TASK 2:
- !}%
+!}%
 of/s		: of (s E) nat
 		   <- of E nat.
 
@@ -63,7 +63,7 @@ of/ifz		: of (ifz E E1 ([x] E2 x)) T
 
 ### Dynamic Semantics
 
- !}%
+!}%
 
 value : exp -> type.  %name value Dval.
 
@@ -89,7 +89,7 @@ step/app/beta-v	: step (app (fun T1 T2 ([f] [x] E1 f x)) E2) (E1 (fun T1 T2 ([f]
 
 %{! 
 TASK 3:
- !}%
+!}%
 step/s		: step (s E) (s E')
 		   <- step E E'.
 
@@ -107,7 +107,7 @@ step/ifz/s	: step (ifz (s E) E1 ([x] E2 x)) (E2 E)
 
 ### Preservation
 
- !}%
+!}%
 
 
 preservation : of E T
@@ -154,7 +154,7 @@ preservation : of E T
 
 %{! 
 TASK 4:
- !}%
+!}%
 
 -	: preservation 
 	   (of/s

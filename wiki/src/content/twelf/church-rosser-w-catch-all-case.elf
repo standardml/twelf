@@ -11,7 +11,7 @@ app : exp -> exp -> exp.
 When we use this ``%block``, it expresses that we can be working in a 
 context with arbitrary expression variables. 
 
- !}%
+!}%
 
 %block exps : block {x: exp}.
 %worlds (exps) (exp).
@@ -32,7 +32,7 @@ explicitly states that we will be reducing in a setting
 with free variables, with the invariant that every variable is added
 with the invariant that it can evaluate to itself.
 
- !}%
+!}%
 
 reduce : exp -> exp -> type.
 %mode reduce +E -E'.
@@ -61,7 +61,7 @@ using a [catch-all case](/wiki/catch-all-case/), so when we go under a binder. T
 to describe a new world, ``exps_id``, that captures the variable
 case of this theorem.
 
- !}%
+!}%
 
 identity : {E} reduce E E -> type.
 %mode identity +A -B.
@@ -89,7 +89,7 @@ then ``[e&lt;sub&gt;arg&lt;/sub&gt;/x]e`` reduces to ``[e'&lt;sub&gt;arg&lt;/sub
 
 The proof is by induction on the structure of the term with the free variable.
 
- !}%
+!}%
 
 substitute 
    : ({x: exp} reduce x x -> reduce (E x) (E' x))
@@ -113,7 +113,7 @@ If we reach a point where the
 variable we are substuiting for doesn't even appear in the term (this
 is the catch-all case), then that first argument is the answer.
 
- !}%
+!}%
 
 - : substitute ([x] [redx: reduce x x] redx) Darg Darg.
 
@@ -173,7 +173,7 @@ Now we come to the interesting part: the diamond property.
 If ``E`` reduces to both ``E1``, and ``E2``, then there is a 
 common E' such that ``E1`` and ``E2`` both reduce to it.
 
- !}%
+!}%
 
 diamond : reduce E E1 -> reduce E E2 -> reduce E1 E' -> reduce E2 E' -> type.
 %mode diamond +X1 +X2 -X3 -X4.
@@ -191,7 +191,7 @@ If either case is the identity, then we are done.
  e=&gt;e2 \ / e2=&gt;e2   e1=&gt;e1\ / e=&gt;e1
         e2                 E1
 
- !}%
+!}%
 
 - : diamond (ID : reduce E E) (D : reduce E E2) 
      D ID'
@@ -220,7 +220,7 @@ Note the oversimplification being made in the graphical presentation, in that
 the subterms and sub-derivations are not clearly shown to have a free variable.
 Twelf will, of course, not allow this sloppiness.
 
- !}%
+!}%
 
 - : diamond 
      (reduce/lam (D1 : {x: exp}{redx: reduce x x} reduce (E x) (E1 x))
@@ -248,7 +248,7 @@ induction hypothesis.
  reduce/app      \     /  reduce/app
  D1b' D1a'        \   /   D2b' D2a'
                  ea' eb'
- !}%
+!}%
 
 - : diamond 
      (reduce/app (D1b : reduce Eb E1b) (D1a : reduce Ea E1a)
@@ -278,7 +278,7 @@ substitutions.
  substitute      \   /  substitute
  D1b' into D1a'   \ /   D2b' into D2a'
               [eb'/x]ea
- !}%
+!}%
 
 - : diamond 
      (reduce/beta 
@@ -324,7 +324,7 @@ The first subcase:
  D1b' into D2a'  \   /  D2b' D2a'      
                   \ /   
                [eb'/x]ea'              
- !}%
+!}%
 
 - : diamond
      (reduce/beta 
@@ -352,7 +352,7 @@ The first subcase:
 If the right-hand hand side is a β-reduction but the left-hand side is not, we 
 have to do the same case in reverse; we omit the graphic.
 
- !}%
+!}%
 
 - : diamond
      (reduce/app

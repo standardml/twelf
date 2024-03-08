@@ -5,7 +5,7 @@
 Let with iterated bindings.
 
 ## Preliminaries
- !}%
+!}%
 
 nat : type.
 z : nat.
@@ -22,7 +22,7 @@ add/s : add (s N) M (s P)
 
 %{! 
 ## Syntax
- !}%
+!}%
 
 exp   : type.
 
@@ -48,7 +48,7 @@ plus : exp -> exp -> exp.
 
 %{! 
 ## Evaluation
- !}%
+!}%
 
 %% substitute the expression for the first var in each of the binds
 map-subst : exp -> binds (s N) (s M) -> binds N M -> type.
@@ -94,7 +94,7 @@ eval : exp -> nat -> type.
 
 %{! 
 ## Example
- !}%
+!}%
 
 %% let* x = 3
 %%      y = x + 2

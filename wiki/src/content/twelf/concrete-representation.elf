@@ -48,7 +48,7 @@ into the type of a de Bruijn term. The proof could also be done with
 de Bruijn terms and a separate judgment relating a de Bruijn term to the
 structural metric it corresponds to, but in this example the intrinsic 
 approach made the proofs simpler.
-\}% %\{ !}%
+!}%
 
 %{! ## Preliminaries !}%
 

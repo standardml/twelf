@@ -4,7 +4,7 @@
 
 ## Natural numbers
 
- !}%
+!}%
 
 nat : type.
 
@@ -15,7 +15,7 @@ succ : nat -> nat.
 
 ## Addition
 
- !}%
+!}%
 
 add : nat -> nat -> nat -> type.
 
@@ -28,7 +28,7 @@ add/s : add (succ M) N (succ P)
 
 ### Example derivations
 
- !}%
+!}%
 
 1 : nat = succ zero.
 2 : nat = succ 1.
@@ -42,7 +42,7 @@ add/s : add (succ M) N (succ P)
 
 ## Exercise: Multiplication
 
- !}%
+!}%
 
 mult : nat -> nat -> nat -> type.
 
@@ -59,7 +59,7 @@ mult/s : mult (succ M) N P'
 
 ## Mode, worlds total
 
- !}%
+!}%
 
 %mode add +M +N -P.
 %worlds () (add _ _ _).
@@ -94,7 +94,7 @@ mult/s : mult (succ M) N P'
 
 ## Right-hand zero
 
- !}%
+!}%
 
 rhzero : {M : nat} add M zero M -> type.
 %mode rhzero +M -D.
@@ -110,7 +110,7 @@ rhzero : {M : nat} add M zero M -> type.
 
 ## Right-hand succ
 
- !}%
+!}%
 
 rhsucc : add M N P -> add M (succ N) (succ P) -> type.
 %mode rhsucc +D1 -D2.
@@ -131,7 +131,7 @@ rhsucc : add M N P -> add M (succ N) (succ P) -> type.
 
 ## Exercise: addition is commutative
 
- !}%
+!}%
 
 commute : add M N P -> add N M P -> type.
 %mode commute +D1 -D2.

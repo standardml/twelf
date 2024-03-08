@@ -12,7 +12,7 @@ Arithmetic expressions with pairs and sums, where the answer type is values.
 
 For an alternate version of sums that doesn't involve output factoring, see [Chris's solution](/wiki/summer-school-2008-alternate-typed-arithmetic-expressions-with-sums/).  For a version that uses output factoring but avoids identity types, see [William's solution](/wiki/summer-school-2008-typed-arithmetic-expressions-with-sums-2/).
 
- !}%
+!}%
 
 nat : type.             %name nat M.
 z : nat.
@@ -48,7 +48,7 @@ cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
 
 ## Typed expressions
 
- !}%
+!}%
 
 tp : type.				%name tp T.
 number : tp.
@@ -78,7 +78,7 @@ case : (sum T U) exp -> (T val -> V exp) -> (U val -> V exp) -> V exp.
 
 For simplicity, take answers to be values. 
 
- !}%
+!}%
 
 eval : T exp -> T val -> type.
 %mode eval +E1 -E2.
@@ -143,7 +143,7 @@ because it doesn't notice that the next constant,
 
 ## Output factored evaluation
 
- !}%
+!}%
 
 id : A exp -> A exp -> type.
 refl : id E E.
@@ -255,7 +255,7 @@ This explains the somewhat-convoluted code above.
   |nonext=
 \}\}
 
- !}%
+!}%
 
 %{!
 -----

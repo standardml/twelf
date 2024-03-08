@@ -2,7 +2,7 @@
 
 %{! 
 This is a case study on pattern matching using Twelf.
- !}%
+!}%
 
 
 
@@ -504,7 +504,7 @@ preservation	: of-exp E T
 
 TODO: Finish commentary.
 \{\{stub\}\}
- !}%
+!}%
 
 %{!
 -----

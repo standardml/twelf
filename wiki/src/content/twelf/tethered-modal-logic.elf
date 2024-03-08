@@ -21,7 +21,7 @@ is
 
 (Author: Jason Reed, based on Pfenning's encoding of intuitionistic
 logic with cut admissibility)
- !}%
+!}%
 
 w : type.  % worlds
 %name w P.

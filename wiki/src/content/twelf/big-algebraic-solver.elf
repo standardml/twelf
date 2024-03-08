@@ -2,7 +2,7 @@
 
 %{! 
 The big algebraic software is a [tactical theorem prover](/wiki/tactical-theorem-proving/) written as a Twelf [logic program](/wiki/logic-programming/) by [Rob](/wiki/user-rsimmons/) at Princeton University as part of the Foundational Proof Carrying Code system. It is quite inefficient due to the fact that it doesn't try to order variables. The [http://wiki.portal.chalmers.se/agda/pmwiki.php?n=Libraries.UsingTheRingSolver RingSolver] in the Agda standard library is an example of a more efficient solver.
- !}%
+!}%
 
 %{! ## Preexisting logic !}%
 
@@ -276,7 +276,7 @@ timesify_end_one : timesify one one one one = refl.
 * Sign - the correct sign
 * Pos - The master positive term list
 * Neg - The master negative term list
- !}%
+!}%
 
 %clause
 catch_neg1: catchtimes A B (neg X) Y (neg Sign) Pos Neg  
