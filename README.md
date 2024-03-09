@@ -4,13 +4,14 @@ Twelf
 
 Copyright (C) 1997-2011, Frank Pfenning and Carsten Schuermann
 
-Authors: Frank Pfenning
-         Carsten Schuermann
+Authors: 
+ - Frank Pfenning
+ - Carsten Schuermann
 With contributions by:
-         Brigitte Pientka
-         Roberto Virga
-         Kevin Watkins
-         Jason Reed
+ - Brigitte Pientka
+ - Roberto Virga
+ - Kevin Watkins
+ - Jason Reed
 
 Twelf is an implementation of
 
