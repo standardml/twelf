@@ -1,19 +1,21 @@
 %%! title: "Equality"
+%%! tags: ["tutorial"]
 
 %{! In many circumstances, it is necessary to represent **equality** of LF terms as a relation.  
 
-One such circumstance is when we wish to prove a [uniqueness lemma](/wiki/uniqueness-lemma/) showing that an object-language judgement determines some outputs uniquely.  For example, consider the [addition judgement on natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/).  To state this uniqueness lemma, we must define a judgement ``eq N N'`` representing equality of natural numbers.  Then the theorem is stated as follows: !}%
-    
-%{! (options removed from twelftag: discard=true) !}%
+One such circumstance is when we wish to prove a [uniqueness lemma](/wiki/uniqueness-lemma/) showing that an object-language judgement determines some outputs uniquely.  For example, consider the [addition judgement on natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/).  To state this uniqueness lemma, we must define a judgement ``eq N N'`` representing equality of natural numbers.  Then the theorem is stated as follows:
 
+
+```twelf
 plus-unique : plus N1 N2 N3 
               -> plus N1 N2 N3' 
               -> eq N3 N3'
               -> type.
 %mode plus-unique +D1 +D2 -D3.
 %worlds () (plus-unique _ _ _).
+```
 
-%{! That is, any two ``plus`` derivations for the same summands have the same sum.  
+That is, any two ``plus`` derivations for the same summands have the same sum.  
 
 In general, equality of LF terms corresponds to syntactic equality of object-language syntax encoded with a first-order representation, and to α-equivalance of object-language terms encoded with a higher-order representation.  Consequently, equality is used in a variety of theorems and proofs (see the tutorials on [uniqueness lemma](/wiki/uniqueness-lemma/)s, [strengthening](/wiki/strengthening/) lemmas, and explicit [canonical forms lemma](/wiki/canonical-forms-lemma/)s for example applications).  
 
@@ -81,11 +83,9 @@ id-tree-node-inv : id-tree (node T1 T2) (node T1' T2')
 
 %{! * Other relations respect equality, in the sense that we can replace equals for equals.  For example, if we have a height relation on trees, then we will be able to prove the following metatheorem: !}%
     
-%{! (options removed from twelftag: hidden=true) !}%
-
+%{!! begin hidden !!}%
 nat : type.
-
-%{!  !}%
+%{!! end hidden !!}%
     
 height : tree -> nat -> type.
 
@@ -171,11 +171,8 @@ id-tree-node-cong : id-tree T1 T1'
 
 See the tutorial on [respects lemma](/wiki/respects-lemma/)s for more detail on them.  The tutorials on [uniqueness lemma](/wiki/uniqueness-lemma/)s, [strengthening](/wiki/strengthening/) lemmas, and explicit [canonical forms lemma](/wiki/canonical-forms-lemma/)s show example applications of equality.
 
-\{\{tutorial\}\} !}%
-
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+You can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Equality).
 !}%

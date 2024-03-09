@@ -1,6 +1,10 @@
 import { readdirSync, writeFileSync } from "fs";
 
-const UNSAFE_WIKI_FILES = new Set(["constructivesemantics"]);
+const UNSAFE_WIKI_FILES = new Set([
+  "constructivesemantics",
+  "double-negation-translation",
+  "hereditary-substitution-with-a-zipper",
+]);
 
 const WIKI_TWELF_LOC = "../wiki/src/content/twelf/";
 const cfgs = [];

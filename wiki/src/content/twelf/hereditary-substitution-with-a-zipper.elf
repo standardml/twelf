@@ -155,22 +155,20 @@ heavy and unenlightening.
 Another option is to ask Twelf to trust us: !}%
 
 %trustme %reduces R' = R (unzip R R').
-%.
 
-However, for some reason
+%{! However, for some reason
 (possibly because the types of the two terms is different) this does not 
-work. and we still get an error message from the final <tt>%total</tt> 
+work. and we still get an error message from the final `%total`
 declaration.
 
-<twelf check=decl>
+```checkedtwelf
 %total {(A B C D) (M R S T)}
 (hsubst_n A _ M _)
 (hsubst_rr C _ S _) 
 (hsubst_rn D _ _ T _)
 (hsubst_r B _ R _).
-</twelf>
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

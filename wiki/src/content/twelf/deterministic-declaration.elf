@@ -4,8 +4,14 @@
 
 ## Example: Tree search
 
-[[Image:Smalltree.svg|thumb|right|250px|Graphical representation of the tree ``testtree`` used in this example.]]
-We define a tree with labeled nodes, and a distinguished tree ``testtree`` !}%
+We define a tree with labeled nodes, and a distinguished tree ``testtree``. 
+
+<center>
+![A starry night sky.](../../../assets/smalltree.png)
+
+Graphical representation of the tree ``testtree`` used in this example.
+</center>
+!}%
     
 label : type.
 a : label.
@@ -32,18 +38,18 @@ findlabel/right : findlabel (node T1 T2) L
 
 %{! If ``findlabel`` is not declared deterministic, all four solutions can be returned, but with ``findlabel`` declared deterministic only one will be found. !}%
     
-%{! (options removed from twelftag: check=decl discard=true) !}%
-
+%{!! begin checked !!}%
 %query 4 * findlabel testtree L.
+%{!! end checked !!}%
 
-%{!  !}%
-    
-%{! (options removed from twelftag: check=decl discard=true) !}%
+%{!
 
+```checkedtwelf
 %deterministic findlabel.
 %query 1 * findlabel testtree L.
+```
 
-%{! ### Causing search to fail
+### Causing search to fail
 
 When using **``%deterministic``**, [[finite failure]] no longer means that no derivation can be found, becuase the deterministic search may put constraints on later results that causes them to fail. Take the ``searchfor`` predicate, which first looks up a label with ``findlabel`` and then checks to see if it is equal to some other label. !}%
     
@@ -57,25 +63,24 @@ searchfor : tree -> label -> type.
 
 %{! Using ``searchfor`` to look for ``c`` in our test tree will cause backtracking, because ``findlabel`` first make ``L'`` equal to ``a``, then ``b``, then ``c``. !}%
     
-%{! (options removed from twelftag: check=decl discard=true) !}%
-
+%{!! begin checked !!}%
 %query 1 * P : searchfor testtree c.
+%{!! end checked !!}%
 
-%{! If ``findlabel`` is deterministic, then the same search will make ``L'`` equal ``a``, and will then be unable to backtrack. !}%
-    
-%{! (options removed from twelftag: check=decl discard=true) !}%
+%{! If ``findlabel`` is deterministic, then the same search will make ``L'`` equal ``a``, and will then be unable to backtrack.
 
+```checkedtwelf
 %deterministic findlabel.
 %query 1 * P : searchfor testtree c.
+```
 
-%{! ## See also
+## See also
 
-* \{\{guide|title=Deterministic Type Families|chapter=5|section=30\}\}
-* [[w:Cut (logic programming)|Cut]] on Wikipedia
+* <Guide chapter="5" section="30">Deterministic Type Families</Guide>
+* [Cut](https://en.wikipedia.org/wiki/Cut_(logic_programming)) on Wikipedia
 
-\{\{keyword|key=deterministic\}\} !}%
+<Keyword name="deterministic"/>
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

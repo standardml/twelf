@@ -147,7 +147,7 @@ notimpbot (notimpbot (iffi ([x] x) ([x] x))).
 ## Double-negation translation
 
 This is essentially the 
-[http://en.wikipedia.org/wiki/G%C3%B6del%E2%80%93Gentzen_negative_translation Godel-Gentzen Negtive Translation].
+[Godel-Gentzen Negtive Translation](http://en.wikipedia.org/wiki/G%C3%B6del%E2%80%93Gentzen_negative_translation).
 It differs only by De Morgan laws that are provable intuitionistically.  
 !}%
 
@@ -667,6 +667,6 @@ comp/contra : itrue ibot -> >> contra -> type.
 %{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+You can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Double-negation_translation).
 !}%

@@ -1,4 +1,5 @@
 %%! title: "Effectiveness lemma"
+%%! tags: ["tutorial"]
 
 %{! We use the term **effectiveness lemma** for a lemma that explicitly proves a [totality assertion](/wiki/totality-assertion/) for an LF type family using another LF type family.  
 
@@ -23,19 +24,15 @@ bit-flip/10 : bit-flip bit/1 bit/0.
 
 %{! We can ask Twelf to prove the following totality assertion:
 
-: For all ``B : bit``, there exists a ``B' : bit`` and ``D : bit-flip B B'``.
+> For all ``B : bit``, there exists a ``B' : bit`` and ``D : bit-flip B B'``.
 
 as follows: !}%
     
-%{! (options removed from twelftag: check="true") !}%
-
 %mode bit-flip +B -B'.
 %worlds () (bit-flip _ _).
 %total {} (bit-flip _ _).
 
 %{! However, we can also prove the totality relation explicitly as an effectiveness lemma ``can-bit-flip``: !}%
-    
-%{! (options removed from twelftag: check="true") !}%
 
 can-bit-flip : {B:bit}
                 bit-flip B B'
@@ -50,7 +47,8 @@ can-bit-flip : {B:bit}
 %total {} (can-bit-flip _ _).
 
 %{! When processing the ``%total``, Twelf verifies the following totality assertion:
-: For all ``B : bit``, there exists a ``B' : bit`` and ``D : bit-flip B B'`` and a ``D' : can-bit-flip B D``.
+
+> For all ``B : bit``, there exists a ``B' : bit`` and ``D : bit-flip B B'`` and a ``D' : can-bit-flip B D``.
 
 ## Motivating scenario
 
@@ -78,32 +76,32 @@ eval-neg : eval (neg E) (bt B')
 
 %{! We elide the parts of the language that are not relevant to this example.
 
-For simplicity, assume the language is manifestly terminating, so the progress theorem can be proved by a simple inductive argument that shows that all terms evaluate to a value: !}%
+For simplicity, assume the language is manifestly terminating, so the progress theorem can be proved by a simple inductive argument that shows that all terms evaluate to a value:
     
-%{! (options removed from twelftag: discard=true) !}%
-
+```twelf
 progress : of E T -> eval E V -> type.
 %mode progress +D1 -D2.
 %worlds () (progress _ _).
+```
 
-%{!  !}%
-    
-%{! (options removed from twelftag: hidden=true) !}%
+!}%
 
+%{!! begin hidden !!}%
 progress : of E T -> eval E V -> type.
 %mode progress +D1 -D2.
+%{!! end hidden !!}%
 
-%{! Now, consider the case of progress for ``of-neg``: !}%
+%{! Now, consider the case of progress for ``of-neg``: 
     
-%{! (options removed from twelftag: check=decl discard=true) !}%
-
+```checkedtwelf
 - : {Dflip : bit-flip B B'}
      progress 
      (of-neg (Dof : of E tp/bit)) 
      (eval-neg Dflip DevalE)
      <- progress Dof (DevalE : eval E (bt B)).
+```
 
-%{! By induction, we come up with a derivation ``DevalE``, which, by the value inversion lemma, must result in a value of the form ``(bt B)``.  To finish the case, we need a derivation ``Dflip : bit-flip B X1`` for some ``B':bit``.  
+By induction, we come up with a derivation ``DevalE``, which, by the value inversion lemma, must result in a value of the form ``(bt B)``.  To finish the case, we need a derivation ``Dflip : bit-flip B X1`` for some ``B':bit``.  
 
 You might think that this case should be accepted as is.  After all, the totality assertion proved by the above ``%total`` shows that such a ``Dflip`` must exist.  
 
@@ -111,23 +109,20 @@ Unfortunately, the current Twelf implementation rejects this case as ill-moded. 
 
 The work-around is to prove the effectiveness lemma.  Using the above effectiveness lemma, we can finish this case as follows: !}%
     
-%{! (options removed from twelftag: check=decl) !}%
-
+%{!! begin checked !!}%
 - : progress 
      (of-neg (Dof : of E tp/bit)) 
      (eval-neg Dflip DevalE)
      <- progress Dof (DevalE : eval E (bt B))
      <- can-bit-flip B Dflip.
+%{!! end checked !!}%
 
 %{! Because the derivation of `` bit-flip B B'`` is an index to ``can-flip-bit``, the case is mode-correct.
 
 This limitation of Twelf could conceivably be addressed in a future release.  For now, it is straightforward to work around it using effectiveness lemmas to prove totality assertions explicitly.
 
-\{\{tutorial\}\} !}%
-
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+You can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Effectiveness_lemma).
 !}%

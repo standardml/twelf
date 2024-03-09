@@ -5,7 +5,7 @@
 In this tutorial, we recast the proof of cut admissibility as an algorithm for normalizing terms in the simply-typed λ-calculus.  This algorithm is called _hereditary substitution_; it is used in the definition of LF itself, as well as in many other type theories.  To apply hereditary substitution, it is necessary to:
 - Define a language of [canonical form](/wiki/canonical-form/)s.  In programming language terms, canonical forms correspond to terms that are not β-reducible ([beta-normal](/wiki/beta-equivalence/)) and then are η-expanded as much as possible ([eta-long](/wiki/eta-equivalence/)); logically, canonical forms correspond to the cut-free sequent calculus proofs.
 - Define hereditary substitution, which computes the canonical result of substituting one canonical form into another.  In programming language terms, hereditary substitution is part of a normalization algorithm; logically, it is the computational content of the proof of cut admissibility.
-- Define an eta-expansion judgement.  In programming language terms, eta-expansion is part of a normalization algorithm; logically, it is the computational content of the identity theorem (&lt;math&gt;\Gamma,A \Rightarrow A&lt;/math&gt;).  
+- Define an eta-expansion judgement.  In programming language terms, eta-expansion is part of a normalization algorithm; logically, it is the computational content of the identity theorem <Math formula="(\Gamma,A \Rightarrow A)"/>.  
 - Define an external language that admits non-canonical forms by elaboration into the canonical forms.  In programming language terms, this elaboration relation corresponds to a normalization algorithm; logically, it is the computational content of the proof of cut elimination.  
 
 In this article, we formalize hereditary substitution and elaboration in Twelf.  We prove several results:
@@ -16,7 +16,7 @@ In this article, we formalize hereditary substitution and elaboration in Twelf. 
 
 This example brings together a number of Twelf proof techniques: 
 * using [%reduces](/wiki/percent-reduces/) for termination 
-* [mutual induction](/wiki/mutual-induction/) and [[lexicographic induction]]
+* [mutual induction](/wiki/mutual-induction/) and <Todo>lexicographic induction</Todo>
 * reasoning with [equality](/wiki/equality/) and [respects lemma](/wiki/respects-lemma/)s
 * proving [uniqueness lemma](/wiki/uniqueness-lemma/)s
 * [output factoring](/wiki/output-factoring/)
@@ -111,18 +111,18 @@ We define three hereditary substitution judgements:
 * ``hsubst_r M0 A0 ([x0] R) R'``: compute the atomic term ``R'`` resulting from substituting ``M0`` for ``x0`` in ``R``.  This judgement applies when ``x0`` is not the head variable of the atomic term ``R``.
 * ``hsubst_rr M0 A0 ([x0] R) M' A'``: compute a new canonical form term ``M'`` resulting from substituting ``M0`` for ``x0`` in ``R``.  This judgement applies when ``x0`` is the head variable of ``R``.
 
-The head variable of an atomic term ``R`` is the variable at the root of a series of eliminations.  E.g., the head of ``fst (app x c)`` is ``x``.  When a canonical form is substituted for a head variable, hereditary substitution continues reducing.  E.g., the following judgement is derivable: !}%
-    
-%{! (options removed from twelftag: discard=true) !}%
+The head variable of an atomic term ``R`` is the variable at the root of a series of eliminations.  E.g., the head of ``fst (app x c)`` is ``x``.  When a canonical form is substituted for a head variable, hereditary substitution continues reducing.  E.g., the following judgement is derivable: 
 
+```
 hsubst_rr 
  (lam ([x] (pair c c)))
  (arrow b (prod b b)) 
  ([x] fst (app x c))
  c
  b
+```
 
-%{! Intuitively, we substitute  ``(lam ([x] (pair c c)))`` to get ``fst (app (lam ([x] (pair c c))) c)`` and then reduce this to ``c``.  
+Intuitively, we substitute  ``(lam ([x] (pair c c)))`` to get ``fst (app (lam ([x] (pair c c))) c)`` and then reduce this to ``c``.  
 
 ``hsubst_rr`` also computes the type of the canonical form it produces, which is needed for the termination metric for hereditary substitution. 
 
@@ -190,7 +190,7 @@ hsubst_rr_snd : hsubst_rr M0 A0 ([x] (snd (R x))) M2' A2'
 
 Other than that, the judgements ``hsubst_m`` and ``hsubst_r`` are defined in the straightforward compositional manner.  The interesting judgement is ``hsubst_rr``, which in each case performs some reduction on the output of the recursive call in order to compute a new canonical form.  The most interesting rule is ``hsubst_rr_app``, which continues the hereditary substitution into the body of the function.
 
-When processing the ``%terminates`` declaration, Twelf proves that it is decidable whether or not a hereditary substitution exists: the hereditary substitution judgements define a terminating logic program.  The auxiliary ``%reduces`` proves that the result type of ``hsubst_rr`` is always a subterm of the type of the term being substituted for. This is true because ``hsubst_rr`` only applies when the cut variable is the head of a sequence of eliminations, and applying one of these elimination forms always decreases the type of the term.  With this reduces information, we check that the hereditary substitution judgements terminate by mutual lexicographic induction—mutual because we show termination for all three judgements simultaneously, and lexicographic because, in each case, the termination metric is first the type of the substituted term, and then the term being substituted into.  This metric is expressed in Twelf by writing ``\{(A0 A0' A0_) (M R R')\}``.  The curly-braces mean lexicographic induction; the parentheses mean mutual induction.
+When processing the ``%terminates`` declaration, Twelf proves that it is decidable whether or not a hereditary substitution exists: the hereditary substitution judgements define a terminating logic program.  The auxiliary ``%reduces`` proves that the result type of ``hsubst_rr`` is always a subterm of the type of the term being substituted for. This is true because ``hsubst_rr`` only applies when the cut variable is the head of a sequence of eliminations, and applying one of these elimination forms always decreases the type of the term.  With this reduces information, we check that the hereditary substitution judgements terminate by mutual lexicographic induction—mutual because we show termination for all three judgements simultaneously, and lexicographic because, in each case, the termination metric is first the type of the substituted term, and then the term being substituted into.  This metric is expressed in Twelf by writing ``{(A0 A0' A0_) (M R R')}``.  The curly-braces mean lexicographic induction; the parentheses mean mutual induction.
 
 ### Expansion
 
@@ -220,9 +220,7 @@ expand_prod : expand (prod A1 A2) R (pair M1 M2)
 
 #### Existence of hereditary substitution
 
-Even though we annotated ``hsubst_rr`` with a [%reduces](/wiki/percent-reduces/) above, we will need an [effectiveness lemma](/wiki/effectiveness-lemma/) version of this [%reduces](/wiki/percent-reduces/) to use that fact in the proof below.
-
-\{\{needs|to figure out if there's a way to avoid this\}\} !}%
+Even though we annotated ``hsubst_rr`` with a [%reduces](/wiki/percent-reduces/) above, we will need an [effectiveness lemma](/wiki/effectiveness-lemma/) version of this [%reduces](/wiki/percent-reduces/) to use that fact in the proof below. !}%
     
 hsubst_rr_size : {A2} {A'} hsubst_rr M2 A2 R M' A'
                     -> type.
@@ -458,8 +456,7 @@ id/tp_refl : id/tp A A.
 
 %{! We elide the trivial proofs of the equivalence relation, congruence, inversion, and respects lemmas; see the complete Twelf code at the end for their statements. !}%
     
-%{! (options removed from twelftag: hidden="true") !}%
-
+%{!! begin hidden !!}%
 id/rtm_sym : id/rtm R R'
 	      -> id/rtm R' R
 	      -> type.
@@ -614,6 +611,7 @@ id/mtm_asm_cong : id/rtm R R'
 
 %worlds (rtm_block) (id/mtm_asm_cong _ _).
 %total {} (id/mtm_asm_cong _ _).
+%{!! end hidden !!}%
 
 %{! The hardest part of proving uniqueness of hereditary substitution is proving that the rules ``hsubst_m_r`` and ``hsubst_m_rr`` are mutually exclusive.  We do by using [reasoning with contradiction](/wiki/reasoning-from-false/). !}%
     
@@ -1002,12 +1000,6 @@ In [part 2](/wiki/hereditary-substitution-for-the-stlc-part-2/), we discuss elab
 
 The complete Twelf code for this tutorial contains the identity lemmas that we elided above.
 
-``&gt;All Twelf code for this tutorial.``
-`` check="true"&gt;See Twelf's output.``
-
-\{\{case study\}\} !}%
-
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

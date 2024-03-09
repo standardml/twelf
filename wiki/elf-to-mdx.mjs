@@ -143,7 +143,7 @@ for (; lineNum < input.length; lineNum++) {
       // FALLTHROUGH TO MARKDOWN PROCESSING SECTION
     } else {
       twelfcontext.push(line);
-      state.accum.push(line);
+      if (state.subtype !== "hidden") state.accum.push(line);
       continue;
     }
   }
