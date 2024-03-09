@@ -7,6 +7,7 @@ Copyright (C) 1997-2011, Frank Pfenning and Carsten Schuermann
 Authors: 
  - Frank Pfenning
  - Carsten Schuermann
+
 With contributions by:
  - Brigitte Pientka
  - Roberto Virga
