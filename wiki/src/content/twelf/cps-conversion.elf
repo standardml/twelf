@@ -502,8 +502,6 @@ For this proof to check we must also make world declarations for the type famili
 
 That's it! We showed how to define a CPS language with an intrinsic distinction between values and expressions, and translate a direct style language into it. The translation is given as a relation on typing derivations, which builds the type correctness of the translation into the translation itself. The translation makes use of LF's ability to encode higher-order reasoning to avoid generating object-level "administrative redices" that would need to be cleaned up and would complicate the metatheory. The code is brief by being simultaneously both proof and program: A metatheorem showing the translation works for all well-typed direct style terms is obtained simply by a [%total](/wiki/percent-total/) declaration for the translation. Alternately, we can think of the computational content of our proof as being the translation itself. 
 
-
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
