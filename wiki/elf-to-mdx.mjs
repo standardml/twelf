@@ -158,7 +158,7 @@ for (; lineNum < input.length; lineNum++) {
         mutablyTrimEmptyLines(state.accum);
         body.push(
           "",
-          "<KatexBlock " +
+          "<DisplayMath " +
             "formula={`" +
             escapeBacktickEnv(state.accum.join("\n")) +
             "`}/>",
@@ -199,7 +199,8 @@ if (state.type === "twelf") {
 const output = `---
 ${header.join("")}---
 
-import KatexBlock from "../../../components/Latex.astro";
+import DisplayMath from "../../../components/DisplayMath.astro";
+import Math from "../../../components/Math.astro";
 import Twelf from "../../../components/Twelf.astro";
 import Guide from "../../../components/Guide.astro";
 import Keyword from "../../../components/Keyword.astro";

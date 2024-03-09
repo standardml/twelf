@@ -15,6 +15,9 @@ Our first task is to introduce LF and see how to represent the syntax of a deduc
 
 In informal mathematical notation ("informal" is used here in the sense of "not formalized"), the syntax of the natural numbers is defined by the following grammar:
 
+```math
+n ::= \mathsf{zero} | \mathsf{succ}(n)
+```
 &lt;math&gt;n ::= \mathsf\{zero\} \, | \, \mathsf\{succ\}(n)&lt;/math&gt;
 
 That is, &lt;math&gt;\mathsf\{zero\}&lt;/math&gt; is a natural number, and if &lt;math&gt;n&lt;/math&gt; is a natural number, then &lt;math&gt;\mathsf\{succ\}(n)&lt;/math&gt; is as well.

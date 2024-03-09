@@ -2,7 +2,19 @@
 title: It's an actual index
 ---
 
- - [ ] Keyword.astro template
+Steps: 
+ - `<math>whatver</math>` needs to become `<Math formula="whatever"/>` 
+   if it's inline, and ```` ```math ```` displaymath otherwise.
+ - Guide links like `{{guide|chapter=2|section=4|title=Lexical Conventions}}` become
+   `<Guide chapter="2" section="4">Lexical Conventions</Guide>`
+ - `{{keyword|key=.}}` becomes `<Keyword name="."/>`
+ - The footer "If anything looks wrong, you can refer to the" becomes just 
+   "You can refer to the" if you've done a good job
+ - Broken links become `<Todo>Broken link</Todo>`
+ 
+
+Todos:
+ - [ ] Keyword.astro template 
  - [ ] Pages tagged "tutorial"
  - [x] [%.](/wiki/percent-eof/)
  - [ ] [%assert](/wiki/percent-assert/)
@@ -97,9 +109,9 @@ title: It's an actual index
  - [x] [Computation and Deduction 2009/Test Page 1](/wiki/computation-and-deduction-2009-test-page-1/)
  - [ ] [Concrete representation](/wiki/concrete-representation/)
  - [ ] [Congruence relation](/wiki/congruence-relation/)
- - [ ] [Constraint domain](/wiki/constraint-domain/)
- - [ ] [Constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/)
- - [ ] [ConstructiveSemantics](/wiki/constructivesemantics/)
+ - [x] [Constraint domain](/wiki/constraint-domain/)
+ - [x] [Constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/)
+ - [x] [ConstructiveSemantics](/wiki/constructivesemantics/)
  - [ ] [Converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/)
  - [ ] [Correctness of mergesort](/wiki/correctness-of-mergesort/)
  - [ ] [Coverage checking](/wiki/coverage-checking/)
