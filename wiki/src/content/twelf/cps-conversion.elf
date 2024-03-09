@@ -1,6 +1,6 @@
 %%! title: "CPS conversion"
 
-%{! **CPS conversion** is the process of translating a [[direct style]] calculus into a [[continuation passing style]] (CPS) one. This tutorial describes one way of formalizing CPS conversion in Twelf. It is an advanced tutorial because it relies on techniques described in other tutorials, such as [[reversing the polarity]].
+%{! **CPS conversion** is the process of translating a <Todo>direct style</Todo> calculus into a <Todo>continuation passing style</Todo> (CPS) one. This tutorial describes one way of formalizing CPS conversion in Twelf. It is an advanced tutorial because it relies on techniques described in other tutorials, such as <Todo>reversing the polarity</Todo>.
 
 We will define a direct style lambda calculus and its static semantics, then a CPS language and its static semantics. We will then prove that any well-formed direct style expression can be translated into a well-formed CPS expression.
 
@@ -76,7 +76,7 @@ oflet :
         of (N y) C) ->
      of (let M N) C.
 
-%{! The type family ``of M A`` encodes the typing judgment Γ \{\{vdash\}\} M : A, and ``ofv V A`` the judgment Γ \{\{vdash\}\} V : A.
+%{! The type family ``of M A`` encodes the typing judgment <Math formula={`\\Gamma \\vdash M : A`}/>, and ``ofv V A`` the judgment  <Math formula={`\\Gamma \\vdash V : A`}/>.
 
 ## CPS language
 
@@ -109,8 +109,6 @@ clam  : (cval -> cexp) -> cval.
 c1    : cval.
 
 %{! This language makes the same syntactic distinction between continuation expressions (``cexp``) and values (``cval``). A continuation expression is a linear sequence of operations on values (here ``cmkpair``, ``cfst`` and ``csnd``), each of which binds a variable. A continuation expression ends with a call to a continuation (``ccall``) or by halting (``chalt``). A continuation value is either a pair of values (``cpair``), the unit element (``c1``) or a lambda (``clam``) which abstracts a continuation expression. Because continuations never return, lambdas have type ``A ccont`` for some argument type A. (Note that the ``ccont`` type constructor is written in postfix notation.) In some presentations of CPS, this is written as A → 0, A → ⊥, or ¬A.
-
-\{\{needs|an example of a CPS term\}\}
 
 The static semantics for the CPS language is as follows: !}%
     
@@ -152,7 +150,7 @@ cov_lam : ({x} cofv x A ->
                cof (C x)) ->
           cofv (clam C) (A ccont).
 
-%{! The type family ``cof C`` encodes the typing judgment Γ \{\{vdash\}\} C _ok_. Continuations do not return, so they do not have a type. The type family ``ofv V A`` the judgment Γ \{\{vdash\}\} V : A for CPS values V. The typing rules are straightforward.
+%{! The type family ``cof C`` encodes the typing judgment <Math formula="\Gamma \vdash C\, \mathit{ok}"/> . Continuations do not return, so they do not have a type. The type family ``ofv V A`` the judgment <Math formula="\Gamma \vdash C : A"/> for CPS values V. The typing rules are straightforward.
 
 ## Translation
 
@@ -168,7 +166,7 @@ ttoct/& : ttoct (A & B) (A' c& B') <- ttoct B B' <- ttoct A A'.
 ttoct/=> : ttoct (A => B) ((A' c& (B' ccont)) ccont) 
 	     <- ttoct B B' <- ttoct A A'.
 
-%{! The family ``ttoct A A'`` ("typ to ctyp") encodes the type translation, which is often written using [[:w:Dana Scott|Scott brackets]] like &lt;nowiki&gt;[[A]]&lt;/nowiki&gt;. The unit type and product types simply translate recursively into their correspondents in the CPS types. An arrow type A → B translates into (A' c& (B' ccont)) ccont. That is, a function is translated into a continuation that expects the (translated) argument paired with a return continuation for the (translated) result.
+%{! The family ``ttoct A A'`` ("typ to ctyp") encodes the type translation, which is often written using [Scott](https://en.wikipedia.org/wiki/Dana_Scott) brackets <Math formula="\llbracket A \rrbracket"/>. The unit type and product types simply translate recursively into their correspondents in the CPS types. An arrow type A → B translates into `(A' c& (B' ccont)) ccont`. That is, a function is translated into a continuation that expects the (translated) argument paired with a return continuation for the (translated) result.
 
 To check our work, we can verify that type translation is [total](/wiki/percent-total/). This result will not be important to our main theorem, but every type should certainly have a translation and it is an easy way to check for mistakes early. !}%
     
@@ -187,7 +185,7 @@ tocpsv+ : {WV  : ofv V A}
 
 %{! ``WV`` is a value typing derivation in the source language. Our translation will be type-directed, translating typing derivations to typing derivations. The terms, which are in the types of the typing derivations, can easily be recovered (in fact, they are [implicit parameter](/wiki/implicit-and-explicit-parameters/)s in this judgment). The middle place in the relation is the translation of the type; this is necessary to ensure that the translated value has the appropriate translated type.
 
-Sometimes it is necessary for the type translation to be an [output](/wiki/percent-mode/) of the relation, and sometimes it is necessary for it to be an input. As is standard for translations between languages, we will need to use the [[reversing the polarity]] technique to give two versions of this relation with two different modes. The second one is identical except for the mode of the middle argument: !}%
+Sometimes it is necessary for the type translation to be an [output](/wiki/percent-mode/) of the relation, and sometimes it is necessary for it to be an input. As is standard for translations between languages, we will need to use the <Todo>reversing the polarity</Todo> technique to give two versions of this relation with two different modes. The second one is identical except for the mode of the middle argument: !}%
     
 tocpsv- : {WV  : ofv V A}
 	  {CT  : ttoct A CA}
@@ -211,19 +209,23 @@ tocps- : {M  : exp}
 	 type.
 %mode tocps- +M +WM -CT -CC -WCC.
 
-%{! For this relation we will use explicit parameters for the terms. The first two arguments are the expression ``M`` to be translated and its typing ``WM`` (the letter w is often used in variable names within this code to stand for "well-formed"). The next argument is the translation for the type ``A`` of the expression, as in the translation for values. The argument ``CC`` is the continuation expression that is the result of CPS conversion. However, it is parameterized over the "tail" of the continuation (of type ``cval -&gt; cexp``), because an expression cannot be CPS-converted in isolation. For example, the direct style expression ``mkpair 1 1`` will translate into !}%
-    
+%{! For this relation we will use explicit parameters for the terms. The first two arguments are the expression ``M`` to be translated and its typing ``WM`` (the letter w is often used in variable names within this code to stand for "well-formed"). The next argument is the translation for the type ``A`` of the expression, as in the translation for values. The argument ``CC`` is the continuation expression that is the result of CPS conversion. However, it is parameterized over the "tail" of the continuation (of type ``cval -&gt; cexp``), because an expression cannot be CPS-converted in isolation. For example, the direct style expression ``mkpair 1 1`` will translate into
+
+```
 [rest : cval -> cexp]
   cmkpair c1 c1 [p : cval]
   rest p
+```
 
-%{! The output ``CC`` is accompanied by ``WCC``, a typing derivation for it. The typing derivation is also parameterized. Its type is !}%
-    
+The output ``CC`` is accompanied by ``WCC``, a typing derivation for it. The typing derivation is also parameterized. Its type is
+
+```
 {C : cval -> cexp}
 ({cv : cval} {wcv : cofv cv CA} cof (C cv)) ->
  cof (CC C)
+```
 
-%{! The first parameter ``C`` is the tail of the continuation, as above. The second argument is a typing derivation for the tail. The tail must be well-formed for any well-formed ``cval`` we might pass to it, so that typing derivation is itself parameterized. To summarize, ``WCC`` is a parameterized typing derivation that allows us to instantiate it with any well-formed tail.
+The first parameter ``C`` is the tail of the continuation, as above. The second argument is a typing derivation for the tail. The tail must be well-formed for any well-formed ``cval`` we might pass to it, so that typing derivation is itself parameterized. To summarize, ``WCC`` is a parameterized typing derivation that allows us to instantiate it with any well-formed tail.
 
 We also need to give a version of this relation with reversed polarity. !}%
     
