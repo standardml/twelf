@@ -1,57 +1,7 @@
 %%! title: "The Twelf Project:Literate Twelf"
-
-%{! The Literate Twelf extension is a relatively simple modification of [TwelfTag](/wiki/twelftag/) intended to facilitate both offline editing, as well as direct use, of pages on this wiki. Literate Twelf pages interperet text inside of multi-line comments as are automatically run through Twelf by the Literate Twelf extension, and Twelf's output ("%% OK %%" or "%% ABORT %%") is displayed in a box at the top of the page.
-
-## Using Literate Twelf
-
-If a file on the wiki starts with the string ``%\{``, a preprocesser is invoked that (essentially) turns all instances of ``%\{`` to ``(/twelf)`` and all instances of ``\}%`` into ``(twelf)``, transforming the Twelf file with comments into a Mediawiki file with escaped TwelfTag sequences. 
-
-Furthermore, if a pipe characther ``|`` appears on the same line as the ``\}%`` symbol, the text between the ``|`` and the ``\}%`` will be interpreted as options to the (twelf) tag.
-
-### Limitations
-
-* Multi-line comments cannot be nested within a Literate Twelf file.
-* Section editing is disabled for Literate Twelf files on the wiki, as this could potentially lead to unpredictable results.
-
-## Demo
-
-The following Literate Twelf page is demonstrated [[Project:Literate Twelf/Sample Page|here]]. Notice that because a ``|`` appears on the second line, the comment cannot be closed on that line or the entire segment ``Literate Twelf]].`` would be interpreted as TwelfTag options.
-
-&lt;code&gt;%\{ 
-Some natural numbers; a demo of [[Project:Literate Twelf|Literate Twelf]]. 
-\}%
- 
-%\{ == Syntax == \}%
- 
-nat: type.
-z : nat.
-s : nat -&gt; nat.
- 
-%\{ == Judgments == \}%
- 
-%\{ === Equality === \}%
- 
-id-nat : nat -&gt; nat -&gt; type.
-id-nat/refl : id-nat N N.
- 
-%\{ === Addition === |\}%
- 
-plus : nat -&gt; nat -&gt; nat -&gt; type.
-plus/z : plus z N N.
-plus/s : plus N1 N2 N3 -&gt; plus (s N1) N2 (s N3).
-
-%\{ Now we can see what it looks like to run a query: |check=decl\}%
-
-%solve _ : plus (s (s (s z))) (s (s z)) N.
- 
-%. 
- 
-This is a pretty boring presentation of the natural numbers;
-it is roughly like all the other ones, like the article on [natural numbers](/wiki/natural-numbers/).&lt;/code&gt; !}%
-
 %{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+This page has been removed. The current Twelf Wiki uses the [Wiki Twelf syntax described here](/wiki-syntax/) for every page under the `/wiki/` prefix.
+
+You can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Literate_Twelf).
 !}%

@@ -1,49 +1,5 @@
 %%! title: "The Twelf Project talk:TwelfTag"
-
-%{! ## Group_s_
-
-Rob, this rocks. I have a feature request. In the article [converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/) I develop a starting signature and then discuss two diverging paths that one could use. I'd like to write
-
-&lt;pre&gt;&lt;nowiki&gt; !}%
-    
-%{! (options removed from twelftag: groups="path1,path2") !}%
-
-% starting signature
-
-%{!  !}%
-    
-%{! (options removed from twelftag: group="path1") !}%
-
-% code for path 1
-
-%{!  !}%
-    
-%{! (options removed from twelftag: group="path2") !}%
-
-% code for path 2
-
-%{! `` group="path1"&gt;see path 1``  `` group="path2"&gt;see path 2``
-&lt;/nowiki&gt;&lt;/pre&gt;
-
-Is this possible with the current setup, or easy to add? Another useful feature which would allow me to give the impression of this is &lt;nowiki&gt; !}%
-    
-%{! (options removed from twelftag: visible="false") !}%
-
-...
-
-%{! &lt;/nowiki&gt; so that I could just silently include two copies of the setup. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 12:33, 9 October 2006 (EDT)
-
-I will add the multiple groups="..." tag, and I'd been contemplating that I needed a hidden="true" tag (I like _affirming_ the HTML). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 14:00, 9 October 2006 (EDT)
-* My suggestion was a little bogus: group is of course a special case of groups, so it should probably be either group="a,b,c" or allow multiple occurences of the parameter (group="a" group="b" group="c")? But, thanks! &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 14:34, 9 October 2006 (EDT)
-:* It is done, using group="a,b,c" form. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:30, 9 October 2006 (EDT)
-
-## oops
-
-http://twelf.plparty.org/w/index.php?title=CPS_conversion&action=edit !}%
-
 %{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+This page has been removed, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project_talk:TwelfTag).
 !}%

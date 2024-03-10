@@ -1,31 +1,5 @@
 %%! title: "Template:Needs"
-
-%{! &lt;div style="float:left;border:solid #EEBBBB 1px;margin:1px;"&gt;
-\{| cellspacing="0" style="background:#FFE7E7;"
-| style="font-size:8pt;padding:4pt;line-height:1.25em;" | This article or section needs \{\{\{1\}\}\}.
-|\}
-&lt;/div&gt;&lt;br clear="all" /&gt;&lt;includeonly&gt;[Category:Pages needing attention](/wiki/category-pages-needing-attention/)&lt;/includeonly&gt;&lt;noinclude&gt;
-
-
-This template allows in-line todo items on pages, with a message. To use it, write:
-
-:&lt;nowiki&gt;\{\{needs|je ne sais quoi\}\}&lt;/nowiki&gt;
-
-Which produces:
-
-&lt;div style="float:left;border:solid #EEBBBB 1px;margin:1px;"&gt;
-\{| cellspacing="0" style="background:#FFE7E7;"
-| style="font-size:8pt;padding:4pt;line-height:1.25em;" | This article or section needs je ne sais quoi.
-|\}
-&lt;/div&gt;&lt;br clear="all" /&gt;
-
-It also lists the page in the [[:Category:pages needing attention|pages needing attention]] category.
-
-&lt;/noinclude&gt; !}%
-
 %{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+This page has been removed, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Needs).
 !}%
