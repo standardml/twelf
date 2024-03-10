@@ -20,10 +20,9 @@ We are therefore led to wonder whether we can represent such "algebras" as LF ty
 
 ## Example 1: Even and Odd
 
-We borrow our first example from the tutorial on [Output factoring](/wiki/output-factoring/): !}%
-    
-%{! (options removed from twelftag: discard="true") !}%
+We borrow our first example from the tutorial on [Output factoring](/wiki/output-factoring/): 
 
+```twelf
 nat : type.
 z : nat.
 s : nat -> nat.
@@ -34,15 +33,15 @@ even : nat -> type.
 z-e : even z.
 s-o : odd (s X) <- even X.
 s-e : even (s X) <- odd X.
+```
 
-%{! Here, ``even`` and ``odd`` are _predicates_ on ``nat`` and are defined in terms of their relation to ``s``.  The [output factoring tutorial](/wiki/output-factoring/) shows you how to prove that, under this definition, every natural number is either even or odd; the statement of the theorem requires a disjoint-union type, and the proof requires a lemma to take care of an output coverage problem.
+Here, ``even`` and ``odd`` are _predicates_ on ``nat`` and are defined in terms of their relation to ``s``.  The [output factoring tutorial](/wiki/output-factoring/) shows you how to prove that, under this definition, every natural number is either even or odd; the statement of the theorem requires a disjoint-union type, and the proof requires a lemma to take care of an output coverage problem.
 
 ### An approach using indexing
 
-Since the subsets of even and odd natural numbers are disjoint, you might think of another approach to representing these subsets, namely, by introducing a new type of _natural number sorts_, and indexing ``nat`` by the sort: !}%
+Since the subsets of even and odd natural numbers are disjoint, you might think of another approach to representing these subsets, namely, by introducing a new type of _natural number sorts_, and indexing ``nat`` by the sort: 
     
-%{! (options removed from twelftag: discard="true") !}%
-
+```twelf
 nat_sort : type.
 even : nat_sort.
 odd : nat_sort.
@@ -51,20 +50,19 @@ nat : nat_sort -> type.
 z : nat even.
 s : nat even -> nat odd.    % Doesn't work:
 s : nat odd -> nat even.    % redefinition of s
+```
 
-%{! We'd like for ``s`` to have both of the declared types at the same time, but that is not possible in LF (though some proposed extensions of LF to include _refinement types_ do allow something like this).  Alternatively, we might try to write something like !}%
-    
-%{! (options removed from twelftag: discard="true") !}%
+We'd like for ``s`` to have both of the declared types at the same time, but that is not possible in LF (though some proposed extensions of LF to include _refinement types_ do allow something like this).  Alternatively, we might try to write something like:
 
+```twelf
 s : nat X -> nat (f X).
+```
 
-%{! for some term ``f`` of type ``nat_sort -&gt; nat_sort`` with the property that ``f even`` = ``odd`` and ``f odd`` = ``even``, but again this is not possible in LF, since terms are freely generated and functional terms are parametric in their arguments (i.e., there are no destructors or case-splitting on arguments).  This approach seems to be stuck.  Or is it?
+for some term ``f`` of type ``nat_sort -> nat_sort`` with the property that ``f even`` = ``odd`` and ``f odd`` = ``even``, but again this is not possible in LF, since terms are freely generated and functional terms are parametric in their arguments (i.e., there are no destructors or case-splitting on arguments).  This approach seems to be stuck.  Or is it?
 
 ### A constraint domain of natural-number sorts
 
 The idea is to use a higher-order "Church-encoding" for our two-element type and to use abbreviations to "hide" the implementation of this type: !}%
-    
-%{! (options removed from twelftag: import="start" export="ex1") !}%
 
 t : type.
 
@@ -78,19 +76,21 @@ nat : nat_sort -> type.
 z : nat even.
 s : nat X -> nat (add1-mod2 X).
 
-%{! Why does this work?  As long as the type ``t`` does not become [subordinate](/wiki/subordination/) to any other type, the only canonical terms of type ``nat_sort`` are ``even`` and ``odd``, and so the type looks "from the outside" just like the type ``nat_sort`` from the previous section.  However, ``add1-mod2``, rather than being a constructor on this type that freely generates new terms, is instead a "pre-existing" canonical term of type ``nat_sort -&gt; nat_sort``.  In fact, there are _four_ canonical terms of this type, the other three being !}%
-    
-%{! (options removed from twelftag: import="ex1") !}%
+%{! Why does this work?  As long as the type ``t`` does not become [subordinate](/wiki/subordination/) to any other type, the only canonical terms of type ``nat_sort`` are ``even`` and ``odd``, and so the type looks "from the outside" just like the type ``nat_sort`` from the previous section.  However, ``add1-mod2``, rather than being a constructor on this type that freely generates new terms, is instead a "pre-existing" canonical term of type ``nat_sort -> nat_sort``.  In fact, there are _four_ canonical terms of this type, the other three being !}%
 
-%abbrev const_even : nat_sort -> nat_sort = [s:nat_sort] [even:t] [odd:t] s even even.   % or: [s] even
-%abbrev const_odd  : nat_sort -> nat_sort = [s:nat_sort] [even:t] [odd:t] s odd  odd.    % or: [s] odd
-%abbrev identity   : nat_sort -> nat_sort = [s:nat_sort] [even:t] [odd:t] s even odd.    % or: [s] s
+%abbrev const_even : nat_sort -> nat_sort = [s:nat_sort] [even:t] [odd:t]
+    s even even.   
+    % or: [s] even
+%abbrev const_odd  : nat_sort -> nat_sort = [s:nat_sort] [even:t] [odd:t]
+    s odd  odd.
+    % or: [s] odd
+%abbrev identity   : nat_sort -> nat_sort = [s:nat_sort] [even:t] [odd:t]
+    s even odd.
+    % or: [s] s
 
-%{! Similarly, there are (2&lt;sup&gt;2&lt;/sup&gt;)&lt;sup&gt;2&lt;/sup&gt; = 16 canonical terms of type ``nat_sort -&gt; nat_sort -&gt; nat_sort``, and 2&lt;sup&gt;4&lt;/sup&gt; = 16 canonical terms of type ``(nat_sort -&gt; nat_sort) -&gt; nat_sort``, and so on.  In fact, what we have here are all lambda-definable functions in the full type-hierarchy over \{``even``, ``odd``\}, which, since this set is finite, is the same as the full (set-theoretic) type-hierarchy over \{``even``, ``odd``\}.  And these functions are just there waiting to be used!
+%{! Similarly, there are <Math formula="(2^2)^2 = 16"/> canonical terms of type ``nat_sort -> nat_sort -> nat_sort``, and <Math formula="2^4 = 16"/> canonical terms of type ``(nat_sort -> nat_sort) -> nat_sort``, and so on.  In fact, what we have here are all lambda-definable functions in the full type-hierarchy over \{``even``, ``odd``\}, which, since this set is finite, is the same as the full (set-theoretic) type-hierarchy over \{``even``, ``odd``\}.  And these functions are just there waiting to be used!
 
 To see one such use, let's define the predicate ``plus X Y Z``.  What should be its type?  We'll give two definitions, the first with minimal type information: !}%
-    
-%{! (options removed from twelftag: import="ex1") !}%
 
 plus_min : nat X -> nat Y -> nat Z -> type.
 %mode plus_min +N1 +N2 -N3.
@@ -101,12 +101,12 @@ plus_min_s : plus_min N1 (s N2) (s N3) <- plus_min N1 N2 N3.
 %worlds () (plus_min N1 N2 N3).
 %total N2 (plus_min N1 N2 N3).
 
-%{! This works fine, but we can do better.  We know, for example, that if ``X`` and ``Y`` are the same, then ``Z`` will be ``even``, and if ``X`` and ``Y`` are different, then ``Z`` will be ``odd``.  In other words, tracking the sorts of the elements involved in an addition requires being able to compute addition mod 2.  But this is just a (finite) function in the type-hierarchy over \{``even``, ``odd``\}, and so to get a maximally precise type for ``plus``, we can just define the term of type ``nat_sort -&gt; nat_sort -&gt; nat_sort`` that represents addition mod 2, and then use that in the type: !}%
-    
-%{! (options removed from twelftag: import="ex1") !}%
+%{! This works fine, but we can do better.  We know, for example, that if ``X`` and ``Y`` are the same, then ``Z`` will be ``even``, and if ``X`` and ``Y`` are different, then ``Z`` will be ``odd``.  In other words, tracking the sorts of the elements involved in an addition requires being able to compute addition mod 2.  But this is just a (finite) function in the type-hierarchy over \{``even``, ``odd``\}, and so to get a maximally precise type for ``plus``, we can just define the term of type ``nat_sort -> nat_sort -> nat_sort`` that represents addition mod 2, and then use that in the type: !}%
 
+%{!! begin checked !!}%
 %abbrev plus-mod2 : nat_sort -> nat_sort -> nat_sort
-   = [s1:nat_sort] [s2:nat_sort] [even:t] [odd:t] s1 (s2 even odd) (s2 odd even).
+   = [s1:nat_sort] [s2:nat_sort] [even:t] [odd:t]
+     s1 (s2 even odd) (s2 odd even).
 
 plus : nat X -> nat Y -> nat (plus-mod2 X Y) -> type.
 %mode plus +N1 +N2 -N3.
@@ -116,26 +116,25 @@ plus_s : plus N1 (s N2) (s N3) <- plus N1 N2 N3.
 
 %worlds () (plus N1 N2 N3).
 %total N2 (plus N1 N2 N3).
+%{!! end checked !!}%
 
-%{! `` import="ex1" check="true"&gt;See Twelf's output``.  You'll see in this output that all of our abbreviations have been expanded, which makes the output a bit harder to read.  It would have been better to have used definitions rather than abbreviations, but (at present anyway) this is, for technical reasons, incompatible with Twelf's meta-checks.
+%{! You'll see in this output that all of our abbreviations have been expanded, which makes the output a bit harder to read.  It would have been better to have used definitions rather than abbreviations, but (at present anyway) this is, for technical reasons, incompatible with Twelf's meta-checks.
 
-Also notice that, apart from the change in name from ``plus_min`` to ``plus``, the declarations of ``plus_z`` and ``plus_s`` are the same; it's just the type that has become more precise.  As an exercise, you may like to check that if ``f`` is any of the other 15 possible canonical forms of type ``nat_sort -&gt; nat_sort``, and you replace the declaration of ``plus`` above with !}%
-    
-%{! (options removed from twelftag: discard=true) !}%
+Also notice that, apart from the change in name from ``plus_min`` to ``plus``, the declarations of ``plus_z`` and ``plus_s`` are the same; it's just the type that has become more precise.  As an exercise, you may like to check that if ``f`` is any of the other 15 possible canonical forms of type ``nat_sort -> nat_sort``, and you replace the declaration of ``plus`` above with 
 
+```twelf
 plus : nat X -> nat Y -> nat (f X Y) -> type.
+```
 
-%{! then at least one of the two declarations for ``plus_z`` or ``plus_s`` will no longer type-check without generating unresolved constraints.  Finally, we observe that, as compared to the definitions of even and odd in the tutorial on [output factoring](/wiki/output-factoring/), it is intrinsic in our encoding via the constraint domain ``nat_sort`` that every natural number is either even or odd, and so this is not something that needs to be proved.
+then at least one of the two declarations for ``plus_z`` or ``plus_s`` will no longer type-check without generating unresolved constraints.  Finally, we observe that, as compared to the definitions of even and odd in the tutorial on [output factoring](/wiki/output-factoring/), it is intrinsic in our encoding via the constraint domain ``nat_sort`` that every natural number is either even or odd, and so this is not something that needs to be proved.
 
 ## Example 2: Polarities
 
-For our next example, we are going to use the same constraint domain that we used in Example 1, and for a similar purpose (although we will be renaming it to suit the current situation).  Suppose that we have a language with a type system that includes a function-space operator, ``=&gt;``, along possibly with some others, such as products, sums, and type constants, and we have represented these as canonical forms of an LF type ``tp``.  We want to add an operator ``mu`` to represent _positive inductive types_.  What this means is that if we have a type expression ``F : tp -&gt; tp`` such that for any ``x : tp``, the type ``F x`` only has _positive_ occurrences of ``x`` (that is, every occurrence of ``x`` is on the left-hand side of an even number of ``=&gt;`` operators), then we want to be able to form ``mu F : tp``.  Furthermore, these are the _only_ ``mu``-types that we want to form; i.e., we want this to be an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/).  All of these types will have introduction and elimination forms, but for the purposes of this example, we will just focus on the types themselves.
+For our next example, we are going to use the same constraint domain that we used in Example 1, and for a similar purpose (although we will be renaming it to suit the current situation).  Suppose that we have a language with a type system that includes a function-space operator, ``=>``, along possibly with some others, such as products, sums, and type constants, and we have represented these as canonical forms of an LF type ``tp``.  We want to add an operator ``mu`` to represent _positive inductive types_.  What this means is that if we have a type expression ``F : tp -> tp`` such that for any ``x : tp``, the type ``F x`` only has _positive_ occurrences of ``x`` (that is, every occurrence of ``x`` is on the left-hand side of an even number of ``=>`` operators), then we want to be able to form ``mu F : tp``.  Furthermore, these are the _only_ ``mu``-types that we want to form; i.e., we want this to be an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/).  All of these types will have introduction and elimination forms, but for the purposes of this example, we will just focus on the types themselves.
 
 ### An approach via predicates
 
-A natural approach to this problem is to try to represent the positivity condition as a predicate ``pos`` on ``tp -&gt; tp`` and to define this predicate mutually with another predicate ``neg`` on ``tp -&gt; tp``, as follows: !}%
-    
-%{! (options removed from twelftag: import="start" export="ex2a") !}%
+A natural approach to this problem is to try to represent the positivity condition as a predicate ``pos`` on ``tp -> tp`` and to define this predicate mutually with another predicate ``neg`` on ``tp -> tp``, as follows: !}%
 
 tp : type.
 
@@ -152,108 +151,105 @@ pos_id : pos ([a] a).
 pos_un : pos ([a] un).
 pos_*  : pos ([a] F1 a) -> pos ([a] F2 a) -> pos ([a] F1 a * F2 a).
 pos_=> : neg ([a] F1 a) -> pos ([a] F2 a) -> pos ([a] F1 a => F2 a).
-pos_mu : ({b:tp} pos ([a] b) -> pos ([a] F a b)) -> pos ([a] mu ([b] F a b) _).
+pos_mu : ({b:tp} pos ([a] b) 
+   -> pos ([a] F a b)) 
+   -> pos ([a] mu ([b] F a b) _).
 
 neg_un : neg ([a] un).
 neg_*  : neg ([a] F1 a) -> neg ([a] F2 a) -> neg ([a] F1 a * F2 a).
 neg_=> : pos ([a] F1 a) -> neg ([a] F2 a) -> neg ([a] F1 a => F2 a).
-neg_mu : ({b:tp} neg ([a] b) -> neg ([a] F a b)) -> neg ([a] mu ([b] F a b) _).
+neg_mu : ({b:tp} neg ([a] b) 
+   -> neg ([a] F a b)) 
+   -> neg ([a] mu ([b] F a b) _).
 
 %{! Some comments about this code are in order:
 
-* We have chosen to the make the type constructor ``F`` an [explicit parameter](/wiki/implicit-and-explicit-parameters/) of ``mu`` in order to make ``mu``-terms appear more natural, with the positivity proof relegated to second position.  However, we could just as easily have left this parameter implicit, declaring ``mu : pos F -&gt; tp``, since we would still have access to ``F`` through unification with terms involving type ascriptions, as in ``mu (P : pos F)``.
+- We have chosen to the make the type constructor ``F`` an [explicit parameter](/wiki/implicit-and-explicit-parameters/) of ``mu`` in order to make ``mu``-terms appear more natural, with the positivity proof relegated to second position.  However, we could just as easily have left this parameter implicit, declaring ``mu : pos F -> tp``, since we would still have access to ``F`` through unification with terms involving type ascriptions, as in ``mu (P : pos F)``.
 
-* We define ``pos F`` and ``neg F`` by induction on the body of ``F``, taking advantage of the inductive characterization of LF canonical forms of type ``tp -&gt; tp`` as the canonical forms of type ``tp`` in a context that includes an extra assumption ``a : tp``.  The cases for ``mu`` say that a type ``a`` occurs positively (or negatively) in a ``mu``-type if it occurs positively (or negatively) in its body, and are necessary if we want to allow nested ``mu``-types (but see below!).  The proof components of the ``mu``-type are not used, hence the underscores ``_`` in these declarations.
+- We define ``pos F`` and ``neg F`` by induction on the body of ``F``, taking advantage of the inductive characterization of LF canonical forms of type ``tp -> tp`` as the canonical forms of type ``tp`` in a context that includes an extra assumption ``a : tp``.  The cases for ``mu`` say that a type ``a`` occurs positively (or negatively) in a ``mu``-type if it occurs positively (or negatively) in its body, and are necessary if we want to allow nested ``mu``-types (but see below!).  The proof components of the ``mu``-type are not used, hence the underscores ``_`` in these declarations.
 
-* We have chosen to define ``pos`` and ``neg`` using types involving the ``-&gt;`` arrow rather than the ``&lt;-`` arrow that is typical in logic-programming-style definitions, e.g.,
-&lt;pre style="border:0px; background-color:white"&gt;
+- We have chosen to define ``pos`` and ``neg`` using types involving the ``->`` arrow rather than the ``&lt;-`` arrow that is typical in logic-programming-style definitions, e.g.,
+
+    ```
     pos_* : pos ([a] F1 a * F2 a)
               &lt;- pos ([a] F1 a)
               &lt;- pos ([a] F2 a).
-&lt;/pre&gt;
-: There are two reasons.  First, these declarations are not the same:  using the earlier declaration, a term of the form ``pos_* P1 P2 : pos ([a] F1 a * F2 a)`` has ``P1`` as the positivity proof for ``F1`` and ``P2`` as the positivity proof for ``F2``, whereas in the declaration just given, it is reversed!  Second, we prefer to use ``-&gt;`` when we are representing data (i.e., making object-level definitions) and ``&lt;-`` when we are representing programs (i.e., proving metatheorems), but this is a matter of style.
+    ```
+
+- There are two reasons.  First, these declarations are not the same:  using the earlier declaration, a term of the form ``pos_* P1 P2 : pos ([a] F1 a * F2 a)`` has ``P1`` as the positivity proof for ``F1`` and ``P2`` as the positivity proof for ``F2``, whereas in the declaration just given, it is reversed!  Second, we prefer to use ``->`` when we are representing data (i.e., making object-level definitions) and ``&lt;-`` when we are representing programs (i.e., proving metatheorems), but this is a matter of style.
 
 All of this appears to work, and we were able, in passing, to make some useful comments about the code, but unfortunately there is a problem here, and the problem has to do with nested ``mu``-types.  As a simple example, take the μ-type μ``X``. μ``Y``. ``X * Y`` (which could be a considered the type of infinite streams of infinite streams of infinite streams of ...).  In order for the outer ``mu`` in any representation of this type to be well-formed, it's body, the inner ``mu``, must have only positive occurrences of ``X`` in its body (which it seems to have) and similarly for the positivity of ``Y`` in the body of the inner ``mu``, which is ``X * Y``.  However, you can see in the clause for ``pos_*`` above that, for ``Y`` to be positive in ``X * Y``, not only does it have to be positive in ``Y``, which it is by ``pos_id``, but it also has to be positive in ``X``, which we have not arranged to be the case.
 
 Now, since every occurrence of a variable is both positive and negative in an expression in which it does not occur&mdash;vacuously&mdash;we could add two [catch-all case](/wiki/catch-all-case/)s to our declarations to fix this problem: !}%
     
-%{! (options removed from twelftag: import="ex2a") !}%
-
 pos_vac : pos ([a] F).
 neg_vac : neg ([a] F).
 
 %{! We could then represent our μ-type μ``X``. μ``Y``. ``X * Y`` with the term !}%
     
-%{! (options removed from twelftag: import="ex2a") !}%
-
 streams : tp = mu ([x] mu ([y] x * y) (pos_* pos_vac pos_id)) (pos_mu ([y][py] pos_* pos_id py)).
 
 %{! However, as mentioned in the [tutorial on catch-all cases](/wiki/catch-all-case/), this creates _non-determinism_, since it is now possible to have multiple proofs of positivity for the same type constructor.  For example, we have: !}%
     
-%{! (options removed from twelftag: import="ex2a") !}%
-
 proof1 : pos ([a] un * un) = pos_* pos_un  pos_un.
 proof2 : pos ([a] un * un) = pos_* pos_vac pos_un.
 proof3 : pos ([a] un * un) = pos_* pos_un  pos_vac.
 proof4 : pos ([a] un * un) = pos_* pos_vac pos_vac.
 proof5 : pos ([a] un * un) = pos_vac.
 
-%{! and so, filling in the hole labeled ``%\{proof\}%`` in the term !}%
-    
-%{! (options removed from twelftag: discard="true") !}%
+%{! and so, filling in the hole labeled ``%{proof}%`` in the term 
 
+```
 mu ([x] un * un) ( %{proof}% )
+```
 
-%{! with each of the five proofs above, we would get five different canonical terms of type ``tp`` representing the same μ-type, μ``X``. ``1 * 1`` ! This destroys the [adequacy](/wiki/adequacy/) of our representation, and is why it's best to avoid catch-all cases in object representations.  On the other hand, the same can't be said, in general, of [metatheorem](/wiki/metatheorem/) representation, since there we are usually more concerned about the _existence_ of proofs rather than their unique representation (whatever that means: if you really figure out what it means for two proofs to be "equal", let me know!)  Finally, just as we mentioned in connection with Example 1 that some proposed extensions to LF to include _refinement types_ could give a nice solution to the representation of even and odd natural numbers (among many others such "subsorts"), we should also mention here that some proposed extensions to LF to include _proof-irrelevance_ could address the problem we have described above, by identifying all elements, or "proofs", of certain types, restoring adequacy of such representations.
-
-`` import="ex2a" check="true"&gt;See Twelf's output`` for the code above.
+with each of the five proofs above, we would get five different canonical terms of type ``tp`` representing the same μ-type, μ``X``. ``1 * 1`` ! This destroys the [adequacy](/wiki/adequacy/) of our representation, and is why it's best to avoid catch-all cases in object representations.  On the other hand, the same can't be said, in general, of [metatheorem](/wiki/metatheorem/) representation, since there we are usually more concerned about the _existence_ of proofs rather than their unique representation (whatever that means: if you really figure out what it means for two proofs to be "equal", let me know!)  Finally, just as we mentioned in connection with Example 1 that some proposed extensions to LF to include _refinement types_ could give a nice solution to the representation of even and odd natural numbers (among many others such "subsorts"), we should also mention here that some proposed extensions to LF to include _proof-irrelevance_ could address the problem we have described above, by identifying all elements, or "proofs", of certain types, restoring adequacy of such representations.
 
 ### Is there an adequate intrinsic encoding?
 
-So how can we achieve an adequate intrinsic encoding of μ-types?  The situation is worse than you might think:  there doesn't seem to be any hope of getting such an encoding.  We've seen that adding a catch-all case destroys adequacy, but yet we've also seen that, in representing the μ-type μ``X``. μ``Y``. ``X * Y``, we need a positivity assumption about ``X`` in order to show that ``Y`` occurs positively in ``X * Y``.  So our only hope seems to be to add it to the argument of ``mu``, thus: !}%
-    
-%{! (options removed from twelftag: discard="true") !}%
+So how can we achieve an adequate intrinsic encoding of μ-types?  The situation is worse than you might think:  there doesn't seem to be any hope of getting such an encoding.  We've seen that adding a catch-all case destroys adequacy, but yet we've also seen that, in representing the μ-type μ``X``. μ``Y``. ``X * Y``, we need a positivity assumption about ``X`` in order to show that ``Y`` occurs positively in ``X * Y``.  So our only hope seems to be to add it to the argument of ``mu``, thus: 
 
+```twelf
 mu : {F:{a:tp} pos ([b] a) -> tp} pos F -> tp.
+```
 
-%{! But this is not well-typed unless we also either
+But this is not well-typed unless we also either
 
-- change the type of ``pos`` so that it accepts arguments of the same type as ``F``, or
-- extract the underlying constructor of type ``tp -&gt; tp`` from ``F`` and use that instead as the argument to ``pos``.
+1. change the type of ``pos`` so that it accepts arguments of the same type as ``F``, or
+2. extract the underlying constructor of type ``tp -> tp`` from ``F`` and use that instead as the argument to ``pos``.
 
-But neither of these is possible:  we can't do 1 because ``pos`` would then have to be declared as !}%
+But neither of these is possible:  we can't do 1 because ``pos`` would then have to be declared as 
     
-%{! (options removed from twelftag: discard="true") !}%
-
+```twelf
 pos : ({a:tp} pos ([b] a) -> tp) -> type
+```
 
-%{! which is circular, and we can't do 2, because to get a ``tp`` output from ``F``, we'd need first to construct something of type ``pos ([b] a)``, which is exactly the problem we were trying to solve in the first place.  So, it seems that our search for an adequate intrinsic encoding of μ-types is doomed.  Or is it?
+which is circular, and we can't do 2, because to get a ``tp`` output from ``F``, we'd need first to construct something of type ``pos ([b] a)``, which is exactly the problem we were trying to solve in the first place.  So, it seems that our search for an adequate intrinsic encoding of μ-types is doomed.  Or is it?
 
 ### Using the even/odd constraint domain
 
-You may remember our original characterization of what it means for a type expression ``F : tp -&gt; tp`` to have only positive occurrences of its bound variable, namely, that every occurrence of the variable is on the left-hand side of an _even_ number of ``=&gt;`` operators.  This suggests that, in the same way that we used the ``nat_sort`` constraint domain in Example 1 as an index to ``nat`` in order to capture the even (and odd) natural numbers, we can also use it here as an index to ``tp`` to capture occurrences on the left of an even (and odd) number of ``=&gt;``s.  When we follow this idea to its logical conclusion, this is what we get: !}%
+You may remember our original characterization of what it means for a type expression ``F : tp -> tp`` to have only positive occurrences of its bound variable, namely, that every occurrence of the variable is on the left-hand side of an _even_ number of ``=>`` operators.  This suggests that, in the same way that we used the ``nat_sort`` constraint domain in Example 1 as an index to ``nat`` in order to capture the even (and odd) natural numbers, we can also use it here as an index to ``tp`` to capture occurrences on the left of an even (and odd) number of ``=>``s.  When we follow this idea to its logical conclusion, this is what we get: !}%
     
-%{! (options removed from twelftag: import="start" export="ex2b") !}%
-
 t : type.
 
-%abbrev pol : type = t -> t -> t.                              % polarities
-%abbrev opp : pol -> pol = [p:pol] [pos:t] [neg:t] p neg pos.  % the opposite polarity
+% polarities
+%abbrev pol : type = t -> t -> t. 
+
+% the opposite polarity
+%abbrev opp : pol -> pol = [p:pol] [pos:t] [neg:t] p neg pos. 
 
 tp : pol -> type.
 
-un : tp P.                                                     % unit type
-*  : tp P -> tp P -> tp P.            %infix right 11 *.       % product type
-=> : tp (opp P) -> tp P -> tp P.      %infix right 10 =>.      % function type
-mu : (tp P -> tp P) -> tp P.                                   % inductive type
+un : tp P.                                             % unit type
+*  : tp P -> tp P -> tp P.        %infix right 11 *.   % product type
+=> : tp (opp P) -> tp P -> tp P.  %infix right 10 =>.  % function type
+mu : (tp P -> tp P) -> tp P.                           % inductive type
 
-%{! That's it!  You may find it hard to believe that this works, so let's look at it more closely.  The constraint domain is the same one we used before, with ``nat_sort`` renamed to ``pol`` and ``add1-mod2`` renamed to ``opp``.  In all of the type constructors the polarity index is implicitly quantified, so each will apply to both polarities, but the individual polarities themselves have no meaning&mdash;there isn't a "positive" polarity or a "negative" polarity, for example&mdash;so we haven't given them names.  The main force of the polarities is to be found in the rules for ``=&gt;`` and ``mu``.  In the case of ``=&gt;``, the rule says that, whatever polarity is to be assigned to the type ``A =&gt; B``, the same polarity must be assigned to ``B`` and the opposite polarity must be assigned to ``A``.  And in the case of ``mu``, the fact that the functional argument to ``mu`` has domain and codomain types with the _same_ polarity means that, if we consider this functional argument to be an abstract syntax tree with instances of the bound variable at the leaves, then an even number of applications of ``opp`` must occur between the root of this tree and any occurrence of the bound variable at the leaves.
+%{! That's it!  You may find it hard to believe that this works, so let's look at it more closely.  The constraint domain is the same one we used before, with ``nat_sort`` renamed to ``pol`` and ``add1-mod2`` renamed to ``opp``.  In all of the type constructors the polarity index is implicitly quantified, so each will apply to both polarities, but the individual polarities themselves have no meaning&mdash;there isn't a "positive" polarity or a "negative" polarity, for example&mdash;so we haven't given them names.  The main force of the polarities is to be found in the rules for ``=>`` and ``mu``.  In the case of ``=>``, the rule says that, whatever polarity is to be assigned to the type ``A => B``, the same polarity must be assigned to ``B`` and the opposite polarity must be assigned to ``A``.  And in the case of ``mu``, the fact that the functional argument to ``mu`` has domain and codomain types with the _same_ polarity means that, if we consider this functional argument to be an abstract syntax tree with instances of the bound variable at the leaves, then an even number of applications of ``opp`` must occur between the root of this tree and any occurrence of the bound variable at the leaves.
 
 In short, you can think of the rules as giving conditions for a particular simultaneous polarity assignment to all of the subterms of a given term to be _coherent_, and you'll notice that if one polarity assignment is coherent, then so is its opposite, reinforcing the idea that the individual polarities are meaningless.  (We might say, following Einstein, that positivity and negativity are not _absolute_ notions, but are only meaningful relative to other instances of one another!)  Thus, since each of the type constructors relates the polarity of its "output" to the polarities of its "inputs" (with, in the case of ``mu``, an assumption about the polarity of the bound type variable), a given term representing one of our types will have, overall, either zero or exactly two polarity assignments for its subterms that can be coherent, with only the latter case corresponding to the type being well-formed.  It follows that the product type ``\{P:pol\} tp P`` adequately represents our informal notion of positive inductive types.
 
 Here are some sample encodings of μ-types, starting with the two examples we discussed before: !}%
-    
-%{! (options removed from twelftag: import="ex2b") !}%
 
 %abbrev pos_ind : type = {P:pol} tp P.
 
@@ -265,31 +261,33 @@ ex2 : pos_ind = [P] mu [x] (x => un) => x.
 ex3 : pos_ind = [P] mu [x] (x * x => un) => x * x.
 ex4 : pos_ind = [P] mu [x] (mu [y] x => y) => x.
 
-%{! `` import="ex2b" check="true"&gt;See Twelf's output``.
+%{! You might also like to check that each of these definitions fails to type-check: 
 
-You might also like to check that each of these definitions fails to type-check: !}%
-    
-%{! (options removed from twelftag: discard="true) !}%
-
+```checkedtwelf
 ex5 : pos_ind = [P] mu [x] x => un.
-ex6 : pos_ind = [P] mu [x] x => x.
-ex7 : pos_ind = [P] mu [x] x * (mu [y] x => y).
+```
 
-%{! Curiously, if you remove the type ascriptions and polarity abstractions from these three ill-formed ``mu``-types, then they _do_ type-check, but only because Twelf, during type-reconstruction, abstracts a variable ``X`` of type ``t`` from these definitions and then assigns the "constant polarity" ``[t1][t2] X`` (which is its own opposite!) to the contradictory subterms.  This illustrates again the reliance of this method on the fact that the basic type ``t`` cannot have any canonical elements.
+```checkedtwelf
+ex6 : pos_ind = [P] mu [x] x => x.
+```
+
+```checkedtwelf
+ex7 : pos_ind = [P] mu [x] x * (mu [y] x => y).
+```
+
+Curiously, if you remove the type ascriptions and polarity abstractions from these three ill-formed ``mu``-types, then they _do_ type-check, but only because Twelf, during type-reconstruction, abstracts a variable ``X`` of type ``t`` from these definitions and then assigns the "constant polarity" ``[t1][t2] X`` (which is its own opposite!) to the contradictory subterms.  This illustrates again the reliance of this method on the fact that the basic type ``t`` cannot have any canonical elements.
 
 ## Example 3: Uniform syntactic categories
 
 Looking over the examples from the previous two sections, you may have noticed a pattern in the method we used to achieve simplification in each case, a method that we might call _intrinsification by indexing_.  That is, we were given a type ``A`` with some unary predicates ``P`` on that type and we "intrinsified" those predicates by turning ``A`` into a type family ``A'`` that was indexed by a particular constraint domain whose elements represented those predicates; for any predicate ``P``, the elements of ``A' P`` were exactly the original elements of ``A`` that satisfied ``P``.  This opened up the possibility of giving more precise types to functions defined on ``A`` that respected the predicates, since we were are able to "track" their behavior on the indices by using definable functions in the type-hierarchy over the constraint domain.
 
-Thus, in Example 1, the type ``A`` was ``nat`` and the predicates were ``even`` and ``odd``.  These predicates became elements of a constraint domain ``nat_sort`` that we used to index ``A``, and the functions ``s`` and (via its graph) ``plus`` could be tracked by functions ``add1-mod2`` and ``plus-mod2`` on ``nat_sort``.  And in Example 2, the type ``A`` was ``tp -&gt; tp`` and the predicates were ``pos`` and ``neg``.  These predicates became elements of a constraint domain ``pol`` and the various type constructors were tracked with the help of (the identity function and) the function ``opp`` on ``pol``.
+Thus, in Example 1, the type ``A`` was ``nat`` and the predicates were ``even`` and ``odd``.  These predicates became elements of a constraint domain ``nat_sort`` that we used to index ``A``, and the functions ``s`` and (via its graph) ``plus`` could be tracked by functions ``add1-mod2`` and ``plus-mod2`` on ``nat_sort``.  And in Example 2, the type ``A`` was ``tp -> tp`` and the predicates were ``pos`` and ``neg``.  These predicates became elements of a constraint domain ``pol`` and the various type constructors were tracked with the help of (the identity function and) the function ``opp`` on ``pol``.
 
 We will continue to explore this theme by using a couple of examples from the typed lambda calculus and LF itself.  But first, let's look a little more carefully at the conditions under which we can expect the methods of the previous two sections to work.  Clearly, if we want there to be a bijection between ``A`` and the collection of types ``A' P`` indexed by the predicates ``P``, then the extensions of these predicates must form a partition of ``A`` (i.e., they must be pairwise disjoint and collectively exhaustive).  This may seem like a severe restriction, but there are some ways around it, as we will see shortly.  But another restriction of the method is that, if we want to give more informative types for functions defined on ``A``, these must must not only respect the predicates, but the induced functions on the indices must also be _uniform_ in the sense that they can be defined parametrically on the index.  These restrictions will become clearer as we look at more examples.
 
 ### Simply-typed lambda calculus with values
 
 Our next example won't actually require a constraint domain, but it nevertheless illustrates the intrinsification-by-indexing theme we are developing, and it shows how you can sometimes get around some of the limitations of the method that were discussed at the end of the previous section.  Suppose we want to represent a simply-typed call-by-value lambda-calculus with a (big-step) evaluation relation that relates arbitrary terms with their values under evaluation, and we decide to represent typed terms intrinsically and values extrinsically: !}%
-    
-%{! (options removed from twelftag: import="start" export="ex3a") !}%
 
 tp : type.
 => : tp -> tp -> tp.   %infix right 10 =>.
@@ -310,12 +308,8 @@ eval-app : eval (app E1 E2) V
 
 %{! That is, the encoding of typed terms here is intrinsic in that we are only representing well-typed terms (along with their types), and not separate types and (not necessarily well-typed) terms that are related by a typing judgment.  And our encoding of values is extrinisic in that we are representing values as a subset of terms through a separate judgment, instead of similarly building the notion into the terms.  (See the tutorial on [Intrinsic and extrinsic encodings](/wiki/intrinsic-and-extrinsic-encodings/), which uses some similar examples.)
 
-`` import="ex3a" check="true"&gt;See Twelf's output`` for the above declarations.
-
 Now, we'd like to "intrinsify" the representation of values in this encoding, but there is an obstacle here that wasn't present in our previous examples:  we have two predicates here corresponding to values and general terms, but they aren't disjoint:  every values is a general term.  The solution is to introduce a separate predicate for _non-values_, which, along with values, partition the set of terms.  Fortunately, this is possible here, since non-values have a simple inductive definition:  they are precisely the applications.  Here is the final result: !}%
     
-%{! (options removed from twelftag: import="start" export="ex3b") !}%
-
 tp : type.
 => : tp -> tp -> tp.  %infix right 10 =>.
 
@@ -337,8 +331,6 @@ ev-app : eval (app E1 E2) V
 
 %{! Now we can see why a constraint domain wasn't required in this case:  there are no special functions needed to track ``lam`` and ``app`` on the indices.  Yet we still get an intrinsic encoding with more informative types for ``lam``, ``app``, and ``eval``.  And whereas with the extrinisic encoding we would have to prove a metatheorem that if ``eval E V`` then ``val V``, with the intrinsic encoding this comes for free.
 
-`` import="ex3b" check="true"&gt;See Twelf's output``.
-
 ### The syntax of Canonical LF
 
 In modern presentations of the LF type theory (see the glossary entry for [canonical form](/wiki/canonical-form/)s for more information), the set of syntactic objects is divided into five categories:  kinds, canonical types, atomic type families, canonical terms, and atomic terms, often denoted by the letters K, A, P, M, and R.  This stratification of syntax necessitates a similar stratification of the typing judgment (or, as we will call it, the classification judgment), the [hereditary substitution](/wiki/hereditary-substitution/) judgment, and the statements of theorems about these judgments, for example the substitution theorem.
@@ -350,12 +342,11 @@ In this section, we will show how it is possible to define a constraint domain `
 We first define the constraint domain, ``cat``.  There are two subtleties here.  First, because our unified classification judgment relates a syntactic object to its classifier, it will be necessary for the purpose of uniformity to introduce a category to classify kinds; we call it "unit" (letter: U) and give it a unique element ``*`` (this element might be called a "hyperkind").  Second, the hereditary substitution operation, when applied to an atomic term _R_, can produce either a canonical term or an atomic term, depending on whether the substitution variable occurs at the head of _R_ or not.  Consequently, we introduce a syntactic category to represent the disjoint union of canonical and atomic terms (letter: M+R), and we introduce two injections from M and R into M+R as term constructors.
 
 Here is the definition of the constraint domain: !}%
-    
-%{! (options removed from twelftag: import="start" export="ex3d") !}%
 
 t : type.
 
-%abbrev cat : type = t -> t -> t -> t -> t -> t -> t -> t.  % seven elt type
+% seven element type
+%abbrev cat : type = t -> t -> t -> t -> t -> t -> t -> t.
 
 %abbrev k   : cat = [k][a][p][m][r][m+r][u] k.
 %abbrev a   : cat = [k][a][p][m][r][m+r][u] a.
@@ -368,28 +359,26 @@ t : type.
 %{! #### Terms and term constructors
 
 We can now introduce the type ``tm`` of terms, which is indexed by ``cat``, as well as the various term constructors: !}%
-    
-%{! (options removed from twelftag: import="ex3d") !}%
 
 tm  : cat -> type.
 
-typ      : tm k.                               % type (the base kind)
-pi_k     : tm a -> (tm r -> tm k) -> tm k.     % kind-level product
+typ      : tm k.                           % type (the base kind)
+pi_k     : tm a -> (tm r -> tm k) -> tm k. % kind-level product
 
-coer_pa  : tm p -> tm a.                       % type coercion
-pi_a     : tm a -> (tm r -> tm a) -> tm a.     % type-level product
+coer_pa  : tm p -> tm a.                   % type coercion
+pi_a     : tm a -> (tm r -> tm a) -> tm a. % type-level product
 
-app_p    : tm p -> tm m -> tm p.               % atomic family application
+app_p    : tm p -> tm m -> tm p.           % atomic family application
 
-coer_rm  : tm r -> tm m.                       % term coercion
-lam_m    : (tm r -> tm m) -> tm m.             % term-level lambda abstraction
+coer_rm  : tm r -> tm m.                   % term coercion
+lam_m    : (tm r -> tm m) -> tm m.         % term-level lambda abstraction
 
-app_r    : tm r -> tm m -> tm r.               % atomic term application
+app_r    : tm r -> tm m -> tm r.           % atomic term application
 
-canon    : tm m -> tm m+r.                     % left injection
-atom     : tm r -> tm m+r.                     % right injection
+canon    : tm m -> tm m+r.                 % left injection
+atom     : tm r -> tm m+r.                 % right injection
 
-*        : tm u.                               % unit
+*        : tm u.                           % unit
 
 %{! Here, we have used the standard [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) representations of binders, which in this case always abstract over atomic term variables.  We have also included explicit coercions from atomic to canonical types and terms, since we really have disjoint syntactic categories here, instead of the usual overlapping ones, so some operation is needed to move from one category to another.
 
@@ -414,8 +403,6 @@ substj : (tm r -> tm X) -> tm m -> tm (subst X) -> type.
 #### Rules for classification
 
 We now give the encodings of the rules for classification.  For the purposes of this tutorial, it is not necessary that you study these rules in detail (unless they interest you!); just notice that Twelf is, in each case, able to infer the syntactic categories of all syntactic constituents of these rules by the using the term constructors involved, as well as the ``class`` function used to track the category of the classifier. !}%
-    
-%{! (options removed from twelftag: import="ex3d") !}%
 
 canon_kind_type : classj typ *.
 
@@ -514,10 +501,9 @@ subst_unit_unit : substj ([x] *) M0 *.
 
 %{! #### Statement of the substitution theorem
 
-We finish up this example with one more illustration of the unification afforded by our constraint domain: the statement of the substitution theorem for LF.  The theorem statement involves an implicit quantification over the syntactic category.  This means, in particular, that it isn't necessary to prove this by a mutual induction over the syntactic category, as is usually the case.  (Note, however, that because of the simplifications to LF that we have used for this presentation, it won't be possible to prove the theorem in this form.) !}%
-    
-%{! (options removed from twelftag: import="ex3d") !}%
+We finish up this example with one more illustration of the unification afforded by our constraint domain: the statement of the substitution theorem for LF.  The theorem statement involves an implicit quantification over the syntactic category.  This means, in particular, that it isn't necessary to prove this by a mutual induction over the syntactic category, as is usually the case.  (Note, however, that because of the simplifications to LF that we have used for this presentation, it won't be possible to prove the theorem in this form.)
 
+```checkedtwelf
 sub_thm : {T:tm r -> tm X} classj M0 A0
            -> ({x:tm r} classj x A0 -> classj (T x) (C x))
            -> substj ([x] C x) M0 C'
@@ -526,14 +512,13 @@ sub_thm : {T:tm r -> tm X} classj M0 A0
               substj ([x] T x) M0 T'
            -> classj T' C'
            -> type.
+```
 
-%{! `` import="ex3d" check="true"&gt;See Twelf's output`` for all the code in this section.  Expansion of abbreviations is really hurting us here in this output, since ``nat`` expands to a type with seven arrows!
+Expansion of abbreviations is really hurting us here in this output, since ``nat`` expands to a type with seven arrows!
 
 ## Example 4: Lists of length _n_
 
 All of the constraint domains that we have used so far have been finite.  For our last example, we will use an infinite constraint domain to implement one of the examples from the Twelf Manual that was used to illustrate the built-in constraint domain of rational numbers.  The example defines a dependent type of lists of items, where the index is the length of the list.  It then defines an append function, using the integer addition function to track the index of the result.  We can achieve that result here by using a Church encoding of the natural numbers: !}%
-    
-%{! (options removed from twelftag: import="start" export="ex4") !}%
 
 t : type.
 
@@ -541,7 +526,8 @@ t : type.
 
 %abbrev 0   = [s:t -> t] [z:t] z.
 %abbrev s   = [n:nat] [s:t -> t] [z:t] s (n s z).
-%abbrev +   = [n:nat] [m:nat] [s:t -> t] [z:t] n s (m s z).  %infix right 10 +.
+%abbrev +   = [n:nat] [m:nat] [s:t -> t] [z:t] n s (m s z).  
+%infix right 10 +.
 
 item : type.
 list : nat -> type.    % list N = item lists of length N
@@ -561,8 +547,6 @@ append_cons : append (cons T L1) L2 (cons T L3)
 - ``X + Y = Z`` implies ``(s X) + Y = (s Z)``, for all ``X``, ``Y``, and ``Z`` in ``nat``.
 
 These are statements&mdash;an equation and an implication between two equations&mdash;that are universally quantified over an infinite set, and are normally the kind of statement that is proved by induction on the natural numbers.  So, is Twelf secretly proving statements by induction during type-checking?  No, but that would be nice!  In fact, in the case of 1, if you apply the definition of ``+`` to ``0`` and a _free variable_ ``X`` of type ``nat`` and then (beta-eta) normalize the result, you will see that it is equal (i.e., beta-eta equivalent) to ``X``.  Similarly, if you apply the definitions of ``+`` and ``s`` to ``(s X) + Y``, on the one hand, and ``s(X + Y)`` on the other, for free variables ``X`` and ``Y`` of type ``nat``, you will see that they are again equal.  Thus, all Twelf needs in order to prove 1 and 2 above is beta-eta equivalence!
-
-`` import="ex4" check="true"&gt;See Twelf's output``
 
 ## Conclusion
 
