@@ -2,6 +2,10 @@
 title: It's an actual index
 ---
 
+Priorities right now:
+1. Just make regression failures not regression failures in an intelligent way. This can be "just turn the entire twelf into a ```` ```twelf ```` codeblock" (all the computation and deduction stuff) or "add a %. to the beginning" (this doesn't work well but I used it the one HLF page). Sometimes it's adding things to UNSAFE_WIKI_FIES in TEST/regression-wiki.mjs. Often it's just taking the one failing example and turning it into a comment that includes ```` ```checkedtwelf ````.
+2. Actually going through pages, turning mangled math into either ```` ```math ```` or `<Math formula="blah"/>` (or `<Math formula={`blah`}/>` which is, in rare cases, cleaner), removing un-translated twelf tags, comparing with the source website. See below for the full list. Pages that are actually edited this way get checked off below.
+
 Steps:
 
 - `<math>whatver</math>` needs to become `<Math formula="whatever"/>`
