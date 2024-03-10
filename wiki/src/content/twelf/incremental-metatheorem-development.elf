@@ -6,10 +6,10 @@ The newest versions of Twelf provide a direct way to create such holes. Users of
 
 ## Twelf CVS: %trustme
 
-The [``%trustme``](/wiki/percent-trustme/) declaration instructs Twelf to run the immediately following declaration but suppress any errors that occur. It is commonly used on [``%total``](/wiki/percent-total/) declarations to introduce lemmas that have not yet been proved, in order to develop a proof without first proving some necessary lemmas. 
+The [``%trustme``](/wiki/percent-trustme/) declaration instructs Twelf to run the immediately following declaration but suppress any errors that occur. It is commonly used on [``%total``](/wiki/percent-total/) declarations to introduce lemmas that have not yet been proved, in order to develop a proof without first proving some necessary lemmas.
 
 If Twelf is in [unsafe mode](/wiki/unsafe-mode/), it will accept ``%trustme`` before the ``%total`` directive of a metatheorem with an incomplete proof. Twelf will consider such metatheorems total for the purpose of the totality checks of subsequent metatheorems. The following is an example of ``%trustme`` in action. !}%
-    
+
 nat : type.
 
 nat/z : nat.
@@ -39,28 +39,30 @@ The %trustme declaration makes Twelf's deductions unsound, of course, so should 
 
 ## Twelf 1.5R1 and earlier
 
-In older versions of Twelf, the following technique can be used. In the following code, "foo" is obviously not a total relation&mdash;it has no cases at all defined. However, after Twelf tries to check the line ``%total I (foo I _).`` and fails, it will actually allow ``foo`` to be used to check ``bar``'s totality. !}%
-    
+In older versions of Twelf, the following technique can be used. In the following code, "foo" is obviously not a total relation&mdash;it has no cases at all defined. However, after Twelf tries to check the line ``%total I (foo I _).`` and fails, it will actually allow ``foo`` to be used to check ``bar``'s totality.
+
+```twelf
 thing : type.
 
-a : thing. 
+a : thing.
 b : thing.
 
 foo : thing -> thing -> type.
-%mode foo +I -O. 
-%worlds () (foo _ _). 
-%total I (foo I _).  
+%mode foo +I -O.
+%worlds () (foo _ _).
+%total I (foo I _).
 
 bar : thing -> thing -> type.
 
 - : bar I O
       <- foo I O.
 
-%mode bar +I -O. 
-%worlds () (bar _ _). 
+%mode bar +I -O.
+%worlds () (bar _ _).
 %total I (bar I _).
+```
 
-%{! To reiterate, in order to use this "feature" you get Twelf to reject the ``%total`` declaration for foo. Then, it will believe that foo is total in checking _subsequent_ theorems. It won't believe that foo is total if you try to rerun ``%total`` for foo itself&mdash;if you re-check the ``%total``, it reruns the totality check, and finds that foo still isn't total.
+To reiterate, in order to use this "feature" you get Twelf to reject the ``%total`` declaration for foo. Then, it will believe that foo is total in checking _subsequent_ theorems. It won't believe that foo is total if you try to rerun ``%total`` for foo itself&mdash;if you re-check the ``%total``, it reruns the totality check, and finds that foo still isn't total.
 
 \{\{tutorial\}\} !}%
 
