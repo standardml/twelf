@@ -10,6 +10,7 @@ const UNSAFE_WIKI_FILES = new Set([
   "minmltominhaskell",
   "percent-thaw",
   "polarized-pcf",
+  "iterated-inductive-definitions-and-defunctionalization",
 ]);
 
 const WIKI_TWELF_LOC = "../wiki/src/content/twelf/";

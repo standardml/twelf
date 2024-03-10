@@ -63,16 +63,11 @@ eval/@ : eval (@ F E1 E2) N
 %covers eval +E -N.
 %unique eval +E -N.
 
-
-%{!
-
-The code in this section relies on autoFreeze being turned off. There doesn't appear to be a way
-to turn autoFreeze off from within the twelf source language, only the twelf server protocol.
-
-```twelf
 %%%%%%%%%%%%
 % EXAMPLES %
 %%%%%%%%%%%%
+
+%thaw binop.
 
 plus : binop.
 plus/_ : apply plus M N P <- add M N P.
@@ -90,8 +85,8 @@ times/_ : apply times M N P <- mult M N P.
 %query 1 * eval (let (n (s s z)) [two]
 		 let (n (s s s z)) [three]
 		 @ plus two (@ times two three)) N.
-```
 
+%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
