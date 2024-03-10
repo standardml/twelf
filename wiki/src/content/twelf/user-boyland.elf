@@ -20,32 +20,38 @@ if the error message included the names of these free variables.  Update: of cou
 
 ### An ``exists*`` keyword
 
-In Twelf currently, a theorem has the form !}%
-    
+In Twelf currently, a theorem has the form
+
+```twelf
 my-theorem :
     forall* {K1} {K2} {V1:term K1} {V2: term K2}
     forall {D:rule V1 V2}
     exists {K3} {V3:term K3} {DP:rule2 V1 V2 V3}
     true.
+```
 
-%{! Sometimes the existentially bound variables are as extraneous as the ``forall*``
-bound variables.  One would like to write !}%
-    
+Sometimes the existentially bound variables are as extraneous as the ``forall*``
+bound variables.  One would like to write
+
+```twelf
 my-theorem :
     forall* {K1} {K2} {V1:term K1} {V2: term K2}
     forall {D:rule V1 V2}
-    exists* {K3} 
+    exists* {K3}
     exists {V3:term K3} {DP:rule2 V1 V2 V3}
     true.
+```
 
-%{! Currently my workaround is to avoid the theorem syntax and use an explicit mode declaration: !}%
-    
+Currently my workaround is to avoid the theorem syntax and use an explicit mode declaration:
+
+```twelf
 my-theorem : (rule V1 V2) -> ({V3} (rule2 V1 V2 V3)) -> type.
-%mode +{K1} +{K2} +{V1:term K1} +{V2: term K2} +{D:rule V1 V2} 
+%mode +{K1} +{K2} +{V1:term K1} +{V2: term K2} +{D:rule V1 V2}
             -{K3} -{V3:term K3} -{DP:rule2 V1 V2 V3}
             (my-theorem D DP).
+```
 
-%{! An ``exists*`` keyword should be a trivial addition.
+An ``exists*`` keyword should be a trivial addition.
 
 ### Multiple ``%reduces`` for a type family
 
@@ -82,8 +88,9 @@ After using Twelf for about a year and writing 100K lines of Twelf, the most fru
 In decreasing order of imporance.
 
 ### Type Reconstruction Nontermination
-Type reconstruction sometimes fails to terminate !}%
-    
+Type reconstruction sometimes fails to terminate
+
+```twelf
 xxtag : type.
 
 xxtag/a : xxtag.
@@ -119,13 +126,14 @@ xxtrans-open-exists :
 
 - : {K1} {K2} {O}
     xxtrans-open-exists
-	 (xxtrans/gen-exists K1 K2 ([v] (xxoutput/exists ([v'] FF v v'))) O) 
-        ([v'] (xxtrans/transitive 
+	 (xxtrans/gen-exists K1 K2 ([v] (xxoutput/exists ([v'] FF v v'))) O)
+        ([v'] (xxtrans/transitive
 		 (xxtrans/gen-exists _ _
 		    ([v] (FF v v')) O)
 		 (xxtrans/inside ([v] (xxtrans/gen-exists _ _ _ v'))))).
+```
 
-%{! The last term is incorrectly typed because ``FF`` depends on K1 and K2, but is not declared explicitly.
+The last term is incorrectly typed because ``FF`` depends on K1 and K2, but is not declared explicitly.
 But in my version of twelf (twelf 1.5R3, with trustme, allegedly from August 2005) doesn't
 appear to terminate when attempting to type it.
 
@@ -135,8 +143,9 @@ appear to terminate when attempting to type it.
 
 ### Coverage Checker Nontermination
 
-The coverage checker sometimes fails to terminate. !}%
-    
+The coverage checker sometimes fails to terminate.
+
+```twelf
 %%%% coverage checking doesn't always terminate
 
 %%%% Definitions
@@ -146,7 +155,7 @@ void : type.
 
 expr : type.
 
-unit : expr. 
+unit : expr.
 add : expr -> expr -> expr.
 
 
@@ -181,8 +190,9 @@ atomic-expr/add : atomic-expr (add unit unit).
 
 %worlds () (expr-in-atomic-expr-contradiction _ _ _).
 %total { } (expr-in-atomic-expr-contradiction _ _ _).
+```
 
-%{! ### Broken Invariant in Coverage Checker
+### Broken Invariant in Coverage Checker
 
 Apparently (I learned of this problem from Rob Simmons), the coverage checker
 sometimes reports a broken invariant when checking code that
@@ -190,7 +200,7 @@ uses the explicit-context idiom.  This problem is not well understood, but manif
 
 ### Coverage checker checking with functions of type A -&gt; A when A is not subordinate to itself.
 
-If the coverage check, when expanding cases comes upon a term that might depend on a formal 
+If the coverage check, when expanding cases comes upon a term that might depend on a formal
 parameter of the same type, it will require a case that handles such a function, even if the
 type in question in not subordinate to itself.  Such a case normally cannot be written because of freezing.
 (Example to come later).
@@ -213,10 +223,11 @@ then there is an "uncaught exception" rather than a helpful error message.
 ### Theorem Prover Nontermination
 
 The prover sometimes fails to terminate.
-See example in 
+See example in
 [http://cs.nju.edu.cn/boyland/proof/using-twelf.html my tutorial] (Section 2.3)
-I have copied it here for completeness: !}%
-    
+I have copied it here for completeness:
+
+```twelf
 %%% Example of Twelf from "using-twelf" paper
 
 term : type.
@@ -263,8 +274,9 @@ of/if : of X bool -> of Y T -> of Z T -> of (if X Y Z) T.
 progress : (of X T) -> (not_stuck X) -> type.
 %mode progress +D1 -D2.
 %prove 2 T (progress T _).
+```
 
-%{! The theorem prover is deprecated in Twelf, and fixing this bug is not required before producing
+The theorem prover is deprecated in Twelf, and fixing this bug is not required before producing
 a new release of Twelf.
 
 ## Challenges
