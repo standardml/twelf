@@ -7,7 +7,6 @@
 The following example shows a simple Twelf declaration at top, and the text below it [in green](/wiki/twelftag/) shows the response from Twelf. Notice that the last three lines are not considered by Twelf, because it stops reading input when it reaches the ``%.`` keyword. 
 
 ```checkedtwelf
-
 nat : type.
 
 %.
@@ -15,7 +14,6 @@ nat : type.
 This line will not be checked.
 Neither will anything else that gets put after the %.
 %total T (pretendlemma T _ _).
-
 ```
 
 ## See also
