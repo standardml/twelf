@@ -7,6 +7,9 @@ const UNSAFE_WIKI_FILES = new Set([
   "incremental-metatheorem-development",
   "percent-assert",
   "user-hdeyoung-monweakfoc-elf",
+  "minmltominhaskell",
+  "percent-thaw",
+  "polarized-pcf",
 ]);
 
 const WIKI_TWELF_LOC = "../wiki/src/content/twelf/";
