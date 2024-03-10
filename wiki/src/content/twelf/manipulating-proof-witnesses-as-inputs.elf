@@ -62,6 +62,8 @@ plus-succ/z : plus-succ plus/z plus/z.
 plus-succ/s : plus-succ (plus/s D1) (plus/s D2)
                <- plus-succ D1 D2.
 
+%{!! end hidden !!}%
+
 plus-comm : plus A B C -> plus B A C -> type.
 %mode plus-comm +A -B.
 
@@ -71,7 +73,6 @@ plus-comm/s : plus-comm (plus/s D1) D2
                <- plus-comm D1 D3
                <- plus-succ D3 D2.
 
-%{!! end hidden !!}%
 
 %{!
 Now, in our example, we have a new version of the first code example:
@@ -138,6 +139,8 @@ can-plus-succ/s : can-plus-succ (plus/s D) (plus/s D') (plus-succ/s DS)
 %worlds () (can-plus-succ _ _ _).
 %total T (can-plus-succ T _ _).
 
+%{!! end hidden !!}%
+
 can-plus-comm : {D: plus A B C}{D': plus B A C} plus-comm D D' -> type.
 %mode can-plus-comm +D -D' -DC.
 
@@ -150,8 +153,6 @@ can-plus-succ/s : can-plus-comm (plus/s D) D'' (plus-comm/s DS DC)
 
 %worlds () (can-plus-comm _ _ _).
 %total T (can-plus-comm T _ _).
-
-%{!! end hidden !!}%
 
 %{!
 
