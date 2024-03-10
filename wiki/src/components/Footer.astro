@@ -1,7 +1,4 @@
 ---
-import EditLink from 'virtual:starlight/components/EditLink';
-import LastUpdated from 'virtual:starlight/components/LastUpdated';
-import Pagination from 'virtual:starlight/components/Pagination';
 ---
 
 <footer>
@@ -9,10 +6,7 @@ import Pagination from 'virtual:starlight/components/Pagination';
         {Astro.props.entry.slug 
          && Astro.props.entry.slug.startsWith("wiki/")
          && `You can edit this Wiki Twelf page on GitHub at https://github.com/standardml/twelf/blob/wiki/wiki/src/content/twelf/${Astro.props.entry.slug.slice(5)}.elf`}
-		<EditLink {...Astro.props} />
-		<LastUpdated {...Astro.props} />
 	</div>
-	<Pagination {...Astro.props} />
 </footer>
 
 <style>
