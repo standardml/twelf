@@ -1,8 +1,8 @@
 %%! title: "Twelf style guide"
 
-%{! _This page is a style guide for Twelf code. For a style guide for contributions to the Twelf Project Wiki, see [[Project:Style guide]]_
+%{! _This page is a style guide for Twelf code. For a style guide for contributions to the Twelf Project Wiki, see [Project:Style guide](/wiki/the-twelf-project-style-guide/)._
 
-The style you use to write Twelf code should be consistent so that it is readable by others now and by you in the future. However, the general objectives of &lt;i&gt;consistency and readability of code&lt;/i&gt; is more important than anything that is or possibly could be said on this page. Therefore, this page should be seen as attempt to collect a set of good practices from experience that can be used as recommendations for new users. 
+The style you use to write Twelf code should be consistent so that it is readable by others now and by you in the future. However, the general objectives of _consistency and readability of code_ is more important than anything that is or possibly could be said on this page. Therefore, this page should be seen as attempt to collect a set of good practices from experience that can be used as recommendations for new users. 
 
 The first two sections are about whitespace & comments, which are extremely important aspects of readability. The final section is on conventions used for writing identifiers, which is less important as long as consistency is maintained within a project. The article on [naming conventions](/wiki/naming-conventions/) also considers ways of standardizing identifier names.
 
@@ -21,7 +21,7 @@ color/black : color.
 
 %{! ### Judgments
 
-The declarations for the constants corresponding to the inference rules for a particular judgment should be grouped together. There should be an empty line between the declaration of the judgment and its inference rules, as well as one empty line between the declaration of two inference rules. If a [%mode](/wiki/percent-mode/) declaration is used, it should be on the line immediately following the declaration of the judgment. !}%
+The declarations for the constants corresponding to the inference rules for a particular judgment should be grouped together. There should be an empty line between the declaration of the judgment and its inference rules, as well as one empty line between the declaration of two inference rules. If a [`%mode`](/wiki/percent-mode/) declaration is used, it should be on the line immediately following the declaration of the judgment. !}%
     
 color-neq : color -> color -> type.
 
@@ -62,7 +62,7 @@ can-color-neq : {C:color} color-neq C C' -> type.
 
 ## Comments
 
-Comments are at least as important a consideration when writing Twelf code intended to be readable by others, especially when the other readers are not themselves Twelf users.  The [http://www.cis.upenn.edu/~plclub/wiki-static/cmu-twelf/1a.elf CMU POPLMark solution] contains a good representation of how comments can be used to aid comprehension of a proof.
+Comments are at least as important a consideration when writing Twelf code intended to be readable by others, especially when the other readers are not themselves Twelf users.  The [CMU POPLMark solution](http://www.cis.upenn.edu/~plclub/wiki-static/cmu-twelf/1a.elf) contains a good representation of how comments can be used to aid comprehension of a proof.
 
 ### Guidelines
 
@@ -79,11 +79,11 @@ Comments are at least as important a consideration when writing Twelf code inten
 
 %{! * Comments are most useful as multi-line comments at the beginning of "groups" and "super-groups" as defined in the previous section. Listing the important metatheorems at the beginning of a long group of metatheorems is also helpful.
 
-* Multi-line comments should be as free of visual cruft (borders, horizontal lines) as possible. The ``%\{   \}%`` construct should be used for most multi-line comments.
+* Multi-line comments should be as free of visual cruft (borders, horizontal lines) as possible. The <tt>%<span/>\{   \}<span/>%</tt> construct should be used for most multi-line comments.
 
 ## Identifiers
 
-Due to the current absence of a module system for Twelf, careful identifier choice is crucial to managing the namespace of a large project. Because small projects can often grow into something quite large, we suggest thinking about a system of conventions such as the one described here from the outset. 
+Due to the absence of a module system for Twelf, careful identifier choice is crucial to managing the namespace of a large project. Because small projects can often grow into something quite large, we suggest thinking about a system of conventions such as the one described here from the outset. 
 
 The names of constants and [type families](/wiki/type-family/) should _always_ begin with a lower case letter. Type families should only contain lower-case letters, numbers, and dashes ("-") which are used to separate words in an identifier, as in ``this-is-my-neat-proof``. The other options using underscores (as in ``this_is_my_neat_proof``), an option that is often used but which is currently generally avoided. Using ``camelCase`` is generally to be avoided: it is easier to distinguish an [implicit parameter](/wiki/implicit-and-explicit-parameters/) from a constant if only implicit parameters use capital letters.
 
