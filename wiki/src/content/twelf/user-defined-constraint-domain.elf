@@ -1,4 +1,5 @@
 %%! title: "User-defined constraint domain"
+%%! tags: ["tutorial"]
 
 %{! This tutorial describes a technique for defining a limited form of **constraint domain** in Twelf, that is, a type with non-trivial equations among its terms.  Unlike Twelf's built-in (but [currently problematic](/wiki/constraint-domains-and-coverage-checking/)) constraint domains of rationals, integers, and strings, these constraint domains are already part of the LF type theory and thus interact nicely with each other and with the rest of the theory.  And, as we shall see, they can be used for many of the same purposes, not to mention a whole host of new ones, including a limited form of type refinement.
 

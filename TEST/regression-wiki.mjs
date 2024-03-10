@@ -4,6 +4,8 @@ const UNSAFE_WIKI_FILES = new Set([
   "constructivesemantics",
   "double-negation-translation",
   "hereditary-substitution-with-a-zipper",
+  "incremental-metatheorem-development",
+  "percent-assert",
   "user-hdeyoung-monweakfoc-elf",
 ]);
 
