@@ -1,4 +1,5 @@
 %%! title: "Output factoring"
+%%! tags: ["tutorial"]
 
 %{! When checking coverage of [metatheorem](/wiki/metatheorem/)s, a common problem arises because the [output coverage](/wiki/coverage-checking/) checker only considers each rule in isolation. The proof transformation technique for addressing this problem is known as **output factoring**.
 
@@ -70,8 +71,6 @@ lemma : even_or_odd X -> even_or_odd (s X) -> type.
 
 %{! Using this lemma, we complete the proof as follows: !}%
 
-%{! (options removed from twelftag: check="true") !}%
-
 always_even_or_odd : {N:nat} even_or_odd N -> type.
 %mode always_even_or_odd +D -P.
 
@@ -141,8 +140,6 @@ vos_step : val_or_step E
 
 %{! As discussed above, we first prove a factoring lemma that does all the work after the inductive call of the application case: !}%
 
-%{! (options removed from twelftag: check="true") !}%
-
 progress/app : of E1 (arrow T2 T)
                 -> val_or_step E1
                 -> val_or_step E2
@@ -176,8 +173,6 @@ pa_val_val : progress/app
 
 Using this lemma, the proof of progress is quite simple: !}%
 
-%{! (options removed from twelftag: check="true") !}%
-
 progress : of E T -> val_or_step E -> type.
 %mode progress +Dof -Dvos.
 
@@ -194,8 +189,6 @@ prog_app : progress (of_app (DofE1 : of E1 (arrow T2 T))
 
 %worlds () (progress _ _).
 %total D (progress D _).
-
-%{! \{\{tutorial\}\} !}%
 
 %{!
 -----
