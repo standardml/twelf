@@ -1,17 +1,17 @@
 %%! title: "%worlds"
 
-%{! A **world** (or **worlds**) is a set of [LF](/wiki/lf/) contexts.  
+%{! A **world** (or **worlds**) is a set of [LF](/wiki/lf/) contexts.
 
-The representation of an [object language](/wiki/object-logic/) in LF is specified not just by an LF [signature](/wiki/twelf-signature/), but also by the world in which that signature is considered.  This is because a representation that is [adequate](/wiki/adequacy/) in one set of contexts may not be adequate in another. Similarly, a [totality assertion](/wiki/totality-assertion/) about an LF type family may be true in one set of contexts but false in another. 
+The representation of an [object language](/wiki/object-logic/) in LF is specified not just by an LF [signature](/wiki/twelf-signature/), but also by the world in which that signature is considered.  This is because a representation that is [adequate](/wiki/adequacy/) in one set of contexts may not be adequate in another. Similarly, a [totality assertion](/wiki/totality-assertion/) about an LF type family may be true in one set of contexts but false in another.
 
 Twelf includes a **``%worlds``** declaration that serves two purposes.  First, it declares the world for which a [totality assertion](/wiki/totality-assertion/) about a type family is proved. Second, it verifies that the constants inhabiting a type family stay within contexts in the specified world.
 
-In Twelf, a world is specified by first defining a set of _blocks_ using a [%block](/wiki/percent-block/) declaration. A block is a pattern that describes a fragment of an LF context.  Then a world is specified by a regular expression ``(b1 | b2 | ... | bn)*`` for blocks ``b1`` through ``bn``.  This regular expression matches any LF context consisting of any number of these blocks in any order.  Hence, Twelf supports the specification of **regular worlds**.  
+In Twelf, a world is specified by first defining a set of _blocks_ using a [%block](/wiki/percent-block/) declaration. A block is a pattern that describes a fragment of an LF context.  Then a world is specified by a regular expression ``(b1 | b2 | ... | bn)*`` for blocks ``b1`` through ``bn``.  This regular expression matches any LF context consisting of any number of these blocks in any order.  Hence, Twelf supports the specification of **regular worlds**.
 
 ## Specifying the world of a totality assertion
 
 We can define natural numbers and a relation ``max`` that defines the larger of two natural numbers. !}%
-    
+
 nat : type.
 z : nat.
 s : nat -> nat.
@@ -27,80 +27,72 @@ mss : max (s N1) (s N2) (s N)
 
 ### Totality of ``max`` in the empty context
 
-The judgement ``max`` defined in this signature is a [total](/wiki/percent-total/) relation on natural numbers, or LF terms of type ``nat`` in the empty LF context.  We specify this totality assertion in Twelf with the following declarations: !}%
-    
-%{! (options removed from twelftag: check=true export="maxtotal") !}%
+The judgement ``max`` defined in this signature is a [total](/wiki/percent-total/) relation on natural numbers, or LF terms of type ``nat`` in the empty LF context.  We specify this totality assertion in Twelf with the following declarations:
+!}%
 
 %mode max +N1 +N2 -N3.
 %worlds () (max _ _ _).
 %total T (max T _ _).
 
-%{! The ``%worlds`` declaration does not mention any blocks; the world ``()*`` describes only the empty LF context.  
+%{!
+The ``%worlds`` declaration does not mention any blocks; the world ``()*`` describes only the empty LF context.
 
 ### Non-totality of ``max`` in an extended context
 
 What happens if we consider ``max`` in an LF context that includes variables of type ``nat``?  (Note that in this world ``nat`` no longer represents the natural numbers.)
 
-The following [``%block``](/wiki/percent-block/) declaration defines the block ``random_nat``, which allows such variables: !}%
-    
-%{! (options removed from twelftag: export="badnews") !}%
+The following [``%block``](/wiki/percent-block/) declaration defines the block ``random_nat``, which allows such variables:
 
+```checkedtwelf
 %block random_nat : block {x: nat}.
 
 %mode max +N1 +N2 -N3.
 %worlds (random_nat) (max _ _ _).
 
-%{! If we attempt to verify the totality assertion for ``max`` in these worlds, Twelf reports an error: ``max`` is not defined in the "natural numbers" arising from LF variables in the context. !}%
-    
-%{! (options removed from twelftag: import="badnews" check=decl) !}%
-
 %total T (max T _ _).
+```
 
-%{! ## World checking
+If we attempt to verify the totality assertion for ``max`` in these worlds, Twelf reports an error: ``max`` is not defined in the "natural numbers" arising from LF variables in the context.
 
-Up until this point, we have focused on the role of a ``%worlds`` declaration has in specifying a totality assertion.  However, just as ``%mode`` both specifies the mode of a totality assertion and mode-checks a type family, ``%worlds`` both specifies the world of a totality assertion and _world checks_ a type family.  
+## World checking
+
+Up until this point, we have focused on the role of a ``%worlds`` declaration has in specifying a totality assertion.  However, just as ``%mode`` both specifies the mode of a totality assertion and mode-checks a type family, ``%worlds`` both specifies the world of a totality assertion and _world checks_ a type family.
 
 What property does a world declaration specify?  Intuitively, a world declaration for a type family circumscribes the contexts in which we consider inhabitants of that type family.  For example, the world declaration for ``max`` says that we should only ever consider terms of type ``max`` in the empty LF context.
 Thus, it is a world error if some piece of Twelf code introduces a variable relevant to ``max``.  World checking ensures that we only consider a term in the contexts declared for its type.
 
-When Twelf processes a ``%worlds`` declaration, it world checks each constant in the type family. A constant _world checks_ under the following condition: whenever the ambient LF context is of the form specified by the world declaration, each premise of the constant occurs in an LF context that is within the world specified for the premise's type family. 
+When Twelf processes a ``%worlds`` declaration, it world checks each constant in the type family. A constant _world checks_ under the following condition: whenever the ambient LF context is of the form specified by the world declaration, each premise of the constant occurs in an LF context that is within the world specified for the premise's type family.
 
 ### Example world violation
 
 For example, consider the following signature for the lambda-calculus: !}%
-    
-%{! (options removed from twelftag: import="maxtotal" export="height") !}%
 
 exp : type.
 lam : (exp -> exp) -> exp.
 app : exp -> exp -> exp.
 
 %{! We define a height relation on open lambda-terms as a [hypothetical judgement](/wiki/hypothetical-judgment/); note that the height rule for variables is represented as an LF assumption: !}%
-    
-%{! (options removed from twelftag: import="height") !}%
 
 height : exp -> nat -> type.
 
 height/lam : height (lam ([x] E x)) (s N)
-              <- {x: exp} height x (s z) -> height (E x) N. 
+              <- {x: exp} height x (s z) -> height (E x) N.
 height/app : height (app E1 E2) (s N)
               <- height E1 N1
-              <- height E2 N2 
+              <- height E2 N2
               <- max N1 N2 N.
 
-%{! If we try to declare ``height`` to be defined in the closed world, as we did for ``max``, Twelf will fail with a ``World violation`` [error message](/wiki/error-messages/): !}%
-    
-%{! (options removed from twelftag: import="height" discard=true check=decl) !}%
+%{! If we try to declare ``height`` to be defined in the closed world, as we did for ``max``, Twelf will fail with a ``World violation`` [error message](/wiki/error-messages/):
 
+```checkedtwelf
 %worlds () (height _ _).
+```
 
-%{! This is because ``height/lam`` adds variables to the LF context, so saying that the context should always be empty is wrong!  Additionally, this world declaration is incorrect for another reason: the adequacy argument for ``exp`` says LF terms in contexts including variables of type ``tm`` adequately represent open object language terms; so if we wish ``height`` to represent a judgement on open terms, it must be declared in a world including such variables.  Declaring ``height`` as above, even if it succeeded, would not capture the idea we have in mind that ``height`` is a relation on open terms.  
+This is because ``height/lam`` adds variables to the LF context, so saying that the context should always be empty is wrong!  Additionally, this world declaration is incorrect for another reason: the adequacy argument for ``exp`` says LF terms in contexts including variables of type ``tm`` adequately represent open object language terms; so if we wish ``height`` to represent a judgement on open terms, it must be declared in a world including such variables.  Declaring ``height`` as above, even if it succeeded, would not capture the idea we have in mind that ``height`` is a relation on open terms.
 
 ### Example world success
 
 The correct world for this type family consists of blocks of the form defined in the following [``%block``](/wiki/percent-block/) declaration called ``var-height``.  These blocks specify that whenever a new variable with type ``exp`` is added to the context, it is added along with a derivation of ``height x (s z)``. The type family ``height`` adequately represents the notion of height that we have in mind in this world.  Moreover, it also world-checks in this world: !}%
-    
-%{! (options removed from twelftag: import="height" check=true) !}%
 
 %block var-height : block {x: exp}{_: height x (s z)}.
 
@@ -108,8 +100,6 @@ The correct world for this type family consists of blocks of the form defined in
 %worlds (var-height) (height _ _).
 
 %{! Indeed, the type family is total in this world as well: !}%
-    
-%{! (options removed from twelftag: import="height" check=decl) !}%
 
 %total T (height T _).
 
@@ -119,10 +109,10 @@ It should be interesting that ``max`` can be called by ``height``, even though `
 
 &lt;code&gt;%% OK %%
 Print.subord
-nat #&gt; nat 
-max #&gt; max nat 
-exp #&gt; exp 
-height #&gt; height exp max nat 
+nat #&gt; nat
+max #&gt; max nat
+exp #&gt; exp
+height #&gt; height exp max nat
 %% OK %%&lt;/code&gt;
 
 The line ``max #&gt; max nat`` means that the canonical forms (i.e. the possible derivations) of ``max`` will not change unless the definitions of ``max`` or ``nat`` are changed. Because the block ``var-height`` does not add any declarations that are subordinate to either of these types, it is permissible to call ``max`` from within an LF context that includes blocks of the form ``var-height``.
@@ -132,12 +122,11 @@ This is an instance of what is called [world subsumption](/wiki/world-subsumptio
 
 * [``%block``](/wiki/percent-block/)
 * [Totality assertion](/wiki/totality-assertion/)
-* \{\{guide|chapter=9|section=53|title=Regular Worlds\}\}
+* <Guide chapter="9" section="53">Regular Worlds</Guide>
 * The case study [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/) uses regular worlds heavily.
 
-\{\{keyword|key=worlds\}\} !}%
+<Keyword name="worlds"/>
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
