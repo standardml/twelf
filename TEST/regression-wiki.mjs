@@ -4,7 +4,13 @@ import { readdirSync, writeFileSync } from "fs";
  * meant to be filled out as exercises) should be added here.
  */
 const IGNORED_WIKI_FILES = new Set([
-  "popl-tutorial-typed-bracket-abstraction"
+  "popl-tutorial-typed-bracket-abstraction",
+  "popl-tutorial-basic-error-messages",
+  "popl-tutorial-big-step-small-step",
+  "popl-tutorial-exceptions-problem",
+  "popl-tutorial-minml-encoding",
+  "popl-tutorial-minml-preservation-theorem",
+  "popl-tutorial-sequent-vs-natural-deduction",
 ])
 
 /* It's always okay to add more pages here, we're just erring on the side
@@ -28,6 +34,8 @@ const cfgs = [];
 for (const file of readdirSync(WIKI_TWELF_LOC)) {
   if (file.endsWith(".elf")) {
     const base = file.slice(0, file.length - 4);
+	 if (IGNORED_WIKI_FILES.has(base))
+		continue;
     const cfg = base + ".cfg";
     writeFileSync(WIKI_TWELF_LOC + cfg, file);
     cfgs.push(
