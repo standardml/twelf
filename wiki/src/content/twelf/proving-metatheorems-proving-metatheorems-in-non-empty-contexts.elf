@@ -359,7 +359,7 @@ subst-size : {E' : tm}
 
 However, the totality check fails:
 
-```checktwelf
+```checkedtwelf
 %total D (subst-size _ D _ _).
 ```
 
