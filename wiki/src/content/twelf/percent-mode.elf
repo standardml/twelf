@@ -93,7 +93,7 @@ ps': plus (s N1) N2 (s N3)
 * <Guide chapter="7" section="41">Modes</Guide>
 * \{\{proving|title=Proving totality assertions about the natural numbers\}\}, particulary the section on [Mode](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/).
 
-<Keyword name="mode">
+<Keyword name="mode"/>
 
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
