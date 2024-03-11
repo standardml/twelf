@@ -1,8 +1,16 @@
-import { exec } from "child_process";
-import { existsSync, mkdir, mkdirSync, readdirSync, watch } from "fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  watch,
+  writeFileSync,
+} from "fs";
 import { argv } from "process";
+import { elfToMdx } from "./elf-to-mdx.mjs";
 
-const DIR_OF_ELF = "src/content/twelf";
+const DIR_OF_WIKI = "twelf/wiki/";
+const DIR_OF_ELF = "pages";
 const DIR_OF_MDX = "src/content/docs/wiki";
 if (!existsSync(DIR_OF_MDX)) {
   mkdirSync("src/content/docs/wiki");
@@ -15,11 +23,9 @@ function mdxOfFile(file) {
   const base = file.slice(0, file.length - 4);
   const mdxname = `${DIR_OF_MDX}/${file.slice(0, file.length - 4)}.mdx`;
   console.log(`elf->mdx transforming ${file}`);
-  exec(`node elf-to-mdx.mjs ${elfname} ${mdxname}`, (error) => {
-    if (error !== null) {
-      console.log(`elf->mdx unexpected result ${error}`);
-    }
-  });
+  const elfFile = readFileSync(elfname).toString("utf-8");
+  const mdxFile = elfToMdx(DIR_OF_WIKI + elfname, elfFile);
+  writeFileSync(mdxname, mdxFile);
 }
 
 console.log(`elf->mdx checking existing files...`);
