@@ -5,7 +5,6 @@ import { readdirSync, writeFileSync } from "fs";
  */
 const IGNORED_WIKI_FILES = new Set([
   "popl-tutorial-typed-bracket-abstraction",
-  "popl-tutorial-basic-error-messages",
   "popl-tutorial-big-step-small-step",
   "popl-tutorial-exceptions-problem",
   "popl-tutorial-minml-encoding",
