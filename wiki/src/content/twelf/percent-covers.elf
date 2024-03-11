@@ -7,7 +7,7 @@ The ``%covers`` declaration essentially checks that your type family does an ML-
 ## Example
 
 For this example, we define a type ``elem`` with three elements, ``a``, ``b``, ``c``, and a relation ``rel`` with three positions. We will then use ``%covers`` to check coverage on this relation given a number of different ways of assigning positions as either inputs or outputs. !}%
-    
+
 elem: type.
 
 a: elem.
@@ -23,29 +23,29 @@ rel3 : rel c c c <- rel c a c.
 
 %worlds () (rel _ _ _) (fail).
 
-%{! The first ``%covers`` declaration below checks that ``rel`` covers the first position - it does, as there is one case for each of the three possibilities. This is true even though ``rel b X Y`` will fail and the query ``rel c X Y`` will loop forever. The second declaration checks that ``rel`` covers the second position, which happens trivially because the first case, labeled ``rel1``, and the second case ``rel2``, have a [[metavariable]] in the second position that matches any possible input. !}%
-    
-%{! (options removed from twelftag: check=true discard=true) !}%
+%{! The first ``%covers`` declaration below checks that ``rel`` covers the first position - it does, as there is one case for each of the three possibilities. This is true even though ``rel b X Y`` will fail and the query ``rel c X Y`` will loop forever. The second declaration checks that ``rel`` covers the second position, which happens trivially because the first case, labeled ``rel1``, and the second case ``rel2``, have a [[metavariable]] in the second position that matches any possible input.
 
+```checkedtwelf
 %covers rel +X1 -X2 -X3.
 %covers rel -X1 +X2 -X3.
+```
 
-%{! If we try to check coverage on the third position, however, we get an error; the third position does not have a case that handles ``a``. !}%
-    
-%{! (options removed from twelftag: check=decl discard=true) !}%
+If we try to check coverage on the third position, however, we get an error; the third position does not have a case that handles ``a``.
 
+```checkedtwelf
 %covers rel -X1 -X2 +X3.
+```
 
-%{! Furthermore, even though we cover the first and second positions individually, if we consider them together we leave out two cases, which is what Twelf's response below explains: !}%
-    
-%{! (options removed from twelftag: check=decl discard=true) !}%
+Furthermore, even though we cover the first and second positions individually, if we consider them together we leave out two cases, which is what Twelf's response below explains:
 
+```checkedtwelf
 %covers rel +X1 +X2 -X3.
+```
 
-%{! ## Limitations
+## Limitations
 
 Coverage checking is a weak test; it only checks that at least one constant will immediately apply during proof search. For example, the following program coverage checks: !}%
-    
+
 bit : type.
 0 : bit.
 1 : bit.
@@ -74,19 +74,20 @@ cf : zero X 0
 %worlds () (nope _) (not _ _) (zero _ _).
 %covers zero +B -B'.
 
-%{! Although ``zero`` passes the coverage check, it always fails. ``cn`` matches all inputs, but then appeals to a subgoal (``nope``) that is empty and immediately fails. ``cz`` appeals recursively to ``zero``, but insists that its output be ``1``, so this also fails. ``cf`` appeals to the total relation ``not``, but in a way that constrains the output so that it also always fails (see [output freeness](/wiki/output-freeness/)). To get all of these tests, you must use the [%total](/wiki/percent-total/) declaration. Here, totality fails on the first case as expected: !}%
-    
-%{! (options removed from twelftag: check=decl discard=true) !}%
+%{! Although ``zero`` passes the coverage check, it always fails. ``cn`` matches all inputs, but then appeals to a subgoal (``nope``) that is empty and immediately fails. ``cz`` appeals recursively to ``zero``, but insists that its output be ``1``, so this also fails. ``cf`` appeals to the total relation ``not``, but in a way that constrains the output so that it also always fails (see [output freeness](/wiki/output-freeness/)). To get all of these tests, you must use the [%total](/wiki/percent-total/) declaration. Here, totality fails on the first case as expected:
 
+```checkedtwelf
 %total D (zero D _).
+```
 
-%{! ## See also
+## See also
 
-* \{\{guide|chapter=9|section=54|title=Input Coverage\}\}
+* <Guide chapter="9" section="54">Input Coverage</Guide>
 * [Input coverage](/wiki/coverage-checking/)
-* [Coverage checking](/wiki/coverage-checking/) !}%
+* [Coverage checking](/wiki/coverage-checking/)
 
-%{!
+<Keyword name="covers">
+
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
