@@ -1,5 +1,5 @@
 {
-  "name": "zapping-zenith",
+  "name": "twelf-wiki-website",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -15,9 +15,7 @@
     "astro": "^4.3.5",
     "katex": "^0.16.9",
     "sharp": "^0.32.5",
-    "typescript": "^5.3.3"
-  },
-  "devDependencies": {
+    "typescript": "^5.3.3",
     "@types/katex": "^0.16.7",
     "starlight-links-validator": "^0.6.0"
   }
