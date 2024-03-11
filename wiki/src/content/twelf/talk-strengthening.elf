@@ -1,32 +1,5 @@
 %%! title: "Talk:Strengthening"
-
-%{! This tutorial is great! I have a few suggestions:
-- It would be helpful to discuss, for intuition, why the variables cannot occur in the term you get out of the store.  What is the invariant on the store that makes this work?  Right now, I'm not seeing it.
-- It might be clearer to decompose the second strengthening lemma into first a respects lemma and then one !}%
-    
-tm-wf-strengthen :
-  ({v:tm}{d:tm-var v} tm-wf T S) ->
-%%
-  tm-wf T S ->
-  type.
-%mode tm-wf-strengthen +X1 -X3.
-
-%{! [Drl](/wiki/user-drl/) 15:16, 15 March 2007 (EDT)
-
-I just fixed 1. in the article; let me know if that satisfies. For 2., I tried to do it that way in the original proof, but I was unable to use the respects lemma where I needed it (a termination problem I couldn't figure out; something to do with subterm ordering under a binder). I will reconstruct it and see if somebody can help me fix the problem. [JakeD](/wiki/user-jaked/) 16:41, 15 March 2007 (EDT)
-
-: OK, it makes sense that that particular variable isn't in the thing from the store because the store itself doesn't mention it.  Is there some stronger invariant on things in the store, though?  Why can they have free variables at all?  Should they be values?  I guess I'm hunting around for a different strengthening theorem that says "if the store seems to depend on variable ``x``, in fact it doesn't".  This is orthogonal to the one you prove here, but it might be worth commenting that it holds (if it does), so people (like me) don't get confused. [Drl](/wiki/user-drl/) 17:10, 15 March 2007 (EDT)
-
-: And oh, maybe you forgot to put a [%reduces](/wiki/percent-reduces/) on the respects lemma?  That would cause termination trouble if you tried to use the respects lemma before the inductive call.  [Drl](/wiki/user-drl/) 17:11, 15 March 2007 (EDT)
-
-:: Yes, the store only ever contains values, but that's an invariant preserved by evaluation (not intrinsic to the definition of a store). We could define stores so that it is intrinsic (I think we'd need to make evaluation intrinsically return a value) and perhaps that would be clearer.
-:: I tried [%reduces](/wiki/percent-reduces/) and it didn't work; the problem was that the inductive call is under a binder. Maybe there is a way to declare [%reduces](/wiki/percent-reduces/) under a binder?[JakeD](/wiki/user-jaked/) 19:01, 15 March 2007 (EDT)
-
-::: Dunno.  Post the code here and I'll look... [Drl](/wiki/user-drl/) 19:35, 15 March 2007 (EDT) !}%
-
 %{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+This page has been removed, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Strengthening).
 !}%

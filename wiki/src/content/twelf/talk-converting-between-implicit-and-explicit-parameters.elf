@@ -1,25 +1,5 @@
 %%! title: "Talk:Converting between implicit and explicit parameters"
-
-%{! ## Annotation example
-
-I tried for an hour to come up with a simple example where this trick is required, but I couldn't. (I've used it in much more complicated stuff, though, so it definitely comes up.) Anybody else more clever at minimal examples? &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 11:47, 10 October 2006 (EDT)
-
-## Using abbreviations to convert from explicit to implicit
-
-I frequently use abbreviations to define a shortcut version of a relation omitting those extra parameters.
-Thus !}%
-    
-%abbrev translate-i : of M A -> of M' A -> type = translate-e M A M'.
-
-%{! Or even !}%
-    
-%abbrev translate-i = translate-e _ _ _.
-
-%{! The advantage of the abbreviation technique is that you don't need to transform things back and forth: you just use whichever form is more convenient.  The only place where abbreviations CANNOT be used is in call patterns. [Boyland](/wiki/user-boyland/) 22:36, 8 January 2010 (EST) !}%
-
 %{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
+This page has been removed, you can refer to the
 [wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Converting_between_implicit_and_explicit_parameters).
 !}%
