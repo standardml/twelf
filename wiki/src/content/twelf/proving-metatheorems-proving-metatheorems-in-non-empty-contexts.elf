@@ -258,10 +258,9 @@ subst-size : {E' : tm}
 
 %{! ## Proof attempt
 
-For pedagogical purposes, we first present an incorrect proof attempt; the change required to fix this attempt is small.  The proof uses some straightforward lemmas about arithmetic: !}%
-    
-%{! (options removed from twelftag: discard=true) !}%
+For pedagogical purposes, we first present an incorrect proof attempt; the change required to fix this attempt is small.  The proof uses some straightforward lemmas about arithmetic: 
 
+```twelf
 plus-s-rh : plus N1 N2 N3 -> plus N1 (s N2) (s N3) -> type.
 %mode plus-s-rh +D1 -D2.
 %worlds () (plus-s-rh _ _).
@@ -278,8 +277,9 @@ lemma : plus N1 N2 Nsum
 	 -> type.
 %mode lemma +X1 +X2 +X3 +X4 -X5.
 %worlds () (lemma _ _ _ _ _).
+```
 
-%{! The first two would be part of an arithmetic library; the third is a simple lemma that is proved directly using commutativity and associativity of addition.
+The first two would be part of an arithmetic library; the third is a simple lemma that is proved directly using commutativity and associativity of addition.
 
 Additionally, the proof of the theorem uses the following easy lemma: !}%
     
@@ -357,13 +357,13 @@ subst-size : {E' : tm}
 * The proof inducts over and case-analyzes the LF term of type ``\{x:tm\} size x (s z) -&gt; size (E x) N``.  By inversion, such a term has the form ``[x] [dx] M`` where ``M : size (E x) N``.  Thus, the proof includes one case for each possible ``M``.  This includes each constructor of type ``size``, along with the distinguished variable ``x``.  
 * Make sure you understand why each constant world checks: The ``subst-size`` premise of the case for ``size-lam`` is in an extended context, but that this context stays in the appropriate world.  Additionally, by world subsumption, ``(size-block)*`` subsumes the world containing only the empty context for the arithmetic lemmas.  
 
-However, the totality check fails: !}%
-    
-%{! (options removed from twelftag: check="decl" discard=true) !}%
+However, the totality check fails:
 
+```checktwelf
 %total D (subst-size _ D _ _).
+```
 
-%{! This error message tells us that this proof does not cover the case for variables in the context itself.  That is, we forgot to cover the case when the size derivation is a variable (representing the use of a hypothesis) but is not the distinguished variable ``x``.
+This error message tells us that this proof does not cover the case for variables in the context itself.  That is, we forgot to cover the case when the size derivation is a variable (representing the use of a hypothesis) but is not the distinguished variable ``x``.
 
 ## Corrected proof
 

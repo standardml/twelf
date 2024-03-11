@@ -4,10 +4,8 @@
 
 **_Please fill [https://spreadsheets.google.com/viewform?key=p0-89EvFXQhUXF827jjk_Dg feedback form]**_
 
-
+```twelf
 ## Syntax
-
-!}%
 
 %% Types:
 
@@ -229,8 +227,8 @@ pres : of E T
 
 %worlds () (pres _ _ _).
 %total D (pres _ D _).
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

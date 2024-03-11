@@ -2,9 +2,8 @@
 
 %{! 
 
-## Arithmetic primitives
-
-!}%
+```twelf
+% Arithmetic primitives
 
 nat : type.  
 z : nat.
@@ -19,11 +18,7 @@ add/s : add (s M) N (s P) <- add M N P.
 %worlds () (add _ _ _).
 %total M (add M _ _).
 
-%{! 
-
-## Multiplication
-
-!}%
+% Multiplication
 
 mult : nat -> nat -> nat -> type.
 
@@ -64,14 +59,11 @@ mult'/s : mult' (s M) N Q
 %worlds () (mult' _ _ _).
 %total M (mult'' M _ _).
 
-%{! 
 
-## Expressions with times, pairs
+% Expressions with times, pairs
 
-- Add syntax for times; eval is still total
-- Add syntax for pairs; eval is no longer total
-
-!}%
+% - Add syntax for times; eval is still total
+% - Add syntax for pairs; eval is no longer total
 
 val : type.
 num  : nat -> val.
@@ -116,19 +108,15 @@ eval/snd : eval (snd E) V2
 %worlds () (eval _ _).
 %% %total E (eval E _).
 
-%{! 
+% Typing judgement
+% 
+% - Write the rules, don't add typing assumption in of/let, get a world error
+% - Define block, get a world subsumption error for of-val
+% - Put of-val in the right world; now of world-checks
+% - Try example; get stuck
+% - Add typing assumption, change of/let, finish example
 
-## Typing judgement
-
-- Write the rules, don't add typing assumption in of/let, get a world error
-- Define block, get a world subsumption error for of-val
-- Put of-val in the right world; now of world-checks
-- Try example; get stuck
-- Add typing assumption, change of/let, finish example
-
-Finished product:
-
-!}%
+% Finished product:
 
 tp : type.
 natural : tp.
@@ -173,8 +161,8 @@ of/let : of (let E1 ([x] E2 x)) T
 % 	   = of/let ([x] (of/ret (XXX x))) (of/ret of/num).
 example : of (let (ret (num z)) ([y] (ret y))) natural 
 	   = of/let ([x] [dx : of/val x natural] (of/ret dx)) (of/ret of/num).
+```
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

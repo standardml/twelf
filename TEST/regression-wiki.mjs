@@ -1,5 +1,15 @@
 import { readdirSync, writeFileSync } from "fs";
 
+/* Only files that are broken *on purpose* (because they're templates
+ * meant to be filled out as exercises) should be added here.
+ */
+const IGNORED_WIKI_FILES = new Set([
+  "popl-tutorial-typed-bracket-abstraction"
+])
+
+/* It's always okay to add more pages here, we're just erring on the side
+ * of running in safe mode.
+ */
 const UNSAFE_WIKI_FILES = new Set([
   "constructivesemantics",
   "double-negation-translation",
