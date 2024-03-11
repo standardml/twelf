@@ -1,6 +1,6 @@
 %%! title: "%query"
 
-%{! The **``%query``** declarations specify a type (that corresponds to a judgment by the [judgments as types](/wiki/judgment/) principle), and tells Twelf's [logic programming](/wiki/logic-programming/) engine to search for a proof of that judgment. 
+%{! The **``%query``** declarations specify a type (that corresponds to a judgment by the [judgments as types](/wiki/judgment/) principle), and tells Twelf's [logic programming](/wiki/logic-programming/) engine to search for a proof of that judgment.
 
 A query declaration also takes two other inputs, which can either be a number or a star "``*``". The meaning of this can be slightly counterintuitive:
 
@@ -16,7 +16,7 @@ This meaning that some possible queries will always fail:
 ## Example
 
 We will use the example of list membership to demonstrate ``%query`` because there may be multiple ways to find an element in a list (if that element occurs multiple times). !}%
-    
+
 elem : type.
 a : elem.
 b : elem.
@@ -34,37 +34,40 @@ member/hit  : member A (A , L).
 member/skip : member A (B , L)
                <- member A L.
 
-%{!  !}%
-    
-%{! (options removed from twelftag: discard=true check=true) !}%
+%{!
 
+```checkedtwelf
 %query 1 * member d sample-list.   % There is exactly one "d" in the list
 %query 3 3 member a sample-list.   % There are at least three "a's" in the list
 %query * 2 member b sample-list.   % There are at least two "b's" in the list
 %query * 0 member c sample-list.   % Try zero times (the query isn't even run)
 %query 8 0 member c sample-list.   % Try zero times (the query isn't even run)
-%query 3 * member a sample-list.   % Fails because there are more than 3 solutions
+```
 
-%{! ### Getting output from ``%query``
+```checkedtwelf
+%query 3 * member a sample-list.   % Fails because there are more than 3 solutions
+```
+
+### Getting output from ``%query``
 
 Unlike [``%solve``](/wiki/percent-solve/), ``%query`` declarations do not allow you to insert the output of a query into the [signature](/wiki/twelf-signature/). However, you can inspect the output in the Twelf buffer. For example, if we leave the first argument of ``%query`` as a [[metavariable]], the following query will output the first two elements it finds in the list (the first two elements in the list). !}%
-    
+
 %{! (options removed from twelftag: check=decl) !}%
 
 %query * 2 member E sample-list.
 
 %{! Furthermore, if you change the format of a query from ``%query 1 * ...`` to ``%query 1 * D : ...``, where ``D`` is some uppercase identifier, it will print the [[proof term]] that caused the query to succeed. The proof terms below indicate that the first two instances of ``b`` is located in the fourth position in the list (the search skips three times and then hits) and in the ninth position in the list (the search skips eight times and then hits). !}%
-    
+
 %{! (options removed from twelftag: check=decl) !}%
 
 %query * 2 D : member b sample-list.
 
 %{! ## See also
 
-* \{\{guide|chapter=5|section=23|title=Query Declaration\}\}
-\{\{keyword|key=query\}\} !}%
+* <Guide chapter="5" section="23">Query Declaration</Guide>
 
-%{!
+<Keyword name="query"/>
+
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

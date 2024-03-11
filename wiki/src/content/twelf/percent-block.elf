@@ -45,7 +45,7 @@ exp : typ -> type.
 * [``%worlds``](/wiki/percent-worlds/)
 * \{\{proving|title=Proving totality assertions in non-empty contexts\}\}
 * [Totality assertion](/wiki/totality-assertion/)
-* <Guide chapter="9" section="53"Regular Worlds</Guide>
+* <Guide chapter="9" section="53">Regular Worlds</Guide>
 
 <Keyword name="block"/>
 
