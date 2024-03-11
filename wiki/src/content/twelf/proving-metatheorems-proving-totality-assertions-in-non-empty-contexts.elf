@@ -64,13 +64,13 @@ size-app   : size (app E1 E2) (s N)
 
 ## World Declarations
 
-We would like to assert that every term has a size.  However, because the definition of the size judgement extends the LF context, our usual worlds declaration fails: !}%
-    
-%{! (options removed from twelftag: import="preworld" discard=true check="decl") !}%
+We would like to assert that every term has a size.  However, because the definition of the size judgement extends the LF context, our usual worlds declaration fails:
 
+```checkedtwelf
 %worlds () (size _ _).
+```
 
-%{! The worlds declaration fails because ``size`` does not stay in the empty context.
+The worlds declaration fails because ``size`` does not stay in the empty context.
 
 To give an appropriate worlds declaration for this type family, we must first specify the form of the contexts in which we consider it.  We do so with a block declaration: !}%
     
@@ -141,10 +141,9 @@ In this case, Twelf succeeds in proving the totality of ``size``. !}%
 
 %{! ## Example world errors
 
-In this section, we show some example world errors.  For comparison, we collect the complete correct definition of ``size`` here: !}%
-    
-%{! (options removed from twelftag: check="true" import="syntax" discard=true) !}%
+In this section, we show some example world errors.  For comparison, we collect the complete correct definition of ``size`` here:
 
+```checkedtwelf
 size       : tm -> nat -> type.
 %mode size +E -N.
 
@@ -161,35 +160,35 @@ size-app   : size (app E1 E2) (s N)
 %block size-block : block {x : tm} {_ : size x (s z)}.
 %worlds (size-block) (size _ _).
 %total E (size E _).
+```
 
-%{! ### Premise in an incorrect context
+### Premise in an incorrect context
 
-One possible world error is to write a premise whose local context extensions do not stay in the appropriate world.   For example, if we forgot the ``size`` assumption in the ``lam`` case, Twelf would report an error: !}%
-    
-%{! (options removed from twelftag: import="preworld" discard=true check="decl") !}%
+One possible world error is to write a premise whose local context extensions do not stay in the appropriate world.   For example, if we forgot the ``size`` assumption in the ``lam`` case, Twelf would report an error: 
 
+```checkedtwelf
 size-lam   : size (lam _ E) (s N)
 		<- ({x : tm} 		   
                       size (E x) N).
 %block size-block : block {x : tm} {_ : size x (s z)}.
 %worlds (size-block) (size _ _).
+```
 
-%{! ### World subsumption failure
+### World subsumption failure
 
-Another possible world error is that world subsumption could fail.  For example, if ``size`` were stated for a  world containing natural number assumptions (which of course ruins the adequacy of ``nat`` for the natural numbers), it would not be permissible to call ``plus``: !}%
-    
-%{! (options removed from twelftag: import="preworld" discard=true check="decl") !}%
+Another possible world error is that world subsumption could fail.  For example, if ``size`` were stated for a  world containing natural number assumptions (which of course ruins the adequacy of ``nat`` for the natural numbers), it would not be permissible to call ``plus``:
 
+```checkedtwelf
 %block size-block : block {x : tm} {_ : size x (s z)}.
 %block natblock : block {x:nat}.
 %worlds (natblock | size-block) (size _ _).
+```
 
-%{! ### Totality failure because of a forgotten assumption
+### Totality failure because of a forgotten assumption
 
-Finally, a type family can be world correct but fail to define a total relation if we consider the theorem in an improper world.  For example, say we had defined ``size`` as follows: !}%
-    
-%{! (options removed from twelftag: check="decl" import="syntax" discard=true) !}%
+Finally, a type family can be world correct but fail to define a total relation if we consider the theorem in an improper world.  For example, say we had defined ``size`` as follows:
 
+```checkedtwelf
 size       : tm -> nat -> type.
 %mode size +E -N.
 
@@ -204,17 +203,11 @@ size-app   : size (app E1 E2) (s N)
 %block size-block : block {x : tm}.
 %worlds (size-block) (size _ _).
 %total E (size E _).
+```
 
-%{! This definition world checks because the context in ``size-lam`` is of the form specified by the world declaration.  However, the type family ``size`` does not define a total relation because it does not cover 
+This definition world checks because the context in ``size-lam`` is of the form specified by the world declaration.  However, the type family ``size`` does not define a total relation because it does not cover 
 variables ``x:tm`` in the LF context.  A total relation must cover both the LF constants in the signature and the LF variables in all contexts in the world.
 
-\{\{proving metatheorems
-  | next = Proving metatheorems in non-empty contexts
-  | nextname = Proving metatheorems in non-empty contexts
-  | prev = Proving metatheorems about the STLC
-  | prevname = Proving metatheorems\}\} !}%
-
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

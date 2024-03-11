@@ -33,7 +33,18 @@ Hypothesis is derivable by the rule &lt;math&gt;\mbox\{of-var\}&lt;/math&gt;.  W
 ### LF representation
 
 In the previous section, we used LF binding to represent object-language variables.  In this section, we use LF binding to represent object-language hypothetical judgements.  The following LF signature represents the above judgement &lt;math&gt;\gamma \vdash e : \tau&lt;/math&gt; with the LF type family ``of``. !}%
-    
+
+%{!! begin hidden !!}%
+tp    : type.
+unit  : tp.
+arrow : tp -> tp -> tp.
+
+tm    : type.
+empty : tm.
+app   : tm -> tm -> tm.
+lam   : tp -> (tm -> tm) -> tm.
+%{!! end hidden !!}%
+
 of       : tm -> tp -> type.
 of-empty : of empty unit.
 of-lam   : of (lam T2 ([x] E x)) (arrow T2 T)
@@ -64,12 +75,13 @@ Some examples may help clarify the intended representation:
 
 \{\{needs|examples\}\}
 
-**Eta-expansion.** As we mentioned [before](/wiki/proving-metatheorems-full-lf/), Twelf permits programmers to write non-eta-expanded terms, which it treats as syntactic sugar for their eta-expansions.  For example, we could equivalently have written: !}%
-    
+**Eta-expansion.** As we mentioned [before](/wiki/proving-metatheorems-full-lf/), Twelf permits programmers to write non-eta-expanded terms, which it treats as syntactic sugar for their eta-expansions.  For example, we could equivalently have written:
+
+```twelf    
 of-lam  : of (lam T2 E) (arrow T2 T)
             <- ...
 
-%{! This version differs from ``of-lam`` above in that the term ``E`` is not eta-expanded.  Some consider it good Twelf style to write terms in a fully eta-expanded ([eta-long](/wiki/eta-equivalence/)) form, because (1) the eta-expanded terms are the canonical forms of LF, and (2) the eta-expansion makes the binding structure apparent in the syntax, without knowing the types of the involved constants.  On the other hand, readers who know the types of the constants may find the eta-short version easier to read.
+This version differs from ``of-lam`` above in that the term ``E`` is not eta-expanded.  Some consider it good Twelf style to write terms in a fully eta-expanded ([eta-long](/wiki/eta-equivalence/)) form, because (1) the eta-expanded terms are the canonical forms of LF, and (2) the eta-expansion makes the binding structure apparent in the syntax, without knowing the types of the involved constants.  On the other hand, readers who know the types of the constants may find the eta-short version easier to read.
 
 ### Theorems for free
 

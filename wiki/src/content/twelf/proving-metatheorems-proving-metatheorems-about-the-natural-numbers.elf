@@ -6,9 +6,25 @@
   | next = Summary: the natural numbers
   | nextname = Summary\}\}
 
-In the previous section, we saw how to ask Twelf to verify totality assertions, which are a particular form of statement one can make about a deductive system.  However, not all that many metatheorems are totality assertions about the judgements of an object language.  Moreover, even if a judgement does in fact satisfy a total assertion, the judgement often will not be written in the particular form that allows Twelf to automatically check mode, worlds, termination, and coverage.  So why are totality assertions so important?
+In the previous section, we saw how to ask Twelf to verify totality assertions, which are a particular form of statement one can make about a deductive system.  However, not all that many metatheorems are totality assertions about the judgements of an object language.  Moreover, even if a judgement does in fact satisfy a total assertion, the judgement often will not be written in the particular form that allows Twelf to automatically check mode, worlds, termination, and coverage.  So why are totality assertions so important? !}%
 
-## How to prove metatheorems
+%{!! begin hidden !!}%
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+even   : nat -> type.
+even-z : even z.
+even-s : even (s (s N))
+	  <- even N.
+
+plus   : nat -> nat -> nat -> type.
+plus-z : plus z N2 N2.
+plus-s : plus (s N1) N2 (s N3)
+	  <- plus N1 N2 N3.
+%{!! end hidden !!}%
+
+%{! ## How to prove metatheorems
 
 The reason is that we can use Twelf's ability to _prove_ totality assertions to _check_ proofs of more general metatheorems.  Let's illustrate this with an example.  Say we want to prove that the sum of two even numbers is even.  More precisely, let's prove the following statement:
 
@@ -32,12 +48,11 @@ This will all be clearer once we do an example.
 ### Representing the theorem statement
 
 We represent the above theorem statement in Twelf as a type family relating the appropriate derivations: !}%
-    
+
 %{! (options removed from twelftag: discard=true) !}%
 
 sum-evens : even N1 -> even N2 -> plus N1 N2 N3 -> even N3 -> type.
 %mode sum-evens +D1 +D2 +Dplus -D3.
-%worlds () (sum-evens _ _ _ _).
 
 %{! The kind of ``sum-evens`` is _dependent_, unlike all the kinds we have seen so far.  The dependency ensures that the ``sum-evens`` relation relates derivations of the appropriate facts.  
 
@@ -104,6 +119,7 @@ Now that we have represented the proof, all that's left is to ask Twelf to verif
     
 %{! (options removed from twelftag: discard=true) !}%
 
+%worlds () (sum-evens _ _ _ _).
 %total D (sum-evens D _ _ _).
 
 %{! We call attention to a few of Twelf's checks:
