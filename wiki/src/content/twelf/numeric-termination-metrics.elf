@@ -1,13 +1,14 @@
 %%! title: "Numeric termination metrics"
+%%! tags: ["tutorial"]
 
-%{! Sometimes, a proof proceeds not by a direct induction on some assumption, but by induction on some size function computed from an assumption.  To mechanize such a proof in Twelf, you must make the size function explicit in the statement of the theorem.  
+%{! Sometimes, a proof proceeds not by a direct induction on some assumption, but by induction on some size function computed from an assumption.  To mechanize such a proof in Twelf, you must make the size function explicit in the statement of the theorem.
 
 This tutorial presents an example of such a proof. We show a fragment of a proof of confluence for a λ-calculus with typed η-expansion.  The proof inducts on the size of a reduction derivation.  Moreover, the proof uses [%reduces](/wiki/percent-reduces/) to tell the termination checker that addends are subterms of their sum. In general, a [%reduces](/wiki/percent-reduces/) declaration is necessary whenever the computation of a numeric termination metric uses an auxiliary relation like addition or maximum.  See the tutorial on [structural termination metrics](/wiki/structural-metrics/) for another approach to termination metrics.
 
 ## Language Definition
 
 The syntax, typing judgement, and reduction relation for the language are straightforward: !}%
-    
+
 %% Syntax
 
 tp  : type.  %name tp T.
@@ -44,14 +45,14 @@ reduce_eta	: reduce E (lam T1 ([x] app E' x))
 		   <- of E (arrow T1 T2)
 		   <- reduce E E'.
 
-%{! The judgement ``reduce`` defines a parallel, reflexive reduction relation with typed η-expansion.  
+%{! The judgement ``reduce`` defines a parallel, reflexive reduction relation with typed η-expansion.
 
 ## Facts about numbers
 
 In the proof below, we induct on the size of a reduction derivation.  To get this induction to go through, we require some facts about addition on natural numbers.
 
 First, we define addition: !}%
-    
+
 nat : type.  %name nat N.
 
 0 : nat.
@@ -65,10 +66,10 @@ sum_0		: sum 0 N N.
 sum_s		: sum (s N1) N2 (s N3)
 		   <- sum N1 N2 N3.
 
-%{! For the proof below, we need a way to tell Twelf's termination checker that summands are subterms of their sum.  We do that by proving a lemma with a [%reduces](/wiki/percent-reduces/) declaration.  
+%{! For the proof below, we need a way to tell Twelf's termination checker that summands are subterms of their sum.  We do that by proving a lemma with a [%reduces](/wiki/percent-reduces/) declaration.
 
 We prove the lemma for the second summand first.  Note that all arguments of this lemma are inputs; the only "output" is the fact that the ``%reduces`` holds: !}%
-    
+
 sum_reduces2 : {N1:nat} {N2:nat} {N3:nat} sum N1 N2 N3 -> type.
 %mode sum_reduces2 +X1 +X2 +X3 +X4.
 
@@ -80,9 +81,17 @@ sum_reduces2 : {N1:nat} {N2:nat} {N3:nat} sum N1 N2 N3 -> type.
 %total D (sum_reduces2 _ _ _ D).
 %reduces N2 <= N3 (sum_reduces2 N1 N2 N3 _).
 
-%{! The easiest way to prove the lemma for the first summand is to commute the addition and appeal to the previous lemma.  We elide the proof of commutativity: !}%
-    
-%{! (options removed from twelftag: hidden="true") !}%
+%{! The easiest way to prove the lemma for the first summand is to commute the addition and appeal to the previous lemma.  We state commutativity as
+
+```twelf
+sum_commute : sum N1 N2 N3 -> sum N2 N1 N3 -> type.
+%mode sum_commute +D1 -D2.
+%worlds () (sum_commute _ _).
+```
+
+but elide its proof. !}%
+
+%{!! begin hidden !!}%
 
 sum_ident : {n:nat} sum n 0 n -> type.
 %mode sum_ident +N -E.
@@ -116,16 +125,8 @@ sum_commute : sum N1 N2 N3 -> sum N2 N1 N3 -> type.
 %worlds () (sum_commute _ _).
 %total D (sum_commute D _).
 
-%{!  !}%
-    
-%{! (options removed from twelftag: name="_") !}%
+%{!! end hidden !!}%
 
-sum_commute : sum N1 N2 N3 -> sum N2 N1 N3 -> type.
-%mode sum_commute +D1 -D2.
-%worlds () (sum_commute _ _).
-
-%{!  !}%
-    
 sum_reduces1 : {N1:nat} {N2:nat} {N3:nat} sum N1 N2 N3 -> type.
 %mode sum_reduces1 +X1 +X2 +X3 +X4.
 
@@ -141,10 +142,8 @@ sum_reduces1 : {N1:nat} {N2:nat} {N3:nat} sum N1 N2 N3 -> type.
 
 We now show part of the proof of the diamond property for this notion of reduction.  The proof requires a metric computing the size of a reduction derivation.
 
-\{\{needs|to recreate why you need a metric\}\}
-
 ### Definition of the metric !}%
-    
+
 reduce_metric : reduce E E' -> nat -> type.
 
 reduce_metric_id	: reduce_metric reduce_id 1.
@@ -162,13 +161,11 @@ reduce_metric_eta	: reduce_metric (reduce_eta D _) (s N)
 			   <- reduce_metric D N.
 
 %{! ### Excerpt of the proof !}%
-    
-%{! (options removed from twelftag: check="true") !}%
 
 diamond : {N1:nat} {N2:nat}
 	   {D1:reduce E E1}
-	   {D2:reduce E E2} 
-	   reduce_metric D1 N1 
+	   {D2:reduce E E2}
+	   reduce_metric D1 N1
 	   -> reduce_metric D2 N2
 %%
 	   -> reduce E1 E'
@@ -179,21 +176,21 @@ diamond : {N1:nat} {N2:nat}
 -: diamond _ _ D reduce_id _ _ reduce_id D.
 
 -: diamond (s N1) (s N2)
-    (reduce_lam D1) (reduce_lam D2) 
+    (reduce_lam D1) (reduce_lam D2)
     (reduce_metric_lam DM1) (reduce_metric_lam DM2)
     (reduce_lam D1') (reduce_lam D2')
     <- ({x:exp} {d:of x T}
 	  diamond N1 N2 (D1 x d) (D2 x d) (DM1 x d) (DM2 x d) (D1' x d) (D2' x d)).
 
--: diamond 
+-: diamond
     (s N1)
     (s N2)
     (reduce_app
        (D21 : reduce E2 E21)
        (D11 : reduce E1 E11))
-    (reduce_app 
+    (reduce_app
        (D22 : reduce E2 E22)
-       (D12 : reduce E1 E12)) 
+       (D12 : reduce E1 E12))
     (reduce_metric_app
        (Dsum1 : sum N11 N21 N1)
        (DM21 : reduce_metric D21 N21)
@@ -216,28 +213,23 @@ diamond : {N1:nat} {N2:nat}
 %worlds (bind) (diamond _ _ _ _ _ _ _ _).
 %terminates [N1 N2] (diamond N1 N2 _ _ _ _ _ _).
 
-%{! The ``reduce_app`` against ``reduce_app`` case illustrates why we need to know that summands are subterms of their sum: the inductive calls are on the summands that add up to the size of the overall derivation.  If we elided the calls to ``sum_reduces*``, the case would not termination-check, because Twelf would not be able to tell that, for example, ``N11 &lt; (s N1)``.  
+%{! The ``reduce_app`` against ``reduce_app`` case illustrates why we need to know that summands are subterms of their sum: the inductive calls are on the summands that add up to the size of the overall derivation.  If we elided the calls to ``sum_reduces*``, the case would not termination-check, because Twelf would not be able to tell that, for example, ``N11 &lt; (s N1)``.
 
-In other cases, which we have elided, the termination metric gets smaller but the reduction derivations themselves do not.  
-
-\{\{needs|to show one such case.\}\}
+In other cases, which we have elided, the termination metric gets smaller but the reduction derivations themselves do not.
 
 ### Cleanup
 
 We would like an overall theorem: !}%
-    
+
 diamond/clean : reduce E E1
     	       -> reduce E E2
   	       -> reduce E1 E'
 	       -> reduce E2 E' -> type.
 %mode diamond/clean +X1 +X2 -X3 -X4.
-%worlds (bind) (diamond/clean _ _ _ _ _ _ _ _).
+%worlds (bind) (diamond/clean _ _ _ _).
 
-%{! It is simple to prove this theorem using the above if we prove an [effectiveness lemma](/wiki/effectiveness-lemma/) for ``reduce_metric``.  
+%{! It is simple to prove this theorem using the above if we prove an [effectiveness lemma](/wiki/effectiveness-lemma/) for ``reduce_metric``.
 
-\{\{tutorial\}\} !}%
-
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the

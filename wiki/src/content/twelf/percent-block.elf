@@ -9,22 +9,22 @@ A ``%block`` declaration acts more like a definition than other keywords, which 
 
 These sample ``%block`` declarations are in the context of the definitions of ``exp`` and ``height`` in the [``%worlds``](/wiki/percent-worlds/) article.
 
-Using this block in a ``%worlds`` declaration means that arbitrary variables representing expressions can appear in the context: !}%
-    
+Using this block in a ``%worlds`` declaration means that arbitrary variables representing expressions can appear in the context:
+```twelf
 %block var-rand : block {x : exp}.
-
-%{! Using this block in a ``%worlds`` declaration means that variables representing expressions can appear in the context, but only if they are accompanied by a judgment that defines the height of that variable to be one. !}%
-    
+```
+Using this block in a ``%worlds`` declaration means that variables representing expressions can appear in the context, but only if they are accompanied by a judgment that defines the height of that variable to be one.
+```twelf
 %block var-height : block {x : exp}{_ : height x (s z)}.
-
-%{! Using this block in a ``%worlds`` declaration means that variables representing expressions can appear in the context, but only if they are accompanied by a judgment that defines the height of that variable to be some natural number. !}%
-    
+```
+Using this block in a ``%worlds`` declaration means that variables representing expressions can appear in the context, but only if they are accompanied by a judgment that defines the height of that variable to be some natural number.
+```twelf
 %block var-heightN : some {N: nat} block {x : exp}{_ : height x N}.
-
-%{! ## Block definitions
+```
+## Block definitions
 
 As of 1.7.1, block &lt;i&gt;definitions&lt;/i&gt; are now supported. !}%
-    
+
 %{! (options removed from twelftag: import="new") !}%
 
 typ : type.
@@ -35,7 +35,7 @@ exp : typ -> type.
 %block vars = (typ-var | exp-var).
 
 %{! Using ``vars`` in a [``%worlds``](/wiki/percent-worlds/) declaration is the same as using ``typ-var | exp-var``, and in fact when Twelf prints out the ``%worlds`` declaration, block definitions will be automatically expanded. !}%
-    
+
 %{! (options removed from twelftag: import="new" check="decl") !}%
 
 %worlds (vars) (exp _).
@@ -45,11 +45,10 @@ exp : typ -> type.
 * [``%worlds``](/wiki/percent-worlds/)
 * \{\{proving|title=Proving totality assertions in non-empty contexts\}\}
 * [Totality assertion](/wiki/totality-assertion/)
-* \{\{guide|chapter=9|section=53|title=Regular Worlds\}\}
+* <Guide chapter="9" section="53"Regular Worlds</Guide>
 
-\{\{keyword|key=block\}\} !}%
+<Keyword name="block"/>
 
-%{!
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
 If anything looks wrong, you can refer to the
