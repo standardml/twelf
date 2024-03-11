@@ -1,0 +1,144 @@
+%%! title: "POPL Tutorial/cps-rp"
+
+%{!  !}%
+
+tp : type.
+o : tp.
+=> : tp -> tp -> tp. %infix right 3 =>.
+
+e : tp -> type.
+v : tp -> type.
+app : e (A => B) -> e A -> e B.
+lam : (v A -> e B) -> v (A => B).
+inj : v A -> e A.
+%block sourceb : some {A : tp} block {x : v A}.
+%worlds (sourceb) (e _) (v _).
+
+
+
+
+ctp	: type.
+
+co	: ctp.
+carr	: ctp -> ctp -> ctp. 
+
+
+ce : type.
+cv : ctp -> type.
+capp : cv (carr A B) -> cv A -> (cv B -> ce) -> ce.
+clam : (cv A -> (cv B -> ce) -> ce) -> cv (carr A B).
+%block targetb1 : some {A : ctp} block {x : cv A}.
+%block targetb2 : some {A : ctp} block {y : cv A -> ce}.
+%worlds (targetb1 | targetb2) (ce) (cv _).
+
+
+
+trans-tp	: tp -> ctp -> type.
+
+trans-tp/o	: trans-tp o co.
+trans-tp/arr	: trans-tp (T1 => T2) (carr P1 P2)
+		   <- trans-tp T1 P1
+		   <- trans-tp T2 P2. 
+
+can-trans-tp	: {A:tp}
+		   trans-tp A A'
+		   -> type.
+%mode can-trans-tp +D1 -D2.
+
+-	: can-trans-tp _ trans-tp/o.
+
+-	: can-trans-tp (A => B) (trans-tp/arr D2 D1)
+	   <- can-trans-tp A D1
+	   <- can-trans-tp B D2.
+
+%worlds () (can-trans-tp _ _).
+%total (D1) (can-trans-tp D1 _).
+
+
+
+ctp-eq	: ctp -> ctp -> type.
+
+ctp-eq/i	: ctp-eq A' A'.
+
+
+ctp-eq-resp	: {C : ctp -> ctp -> ctp}
+		   ctp-eq A1 A1'
+		   -> ctp-eq A2 A2'
+		   -> ctp-eq (C A1 A2) (C A1' A2')
+		   -> type.
+%mode ctp-eq-resp +D1 +D2 +D3 -D4.
+
+-	: ctp-eq-resp C (ctp-eq/i : ctp-eq A A)
+	   (ctp-eq/i : ctp-eq B B)
+	   (ctp-eq/i : ctp-eq (C A B) (C A B)).
+
+%worlds () (ctp-eq-resp _ _ _ _).
+%total {} (ctp-eq-resp _ _ _ _). 
+
+
+trans-tp-unique	: trans-tp A A'
+		   -> trans-tp A A''
+		   -> ctp-eq A' A''
+		   -> type. 
+%mode trans-tp-unique +D1 +D2 -D3.
+
+-	: trans-tp-unique trans-tp/o trans-tp/o ctp-eq/i.
+
+-	: trans-tp-unique (trans-tp/arr D2 D1) (trans-tp/arr D2' D1')  DQ3
+	   <- trans-tp-unique D1 D1' DQ1
+	   <- trans-tp-unique D2 D2' DQ2
+	   <- ctp-eq-resp carr DQ1 DQ2 DQ3.
+
+%worlds () (trans-tp-unique _ _ _).
+%total (D1) (trans-tp-unique D1 _ _). 
+
+
+
+ceo-resp-ctp-eq	: ctp-eq A A'
+		   -> ((cv A -> ce) -> ce)
+		   -> ((cv A' -> ce) -> ce)
+		   -> type. 
+%mode ceo-resp-ctp-eq +D1 +D2 -D3.
+
+-	: ceo-resp-ctp-eq _ D1 D1.
+
+%worlds (targetb1 | targetb2) (ceo-resp-ctp-eq _ _ _).
+%total {} (ceo-resp-ctp-eq  _ _ _). 
+
+
+
+cps : v A -> trans-tp A A' -> cv A' -> type.
+%mode cps +X1 -X2 -X3.
+
+cpse : e A -> trans-tp A A' -> ((cv A' -> ce) -> ce) -> type.
+%mode cpse +X1 -X2 -X3.
+
+cpse+ : e A -> trans-tp A A' -> ((cv A' -> ce) -> ce) -> type.
+%mode cpse+ +X1 +X2 -X3.
+
+cps/lam : cps (lam E) (trans-tp/arr D2 D1) (clam E')
+	   <- can-trans-tp _ D1
+	   <- ({x:v A}{x':cv A'} cps x D1 x' -> cpse (E x) D2 (E' x')).
+cpse/app : cpse (app E1 E2) D2
+	    ([c : (cv A' -> ce)] E1' ([w1] E2' ([w2]
+                                        capp w1 w2 c)))
+	    <- cpse E1 (trans-tp/arr D2 D1) E1'
+	    <- cpse+ E2 D1 E2'.
+cpse/inj : cpse (inj E) D1 ([c : (cv A -> ce)] c E')
+	    <- cps E D1 E'.
+
+cpse+/i	: cpse+ E D1 E''
+	   <- cpse E D1' E'
+	   <- trans-tp-unique D1' D1 DQ
+	   <- ceo-resp-ctp-eq DQ E' E''.
+
+%block cpsb : some {A : tp}{A' : ctp}{D1: trans-tp A A'} block {x : v A} {x' : cv A'} {d : cps x D1 x'}.
+%worlds (cpsb) (cps _ _ _) (cpse _ _ _) (cpse+ _ _ _).
+%total (E V E') (cps E _ _) (cpse V _ _) (cpse+ E' _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/cps-rp).
+!}%

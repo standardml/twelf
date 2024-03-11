@@ -1,0 +1,30 @@
+%%! title: "Ground"
+
+%{! A term is **ground** if it does not contain any existential ([unification](/wiki/unification/)) variables. For example, we can make the following [queries](/wiki/percent-solve/) on [``plus``](/wiki/natural-numbers/): !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
+nat: type.
+z: nat.
+s: nat -> nat.
+plus: nat -> nat -> nat -> type.
+plus-z: plus z N N.
+plus-s: plus (s N1) N2 (s N3)
+     <- plus N1 N2 N3.
+
+%{!  !}%
+    
+%{! (options removed from twelftag: discard="true" check="decl") !}%
+
+%mode plus +M +N -O.
+%solve D1 : plus (s z) (s (s z)) X.
+%solve D2 : plus (s z) (s Y) (s (s z)).
+
+%{! In the query for ``D1``, the first two arguments to ``plus`` are ground. The third is not; it is an existential variable. This is the typical situation: that the input arguments are ground and the output is an unconstrained existential variable. A [%total](/wiki/percent-total/) declaration for ``plus`` guarantees that such queries will always succeed. However, we can still issue queries like the second, where the middle argument is not ground. In this case, the query does succeed, but the totality declaration does not guarantee that it will. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Ground).
+!}%

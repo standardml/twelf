@@ -1,0 +1,33 @@
+%%! title: "Summer school 2008:Exercises 2"
+
+%{! \{\{Summer school 2008
+  |noprevious=
+  |nonext=
+\}\}
+
+## System F [(solution)](/wiki/summer-school-2008-encoding-of-system-f/)
+
+- Give an LF encoding of System F (the polymorphic lambda-calculus). Use [http://www.cs.cmu.edu/~rwh/plbook/book.pdf PFPL Chapter 25 as the on-paper definition].  
+- Prove adequacy.  You may want to follow the adequacy proof in [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf MMLF], section 3.2, page 21.
+
+## System F, Intrinsic Encoding
+
+- Use an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) to represent only the well-typed System F terms.
+- What can you say about adequacy for this encoding? 
+
+## Hereditary substitution
+
+Hereditary substitution is used in the definition of LF to compute the canonical result of substituting one canonical term into another.  Read and understand the rules for hereditary substitution in [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf MMLF].
+
+
+\{\{Summer school 2008
+  |noprevious=
+  |nonext=
+\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Exercises_2).
+!}%

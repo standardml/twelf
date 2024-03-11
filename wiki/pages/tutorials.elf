@@ -1,0 +1,59 @@
+%%! title: "Tutorials"
+
+%{! :_If you are not already familiar with Twelf, you should read the [introductions to Twelf](/wiki/introductions-to-twelf/) before reading the tutorials on this page.  See the [documentation](/wiki/documentation/) page for other resources._
+
+Types of tutorials:
+* **[[#Proof techniques|Proof techniques]]:** learn helpful and common Twelf devices.
+* **[[#Troubleshooting|Troubleshooting]]:** learn how to diagnose and fix Twelf errors. 
+
+Feel free to write new tutorials and add them to this page.__NOTOC__
+
+These tutorials are also gathered in the [[:Category:tutorials|tutorial category]].  
+
+## Proof techniques
+
+&lt;!-- DRL says: header 2 has too much visual weight here --&gt;
+
+#### Beginner
+
+* [Reformulating languages to use hypothetical judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/) - how to present judgements in a way that's easy to encode in LF.
+* [Holes in metatheorems](/wiki/incremental-metatheorem-development/) - how to assume lemmas while developing proofs.
+* [Equality](/wiki/equality/) - how to represent equality of LF terms as a type family.
+* [Respects lemma](/wiki/respects-lemma/)s - how to prove that other families and constants respect equality and other relations.
+* [Uniqueness lemma](/wiki/uniqueness-lemma/)s - how to prove that the inputs to a relation determine an output uniquely.
+* [Effectiveness lemma](/wiki/effectiveness-lemma/)s - how to prove [totality assertion](/wiki/totality-assertion/)s explicitly.
+* [Output factoring](/wiki/output-factoring/) - how to reason from a disjunction.  Illustrates proving the progress theorem for a programming language.                            
+* [Reasoning from false](/wiki/reasoning-from-false/) - how to do proofs by contradiction.
+* [Catch-all case](/wiki/catch-all-case/)s - how to avoid putting a theorem case in the LF context.
+* [Mutual induction](/wiki/mutual-induction/) - how to prove mutually inductive theorems
+* [Converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/) - how to convert between implicit and explicit quantification of the parameters of a type family.
+
+#### Advanced
+
+* [Strengthening](/wiki/strengthening/) - how to convince Twelf that a term does not depend on some assumptions.
+* Explicit termination metrics - how to use a termination metric other than the subderivation ordering.
+** [Numeric termination metrics](/wiki/numeric-termination-metrics/) - how to use numbers to induct on the size of some argument.
+** [Structural termination metrics](/wiki/structural-metrics/) - how to use fancier termination metrics that capture the structure of an argument directly.
+* [Simplifying dynamic clauses](/wiki/simplifying-dynamic-clauses/) - how to streamline certain proofs about relations that introduce hypotheses. 
+* [Canonical forms lemma](/wiki/canonical-forms-lemma/) for a progress theorem - how to get this lemma for free when you can, and how to prove it explicitly using [equality](/wiki/equality/) when you can't.
+* Structural properties of a [hypothetical judgement](/wiki/hypothetical-judgment/) - how to get structural properties for free when you can, and how to prove them explicitly when you can't.
+** [Weakening](/wiki/weakening-lemma/)
+** [Exchange](/wiki/exchange-lemma/) 
+** [Substitution](/wiki/substitution-lemma/)
+* [Evaluation contexts](/wiki/evaluation-contexts/) - how to represent evaluation contexts as LF functions
+* [User-defined constraint domain](/wiki/user-defined-constraint-domain/)s - how to make encodings more [intrinsic](/wiki/intrinsic-and-extrinsic-encodings/) by replacing predicates with indexing, and how to use Church-encodings to create special index types that are similar to constraint domains in that they admit non-trivial equations on their elements.
+For larger examples of Twelf in action, see see the [case studies](/wiki/case-studies/).
+
+## Troubleshooting
+
+* [Error messages](/wiki/error-messages/) - brief explanations of (and remedies for) common Twelf error messages.
+* [Understanding output freeness](/wiki/output-freeness/) - understanding a subtle part of output coverage checking.
+* [Debugging coverage errors](/wiki/debugging-coverage-errors/) - techniques for finding coverage errors.
+* [Constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/) - in general, you can't use them in the same [signature](/wiki/twelf-signature/). !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Tutorials).
+!}%

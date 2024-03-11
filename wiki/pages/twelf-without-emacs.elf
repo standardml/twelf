@@ -1,0 +1,33 @@
+%%! title: "Twelf without Emacs"
+
+%{! First, you should read up on [Twelf with Emacs](/wiki/twelf-with-emacs/), to understand [how Twelf programs are divided up into files](/wiki/twelf-with-emacs/) and how one interacts with those files.  Then, instead of using emacs, you can run the ``twelf-server`` command directly from your shell and interact with your files using the following commands.  (You may find it convenient to run ``twelf-server`` under some readline wrapper program like ``rlwrap`` or ``ledit`` to get command-line editing and history.)
+
+### Loading the configuration file
+
+To read your current config from ``sources.cfg``, type &lt;code&gt;make&lt;/code&gt;  To read some other config ``other.cfg``, type &lt;code&gt;make other.cfg&lt;/code&gt;
+
+### Checking an individual declaration
+
+To check an individual declaration, type &lt;code&gt;readDecl&lt;/code&gt;  Then, on a new line, type a Twelf declaration, terminated with a period.
+
+### Checking an individual file
+
+To load an individual file ``sometwelf.elf``, type &lt;code&gt;loadFile sometwelf.elf&lt;/code&gt;
+
+### Logic programming proof search
+
+To animate your specifications by doing logic programming queries, type &lt;code&gt;top&lt;/code&gt;  You will be presented with a a prompt, &lt;code&gt;?-&lt;/code&gt; at which you can type queries with existential metavariables, like &lt;code&gt;?- plus (s z) (s (s z)) N.&lt;/code&gt;  Assuming you've loaded the signature from the [Natural numbers](/wiki/natural-numbers/) article), the Twelf server responds with the following: &lt;code&gt;Solving...
+N = s (s (s z)).
+More?&lt;/code&gt;
+You can exit the logic programming top-level by pressing Ctrl-C.
+
+### Quitting
+
+To quit from the Twelf server, type &lt;code&gt;quit&lt;/code&gt; or press Ctrl-D. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Twelf_without_Emacs).
+!}%

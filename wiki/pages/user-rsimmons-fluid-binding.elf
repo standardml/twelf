@@ -1,0 +1,1037 @@
+%%! title: "User:Rsimmons/Fluid binding"
+
+%{! ## Fluid variable sets !}%
+
+uninhabited : type.
+fluid : type.
+fluids : type.
+# : fluids. 
+, : fluid -> fluids -> fluids. %infix right 10 ,.
+
+%{! ### Individual fluid variables !}%
+
+%{! We treat typing rules as if there are *no* concrete fluid variables,
+but we have to define specific fluid variables for the dynamic semantics. !}%
+
+a : fluid. 
+b : fluid. 
+c : fluid. 
+d : fluid.  
+
+%block bfluid : block {f: fluid}.
+
+eqfluid : fluid -> fluid -> type.
+eqfluid/refl : eqfluid A A.
+
+neqfluid : fluid -> fluid -> type.
+neqfluid/ab : neqfluid a b.
+neqfluid/ac : neqfluid a c.
+neqfluid/ad : neqfluid a d.
+neqfluid/ba : neqfluid b a.
+neqfluid/bc : neqfluid b c.
+neqfluid/bd : neqfluid b d.
+neqfluid/ca : neqfluid c a.
+neqfluid/cb : neqfluid c b.
+neqfluid/cd : neqfluid c d.
+neqfluid/da : neqfluid d a.
+neqfluid/db : neqfluid d b.
+neqfluid/dc : neqfluid d c.
+
+decidable-fluid : fluid -> fluid -> type.
+decidable-fluid/eq : decidable-fluid A A.
+decidable-fluid/neq : neqfluid A B -> decidable-fluid A B.
+
+eq-or-neq-total : {A}{B} decidable-fluid A B -> type.
+- : eq-or-neq-total a a (decidable-fluid/eq).
+- : eq-or-neq-total a b (decidable-fluid/neq neqfluid/ab).
+- : eq-or-neq-total a c (decidable-fluid/neq neqfluid/ac).
+- : eq-or-neq-total a d (decidable-fluid/neq neqfluid/ad).
+- : eq-or-neq-total b a (decidable-fluid/neq neqfluid/ba).
+- : eq-or-neq-total b b (decidable-fluid/eq).
+- : eq-or-neq-total b c (decidable-fluid/neq neqfluid/bc).
+- : eq-or-neq-total b d (decidable-fluid/neq neqfluid/bd).
+- : eq-or-neq-total c a (decidable-fluid/neq neqfluid/ca).
+- : eq-or-neq-total c b (decidable-fluid/neq neqfluid/cb).
+- : eq-or-neq-total c c (decidable-fluid/eq).
+- : eq-or-neq-total c d (decidable-fluid/neq neqfluid/cd).
+- : eq-or-neq-total d a (decidable-fluid/neq neqfluid/da).
+- : eq-or-neq-total d b (decidable-fluid/neq neqfluid/db).
+- : eq-or-neq-total d c (decidable-fluid/neq neqfluid/dc).
+- : eq-or-neq-total d d (decidable-fluid/eq).
+%mode eq-or-neq-total +A +B -D.
+%worlds () (eq-or-neq-total _ _ _).
+%total {} (eq-or-neq-total _ _ _).
+
+exclusive-fluid : eqfluid A B -> neqfluid A B -> uninhabited -> type.
+%mode exclusive-fluid +A +B -C. 
+%worlds () (exclusive-fluid _ _ _).
+%total {} (exclusive-fluid _ _ _).
+
+%{! ### Operations on sets of fluid variables !}%
+
+in : fluid -> fluids -> type.
+in/z : in A (A , As).
+in/s : in A As -> in A (B , As).
+
+subset : fluids -> fluids -> type.
+subset/z : subset # As.
+subset/s : in A Bs -> subset As Bs -> subset (A , As) Bs.
+
+merge : fluids -> fluids -> fluids -> type.
+merge/z : merge # Bs Bs.
+merge/s : merge (A , As) Bs (A , Cs)
+           <- merge As Bs Cs.
+
+%{! ### Structural properties !}%
+
+in-subset : in A Bs -> subset Bs Cs -> in A Cs -> type.
+- : in-subset in/z (subset/s In Sub : subset (A , Bs) Cs) In.
+- : in-subset (in/s (In: in A Bs)) (subset/s In' Sub : subset (B , Bs) Cs) In''
+     <- in-subset In Sub (In'' : in A Cs).
+%mode in-subset +A +B -C.
+%worlds (bfluid) (in-subset _ _ _).
+%total T (in-subset T _ _).
+
+in-merge1 : in A As -> merge As Bs Cs -> in A Cs -> type.
+- : in-merge1 in/z (merge/s _) in/z.
+- : in-merge1 (in/s In) (merge/s Merge) (in/s In') <- in-merge1 In Merge In'.
+%mode in-merge1 +A +B -C.
+%worlds () (in-merge1 _ _ _).
+%total T (in-merge1 _ T _).
+
+in-merge2 : in A Bs -> merge As Bs Cs -> in A Cs -> type.
+- : in-merge2 In merge/z In.
+- : in-merge2 In (merge/s Merge) (in/s In')
+     <- in-merge2 In Merge In'.
+%mode in-merge2 +A +B -C.
+%worlds () (in-merge2 _ _ _).
+%total T (in-merge2 _ T _).
+
+
+eq-or-in : fluid -> fluid -> fluids -> type.
+eq-or-in/eq : eq-or-in A A Cs.
+eq-or-in/in : in A Cs -> eq-or-in A B Cs.
+
+% exclude : {A}{B}{Cs} uninhabited -> eq-or-in A B Cs -> type.
+% mode exclude +A +B +C +D -E. 
+% worlds (bfluid) (exclude _ _ _ _ _). 
+% total {} (exclude _ _ _ _ _).
+% 
+% in-inversion' : decidable-fluid A B -> in A (B , Cs) -> eq-or-in A B Cs -> type.
+% - : in-inversion' _ in/z eq-or-in/eq.
+% - : in-inversion' decidable-fluid/eq in-s D
+%      <- exclusive-fluid 
+
+in-inversion : in A (B , Cs) -> eq-or-in A B Cs -> type.
+- : in-inversion in/z eq-or-in/eq.
+- : in-inversion (in/s Sub) (eq-or-in/in Sub).
+%mode in-inversion +A -B.
+%worlds (bfluid) (in-inversion _ _). 
+%total {} (in-inversion _ _).
+
+subset-trans : subset As Bs -> subset Bs Cs -> subset As Cs -> type.
+- : subset-trans subset/z _ subset/z.
+- : subset-trans (subset/s In Sub) (Sub') (subset/s In Sub'')
+     <- subset-trans Sub Sub' (Sub'': subset FS HS).
+- : subset-trans (subset/s (In: in A Bs) (Sub: subset As Bs)) 
+     (Sub': subset Bs Cs) (subset/s In' Sub'')
+     <- subset-trans Sub Sub' (Sub'': subset As Cs)
+     <- in-subset In Sub' (In' : in A Cs).
+%mode subset-trans +FG +GH -FH.
+%worlds (bfluid) (subset-trans _ _ _).
+%total T (subset-trans T _ _).
+
+subset-weaken : {C} subset Bs Cs -> subset Bs (C , Cs) -> type.
+- : subset-weaken C subset/z subset/z.
+- : subset-weaken C (subset/s In Sub : subset (B , Bs) Cs) 
+     (subset/s (in/s In) Sub' : subset (B , Bs) (C , Cs))
+     <- subset-weaken C Sub (Sub' : subset Bs (C , Cs)).
+%mode subset-weaken +A +AS -Sub.
+%worlds (bfluid) (subset-weaken _ _ _).
+%total T (subset-weaken _ T _).
+
+subset-refl : {FS} subset FS FS -> type.
+- : subset-refl # subset/z.
+- : subset-refl (A , As) (subset/s in/z Sub')
+     <- subset-refl As (Sub: subset As As)
+     <- subset-weaken A Sub (Sub': subset As (A , As)).
+%mode subset-refl +As -S.
+%worlds (bfluid) (subset-refl _ _).
+%total T (subset-refl T _).
+
+merge-subset1 : merge As Bs Cs -> subset As Cs -> type.
+- : merge-subset1 merge/z subset/z.
+- : merge-subset1 (merge/s Merge : merge (A , As) Bs (A , Cs))
+     (subset/s in/z Sub')
+     <- merge-subset1 Merge Sub
+     <- subset-weaken A Sub Sub'.
+%mode merge-subset1 +A -B.
+%worlds (bfluid) (merge-subset1 _ _).
+%total T (merge-subset1 T _).
+
+
+
+%{! ## Syntax !}%
+
+%{! ### Types !}%
+
+ty : type.
+ty/nat : ty.                    % nat
+ty/arrow : ty -> ty -> ty.      % tau1 tau2
+ty/mayuse : ty -> fluids -> ty. % [C] tau
+
+%{! #### Type equality !}%
+
+eqty : ty -> ty -> type.
+eqty/refl : eqty T T.
+
+%{! #### Individual fluid types !}%
+
+fluidty : fluid -> ty -> type.
+%block ftyblock : some {T: ty} block {f: fluid} {d: fluidty f T}.
+
+fluidty/a : fluidty a ty/nat.
+fluidty/b : fluidty b (ty/arrow ty/nat (ty/mayuse ty/nat (a , c , #))).
+fluidty/c : fluidty c ty/nat.
+fluidty/d : fluidty d (ty/arrow ty/nat ty/nat).
+
+
+fluidty-uniq : fluidty A T -> fluidty A T' -> eqty T T' -> type.
+
+- : fluidty-uniq fluidty/a fluidty/a eqty/refl.
+- : fluidty-uniq fluidty/b fluidty/b eqty/refl.
+- : fluidty-uniq fluidty/c fluidty/c eqty/refl.
+- : fluidty-uniq fluidty/d fluidty/d eqty/refl.
+
+%mode fluidty-uniq +A +B -C. 
+%worlds () (fluidty-uniq _ _ _). 
+%total {} (fluidty-uniq _ _ _).
+
+%{! ### Terms !}%
+
+tm : type.
+tm/lam : ty -> (tm -> tm) -> tm.
+tm/app : tm -> tm -> tm.
+tm/z : tm.
+tm/s : tm -> tm.
+tm/if : tm -> tm -> (tm -> tm) -> tm.
+tm/fix : ty -> (tm -> tm) -> tm.
+tm/access : fluid -> tm.
+tm/fluid-let : fluid -> tm -> tm -> tm.
+tm/susp : tm -> tm.
+tm/unsusp : tm -> tm.
+tm/let : tm -> ty -> (tm -> tm) -> tm = [e][t][f] tm/app (tm/lam t f) e.
+
+%{! #### Term equality !}%
+
+eqtm : tm -> tm -> type.
+eqtm/refl : eqtm E E.
+
+%{! ### Values !}%
+
+v : tm -> type.
+v/lam : v (tm/lam T ([x] E x)).
+v/z : v tm/z.
+v/s : v E -> v (tm/s E).
+v/susp : v (tm/susp E).
+
+%{! ### Frames and stacks !}%
+
+frame : type.
+-- : type.
+--- : --.
+
+f/app1 : -- -> tm -> frame.
+f/app2 : {t} v t -> -- -> frame.
+f/s : -- -> frame.
+f/if : -- -> tm -> (tm -> tm) -> frame.
+f/fluid-let : fluid -> -- -> tm -> frame.
+f/fluid-bind : fluid -> {t} v t -> frame.
+f/unsusp : -- -> frame.
+
+stack : type.
+emp : stack.
+; : frame -> stack -> stack. %infix right 10 ;.
+
+%{! ### Machine States !}%
+
+state : type.
+
+>> : stack -> tm -> state.
+<< : stack -> {t} v t -> state.
+
+
+
+
+%{! ## Static semantics !}%
+
+of : tm -> ty -> fluids -> type.   % May access the mentioned fluids
+
+of/weaken : of E T Bs -> subset Bs Cs -> of E T Cs.
+
+of/lam : ({x} of x T # -> of (E x) T' #) -> of (tm/lam T E) (ty/arrow T T') #.
+of/app : of E1 (ty/arrow T T') Bs -> of E2 T Bs -> of (tm/app E1 E2) T' Bs.
+of/z : of tm/z ty/nat #.
+of/s : of E ty/nat Bs -> of (tm/s E) ty/nat Bs.
+of/if : of E ty/nat Bs -> of E1 T Bs -> ({x} of x ty/nat # -> of (E2 x) T Bs) 
+ -> of (tm/if E E1 ([x] E2 x)) T Bs. 
+of/fix : ({x} of x T # -> of (E x) T #) -> of (tm/fix T ([x] E x)) T #.
+of/access : fluidty A T -> of (tm/access A) T (A , #).
+of/fluid-let : fluidty A Tf -> of E1 Tf Bs -> of E2 T (A , Bs) 
+ -> of (tm/fluid-let A E1 E2) T Bs.
+of/susp : of E T Bs -> of (tm/susp E) (ty/mayuse T Bs) #.
+of/unsusp : merge As Bs Cs -> of E (ty/mayuse T As) Bs -> of (tm/unsusp E) T Cs.
+
+
+offrame : frame -> ty -> fluids -> ty -> fluids -> type.
+
+offrame/app1 : of E2 T' Bs -> offrame (f/app1 --- E2) (ty/arrow T' T) Bs T Bs.
+offrame/app2 : of E1 (ty/arrow T' T) # -> offrame (f/app2 E1 V ---) T' Bs T Bs.
+offrame/s : offrame (f/s ---) ty/nat Bs ty/nat Bs.
+offrame/if : of E1 T Bs -> ({x} of x ty/nat # -> of (E2 x) T Bs) 
+ -> offrame (f/if --- E1 ([x] E2 x)) ty/nat Bs T Bs.
+offrame/fluid-let : fluidty A T -> of E T' (A , Bs) 
+ -> offrame (f/fluid-let A --- E) T Bs T' Bs.
+offrame/fluid-bind : fluidty A Tf -> of E Tf #
+ -> offrame (f/fluid-bind A E Dv) T (A , Bs) T Bs.
+offrame/unsusp : merge As Bs Cs 
+ -> offrame (f/unsusp ---) (ty/mayuse T As) Bs T Cs.
+
+ofstack : stack -> ty -> fluids -> type.
+
+ofstack/weaken :  ofstack K T Cs -> subset Bs Cs -> ofstack K T Bs.
+
+ofstack/emp : ofstack emp T #.
+ofstack/frame : offrame F Bs T Bs' Cs' -> ofstack K Bs' Cs' 
+ -> ofstack (F ; K) Bs T.
+
+ok : state -> type.
+ok>> : ofstack K T Bs -> of E T Bs -> ok (>> K E).
+ok<< : ofstack K T Bs -> of E T Bs -> {V: v E} ok (<< K E V).
+
+
+
+
+
+%{! ## Dynamic semantics !}%
+
+%{! ### Deep binding lookup !}%
+
+lookup : fluid -> stack -> {t: tm} v t -> type.
+lookup/app1 : lookup F K Val Dv -> lookup F (f/app1 --- E2 ; K)        Val Dv.
+lookup/app2 : lookup F K Val Dv -> lookup F (f/app2 E1 DV --- ; K)     Val Dv.
+lookup/s    : lookup F K Val Dv -> lookup F (f/s --- ; K)              Val Dv.
+lookup/if   : lookup F K Val Dv -> lookup F (f/if --- E1 E2 ; K)       Val Dv.
+lookup/flet : lookup F K Val Dv -> lookup F (f/fluid-let A --- E2 ; K) Val Dv.
+lookup/ususp: lookup F K Val Dv -> lookup F (f/unsusp --- ; K)         Val Dv.
+lookup/hit  : eqfluid A B -> lookup A (f/fluid-bind B Val Dv ; K) Val Dv.
+lookup/miss : neqfluid A B -> lookup A K Val Dv  
+ -> lookup A (f/fluid-bind B _ _ ; K) Val Dv.
+
+%{! ### Small-step evaluation !}%
+
+step : state -> state -> type.
+step/lam   : step
+              (>> K (tm/lam T ([x] E x)))
+              (<< K (tm/lam T ([x] E x)) v/lam).
+step/app1  : step 
+              (>> K (tm/app E1 E2))
+              (>> (f/app1 --- E2 ; K) E1).
+step/app2  : step
+              (<< (f/app1 --- E2 ; K) V DV) 
+              (>> (f/app2 V DV --- ; K) E2).
+step/appr  : step 
+              (<< (f/app2 (tm/lam T E) DV --- ; K) V _) 
+              (>> K (E V)).
+step/z     : step
+              (>> K tm/z)
+              (<< K tm/z v/z).
+step/s     : step
+              (>> K (tm/s E))
+              (>> (f/s --- ; K) E).
+step/sr    : step
+              (<< (f/s --- ; K) V DV) 
+              (<< K  (tm/s V) (v/s DV)).
+step/if    : step 
+              (>> K (tm/if E E1 E2)) 
+              (>> (f/if --- E1 E2 ; K) E).
+step/ifz   : step 
+              (<< (f/if --- E1 E2 ; K) tm/z _) 
+              (>> K E1).
+step/ifs   : step 
+              (<< (f/if --- E1 E2 ; K) (tm/s E) _) 
+              (>> K (E2 E)).
+step/fix   : step 
+              (>> K (tm/fix T ([x] E x))) 
+              (>> K (E (tm/fix T ([x] E x)))).
+step/access : lookup A K V Dv -> step (>> K (tm/access A)) (<< K V Dv).
+step/flet1 : step 
+              (>> K (tm/fluid-let A E1 E2)) 
+              (>> (f/fluid-let A --- E2 ; K) E1).
+step/flet2 : step 
+              (<< (f/fluid-let A --- E2 ; K) V DV)
+              (>> (f/fluid-bind A V DV ; K) E2).
+step/fletr : step 
+              (<< (f/fluid-bind A Vbound DVbound ; K) V DV)
+              (<< K V DV).
+step/susp  : step
+              (>> K (tm/susp E))
+              (<< K (tm/susp E) v/susp).
+step/ususp : step
+              (>> K (tm/unsusp E))
+              (>> (f/unsusp --- ; K) E).
+step/ususpr: step
+              (<< (f/unsusp --- ; K) (tm/susp E) _) 
+              (>> K E).
+
+
+%{! ## Progress !}%
+
+%{! ### Not stuck !}%
+
+nstuck : state -> type.
+nstuck/step  : step E E' -> nstuck E.
+nstuck/final : nstuck (<< emp V DV).
+
+%{! ### First deep stack access theorem !}%
+
+access-stack : in A Bs  
+                -> ofstack K T Bs 
+                -> lookup A K E Dv 
+                -> fluidty A Tf
+                -> of E Tf #
+                -> type.
+%mode access-stack +A +B -C -D -E.
+read-stack : eq-or-in A B Cs
+              -> decidable-fluid A B 
+              -> offrame (f/fluid-bind B E Dv) T (B , Cs) T Cs
+              -> ofstack K T Cs
+              -> lookup A (f/fluid-bind B E Dv ; K) Ev Dval
+              -> fluidty A Tf
+              -> of Ev Tf # -> type.
+%mode read-stack +A +G +B +C -D -E -F.
+- : read-stack eq-or-in/eq _ (offrame/fluid-bind 
+                              (Dfluid: fluidty B Tf) 
+                              (Dval: of E Tf #)) _
+     (lookup/hit eqfluid/refl) Dfluid Dval.
+- : read-stack _ (decidable-fluid/eq) (offrame/fluid-bind 
+                              (Dfluid: fluidty B Tf) 
+                              (Dval: of E Tf #)) _
+     (lookup/hit eqfluid/refl) Dfluid Dval.
+- : read-stack (eq-or-in/in In) (decidable-fluid/neq Neq) _ Dstack 
+     (lookup/miss Neq Look) Dfluid Dval
+     <- access-stack In Dstack Look Dfluid Dval.
+
+- : access-stack (In: in A Bs) (ofstack/weaken Dt (Sub: subset Bs Cs))
+     Lookup Df Dvt
+     <- in-subset In Sub In'
+     <- access-stack In' Dt Lookup Df Dvt.
+- : access-stack In (ofstack/frame (offrame/app1 _) Dt) 
+     (lookup/app1 Look) Df Dvt
+     <- access-stack In Dt Look Df Dvt.
+- : access-stack In (ofstack/frame (offrame/app2 _) Dt) 
+     (lookup/app2 Look) Df Dvt
+     <- access-stack In Dt Look Df Dvt.
+- : access-stack In (ofstack/frame (offrame/s) Dt) 
+     (lookup/s Look) Df Dvt
+     <- access-stack In Dt Look Df Dvt.
+- : access-stack In (ofstack/frame (offrame/if _ _) Dt)
+     (lookup/if Look) Df Dvt
+     <- access-stack In Dt Look Df Dvt.
+- : access-stack In (ofstack/frame (offrame/fluid-let _ _) Dt)
+     (lookup/flet Look) Df Dvt
+     <- access-stack In Dt Look Df Dvt.
+- : access-stack (In : in A (B , Cs)) (ofstack/frame Dframe Dstack)
+     Look Df Dvt
+     <- in-inversion In (Deq-or-in : eq-or-in A B Cs)
+     <- eq-or-neq-total A B (Deq-or-neq : decidable-fluid A B)
+     <- read-stack Deq-or-in Deq-or-neq Dframe Dstack 
+        (Look: lookup A (f/fluid-bind B _ _ ; _) _ _)
+        (Df: fluidty A Tf) 
+        (Dvt: of E Tf #).
+- : access-stack In (ofstack/frame (offrame/unsusp (Merge: merge As Bs Cs)) 
+                       (Dt: ofstack K T Cs))
+     (lookup/ususp Look) Df Dvt
+     <- in-merge2 In Merge In'
+     <- access-stack In' (Dt: ofstack K T Cs) Look Df Dvt.
+%worlds () (access-stack _ _ _ _ _) (read-stack _ _ _ _ _ _ _).
+%total (T S) (access-stack _ T _ _ _) (read-stack _ _ _ S _ _ _).
+
+
+
+%{! ### Canonical Forms !}%
+
+canon-arrow : of E1 (ty/arrow T1 T2) Bs 
+               -> v E1
+               -> eqtm E1 (tm/lam T1 ([x] E x)) -> type.
+- : canon-arrow (of/weaken T _) Dv Eq <- canon-arrow T Dv Eq.
+- : canon-arrow (of/lam _) v/lam eqtm/refl.
+%mode canon-arrow +A +B -C. 
+%worlds () (canon-arrow _ _ _). 
+%total T (canon-arrow T _ _).
+
+z-or-s : tm -> type.
+z-or-s/z : z-or-s tm/z.
+z-or-s/s : z-or-s (tm/s E).
+
+canon-nat : of E1 ty/nat Bs 
+               -> v E1
+               -> z-or-s E1 -> type.
+- : canon-nat (of/weaken T _) Dv Eq <- canon-nat T Dv Eq.
+- : canon-nat (of/z) (v/z) (z-or-s/z).
+- : canon-nat (of/s _) (v/s _) (z-or-s/s).
+%mode canon-nat +A +B -C. 
+%worlds () (canon-nat _ _ _). 
+%total T (canon-nat T _ _).
+
+canon-mayuse : of E1 (ty/mayuse T As) Bs
+                -> v E1
+                -> eqtm E1 (tm/susp E) -> type.
+- : canon-mayuse (of/weaken T _) Dv Eq <- canon-mayuse T Dv Eq.
+- : canon-mayuse (of/susp _) v/susp eqtm/refl.
+%mode canon-mayuse +A +B -C.
+%worlds () (canon-mayuse _ _ _).
+%total T (canon-mayuse T _ _).
+
+
+%{! ### Progress !}%
+
+progress>> : ofstack K T Bs 
+              -> of E T Bs
+              -> step (>> K E) S' -> type.
+
+- : progress>> TK (of/weaken TE Sub) Step
+     <- progress>> (ofstack/weaken TK Sub) TE Step.
+- : progress>> TK (of/lam _) step/lam.
+- : progress>> TK (of/app _ _) step/app1.
+- : progress>> TK (of/z) step/z.
+- : progress>> TK (of/s _) step/s.
+- : progress>> TK (of/if _ _ _) step/if.
+- : progress>> TK (of/fix _) step/fix.
+- : progress>> TK (of/access (TA : fluidty A T)) (step/access Look)
+     <- access-stack in/z TK Look _ _.
+- : progress>> TK (of/fluid-let _ _ _) step/flet1.
+- : progress>> TK (of/susp _) step/susp.
+- : progress>> TK (of/unsusp _ _) step/ususp. 
+
+%mode progress>> +A +B -C.
+%worlds () (progress>> _ _ _). 
+%total T (progress>> _ T _).
+
+progress<< : ofstack K T Bs
+              -> of E T Bs
+              -> {Dv : v E} nstuck (<< K E Dv) -> type.
+%mode progress<< +A +B +C -D.
+
+- : progress<< (ofstack/weaken TK Sub) TE Dv NS
+     <- progress<< TK (of/weaken TE Sub) Dv NS.
+- : progress<< (ofstack/emp) TE Dv nstuck/final.
+- : progress<< (ofstack/frame (offrame/app1 TE2) TK) TE1 Dv 
+     (nstuck/step step/app2).
+
+p1 : eqtm E1 (tm/lam T1 ([x] E x)) 
+      -> {Dv}{K}{E2}{Dv'}
+         step (<< (f/app2 E1 Dv --- ; K) E2 Dv') S' -> type.
+- : p1 _ _ _ _ _ step/appr. 
+%mode p1 +A +B +C +D +E -F.
+%worlds () (p1 _ _ _ _ _ _). %total {} (p1 _ _ _ _ _ _). 
+
+- : progress<< (ofstack/frame
+                  (offrame/app2 TE1 : offrame (f/app2 E1 Dv ---) T' Bs T Bs) TK)
+     TE2 _ (nstuck/step Step)
+     <- canon-arrow TE1 Dv Eq
+     <- p1 Eq _ _ _ _ Step.
+
+- : progress<< (ofstack/frame offrame/s TK) TE1 Dv (nstuck/step step/sr).
+
+p2 : z-or-s E
+      -> {E1}{E2}{K}{Dv}
+         step (<< (f/if --- E1 E2 ; K) E Dv) S' -> type.
+- : p2 z-or-s/z _ _ _ _ step/ifz.
+- : p2 z-or-s/s _ _ _ _ step/ifs.
+%mode p2 +A +B +C +D +F -E. 
+%worlds () (p2 _ _ _ _ _ _). %total {} (p2 _ _ _ _ _ _).
+
+- : progress<< (ofstack/frame (offrame/if _ _) TK) TE Dv (nstuck/step Step)
+     <- canon-nat TE Dv Eq
+     <- p2 Eq _ _ _ _ Step.
+- : progress<< (ofstack/frame (offrame/fluid-let _ _) TK) TE Dv 
+     (nstuck/step step/flet2).
+- : progress<< (ofstack/frame (offrame/fluid-bind _ _) TK) TE Dv
+     (nstuck/step step/fletr).
+
+%{! Note: when I write in ``eqtm E (tm/susp E)`` here and then
+try to check the case, the error I get is worrisome, occurs-check wise. !}%
+
+p3 : eqtm E (tm/susp E')
+      -> {K}{Dv}
+         step (<< (f/unsusp --- ; K) E Dv) S' -> type.
+- : p3 eqtm/refl _ _ step/ususpr. 
+%mode p3 +A +B +D -C. %worlds () (p3 _ _ _ _). %total {} (p3 _ _ _ _).
+
+- : progress<< (ofstack/frame (offrame/unsusp _) TK) TE Dv (nstuck/step Step)
+     <- canon-mayuse TE Dv Eq
+     <- p3 Eq _ _ Step.
+
+%worlds () (progress<< _ _ _ _).
+%total T (progress<< T _ _ _).
+
+progress : ok S -> nstuck S -> type.
+- : progress (ok>> TK TE) (nstuck/step Step) <- progress>> TK TE Step.
+- : progress (ok<< TK TE Dv) NS <- progress<< TK TE Dv NS.
+%mode progress +A -B.
+%worlds () (progress _ _).
+%total {} (progress _ _).
+
+%{! ## Preservation !}%
+
+%{! ### Second deep stack access theorem !}%
+
+access-stack' : in A Bs  
+                -> ofstack K T Bs 
+                -> lookup A K E Dv 
+                -> fluidty A Tf
+                -> of E Tf #
+                -> type.
+%mode access-stack' +A +B +C -D -E.
+read-stack' : eq-or-in A B Cs
+              -> decidable-fluid A B 
+              -> offrame (f/fluid-bind B E Dv) T (B , Cs) T Cs
+              -> ofstack K T Cs
+              -> lookup A (f/fluid-bind B E Dv ; K) Ev Dval
+              -> fluidty A Tf
+              -> of Ev Tf # -> type.
+%mode read-stack' +A +G +B +C +D -E -F.
+- : read-stack' eq-or-in/eq _ (offrame/fluid-bind 
+                              (Dfluid: fluidty B Tf) 
+                              (Dval: of E Tf #)) _
+     (lookup/hit eqfluid/refl) Dfluid Dval.
+- : read-stack' _ (decidable-fluid/eq) (offrame/fluid-bind 
+                              (Dfluid: fluidty B Tf) 
+                              (Dval: of E Tf #)) _
+     (lookup/hit eqfluid/refl) Dfluid Dval.
+- : read-stack' (eq-or-in/in In) (decidable-fluid/neq Neq) _ Dstack 
+     (lookup/miss Neq Look) Dfluid Dval
+     <- access-stack' In Dstack Look Dfluid Dval.
+
+- : access-stack' (In: in A Bs) (ofstack/weaken Dt (Sub: subset Bs Cs))
+     Lookup Df Dvt
+     <- in-subset In Sub In'
+     <- access-stack' In' Dt Lookup Df Dvt.
+- : access-stack' In (ofstack/frame (offrame/app1 _) Dt) 
+     (lookup/app1 Look) Df Dvt
+     <- access-stack' In Dt Look Df Dvt.
+- : access-stack' In (ofstack/frame (offrame/app2 _) Dt) 
+     (lookup/app2 Look) Df Dvt
+     <- access-stack' In Dt Look Df Dvt.
+- : access-stack' In (ofstack/frame (offrame/s) Dt) 
+     (lookup/s Look) Df Dvt
+     <- access-stack' In Dt Look Df Dvt.
+- : access-stack' In (ofstack/frame (offrame/if _ _) Dt)
+     (lookup/if Look) Df Dvt
+     <- access-stack' In Dt Look Df Dvt.
+- : access-stack' In (ofstack/frame (offrame/fluid-let _ _) Dt)
+     (lookup/flet Look) Df Dvt
+     <- access-stack' In Dt Look Df Dvt.
+- : access-stack' (In : in A (B , Cs)) (ofstack/frame Dframe Dstack)
+     Look Df Dvt
+     <- in-inversion In (Deq-or-in : eq-or-in A B Cs)
+     <- eq-or-neq-total A B (Deq-or-neq : decidable-fluid A B)
+     <- read-stack' Deq-or-in Deq-or-neq Dframe Dstack 
+        (Look: lookup A (f/fluid-bind B _ _ ; _) _ _)
+        (Df: fluidty A Tf) 
+        (Dvt: of E Tf #).
+- : access-stack' In (ofstack/frame (offrame/unsusp (Merge: merge As Bs Cs)) 
+                       (Dt: ofstack K T Cs))
+     (lookup/ususp Look) Df Dvt
+     <- in-merge2 In Merge In'
+     <- access-stack' In' (Dt: ofstack K T Cs) Look Df Dvt.
+%worlds () (access-stack' _ _ _ _ _) (read-stack' _ _ _ _ _ _ _).
+%total (T S) (access-stack' _ T _ _ _) (read-stack' _ _ _ S _ _ _).
+
+%{! ### Effect-free value theorem !}%
+
+%{! Yipes! This is actually a complicated induction principle, because we need
+to induct on two things at once - either the typing derivation or the
+value derivation gets smaller with every recursive call. Perhaps this could
+be factored out into two non-mutually-recursive lemmas? !}%
+
+effect-value : v E -> of E T Bs -> of E T # -> type.
+- : effect-value V (of/weaken T Sub) T'
+     <- effect-value V T T'. 
+- : effect-value v/lam T T.
+- : effect-value v/susp T T.
+- : effect-value v/z T T.
+- : effect-value (v/s V) (of/s T) (of/s T')
+     <- effect-value V T T'.
+%mode effect-value +A +B -C.
+%worlds () (effect-value _ _ _).
+%total [S T] (effect-value S T _).
+
+
+
+%{! ### Inversion !}%
+
+inv-lam : of (tm/lam T1 ([x] E x)) T Bs 
+           -> eqty T (ty/arrow T1 T2)
+           -> ({x} of x T1 # -> of (E x) T2 #) -> type.
+- : inv-lam (of/weaken T Sub) Eq Tf
+     <- inv-lam T Eq Tf.
+- : inv-lam (of/lam F) eqty/refl F.
+%mode inv-lam +A -B -C. %worlds () (inv-lam _ _ _). %total T (inv-lam T _ _).
+
+inv-app : of (tm/app E1 E2) T Cs
+           -> subset Bs Cs
+           -> of E1 (ty/arrow T' T) Bs
+           -> of E2 T' Bs -> type.
+- : inv-app (of/weaken T Sub') Sub'' T1 T2 
+     <- inv-app T Sub T1 T2
+     <- subset-trans Sub Sub' Sub''.
+- : inv-app (of/app T1 T2) Sub T1 T2 <- subset-refl _ Sub.
+%mode inv-app +A -D -B -C. %worlds () (inv-app _ _ _ _).
+%total T (inv-app T _ _ _).
+
+inv-s : of (tm/s E) T Cs 
+         -> subset Bs Cs
+         -> eqty T ty/nat 
+         -> of E ty/nat Bs -> type.
+- : inv-s (of/weaken T Sub') Sub'' Eq T'
+     <- inv-s T Sub Eq T'
+     <- subset-trans Sub Sub' Sub''.
+- : inv-s (of/s T) Sub eqty/refl T <- subset-refl _ Sub.
+%mode inv-s +A -B -D -C. %worlds () (inv-s _ _ _ _). %total T (inv-s T _ _ _).
+
+inv-if : of (tm/if E E1 E2) T Cs
+          -> subset Bs Cs
+          -> of E ty/nat Bs 
+          -> of E1 T Bs
+          -> ({x} of x ty/nat # -> of (E2 x) T Bs) -> type.
+- : inv-if (of/weaken Tif Sub') Sub'' T T1 T2
+     <- inv-if Tif Sub T T1 T2
+     <- subset-trans Sub Sub' Sub''.
+- : inv-if (of/if T T1 T2) Sub T T1 T2 <- subset-refl _ Sub.
+%mode inv-if +A -B -C -D -E. %worlds () (inv-if _ _ _ _ _).
+%total T (inv-if T _ _ _ _).
+
+inv-fix : of (tm/fix T' F) T Cs
+           -> eqty T T'
+           -> of (tm/fix T F) T #
+           -> ({x} of x T # -> of (F x) T #)
+           -> type.
+- : inv-fix (of/weaken Tfix Sub) Eq Tfix' Tfn
+     <- inv-fix Tfix Eq Tfix' Tfn.
+- : inv-fix (of/fix T) eqty/refl (of/fix T) T.
+%mode inv-fix +A -B -C -D. 
+%worlds () (inv-fix _ _ _ _). 
+%total T (inv-fix T _ _ _).
+
+inv-access : of (tm/access A) T Cs
+              -> in A Cs
+              -> fluidty A T
+              -> type.
+- : inv-access (of/weaken Taccess Sub) In' FT
+     <- inv-access Taccess In FT
+     <- in-subset In Sub In'.
+- : inv-access (of/access FT) in/z FT.
+%mode inv-access +A -B -C. 
+%worlds () (inv-access _ _ _). 
+%total T (inv-access T _ _).
+
+inv-fluid-let : of (tm/fluid-let A E1 E2) T Cs
+                 -> subset Bs Cs
+                 -> fluidty A Tf
+                 -> of E1 Tf Bs
+                 -> of E2 T (A , Bs) -> type.
+- : inv-fluid-let (of/weaken Tfluid Sub') Sub'' FT T1 T2
+     <- inv-fluid-let Tfluid Sub FT T1 T2
+     <- subset-trans Sub Sub' Sub''.
+- : inv-fluid-let (of/fluid-let FT T1 T2) Sub FT T1 T2
+     <- subset-refl _ Sub.
+%mode inv-fluid-let +A -B -C -D -E.
+%worlds () (inv-fluid-let _ _ _ _ _).
+%total T (inv-fluid-let T _ _ _ _).
+
+inv-unsusp : of (tm/unsusp E) T Ds
+              -> subset Cs Ds
+              -> of E (ty/mayuse T As) Bs
+              -> merge As Bs Cs -> type.
+- : inv-unsusp (of/weaken Tun Sub') Sub'' T M
+     <- inv-unsusp Tun Sub T M
+     <- subset-trans Sub Sub' Sub''.
+- : inv-unsusp (of/unsusp Merge T) Sub T Merge
+     <- subset-refl _ Sub.
+%mode inv-unsusp +A -B -C -D.
+%worlds () (inv-unsusp _ _ _ _).
+%total T (inv-unsusp T _ _ _).
+
+invf-app1 : ofstack (f/app1 --- E2 ; K) T Bs
+            -> subset Bs Cs
+            -> eqty T (ty/arrow T1 T2)
+            -> ofstack K T2 Cs
+            -> of E2 T1 Cs -> type.
+- : invf-app1 (ofstack/weaken TK (Sub: subset As Bs))
+     (Sub'': subset As Cs) Eq TK' TE'
+     <- invf-app1 TK (Sub': subset Bs Cs) Eq TK' TE'
+     <- subset-trans Sub Sub' Sub''.
+- : invf-app1 (ofstack/frame (offrame/app1 (TE : of E2 T1 Cs)) 
+                (TK: ofstack K T2 Cs)) Sub eqty/refl TK TE
+     <- subset-refl _ Sub.
+%mode invf-app1 +A -E -B -C -D. 
+%worlds () (invf-app1 _ _ _ _ _).
+%total T (invf-app1 T _ _ _ _).
+
+invf-app2 : ofstack (f/app2 E1 Dv --- ; K) Targ Bs
+            -> subset Bs Cs
+            -> of E1 (ty/arrow Targ Tres) Cs
+            -> ofstack K Tres Cs -> type.
+- : invf-app2 (ofstack/weaken TK Sub) Sub'' TE' TK'
+     <- invf-app2 TK Sub' TE' TK'
+     <- subset-trans Sub Sub' Sub''.
+- : invf-app2 (ofstack/frame (offrame/app2 TE) TK) Sub 
+     (of/weaken TE subset/z) TK 
+     <- subset-refl _ Sub.
+%mode invf-app2 +A -B -C -D .
+%worlds () (invf-app2 _ _ _ _).
+%total T (invf-app2 T _ _ _).
+
+invf-s : ofstack (f/s --- ; K) T Bs
+         -> subset Bs Cs
+         -> eqty T ty/nat
+         -> ofstack K ty/nat Cs -> type.
+- : invf-s (ofstack/weaken TK Sub) Sub'' Eq TK'
+     <- invf-s TK Sub' Eq TK'
+     <- subset-trans Sub Sub' Sub''.
+- : invf-s (ofstack/frame offrame/s TK) Sub eqty/refl TK
+     <- subset-refl _ Sub.
+%mode invf-s +A -B -C -D.
+%worlds () (invf-s _ _ _ _).
+%total T (invf-s T _ _ _).
+
+invf-if : ofstack (f/if --- E1 E2 ; K) Tn Bs
+           -> subset Bs Cs
+           -> eqty Tn ty/nat
+           -> of E1 T Cs
+           -> ({x} of x ty/nat # -> of (E2 x) T Cs)
+           -> ofstack K T Cs -> type.
+- : invf-if (ofstack/weaken TK Sub) Sub'' Eq TE1 TE2 TK'
+     <- invf-if TK Sub' Eq TE1 TE2 TK'
+     <- subset-trans Sub Sub' Sub''.
+- : invf-if (ofstack/frame (offrame/if T1 T2) TK) Sub eqty/refl T1 T2 TK
+     <- subset-refl _ Sub.
+%mode invf-if +A -B -C -D -E -F.
+%worlds () (invf-if _ _ _ _ _ _).
+%total T (invf-if T _ _ _ _ _).
+
+invf-fluid-let : ofstack (f/fluid-let A --- E2 ; K) Tf Bs
+                  -> subset Bs Cs
+                  -> fluidty A Tf
+                  -> of E2 T (A , Cs)
+                  -> ofstack K T Cs -> type.
+- : invf-fluid-let (ofstack/weaken TK Sub) Sub'' TF T2 TK'
+     <- invf-fluid-let TK Sub' TF T2 TK'
+     <- subset-trans Sub Sub' Sub''.
+- : invf-fluid-let (ofstack/frame (offrame/fluid-let FT T2) TK) Sub FT T2 TK
+     <- subset-refl _ Sub.
+%mode invf-fluid-let +A -B -C -D -E.
+%worlds () (invf-fluid-let _ _ _ _ _).
+%total T (invf-fluid-let T _ _ _ _).
+
+invf-fluid-bind : ofstack (f/fluid-bind A E Dv ; K) T Bs
+                  -> subset Bs (A , Cs)
+                  -> ofstack K T Cs -> type.
+- : invf-fluid-bind (ofstack/weaken TK Sub) Sub'' TK'
+     <- invf-fluid-bind TK Sub' TK'
+     <- subset-trans Sub Sub' Sub''.
+- : invf-fluid-bind (ofstack/frame (offrame/fluid-bind _ _) TK) 
+     (subset/s in/z Sub') TK
+     <- subset-refl _ Sub
+     <- subset-weaken _ Sub Sub'.
+%mode invf-fluid-bind +A -B -C.
+%worlds () (invf-fluid-bind _ _ _).
+%total T (invf-fluid-bind T _ _).
+
+%{! ### Preservation !}%
+
+preservation : step S S' -> ok S -> ok S' -> type.
+%mode preservation +A +B -C.
+
+- : preservation step/lam (ok>> TK TE) (ok<< TK TE v/lam).
+- : preservation step/app1 (ok>> TK TE) 
+     (ok>> (ofstack/frame (offrame/app1 T2) (ofstack/weaken TK Sub)) T1)
+     <- inv-app TE Sub T1 T2.
+p1 : eqty T (ty/arrow T1 T2) -> of E T Bs -> of E (ty/arrow T1 T2) Bs -> type.
+- : p1 eqty/refl T T. 
+%mode p1 +A +B -C. %worlds () (p1 _ _ _). %total {} (p1 _ _ _).
+- : preservation step/app2 (ok<< (TK: ofstack (f/app1 --- E2 ; K) T Bs) TE Dv)
+     (ok>> (ofstack/frame (offrame/app2 TE1'') TK') TE2'
+        : ok (>> (f/app2 E1 Dv --- ; K) E2))
+     <- invf-app1 TK (Sub: subset Bs Cs) (Eq: eqty T (ty/arrow T1 T2)) 
+         (TK' : ofstack K T2 Cs) (TE2': of E2 T1 Cs)
+     <- p1 Eq TE TE1'
+     <- effect-value Dv TE1' (TE1'': of E1 (ty/arrow T1 T2) #).
+p3 : eqty (ty/arrow Ta Tb) (ty/arrow T' T'')
+      -> ofstack K Tb Cs
+      -> ({x} of x T' # -> of (E x) T'' #)
+      -> of E2 Ta #
+      -> ok (>> K (E E2)) -> type.
+- : p3 eqty/refl TK TE1 TE2 (ok>> TK (of/weaken (TE1 _ TE2) subset/z)).
+%mode p3 +A +B +C +D -E. %worlds () (p3 _ _ _ _ _). %total {} (p3 _ _ _ _ _).
+- : preservation step/appr (ok<< TK TE2 Dv) 
+     (Ans: ok (>> K (E E2)))
+     <- effect-value Dv TE2 (TE2': of E2 Ta #)
+     <- invf-app2 
+        (TK: ofstack (f/app2 (tm/lam T' E) V --- ; K) Ta Bs) 
+        (Sub: subset Bs Cs) 
+        (T1 : of (tm/lam T' E) (ty/arrow Ta Tb) Cs) 
+        (TK'' : ofstack K Tb Cs)
+     <- inv-lam T1 
+        (Eq: eqty (ty/arrow Ta Tb) (ty/arrow T' T'')) 
+        (Tfunc: {x} of x T' # -> of (E x) T'' #)
+     <- p3 Eq TK'' Tfunc TE2' Ans.
+- : preservation step/z (ok>> TK TE) (ok<< TK TE v/z).
+p2 : eqty T ty/nat -> ofstack K T Bs -> ofstack K ty/nat Bs -> type.
+- : p2 eqty/refl T T.
+%mode p2 +A +B -C. %worlds () (p2 _ _ _). %total {} (p2 _ _ _).
+- : preservation step/s (ok>> (TK: ofstack E T Bs) TE) 
+     (ok>> (ofstack/frame offrame/s (ofstack/weaken TK' Sub)) TE')
+     <- inv-s TE Sub Eq TE'
+     <- p2 Eq TK TK'.
+p6 : eqty T ty/nat -> of E T Bs -> of E ty/nat Bs -> type.
+- : p6 eqty/refl T T.
+%mode p6 +A +B -C. %worlds () (p6 _ _ _). %total {} (p6 _ _ _).
+- : preservation step/sr (ok<< TK TE Dv) 
+     (ok<< TK' (of/weaken (of/s TE') Sub)  (v/s Dv))
+     <- invf-s (TK: ofstack (f/s --- ; K) T Bs) Sub 
+        (Eq: eqty T ty/nat) (TK': ofstack K ty/nat Cs)
+     <- p6 Eq TE TE'.
+- : preservation step/if (ok>> TK TE) 
+     (ok>> (ofstack/frame (offrame/if T1 T2) (ofstack/weaken TK Sub)) T)
+     <- inv-if TE Sub T T1 T2.
+- : preservation step/ifz (ok<< TK TE Dv) (ok>> TK' TE1)
+     <- invf-if (TK: ofstack (f/if --- E1 E2 ; K) T Bs) 
+        (Sub: subset Bs Cs)
+        (Eq : eqty T ty/nat) 
+        (TE1 : of E1 T' Cs) _ (TK' : ofstack K _ Cs).
+- : preservation step/ifs (ok<< TK TE Dv) 
+     (ok>> TK' (TE2 _ (of/weaken TN Sub#)))
+     <- invf-if (TK: ofstack (f/if --- E1 E2 ; K) T Bs) 
+        (Sub: subset Bs Cs)
+        (Eq : eqty T ty/nat) 
+        _ (TE2: {x} of x ty/nat # -> of (E2 x) T' Cs) (TK' : ofstack K T' Cs)
+     <- effect-value Dv TE TE'
+     <- inv-s TE' (Sub# : subset As #) _ (TN: of N ty/nat As).
+p6 : eqty T T'
+      -> of (tm/fix T F) T #
+      -> ({x:tm} of x T # -> of (F x) T #)
+      -> of (tm/fix T' F) T #
+      -> ({x:tm} of x T # -> of (F x) T #) -> type.
+- : p6 eqty/refl T F T F.
+%mode p6 +A +B +C -D -E. 
+%worlds () (p6 _ _ _ _ _). 
+%total {} (p6 _ _ _ _ _).
+- : preservation step/fix (ok>> TK TE)
+     (ok>> TK (of/weaken (Tfn' _ Tfix') subset/z))
+     <- inv-fix (TE: of (tm/fix T' F) T Bs) 
+        (Eq: eqty T T') (Tfix: _) Tfn
+     <- p6 Eq Tfix Tfn Tfix' Tfn'.
+
+p5 : eqty T T' -> of E T # -> of E T' # -> type.
+- : p5 eqty/refl T T. 
+%mode p5 +A +B -C. %worlds () (p5 _ _ _). %total {} (p5 _ _ _).
+- : preservation (step/access (Look : lookup A K V Dv))
+     (ok>> TK TE) (ok<< TK (of/weaken TE'' subset/z) Dv : ok (<< K V Dv))
+     <- inv-access TE (In: in A Bs) (FT: fluidty A T)
+     <- access-stack' In TK Look (FT': fluidty A T') (TE': of V T' #)
+     <- fluidty-uniq FT' FT Eq
+     <- p5 Eq TE' TE''.
+- : preservation step/flet1 (ok>> TK TE) 
+     (ok>> (ofstack/frame (offrame/fluid-let FT T2) (ofstack/weaken TK Sub)) T1)
+     <- inv-fluid-let (TE: of (tm/fluid-let A E1 E2) T Cs)
+        (Sub: subset Bs Cs)
+        (FT: fluidty A Tf) 
+        (T1: of E1 Tf Bs) 
+        (T2: of E2 T (A , Bs)).
+- : preservation step/flet2 (ok<< TK TE Dv) 
+     (ok>> (ofstack/frame (offrame/fluid-bind FT TE') TK') T2)
+     <- invf-fluid-let (TK: ofstack (f/fluid-let A --- E2 ; K) Tf Bs)
+        (Sub: subset Bs Cs)
+        (FT: fluidty A Tf)
+        (T2: of E2 T (A , Cs))
+        (TK': ofstack K T Cs)
+     <- effect-value Dv TE (TE': of E1 Tf #).
+- : preservation step/fletr (ok<< TK TE Dv)
+     (ok<< TK' (of/weaken TE' subset/z) Dv)
+     <- effect-value Dv TE TE'
+     <- invf-fluid-bind TK _ TK'.
+- : preservation step/susp (ok>> TK TE) (ok<< TK TE v/susp).
+- : preservation step/ususp (ok>> (TK: ofstack K T Ds) 
+                               (TE: of (tm/unsusp E) T Ds)) 
+     (ok>> (ofstack/frame 
+              (offrame/unsusp (Merge: merge As Bs Cs)) 
+              (ofstack/weaken TK (Sub: subset Cs Ds))) 
+        (TE': of E (ty/mayuse T As) Bs))
+     <- inv-unsusp TE Sub TE' Merge.
+
+inv-susp : of (tm/susp E) T Cs 
+            -> eqty T (ty/mayuse T' As)
+            -> of (tm/susp E) (ty/mayuse T' As) #
+            -> of E T' As -> type.
+- : inv-susp (of/weaken Ts Sub) Eq Ts' T
+     <- inv-susp Ts Eq Ts' T.
+- : inv-susp (of/susp T) eqty/refl (of/susp T) T.
+%mode inv-susp +A -B -C -D. 
+%worlds () (inv-susp _ _ _ _). 
+%total T (inv-susp T _ _ _).
+
+invf-unsusp : ofstack (f/unsusp --- ; K) T B's
+               -> subset B's Bs
+               -> eqty T (ty/mayuse T' As)
+               -> merge As Bs Cs
+               -> ofstack K T' Cs -> type.
+- : invf-unsusp (ofstack/weaken TK Sub) Sub'' Eq Merge TK'
+     <- invf-unsusp TK Sub' Eq (Merge: merge As Bs Cs) TK'
+     <- subset-trans Sub Sub' Sub''.
+- : invf-unsusp (ofstack/frame 
+                   (offrame/unsusp (Merge: merge As Bs Cs)) 
+                   (TK: ofstack K T Cs))
+     Sub eqty/refl Merge TK
+     <- subset-refl Bs Sub.
+%mode invf-unsusp +A -B -C -D -E.
+%worlds () (invf-unsusp _ _ _ _ _).
+%total T (invf-unsusp T _ _ _ _).
+
+p7 : eqty T (ty/mayuse T' As)
+   -> eqty T (ty/mayuse T'' As')
+   -> ofstack K T'' Cs -> ofstack K T' Cs -> type.
+- : p7 eqty/refl eqty/refl T T.
+%mode p7 +A +B +C -D. %worlds () (p7 _ _ _ _). %total {} (p7 _ _ _ _).
+p8 : eqty T (ty/mayuse T' As)
+   -> eqty T (ty/mayuse T'' As')
+   -> merge As' B's Cs -> merge As B's Cs -> type.
+- : p8 eqty/refl eqty/refl T T.
+%mode p8 +A +B +C -D. %worlds () (p8 _ _ _ _). %total {} (p8 _ _ _ _).
+
+- : preservation step/ususpr (ok<< (TK: ofstack (f/unsusp --- ; K) T Bs)
+                                (TE: of (tm/susp E) T Bs) Dv)
+     (ok>> (ofstack/weaken (TK'' : ofstack K T' Cs) (Sub: subset As Cs))
+        TE')
+     <- inv-susp TE (Eq: eqty T (ty/mayuse T' As)) _ (TE' : of E T' As)
+     <- invf-unsusp TK
+        (Sub': subset Bs B's) 
+        (Eq2: eqty T (ty/mayuse T'' As')) 
+        (Merge: merge As' B's Cs) 
+        (TK' : ofstack K T'' Cs)
+     <- p7 Eq Eq2 TK' TK''
+     <- p8 Eq Eq2 Merge Merge'
+     <- merge-subset1 Merge' Sub.
+
+
+%worlds () (preservation _ _ _).
+%total {} (preservation _ _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Fluid_binding).
+!}%

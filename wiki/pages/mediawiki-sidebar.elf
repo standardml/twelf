@@ -1,0 +1,28 @@
+%%! title: "MediaWiki:Sidebar"
+
+%{! * the twelf wiki
+** mainpage|mainpage
+** About The Twelf Project|The Twelf Project
+** Download|Download Twelf
+** Documentation|Documentation 
+&lt;!-- The space here is controlled by Mediawiki:Monobook.css --&gt;
+** recentchanges-url|recentchanges
+** Project:Contributing|Contributing
+
+* learn twelf
+** Introductions to Twelf|Introductions
+** Tutorials|Tutorials
+** Case studies|Case studies
+** Glossary|Twelf glossary
+** Ask Twelf Elf|Ask Twelf Elf
+
+* reference
+** Bibliography of LF|LF bibliography
+** Research projects using Twelf|Research with Twelf !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/MediaWiki:Sidebar).
+!}%

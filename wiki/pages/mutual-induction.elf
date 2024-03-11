@@ -1,0 +1,112 @@
+%%! title: "Mutual induction"
+%%! tags: ["tutorial"]
+
+%{! It is common to write two or more mutually recursive type families.  For example, an object language may have mutually recursive judgements, or a proof may require mutually recursive theorems.  To check the totality of mutually recursive type families, you need to usual a mutual termination metric. This tutorial presents an example of doing so.
+
+## Motivating example
+
+As a motivating example, we define a simple subtyping relation on the types of a programming language.  The language includes integers, floating point numbers, and functions.  We consider ``int`` to be a subtype of ``float``, and we give the usual contravariant rule for functions: !}%
+
+tp    : type.
+int   : tp.
+float : tp.
+arrow : tp -> tp -> tp.
+
+sub       : tp -> tp -> type.
+sub-ii    : sub int int.
+sub-ff    : sub float float.
+sub-if    : sub int float.
+sub-arrow : sub (arrow T S) (arrow T' S')
+	     <- sub T' T
+	     <- sub S S'.
+
+%{! Let's prove that this subtyping relation is transitive.  Our first proof attempt goes as follows:
+
+```checkedtwelf
+sub-trans : sub T1 T2 -> sub T2 T3 -> sub T1 T3 -> type.
+%mode sub-trans +X1 +X2 -X3.
+
+- : sub-trans (D : sub T T) (D' : sub T T) D.
+- : sub-trans sub-ii sub-if sub-if.
+- : sub-trans sub-if sub-ff sub-if.
+
+- : sub-trans
+     (sub-arrow
+	(DS12 : sub S1 S2)
+	(DT21 : sub T2 T1))
+     (sub-arrow
+	(DS23 : sub S2 S3)
+	(DT32 : sub T3 T2))
+     (sub-arrow DS13 DT31)
+     <- sub-trans DT32 DT21 DT31
+     <- sub-trans DS12 DS23 DS13.
+
+%total D (sub-trans D _ _).
+```
+
+The base cases do the appropriate thing.  The case for ``sub-arrow`` against ``sub-arrow`` makes two inductive calls, corresponding to the two components of the arrow type.
+
+However, the totality check fails!
+
+To deal with the contravariance, we swapped the two argument derivations in the first inductive call of ``sub-arrow``.  However, this means that we have not given a proof by induction on the derivation of ``sub T1 T2``, since in this premise that derivation is not a subterm of the input.  This relation cannot be regarded as a proof by induction on the second derivation for the same reason.
+
+One solution would be to induct over the sum of the sizes of the two derivations, which certainly gets smaller in this case.
+
+## Mutual induction
+
+However, a simpler solution, which happens to work in this case, is to prove the transitivity theorem _twice_, once by induction on the first input, and again by induction on the second input, in a mutually inductive loop.  These two proofs will call each other in the contravariant premise, so the induction will go through.  Here's what the revised proof looks like: !}%
+
+sub-trans : sub T1 T2 -> sub T2 T3 -> sub T1 T3 -> type.
+%mode sub-trans +X1 +X2 -X3.
+
+sub-trans' : sub T1 T2 -> sub T2 T3 -> sub T1 T3 -> type.
+%mode sub-trans' +X1 +X2 -X3.
+
+%% normal
+
+- : sub-trans (D : sub T T) (D' : sub T T) D.
+
+- : sub-trans sub-ii sub-if sub-if.
+
+- : sub-trans sub-if sub-ff sub-if.
+
+- : sub-trans
+     (sub-arrow
+	(DS12 : sub S1 S2)
+	(DT21 : sub T2 T1))
+     (sub-arrow
+	(DS23 : sub S2 S3)
+	(DT32 : sub T3 T2))
+     (sub-arrow DS13 DT31)
+     <- sub-trans' DT32 DT21 DT31
+     <- sub-trans DS12 DS23 DS13.
+
+%% prime
+
+- : sub-trans' D D D.
+
+- : sub-trans' sub-ii sub-if sub-if.
+
+- : sub-trans' sub-if sub-ff sub-if.
+
+- : sub-trans'
+     (sub-arrow
+	(DS12 : sub S1 S2)
+	(DT21 : sub T2 T1))
+     (sub-arrow
+	(DS23 : sub S2 S3)
+	(DT32 : sub T3 T2))
+     (sub-arrow DS13 DT31)
+     <- sub-trans DT32 DT21 DT31
+     <- sub-trans' DS12 DS23 DS13.
+
+%worlds () (sub-trans _ _ _) (sub-trans' _ _ _).
+%total (D D') (sub-trans D _ _) (sub-trans' _ D' _).
+
+%{! Because each relation refers to the other, we must use a mutual termination metric.  A mutual termination metric has the form ``(D1 D2 ... Dn)``, where there must be as many variables in the termination metric as there are mutual relations.  Then, the remainder of the ``%total`` lists each mutual relation, and identifies which argument to each relation is considered to be the induction position.  In this case, we say that ``sum-trans`` is by induction on the first argument, whereas ``sum-trans'`` is by induction on the second (though the symmetric declaration would also work).
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Mutual_induction).
+!}%

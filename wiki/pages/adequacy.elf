@@ -1,0 +1,26 @@
+%%! title: "Adequacy"
+
+%{! Twelf is based on the logical framework [LF](/wiki/lf/). When we write down a logical system (an [object logic](/wiki/object-logic/) such as a programming language) in Twelf, we are defining the objects and judgments of our language as LF types and terms. 
+The correctness criterion for such a representation is called **adequacy**.  An LF representation is **adequate** iff it is isomorphic to the original description of the object logic. Specifically, we require a _compositional bijection_ between the original description and the LF representations, which means that:
+
+- There is a bijection between object language entities and LF objects of a particular type (the "bijection" part).
+- For representations that use  [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) and [higher-order judgment](/wiki/higher-order-judgements/)s, LF's notion of substitution correctly models object-language substitution (the "compositional" part). 
+
+See the introductory article [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/), as well as Harper and Licata's paper &lt;ref&gt;\{\{bibtex:hl07mechanizing\}\}&lt;/ref&gt;, for example adequacy statements and proofs.
+
+## References
+
+&lt;references/&gt;
+
+* [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)
+* [http://www-2.cs.cmu.edu/~rwh/papers/how/believe-twelf.pdf How to Believe a Twelf Proof]
+\{\{bibtex:hhp93lf\}\}
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Adequacy).
+!}%

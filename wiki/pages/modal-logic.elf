@@ -1,0 +1,170 @@
+%%! title: "Modal logic"
+
+%{! In this page we show how to encode modal logic in LF. Similarly to [linear logic](/wiki/linear-logic/), the main idea here is to define a judgment that explicitly restricts the use of non-necessity assumptions (any assumption of a proof for a judgment that is not necessary). 
+
+## The Encoding
+### Syntax !}%
+    
+% Terms
+tm : type.
+
+unit : tm.
+app : tm -> tm -> tm.
+lam : (tm -> tm) -> tm.
+bx : tm -> tm.
+letbox : tm -> ( tm -> tm) -> tm.
+
+% Types
+tp:type.
+o:tp.
+arrow: tp -> tp -> tp.
+box: tp -> tp.
+dia: tp -> tp.
+
+%{! ### Local Judgment
+The correct use of an assumption inside a proof term can be enforced by a ``local`` judgment. This jugment ensures that a variable is never used inside any term `` bx M `` that exists within its scope (we say that the variable is local). !}%
+    
+local : (tm -> tm) -> type.
+
+%{! The simplest cases are the one for variables. !}%
+    
+local/var:  local ([x] x).
+
+%{!  !}%
+    
+local/closed:  local ([x] M).
+
+%{! A variable is local in an abstraction if it is local inside the abstraction's body. Note that the abstraction's argument (which must be local as well) is handled separately by the abstraction's typing rule. !}%
+    
+local/lam: local ( [x] lam ([y] N x y))
+      	  <- {y} local ([x] N x y).
+
+%{! A variable is local in an application if it is local inside its subterms. !}%
+    
+local/app : local ([x] app (M x) (N x))
+	<- local ([x] M x)
+	<- local ([x] N x).
+
+%{! The same idea applies to letbox. !}%
+    
+local/letbox: local ([x] letbox (M x) ([y] N x y))
+       	   <- local ([x] M x)
+           <- {y} local ([x] N x y).
+
+%{! Significantly, there is no rule for bx.  Local variables are not permitted to appear within box terms.
+
+### Typing rules
+The key idea introduced by our enconding of modal logic is that typing rules need to check (using the local judgment described above) that non-necessary assumptions are never used inside a term ``bx M ``. In our case, abstractions are the only terms that bind restricted (non-necessary) variables, and therefore the rule for ``letbox`` does not need to check whether its variable is local or not. !}%
+    
+of : tm -> tp -> type. 
+
+of/unit: of unit o.
+
+of/bx:  of ( bx M ) ( box T ) 
+	 <- of M T.
+
+of/lam:  of (lam M) (arrow A  B) 
+	 <- ( {n:tm} of n A -> of ( M n) B )
+	 <- local M.
+
+of/letbox: of ( letbox N M ) B 
+	   <- of N (box A) 
+	   <- ( {n:tm} of n  A -> of ( M n) B ). 
+
+of/app: (of M (arrow T1  T2)) ->  (of N T1) -> (of ( app M N ) T2).
+
+%{! ``&gt;Source code for the encoding``
+
+# Type Preservation
+As an example, we can prove preservation using our encoding.
+
+## Evaluation Rules
+First, we define the ``value`` judgment and evaluation rules. !}%
+    
+value: tm -> type.
+
+value/unit: value (unit).
+value/lam: value (lam M).
+value/bx: value (bx M)
+	   <- value M.
+
+
+%%%%%% Evaluation rules %%%%%%
+step : tm -> tm -> type.
+
+step/beta: step ( app (lam N ) M) (N M)
+	    <- value M.
+
+step/app1: step (app M N) (app M1 N) 
+	    <- step M M1
+	   <- value N.
+
+step/app2: step (app M N) (app M N1) 
+       <- step N N1.
+      
+
+step/bx: step (bx M) (bx N) 
+     <- step M N.
+
+step/letbox: step (letbox M N) ( letbox M' N) 
+	  <- step M M'.
+
+
+step/letbox/beta: step (letbox (bx M) N) ( N M)
+		   <- value M.
+
+%{! ## Type Preservation Proof !}%
+    
+step-type: of M A -> step M N -> of N A -> type.
+%mode step-type +M +R -N.
+
+step-type/beta: step-type  ( of/app (of/lam LN P) OM)
+	 	      ( step/beta _ : step (app (lam N) M) (N M))
+		      ( P M OM  ).
+
+
+
+
+
+step-type/app1 : step-type (of/app OM ON)
+	  	       (step/app1 _ R )
+		       (of/app OM1 ON) 
+		 <-
+		 step-type OM R OM1. 
+
+
+step-type/app2: step-type (of/app ON OM)
+	  	       (step/app2 R )
+		       (of/app ON OM1) 
+		 <-
+		 step-type OM R OM1. 
+
+
+step-type/bx: step-type (of/bx PM)
+	 	      (step/bx S)
+		      (of/bx PN)
+		      <- step-type PM S PN.
+
+step-type/letbox : step-type (of/letbox ON OM)
+	  	       (step/letbox R )
+		       (of/letbox ON OM1) 
+		 <-
+		 step-type OM R OM1. 
+
+step-type/letbox/beta: step-type ( of/letbox P (of/bx OM)) 
+	 	      (step/letbox/beta _)
+		      (P M OM).
+
+%worlds ()  (step-type _ _ _ ).
+%total (R)(step-type R   _ _ ).
+
+%{! ``&gt;Complete Source code``
+
+`` check=true&gt;Twelf Output`` !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Modal_logic).
+!}%

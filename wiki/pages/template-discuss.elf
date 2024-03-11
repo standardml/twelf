@@ -1,0 +1,19 @@
+%%! title: "Template:Discuss"
+
+%{! [[Talk:\{\{PAGENAME\}\}#\{\{\{1\}\}\}|&lt;sup&gt;[?]&lt;/sup&gt;]]&lt;noinclude&gt;
+
+
+This template places a discussion link in an article. The link takes the user to a supplied section on the talk page for the same article. (It does not work for pages outside the article namespace). To use it, write:
+
+:&lt;nowiki&gt;\{\{discuss|&lt;/nowiki&gt;_description of issue_&lt;nowiki&gt;\}\}&lt;/nowiki&gt;
+
+where _description of issue_ is an informative section header for the talk page. You should then create that section on the talk page. The link looks like this.[&lt;sup&gt;[?]&lt;/sup&gt;](/wiki/talk-main-page/)
+
+&lt;/noinclude&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Discuss).
+!}%

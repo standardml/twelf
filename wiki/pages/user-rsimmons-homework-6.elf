@@ -1,0 +1,241 @@
+%%! title: "User:Rsimmons/Homework 6"
+
+%{! 
+
+First: look to the right ----&gt;
+
+Where it says "Code: here" click on that link. This will you to grab the code for this webpage in a form that you can cut and paste into a file and use in Twelf.
+
+Unless you want to do this whole assignment in [Twelf Live](/wiki/twelf-live/), then you will need to download Twelf on your machine. 
+
+* [http://twelf.plparty.org/builds/twelf-linux.tar.gz Linux (tgz)]
+* [http://twelf.plparty.org/builds/twelf.exe Windows (exe)]
+* [http://twelf.plparty.org/builds/twelf-osx-intel.dmg Mac OS 10.4 or 10.5 (Intel only) (dmg)]
+* [http://twelf.plparty.org/builds/twelf-src.tar.gz Source tarball (tgz)].  You will need [http://www.mlton.org MLton] or [http://www.smlnj.org sml/nj]. 
+
+**_Handing in:**_ Place the file ``hw06.elf`` in your handin directory by midnight on **_Monday, November 24**_
+
+!}%
+
+%{! ## Part 1: Natural Numbers !}%
+
+%{! In the last section of [http://www.andrew.cmu.edu/course/15-814/homeworks/hw05.html Homework 5], I developed natural numbers in System F and then made some inductive definitions. I will do that again, but in Twelf, not System F.
+
+Natural numbers are no longer an interesting System F type, they're just something I define: !}%
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+%{! Again, I can outright define the various natural numbers if I care to, and I can even define an LF term ``succ`` that takes a natural number and returns its successor, though this is kind of a dumb function, because it just applies the ``s`` constructor: !}%
+
+0 : nat = z.
+1 : nat = s z.
+2 : nat = s (s z).
+3 : nat = s (s (s z)).
+4 : nat = s (s (s (s z))).
+5 : nat = s (s (s (s (s z)))).
+6 : nat = s (s (s (s (s (s z))))).
+
+succ : nat -> nat = [n: nat] s n.
+
+%{! ### Inductive descriptions of functions... well, of total relations !}%
+
+%{! As before, I want to inductively define functions on natural numbers, and I want to know they're _functions_ - that I'll get an
+input for every output (actually, what we're showing here is that they are "total" or "effective" relations - that for every input there is an output - and not that that output is unique. We can treat a relation as a function if it satisfies uniqueness and effectiveness, but that is not something we care about in this assignment.
+
+Our approach to inductively defining an effective relation is to describe the logic program that actually does describe a function. !}%
+
+%{! 
+**Addition:** _n+m=p_ is defined by induction on _n_. If _n = 0_ then _n+m=m_, and if _n = n'+1_ and _n'+m=p_, then _n+m=p+1_. 
+!}%
+
+sum : nat -> nat -> nat -> type.
+%mode sum +N +M -P.
+
+sum/z : sum z M M.
+sum/s : sum (s N') M (s P)
+         <- sum N' M P.
+
+%worlds () (sum _ _ _).
+%total N (sum N _ _).
+
+%{! 
+**Multiplication:** _n×m=p_ is defined by induction on _n_. If _n = 0_, then _n×m=0_, and if _n = n'+1_ and _n'×m=p_, then _n×m=m+p_.
+!}%
+
+mult : nat -> nat -> nat -> type.
+%mode mult +N +M -P.
+
+mult/z : mult z M z.
+mult/s : mult (s N') M P'
+          <- mult N' M P
+          <- sum M P P'.
+
+%worlds () (mult _ _ _).
+%total N (mult N _ _).
+
+%{! 
+**Exponentiation:** _n^m=p_ is defined by induction on _m_ (**not** _n_). If _m = 0_, then _n^m=1_, and if _m = m'+1_ and _n^m'=p_, then _n^m=n*p_.
+!}%
+
+pow : nat -> nat -> nat -> type.
+%mode pow +N +M -P.
+
+pow/z : pow N z (s z).
+pow/s : pow N (s M) P'
+         <- pow N M P
+         <- mult N P P'.
+
+%worlds () (pow _ _ _).
+%total M (pow _ M _).
+
+%{! ### Question 1: Specification from code !}%
+
+%{! What function the following relations define? (Again, ``%total`` proves only that they are total relations, but these relations
+also happen to be unique, meaning that they are functions.) 
+
+A word or two should suffice in each case. !}%
+
+
+%{! #### Relation 1 !}%
+
+rel1 : nat -> nat -> type.
+%mode rel1 +N -M.
+
+rel1/z : rel1 z (s z).
+rel1/s : rel1 (s N') P'
+          <- rel1 N' P
+          <- mult (s N') P P'.
+
+%worlds () (rel1 _ _).
+%total N (rel1 N _).
+
+
+%{! #### Relation 2 !}%
+
+rel2 : nat -> nat -> nat -> type.
+%mode rel2 +N +M -P.
+
+rel2/z1 : rel2 N z N.
+rel2/z2 : rel2 z M M.
+rel2/s : rel2 (s N) (s M) (s P)
+          <- rel2 N M P.
+
+%worlds () (rel2 _ _ _).
+%total [N M] (rel2 N M _).
+
+
+%{! #### Relation 3 !}%
+
+rel3 : nat -> nat -> type.
+%mode rel3 +N -M.
+
+rel3/z : rel3 z (s z).
+rel3/1 : rel3 (s z) (s z).
+rel3/s : rel3 (s (s N')) P
+          <- rel3 N' P1
+          <- rel3 (s N') P2
+          <- sum P1 P2 P. 
+         
+%worlds () (rel3 _ _).
+%total N (rel3 N _).
+
+%{! ## Part 2: Lists and Trees !}%
+
+%{! We had lists and trees in Homework 5, and now we have them again. We don't have to give them System F types, we can just define the constructors in a straightforward manner:
+
+In BNF:
+  l ::= nil | cons n l
+  t ::= leaf | node n t t 
+
+In Twelf: !}%
+
+list : type.
+nil : list.
+cons : nat -> list -> list.
+
+tree : type.
+leaf : tree.
+node : nat -> tree -> tree -> tree.
+
+%{! Remember this example?
+       2
+      / \
+     *   1
+        / \
+       6   *
+      / \
+     /   \
+    5     2
+   / \   / \
+  *   * 3   *
+       / \
+      *   *
+I gave a System F term for that tree in the previous assignment, and all I had to do was cut and paste here: !}%
+
+mytree : tree = node 2 leaf (node 1 (node 6 (node 5 leaf leaf) (node 2 (node 3 leaf leaf) leaf)) leaf).
+
+%{! ### Question 2: Code from specification !}%
+
+%{! Define ``append`` and ``flip`` as defined in [http://www.andrew.cmu.edu/course/15-814/homeworks/hw05.html Homework 5]. The ``infix`` relation is defined for you, but you will need to define ``append`` before Twelf will accept that ``infix`` is total. !}%
+
+%{! #### Append !}%
+
+append : list -> list -> list -> type.
+%mode append +L1 +L2 -L.
+
+% Write code here
+
+%worlds () (append _ _ _).
+%% %total L (append L _ _). % Uncomment me to finish
+
+%{! #### Flip !}%
+
+flip : tree -> tree -> type.
+%mode flip +T -T'.
+
+% Write code here
+
+%worlds () (flip _ _).
+%% %total T (flip T _). % Uncomment me to finish
+
+
+%{! #### Infix !}%
+
+infix : tree -> list -> type.
+%mode infix +T -L.
+
+infix/z : infix leaf nil.
+infix/s : infix (node N T1 T2) L
+           <- infix T1 L1
+           <- infix T2 L2
+           <- append L1 (cons N L2) L.
+
+%worlds () (infix _ _).
+%% %total T (infix T _). % Uncomment me once append works.
+
+%{! ### Test cases !}%
+
+%% %query 1 * append (cons 4 (cons 5 nil)) (cons 3 (cons 1 nil)) (cons 4 (cons 5 (cons 3 (cons 1 nil)))).
+%% %query 1 * append nil (cons 4 (cons 5 (cons 6 nil))) (cons 4 (cons 5 (cons 6 nil))).
+%% %query 1 * append (cons 4 (cons 5 (cons 6 nil))) nil (cons 4 (cons 5 (cons 6 nil))).
+%% %query 1 * flip (node 2 leaf leaf) (node 2 leaf leaf).
+%% %query 1 * flip (node 3 (node 1 leaf leaf) leaf) (node 3 leaf (node 1 leaf leaf)).
+%% %query 1 * flip 
+%%             mytree 
+%%             (node 2
+%%               (node 1 
+%%                 leaf 
+%%                 (node 6 
+%%                   (node 2 leaf (node 3 leaf leaf)) 
+%%                   (node 5 leaf leaf)))
+%%               leaf).
+%% %query 1 * infix mytree (cons 2 (cons 5 (cons 6 (cons 3 (cons 2 (cons 1 nil)))))).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Homework_6).
+!}%

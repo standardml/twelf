@@ -1,0 +1,15 @@
+%%! title: "Template:Bibtex:lch07ml"
+
+%{! &lt;bibtex&gt;@inproceedings\{ lee07ml,
+    author = "Daniel K. Lee and Karl Crary and Robert Harper",
+    title = "Towards a mechanized metatheory of Standard ML",
+    booktitle = "ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages",
+    year = "2007",
+\}&lt;/bibtex&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Bibtex:lch07ml).
+!}%

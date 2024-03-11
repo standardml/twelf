@@ -1,0 +1,11 @@
+%%! title: "Template:Twelf code"
+
+%{! &lt;hr&gt;&lt;small&gt;The above page contains an example of [[:Category:Twelf code|Twelf code]]. It may be attached to a [tutorial](/wiki/tutorials/) as an illustrative example, or it may stand on its own.&lt;/small&gt;
+&lt;includeonly&gt;[Category:Twelf code](/wiki/category-twelf-code/)&lt;/includeonly&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Twelf_code).
+!}%

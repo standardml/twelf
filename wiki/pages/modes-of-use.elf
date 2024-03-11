@@ -1,0 +1,140 @@
+%%! title: "Modes of use"
+
+%{! 
+
+Twelf is a very flexible system that lends itself to a wide variety of [deductive systems](/wiki/object-logic/). This flexibility can be confusing, as different uses of Twelf look very different from one another. Here, we attempt to describe a number of the major modes of use of Twelf.
+
+* **[[#A framework for defining logics|A framework for defining logics]]** - The judgments of a logic are encoded in Twelf so that Twelf's type checker can check the correctness of proofs. The Foundational Proof Carrying Code project at Princeton used this method extensively to write proofs about programs that could be verified by a small, trusted checker. The primary tutorial for this style is Andrew Appel's [http://www.cs.princeton.edu/~appel/twelf-tutorial/ Hints on Proving Theorems in Twelf]
+* **[[#Proving properties about deductive systems|Proving properties about deductive systems]] - This is a relatively recent use of Twelf, but it is also perhaps the most widespread. The judgments of a deductive system, typically a programming language, are encoded in Twelf, and then Twelf is used to verify [metatheorems](/wiki/metatheorem/) about that deductive system. The primary tutorial for this style is [Dan Licata's](/wiki/user-drl/) [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/), though several others can be found on the [Documentation](/wiki/documentation/) page.
+* Typed logic programming - Twelf can also be used as an advanced typed logic programming language, a variant of Lambda Prolog with dependent types.
+
+Most large projects integrate several of these modes of use. There are some limitations to this integration, particularly in that the [constraint domains](/wiki/constraint-domain/) and [[type level definitions]] cannot be used in projects that want to prove [metatheorems](/wiki/metatheorem/). 
+
+
+## A framework for defining logics
+
+The "theorem style" use of Twelf described in Andrew Appel's notes defines a deductive system, typically a **logic**: first a set of propositions (propositions often have type ``o`` for historical reasons), and then axioms about how propositions can be proven. Appel's FPCC project uses higher-order logic, but here we define a much simpler propositional logic.
+
+!}%
+
+o : type.
+
+% Propositions
+
+true : o.
+imp : o -> o -> o. %infix right 10 imp.
+and : o -> o -> o. %infix right 11 and.
+
+% Judgments
+
+pf : o -> type.
+
+true-i : pf true.
+
+imp-i : (pf A -> pf B) -> pf (A imp B).
+imp-e : pf (A imp B) -> pf A -> pf B.
+
+and-i : pf A -> pf B -> pf (A and B).
+and-e1 : pf (A and B) -> pf A.
+and-e2 : pf (A and B) -> pf B.
+
+%{! Having defined this a logic, the point of the exercise is to write out proofs by hand (perhaps with the assistance of [tactical theorem proving](/wiki/tactical-theorem-proving/)). These proofs can then be automatically verified by Twelf, or by an extremely small independent checker.
+
+Here are some examples from the first lecture of Hints on Proving Theorems in Twelf: !}%
+
+symm-and: pf (A and B) -> pf (B and A) = 
+  [p1 : pf (A and B)] 
+  and-i (and-e2 p1) (and-e1 p1).
+
+and-l : pf (A and B) -> (pf A -> pf B -> pf C) -> pf C = 
+  [p1 : pf (A and B)]
+  [p2 : pf A -> pf B -> pf C]
+  imp-e (imp-e (imp-i [p3] imp-i (p2 p3)) (and-e1 p1)) (and-e2 p1).
+
+example-abc: pf (A and B) ->
+              pf C ->
+               pf ((B and C) and (A and C)) =
+ [p1: pf (A and B)]        
+ [p2: pf C]               
+ and-l p1            
+        [p3: pf A]  
+        [p4: pf B]   
+ and-i                
+ (and-i p4           
+  p2)              
+ (and-i p3 p2).        
+
+%{! Even this logic allows us to prove a number of interesting theorems; the definition of a more complex logic (without much commentary)  can be found at [Zermelo Frankel](/wiki/zermelo-frankel/).
+
+
+## Proving properties about deductive systems
+
+The "metatheorem style" use of Twelf defines a deductive system, typically a **programming language**: first the abstract syntax of the language, and then the static and dynamic semantics. Here is an example of a simple lambda calculus with product types (we don't define the dynamic semantics here, see \{\{proving|title=Representing the judgements of the STLC\}\} for a similar example). 
+!}%
+
+
+exp : type.
+tp  : type.
+
+
+% Expressions
+
+exp/unit : exp.
+exp/lam : tp -> (exp -> exp) -> exp.
+exp/app : exp -> exp -> exp.
+exp/pair : exp -> exp -> exp.
+exp/fst : exp -> exp.
+exp/snd : exp -> exp.
+
+
+% Types
+
+unit : tp.
+arrow : tp -> tp -> tp.  %infix right 10 arrow.
+pair : tp -> tp -> tp.   %infix right 11 pair.
+
+
+% Static semantics
+
+of : exp -> tp -> type.
+
+of/unit : of exp/unit unit.
+
+of/lam : of (exp/lam T1 ([x] E x)) (T1 arrow T2)
+          <- ({x: exp} of x T1 -> of (E x) T2).
+of/app : of (exp/app E E') T
+          <- of E' T'
+          <- of E (T' arrow T).
+
+of/pair : of (exp/pair E1 E2) (T1 pair T2)
+           <- of E2 T2
+           <- of E1 T1.
+of/fst : of (exp/fst E) T1
+          <- of E (T1 pair T2).
+of/snd : of (exp/snd E) T2
+          <- of E (T1 pair T2).
+
+
+% Dynamic semantics
+
+step : exp -> exp -> type.
+
+% ... and so on
+
+%{! 
+
+Having defined this programming language, we are generally interested in proving [metatheorems](/wiki/metatheorem/) relating that programming language to a particular dynamic semantics - showing, for instance, that a certain evaluation strategy will preserve the type of the terms it evaluates, and that if a closed can be given a type, it can either be reduced or it is already a value. We also may be interested in using the [logic programming](/wiki/logic-programming/) engine of Twelf to _run_ our typing judgments as a logic program, giving our language a reference type checker.
+
+
+### Discussion
+
+
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Modes_of_use).
+!}%

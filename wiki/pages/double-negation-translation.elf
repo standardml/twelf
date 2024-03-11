@@ -1,0 +1,672 @@
+%%! title: "Double-negation translation"
+
+%{! 
+
+## Intuitionistic logic
+
+!}%
+
+iprop : type.  %name iprop A'.
+
+itop : iprop.
+iand : iprop -> iprop -> iprop.
+ibot : iprop.
+ior  : iprop -> iprop -> iprop.
+iimp : iprop -> iprop -> iprop.
+
+%block ipb : block {X : iprop}.
+%worlds (ipb) (iprop).
+
+itrue : iprop -> type.
+
+imt : itrue itop.
+ipair : itrue A -> itrue B -> itrue (iand A B).
+ifst : itrue (iand A B) -> itrue A.
+isnd : itrue (iand A B) -> itrue B.
+iabort : itrue ibot -> itrue C.
+iinl  : itrue A -> itrue (ior A B). 
+iinr  : itrue B -> itrue (ior A B). 
+icase : itrue (ior A B) -> (itrue A -> itrue C) ->  (itrue B -> itrue C) -> itrue C.
+ilam  : (itrue A -> itrue B) -> itrue (iimp A B).
+iapp  : itrue (iimp A B) -> itrue A -> itrue B.
+
+inot : iprop -> iprop = [A] iimp A ibot.
+idn : iprop -> iprop = [A] (inot (inot A)).
+
+dni : itrue A -> itrue (idn A) =
+ [x : itrue A] (ilam [y : itrue (inot A)] (iapp y x)).
+
+tne : itrue (idn (inot A)) -> itrue (inot A) =
+ [x3 : itrue (inot (inot (inot A)))] 
+   ilam [x : itrue A] 
+     iapp x3 (ilam [y : itrue (inot A)] (iapp y x)).
+
+distdnand : itrue (idn (iand A B)) -> itrue (iand (idn A) (idn B)) =
+ [f] (ipair 
+	(ilam [x : itrue (inot A)] iapp f (ilam [p] iapp x (ifst p)))
+	(ilam [x : itrue (inot B)] iapp f (ilam [p] iapp x (isnd p)))
+	).
+
+dnebot : itrue (idn ibot) -> itrue ibot = [x] iapp x (ilam [x] x).
+%abbrev dnetop : itrue (idn itop) -> itrue itop = [x] imt.
+
+distdnimp : itrue (idn (iimp A B)) -> itrue (iimp (idn A) (idn B)) =
+ [f] (ilam [x : itrue (idn A)] 
+	(ilam [y : itrue (inot B)] 
+	   iapp f 
+	   (ilam [g : itrue (iimp A B)]
+	      iapp x (ilam [z : itrue A] iapp y (iapp g z))))). 
+
+%block itb : some {A : iprop} block {D : itrue A}.
+%worlds (ipb | itb) (itrue _). 
+
+
+%{! 
+
+## Classical logic
+
+!}%
+
+prop : type.  %name prop A.
+
+top : prop.
+and : prop -> prop -> prop.
+bot : prop.
+or  : prop -> prop -> prop.
+imp : prop -> prop -> prop.
+nbot : prop.
+not : prop -> prop.
+
+%block pb : block {X : prop}.
+%worlds (pb) (prop).
+
+conc : type.
+true  : prop -> conc. %prefix 2 true.
+false : prop -> conc. %prefix 2 false.
+contra : conc. 
+
+>> : conc -> type.  %prefix 3 >>.
+
+mt : >> true top.
+pair : >> true A -> >> true B -> >> true (and A B).
+fst : >> true (and A B) -> >> true A.
+snd : >> true (and A B) -> >> true B.
+abort : >> true bot -> >> J.
+inl  : >> true A -> >> true (or A B). 
+inr  : >> true B -> >> true (or A B). 
+case : >> true (or A B) -> (>> true A -> >> J) ->  (>> true B -> >> J) -> >> J.
+lam  : (>> true A -> >> true B) -> >> true (imp A B).
+app  : >> true (imp A B) -> >> true A -> >> true B.
+
+%% anything follows from contradiction
+cabort : >> contra -> >> J.
+
+%% negative bottom
+nboti : >> contra -> >> true nbot.
+nbote : >> true nbot -> >> contra.
+
+%% falsehood
+cont  : (>> true A -> >> contra) -> >> false A.
+throw : >> false A -> >> true A -> >> contra.
+
+%% negation
+noti    : >> false A -> >> true (not A).
+notcase : >> true (not A) -> (>> false A -> >> J) -> >> J.                                       %% because not should be positive
+
+%% letcc
+letcc : (>> false A -> >> contra) -> >> true A.
+
+%block tb : some {A : prop} block {D : >> true A}.
+%block fb : some {A : prop} block {D : >> false A}.
+%worlds (pb | tb | fb) (>> _).
+
+iff  : prop -> prop -> prop = [A] [B] (and (imp A B) (imp B A)).
+iffi : (>> true A -> >> true B) -> (>> true B -> >> true A) -> (>> true (iff A B)) 
+ = [E1] [E2] (pair (lam E1) (lam E2)).
+iffel : (>> true (iff A B)) -> (>> true A -> >> true B) 
+ = [E1] [E2] (app (fst E1) E2).
+iffer : (>> true (iff A B)) -> (>> true B -> >> true A) 
+ = [E1] [E2] (app (snd E1) E2).
+
+cdni : >> true A -> >> true (not (not A)) =
+[x] (noti (cont [nx] (notcase nx [f] throw f x))).
+
+cdne : >> true (not (not A)) -> >> true A =
+[x] notcase x ([f] letcc [u] throw f (noti u)).
+
+notimpbot : >> true (iff A B) -> >> true (iff (not A) (imp B bot)) =
+[c] (iffi 
+       ([x] notcase x ([f] (lam [y] (cabort (throw f (iffer c y))))))
+       ([x] noti (cont [y] abort (app x (iffel c y))))).
+
+notimpbot2 : >> true (iff (not (not A)) (imp (imp A bot) bot)) =
+notimpbot (notimpbot (iffi ([x] x) ([x] x))).
+   
+%{! 
+
+## Double-negation translation
+
+This is essentially the 
+[Godel-Gentzen Negtive Translation](http://en.wikipedia.org/wiki/G%C3%B6del%E2%80%93Gentzen_negative_translation).
+It differs only by De Morgan laws that are provable intuitionistically.  
+!}%
+
+* : prop -> iprop -> type.
+%mode * +A -A'.
+
+*/top : * top itop.
+*/and : * (and A B) (iand A' B')
+	 <- * A A'
+	 <- * B B'.
+*/bot : * bot ibot.
+*/or : * (or A B) (inot (inot (ior A' B')))
+	 <- * A A'
+	 <- * B B'.
+*/imp : * (imp A B) (iimp A' B')
+	 <- * A A'
+	 <- * B B'.
+*/nbot : * nbot ibot.
+*/not  : * (not A) (inot A')
+	  <- * A A'.
+
+%block *b : block {X : prop} {X' : iprop} {_ : * X (inot (inot X'))}.
+%worlds (*b) (* _ _).
+%total A (* A _).
+%unique * +A -1A'.
+
+*tot : {A} * A A' -> type.
+%mode *tot +A -D*.
+
+%block *totb : block {X : prop} {X' : iprop} {D* : * X (idn X')} {_ : *tot X D*}.
+%worlds (*totb) (*tot _ _).
+%trustme %total {} (*tot _ _).  %% verified by %total above
+
+id-iprop : iprop -> iprop -> type.
+id-iprop/refl : id-iprop A A.
+
+id-iprop-not-cong : id-iprop A' B' -> id-iprop (inot A') (inot B') -> type.
+%mode id-iprop-not-cong +X1 -X2.
+- : id-iprop-not-cong _ id-iprop/refl.
+%worlds (ipb) (id-iprop-not-cong _ _).
+%total {} (id-iprop-not-cong _ _).
+
+*unique : * A A' -> * A B' -> id-iprop A' B' -> type.
+%mode *unique +X1 +X2 -X3.
+%worlds (*b) (*unique _ _ _).
+%trustme %total {} (*unique _ _ _). %% verified by %unique above
+
+itrue-respects-id : itrue A -> id-iprop A' A -> itrue A' -> type.
+%mode itrue-respects-id +X1 +X2 -X3.
+- : itrue-respects-id D _ D.
+%worlds (itb | ipb) (itrue-respects-id _ _ _).
+%total {} (itrue-respects-id _ _ _).
+
+%{! 
+
+### Double-negation elimination for the target of the translation
+
+!}%
+
+dne : * A A' -> (itrue (inot (inot A')) -> itrue A') -> type.
+%mode dne +X1 -X2.
+
+- : dne (*/and D*2 D*1) ([x] ipair (E1 (ifst (distdnand x))) (E2 (isnd (distdnand x))))
+     <- dne D*1 E1
+     <- dne D*2 E2.
+- : dne */top ([x] imt).
+- : dne (*/or _ _) [x] (tne x).
+- : dne */bot  ([x] (dnebot x)).
+- : dne */nbot  ([x] (dnebot x)).
+- : dne (*/imp D*2 D*1) 
+     ([x] (ilam [y] E2 (iapp (distdnimp x) (dni y))))
+     <- dne D*2 E2.
+- : dne (*/not D*) tne 
+     <- dne D* E.
+
+%block dneb : block {X : prop} {X' : iprop} {dx : * X (idn X')}
+	       {_ : dne dx tne}.
+
+%worlds (dneb | itb) (dne _ _).
+%total D (dne D _).
+
+%{! 
+
+## Soundness
+
+!}%
+
+sound/true : >> true A -> * A A' -> itrue A' -> type.
+%mode sound/true +X1 +X2 -X3.
+
+sound/false : >> false A -> * A A' -> itrue (iimp A' ibot) -> type.
+%mode sound/false +X1 +X2 -X3.
+
+sound/contra : >> contra -> itrue ibot -> type.
+%mode sound/contra +X1 -X3.
+
+%% true
+
+- : sound/true mt */top imt.
+- : sound/true (pair E1 E2) (*/and D*2 D*1) (ipair E1' E2')
+     <- sound/true E1 D*1 E1'
+     <- sound/true E2 D*2 E2'.
+- : sound/true (fst (E : >> true (and A1 A2))) D*1 (ifst E')
+     <- *tot A2 D*2
+     <- sound/true E (*/and D*2 D*1) E'.
+- : sound/true (snd (E : >> true (and A1 A2))) D*2 (isnd E')
+     <- *tot A1 D*1
+     <- sound/true E (*/and D*2 D*1) E'.
+- : sound/true ((abort E) : >> true C) D* (iabort E')
+     <- sound/true E */bot E'.
+- : sound/true ((inl E) : >> true (or A1 A2)) (*/or D*2 D*1) (dni (iinl E'))
+     <- sound/true E D*1 E'.
+- : sound/true ((inr E) : >> true (or A1 A2)) (*/or D*2 D*1) (dni (iinr E'))
+     <- sound/true E D*2 E'.
+- : sound/true (case (E : >> true (or A B)) E1 E2) D* 
+     (Edne (ilam [f : itrue (inot C')] 
+	      iapp E' (ilam [x : itrue (ior A' B')]
+			 (icase x 
+			    ([x1] iapp f (E1' x1)) 
+			    ([x2] iapp f (E2' x2))))))
+     <- *tot A D*A
+     <- *tot B D*B
+     <- sound/true E (*/or D*B D*A) E'
+     <- ({x : >> true A} {x' : itrue A'} 
+	   {_ : {A''} {D* : * A A''} {Did} {E''}
+		 sound/true x D* E''
+		 <- *unique D* D*A Did
+		 <- itrue-respects-id x' Did E''}
+	   sound/true (E1 x) D* (E1' x'))
+     <- ({x : >> true B} {x' : itrue B'} 
+	   {_ : {A''} {D* : * B A''} {Did} {E''}
+		 sound/true x D* E''
+		 <- *unique D* D*B Did
+		 <- itrue-respects-id x' Did E''}
+	   sound/true (E2 x) D* (E2' x'))
+     <- dne D* Edne.
+- : sound/true ((lam E) : >> true (imp A B)) (*/imp D* D*A) (ilam E')
+     <- ({x : >> true A} {x' : itrue A'} 
+	   {_ : {A''} {D* : * A A''} {Did} {E''}
+		 sound/true x D* E''
+		 <- *unique D* D*A Did
+		 <- itrue-respects-id x' Did E''}
+	   sound/true (E x) D* (E' x')).
+- : sound/true (app E1 E2) D*B (iapp E1' E2')
+     <- *tot A D*A
+     <- sound/true E1 (*/imp D*B D*A) E1'
+     <- sound/true  E2 D*A E2'.
+- : sound/true ((cabort E) : >> true C) D* (iabort E')
+     <- sound/contra E E'.
+- : sound/true ((nboti E) : >> true nbot) */nbot (iabort E')
+     <- sound/contra E E'.
+- : sound/true ((noti E) : >> true (not A)) (*/not D*) E'
+     <- sound/false E D* E'.
+- : sound/true (notcase E1 E2) D*C (E2' E1')
+     <- *tot A D*A 
+     <- sound/true E1 (*/not (D*A : * A A')) E1'
+     <- ({x : >> false A} {x' : itrue (inot A')} 
+	   {_ : {A'' : iprop} {D* : * A A''} 
+		 {Did : id-iprop A'' A'}
+		 {Did' : id-iprop (inot A'') (inot A')}
+		 {E'' : itrue (inot A'')}
+		 sound/false x D* E''
+		 <- *unique D* D*A Did
+		 <- id-iprop-not-cong Did Did'
+		 <- itrue-respects-id x' Did' E''}
+	   sound/true (E2 x) D*C (E2' x')).
+- : sound/true ((letcc E) : >> true A) D*A (Edne (ilam E'))
+     <- ({x : >> false A} {x' : itrue (inot A')}  
+	   {_ : {A'' : iprop} {D* : * A A''} 
+		 {Did : id-iprop A'' A'}
+		 {Did' : id-iprop (inot A'') (inot A')}
+		 {E'' : itrue (inot A'')}
+		 sound/false x D* E''
+		 <- *unique D* D*A Did
+		 <- id-iprop-not-cong Did Did'
+		 <- itrue-respects-id x' Did' E''}
+	   sound/contra (E x) (E' x'))
+     <- dne D*A Edne.
+
+%% false
+
+- : sound/false ((cont E) : >> false A) D*A (ilam E')
+     <-  ({x : >> true A} {x' : itrue A'} 
+	    {_ : {A''} {D* : * A A''} {Did} {E''}
+		  sound/true x D* E''
+		  <- *unique D* D*A Did
+		  <- itrue-respects-id x' Did E''}
+	    sound/contra (E x) (E' x')).
+- : sound/false (cabort E) D* (iabort E')
+     <- sound/contra E E'.
+- : sound/false (case (E : >> true (or A B)) E1 E2) D* 
+     (ilam [c : itrue C]
+	iapp E' (ilam [x]
+		   (icase x 
+		      ([x1] iapp (E1' x1) c) 
+		      ([x2] iapp (E2' x2) c))))
+     <- *tot _ D*A
+     <- *tot _ D*B
+     <- sound/true E (*/or D*B D*A) E'
+     <- ({x : >> true A} {x' : itrue A'} 
+	   {_ : {A''} {D* : * A A''} {Did} {E''}
+		 sound/true x D* E''
+		 <- *unique D* D*A Did
+		 <- itrue-respects-id x' Did E''}
+	   sound/false (E1 x) D* (E1' x'))
+     <- ({x : >> true B} {x' : itrue B'} 
+	   {_ : {A''} {D* : * B A''} {Did} {E''}
+		 sound/true x D* E''
+		 <- *unique D* D*B Did
+		 <- itrue-respects-id x' Did E''}
+	   sound/false (E2 x) D* (E2' x')).
+- : sound/false ((abort E) : >> false C) D* (iabort E')
+     <- sound/true E */bot E'.
+- : sound/false (notcase E1 E2) D*C (E2' E1')
+     <- *tot _ D*A
+     <- sound/true E1 (*/not (D*A : * A A')) E1'
+     <- ({x : >> false A} {x' : itrue (inot A')}  
+	   {_ : {A'' : iprop} {D* : * A A''} 
+		 {Did : id-iprop A'' A'}
+		 {Did' : id-iprop (inot A'') (inot A')}
+		 {E'' : itrue (inot A'')}
+		 sound/false x D* E''
+		 <- *unique D* D*A Did
+		 <- id-iprop-not-cong Did Did'
+		 <- itrue-respects-id x' Did' E''}
+	   sound/false (E2 x) D*C (E2' x')).
+
+%% contra 
+
+- : sound/contra (throw E1 E2) (iapp E1' E2')
+     <- *tot _ D*
+     <- sound/true E2 D* E2'
+     <- sound/false E1 D* E1'.
+- : sound/contra (nbote E) E'
+     <- sound/true E */nbot E'.
+- : sound/contra (case E E1 E2) 
+     (iapp E' (ilam [x] (icase x E1' E2')))
+     <- *tot _ D*A
+     <- *tot _ D*B
+     <- sound/true E (*/or D*B D*A) E'
+     <- ({x : >> true A} {x' : itrue A'} 
+	   {_ : {A''} {D* : * A A''} {Did} {E''}
+		 sound/true x D* E''
+		 <- *unique D* D*A Did
+		 <- itrue-respects-id x' Did E''}
+	   sound/contra (E1 x) (E1' x'))
+     <- ({x : >> true B} {x' : itrue B'}
+	   {_ : {A''} {D* : * B A''} {Did} {E''}
+		 sound/true x D* E''
+		 <- *unique D* D*B Did
+		 <- itrue-respects-id x' Did E''}
+	   sound/contra (E2 x) (E2' x')).
+- : sound/contra (abort E) (iabort E')
+     <- sound/true E */bot E'.
+- : sound/contra (cabort E) E'
+     <- sound/contra E E'.
+- : sound/contra (notcase E1 E2) (E2' E1')
+     <- *tot _ D*A
+     <- sound/true E1 (*/not (D*A : * A A')) E1'
+     <- ({x : >> false A} {x' : itrue (inot A')}
+	   {_ : {A'' : iprop} {D* : * A A''} 
+		 {Did : id-iprop A'' A'}
+		 {Did' : id-iprop (inot A'') (inot A')}
+		 {E'' : itrue (inot A'')}
+		 sound/false x D* E''
+		 <- *unique D* D*A Did
+		 <- id-iprop-not-cong Did Did'
+		 <- itrue-respects-id x' Did' E''}
+	   sound/contra (E2 x) (E2' x')).
+
+%% uses a fancy variable case:
+%block soundtb : some {A : prop} {A' : iprop} {Dx : * A A'}
+		 block {x : >> true A} {x' : itrue A'} 
+		  {_ : {A''} {D* : * A A''} {Did} {E''}
+			sound/true x D* E''
+			<- *unique D* Dx Did
+			<- itrue-respects-id x' Did E''}.
+%block soundfb : some {A : prop} {A' : iprop} {Dx : * A A'}
+		 block {x : >> false A} {x' : itrue (inot A')} 
+		  {_ : {A'' : iprop} {D* : * A A''} 
+			{Did : id-iprop A'' A'}
+			{Did' : id-iprop (inot A'') (inot A')}
+			{E'' : itrue (inot A'')}
+			sound/false x D* E''
+			<- *unique D* Dx Did
+			<- id-iprop-not-cong Did Did'
+			<- itrue-respects-id x' Did' E''}.
+%block soundpb : block {X : prop} {X' : iprop} {dx : * X (idn X')}
+		  {_ : dne dx tne}
+		  {_ : *tot X dx}.
+
+%worlds (soundpb | soundtb | soundfb) (sound/true _ _ _) (sound/true _ _ _) (sound/false _ _ _) (sound/false _ _ _) (sound/contra _ _).
+%total (D1 D4 D2 D5 D3) (sound/true D4 _ _) (sound/true D1 _ _) (sound/false D5 _ _) (sound/false D2 _ _) (sound/contra D3 _).
+
+
+%{! 
+
+## Completeness
+
+### Inclusion
+
+Include intuitionistic props into classical.  We need to define another
+translation because * is not total with the reverse mode (it doesn't
+translate atoms).
+
+!}%
+
+*i : prop -> iprop -> type.
+%mode *i -A +A'.
+
+*i/top : *i top itop.
+*i/and : *i (and A B) (iand A' B')
+	 <- *i A A'
+	 <- *i B B'.
+*i/bot : *i bot ibot.
+*i/or : *i (or A B) (ior A' B')
+	 <- *i A A'
+	 <- *i B B'.
+*i/imp : *i (imp A B) (iimp A' B')
+	 <- *i A A'
+	 <- *i B B'.
+
+%block *ib : block {X : prop} {X' : iprop} {_ : *i X X'}.
+%worlds (*ib) (*i _ _).
+%total A (*i _ A).
+%unique *i -1A +A'. 
+
+*itot : {A'} *i A A' -> type.
+%mode *itot +A -D*i.
+
+%block *itotb : block {X : prop} {X' : iprop} 
+		 {D*i : *i X X'} {_ : *itot X' D*i}.
+%worlds (*itotb | fb | pb) (*itot _ _).
+%trustme %total {} (*itot _ _).  %% verified by %total above
+
+id-prop : prop -> prop -> type.
+id-prop/refl : id-prop A A.
+
+*iunique : *i A A' -> *i B A' -> id-prop A B -> type.
+%mode *iunique +X1 +X2 -X3.
+%worlds (*ib | fb | pb) (*iunique _ _ _).
+%trustme %total {} (*iunique _ _ _). %% verified by %unique above
+
+true-respects-id : >> true A -> id-prop A' A -> >> true A' -> type.
+%mode true-respects-id +X1 +X2 -X3.
+- : true-respects-id D _ D.
+%worlds (tb | fb | pb) (true-respects-id _ _ _).
+%total {} (true-respects-id _ _ _).
+
+%{! 
+
+### Intuitionistic truth implies classical truth
+
+The arguments are in a funny order because I copied from soundness. =)
+
+!}%
+
+incl :  >> true A -> *i A A' -> itrue A' -> type.
+%mode incl -X1 +X2 +X3.
+
+- : incl mt *i/top imt.
+- : incl (pair E1 E2) (*i/and D*2 D*1) (ipair E1' E2')
+     <- incl E1 D*1 E1'
+     <- incl E2 D*2 E2'.
+- : incl (fst E) D*1 (ifst (E' : itrue (iand A1 A2)))
+     <- *itot A2 D*2
+     <- incl E (*i/and D*2 D*1) E'.
+- : incl (snd (E : >> true (and A1 A2))) D*2 (isnd E')
+     <- *itot _ D*1
+     <- incl E (*i/and D*2 D*1) E'.
+- : incl ((abort E) : >> true C) D* (iabort E')
+     <- incl E *i/bot E'.
+- : incl ((inl E) : >> true (or A1 A2)) (*i/or D*2 D*1) (iinl E')
+     <- incl E D*1 E'.
+- : incl ((inr E) : >> true (or A1 A2)) (*i/or D*2 D*1) (iinr E')
+     <- incl E D*2 E'.
+- : incl (case (E : >> true (or A B)) E1 E2) D* (icase E' E1' E2')
+     <- *itot _ D*A
+     <- *itot _ D*B
+     <- incl E (*i/or D*B D*A) E'
+     <- ({x : >> true A} {x' : itrue A'} 
+	   {_ : {A-2} {D*' : *i A-2 A'} {Did : id-prop A-2 A} {E : >> true A-2}
+		      incl E D*' x'
+		      <- *iunique D*' D*A Did
+		      <- true-respects-id x Did E
+		       }
+	   incl (E1 x) D* (E1' x'))
+     <- ({x : >> true B} {x' : itrue B'} 
+	   {_ : {B-2} {D*' : *i B-2 B'} {Did : id-prop B-2 B} {E : >> true B-2}
+		      incl E D*' x'
+		      <- *iunique D*' D*B Did
+		      <- true-respects-id x Did E
+		      }
+	   incl (E2 x) D* (E2' x')).
+- : incl ((lam E) : >> true (imp A B)) (*i/imp D* D*A) (ilam E')
+     <- ({x : >> true A} {x' : itrue A'} 
+	   {_ : {A-2} {D*' : *i A-2 A'} {Did : id-prop A-2 A} {E : >> true A-2}
+		      incl E D*' x'
+		      <- *iunique D*' D*A Did
+		      <- true-respects-id x Did E
+			}
+	   incl (E x) D* (E' x')).
+- : incl (app E1 E2) D*B (iapp E1' E2')
+     <- *itot A D*A
+     <- incl E1 (*i/imp D*B D*A) E1'
+     <- incl  E2 D*A E2'.
+
+%block inclb : some {A} {A'} {D* : *i A A'}
+		block {x : >> true A} {x' : itrue A'} 
+		{_ : {A-2} {D*' : *i A-2 A'} {Did : id-prop A-2 A} {E : >> true A-2}
+		      incl E D*' x'
+		      <- *iunique D*' D* Did
+		      <- true-respects-id x Did E
+		      }.
+%worlds (inclb | fb | *itotb) (incl _ _ _). 
+%total D (incl _ _ D).
+
+%{! 
+
+### Round-tripping the two translations is classically equivalent
+
+!}%
+
+equiv : * A A' -> *i A'' A' -> >> true (iff A A'') -> type.
+%mode equiv +X1 +X2 -X3.
+
+- : equiv D D' (iffi ([x] x) ([x] x)).
+- : equiv (*/and D*2 D*1) (*i/and D*2' D*1') 
+     (iffi 
+	([x] (pair (iffel E1 (fst x)) (iffel E2 (snd x))))
+	([x] (pair (iffer E1 (fst x)) (iffer E2 (snd x)))))
+     <- equiv D*1 D*1' E1
+     <- equiv D*2 D*2' E2.
+- : equiv (*/or D*2 D*1) (*i/imp *i/bot (*i/imp *i/bot (*i/or D*2' D*1')))
+     (iffi
+	([x] (iffel notimpbot2
+		(cdni 
+		   (case x 
+		      ([x1] (inl (iffel E1 x1)))
+		      ([x2] (inr (iffel E2 x2)))))))
+ 	([x] (case (cdne (iffer notimpbot2 x))
+		([x1] (inl (iffer E1 x1))) ([x2] (inr (iffer E2 x2))))))
+     <- equiv D*1 D*1' E1
+     <- equiv D*2 D*2' E2.
+- : equiv (*/imp D*2 D*1) (*i/imp D*2' D*1') 
+     (iffi 
+	([f : >> true (imp A1 A2)] (lam [x : >> true B1] (iffel E2 (app f (iffer E1 x)))))
+	([f : >> true (imp B1 B2)] (lam [x : >> true A1] (iffer E2 (app f (iffel E1 x))))))
+     <- equiv D*1 D*1' (E1 : >> true (iff A1 B1))
+     <- equiv D*2 D*2' (E2 : >> true (iff A2 B2)).
+- : equiv */nbot *i/bot (iffi ([x] (cabort (nbote x))) ([x] abort x)).
+- : equiv (*/not D*) (*i/imp *i/bot D*') 
+     (iffi
+	([x] (lam [y] (cabort (notcase x [u] throw u (iffer E y)))))
+	([x] (noti (cont [y] (abort (app x (iffel E y)))))))
+     <- equiv D* D*' E.
+
+%block equivb : block {X : prop} {X' : iprop} 
+		 {d*i : *i X X'}
+		 {d*  : * X (inot (inot X'))}
+		 {_   : equiv d* (*i/imp *i/bot (*i/imp *i/bot d*i)) 
+			 (iffi 
+			    ([x : >> true X] (iffel notimpbot2 (cdni x)))
+			    ([x : >> true (imp (imp X bot) bot)]
+			       (cdne (iffer notimpbot2 x))))
+			    }.
+
+%worlds (equivb | tb | fb) (equiv _ _ _).
+%total D (equiv D _ _).
+
+%{! 
+
+### If A* is intuitionistically true, then A is classically true
+
+!}%
+
+comp : itrue A' -> * A A' -> >> true A -> type.
+%mode comp +X1 +X2 -X3. 
+
+- : comp (E' : itrue A') D* (iffer Eiff E)
+     <- *itot A' D*i
+     <- incl E D*i E'
+     <- equiv D* D*i Eiff.
+
+%block comp-pb : block {X : prop} {X' : iprop} 
+		 {d*i : *i X X'}
+		 {d*  : * X (inot (inot X'))}
+		 {_   : equiv d* (*i/imp *i/bot (*i/imp *i/bot d*i)) 
+			 (iffi 
+			    ([x : >> true X] (iffel notimpbot2 (cdni x)))
+			    ([x : >> true (imp (imp X bot) bot)]
+			       (cdne (iffer notimpbot2 x))))
+			    }
+		  {_ : *itot X' d*i}.
+
+%worlds (comp-pb | inclb | fb) (comp _ _ _).
+%total E1 (comp E1 _ _).
+
+comp/false : itrue (iimp A' ibot) -> * A A' -> >> false A -> type.
+%mode comp/false +X1 +X2 -X3.
+
+- : comp/false E D* (cont [x] (notcase E' [u] throw u x))
+     <- comp E (*/not D*)  E'.
+
+%worlds (comp-pb | inclb | fb) (comp/false _ _ _).
+%total {} (comp/false _ _ _).
+
+comp/contra : itrue ibot -> >> contra -> type.
+%mode comp/contra +X1 -X3.
+
+- : comp/contra E (nbote E')
+     <- comp E */nbot  E'.
+
+%worlds (comp-pb | inclb | fb) (comp/contra _ _).
+%total {} (comp/contra _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+You can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Double-negation_translation).
+!}%

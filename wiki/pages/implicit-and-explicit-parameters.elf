@@ -1,0 +1,53 @@
+%%! title: "Implicit and explicit parameters"
+
+%{! When declaring a type family or constant, the Twelf programmer often needs to use **universally quantified** parameters, and has the choice of making the parameter **implicit** or **explicit**. The article on [converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/) discusses how these two ways of doing things can be derived from each other.
+
+Using fully **explicit parameters** means that all variables are _bound_ by being placed within curly braces ``\{\}``. The type family or constant generally has more arguments when using this form.
+
+Using **implicit parameters** means that variables are not put within curly braces. Twelf assumes an identifier is meant to be a universally quantified parameter if the identifier starts with an uppercase letter _and_ if that identifier has not been bound or defined anywhere else. This is essentially an interface aspect allowing for simpler code&mdash;internally, Twelf applies [[type reconstruction]] to identify the type of the universally quantified variables and converts the implicit parameters into explicit parameters. 
+
+The implicit parameters style is more concise and is often cleaner; however, in some cases it is necessary to use explicit parameters (for instance, a [``%terminates``](/wiki/percent-terminates/) or [``%total``](/wiki/percent-total/) declaration can refer to explicit parameters, not implicit parameters), and it may make stylistic sense in other situations as well.
+
+Examples of the two different styles follow, using the language from the article on [converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/) which is omitted for brevity. The Twelf output is included - note that the Twelf output _always_ writes out explicit parameters,\{\{discuss|Always prints out the parameters\}\} even if the definition is using implicit parameters; therefore the two examples have almost exactly the same output from Twelf.
+
+### Implicit parameters !}%
+    
+%{! (options removed from twelftag: hidden=true) !}%
+
+exp : type.
+typ : type.
+of  : exp -> typ -> type.
+
+0 : exp.
+1 : exp.
+bit : typ.
+void : typ.
+of1 : of 1 bit.
+of0 : of 0 bit.
+
+%{!  !}%
+    
+%{! (options removed from twelftag: discard=true check=decl) !}%
+
+translate-i : of M A -> of M' A -> type.
+%mode translate-i +D -D'.
+
+%{! ### Explicit parameters
+
+Note that in this example we use slightly bad [style](/wiki/twelf-style-guide/), capitalizing our bound variables ``M``, ``A``, and ``M'``. !}%
+    
+%{! (options removed from twelftag: discard=true check=decl) !}%
+
+translate-e : {M : exp}{A : typ} {M' : exp} of M A -> of M' A -> type.
+%mode translate-e +M +A -M' +D -D'.
+
+%{! ## See also
+
+* \{\{proving|title=Full LF\}\} discusses implicit and explicit parameters in the section "Twelf conveniences." !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Implicit_and_explicit_parameters).
+!}%

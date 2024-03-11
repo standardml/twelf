@@ -1,0 +1,590 @@
+%%! title: "Letrec"
+
+%{! An example of encoding ``letrec``, i.e. let-binding a bundle of mutually recursive expressions !}%
+
+nat	: type.
+
+z	: nat.
+s	: nat -> nat. 
+
+tp	: type. 
+
+natt	: tp.
+arrow	: tp -> tp -> tp.
+
+tplist	: nat -> type.
+
+tplist/z	: tplist z.
+tplist/s	: tp -> tplist N -> tplist (s N). 
+
+exp	: type. 
+oexp	: nat -> type. 
+explist	: nat -> type. 
+
+%{! 
+oexplist N M, is a list of M expressions with N bound variables
+!}%
+oexplist: nat -> nat -> type. 
+
+
+zero	: exp.
+succ	: exp -> exp. 
+case	: exp -> exp -> (exp -> exp) -> exp. 
+let	: exp -> (exp -> exp) -> exp. 
+letrec	: oexplist N N -> oexp N -> exp.
+bproj	: oexplist N N -> nat -> exp. % projecting from a bundle
+lam	: (exp -> exp) -> exp. 
+app	: exp -> exp -> exp. 
+
+
+
+oexp/z	: exp -> oexp z.
+oexp/s	: (exp -> oexp N) -> oexp (s N).
+
+
+
+explist/z	: explist z.
+explist/s	: exp -> explist N -> explist (s N).
+
+
+
+oexplist/z	: explist N -> oexplist z N.
+oexplist/s	: (exp -> oexplist N M) -> oexplist (s N) M. 
+
+
+
+tplist-get	: nat -> tplist N -> tp -> type. 
+
+tplist-get/hit	: tplist-get z (tplist/s T TL) T.
+tplist-get/miss	: tplist-get (s N) (tplist/s T TL) T'
+		   <- tplist-get N TL T'. 
+
+
+
+of-exp		: exp -> tp -> type. 
+of-oexp		: tplist N -> oexp N -> tp -> type. 
+of-explist	: explist N -> tplist N -> type.
+of-oexplist	: tplist N -> oexplist N M -> tplist M -> type. 
+
+
+
+of-exp/zero	: of-exp zero natt.
+
+of-exp/succ	: of-exp (succ E) natt
+		   <- of-exp E natt. 
+
+of-exp/case	: of-exp (case E1 E2 E3) T
+		   <- of-exp E1 natt
+		   <- of-exp E2 T
+		   <- ({x} of-exp x natt
+			 -> of-exp (E3 x) T).
+
+of-exp/let	: of-exp (let E1 E2) T'
+		   <- of-exp E1 T
+		   <- ({x} of-exp x T
+			 -> of-exp (E2 x) T'). 
+
+of-exp/letrec	: of-exp (letrec OEL OE) T
+		   <- of-oexplist TL OEL TL
+		   <- of-oexp TL OE T.
+
+of-exp/bproj	: of-exp (bproj OE N) T
+		   <- of-oexplist TL OE TL
+		   <- tplist-get N TL T. 
+
+of-exp/lam	: of-exp (lam E) (arrow T1 T2)
+		   <- ({x} of-exp x T1
+			 -> of-exp (E x) T2).
+
+of-exp/app	: of-exp (app E1 E2) T2
+		   <- of-exp E1 (arrow T1 T2)
+		   <- of-exp E2 T1. 
+
+
+
+of-oexp/z	: of-oexp tplist/z (oexp/z E) T
+		   <- of-exp E T. 
+of-oexp/s	: of-oexp (tplist/s T TL) (oexp/s ([x] EL x)) T'
+		   <- ({x} of-exp x T
+			 -> of-oexp TL (EL x) T').
+
+
+
+of-explist	: explist N -> tplist N -> type. 
+
+of-explist/z	: of-explist explist/z tplist/z.
+of-explist/s	: of-explist (explist/s E EL) (tplist/s T TL)
+		   <- of-exp E T
+		   <- of-explist EL TL. 
+
+
+
+of-oexplist/z	: of-oexplist tplist/z (oexplist/z EL) TL
+		   <- of-explist EL TL.
+of-oexplist/s	: of-oexplist (tplist/s T TL) (oexplist/s OEL) TL'
+		   <- ({x} of-exp x T
+			 -> of-oexplist TL (OEL x) TL').
+
+
+value	: exp -> type.
+
+value/zero	: value zero.
+
+value/succ	: value (succ E)
+		   <- value E. 
+
+value/lam	: value (lam E).
+
+
+
+subst-oexp	: explist N -> oexp N -> exp -> type. 
+
+subst-oexp/z	: subst-oexp explist/z (oexp/z E) E. 
+subst-oexp/s	: subst-oexp (explist/s E EL) (oexp/s ([x] OE x)) E'
+		   <- subst-oexp EL (OE E) E'.
+
+
+expand-oexplist	: nat -> oexplist M M -> oexplist N M -> explist M -> type. 
+
+expand-oexplist/z	: expand-oexplist _ _ (oexplist/z EL) EL. 
+expand-oexplist/s	: expand-oexplist N OEL (oexplist/s OEL') EL
+			   <- expand-oexplist (s N) OEL (OEL' (bproj OEL N)) EL.
+
+
+
+
+
+explist-get	: nat -> explist N -> exp -> type. 
+
+explist-get/hit	: explist-get z (explist/s E EL) E.
+explist-get/miss: explist-get (s N) (explist/s E EL) E'
+		   <- explist-get N EL E'.
+
+
+
+step	: exp -> exp -> type. 
+
+step/succ	: step (succ E) (succ E')
+		   <- step E E'.
+
+step/case	: step (case E1 E2 E3) (case E1' E2 E3)
+		   <- step E1 E1'.
+
+step/case-beta-1: step (case zero E2 E3) E2.
+
+step/case-beta-2: step (case (succ E1) E2 E3) (E3 E1)
+		   <- value E1. 
+
+step/let	: step (let E1 E2) (let E1' E2)
+		   <- step E1 E1'.
+
+step/let-beta	: step (let E1 E2) (E2 E1)
+		   <- value E1. 
+
+step/letrec	: step (letrec OEL OE) E
+		   <- expand-oexplist z OEL OEL EL
+		   <- subst-oexp EL OE E.
+
+step/bproj	: step (bproj OEL N) E
+		   <- expand-oexplist z OEL OEL EL
+		   <- explist-get N EL E. 
+
+step/app-1	: step (app E1 E2) (app E1' E2)
+		   <- step E1 E1'.
+
+step/app-2	: step (app E1 E2) (app E1 E2')
+		   <- value E1
+		   <- step E2 E2'. 
+
+step/app-beta	: step (app (lam E) E2) (E E2)
+		   <- value E2. 
+
+
+
+nat-plus	: nat -> nat -> nat -> type.
+
+nat-plus/z	: nat-plus z N N.
+nat-plus/s	: nat-plus (s N1) N2 (s N3)
+		   <- nat-plus N1 N2 N3. 
+
+
+
+nat-plus-move-s	: nat-plus (s N1) N2 N3
+		   -> nat-plus N1 (s N2) N3
+		   -> type. 
+%mode nat-plus-move-s +D1 -D2.
+
+-	: nat-plus-move-s (nat-plus/s nat-plus/z) nat-plus/z.
+
+-	: nat-plus-move-s (nat-plus/s D1) (nat-plus/s D2)
+	   <- nat-plus-move-s D1 D2.
+
+%worlds () (nat-plus-move-s _ _).
+%total (D1) (nat-plus-move-s D1 _). 
+
+
+
+can-expand-oexplist	: {N} {OEL : oexplist NN NN} 
+			   {OEL' : oexplist N NN}
+			   nat-plus N N' NN
+			   -> expand-oexplist N' OEL OEL' EL
+			   -> type. 
+%mode can-expand-oexplist +D1 +D2 +D3 +D4 -D5.
+
+-	: can-expand-oexplist z OEL (oexplist/z EL) nat-plus/z expand-oexplist/z.
+
+-	: can-expand-oexplist (s N) _ _ NP (expand-oexplist/s DEO)
+	   <- nat-plus-move-s NP NP'
+	   <- can-expand-oexplist N _ _ NP' DEO.
+
+%worlds () (can-expand-oexplist _ _ _ _ _).
+%total (D1) (can-expand-oexplist D1 _ _ _ _).
+
+
+
+nat-plus-z	: {N}
+		   nat-plus N z N
+		   -> type. 
+%mode nat-plus-z +D1 -D2.
+
+-	: nat-plus-z _ nat-plus/z.
+
+-	: nat-plus-z _ (nat-plus/s D1)
+	   <- nat-plus-z _ D1.
+
+%worlds () (nat-plus-z _ _).
+%total (D1) (nat-plus-z D1 _).
+
+
+
+notstuck	: exp -> type.
+
+notstuck/value	: notstuck E
+		   <- value E. 
+notstuck/step	: notstuck E
+		   <- step E E'. 
+
+
+
+can-subst-oexp	: {EL : explist N}
+		   {OE : oexp N}
+		   subst-oexp EL OE E
+		   -> type. 
+%mode can-subst-oexp +D1 +D2 -D3.
+
+-	: can-subst-oexp _ _ subst-oexp/z.
+
+-	: can-subst-oexp (explist/s E EL) _ (subst-oexp/s D1)
+	   <- can-subst-oexp EL _ D1. 
+
+%worlds () (can-subst-oexp _ _ _).
+%total (D1) (can-subst-oexp D1 _ _).
+
+
+
+
+
+
+can-explist-get	: {EL : explist N'}
+		   tplist-get N (TL : tplist N') T
+		   -> explist-get N EL E
+		   -> type.
+%mode can-explist-get +D1 +D2 -D3.
+
+-	: can-explist-get _ tplist-get/hit 
+	   explist-get/hit.
+
+-	: can-explist-get _ (tplist-get/miss D2) 
+	   (explist-get/miss D')
+	   <- can-explist-get _ D2 D'.
+
+%worlds () (can-explist-get _ _ _).
+%total (D2) (can-explist-get _ D2 _). 
+
+
+
+progress-case	: {E1}{E2}
+		   of-exp E natt
+		   -> notstuck E 
+		   -> notstuck (case E E1 E2)
+		   -> type. 
+%mode progress-case +D1 +D2 +D3 +D4 -D5.
+
+-	: progress-case _ _ _ (notstuck/step S)
+	   (notstuck/step (step/case S)).
+
+-	: progress-case _ _ of-exp/zero (notstuck/value _)
+	   (notstuck/step step/case-beta-1).
+
+-	: progress-case _ _ (of-exp/succ _) (notstuck/value (value/succ DV))
+	   (notstuck/step (step/case-beta-2 DV)).
+
+%worlds () (progress-case _ _ _ _ _). 
+%total {} (progress-case _ _ _ _ _).
+
+
+
+progress-succ	: notstuck E1
+		   -> notstuck (succ E1)
+		   -> type. 
+%mode progress-succ +D1 -D2.
+
+-	: progress-succ (notstuck/step DS)
+	   (notstuck/step (step/succ DS)).
+
+-	: progress-succ (notstuck/value DV1)
+	   (notstuck/value (value/succ DV1)).
+
+%worlds () (progress-succ _ _).
+%total {} (progress-succ _ _).
+
+
+
+progress-app	: of-exp E1 (arrow T1 T2)
+		   -> of-exp E2 T1
+		   -> notstuck E1
+		   -> notstuck E2
+		   -> notstuck (app E1 E2)
+		   -> type. 
+%mode progress-app +D1 +D2 +D3 +D4 -D5.
+
+-	: progress-app _ _ (notstuck/step DS) _
+	   (notstuck/step (step/app-1 DS)).
+
+-	: progress-app _ _ (notstuck/value V) (notstuck/step DS)
+	   (notstuck/step (step/app-2 DS V)).
+
+-	: progress-app (of-exp/lam DM) D2 (notstuck/value value/lam)
+	   (notstuck/value DV) (notstuck/step (step/app-beta DV)).
+%worlds () (progress-app _ _ _ _ _).
+%total {} (progress-app _ _ _ _ _).
+
+
+
+progress-let	: {E2}
+		   notstuck E1
+		   -> notstuck (let E1 E2)
+		   -> type. 
+%mode progress-let +D1 +D2 -D3.
+
+-	: progress-let _ (notstuck/step S) (notstuck/step (step/let S)).
+
+-	: progress-let _ (notstuck/value V) (notstuck/step (step/let-beta V)).
+
+%worlds () (progress-let _ _ _).
+%total {} (progress-let _ _ _). 
+
+
+
+progress	: of-exp E T
+		   -> notstuck E
+		   -> type.
+%mode progress +D1 -D2.
+
+-	: progress (of-exp/lam _) (notstuck/value value/lam).
+
+-	: progress (of-exp/app D2 D1) NS3
+	   <- progress D1 NS1
+	   <- progress D2 NS2
+	   <- progress-app D1 D2 NS1 NS2 NS3.
+
+-	: progress of-exp/zero (notstuck/value value/zero).
+
+-	: progress (of-exp/succ D1) NS
+	   <- progress D1 NS1
+	   <- progress-succ NS1 NS.
+
+-	: progress (of-exp/case _ _ D1) NS
+	   <- progress D1 NS1
+	   <- progress-case _ _ D1 NS1 NS.
+
+-	: progress (of-exp/let _ D1) NS
+	   <- progress D1 NS1
+	   <- progress-let _ NS1 NS.
+
+-	: progress (of-exp/letrec D2 D1)
+	   (notstuck/step (step/letrec DS DX))
+	   <- nat-plus-z _ DNP
+	   <- can-expand-oexplist _ _ _ DNP DX
+	   <- can-subst-oexp _ _ DS.
+
+-	: progress (of-exp/bproj D2 D1)
+	   (notstuck/step (step/bproj DS DX))
+	   <- nat-plus-z _ DNP
+	   <- can-expand-oexplist _ _ _ DNP DX
+	   <- can-explist-get _ D2 DS.
+
+%worlds () (progress _ _).
+%total (D1) (progress D1 _).
+
+
+
+tplist-prefix	: nat -> tplist N -> tplist N' -> type. 
+
+tplist-prefix/z	: tplist-prefix z TL TL.
+tplist-prefix/s	: tplist-prefix (s N) (tplist/s T TL) TL'
+		   <- tplist-prefix N TL TL'.
+
+
+
+tplist-prefix-get	: tplist-prefix N TL'' (tplist/s T TL')
+			   -> tplist-get N TL'' T
+			   -> type.
+%mode tplist-prefix-get +D1 -D2.
+
+-	: tplist-prefix-get tplist-prefix/z tplist-get/hit.
+
+-	: tplist-prefix-get (tplist-prefix/s D1) (tplist-get/miss D2)
+	   <- tplist-prefix-get D1 D2.
+
+%worlds () (tplist-prefix-get _ _). 
+%total (D1) (tplist-prefix-get D1 _). 
+
+
+
+tplist-prefix-s	: tplist-prefix N TL (tplist/s T TL')
+		   -> tplist-prefix (s N) TL TL'
+		   -> type.
+%mode tplist-prefix-s +D1 -D2.
+
+-	: tplist-prefix-s tplist-prefix/z (tplist-prefix/s tplist-prefix/z). 
+
+-	: tplist-prefix-s (tplist-prefix/s D1) (tplist-prefix/s D2)
+	   <- tplist-prefix-s D1 D2.
+
+%worlds () (tplist-prefix-s _ _).
+%total (D1) (tplist-prefix-s D1 _).
+
+
+
+preservation-expand-oexplist	: tplist-prefix N' TL TL'
+				   -> of-oexplist TL (OEL : oexplist M M) 
+				      (TL : tplist M)
+				   -> of-oexplist TL' OEL' TL
+				   -> expand-oexplist N' OEL OEL' EL
+				   -> of-explist EL TL
+				   -> type. 
+%mode preservation-expand-oexplist +D1 +D2 +D3 +D4 -D5.
+
+-	: preservation-expand-oexplist _
+	   DOE (of-oexplist/z DEL) expand-oexplist/z 
+	   DEL. 
+
+-	: preservation-expand-oexplist 
+	   DO
+	   DOE
+	   (of-oexplist/s DOE')
+	   (expand-oexplist/s DOX)
+	   DEL
+	   <- tplist-prefix-s DO DO'
+	   <- tplist-prefix-get DO DG
+	   <- preservation-expand-oexplist DO' DOE 
+	      (DOE' _ (of-exp/bproj DG DOE))
+	      DOX DEL. 
+
+%worlds () (preservation-expand-oexplist _ _ _ _ _).
+%total (D1) (preservation-expand-oexplist  _ _ _ D1 _).
+
+
+
+preservation-subst-oexp	: of-explist EL TL
+			   -> of-oexp TL OE T
+			   -> subst-oexp EL OE E
+			   -> of-exp E T
+			   -> type.
+%mode preservation-subst-oexp +D1 +D2 +D3 -D4.
+
+-	: preservation-subst-oexp _ (of-oexp/z D1) subst-oexp/z D1.
+
+-	: preservation-subst-oexp (of-explist/s D1 D) (of-oexp/s D2)
+	   (subst-oexp/s D3) D4
+	   <- preservation-subst-oexp D1 (D2 _ D) D3 D4.
+
+%worlds () (preservation-subst-oexp _ _ _ _).
+%total (D1) (preservation-subst-oexp _ _ D1 _).
+
+
+
+
+preservation-get	: of-explist EL TL
+			   -> explist-get M EL E
+			   -> tplist-get M TL T
+			   -> of-exp E T
+			   -> type.
+%mode preservation-get +D1 +D2 +D3 -D4.
+
+-	: preservation-get (of-explist/s _ D) explist-get/hit tplist-get/hit D.
+
+-	: preservation-get (of-explist/s DL _) (explist-get/miss D') 
+	   (tplist-get/miss D'') D
+	   <- preservation-get DL D' D'' D.
+
+%worlds () (preservation-get _ _ _ _).
+%total (D1) (preservation-get _ _ D1 _).
+
+
+
+preservation	: of-exp E T
+		   -> step E E'
+		   -> of-exp E' T
+		   -> type.
+%mode preservation +D1 +D2 -D3.
+
+-	: preservation (of-exp/app D2 D1) (step/app-1 DS)
+	   (of-exp/app D2 D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/app D2 D1) (step/app-2 DS V)
+	   (of-exp/app D2' D1)
+	   <- preservation D2 DS D2'.
+
+-	: preservation (of-exp/app D2 (of-exp/lam D1)) (step/app-beta V)
+	   (D1 _ D2).
+
+
+-	: preservation (of-exp/succ D1) (step/succ DS)
+	   (of-exp/succ D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/case D3 D2 D1) (step/case DS)
+	   (of-exp/case D3 D2 D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/case D3 D2 _) step/case-beta-1
+	   D2.
+
+-	: preservation (of-exp/case D3 _ (of-exp/succ D1)) (step/case-beta-2 _)
+	   (D3 _ D1).
+
+-	: preservation (of-exp/let D2 D1) (step/let DS)
+	   (of-exp/let D2 D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/let D2 D1) (step/let-beta _)
+	   (D2 _ D1).
+
+-	: preservation (of-exp/letrec D2 D1) (step/letrec DOS DOX)
+	   D
+	   <- preservation-expand-oexplist tplist-prefix/z D1 D1 DOX D1'
+	   <- preservation-subst-oexp D1' D2 DOS D.
+
+-	: preservation (of-exp/bproj D2 D1) (step/bproj DOS DOX)
+	   D
+	   <- preservation-expand-oexplist tplist-prefix/z D1 D1 DOX D1'
+	   <- preservation-get D1' DOS D2 D.
+
+%worlds () (preservation _ _ _).
+%total (D1) (preservation _ D1 _).
+
+%{! 
+TODO: commentary.
+
+\{\{stub\}\}
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Letrec).
+!}%

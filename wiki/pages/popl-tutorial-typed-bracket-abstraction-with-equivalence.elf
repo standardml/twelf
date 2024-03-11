@@ -1,0 +1,513 @@
+%%! title: "POPL Tutorial/Typed bracket abstraction with equivalence"
+
+%{! 
+
+This is a case study translating the simply lambda calculus into S, K, and I
+combinatory logic.  The correctness of the translation is proven in the
+following sense: if a two terms are beta-eta equal, then their translations
+are beta-eta equal.
+
+[William Lovas](/wiki/user-william-lovas/)
+
+!}%
+
+
+%{! 
+
+## Syntax and static semantics
+
+!}%
+
+%{! 
+
+First we define the syntax of the two languages.  ``term A`` is the
+type of simply-typed lambda-calculus terms of type A; ``comb A`` is
+the type of simply-typed combinator terms of type A.  Combinators are of
+interest primarily because they have no binding structure; despite this
+apparent limitation, we can translate any lambda-calculus term to an
+operationally and logically related combinator term.
+
+Note that since we're using an
+[intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/), these syntax
+definitions double as definitions of the languages' static semantics.
+
+!}%
+
+tp : type.              %name tp A a.
+
+o : tp.
+=> : tp -> tp -> tp.    %infix right 10 =>.
+
+
+term : tp -> type.      %name term M x.
+
+%% tm : type.              %name tm M x.
+%% %abbrev term : tp -> type = [x] tm.
+
+app : term (A => B) -> term A -> term B.
+lam : (term A -> term B) -> term (A => B).
+
+
+comb : tp -> type.     %name comb N y.
+
+%% cm : type.              %name cm N y.
+%% %abbrev comb : tp -> type = [x] cm.
+
+s : comb ((A => B => C) => (A => B) => A => C).
+k : comb (A => B => A).
+i : comb (A => A).
+
+capp : comb (A => B) -> comb A -> comb B.
+
+%{! 
+
+We can use Twelf's [abbreviation mechanism](/wiki/abbrev-declaration/) and
+[fixity declarations](/wiki/fixity-declaration/) to obtain some cute syntax.
+
+!}%
+
+%abbrev @ = app.
+%infix left 10 @.
+
+%abbrev @@ = capp.
+%infix left 10 @@.
+
+%{! 
+
+## Equational theory
+
+!}%
+
+%{! 
+
+Then we define equality relations on both languages.  ``teq`` is
+definitional equality for lambda terms; ``ceq`` is definitional
+equality for combinator terms.  In both cases, the equality relation
+amounts to beta-eta equivalence.  (We use extensionality instead of a
+rule based on eta-expansion.)
+
+!}%
+
+% definitional equality on terms (better name?)
+teq : term A -> term A -> type.
+%mode teq *M1 *M2.  % spurious mode declaration necessary?  see unique-block..
+
+% beta
+eq/beta : teq (app (lam [x] M1 x) M2) (M1 M2).
+
+% eta
+eq/eta : teq M1 M2
+          <- ({x} teq (app M1 x) (app M2 x)).
+
+% XXX interesting note: beta + ext ⊦ lam.  lam + beta + eta ⊦ ext.
+% others?  cut out some cases?
+
+% compatibilities
+eq/lam : teq (lam [x] M x) (lam [x] M' x)
+          <- ({x} teq (M x) (M' x)).
+
+eq/app : teq (app M1 M2) (app M1' M2')
+          <- teq M1 M1'
+          <- teq M2 M2'.
+
+% equivalence
+eq/refl : teq M M.
+
+eq/symm : teq M M'
+           <- teq M' M.
+
+eq/trans : teq M M''
+            <- teq M' M''
+            <- teq M M'.
+
+%block teq-block : some {A:tp} block {x:term A}.
+%worlds (teq-block) (teq _ _).
+
+% definitional equality on combs
+ceq : comb A -> comb A -> type.
+
+% betas
+ceq/i : ceq (capp i N) N.
+ceq/k : ceq (capp (capp k N1) N2) N1.
+ceq/s : ceq (capp (capp (capp s N1) N2) N3) (capp (capp N1 N3) (capp N2 N3)).
+
+% eta
+ceq/eta : ceq N1 N2
+           <- ({y} ceq (capp N1 y) (capp N2 y)).
+
+% compatibility
+ceq/app : ceq (capp N1 N2) (capp N1' N2')
+           <- ceq N1 N1'
+           <- ceq N2 N2'.
+
+% equivalence
+ceq/refl : ceq N N.
+
+ceq/symm : ceq N N'
+            <- ceq N' N.
+
+ceq/trans : ceq N N''
+             <- ceq N' N''
+             <- ceq N N'.
+
+%abbrev ; : ceq N N' -> ceq N' N'' -> ceq N N'' = [d1] [d2] ceq/trans d1 d2.
+%infix right 5 ;.
+
+%block ceq-block : some {A:tp} block {y:comb A}.
+%worlds (ceq-block) (ceq _ _).
+
+%{! 
+
+## Translation
+
+!}%
+
+%{! 
+
+We can now define a compositional translation from lambda terms to combinator
+terms in the standard way.  The translation appeals to a function called
+_bracket abstraction_ which simulates binding in the combinator calculus.
+
+Bracket abstraction is usually written &lt;math&gt;[x] N&lt;/math&gt; where &lt;math&gt;N&lt;/math&gt;
+is a combinator term, and &lt;math&gt;x&lt;/math&gt; is a variable potentially free in
+&lt;math&gt;N&lt;/math&gt;.  (Be careful not to confuse these brackets with Twelf's syntax
+for lambda abstraction.)  It is defined inductively over the term
+&lt;math&gt;N&lt;/math&gt;:
+
+&lt;blockquote&gt;
+&lt;math&gt;[x]&lt;/math&gt; &lt;math&gt;x = I&lt;/math&gt;&lt;br&gt;
+&lt;math&gt;[x]&lt;/math&gt; &lt;math&gt;N = K&lt;/math&gt; &lt;math&gt;N&lt;/math&gt;
+    (where &lt;math&gt;x&lt;/math&gt; not free in &lt;math&gt;N&lt;/math&gt;)&lt;br&gt;
+&lt;math&gt;[x]&lt;/math&gt; &lt;math&gt;N_1&lt;/math&gt; &lt;math&gt;N_2 =
+    S&lt;/math&gt; &lt;math&gt;([x]&lt;/math&gt; &lt;math&gt;N_1)&lt;/math&gt;
+             &lt;math&gt;([x]&lt;/math&gt; &lt;math&gt;N_2)&lt;/math&gt;&lt;br&gt;
+&lt;/blockquote&gt;
+
+Using it, we can define a translation on lambda-terms, &lt;math&gt;M^*&lt;/math&gt;, where
+&lt;math&gt;M&lt;/math&gt; is a lambda-term, as follows:
+
+&lt;blockquote&gt;
+&lt;math&gt;x^* = x&lt;/math&gt;&lt;br&gt;
+&lt;math&gt;(M_1&lt;/math&gt; &lt;math&gt;M_2)^*&lt;/math&gt; =
+    &lt;math&gt;M_1^*&lt;/math&gt; &lt;math&gt;M_2^*&lt;/math&gt;&lt;br&gt;
+&lt;math&gt;(\lambda x.&lt;/math&gt; &lt;math&gt;M)^* = [x]&lt;/math&gt; &lt;math&gt;M^*&lt;/math&gt;
+&lt;/blockquote&gt;
+
+Note that in the definition of bracket abstraction, we need not consider a
+case for lambda-abstraction since bracket abstraction works over combinator
+terms, in which lambda-abstraction has already been eliminated.
+
+The main translation is represented in LF by a judgement (an LF type family)
+``translate M N``.  Bracket abstraction is represented by a judgement
+relating LF-level abstractions in the combinator language to closed combinator
+terms, ``bracket ([x] N x) N``.  This definition is essentially an
+instance of [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
+
+!}%
+
+translate : term A -> comb A -> type.
+%mode translate +M -N.
+%name translate Dtrans dtrans.
+
+bracket : (comb A -> comb B) -> comb (A => B) -> type.
+%mode bracket +N -N*.
+%name bracket Dbrack dbrack.
+
+
+t/app : translate (app M1 M2) (capp N1 N2)
+         <- translate M1 N1
+         <- translate M2 N2.
+
+%{! 
+
+The translation on lambda-abstractions has to work under an extended context
+with a lambda-term variable, a combinator-term variable, and an assumption
+that the one translates to the other.  See the ``%worlds`` declaration
+below.
+
+!}%
+t/lam : translate (lam [x] M x) N*
+         <- ({x:term A} {y:comb A} translate x y -> translate (M x) (N y))
+         <- bracket ([y] N y) N*.
+
+
+b/i : bracket ([x] x) i.
+
+b/k : bracket ([x] Y) (capp k Y).
+
+b/s : bracket ([x] capp (N1 x) (N2 x)) (capp (capp s N1') N2')
+       <- bracket ([x] N1 x) N1'
+       <- bracket ([x] N2 x) N2'.
+
+
+%block trans-block : some {A:tp}
+                     block {x:term A} {y:comb A} {dtrans:translate x y}.
+
+%worlds (trans-block) (bracket _ _).
+%worlds (trans-block) (translate _ _).
+
+%{! 
+
+Both relations are effective (though we cannot use this fact in proofs).
+
+!}%
+
+%total N (bracket N _).
+%total M (translate M _).
+
+%{! 
+
+Instead, we need effectiveness lemmas.  XXX explain this better...
+
+!}%
+
+can-bracket : {N : comb A -> comb B} bracket N N* -> type.
+%mode can-bracket +N -Dbrack.
+
+can-translate : {M : term A} translate M N -> type.
+%mode can-translate +M -Dtrans.
+
+- : can-bracket ([x] x) b/i.
+- : can-bracket ([x] N) b/k.
+- : can-bracket ([x] capp (N1 x) (N2 x)) (b/s Dbrack2 Dbrack1)
+     <- can-bracket ([x] N1 x) Dbrack1
+     <- can-bracket ([x] N2 x) Dbrack2.
+
+- : can-translate (app M1 M2) (t/app Dtrans2 Dtrans1)
+     <- can-translate M1 (Dtrans1 : translate M1 N1)
+     <- can-translate M2 (Dtrans2 : translate M2 N2).
+
+- : can-translate (lam [x] M x) (t/lam Dbrack Dtrans)
+     <- ({x} {y} {dtrans: translate x y} {thm: can-translate x dtrans}
+            can-translate (M x) (Dtrans x y dtrans : translate (M x) (N y)))
+     <- can-bracket ([y] N y) (Dbrack : bracket ([y] N y) N*).
+
+%block can-block
+            : some {A:tp}
+              block {x:term A} {y:comb A}
+                    {dtrans: translate x y}
+                    {thm: can-translate x dtrans}.
+
+%worlds (can-block) (can-bracket _ _).
+%total N (can-bracket N _).
+
+%worlds (can-block) (can-translate _ _).
+%total M (can-translate M _).
+
+
+%{! 
+
+## Correctness of the translation
+
+!}%
+
+%{! 
+
+First, we prove the correctness of bracket abstraction itself:
+the application of a bracket abstraction reduces to a substitution.
+
+!}%
+
+subst : bracket ([x] N x) N* -> {N0} ceq (capp N* N0) (N N0) -> type.
+%mode subst +B +X -CS.
+
+- : subst (b/i : bracket ([x] x) i)
+          N0
+          (ceq/i : ceq (i @@ N0) N0).
+
+- : subst (b/k : bracket ([x] Y) (k @@ Y))
+          N0
+          (ceq/k : ceq (k @@ Y @@ N0) Y).
+
+% developing incrementally, it's useful to write down the type of each output
+- : subst (b/s (B2 : bracket ([x] N2 x) N2')
+               (B1 : bracket ([x] N1 x) N1')
+            : bracket ([x] N1 x @@ N2 x) (s @@ N1' @@ N2'))
+          N0
+          (ceq/trans
+              (ceq/s
+                : ceq (s @@ N1' @@ N2' @@ N0) ((N1' @@ N0) @@ (N2' @@ N0)))
+              (ceq/app Dceq2 Dceq1
+                : ceq ((N1' @@ N0) @@ (N2' @@ N0)) (N1 N0 @@ N2 N0)))
+     <- subst B1 N0 (Dceq1 : ceq (N1' @@ N0) (N1 N0))
+     <- subst B2 N0 (Dceq2 : ceq (N2' @@ N0) (N2 N0)).
+
+%worlds (ceq-block) (subst _ _ _).
+%total {B} (subst B _ _).
+
+
+%{! 
+
+Next, we need to know that the translation of a term is unique up to
+equivalence.
+
+!}%
+
+translate-unique : translate M N -> translate M N' -> ceq N N' -> type.
+%mode translate-unique +Dt1 +Dt2 -Deq.
+
+- : translate-unique
+        (t/app (Dtrans2 : translate M2 N2)
+               (Dtrans1 : translate M1 N1)
+          : translate (M1 @ M2) (N1 @@ N2))
+        (t/app (Dtrans2' : translate M2 N2')
+               (Dtrans1' : translate M1 N1')
+          : translate (M1 @ M2) (N1' @@ N2'))
+        (ceq/app Dceq2 Dceq1)
+     <- translate-unique Dtrans1 Dtrans1' (Dceq1 : ceq N1 N1')
+     <- translate-unique Dtrans2 Dtrans2' (Dceq2 : ceq N2 N2').
+
+- : translate-unique
+        (t/lam (Dbrack : bracket ([y] N y) N*)
+               ([x] [y] [dt] Dtrans x y dt : translate (M x) (N y))
+          : translate (lam [x] M x) N*)
+        (t/lam (Dbrack' : bracket ([y] N' y) N'*)
+               ([x] [y] [dt] Dtrans' x y dt : translate (M x) (N' y))
+          : translate (lam [x] M x) N'*)
+        (ceq/eta ([y] (Dceq y : ceq (N* @@ y) (N y)) ;
+                      (Dceqtrans y : ceq (N y) (N' y)) ;
+                      (ceq/symm (Dceq' y) : ceq (N' y) (N'* @@ y))
+                   : ceq (N* @@ y) (N'* @@ y))
+          : ceq N* N'*)
+     <- ({x} {y} {dtrans: translate x y}
+         {thm-unique: translate-unique dtrans dtrans ceq/refl}
+            translate-unique (Dtrans x y dtrans) (Dtrans' x y dtrans)
+            (Dceqtrans y : ceq (N y) (N' y)))
+     <- ({z} subst Dbrack z (Dceq z : ceq (N* @@ z) (N z)))
+     <- ({z} subst Dbrack' z (Dceq' z : ceq (N'* @@ z) (N' z))).
+
+%block unique-block
+            : some {A:tp}
+              block {x:term A} {y:comb A}
+                    {dtrans: translate x y}
+                    {thm: translate-unique dtrans dtrans ceq/refl}.
+
+%worlds (unique-block) (translate-unique _ _ _).
+%total D (translate-unique D _ _).
+
+
+%{! 
+
+Then, we can prove simulation, the correctness of translation, by a
+straightforward induction on equality derivations in the lambda-calculus,
+using the correctness of bracket abstraction as a lemma in the case of a
+beta-reduction.
+
+!}%
+
+simulate' : translate M N -> translate M' N' -> teq M M' -> ceq N N' -> type.
+%mode simulate' +Dt +Dt' +Deq -Dceq.
+
+%abbrev simulate
+            : teq M M' -> translate M N -> translate M' N' -> ceq N N' -> type
+            = [deq] [dt] [dt'] [ceq] simulate' dt dt' deq ceq.
+%%mode simulate +Deq +Dt +Dt' -Dceq.
+
+- : simulate (eq/beta
+               : teq (app (lam [x] M1 x) M2) (M1 M2))
+             (t/app (Dtrans2 : translate M2 N2)
+                    (t/lam
+                        (Dbrack : bracket ([y] N1 y) N1*)
+                        % XXX mysteriously necessary type annotations
+                        ([x:term A2] [y:comb A2] [dtrans:translate x y]
+                            Dtrans1 x y dtrans
+                          : translate (M1 x) (N1 y)))
+               : translate (app (lam [x] M1 x) M2) (capp N1* N2))
+             (Dtrans3
+               : translate (M1 M2) N3)
+             (Dceq ; Dceq3
+               : ceq (capp N1* N2) N3)
+     <- subst Dbrack N2 (Dceq : ceq (capp N1* N2) (N1 N2))
+     <- translate-unique (Dtrans1 M2 N2 Dtrans2) Dtrans3
+                         (Dceq3 : ceq (N1 N2) N3).
+
+- : simulate (eq/eta ([x] Deq x : teq (app M1 x) (app M2 x))
+               : teq M1 M2)
+             (Dtrans1 : translate M1 N1)
+             (Dtrans2 : translate M2 N2)
+             (ceq/eta ([y] Dceq y) : ceq N1 N2)
+     <- ({x} {y} {dtrans: translate x y}
+         {thm-can: can-translate x dtrans}
+         {thm-unique: translate-unique dtrans dtrans ceq/refl}
+         {thm-simulate: simulate eq/refl dtrans dtrans ceq/refl}
+            simulate (Deq x : teq (app M1 x) (app M2 x))
+                     (t/app dtrans Dtrans1 : translate (app M1 x) (capp N1 y))
+                     (t/app dtrans Dtrans2 : translate (app M2 x) (capp N2 y))
+                     (Dceq y : ceq (capp N1 y) (capp N2 y))).
+
+- : simulate (eq/lam ([x] Deq x : teq (M x) (M' x))
+               : teq (lam [x] M x) (lam [x] M' x))
+             (t/lam (Dbrack : bracket ([y] N y) N*)
+                    ([x] [y] [dtrans: translate x y] Dtrans x y dtrans
+                      : translate (M x) (N y))
+               : translate (lam [x] M x) N*)
+             (t/lam (Dbrack' : bracket ([y] N' y) N*')
+                    ([x] [y] [dtrans: translate x y] Dtrans' x y dtrans
+                      : translate (M' x) (N' y))
+               : translate (lam [x] M' x) N*')
+             (ceq/eta ([y] (Dceq* y : ceq (N* @@ y) (N y)) ;
+                           (Dceq y : ceq (N y) (N' y)) ;
+                           (ceq/symm (Dceq*' y) : ceq (N' y) (N*' @@ y)))
+               : ceq N* N*')
+     <- ({x} {y} {dtrans: translate x y}
+         {thm-can: can-translate x dtrans}
+         {thm-unique: translate-unique dtrans dtrans ceq/refl}
+         {thm-simulate: simulate eq/refl dtrans dtrans ceq/refl}
+            simulate (Deq x : teq (M x) (M' x))
+                     (Dtrans x y dtrans : translate (M x) (N y))
+                     (Dtrans' x y dtrans : translate (M' x) (N' y))
+                     (Dceq y : ceq (N y) (N' y)))
+     <- ({y} subst Dbrack y (Dceq* y : ceq (N* @@ y) (N y)))
+     <- ({y} subst Dbrack' y (Dceq*' y : ceq (N*' @@ y) (N' y))).
+
+- : simulate (eq/app (Deq2 : teq M2 M2')
+                     (Deq1 : teq M1 M1')
+               : teq (M1 @ M2) (M1' @ M2'))
+             (t/app (Dtrans2 : translate M2 N2)
+                    (Dtrans1 : translate M1 N1)
+               : translate (M1 @ M2) (N1 @@ N2))
+             (t/app (Dtrans2' : translate M2' N2')
+                    (Dtrans1' : translate M1' N1')
+               : translate (M1' @ M2') (N1' @@ N2'))
+             (ceq/app Dceq2 Dceq1
+               : ceq (N1 @@ N2) (N1' @@ N2'))
+     <- simulate Deq1 Dtrans1 Dtrans1' (Dceq1 : ceq N1 N1')
+     <- simulate Deq2 Dtrans2 Dtrans2' (Dceq2 : ceq N2 N2').
+
+- : simulate (eq/refl : teq M M)
+             (Dtrans : translate M N)
+             (Dtrans' : translate M N')
+             Dceq
+     <- translate-unique Dtrans Dtrans' (Dceq : ceq N N').
+
+- : simulate (eq/symm (Deq : teq M' M) : teq M M')
+             (Dtrans : translate M N)
+             (Dtrans' : translate M' N')
+             (ceq/symm Dceq : ceq N N')
+     <- simulate Deq Dtrans' Dtrans (Dceq : ceq N' N).
+
+- : simulate (eq/trans (Deq1 : teq M M') (Deq2 : teq M' M'') : teq M M'')
+             (Dtrans : translate M N)
+             (Dtrans'' : translate M'' N'')
+             (ceq/trans Dceq1 Dceq2 : ceq N N'')
+     <- can-translate M' (Dtrans' : translate M' N')
+     <- simulate Deq1 Dtrans Dtrans' (Dceq1 : ceq N N')
+     <- simulate Deq2 Dtrans' Dtrans'' (Dceq2 : ceq N' N'').
+
+%block simulate-block
+            : some {A:tp}
+              block {x:term A} {y:comb A}
+                    {dtrans: translate x y}
+                    {thm-can: can-translate x dtrans}
+                    {thm-unique: translate-unique dtrans dtrans ceq/refl}
+                    {thm-simulate: simulate' dtrans dtrans eq/refl ceq/refl}.
+
+%worlds (simulate-block) (simulate' _ _ _ _).
+%total D (simulate' _ _ D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Typed_bracket_abstraction_with_equivalence).
+!}%

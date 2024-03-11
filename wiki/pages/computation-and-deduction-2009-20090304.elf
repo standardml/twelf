@@ -1,0 +1,193 @@
+%%! title: "Computation and Deduction 2009/20090304"
+
+%{! 
+Code from class, March 4.
+
+Translates lambda calculus into combinator calculus to illustrate non-trivial worlds.
+
+## Syntax
+
+```twelf
+
+% lambda calculus
+
+term : type.                    %name term M x.
+
+app : term -> term -> term.
+lam : (term -> term) -> term.
+
+%block term-block : block {x:term}.
+%worlds (term-block) (term).
+
+% combinator calculus
+
+comb : type.                    %name comb A y.
+
+s : comb.
+k : comb.
+i : comb.
+capp : comb -> comb -> comb.
+
+%block comb-block : block {y:comb}.
+%worlds (comb-block) (comb).
+
+%{! 
+
+## Translation
+
+!}%
+
+% bracket abstraction
+
+bracket : (comb -> comb) -> comb -> type.
+%mode bracket +A -A'.
+
+bracket/var : bracket ([y] y) i.
+
+bracket/i : bracket ([y] i) (capp k i).
+bracket/k : bracket ([y] k) (capp k k).
+bracket/s : bracket ([y] s) (capp k s).
+
+bracket/app : bracket ([y] capp (A y) (B y)) (capp (capp s A') B')
+               <- bracket ([y] A y) A'
+               <- bracket ([y] B y) B'.
+
+%block bracket-block : block {y:comb} {bracket/y:bracket ([z] y) (capp k y)}.
+
+%worlds (bracket-block) (bracket _ _).
+%total A (bracket A _).
+
+
+% translation
+
+translate : term -> comb -> type.
+%mode translate +M -A.
+
+translate/app : translate (app M N) (capp A B)
+                 <- translate M A
+                 <- translate N B.
+
+translate/lam : translate (lam ([x] M x)) A'
+                 <- ({x} {y} bracket ([z] y) (capp k y)
+                            -> translate x y
+                            -> translate (M x) (A y))
+                 <- bracket ([y] A y) A'.
+
+%block translate-block
+        : block {x:term} {y:comb}
+                {bracket/y: bracket ([z] y) (capp k y)}
+                {translate/x: translate x y}.
+%worlds (translate-block) (translate _ _).
+%total M (translate M _).
+
+%{! 
+
+## Equational theory
+
+Lambda term equality was discussed only briefly.  Combinator equality was presented for the ``subst`` lemma, below.
+
+!}%
+
+% lambda term equality
+
+teq : term -> term -> type.
+
+% beta
+teq/beta : teq (app (lam ([x] M x)) N) (M N).
+
+% extensionality (eta)
+teq/ext : teq M M'
+           <- ({x:term} teq (app M x) (app M' x)).
+
+% compatibilities
+teq/app : teq (app M N) (app M' N')
+           <- teq M M'
+           <- teq N N'.
+
+teq/lam : teq (lam ([x] M x)) (lam ([x] M' x))
+           <- ({x:term} teq (M x) (M' x)).
+
+% equivalence
+teq/refl : teq M M.
+
+teq/symm : teq M M'
+            <- teq M' M.
+
+teq/trans : teq M M'
+             <- teq M N
+             <- teq N M'.
+
+%worlds (term-block) (teq _ _).
+
+
+% combinator equality
+
+ceq : comb -> comb -> type.
+
+% betas
+ceq/i : ceq (capp i A) A.
+ceq/k : ceq (capp (capp k A) B) A.
+ceq/s : ceq (capp (capp (capp s A) B) C) (capp (capp A C) (capp B C)).
+
+% extensionality
+ceq/ext : ceq A A'
+           <- ({y:comb} ceq (capp A y) (capp A' y)).
+
+% compatibility
+ceq/app : ceq (capp A B) (capp A' B')
+           <- ceq A A'
+           <- ceq B B'.
+
+% equivalence
+ceq/refl : ceq A A.
+
+ceq/symm : ceq A A'
+            <- ceq A' A.
+
+ceq/trans : ceq A A'
+             <- ceq A B
+             <- ceq B A'.
+
+%worlds (comb-block) (ceq _ _).
+
+
+
+%{! 
+
+## Correctness of the translation
+
+!}%
+
+% substitution lemma
+
+subst : bracket ([y] A y) A' -> {C:comb} ceq (capp A' C) (A C) -> type.
+%mode subst +Dbrack +C -Dceq.
+
+- : subst (bracket/var : bracket ([y] y) i)
+          C
+          (ceq/i : ceq (capp i C) C).
+
+- : subst (bracket/i : bracket ([y] i) (capp k i))
+          C
+          (ceq/k : ceq (capp (capp k i) C) i).
+
+- : subst (bracket/k : bracket ([y] k) (capp k k))
+          C
+          (ceq/k : ceq (capp (capp k k) C) k).
+
+- : subst (bracket/s : bracket ([y] s) (capp k s))
+          C
+          (ceq/k : ceq (capp (capp k s) C) s).
+
+%block subst-block : block {y:comb}
+                           {bracket/y: bracket ([z] y) (capp k y)}
+                           {thm-subst: {C:comb} subst bracket/y C ceq/k}.
+%worlds (subst-block) (subst _ _ _).
+%total D (subst D _ _).
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090304).
+!}%

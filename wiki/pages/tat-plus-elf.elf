@@ -1,0 +1,60 @@
+%%! title: "TAT/plus.elf"
+
+%{! Part 1 !}%
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+%mode plus +N1 +N2 -N3.
+p/z : plus z N N.
+p/s : plus (s N) M (s P)
+       <- plus N M P.
+%worlds () (plus _ _ _). 
+%total N (plus N _ _). 
+
+plus/z : {N:nat} plus N z N -> type.
+%mode plus/z +N -X. 
+
+-z : plus/z z p/z.
+-s : plus/z (s N) (p/s Dplus)
+      <- plus/z N (Dplus : plus N z N). 
+
+%worlds () (plus/z _ _). 
+%total N (plus/z N _). 
+
+plus/s : plus N M P -> plus N (s M) (s P) -> type.
+%mode plus/s +X1 -X2.
+
+-z : plus/s p/z p/z.
+
+-s : plus/s
+         (p/s (Dplus : plus N M P)) 
+         (p/s Dplus')
+      <- plus/s Dplus (Dplus' : plus N (s M) (s P)).
+
+%worlds () (plus/s _ _). 
+%total D (plus/s D _). 
+
+plus/commutes : plus N M P -> plus M N P -> type.
+%mode plus/commutes +X1 -X2.
+
+-z  : plus/commutes p/z D
+       <- plus/z _ D.
+
+-s  : plus/commutes (p/s (Dplus : plus N M P)) Dplus''
+       <- plus/commutes Dplus
+          (Dplus' : plus M N P)
+       <- plus/s Dplus'
+          (Dplus'' : plus M (s N) (s P)).
+
+%worlds () (plus/commutes _ _).
+%total D (plus/commutes D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/TAT/plus.elf).
+!}%

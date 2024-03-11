@@ -1,0 +1,149 @@
+%%! title: "Computation and Deduction 2009/20090204"
+
+%{! Code from class, February 4 
+
+```twelf
+tp : type.  %name tp T.
+
+num : tp.
+arr : tp -> tp -> tp.
+
+%worlds () (tp).
+
+term : type.  %name term E.
+
+z : term.
+s : term -> term.
+ifz : term -> term -> (term -> term) -> term.
+lam : tp -> (term -> term) -> term.
+app : term -> term -> term.
+
+%block var : block {x:term}.
+%worlds (var) (term).
+
+of : term -> tp -> type.
+
+of/z : of z num.
+
+of/s : of (s N) num
+        <- of N num.
+
+of/ifz : of (ifz E E0 ([x] E1 x)) T
+          <- of E num
+          <- of E0 T
+          <- ({x} of x num -> of (E1 x) T).
+
+of/lam : of (lam T ([x] E x)) (arr T T')
+          <- ({x} of x T -> of (E x) T').
+
+of/app : of (app E1 E2) T'
+          <- of E1 (arr T T')
+          <- of E2 T.
+
+%block stupid : some {x:term} {t:tp} block {d:of x t}.
+%block bind : some {T:tp} block {x:term} {d : of x T}.
+%worlds (bind) (of _ _).
+
+value : term -> type.
+
+value/z : value z.
+
+value/s : value (s E)
+           <- value E.
+
+value/lam : value (lam T E).
+
+%worlds () (value _).
+
+
+
+step : term -> term -> type.
+
+step/s : step (s E) (s E')
+          <- step E E'.
+
+step/ifz/arg : step (ifz E E0 ([x] E1 x)) (ifz E' E0 E1)
+                <- step E E'.
+
+step/ifz/z : step (ifz z E0 E1) E0.
+
+step/ifz/s : step (ifz (s E) E0 ([x] E1 x)) (E1 E)
+              <- value E.
+
+step/app/fn : step (app E1 E2) (app E1' E2)
+	       <- step E1 E1'.
+
+step/app/arg : step (app E1 E2) (app E1 E2')
+		<- value E1
+		<- step E2 E2'.
+
+step/app/beta : step (app (lam T ([x] E1 x)) E2) (E1 E2)
+		 <- value E2.
+
+%worlds () (step _ _).
+
+
+unstuck : term -> type.
+unstuck/val : unstuck E
+	       <- value E.
+
+unstuck/step : unstuck E
+		<- step E E'.
+
+progress-s : unstuck E -> unstuck (s E) -> type.
+%mode progress-s +X1 -X2.
+
+- : progress-s (unstuck/val (D : value E)) (unstuck/val (value/s D)).
+
+- : progress-s (unstuck/step (D : step E E')) (unstuck/step (step/s D)).
+
+%worlds () (progress-s _ _).
+%total {} (progress-s _ _).
+
+progress-ifz : of E num -> unstuck E -> {E0:term} {E1:term -> term} unstuck (ifz E E0 E1) -> type.
+%mode progress-ifz +D1 +D2 +E0 +E1 -D3.
+
+- : progress-ifz _ (unstuck/step (D : step E E')) E0 E1 (unstuck/step (step/ifz/arg D)).
+
+- : progress-ifz 
+     (Dof : of z num)
+     (unstuck/val (value/z))
+     E0 E1
+     (unstuck/step step/ifz/z).
+
+- : progress-ifz
+     (Dof : of (s E) num)
+     (unstuck/val (value/s (Dval : value E)))
+     E0 E1
+     (unstuck/step (step/ifz/s Dval)).
+
+%worlds () (progress-ifz _ _ _ _ _).
+%total {} (progress-ifz _ _ _ _ _).
+
+progress : of E T -> unstuck E -> type.
+%mode progress +D -D'.
+
+- : progress of/z (unstuck/val value/z).
+
+- : progress (of/s (D : of E num)) D''
+     <- progress D (D' : unstuck E)
+     <- progress-s D' (D'' : unstuck (s E)).
+
+- : progress 
+     (of/ifz
+	(D1 : {x} of x num -> of (E1 x) T)
+	(D0 : of E0 T)
+	(D : of E num))
+     D''
+     <- progress D (D' : unstuck E)
+     <- progress-ifz D  D' E0 E1 (D'' : unstuck (ifz E E0 E1)).
+
+%worlds () (progress _ _).
+%total D (progress D _).
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090204).
+!}%

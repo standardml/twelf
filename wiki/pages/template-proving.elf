@@ -1,0 +1,22 @@
+%%! title: "Template:Proving"
+
+%{! [[Proving metatheorems:\{\{\{title\}\}\}|\{\{\{title\}\}\}]] in the tutorial [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)&lt;noinclude&gt;
+
+----
+
+**Documentation:** This template wiki-links to the [User:Drl](/wiki/user-drl/)'s tutorial [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/). As an example,:
+
+::&lt;nowiki&gt;\{\{proving|title=Full LF\}\}&lt;/nowiki&gt;
+
+yields
+
+::[Full LF](/wiki/proving-metatheorems-full-lf/) in the tutorial [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)
+
+&lt;/noinclude&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Proving).
+!}%

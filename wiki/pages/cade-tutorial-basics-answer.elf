@@ -1,0 +1,154 @@
+%%! title: "CADE Tutorial/Basics Answer"
+
+%{! 
+
+## Natural numbers
+
+!}%
+
+nat : type.
+
+zero : nat.
+succ : nat -> nat.
+
+%{! 
+
+## Addition
+
+!}%
+
+add : nat -> nat -> nat -> type.
+
+add/z : add zero N N.
+
+add/s : add (succ M) N (succ P)
+	 <- add M N P.
+
+%{! 
+
+### Example derivations
+
+!}%
+
+1 : nat = succ zero.
+2 : nat = succ 1.
+1+1is2 : add 1 1 2 = add/s (add/z).
+
+%% explicit version of add/z
+%% add/z-explicit  : {n:nat} add zero n n.
+%% 1+1is2-explicit : add 1 1 2 = add/s (add/z-explicit 1).
+
+%{! 
+
+## Exercise: Multiplication
+
+!}%
+
+mult : nat -> nat -> nat -> type.
+
+mult/z : mult zero N zero.
+
+mult/s : mult (succ M) N P'
+	  <- mult M N P
+	  <- add N P P'.
+
+%% note that the arguments are "backwards"
+1*2is2 : mult 1 2 2 = mult/s (add/s (add/s add/z)) mult/z.
+
+%{! 
+
+## Mode, worlds total
+
+!}%
+
+%mode add +M +N -P.
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%solve 1+1is2' : add 1 1 N.
+
+%% Examples of errors:
+%% 
+%% mult/bad-mode-output : mult zero N Q.
+%% 
+%% mult/bad-mode-input : mult (succ M) N zero
+%% 		       <- mult M Q P.
+%% 
+%% %% do input coverage by removing cases
+%% 
+%% mult/bad-termination-1 : mult M N P
+%% 			  <- mult M N P.
+%% mult/bad-termination-2 : mult M N P
+%% 			  <- mult N N P.
+%% 
+%% mult/bad-output-free : mult (succ M) N zero
+%% 			<- mult M N N.
+%% mult/bad-output-cov : mult (succ M) N zero
+%% 		       <- mult M N (succ P).
+
+%mode mult +M +N -P.
+%worlds () (mult _ _ _).
+%total M (mult M _ _).
+
+%{! 
+
+## Right-hand zero
+
+!}%
+
+rhzero : {M : nat} add M zero M -> type.
+%mode rhzero +M -D.
+
+- : rhzero zero add/z.
+- : rhzero (succ M) (add/s D)
+     <- rhzero M (D : add M zero M).
+     
+%worlds () (rhzero _ _).
+%total M (rhzero M _).
+
+%{! 
+
+## Right-hand succ
+
+!}%
+
+rhsucc : add M N P -> add M (succ N) (succ P) -> type.
+%mode rhsucc +D1 -D2.
+
+- : rhsucc (add/z : add zero M M) (add/z : add zero (succ M) (succ M)).
+- : rhsucc (add/s (D1 : add M N P)) (add/s D2)
+     <- rhsucc D1 (D2 : add M (succ N) (succ P)).
+
+%% remark that type annotations are optional:
+%% - : rhsucc add/z add/z.
+%% - : rhsucc (add/s D1) (add/s D2)
+%%      <- rhsucc D1 D2.
+     
+%worlds () (rhsucc _ _).
+%total M (rhsucc M _).
+
+%{! 
+
+## Exercise: addition is commutative
+
+!}%
+
+commute : add M N P -> add N M P -> type.
+%mode commute +D1 -D2.
+
+- : commute (add/z : add zero M M) D
+     <- rhzero M D.
+
+- : commute (add/s (D : add M N P)) D''
+     <- commute D  (D' : add N M P)
+     <- rhsucc D' (D'' : add N (succ M) (succ P)).
+
+%worlds () (commute _ _).
+%total D (commute D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/CADE_Tutorial/Basics_Answer).
+!}%

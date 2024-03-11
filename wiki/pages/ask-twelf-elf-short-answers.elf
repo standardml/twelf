@@ -1,0 +1,53 @@
+%%! title: "Ask Twelf Elf:Short answers"
+
+%{! This page collects short answers to [questions](/wiki/talk-ask-twelf-elf/) people asked.  These answers have not (yet) been made into their own pages, but feel free to fork a page off if you want to give a more thorough answer to a question.
+
+## Comparing Coq and Twelf
+
+Michael Fortson asks: _I can't find any papers comparing Coq and Twelf.  Can someone summarize the differences?_
+
+This is a hard question to answer in any comprehensive manner, since there are lots of differences, in theory and in practice, between the two systems.  However, here's a slapdash list of bullet-points to keep in mind as you think about the two, tailored to representing and proving theorems about programming languages, and quite biased towards talking about LF and Twelf because that's what I know the most about.  There are
+
+**Differences in how you represent languages:** 
+* In LF, you represent your language as the canonical forms of particular LF types; the representation is not an inductive definition inside the LF type theory.  This representation strategy enables [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) and [higher-order judgements](/wiki/higher-order-judgements/), which are very useful ways of dealing with programming languages and logics that involve binding.  LF has a theory of [adequacy](/wiki/adequacy/), which tells you when a representation is correct.
+* In Coq, you represent your language's syntax and judgements as inductively defined types and propositions.  The techniques for dealing with binding are different because you can't use HOAS and HOJ in the same manner as you do in LF.  Also, I don't know of a formal theory of adequacy for Coq, but I haven't looked very hard for one.
+
+**Differences in what constitutes a proof of a metatheorem:**
+* When using Twelf's [metatheorem](/wiki/metatheorem/) features, a proof of a metatheorem consists of an LF type family that Twelf proves [total](/wiki/percent-total/) (this can be confusing at first; start with [this section of the intro](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/) for details).  Thus, we don't prove metatheorems in LF, we prove metatheorems about LF using extra features in Twelf.  
+
+* In contrast, metatheorems in Coq are (more or less) just terms in the Calculus of Inductive Constructions (CiC), which is the same type theory you use for representing languages; there is no separate language for metatheorems.  
+
+**Differences in how you write proofs:**
+*  In Twelf, you write a proof of a metatheorem directly by exhibiting the cases as constants inhabiting an LF type family.  The computational context of the proof is explicit, because this type family can be run as a logic program.  
+
+* The Coq proofs that I've seen consist mostly of tactical proof scripts that instruct Coq how to find the proof term that you're trying to create.  
+
+**Differences in what's provable (in theory):**  Twelf's metatheorem apparatus only checks proofs of ∀∃-statements, so there are some theorems you can't use it to check.
+
+**Differences in what's provable (in practice):**  Of course, the theoretical limits don't tell you much about what people are actually able to do in their day-to-day work.  See the page of [Research projects using Twelf](/wiki/research-projects-using-twelf/) for some examples on the Twelf side of things; there are lots of Coq examples on the Web as well.  
+
+**Differences in foundations:**  LF is a very simple type theory, whereas the CiC (which is something like what Coq implements, but I'm not exactly sure) is a richer type theory.  For proofs of metatheorems, the fair comparison is between LF with Twelf's metatheorem features and CiC with whatever additions Coq implements, and there I'm not sure which is simpler.
+
+This is not intended to be a fair or comprehensive answer to your question, but it's something to think about.  Others might have opinions to add as well.  
+
+Also, you should read the Appel and Leroy list machine benchmark paper that's linked from the [documentation](/wiki/documentation/) page. It compares Twelf and Coq on a simple example (note that the example doesn't use [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) or [higher-order judgements](/wiki/higher-order-judgements/), so it's not even a case where Twelf really shines).   
+[Drl](/wiki/user-drl/) 16:40, 8 April 2007 (EDT)
+
+## Different ways of using Twelf
+
+Michael Fortson asks: _Can you explain the vast difference in style between the examples shown on this site and what is done by Andrew Appel at Princeton?  The two styles seem as if they are two completely different languages!_
+
+From my understanding of the Princeton project and Appel's notes, there's a sense in which they are two different languages.  On the wiki, we give various examples of representing languages and logics as an LF signature (see, e.g., [this section of the intro article](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/)) and then proving metatheorems about them using Twelf's [metatheorem](/wiki/metatheorem/) features such as [%mode](/wiki/percent-mode/), [%worlds](/wiki/percent-worlds/), and [%total](/wiki/percent-total/)  (see, e.g., [this section of the intro article](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/)).
+
+However, there are ways of using Twelf that don't use the metatheorem features at all.  In this style, you encode a particular logic in LF and then reason entirely **within** that logic.  In particular, you prove theorems in that logic by writing LF terms of the appropriate types, which correspond to derivations constructed according to the rules of the logic.  In this setting, Twelf is used as:
+* a type checker for LF, which serves a a proof checker for the encoded logic, and
+* a logic programming language that can be used to search for proofs in the encoded logic.
+
+I don't have much experience using Twelf in this style; others (e.g., [Rob](/wiki/user-rsimmons/)) can say more.  Someone should write an article about why you might want to reason within your own logic encoded in LF instead of using the metatheorem features.  However, I recommend that beginners start by learning how to use Twelf's metatheorem features, since they provide a very useful logic for reasoning about programming languages and logics. [Drl](/wiki/user-drl/) 15:28, 8 April 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Ask_Twelf_Elf:Short_answers).
+!}%

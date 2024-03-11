@@ -1,0 +1,113 @@
+%%! title: "POPL Tutorial/Evaluation Contexts Intrinsic"
+
+%{! 
+
+## Evaluation Contexts, Intrinsically Typed
+
+!}%
+
+tp : type.
+b : tp.
+arr : tp -> tp -> tp.
+
+tm : tp -> type.
+val : tp -> type.
+
+app : tm (arr A B) -> tm A -> tm B.
+ret : val A -> tm A.
+lam : (val A -> tm B) -> val (arr A B).
+
+%block tmb : some {A : tp} block {x : val A}.
+%worlds (tmb) (tm _) (val _).
+
+ec : (tm A -> tm C) -> type.
+ec/var  : ec ([x] x).
+ec/app1 : ec ([x] app (E x) M)
+	   <- ec E.
+ec/app2 : ec ([x] app (ret V) (E x))
+	   <- ec E.
+
+redex  : tm A -> type.
+%mode redex +X1.
+redex/beta : redex (app (ret V1) (ret V2)).
+
+factored : tm A -> type.
+f/val : factored (ret V).
+f/ec  : factored (E M0)
+	 <- ec E
+	 <- redex M0.
+
+factorapp : factored M1 -> factored M2 -> factored (app M1 M2) -> type.
+%mode factorapp +X1 +X2 -X3.
+
+- : factorapp
+     f/val
+     f/val 
+     (f/ec redex/beta ec/var).
+
+- : factorapp
+     (f/ec (Dred0 : redex M0) (Dec : ec E))
+     (_ : factored M2)
+     (f/ec Dred0 (ec/app1 Dec)).
+
+- : factorapp
+     f/val
+     (f/ec (Dred0 : redex M0) (Dec : ec E))
+     (f/ec Dred0 (ec/app2 Dec)).
+
+%worlds () (factorapp _ _ _).
+%total {} (factorapp _ _ _).
+%unique factorapp +X1 +X2 -1X3.
+
+factor : {M : tm A} factored M -> type.
+%mode factor +X1 -X2.
+factor/val : factor (ret V) (f/val).
+factor/app : factor (app E1 E2) F
+	      <- factor E1 F1
+	      <- factor E2 F2
+	      <- factorapp F1 F2 F.
+%worlds () (factor _ _).
+%total M (factor M _).
+%unique factor +X1 -1X2.
+
+result  : (tm A) -> type.
+done    : result (ret V).
+stepped : tm A -> result M.
+
+contract : redex (M : tm A) -> tm A -> type.
+%mode contract +X1 -X2.
+
+- : contract (redex/beta : redex (app (ret (lam M)) (ret V))) (M V).
+
+%worlds () (contract _ _).
+%total {} (contract _ _).
+%unique contract +X1 -1X2.
+
+stepf : factored (M : tm A) -> result M -> type.
+%mode stepf +X1 -X2.
+
+- : stepf f/val done.
+- : stepf (f/ec Dr (Dec : ec E)) (stepped (E Mred))
+     <- contract Dr Mred.
+
+%worlds () (stepf _ _).
+%total {} (stepf _ _).
+%unique stepf +X1 -1X2.
+
+step : {M : tm A} result M -> type.
+%mode step +X1 -X2.
+
+step/i : step M M'
+	  <- factor M F
+	  <- stepf F M'.
+
+%worlds () (step _ _).
+%total {} (step _ _).
+%unique step +X1 -1X2.
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Evaluation_Contexts_Intrinsic).
+!}%

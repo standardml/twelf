@@ -1,0 +1,40 @@
+%%! title: "Proving metatheorems:Summary: the STLC"
+
+%{! \{\{proving metatheorems
+  | nonext = 
+  | prev = Proving metatheorems in non-empty contexts
+  | prevname = Proving metatheorems in non-empty contexts\}\}
+
+## Take-aways
+
+The lessons you should take from this section are:
+
+- LF's binding structure enables elegant representations of object-language binding and hypothetical judgements.
+- World declarations permit totality assertions about type families in non-empty contexts.
+- Such totality assertions can be used to prove general metatheorems about object-language entities that are represented using higher-order LF encodings.  
+
+## What's next?
+
+Now that you've made it through this introduction, you have the basic tools you need to start proving metatheorems with Twelf.  You've seen all of the basic machinery that Twelf provides, and you are in a good position to understand the other documentation on this wiki.  Your next step should be to read some of the [tutorials](/wiki/tutorials/), which describe clever modes of use of the techniques we have talked about here, or to read some of the [case studies](/wiki/case-studies/), which describe interesting applications of Twelf.
+
+## Test yourself
+
+_This section is under development; if you try other examples at this point, please add them here._
+
+Before going on to the next section, you may wish to test yourself with the following exercises.  Then see the [answers](/wiki/proving-metatheorems-stlc-answers-to-exercises/).
+
+- Add product types (&lt;math&gt;\tau_1 \times \tau_2&lt;/math&gt;) to the STLC and extend the proof of preservation to cover this new type.
+- _Add your exercises here!_
+
+
+\{\{proving metatheorems
+  | nonext = 
+  | prev = Proving metatheorems in non-empty contexts
+  | prevname = Proving metatheorems in non-empty contexts\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Summary:_the_STLC).
+!}%

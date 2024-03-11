@@ -1,0 +1,16 @@
+%%! title: "Meta-logic"
+
+%{! A **meta-logic** is a logic for reasoning about another logic. When working with Twelf, there are two common usages for the term "meta-logic."
+
+The first meaning of this term is "a logic used to encode a [object logic](/wiki/object-logic/)." When using Twelf, [LF](/wiki/lf/) is the meta-logic used to create an [adequate](/wiki/adequacy/) encoding of an object logic. When used this way, a meta-logic may also be called a **meta-language.** 
+
+The second meaning of the term is that a meta-logic is a logic in which we state and prove [metatheorem](/wiki/metatheorem/)s. In this case Twelf's facility used to state and verify [totality assertion](/wiki/totality-assertion/)s is the meta-logic used to reason about derivations in object logics. 
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Meta-logic).
+!}%

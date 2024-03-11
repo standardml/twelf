@@ -1,0 +1,188 @@
+%%! title: "Modally Propositional Logic"
+
+%{! 
+
+## Modally-Propositional Logic
+
+!}%
+
+world : type.  %name world W.
+world1 : world.
+succ : world -> world. %% so it doesn't split worlds, which makes the coverage checking output annoying
+
+%block worldb : block {w : world}.
+%worlds (worldb) (world).
+
+acc : world -> world -> type.
+refl : acc W W.
+trans : acc W1 W2 -> acc W2 W3 -> acc W1 W3.
+%block accb : some {W1 : _}{W2 : _}
+	       block {a : acc W1 W2}.
+%worlds (worldb | accb) (acc _ _).
+
+prop : world -> type. %name prop A.
+
+%abbrev boxprop : world -> type = [w] {w'} acc w w' -> prop w'.
+
+box  : boxprop W -> prop W.
+imp  : prop W -> prop W -> prop W.
+at   : prop W' -> prop W.
+down : boxprop W -> prop W.
+
+%block propb : some {W : world}
+		block {a : prop W}.
+%worlds (worldb | accb | propb ) (prop _).
+
+hyp  : prop W -> type.
+conc : prop W -> type.
+
+impL : conc C
+	<- hyp (imp A B) 
+	<- conc A
+	<- (hyp B -> conc C).
+impR : conc (imp A B)
+	<- (hyp A -> conc B).
+
+atL : conc C
+       <- hyp (at A)
+       <- (hyp A -> conc C).
+atR : conc (at A)
+       <- conc A.
+
+boxR : conc (box (A : boxprop W))
+	<- {w'} {a : acc W w'} conc (A w' a).
+boxL : {a : acc W W'}
+	conc C
+	<- hyp (box (A : boxprop W))
+	<- (hyp (A W' a) -> conc C).
+
+downR : conc ((down A) : prop W)
+	 <- conc (A W refl).
+downL : conc C
+	 <- hyp ((down A) : prop W)
+	 <- (hyp (A W refl) -> conc C).
+
+%block hypb : some {W : _} {A : prop W}
+	       block {x : hyp A}.
+%block prophypb : some {W : _} 
+		   block {a : prop W} {h : hyp a -> conc a}.
+ 
+%worlds (worldb | accb | prophypb | hypb ) (hyp _) (conc _).
+
+id : {A : prop W} (hyp A -> conc A) -> type.
+%mode id +X1 -X2.
+
+- : id (imp A B) ([f] impR [x] impL E' (E x) f)
+     <- id A E
+     <- id B E'.
+
+- : id (box (A : boxprop W)) ([b] boxR [w'] [a] boxL a (E w' a) b)
+     <- {w} {a : acc W w} id (A w a) (E w a).
+
+- : id (down A) ([d] downR (downL (E _ refl) d))
+     <- {w} {a : acc W w} id (A w a) (E w a).
+%% ambipolar: 
+% - : id (down A) ([d] downL ([x] downR (E _ refl x)) d)
+%      <- {w} {a : acc W w} id (A w a) (E w a).
+
+- : id (at A) ([a] (atR (atL E a)))
+     <- id A E.
+%% ambipolar: 
+% - : id (at A) ([a] (atL ([x1] atR (E x1)) a))
+%      <- id A E.
+
+%block idcase : some {W : _} 
+		 block {a : prop W} {h : hyp a -> conc a}
+		 {_ : id a h}.
+
+%worlds (worldb | accb | idcase | hypb) (id _ _).
+%total A (id A _).
+
+ca : {A}
+      conc A 
+      -> (hyp A -> conc C)
+      -> conc C
+      -> type.
+%mode ca +A +D +E -F.
+
+- : ca _ (atR D) ([x] atL ([y] E x y) x) E''
+     <- ({y} ca _ (atR D) ([x] E x y) (E' y))
+     <- ca _ D E' E''.
+
+- : ca _ (boxR D) ([x] boxL A ([y] E x y) x) E''
+     <- ({y} ca _ (boxR D) ([x] E x y) (E' y))
+     <- ca _ (D _ A) E' E''.
+
+- : ca _ (downR D) ([x] downL ([y] E x y) x) E''
+     <- ({y} ca _ (downR D) ([x] E x y) (E' y))
+     <- ca _ D E' E''.
+
+- : ca ((imp A B) : prop WAB) (impR D) ([x] impL ([y] E x y) (Arg x) x) (E'' : conc (C : prop WC))
+     <- ({y} ca (imp A B) (impR D) ([x] E x y) (E' y))
+     <- (ca (imp A B) (impR D) ([x] Arg x) Arg')
+     <- ca A Arg' D D'
+     <- ca B D' E' E''.
+
+%% left commutative
+
+- : ca _ (atL D D') E (atL D1 D') 
+     <- ({y} ca _ (D y) E (D1 y)).
+
+- : ca _ (boxL A D D') E (boxL A D1 D') 
+     <- ({y} ca _ (D y) E (D1 y)).
+
+- : ca _ (impL D A D') E (impL D1 A D') 
+     <- ({y} ca _ (D y) E (D1 y)).
+
+- : ca _ (downL D D') E (downL D1 D') 
+     <- ({y} ca _ (D y) E (D1 y)).
+
+%% right commutative
+
+- : ca _ D ([x] (impR ([y] E x y))) (impR F)
+     <- {y} ca _ D ([x] E x y) (F y).
+
+- : ca _ D ([x] (atR (E x))) (atR F)
+     <- ca _ D ([x] E x) F.
+
+- : ca _ D ([x] (downR (E x))) (downR F)
+     <- ca _ D ([x] E x) F.
+
+- : ca _ D ([x] (boxR [w'] [a] (E w' a x))) (boxR F)
+     <- {w'}{a} ca _ D ([x] E w' a x) (F w' a).
+
+- : ca _ D ([x] (boxL A ([y] E x y) Y)) (boxL A F Y)
+     <- {y} ca _ D ([x] E x y) (F y).
+
+- : ca _ D ([x] (downL ([y] E x y) Y)) (downL F Y)
+     <- {y} ca _ D ([x] E x y) (F y).
+
+- : ca _ D ([x] (atL ([y] E x y) Y)) (atL F Y)
+     <- {y} ca _ D ([x] E x y) (F y).
+
+- : ca _ D ([x] (impL ([y] E x y) (Arg x) Y)) (impL F Arg' Y)
+     <- ({y} ca _ D ([x] E x y) (F y))
+     <- ca _ D ([x] Arg x) Arg'.
+
+%block capropb : some {W : _} 
+		   block {a : prop W} {init : hyp a -> conc a}
+		   %% principal
+ 		   {_ : {y : hyp a} ca a (init y) init (init y)}
+		   %% right commutative
+		   {_ : {W' : world} {A : prop W'} {D : conc A} {y : hyp a} 
+			 ca A D ([_] (init y)) (init y)}.
+
+%% FIXME: this shouldn't pass:
+%% propb is not equivalent to prophypb for hyp and conc.
+%% does twelf only check world subsumption on subgoals?
+%% %worlds (worldb | accb | propb | hypb) (ca _ _ _ _). 
+
+%worlds (worldb | accb | capropb | hypb) (ca _ _ _ _). 
+%total {A D E} (ca A D E _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Modally_Propositional_Logic).
+!}%

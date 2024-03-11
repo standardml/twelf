@@ -1,0 +1,50 @@
+%%! title: "Equivalence relation"
+
+%{! We represent many equivalence relations in Twelf.  The page on [equality](/wiki/equality/) discusses how to represent syntactic equality of LF terms as an LF type family.  This page presents examples of other equivalence relations.  
+
+## Example: trees with unordered children
+
+Generally we think of trees as having "left" and "right" subtrees, but imagine we wish to ignore that distinction, so that two trees are equal if they have the same colored root and their subtrees are equal, but we don't insist that the "first" or "left" subtree of one tree is equal to the first subtree of the other tree. In this notion of equality, the following two trees would be equal. !}%
+    
+tree: type.
+
+leaf: tree.
+node: tree -> tree -> tree.
+
+tree1 : tree = (node leaf (node leaf leaf)).
+tree2 : tree = (node (node leaf leaf) leaf).
+
+%{! We define a notion of equality that is compatible with this definition: !}%
+    
+eq-rot-tree : tree -> tree -> type.
+
+eq-rot-tree/node : eq-rot-tree leaf leaf.
+
+eq-rot-tree/match : eq-rot-tree (node T1 T2) (node T1' T2')
+                     <- eq-rot-tree T1 T1'
+                     <- eq-rot-tree T2 T2'.
+
+eq-rot-tree/swap : eq-rot-tree (node T1 T2) (node T2' T1')
+                    <- eq-rot-tree T1 T1'
+                    <- eq-rot-tree T2 T2'.
+
+%query 2 * eq-rot-tree tree1 tree2.
+
+%{! ## Equality by canonical representative
+
+Equality by canonical representative is another approach to equality by means of an equivalence relation. A total, deterministic relation is defined that reduces every term to its canonical form, and the equivalence relation consideres two terms equivalent if they have identical canonical forms.
+
+### Example: canonical representatives for trees with unordered children
+
+The previous definition for equality over trees is unsatisfying in certian ways, for instance, there are two ways to prove that the tree ``(node leaf leaf)`` is equivalent to ``(node leaf leaf)``, one that uses the rule ``eq-rot-tree/match`` and one that uses the rule ``eq-rot-tree/swap``. We could define the canonical representative for every to be a tree where the left child was "bigger" than the right according to some metric, and then two trees could be compared for equality by seeing if their canonical representatives are identical.
+
+\{\{needs|An example of this is not put together; one would be nice.\}\}
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Equivalence_relation).
+!}%

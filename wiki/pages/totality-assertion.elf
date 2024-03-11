@@ -1,0 +1,50 @@
+%%! title: "Totality assertion"
+
+%{! A **totality assertion** is one type of [metatheorem](/wiki/metatheorem/) about [LF](/wiki/lf/) [type families](/wiki/type-family/).  A totality assertion for a type family ``a`` is specified by designating some arguments of the type family as inputs and the remaining arguments as outputs, and by specifying a set of LF contexts.  Then the totality assertion for the type family is the following proposition:
+
+: For all contexts Γ, for all inputs ``M`` in Γ, there exist outputs ``N`` in Γ such that the type ``a M N`` is inhabited in Γ.
+
+In Twelf, totality assertions are specified using [%mode](/wiki/percent-mode/) and [%worlds](/wiki/percent-worlds/) declarations and verified using [%total](/wiki/percent-total/) declarations.  Totality assertions are useful for verifying properties of object-language [judgment](/wiki/judgment/)s.  Additionally, Twelf's ability to verify totality assertions is used to prove general [metatheorem](/wiki/metatheorem/)s.  
+
+## Example totality assertions
+
+Consider the following LF signature, which defined addition on natural numbers: !}%
+    
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+plus   : nat -> nat -> nat -> type.
+plus-z : plus z N2 N2.
+plus-s : plus (s N1) N2 (s N3)
+	  <- plus N1 N2 N3.
+
+%{! A type family such as ``plus`` defines a relation among its indices, where indices are related iff their instance of the family is inhabited by an LF term.  For example, ``plus`` defines a relation between three terms of type ``nat``.  The terms (``s (s z)``, ``s z``, ``s (s (s z))``) are related by this relation (because 2 + 1 = 3), but the terms (``z``, ``s z``, ``s (s (s z))``) are not.
+
+Totality assertions are one class of statements about LF type families. A totality assertion for a type family is specified by designating some index positions as inputs and others positions as outputs.  We call this specification the [mode](/wiki/percent-mode/) of the totality assertion.  Given a mode specification, the totality assertion asserts that for all inputs, there exist outputs that stand in the relation. Using ``plus`` as an example, if we designate the first two positions as inputs and the third position as an output, this specifies the following totality assertion:
+
+: For all ``N1:nat`` and ``N2:nat``, there exist ``N3:nat`` and ``D:plus N1 N2 N3``.
+
+That is, the sum of any two natural numbers exists.  Designating instead the first position as output and second and third positions as inputs defines the following totality assertion:
+
+: For all ``N2:nat`` and ``N3:nat``, there exist ``N1:nat`` and ``D:plus N1 N2 N3``.
+
+Of course, this totality assertion is false, as ``N3 - N2`` might not be a natural number.
+
+A totality assertion for an LF type family corresponds with the standard notion of totality for the relation defined by the family.  Proving a relation total is different from showing that the relation defines a function, as the outputs of a total relation are not necessarily unique&mdash;the relation may relate particular inputs to more than one collection of outputs.
+
+We may prove a totality assertion by induction on [canonical forms](/wiki/canonical-form/).  For example, we can prove the first above totality assertion by induction on ``N1:nat``.  
+
+The above examples consider only terms that are well-typed without mentioning LF variables. In general, it is useful to state totality assertions about all terms that are well-typed in any LF context in a particular [world](/wiki/percent-worlds/), which is a set of LF contexts.  Thus, a totality assertion is specified by both a mode declaration and a [world declaration](/wiki/percent-worlds/).  
+
+The page on [%worlds](/wiki/percent-worlds/) presents an example totality assertion in non-empty contexts.
+
+## See also
+* This page's description of totality assertions was extracted from \{\{proving|title=Proving totality assertions about the natural numbers\}\}.  Read that introduction to learn how to prove totality assertions using Twelf, and how to use totality assertions to mechanize proofs of more general [metatheorem](/wiki/metatheorem/)s. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Totality_assertion).
+!}%

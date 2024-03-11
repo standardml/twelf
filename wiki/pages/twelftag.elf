@@ -1,0 +1,42 @@
+%%! title: "TwelfTag"
+
+%{! The **TwelfTag** system is a way of adding Twelf code directly into the Twelf Project Wiki. This page gives an introduction to TwelfTag for readers. The page [[Project:TwelfTag]] has information about TwelfTag for editors, and the [Twelf Live](/wiki/twelf-live/) system provides a more interactive way of using Twelf with on this website. !}%
+
+%{! ## Syntax highlighting !}%
+
+%{! The most basic function of TwelfTag is to highlight Twelf code much the same way that [Emacs](/wiki/twelf-with-emacs/) does. Names are red, and metavariables (free variables) are in blue.
+!}%
+
+elem : type.
+
+list : type.
+nil : list.
+cons : elem -> list -> list.
+
+list-reverse : list -> list -> list -> type.
+lr/nil : list-reverse nil L L.
+lr/cons : list-reverse (cons E L1) L2 L3
+           <- list-reverse L1 (cons E L2) L3.
+
+%{! ## Showing Twelf's response !}%
+
+%{! When Twelf checks a piece of code, it produces some output that represents Twelf's reconstruction of that code and a message (``%% OK %%`` or ``%% ABORT %%``) that signals whether it was successful. Sometimes it is helpful to show Twelf's response in an article, and TwelfTag can do this too, showing Twelf's response in green. |check=decl !}%
+
+%solve test : {e1}{e2}{e3}{e4} list-reverse (cons e1 (cons e3 (cons e2 (cons e4 nil)))) nil _.
+
+%. == Linking to Twelf code and Twelf output ==
+
+TwelfTag has the ability to link, inside a page, to the code that has been shown highlighted on that page, and also to link to the response Twelf gives when checking that code.
+*<twelflink>This link</twelflink> shows you the twelf code (the code that is shown with syntax ) for this page.
+*<twelflink check=true>This link</twelflink> shows you Twelf's response from reading the code on this page.
+
+== "Literate Twelf" ==
+
+For some pages, including this one, the page itself is written in valid Twelf that is then automatically transformed into an article. Pages written in this way look exactly like other pages, but they have a note at the top of the article that reports on Twelf's status after reading the file - <tt>%% OK %%</tt> means everything checked out, and <tt>%% ABORT %%</tt> means that there was a problem - and links to both the code and Twelf's response. More information on writing articles with this feature can be found at the page on [[Project:Literate Twelf|Literate Twelf]].
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/TwelfTag).
+!}%

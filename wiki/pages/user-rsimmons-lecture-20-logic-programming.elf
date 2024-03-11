@@ -1,0 +1,189 @@
+%%! title: "User:Rsimmons/Lecture 20: Logic Programming"
+
+%{! 
+__NOTOC__
+
+In this lecture, Karl uses Prolog notation. I'm going to skip a step and go ahead and start using Twelf, since I've got all this infrastructure set up to incorporate pretty Twelf into web pages. For the purpose of this exercise, this only means that we have to declare types for things and that we write ``connect a b`` instead of ``connect(a,b)``
+for facts representing a connection from ``a``
+to ``b``, and we say ``D &lt;- A &lt;- B &lt;- C`` instead of ``D :- A, B, C`` for a three-premise rule.
+
+You'll notice there's a box on the upper-right hand corner that calls this page "Literate Twelf." This is related to the idea of [http://www.literateprogramming.com/ Literate Programming] - this wiki page is itself a page of valid Twelf code.
+
+If you'll forgive the ugly illustration, we're interesting in answering questions about rechability on this acyclic graph (we want it to be an acyclic graph!)
+
+&lt;code&gt;
+   -&gt; b &lt;-
+  /       \   
+ /         \ 
+a----------&gt;c-----&gt;d
+&lt;/code&gt;
+
+!}%
+
+node : type.
+a : node.
+b : node.
+c : node.
+d : node.
+
+connect : node -> node -> type.
+reaches : node -> node -> type.
+
+connect/a-b : connect a b.
+connect/a-c : connect a c.
+connect/c-b : connect c b.
+connect/c-d : connect c d.
+
+reach/refl  : {X: node} reaches X X.
+reach/trans : {X: node} {Y: node} {Z: node} reaches Y Z -> connect X Y -> reaches X Z.
+
+%{! 
+
+**NOTE:** You don't have to write the &Pi; bound things, so you could have used:
+&lt;twelf name=dsfadsf&gt;
+reach/refl  : reaches X X.
+reach/trans : reaches Y Z -&gt; connect X Y -&gt; reaches X Z.
+&lt;/twelf&gt;
+(Twelf assumes you meant to &Pi;-bind capitalized things but were too lazy to write the &Pi;, so it does it for you.
+
+I can ask the engine to ask questions about reachability, which will essentially perform a depth-first search on the graph.
+
+I can confirm that there is one way through the graph from ``a`` to 
+``d`` (the notation ``%query 1 *`` isn't important for you to remember, but it means that I want one answer
+no matter how many times I try)
+
+|check=decl !}%
+
+%query 1 * reaches a d. 
+
+%{! 
+
+...I can ask the engine to verify that there are no paths through the graph from ``b`` to ``a``:
+
+|check=decl !}%
+
+%query 0 * reaches b a.
+
+%{! 
+
+...finally, I can use a capital letter (metavariable or substitution variable) ``Z`` to ask, what is EVERY path, starting from
+``a``, in the graph? Turns out there are 5 (``b`` can be reached in two different ways):
+
+|check=decl !}%
+
+%query 5 * reaches a Z.
+
+%.
+
+= The LF Logical Framework =
+
+== Syntax ==
+
+<math>
+K ::= \texttt{type} \mid A \rightarrow K
+</math>
+
+<math>
+A ::= \Pi x{:}A.A \mid \lambda x{:}A.A \mid A~M \mid \texttt{a}
+</math>
+
+<math>
+M ::= x \mid \lambda x{:}A.M \mid M~M \mid \texttt{c}
+</math>
+
+== Typing Rules ==
+
+=== Kinds ===
+
+Kinds ''K'' classify types ''A''.
+
+<br/>
+
+<math>
+{}
+\over
+{\texttt{type} : \texttt{kind}}
+</math>
+
+<br/>
+
+<math>
+{A : \texttt{type} \qquad
+K : \texttt{kind}}
+\over
+{A \rightarrow K : \texttt{kind}}
+</math>
+
+=== Types ===
+
+Types ''A'' classify terms ''M'' and are classified by kinds ''K''.
+
+<br/>
+
+<math>
+{A : \texttt{type}\qquad
+x : A \vdash B : \texttt{type}}
+\over
+{\Pi x{:}A.B : \texttt{type}}
+</math>
+
+<br/>
+
+<math>
+{A : \texttt{type} \qquad
+x : A \vdash B : K}
+\over
+{\lambda x{:}A.B : A \rightarrow K}
+</math>
+
+<br/>
+
+<math>
+{A : A' \rightarrow K \qquad
+M : A'}
+\over
+{A~M : K}
+</math>
+
+<br/>
+
+<math>
+{\texttt{a} : K \in \Sigma}
+\over
+{\texttt{a} : K}
+</math>
+
+=== Terms ===
+
+Terms ''M'' are classified by types ''A''.
+
+<math>
+{A : \texttt{type} \qquad
+x : A \vdash M : A'}
+\over
+{\lambda x{:}A . M : \Pi x {:} A . A'}
+</math>
+
+<br/>
+
+<math>
+{M_1 : \Pi x{:}A . A' \qquad
+M_2 : A}
+\over
+{M_1~M_2 : A'[M_2/x]}
+</math>
+
+<br/>
+
+<math>
+{\texttt{c} : A \in \Sigma}
+\over
+{\texttt{c} : A}
+</math>
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Lecture_20:_Logic_Programming).
+!}%

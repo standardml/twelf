@@ -57,6 +57,7 @@ $TIME ../bin/twelf-regression regression-public.txt
 endgroup
 
 startgroup "Running Twelf Wiki literate examples"
+node regression-wiki.mjs
 $TIME ../bin/twelf-regression regression-wiki.txt
 endgroup
 

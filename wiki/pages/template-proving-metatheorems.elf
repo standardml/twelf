@@ -1,0 +1,20 @@
+%%! title: "Template:Proving metatheorems"
+
+%{! \{| style="width:100%; margin-bottom:5px; border: 1px solid #ADA; background-color: #E4F2E4; text-align:center; font-size:0.9em;"
+|-
+| style="width:35%; text-align:left; font-size:0.9em;" | \{\{\{noprevious|Previous:&lt;br /&gt;[[Proving metatheorems:\{\{\{prev\}\}\}|\{\{\{prevname\}\}\}]]\}\}\}
+| style="width:30%;" | &lt;big&gt;**[Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)** &lt;/big&gt;
+| style="width:35%; text-align:right;font-size:0.9em;" | \{\{\{nonext|Next:&lt;br /&gt;[[Proving metatheorems:\{\{\{next\}\}\}|\{\{\{nextname\}\}\}]]\}\}\}
+|\}
+&lt;br /&gt;__NOTOC__&lt;noinclude&gt;
+
+This template is for use in the [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) multi-page article. It should be given arguments prev (a wiki page) and prevname (the short name to use in the link), as well as arguments next and nextname. If the arguments noprevious or nonext are specified, then these links will not show at all.
+
+&lt;/noinclude&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Proving_metatheorems).
+!}%

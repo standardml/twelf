@@ -1,0 +1,46 @@
+%%! title: "Talk:Totality assertion"
+
+%{! ## Why I somewhat rudely deleted the whole page and redirected to something I wrote previously
+
+I found the previous version of this troubling, mainly just because it was confusing, but also because I'm not sure what a page on "totality assertion" is supposed to contain. I redirected to my summary at [%total](/wiki/percent-total/); that summary is brief and should be expanded (especially with examples). But when a sentence needs to be bullet-pointed, I think it's either saying way too much for one sentence or way too little for us to understand! I propose that we have a page about [metatheorem](/wiki/metatheorem/) that discusses why you'd like to make a [%total](/wiki/percent-total/) declaration and what it means for metatheory, and a page about [%total](/wiki/percent-total/) (still needs work obviously) that explains how you do it and specifically what it means in terms of logic programming.
+
+In case you disagree and recreate this, specifically:
+* there are no infinite-sized terms; if we have a LF term then it is of finite size.
+* Though a %total does prove it's "always possible to derive an object.." it is stronger than that: Twelf's logic program search procedure will always succeed.
+* It's critical for correctness that the inputs are ground, and the outputs are also guaranteed to be ground.
+* There may be no inputs or no outputs (or neither), so using the word "some" might be misleading (it can be read as "exists")
+* I'd say (defined by [%worlds](/wiki/percent-worlds/) consisting of zero or more [%block](/wiki/percent-block/)s), since that's all that worlds are.
+::::&nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:20, 9 March 2007 (EST)
+
+### Original
+A **totality assertion** states the following:
+
+* Given one or more [LF](/wiki/lf/) type families indexed by some number of objects
+* If some of those indices are treated as inputs and some are treated as outputs (as defined by a [%mode](/wiki/percent-mode/) for each family)
+* If the relevant part of the LF context is formed in a certain way (defined by [``%worlds``](/wiki/percent-worlds/) and zero or more [blocks](/wiki/percent-block/))
+* Then given terms for each of the indices treated as inputs, it is always possible to derive an object of any one of the type families, which means that it is possible to construct an object for each of the output types. Furthermore, based on an induction metric (defined by [``%total``](/wiki/percent-total/)), this term has finite size.
+
+If a type family is indexed by judgments, then a totality assertion proves the [metatheorem](/wiki/metatheorem/) that for all proof terms witnessing the truth of inputs, there exist proof terms witnessing the truth of each of the outputs; therefore, the totality assertion can be seen as the statement of a theorem that has the form ∀A∃B for some sets of propositions A and B.
+
+## See also
+
+* [Metatheorem](/wiki/metatheorem/)
+* [%mode](/wiki/percent-mode/)
+* [%block](/wiki/percent-block/)
+* [%worlds](/wiki/percent-worlds/)
+* [%total](/wiki/percent-total/)
+
+## What it should have contained
+
+The page on totality assertions should have contained a general discussion of totality assertions for LF type families.  This is a different concept than %total.  The abstract notion of a totality assertion for a type family has nothing to do with the details of how Twelf proves some of them.  You can write down type family and a true totality assertion for it that Twelf can't prove with %total, or even that we can't prove in Twelf at all.  If %total changes (say, Carsten finishes his logic programming project on permitting more general orderings, or we switch to a functional meta-language), the notion of a totality assertion for a type family doesn't change.  That's why I think they should be separate pages.  Neither Rob nor I have had time to write more than the place-holder for TAs yet though.  Is there an easy way to undo the redirect?  [Drl](/wiki/user-drl/) 11:51, 9 March 2007 (EST)
+:Yeah, it's really easy to undo by using history to navigate to an old version, then _edit_ing that version, and saving. I'm not sure I understand why [totality assertion](/wiki/totality-assertion/) shouldn't be a part of [metatheorem](/wiki/metatheorem/) but what you say makes sense. I think it's important though that this page doesn't appear to be documentation for Twelf's current notion of totality, since that could potentially be very confusing. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 15:25, 9 March 2007 (EST)
+::In fact, [metatheorem](/wiki/metatheorem/) already has a section called [totality assertion](/wiki/metatheorem/); perhaps that would be a satisfactory redirect target? &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 15:33, 9 March 2007 (EST)
+:::The whole point about [metatheorem](/wiki/metatheorem/) as I wrote it was to be hopelessly general - I don't even use dependent types. Then there is a separate issue of how we _specify_ totality assertions over "Twelf things" - that was the idea for this article, which is basically what Dan said. While I don't see why you deleted rather than blanking, one might as well just start over, all I did last night was give the page complete sentences, which it did not have before. As you said in the edit to [metatheorem](/wiki/metatheorem/), you can specify true totality assertions that ``%total`` can't check, so a totality assertion is something different than a ``%total``. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 19:26, 9 March 2007 (EST)
+::::I didn't delete it, I just redirected it. Also, feel free to revert if you don't think that was sensible... I'm just being bold and I have a lot of wiki ego hitpoints, don't worry! I'm not disagreeing that there are various levels at which we could discuss what a totality assertion is: clearly there is what is currently implemented in Twelf CVS; there is what ought to be implemented; there is what's in Carsten's thesis; there is what might be implemented due to current research; there is the general notion of totality on Twelf relations, both in the sense of totality assertions that are recursively enumerable and the sort of undecidable Platonic math set-of-all-total relations; there is the more general still notion of totality on not-necessarily-Twelf relations, etc. But we ought not have an article on all of these! So what's the pedagogical reason for an article on [totality assertion](/wiki/totality-assertion/) that isn't covered by [%total](/wiki/percent-total/) or [metatheorem](/wiki/metatheorem/)? My feeling is that it is an unnecessary middle ground, at least not nearly as important as most of the redlinks on [Twelf glossary](/wiki/glossary/). &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 16:39, 12 March 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Totality_assertion).
+!}%

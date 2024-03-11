@@ -1,0 +1,14 @@
+%%! title: "Template:Needswork"
+
+%{! \{| style="width:100%; margin-bottom:5px; border: 1px solid; background-color: #f2dfce; text-align:center; font-size:0.9em;"
+|-
+| style="align:center;" |This page needs some work: _\{\{\{1\}\}\}_
+|\}
+&lt;includeonly&gt;[Category:Pages needing attention](/wiki/category-pages-needing-attention/)&lt;/includeonly&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Needswork).
+!}%

@@ -1,0 +1,218 @@
+%%! title: "Structural metrics"
+
+%{! Twelf is able to prove metatheorems using induction over a sub-term ordering on a particular input. However, there are some theorems you would like to prove where you want to induct on an object that is not necessarily a subterm of your induction position, but in some sense this object is "smaller". What you can do is define a metric describing the size of the input that you would like to induct on, and use a termination argument that uses the metric in the induction position. The first choice for a metric that comes to mind is the [natural numbers](/wiki/natural-numbers/); see the tutorial on [numeric termination metrics](/wiki/numeric-termination-metrics/) for an example. Using the natural numbers as a metric has the advantage that you can [use nat-less with %reduces](/wiki/using-nat-less-with-reduces/) in order to do strong induction. 
+
+However, the natural numbers are not the only thing you can use as a metric. Oftentimes it is more convenient to use a metric that captures the structure of your derivations, instead of defining a numerical "size" or "height" with the natural numbers. Structural termination metrics correspond more closely to the original derivation, and they save you from having to prove [%reduces](/wiki/percent-reduces/) lemmas for the auxiliary operations used to define a numerical metric.  Structural metrics for most [type families](/wiki/type-family/) are tree-like structures (but the structural metric for type families that look like lists is the natural numbers).  Typing derivations for lambda calculi are an obvious example of a type family whose structural metric resembles a tree.
+
+In the following example, we will define a type family for colors and for trees with colors at the leaves. We will then mutually recursively define two recoloring operations over the colored trees. In order to show the [effectiveness lemma](/wiki/effectiveness-lemma/) for these recoloring operations, we will need to use a structural metric describing the shape of the colored trees as part of our induction. This technique is particularly important when proving properties about an operation that may change a derivation, but preserves "shape". 
+
+We will first define some colors and trees over colors. !}%
+    
+%{! (options removed from twelftag: export="trees") !}%
+
+color : type.
+
+color/red   : color.
+color/blue  : color.
+color/white : color.
+
+
+
+colortree : type.
+
+colortree/node : colortree -> colortree -> colortree.
+colortree/leaf : color -> colortree.
+
+%{! We will also define two operations to recolor colors. We will use these operations to define two operations to recolor trees. Notice how they are defined mutually recursively. This mutual recursion in the definition is what will ultimately force us to require a metric. !}%
+    
+%{! (options removed from twelftag: import="trees") !}%
+
+recolor1 : color -> color -> type.
+
+recolor1/rb : recolor1 color/red color/blue.
+recolor1/bw : recolor1 color/blue color/white.
+recolor1/wr : recolor1 color/white color/red.
+
+
+
+recolor2 : color -> color -> type.
+
+recolor2/rr : recolor2 color/red color/red.
+recolor2/br : recolor2 color/blue color/red.
+recolor2/wb : recolor2 color/white color/blue.
+
+
+
+recolortree1 : colortree -> colortree -> type.
+recolortree2 : colortree -> colortree -> type.
+
+recolortree1/node : recolortree2 TA TA' 
+                     -> recolortree1 TA' TA''
+                     -> recolortree1 (colortree/node TA TB) (colortree/node TA'' TB).
+
+recolortree1/leaf : recolor1 C1 C2 -> recolortree1 (colortree/leaf C1) (colortree/leaf C2).
+
+
+
+recolortree2/node : recolortree1 TB TB' 
+                     -> recolortree2 TB' TB''
+                     -> recolortree2 (colortree/node TA TB) (colortree/node TA TB'').
+
+recolortree2/leaf : recolor2 C1 C2 -> recolortree2 (colortree/leaf C1) (colortree/leaf C2).
+
+%{! At a high level, we can see that the recoloring operations to not change the height or "shape" of the trees, just the coloring. So this operation should be total. We can easily show an [effectiveness lemma](/wiki/effectiveness-lemma/) for each of the recoloring operations for colors. !}%
+    
+%{! (options removed from twelftag: import="trees") !}%
+
+can-recolor1 : {C} recolor1 C C' -> type.
+%mode can-recolor1 +D -D1.
+
+- : can-recolor1 color/red recolor1/rb.
+
+- : can-recolor1 color/blue recolor1/bw.
+
+- : can-recolor1 color/white recolor1/wr.
+
+%worlds () (can-recolor1 _ _).
+%total {} (can-recolor1 _ _).
+
+
+
+can-recolor2 : {C} recolor2 C C' -> type.
+%mode can-recolor2 +D -D1.
+
+- : can-recolor2 color/red recolor2/rr.
+
+- : can-recolor2 color/blue recolor2/br.
+
+- : can-recolor2 color/white recolor2/wb.
+
+%worlds () (can-recolor2 _ _).
+%total {} (can-recolor2 _ _).
+
+%{! Can we prove an effectiveness lemma about the recoloring operations for trees? We will pre-emptively avoid an early pitfull and try to prove both lemmas simultaneously (which is necessary because one must call the other). !}%
+    
+%{! (options removed from twelftag: import="trees") !}%
+
+can-recolortree1 : {T} {T'} recolortree1 T T' -> type.
+%mode can-recolortree1 +T -T' -D1.
+
+can-recolortree2 : {T} {T'} recolortree2 T T' -> type.
+%mode can-recolortree2 +T -T' -D1.
+
+- : can-recolortree1 (colortree/node T1 T2) (colortree/node T1'' T2) (recolortree1/node D1 D2)
+     <- can-recolortree2 T1 T1' D1
+     <- can-recolortree1 T1' T1'' D2.
+
+% we can't even get the above case to pass termination checking
+
+%worlds () (can-recolortree1 _ _ _) (can-recolortree2 _ _ _).
+% %total (T) (can-recolortree1 T _ _) (can-recolortree2 T _ _).
+
+%{! What went wrong when in the above case? The first inductive call to ``can-recolortree2`` was valid. But in the second inductive call to ``can-recolortree2`` we had the _output_ of the first inductive call in the induction position of the second call. This is not valid, because the tree that was outputted was not a sub-term of the input tree. So we will need a metric. It is possible to use a natural number representing the height or size of the tree as a metric, but for this particular proof such a metric would be a bit cumbersome, because we would need to know things about arithmetic to make the induction go through. Instead, we will exploit the fact that the "shape" of the tree is unchanged by the operations and use a tree metric describing the shape of the tree. !}%
+    
+%{! (options removed from twelftag: import="trees") !}%
+
+tree : type.
+
+tree/node : tree -> tree -> tree.
+tree/leaf : tree.
+
+%{! The type ``tree`` we've defined above describes trees with no interesting information at the nodes or leaves. They are only "shapes". We can relate ``colortrees`` to ``trees`` by shape. We can also prove an [effectiveness lemma](/wiki/effectiveness-lemma/) showing this operation is always possible. !}%
+    
+%{! (options removed from twelftag: import="trees") !}%
+
+colortree-shape : colortree -> tree -> type.
+
+colortree-shape/node : colortree-shape T1 T1'
+                        -> colortree-shape T2 T2'
+                        -> colortree-shape (colortree/node T1 T2) (tree/node T1' T2').
+
+colortree-shape/leaf : colortree-shape (colortree/leaf _) tree/leaf.
+
+
+
+can-colortree-shape : {C} {T} colortree-shape C T -> type.
+%mode can-colortree-shape +C -T -D1.
+
+- : can-colortree-shape (colortree/node C1 C2) (tree/node T1 T2)
+     (colortree-shape/node D1 D2)
+     <- can-colortree-shape C1 T1 D1
+     <- can-colortree-shape C2 T2 D2.
+
+- : can-colortree-shape (colortree/leaf _) tree/leaf colortree-shape/leaf.
+
+%worlds () (can-colortree-shape _ _ _).
+%total (C) (can-colortree-shape C _ _).
+
+%{! We will now use ``colortree`` to strengthen our induction hypothesis for the effectiveness of recoloring trees. We will use them to state that not only is it always possible to recolor a tree, but the resulting tree is always the same shape. We will induct over the structure of the ``tree``. !}%
+    
+%{! (options removed from twelftag: import="trees") !}%
+
+can-recolortree1* : {T:tree} colortree-shape CT T
+                    -> colortree-shape CT' T
+                    -> recolortree1 CT CT' -> type.
+%mode can-recolortree1* +T +D1 -D2 -D3.
+
+can-recolortree2* : {T:tree} colortree-shape CT T
+                    -> colortree-shape CT' T
+                    -> recolortree2 CT CT' -> type.
+%mode can-recolortree2* +T +D1 -D2 -D3.
+
+- : can-recolortree1* (tree/node T1 T2) (colortree-shape/node DCS1 DCS2)
+     (colortree-shape/node DCS1'' DCS2) (recolortree1/node DR1 DR2)
+     <- can-recolortree2* T1 DCS1 DCS1' DR1
+     <- can-recolortree1* T1 DCS1' DCS1'' DR2.
+
+- : can-recolortree1* tree/leaf colortree-shape/leaf 
+     colortree-shape/leaf (recolortree1/leaf DR)
+     <- can-recolor1 _ DR.
+
+
+
+- : can-recolortree2* (tree/node T1 T2) (colortree-shape/node DCS1 DCS2)
+     (colortree-shape/node DCS1 DCS2'') (recolortree2/node DR1 DR2)
+     <- can-recolortree1* T2 DCS2 DCS2' DR1
+     <- can-recolortree2* T2 DCS2' DCS2'' DR2.
+
+- : can-recolortree2* tree/leaf colortree-shape/leaf 
+     colortree-shape/leaf (recolortree2/leaf DR)
+     <- can-recolor2 _ DR.
+
+%worlds () (can-recolortree1* _ _ _ _) (can-recolortree2* _ _ _ _).
+%total (T1 T2) (can-recolortree1* T1 _ _ _) (can-recolortree2* T2 _ _ _).
+
+%{! Now we have proven effectiveness lemmas for the recoloring tree operations conditional on the fact that we can compute the size metric. Since we proved this is possible, we can write nicer versions of the lemmas that do not mention the metric. !}%
+    
+%{! (options removed from twelftag: import="trees" check="true") !}%
+
+can-recolortree1 : {T} {T'} recolortree1 T T' -> type.
+%mode can-recolortree1 +T -T' -D1.
+
+- : can-recolortree1 CT _ DR
+     <- can-colortree-shape CT T DCS
+     <- can-recolortree1* T DCS _ DR.
+
+%worlds () (can-recolortree1 _ _ _).
+%total {} (can-recolortree1 _ _ _).
+
+
+
+can-recolortree2 : {T} {T'} recolortree2 T T' -> type.
+%mode can-recolortree2 +T -T' -D1.
+
+- : can-recolortree2 CT _ DR
+     <- can-colortree-shape CT T DCS
+     <- can-recolortree2* T DCS _ DR.
+
+%worlds () (can-recolortree2 _ _ _).
+%total {} (can-recolortree2 _ _ _).
+
+%{! \{\{tutorial\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Structural_metrics).
+!}%

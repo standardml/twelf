@@ -1,0 +1,18 @@
+%%! title: "Template:Undocumented"
+
+%{! &lt;div style="float:right;border:solid #BBBBEE 1px;margin:1em;"&gt;
+\{| cellspacing="0" style="background:#E7E7FF;"
+| style="font-size:8pt;padding:4pt;line-height:1.25em;" | This \{\{\{1|article or section\}\}\} describes an [[:category:undocumented features|undocumented feature]] of Twelf.&lt;br/&gt;The information may be incomplete and subject to change.
+|\}
+&lt;/div&gt;&lt;includeonly&gt;[Category:Undocumented features](/wiki/category-undocumented-features/)&lt;/includeonly&gt;&lt;noinclude&gt;&lt;br clear="all" /&gt;
+
+This template also lists the page in the [[:Category:undocumented features|undocumented features]] category. Use with an optional argument to change the text "article or section" (_e.g._ &lt;nowiki&gt;\{\{undocumented|article\}\}&lt;/nowiki&gt;).
+
+&lt;/noinclude&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Undocumented).
+!}%

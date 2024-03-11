@@ -1,0 +1,82 @@
+%%! title: "Proving metatheorems:Simply typed LF"
+
+%{! \{\{proving metatheorems
+   |prev= Representing the syntax of the natural numbers
+   |prevname= Representing syntax
+   |next=Representing the judgements of the natural numbers
+   |nextname= Representing judgements\}\}
+
+In the previous section, we discussed representing object-language syntax in LF.  As we saw, to prove that an LF representation is correct, you need to be able to reason by induction on the [canonical form](/wiki/canonical-form/)s of LF.  To do so, you will need a basic understanding of the LF type theory.  This understanding will pay off later on, as we will also use induction on canonical forms to [prove metatheorems](/wiki/proving-metatheorems-proving-totality-assertions-about-the-natural-numbers/) about encoded languages.
+
+In this section, we present simply-typed LF in more detail.  
+
+## Syntax
+
+The syntax of simply-typed LF is as follows:
+
+&lt;math&gt;
+A ::= a \mid A_1 \rightarrow A_2 
+&lt;/math&gt;
+
+&lt;math&gt;
+R ::= c \mid x \mid R \, M 
+&lt;/math&gt;
+
+&lt;math&gt;
+M ::= R \, | \, \lambda x.M
+&lt;/math&gt;
+
+The types &lt;math&gt;\texttt\{\}A&lt;/math&gt; consist of base types (&lt;math&gt;\texttt\{\}a&lt;/math&gt;), which are declared in the signature (e.g., ``nat``), and function types (&lt;math&gt;\texttt\{\}A_1 \rightarrow A_2&lt;/math&gt;).  The terms of LF consist of variables (&lt;math&gt;\texttt\{\}x&lt;/math&gt;), constants (&lt;math&gt;\texttt\{\}c&lt;/math&gt;) declared in the signature, application (&lt;math&gt;\texttt\{\}R \, M&lt;/math&gt;), and lambda-abstractions (&lt;math&gt;\texttt\{\}\lambda x.M&lt;/math&gt;), which in Twelf's concrete syntax are written ``[x] M``.  This much should be familiar to you if you've seen the simply-typed lambda-calculus before.  What may be unfamiliar to you is that the grammar is stratified into &lt;math&gt;\texttt\{\}R&lt;/math&gt; and &lt;math&gt;\texttt\{\}M&lt;/math&gt;.  We discuss the reason for this stratification now.
+
+## Canonical forms
+
+The above syntax describes what we call _[canonical form](/wiki/canonical-form/)s_ (as long as they are well-typed, more on this below).  Note what is _not_ a canonical form: there is no syntactic way to apply a lambda-abstraction &lt;math&gt;\texttt\{\}\lambda x.M&lt;/math&gt; to an argument.  Based on your past experience with programming languages, it may seem strange to define LF so that only canonical forms exist—we are not allowed to write down any programs that have any computation left to do.  However, this restriction makes sense if you think about our methodology for representing object languages in LF.  In the previous section, we represented natural numbers with the following LF signature: !}%
+    
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+%{! For this representation to be adequate, the only LF terms of type ``nat`` must be ``z``, ``s z``, ``s (s z)``, and so on.  It is easy to see that non-canonical LF terms interfere with this encoding.  For example, the LF term &lt;math&gt;(\lambda x. \texttt\{s\} \, x) \, \texttt\{z\}&lt;/math&gt; would have type ``nat``, but it is not the representation of any informal natural number. This would contradict the third part of the adequacy argument in the previous section, but restricting LF to canonical forms avoids these counterexamples.  
+
+It is not worth presenting the typing rules for canonical forms here (see, e.g., &lt;ref&gt;\{\{bibtex:hl07mechanizing\}\}&lt;/ref&gt;).  The only detail we need to note here is that terms &lt;math&gt;\texttt\{\}R&lt;/math&gt; are only canonical at base type &lt;math&gt;\texttt\{\}a&lt;/math&gt;, not at function type.  For example, the constant ``s`` is _not_ a canonical form of type ``nat -&gt; nat``.  However, the term &lt;math&gt;\lambda x.\texttt\{s\} x&lt;/math&gt;, which is equivalent, is a canonical form.  
+
+If you have encountered [beta-reduction](/wiki/beta-equivalence/) and [eta-expansion](/wiki/eta-equivalence/) before in your study of programming languages, it may help your intuition to know that the canonical forms of LF coincide with the beta-normal, eta-long terms of the lambda calculus.  What we were saying above is that the syntax of canonical forms forces them to be beta-normal,  and that the typing rules for canonical forms ensure that they are eta-long.  In logic, canonical forms correspond to normal and neutral natural deduction proofs and cut-free sequent calculus proofs.
+
+### Hereditary Substitution
+
+Substitution &lt;math&gt;\mathsf\{\}[M'/x]M&lt;/math&gt; of one canonical form into another does not necessarily produce a canonical result.  For example:
+
+&lt;math&gt;\mathsf\{\}[\lambda y.y/x](x \; z)  \; = \;(\lambda y.y) \; z&lt;/math&gt;
+
+Even though both terms are canonical forms, the result is beta-reducible.  
+
+However, it is possible to define a notion of _hereditary substitution_, which directly computes the canonical result of an ordinary substitution.  When ordinary substitution would return a non-canonical form, hereditary substitution continues to reduce by substituting the argument into the body of the function.  In the above example, the hereditary substitution 
+
+&lt;math&gt;\mathsf\{\}[\lambda y.y/x](x \; z)  \; = \; [z/y] y \; = \; z &lt;/math&gt;
+
+Whenever we use the notation &lt;math&gt;\mathsf\{\}[M'/x]M&lt;/math&gt; for LF, we mean hereditary substitution.
+
+## Induction on canonical forms
+
+The above syntax constitutes an inductive definition of the canonical forms of LF.  Consequently, we can reason by induction on canonical forms using structural induction over this syntax.  When a type adequately represents some informal object-language syntax, induction on the canonical forms of the type corresponds to the structural induction principle for the informal syntax. For example, the induction principle for the type ``nat`` defined in the previous section corresponds to the standard induction principle for the natural numbers.  As we discussed in the previous section, induction on canonical forms is used to prove adequacy.  Additionally, as we discuss below, induction on canonical forms is used to prove metatheorems about deductive systems.
+
+## Why a lambda calculus?
+
+At this point, you may be wondering what we gain by using a lambda-calculus to represent other deductive systems—to represent the natural numbers, all we needed was constants and application; we never even used a term of the form &lt;math&gt;\texttt\{\}\lambda x.M&lt;/math&gt;.  At a high level, the answer is that using a meta-language with variable binding permits clean representations of object languages with variable binding. However, we defer a real answer to this question until we talk about representing the [syntax](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) and [judgements](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/) of a language with binding.
+
+## References
+
+&lt;references/&gt;
+
+\{\{proving metatheorems
+   |prev= Representing the syntax of the natural numbers
+   |prevname= Representing syntax
+   |next=Representing the judgements of the natural numbers
+   |nextname= Representing judgements\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Simply_typed_LF).
+!}%

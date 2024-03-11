@@ -1,0 +1,101 @@
+%%! title: "POPL Tutorial/Nat"
+
+%{! 
+
+## Nats
+
+!}%
+
+nat  : type.
+zero : nat.
+succ : nat -> nat.
+
+%{! 
+
+## Add
+
+!}%
+
+add : nat -> nat -> nat -> type.
+add/z : add zero N N.
+add/s : add (succ M) N (succ O)
+	 <- add M N O.
+
+%mode add +M +N -O.
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%{! 
+
+## Exercise: Mult
+
+!}%
+
+mult : nat -> nat -> nat -> type.
+mult/z : mult zero N zero.
+mult/s : mult (succ M) N O'
+	  <- mult M N O
+	  <- add N O O'.
+
+%mode mult +M +N -O.
+%worlds () (mult _ _ _).
+%total M (mult M _ _).
+
+%{! 
+
+## Right-hand Identity
+
+!}%
+
+rhzero : {M : nat} add M zero M -> type.
+%mode rhzero +M -D.
+
+- : rhzero zero add/z.
+- : rhzero (succ M) (add/s D)
+     <- rhzero M (D : add M zero M).
+     
+%worlds () (rhzero _ _).
+%total M (rhzero M _).
+
+%{! 
+
+## Right-hand succ
+
+!}%
+
+rhsucc : add M N O -> add M (succ N) (succ O) -> type.
+%mode rhsucc +D1 -D2.
+
+- : rhsucc (add/z : add zero M M) (add/z : add zero (succ M) (succ M)).
+- : rhsucc (add/s (D1 : add M N O) : add (succ M) N (succ O))
+     (add/s D2)
+     <- rhsucc D1 (D2 : add M (succ N) (succ O)).
+     
+%worlds () (rhsucc _ _).
+%total M (rhsucc M _).
+
+%{! 
+
+## Exercise: put it all together
+
+!}%
+
+commute : add M N O -> add N M O -> type.
+%mode commute +D1 -D2.
+
+- : commute (add/z : add zero M M) D
+     <- rhzero M D.
+
+- : commute (add/s (D : add M N O)) D''
+     <- commute D  (D' : add N M O)
+     <- rhsucc D' (D'' : add N (succ M) (succ O)).
+
+%worlds () (commute _ _).
+%total D (commute D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Nat).
+!}%

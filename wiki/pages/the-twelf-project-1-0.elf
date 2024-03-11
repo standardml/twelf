@@ -1,0 +1,100 @@
+%%! title: "The Twelf Project:1.0"
+
+%{! This page is about plans for a **1.0** release of the Twelf Wiki.
+
+## Press Release
+
+Subject: New Twelf Wiki
+
+We are pleased to announce the Twelf Wiki, a major new source of documentation about Twelf:
+
+: http://twelf.plparty.org
+
+Twelf is a tool used to specify, implement, and prove properties of deductive systems.  The wiki includes:
+* A new introduction to LF and Twelf.
+* Tutorials on common Twelf tricks and techniques.
+* Case studies of larger applications of Twelf, including encodings of and proofs about linear logic, mutable state, and CPS conversion.
+* Pre-compiled CVS builds of Twelf for Linux and Windows.
+
+We invite you to come share what you know, learn from what's there, and ask questions about what's not.
+
+The Twelf Wiki Team
+
+
+:* I'm tempted to say we should say "a major _and growing_" or something to indicate that this is a work in progress, but perhaps [http://dictionary.oed.com/cgi/entry/50293088?query_type=word&queryword=wiki&first=1&max_to_show=10&single=1&sort_type=alpha with wiki being a real word and all] this isn't necessary... — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 03:47, 20 March 2007 (EDT)
+
+:: The thing I don't like about that is that it can give the impression that we're hedging on the "major"---that it will someday be major, but isn't yet (even though that's not what "major and growing" really means).  Also, I think the last line makes it clear that people will be adding new stuff. [Drl](/wiki/user-drl/) 09:55, 20 March 2007 (EDT)
+
+: We should either say both "encodings of and proofs about" or something like that or junk them both.  We don't want to give people the impression that it's just an LF signature. [Drl](/wiki/user-drl/) 09:26, 21 March 2007 (EDT)
+
+## PL Party Coffee - Notes
+
+The first two subsections, where things are assigned, are things that we'd like to have done by next Wednesday. Things that are unassigned will be claimed before then moved to the [[Project:To do|To do]] list at that point, if not before.
+
+Doing things off the [[Project:To do|To do]] list are also good things to do!
+
+### Come to the site, learn to use Twelf
+
+* Rewriting the pointers into these things: _Tom and Dan Licata to revise_
+:* [General description of Twelf](/wiki/general-description-of-twelf/) - _Will to revise_
+:* [[Reading a Twelf proof]] - _DKLee"
+::* How to read declarations of proofs (type family + mode + worlds + total)
+::* Why the cases in the middle don't matter at that point
+::* Adequacy!
+::* Minimal on syntax
+:* [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) - _Dan Licata_
+:* The "forest" - Case studies, Tutorials, Glossary - Redlinks to be attacked by _Aleffert_, _Spoons_ (?) and others (Also see [[Special:Wantedpages]])
+
+### Neat Things
+
+* &lt;strike&gt;Cut elimination - _Tom_&lt;/strike&gt;
+* Double negation translation - _Jcreed_
+* Language with store - _Rob_
+* Classical logic - _Will_
+* &lt;strike&gt;False dependencies/strengthening - _Jake_&lt;/strike&gt;
+* Mutual and lexographic induction - _Jcreed_ 
+::(maybe handed in [admissibility of cut](/wiki/admissibility-of-cut/) already?)
+* Translating between logics - 
+* Heriditary substitution - 
+* Canonical forms -
+* Reverse the polarity -
+
+## Tom's demands
+
+: _DRL, on March 21, says: Peace in our time!  I claim that the vast majority of Tom's demands have been appeased._
+
+I think it is very important that we have a certain base level of content before we release this on the world. I have seen may projects like this die because they failed to gain sufficient momentum from the initial release. We have enough resources to make this wiki successful, so I will be the annoying one that insists that it meet a certain level of content and quality before we announce it.
+
+Here are some specific demands. If we already have these, or you address them, then please respond:
+
+* There needs to be a path, for a patient someone of undergraduate computer science education, to learn how to use Twelf in a basic way. They should be able to define, say, MinML and prove type safety for it. They should understand the meaning of the metatheorem, including the [%worlds](/wiki/percent-worlds/) declaration and adequacy (it should not simply be a _cut'n'paste_ understanding). By path, I mean that they should be able to start on some page, read a linear sequence of tutorials, and then have this knowledge.
+:: [User:drl](/wiki/user-drl/)'s tutorial [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) will satisfy this when complete, as long as the undergraduate education had a 15-312 like class. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 09:48, 26 February 2007 (EST)
+
+* There needs to be a stub article (at least) for each of the Twelf declarations. When reading a tutorial on the site, users need to be able to see documentation for the keywords. These can start by being short summaries with links into the User's Guide.
+:: I'm satisfied on this. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 11:18, 21 March 2007 (EDT)
+
+* There needs to be a good article at [metatheorem](/wiki/metatheorem/), which could perhaps be a wikified _How to Believe a Twelf Proof_. This material proves to be a major stumbling block for getting even eminent type theorists to understand what Twelf is and how to use it.
+: [Metatheorem](/wiki/metatheorem/) exists, and I think it's in a position where some criticism of it would be helpful; however, the DKLee-task-lisked HtBaTP-equivalent article is going to be [[Reading a Twelf proof]] - I'd be particularly happy to see this one by launch but I don't consider it a dealbreaker either. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 01:48, 28 February 2007 (EST)
+
+* There needs to be more content that will be new to, say, the POPLmark crowd. We should have tutorials that explain how to do some things in Twelf that people actually want to do in their research, like &lt;s&gt;[linear logic](/wiki/linear-logic/)&lt;/s&gt;, normalization via &lt;s&gt;[cut elimination](/wiki/admissibility-of-cut/)&lt;/s&gt;, and [[closure conversion]].
+
+* We need to have good man pages for the most important declarations for mechanizing metatheory: [%worlds](/wiki/percent-worlds/) [%block](/wiki/percent-block/) [%total](/wiki/percent-total/).
+
+* We need at least minimal articles about the most important Twelf concepts, _e.g._ &lt;s&gt;[subordination](/wiki/subordination/)&lt;/s&gt;, &lt;s&gt;[LF](/wiki/lf/)&lt;/s&gt;, &lt;s&gt;[adequacy](/wiki/adequacy/)&lt;/s&gt;, &lt;s&gt;[canonical form](/wiki/canonical-form/)&lt;/s&gt;, &lt;s&gt;[unification](/wiki/unification/)&lt;/s&gt;, &lt;s&gt;[ground](/wiki/ground/)&lt;/s&gt;, [[kind]], [[subterm]]. I mean, really. If these are covered in the tutorials, we should extract those discussions to seed these pages. &lt;s&gt;Also, some other important articles are very incomplete, embarrassing stubs right now (_e.g._ [totality assertion](/wiki/totality-assertion/)).&lt;/s&gt;
+
+::* Reading back over this list I don't disagree with most of these, and the half articles I have also identified as something I/we definitely need to address - but some of this is just the effect of us psyching ourselves out because we've held onto this too long already (i.e. "well, it's been long enough we should have...") which will lead to us never releasing the thing. An article on unification before the release would be great, but it absense won't prevent this from being a useful resource to some undergraduate somewhere. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 11:37, 26 February 2007 (EST)
+:::* I think it will, because questions like "what is unification?" or "what is subordination?" are very natural when learning Twelf, and if unanswered, are a large impediment to understanding what's going on. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 16:01, 26 February 2007 (EST)
+::::* I'm not arguing with your point, but at what point does the absense of _this wiki_ become a larger impediment than the absense of _something on this wiki_? :-) — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:46, 26 February 2007 (EST)
+
+* ((more soon..))
+
+:::::::&nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 13:43, 16 October 2006 (EDT)
+:::::::&nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 09:48, 26 February 2007 (EST)
+:::::::&nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 11:18, 21 March 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:1.0).
+!}%

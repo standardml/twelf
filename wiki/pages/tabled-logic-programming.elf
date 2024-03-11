@@ -1,0 +1,122 @@
+%%! title: "Tabled logic programming"
+
+%{! 
+The operational semantics of Twelf are similar to those of Prolog, 
+a style known as _backward chaining_ or _goal-directed_ proof 
+search. **Tabled logic programming**, which uses Twelf's 
+[``%tabled``](/wiki/percent-tabled/) and [``%querytabled``](/wiki/percent-querytabled/) directives to 
+allow Twelf to prove theorems that might be time-consuming or 
+impossible to prove otherwise. The tabled logic programming 
+capabilities are a 
+part of Twelf's capabilities as a logical framework, but not as a 
+metalogical framework; in other worlds, tabled logic programming 
+cannot be used to prove [metatheorems](/wiki/metatheorem/).
+
+[[Image:Searchgraph-found.svg|thumb|right|325px|The graph used in this example, and the path that the tabled logic query finds to get from node a to node g.]] 
+
+The simplest examples of the power of tabled logic programming in 
+practice involve judgments that involve transitive and/or symmetric 
+closures, such as searching for a path in a graph or formalizing a 
+language with subtyping. Using standard backward-chaining proof search, 
+it is almost impossible to write terminating programs that search for 
+paths, and using backward-chaining search for subtyping typically 
+requires a separate definition of "algorithmic subtyping" that must 
+be shown to be sound and complete with respect to the clearer, simpler 
+definition of subtyping that uses transitivity.
+
+This article will use as its example a path-finding algorithm 
+on an undirected graphs. 
+
+!}%
+
+%{! ## Defining the graph !}%
+
+%{! ### Nodes !}%
+
+node : type.
+
+a : node.
+b : node.
+c : node.
+d : node.
+e : node.
+f : node.
+g : node.
+h : node.
+
+%{! ### Edges !}%
+
+%{! While we will consider edges in our graph to be undirected,
+we will only define the edge in one, arbitrary, direction. !}%
+
+edge : node -> node -> type.
+
+ab : edge a b.
+ac : edge a c. 
+bc : edge b c.
+bd : edge b d.
+cd : edge c d.
+ce : edge c e.
+de : edge d e.
+df : edge d f.
+fg : edge f g.
+
+%{! ### Paths in the graph !}%
+
+%{! 
+This is normally where we would get into trouble; in standard 
+logic programming, it is difficult if not impossible to avoid 
+non-terminating behavior when writing a judgment defining a 
+transitive-symmetric closure like ``path``. However, by 
+adding the directive ``[%tabled](/wiki/percent-tabled/) path``, we will be able 
+to use [``%querytabled``](/wiki/percent-querytabled/) directives to cause each instance 
+of ``path A B`` to be derived at most once during the course 
+of a search: the result is a query that terminates rapidly, 
+instead of not at all.
+!}%
+
+path : node -> node -> type.
+%tabled path.
+
+path/link : edge A B -> path A B.
+path/refl : path A B -> path B A.
+path/trans : path A B -> path B C -> path A C.
+
+%{! ## Searching the graph !}%
+
+%{! 
+It is crucial that we use [``%querytabled``](/wiki/percent-querytabled/) rather than 
+[``%query``](/wiki/percent-query/) in our queries if we wish for them to terminate. 
+Even though we ask Twelf for as many solutions as it can find, the 
+tabled proof search ensures that we can only find one proof of any 
+given path, and the path that is found is by not necessarily the shortest.
+While the path that is found is shown on the graph above, the edge ``ab``
+actually appears three times here - if we use parenthesis to show the order in which
+tabled search connected paths, the path that is found is
+``a`` - ((``b`` - ((``a`` - ``b`` - ``d``) - ``f``)) 
+- ``g``).
+|check=decl discard=true !}%
+
+%querytabled * * D : path a g.
+
+%{! 
+We can also run a terminating search for a path that does not exist, 
+such as one from ``a`` to ``h``.
+|check=decl discard=true !}%
+
+%querytabled * * D : path a h.
+
+%.
+
+== See also ==
+
+* <tt>[%tabled](/wiki/percent-tabled/)</tt>
+* <tt>[%querytabled](/wiki/percent-querytabled/)</tt>
+* {{guide|chapter=5|section=31|title=Tabled Logic Programming}}
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Tabled_logic_programming).
+!}%

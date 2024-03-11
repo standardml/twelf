@@ -1,0 +1,26 @@
+%%! title: "Beta-equivalence"
+
+%{! **Beta-equivalence** (β-equivalence) is a notion of proof equivalence in natural deduction logics with introduction and elimination forms.  Roughly, it says that when an elimination form is applied to an introduction form, they cancel.
+
+Consider the simply-typed lambda-calculus with arrow types.
+
+&lt;math&gt;A ::= a \mid A_1 \rightarrow A_2&lt;/math&gt;
+
+&lt;math&gt;e ::= x \mid \lambda x\{:\}A.\, e \mid e_1\ e_2&lt;/math&gt;
+
+The beta-equivalence induced by the arrow type &lt;math&gt;A \rightarrow B&lt;/math&gt; says that the elimination form &lt;math&gt;e_1\ e_2&lt;/math&gt; "cancels" the introduction form &lt;math&gt;\lambda x\{:\}A.\, e&lt;/math&gt;; formally, it is the least [congruence relation](/wiki/congruence-relation/) &lt;math&gt;\texttt\{\}e_1 =_\beta e_2&lt;/math&gt; closed under the &lt;math&gt;\texttt\{\}\beta&lt;/math&gt; axiom:
+
+&lt;math&gt;\{\; \over (\lambda x\{:\}A.\, e_1)\ e_2 =_\beta [e_2/x] e_1\} \beta&lt;/math&gt;
+
+Beta-equivalence is usually oriented to the right yielding a notion of _beta-reduction_.  For example:
+
+&lt;math&gt;(\lambda x\{:\}A.\, e_1)\ e_2 \Longrightarrow_\beta [e_2/x] e_1&lt;/math&gt;
+
+The term on the left-hand side of the &lt;math&gt;\texttt\{\}\beta&lt;/math&gt; axiom is called a _beta-redex_, and the term on the right-hand side is its _beta-reduct_.  A term with no beta-redexes is called _beta-normal_.  Being beta-normal is one aspect of being [canonical](/wiki/canonical-form/). !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Beta-equivalence).
+!}%

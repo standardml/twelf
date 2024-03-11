@@ -1,0 +1,262 @@
+%%! title: "Strengthening"
+%%! tags: ["tutorial"]
+
+%{! **Strengthening** lemmas prove that something which holds under assumptions also holds without them.
+
+When proving type families total using [%total](/wiki/percent-total/), strengthening lemmas are sometimes necessary because Twelf estimates dependencies conservatively using the [subordination](/wiki/subordination/) relation.  Specifically, for Twelf's [output coverage](/wiki/coverage-checking/) check to succeed, the output variables of higher-order premises must mention all assumptions of subordinate types.  If an assumption's type is subordinate to an output variable's type, but additional reasoning shows that the assumption cannot occur in the output variable in a particular case, you must prove a strengthening lemma expressing this reasoning.
+
+In this tutorial, we'll show a proof where the need for strengthening arises. We'll define a language with locations, stores which map locations to terms in the language, and a notion of well-formedness with respect to a store (no dangling references and no loops). Then we'll define evaluation for the language, and prove that well-formed terms evaluate to well-formed terms; we will need strengthening for this proof.
+
+## A little language with locations
+
+Locations and terms: !}%
+
+loc	: type. %name loc _L.
+
+loc/z	: loc.
+loc/s	: loc -> loc.
+
+tm	: type. %name tm _T.
+
+tm/loc	: loc -> tm.
+tm/lam	: (tm -> tm) -> tm.
+tm/app	: tm -> tm -> tm.
+
+%{! This is a silly little language; it has locations but no way to use them.
+
+(The [``%name``](/wiki/percent-name/) declarations give a prefix which Twelf uses to name unnamed variables for display; we prefix the names with ``_`` so that it's clear which variables Twelf named, and also because Twelf will rename your variables if they collide with the naming prefix, which can be very confusing.)
+
+Stores and store lookup: !}%
+
+st	: type. %name st _S.
+
+st/nil	: st.
+st/cons	: loc -> tm -> st -> st.
+
+st-lookup	: st -> loc -> tm -> type. %name st-lookup _Dlook.
+
+st-lookup/1	: st-lookup (st/cons L T _) L T.
+st-lookup/2	: st-lookup (st/cons L T S) L' T'
+		   <- st-lookup S L' T'.
+
+%{! Stores are just lists of location/term pairs. The lookup relation might look a little strange, since both ``st-lookup/1`` and ``st-lookup/2`` apply if ``L = L'``, but for our purpose it is OK and this avoids having to define disequality of locations.
+
+Well-formedness of terms with respect to a store: !}%
+
+tm-wf	: tm -> st -> type. %name tm-wf _Dwf.
+
+tm-var	: tm -> type.
+
+tm-wf/var	: tm-wf V S
+		   <- tm-var V.
+
+tm-wf/loc	: tm-wf (tm/loc L) S
+		   <- st-lookup S L T
+		   <- tm-wf T S.
+
+tm-wf/lam	: tm-wf (tm/lam ([x:tm] T x)) S
+		   <- ({v:tm}{d:tm-var v}
+			 tm-wf (T v) S).
+
+tm-wf/app	: tm-wf (tm/app T1 T2) S
+		   <- tm-wf T1 S
+		   <- tm-wf T2 S.
+
+%{! A term is well-formed with respect to a store if its locations are all defined in the store, and if the terms bound to its locations are all well-formed with respect to the store.
+
+How to define well-formedness of the open term that appears in the ``lam`` case? We assume some term, and mark it is a variable using ``tm-var``, then check the well-formedness of the lambda body applied to this new term. Then we give a case saying that any term marked as a variable is well-formed.
+
+An alternative would be to directly assume ``tm-wf v S``. This example was extracted from the [[AML proof]], where we need to prove that if we have a store ``S'`` which extends ``S``, and a term ``T`` is well-formed in ``S``, then ``T`` is also well-formed in ``S'``. That proof is difficult if we assume ``tm-wf v S``, because we know nothing about ``v`` in ``S'``. With the ``tm-var`` approach we can just apply the ``tm-wf/var`` rule to get ``tm-wf v S'``.
+
+However, as we will see, this approach forces us to prove a substitution lemma, which requires the strengthening lemma.
+
+### Evaluation semantics
+
+Now we give a definition for how terms evaluate.
+Evaluation is just beta-reduction; we do nothing with locations.
+
+!}%
+
+eval : tm -> tm -> type. %name eval _Deval.
+
+eval/loc	: eval (tm/loc L) (tm/loc L).
+eval/lam	: eval (tm/lam ([x:tm] T x)) (tm/lam ([x:tm] T x)).
+eval/app	: eval (tm/app T1 T2) T'
+		   <- eval T1 (tm/lam ([x:tm] T1' x))
+		   <- eval (T1' T2) T'.
+
+
+%{!
+
+### Substitution Lemma
+
+If a term is well-formed, then what it evaluates to should be, too.
+We can try to state the preservation theorm, and start working on the application case.
+
+```twelf
+eval-pres-wf	: eval T T' -> tm-wf T S -> tm-wf T' S -> type.
+%mode eval-pres-wf +X1 +X2 -X3.
+
+-/app	: eval-pres-wf (eval/app Deval2 Deval1) (tm-wf/app Dwf2 Dwf1) Dwf''
+	   <- eval-pres-wf Deval1 Dwf1 (tm-wf/lam Dwf1')
+      <- % ???
+```
+
+We have ``Dwf1' : {v:tm}{d:tm-var v} tm-wf (T1 v) S`` and ``Dwf2 :
+tm-wf T2 S``; we need ``Dwf' : tm-wf (T1 T2) S``. Now, had we defined
+``tm-wf/lam`` to assume ``d:tm-wf v S`` instead of ``d:tm-var v``,
+then we could just write ``(Dwf1' T2 Dwf2)`` in place of ``Dwf'``.
+But, as previously noted, that gets us into a different kind of
+trouble. So we'll need to prove an explicit substitution lemma first.
+
+ !}%
+
+tm-wf-subst	:
+  ({v:tm}{d:tm-var v}
+     tm-wf (T1 v) S) ->
+  tm-wf T2 S ->
+%%
+  tm-wf (T1 T2) S ->
+  type.
+%mode tm-wf-subst +X1 +X2 -X3.
+
+-/app	: tm-wf-subst ([v][d] tm-wf/app (Dwf2 v d) (Dwf1 v d)) Dwf (tm-wf/app Dwf2' Dwf1')
+	   <- tm-wf-subst Dwf1 Dwf Dwf1'
+	   <- tm-wf-subst Dwf2 Dwf Dwf2'.
+
+-/lam	: tm-wf-subst ([v][d] tm-wf/lam (Dwf1 v d)) Dwf2 (tm-wf/lam Dwf1')
+	   <- ({v':tm}{d':tm-var v'}
+		 tm-wf-subst ([v][d] Dwf1 v d v' d') Dwf2 (Dwf1' v' d')).
+
+-/var	: tm-wf-subst ([v][d] tm-wf/var d) Dwf Dwf.
+
+-/bind	: tm-wf-subst ([v][d] Dwf) _ Dwf.
+
+%{! This lemma gives us exactly what we'll need in the application
+%case of preservation.
+
+The ``lam`` case is complicated only by the fact that we need to go
+under a binder; here ``v`` is the variable we're substituting for and
+``v'`` is the bound variable. Since we call the lemma recursively
+under assumptions, we need to prove it in worlds where those
+assumptions are present.
+
+In the ``var`` case we have found the variable we're substituting for.
+The ``bind`` case handles assumptions; there is no way to explicitly
+refer to them, but they are closed, so we can catch them with this
+case for closed terms.
+
+The ``loc`` case is why we're here: Twelf determines that ``Dlook``
+can depend on ``v`` and ``Dwf1`` on ``v`` and ``d``, even though they
+can't. So we need two strengthening lemmas to get the terms we need.
+The proof case will look like:
+
+```twelf
+-/loc	: tm-wf-subst ([v][d] tm-wf/loc (Dwf1 v d) (Dlook v)) Dwf2 (tm-wf/loc Dwf1' Dlook')
+	   <- st-lookup-strengthen Dlook Dlook' Deq
+ 	   <- tm-wf-strengthen Dwf1 Deq Dwf1'.
+```
+
+Why can't ``Dlook`` and ``Dwf1`` depend on ``v`` and ``d``? We are
+about to give proofs, but here is the intuition: The store ``S`` has
+no dependencies in the declaration of the lemma, and ``st-lookup``
+just walks over the store, so ``Dlook`` has no dependencies; neither
+does the looked-up term. Now ``tm-wf`` just walks over the term
+looking up locations in the store, so it also has no dependencies.
+
+### Preservation theorem
+
+!}%
+
+eval-pres-wf	: eval T T' -> tm-wf T S -> tm-wf T' S -> type.
+%mode eval-pres-wf +X1 +X2 -X3.
+
+-/loc	: eval-pres-wf eval/loc D D.
+-/lam	: eval-pres-wf eval/lam D D.
+-/app	: eval-pres-wf (eval/app Deval2 Deval1) (tm-wf/app Dwf2 Dwf1) Dwf''
+	   <- eval-pres-wf Deval1 Dwf1 (tm-wf/lam Dwf1')
+	   <- tm-wf-subst Dwf1' Dwf2 Dwf'
+	   <- eval-pres-wf Deval2 Dwf' Dwf''.
+
+
+%{!
+
+### Strengthening lemmas
+
+Here is the first: !}%
+
+tm-eq	: tm -> tm -> type.
+tm-eq_	: tm-eq T T.
+
+st-lookup-strengthen :
+  ({v:tm} st-lookup S L (T v)) ->
+%%
+  st-lookup S L T' ->
+  ({v:tm} tm-eq (T v) T') ->
+  type.
+%mode st-lookup-strengthen +X1 -X2 -X3.
+
+-/1	: st-lookup-strengthen ([v] st-lookup/1) st-lookup/1 ([v] tm-eq_).
+-/2	: st-lookup-strengthen ([v] st-lookup/2 (Dlook v)) (st-lookup/2 Dlook') Deq
+	   <- st-lookup-strengthen Dlook Dlook' Deq.
+
+%block tm-bind : block {v:tm}{d:tm-var v}.
+%worlds (tm-bind) (st-lookup-strengthen _ _ _).
+%total D (st-lookup-strengthen D _ _).
+
+%{! It would be nice if we could just get rid of the ``v`` assumption on the ``st-lookup`` derivation, but we have in addition that the returned term ``T`` can depend on ``v``, so we must invent a new non-dependent ``T'`` and return an equality. Otherwise, this is a straightforward induction that demonstrates that we never use the assumption.
+
+The second strengthening lemma is a little different: !}%
+
+tm-wf-strengthen :
+  ({v:tm}{d:tm-var v} tm-wf (T v) S) ->
+  ({v:tm} tm-eq (T v) T') ->
+%%
+  tm-wf T' S ->
+  type.
+%mode tm-wf-strengthen +X1 +X2 -X3.
+
+-/app	: tm-wf-strengthen ([v][d] tm-wf/app (Dwf2 v d) (Dwf1 v d)) ([v] tm-eq_) (tm-wf/app Dwf2' Dwf1')
+	   <- tm-wf-strengthen Dwf2 ([v] tm-eq_) Dwf2'
+	   <- tm-wf-strengthen Dwf1 ([v] tm-eq_) Dwf1'.
+
+-/lam	: tm-wf-strengthen ([v][d] tm-wf/lam (Dwf v d)) ([v:tm] tm-eq_) (tm-wf/lam Dwf')
+	   <- ({v':tm}{d':tm-var v'}
+		 tm-wf-strengthen ([v][d] Dwf v d v' d') ([v] tm-eq_) (Dwf' v' d')).
+
+-/loc	: tm-wf-strengthen ([v][d] tm-wf/loc (Dwf v d) (Dlook v)) ([v] tm-eq_) (tm-wf/loc Dwf' Dlook')
+	   <- st-lookup-strengthen Dlook Dlook' Deq
+	   <- tm-wf-strengthen Dwf Deq Dwf'.
+
+-/bind	: tm-wf-strengthen ([v][d] Dwf) _ Dwf.
+
+%worlds (tm-bind) (tm-wf-strengthen _ _ _).
+%total D (tm-wf-strengthen D _ _).
+
+%{! Here it is a priori possible that something of type ``tm-wf (T v) S`` could depend on ``v`` and ``d`` (e.g. it could be ``(tm-wf/var d)``), but in conjunction with the equality it cannot. In the ``loc`` case we're doing essentially the same thing that we do in the substitution lemma, and must appeal to ``st-lookup-strengthen`` and ``tm-wf-strengthen`` (but we're not inducting over the well-formed term here). The coverage checker is able to rule out the ``var`` case since ``T`` does not depend on ``v``.
+
+### Finishing the proof
+
+Now that we have the strengthening lemmas, we can implement the final clause of our substitution lemma:
+
+!}%
+-/loc	: tm-wf-subst ([v][d] tm-wf/loc (Dwf1 v d) (Dlook v)) Dwf2 (tm-wf/loc Dwf1' Dlook')
+	   <- st-lookup-strengthen Dlook Dlook' Deq
+ 	   <- tm-wf-strengthen Dwf1 Deq Dwf1'.
+%{!
+
+and check that the substitution lemma and the preservation theorem are actually correct:
+
+!}%
+%worlds (tm-bind) (tm-wf-subst _ _ _).
+%total D (tm-wf-subst D _ _).
+
+%worlds () (eval-pres-wf _ _ _).
+%total D (eval-pres-wf D _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Strengthening).
+!}%

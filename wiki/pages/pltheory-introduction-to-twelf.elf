@@ -1,0 +1,18 @@
+%%! title: "PLTheory:Introduction to Twelf"
+
+%{! This article is an introduction to Twelf and how it can be used to represent basic data structures and logical systems&mdash;in particular the judgment-based syntax and semantics of programming languages&mdash;as well as represent and check proofs of their properties.  Additional [introductions to Twelf](/wiki/introductions-to-twelf/) and many [tutorials](/wiki/tutorials/) that explain representation and proof techniques can be found elsewhere.  These notes assume that you have already installed Twelf and are familiar with the process of starting and interacting with a Twelf server.  Additional information on getting started with Twelf can be found in the [Documentation](/wiki/documentation/) section, and in particular the [User's Guide](/wiki/users-guide/) (which also comes with the Twelf distribution).
+
+## Table of Contents for Part 1
+
+- [First-order encodings](/wiki/first-order-encodings/)
+- [Signatures as logic programs](/wiki/signatures-as-logic-programs/)
+- [Signature checking](/wiki/signature-checking/): modes, termination, coverage, totality
+- [[Higher-order encodings]]
+- [[Common patterns and pitfalls]] !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/PLTheory:Introduction_to_Twelf).
+!}%

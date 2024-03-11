@@ -1,0 +1,62 @@
+%%! title: "Main Page"
+
+%{! &lt;!-- 
+
+Hi there!   
+
+You probably want to edit the content of this page, but you should know that most of the stuff on the front page isn't actually in this file.
+
+The contents of the four sections on this page are four separate pages. You can find and edit them by clicking on the "discussion" link below. Then click on the page for the section you want to edit, and edit that page, not this one. (They are also linked from the bottom of the edit page, under "templates used on this page.")
+
+
+
+If you do want to edit things besides those four sections of content, you're in the right place.
+
+
+ - Rob
+
+
+--&gt;&lt;!-- Beginning of header section --&gt;\{|style="width:100%;margin-top:+.7em;background-color:#fcfcfc;border:1px solid #ccc"
+|style="width:56%;color:#000"|
+\{|style="width:280px;border:solid 0px;background:none"
+|-
+|style="width:280px;text-align:center;white-space:nowrap;color:#000" |
+&lt;div style="font-size:162%;border:none;margin: 0;padding:.1em;color:#000"&gt;Welcome to [The Twelf Project](/wiki/about-the-twelf-project/)&lt;/div&gt;
+&lt;div id="articlecount" style="width:100%;text-align:center;font-size:85%;"&gt;[[Special:allpages|\{\{NUMBEROFARTICLES\}\}]] articles and counting...&lt;/div&gt;
+|\}&lt;!-- Portals Follow --&gt;
+|style="width:11%;font-size:95%;color:#000"|
+|\}&lt;!-- End Portals --&gt;
+
+&lt;!-- Start of left-column --&gt;
+\{|style="border-spacing:8px;margin:0px -8px"
+|class="MainPageBG" style="width:55%;border:1px solid #cef2e0;background-color:#f5fffa;vertical-align:top;color:#000"|
+\{|width="100%" cellpadding="2" cellspacing="5" style="vertical-align:top;background-color:#f5fffa"
+! &lt;h2 style="margin:0;background-color:#cef2e0;font-size:120%;font-weight:bold;border:1px solid #a3bfb1;text-align:left;color:#000;padding:0.2em 0.4em;"&gt;What is Twelf?&lt;/h2&gt;
+|-
+|style="color:#000"|\{\{The Twelf Project/Introduction\}\}
+|-
+! &lt;div style="margin:0;background-color:#cef2e0;font-size:120%;font-weight:bold;border:1px solid #a3bfb1;text-align:left;color:#000;padding:0.2em 0.4em;"&gt;
+&lt;div style="float:right"&gt;\{\{click-inline | image=disk download.gif | link = download | width = 23px | height = 20px\}\}&lt;/div&gt;
+Download and Learn Twelf&lt;/div&gt;
+|-
+|style="color:#000"|\{\{The Twelf Project/Getting Started\}\}
+|-
+|\}
+&lt;!-- Start of right-column --&gt;
+|class="MainPageBG" style="width:45%;border:1px solid #f2dfce;background-color:#fffaf5;vertical-align:top"|
+\{| width="100%" cellpadding="2" cellspacing="5" style="vertical-align:top;background-color:#fffaf5"
+! &lt;h2 style="margin:0;background:#f2dfce;font-size:120%;font-weight:bold;border:1px solid #bfb0a3;text-align:left;color:#000;padding:0.2em 0.4em;"&gt;What's new?&lt;/h2&gt;
+|- 
+|style="color:#000"|\{\{:What's new\}\}
+|-
+|\}
+|\}
+__NOTOC__
+__NOEDITSECTION__ !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Main_Page).
+!}%

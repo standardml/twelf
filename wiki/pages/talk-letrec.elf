@@ -1,0 +1,30 @@
+%%! title: "Talk:Letrec"
+
+%{! ## Different formalism?
+
+The formalism on the current page is probably the right thing to do for "real-world binding", since it's closest to the actual syntax that people will have in mind.  
+
+However, it looks a little funny to me to have projection from an object as a language construct, without the objects themselves being first class.  Would it be better to do a version with objects and define letrec as syntactic sugar for an object that you immediately split?  I guess that doesn't show off the binding issues as well, since an object only binds one name and the components are accessed by projection.
+
+Maybe at the end of this case study, we can say that letrec doesn't need to primitive, and elaborate it as
+&lt;code&gt;
+letrec x1 = e1 ... in e
+&lt;/code&gt;
+
+translates to
+
+&lt;code&gt;
+let o = obj x is (e1[pi_1 o/x1], ...) in
+let x1 = pi_1 o in
+    ...
+in e
+&lt;/code&gt;
+
+[Drl](/wiki/user-drl/) 15:22, 16 October 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Letrec).
+!}%

@@ -1,0 +1,145 @@
+%%! title: "ConstructiveSemantics"
+
+%{! A little proof of cut eliminiation for the logic FF in an unpublished paper by Reed and Pfenning. !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+% Termination metric
+
+lo : type.
+hi : type.
+* : lo.
+s : lo -> hi.
+
+% Syntax
+
+t+ : type. % "terms" that go in positive atoms
+t- : type. %name t- T. % "terms" that go in negative atoms
+p : type. % positive props
+o : type. % negative props
+i : type. % worlds, frames
+
+% Propositions
+imp : p -> o -> o.
+top : o.
+s- : t- -> o.
+s+ : t+ -> p.
+v : o -> p.
+
+% Stub terms to make coverage nontrivial
+t+/ : t+.
+t-/ : t-.
+
+% Judgments
+j : type. %name j J.
+/lfoc : o -> t- -> j.
+/rinv : o -> j.
+/rfoc : p -> j.
+pf : j -> type.
+%abbrev lfoc = [A][T] pf (/lfoc A T).
+%abbrev rinv = [A] pf (/rinv A).
+%abbrev rfoc = [B] pf (/rfoc B).
+
+<= : t- -> t- -> type.
+hyp : p -> type.
+
+% Stub judgment to make coverage nontrivial
+refl : <= T T.
+
+% Inference Rules
+s+R : hyp (s+ T) -> rfoc (s+ T).
+s-L : <= T T0 -> lfoc (s- T) T0.
+vR : rinv A -> rfoc (v A).
+vL : lfoc A T -> (hyp (v A) -> rinv (s- T)).
+topR : rinv top.
+impR : rinv (imp B A) <- (hyp B -> rinv A).
+impL : lfoc (imp B A) T <- rfoc B <- lfoc A T.
+
+% Theorems
+
+trans : <= T1 T2 -> <= T2 T3 -> <= T1 T3 -> type.
+mono/rinv : <= T1 T2 -> rinv (s- T1) -> rinv (s- T2) -> type.
+mono/lfoc : <= T1 T2 -> lfoc A T1 -> lfoc A T2 -> type.
+
+cut/rfoc : {B} hi -> rfoc B -> (hyp B -> pf J) -> pf J -> type.
+cut/rinv : {A} hi -> rinv A -> (hyp (v A) -> pf J) -> pf J -> type.
+cut/pc : {A} lo -> rinv A -> lfoc A T -> rinv (s- T) -> type.
+
+% mono/rinv proof
+mono/rinv/ : mono/rinv LE (vL LF H) (vL LF' H) <- mono/lfoc LE LF LF'.
+
+% mono/lfoc proof
+mono/lfoc/impL : mono/lfoc LE (impL LF RF) (impL LF' RF)
+	      <- mono/lfoc LE LF LF'.
+mono/lfoc/s- : mono/lfoc LE (s-L LE') (s-L LE'')
+	    <- trans LE' LE LE''.
+
+% cut/rfoc proof
+cut/rfoc/v : cut/rfoc (v A) TM (vR RI) PF1 PF2 
+	      <- cut/rinv A TM RI PF1 PF2.
+cut/rfoc/s+ : cut/rfoc (s+ T) TM (s+R H) PF (PF H).
+
+% cut/pc proof
+cut/pc/imp : cut/pc (imp B A) TM (impR RI) (impL LF RF) RI''
+	      <- cut/rfoc B (s TM) RF RI RI'
+	      <- cut/pc A TM RI' LF RI''.
+cut/pc/s- : cut/pc (s- T) TM IN (s-L LE) OUT <- mono/rinv LE IN OUT.
+
+% cut/rinv proof
+cut/rinv/impL : cut/rinv A TM RI ([x] impL (LF x) (RF x)) (impL LF' RF')
+		 <- cut/rinv A TM RI LF LF'
+		 <- cut/rinv A TM RI RF RF'.
+cut/rinv/impR : cut/rinv A TM RI ([x] impR ([y] D x y)) (impR Y)
+		 <- {y} cut/rinv A TM RI ([x] D x y) (Y y).
+cut/rinv/s-L : cut/rinv A TM RI ([x] s-L D) (s-L D).
+cut/rinv/vL/hit : cut/rinv A (s TM) RI ([x] vL (LF x) x) Y
+		   <- cut/rinv A (s TM) RI LF Z
+		   <- cut/pc A TM RI Z Y.
+cut/rinv/vL/miss : cut/rinv A TM RI ([x] vL (LF x) H) (vL LF' H)
+		    <- cut/rinv A TM RI LF LF'.
+cut/rinv/vR : cut/rinv A TM RI ([x] vR (RI0 x)) (vR RI0')
+		 <- cut/rinv A TM RI RI0 RI0'.
+
+cut/rinv/s+R : cut/rinv A TM RI ([x] s+R H) (s+R H).
+cut/rinv/topR : cut/rinv A TM RI ([x] topR) topR.
+
+
+% Checks
+%block b : some {P : p} block {x : hyp P}.
+%mode 
+ (trans +A +B -C)
+ (mono/rinv +A +B -C)
+ (mono/lfoc +A +B -C).
+%mode 
+ (cut/rfoc +A +B +C +D -E)
+ (cut/rinv +A +B +C +D -E)
+ (cut/pc   +A +B +C +D -E).
+%worlds (b) 
+ (trans _ _ _)
+ (mono/rinv _ _ _)
+ (mono/lfoc _ _ _).
+%worlds (b) 
+(cut/rfoc _ _ _ _ _)
+(cut/rinv _ _ _ _ _)
+(cut/pc   _ _ _ _ _).
+
+% Assume structure relation is transitive
+%trustme %total LE1 (trans LE1 LE2 LE3).
+
+%total (RI1 LF1) 
+ (mono/rinv LE RI1 RI2)
+ (mono/lfoc LE' LF1 LF2).
+
+%total 
+{(B A A') (N1 N2 N3) [(RF RI RI' ) (PFRF1 PFRI1 LF )]} 
+(cut/rfoc B N1 RF PFRF1 PFRF2)
+(cut/rinv A N2 RI PFRI1 PFRI2)
+(cut/pc A' N3 RI' LF RI'').
+
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/ConstructiveSemantics).
+!}%

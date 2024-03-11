@@ -1,0 +1,22 @@
+%%! title: "Unsafe mode"
+
+%{! In order for Twelf to be useful as a theorem verifier, Twelf should not accept untrue or unproven assumptions. However, it is  sometimes helpful for the Twelf user to be able to state, and use, unproven assumptions, especially during proof development. Directives like [``%trustme``](/wiki/percent-trustme/) and [``%assert``](/wiki/percent-assert/) allow the Twelf user to do just this. 
+
+When Twelf is set to not accept any untrue or unproven assumptions, it is in **safe mode** (this is the default setting). In order to use directives like [``%trustme``](/wiki/percent-trustme/), Twelf must be set to **unsafe mode.**
+
+## Setting Twelf in unsafe mode
+
+* In [Twelf with Emacs](/wiki/twelf-with-emacs/), select the **Twelf** menu, then select the **Options** submenu, then select the **unsafe** menu option.
+* If using the Twelf server directly from the command line, the command &lt;code&gt;set unsafe true&lt;/code&gt; will put Twelf in unsafe mode.
+* In ML Twelf, the SML command &lt;code&gt;Twelf.unsafe := true;&lt;/code&gt; will put Twelf in unsafe mode. 
+
+## See also
+
+* [Holes in metatheorems](/wiki/incremental-metatheorem-development/) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Unsafe_mode).
+!}%

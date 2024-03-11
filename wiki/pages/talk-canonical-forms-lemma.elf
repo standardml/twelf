@@ -1,0 +1,15 @@
+%%! title: "Talk:Canonical forms lemma"
+
+%{! [canonical form](/wiki/canonical-form/) should be its own page (not a redirect) for the LF notion of canonical form. I deleted the redirect until we have such a page. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 17:32, 30 September 2006 (EDT)
+
+
+I just realized after writing the examples, that to make canonical forms seem relevant, I had to do progress proofs anyway. I am considering re-doing this article as "Progress when you get canonical forms for free vs. progress when you need to prove canonical forms". --[DanielKLee](/wiki/user-danielklee/) 19:05, 30 September 2006 (EDT)
+
+I just also realized there is a way to do progress for the second type system and still get CFLs for free. GAH. Not sure whether I should do a third example to show it off, or just pretend it doesn't exist to make the second example still seem relevant. --[DanielKLee](/wiki/user-danielklee/) 19:05, 30 September 2006 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Canonical_forms_lemma).
+!}%

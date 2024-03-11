@@ -1,0 +1,16 @@
+%%! title: "Talk:Case studies"
+
+%{! I don't really think [CPS conversion](/wiki/cps-conversion/) is a case study; it's meant to be a contrived tutorial. (I have a much larger code base from my thesis project that would be the "case study".) But I don't mind it being here until there's more to fill out this page... &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 20:23, 11 October 2006 (EDT)
+: I guess in my mental separation, a tutorial answers a question someone might ask or shows a technique someone might use directly, whereas a case study says "this is how you do something cool and non-trivial in Twelf." - to borrow Karl's separation from two ConCert meetings ago, tutorials are "let's think about how to do work in Twelf" and case studies are "used Twelf, got things done", and I saw CPS conversion more as "got things done." However, perhaps the best solution in these cases is to list it in both places, which I think would be entirely appropriate. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 20:49, 11 October 2006 (EDT)
+:: Well, the CPS example is for a toy language specifically designed for pedagogical purposes, so it's not an example of getting things done&mdash;even though it was an offshoot of real work. But sure, let's put it in both places. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 20:59, 11 October 2006 (EDT)
+::: Perhaps my problem is that we need a new category that isn't quite "Advanced Proof Techinques"... Trying to make a good sort of the things that are tutorials seems to get me in trouble every time. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 21:35, 11 October 2006 (EDT)
+:::: Sounds like another Twelf coffee is in order! &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 22:09, 11 October 2006 (EDT)
+::::: Indeed, especially as I've now started the leak, apparently - Carsten, Brigette, and Kevin are aware of this project (intentional), Carsten may point some of his students to upload examples (encouraged), and Brigette may be sharing this with her McGill Computation and Deduction course (yipes!). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 22:49, 11 October 2006 (EDT)
+:: Might I suggest an "Illustrative Examples" category. Illustrative examples are minimal examples that highlight one or two particular encoding or proof techniques. The emphasis being on how a particular thing is done, rather than focusing on general techniques (tutorials) or larger proofs with their own agendas (case studies). --[DanielKLee](/wiki/user-danielklee/) 00:01, 12 October 2006 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Case_studies).
+!}%

@@ -1,0 +1,30 @@
+%%! title: "User:Rsimmons"
+
+%{! My name is Robert J. Simmons. I am a first-year graduate student at Carnegie Mellon University.
+
+* Web page: http://www.cs.cmu.edu/~rjsimmon/
+* Wikipedia: [[w:User:Sirmob]]
+* Girard Reading Group Wiki: http://locuspocus.hyperkind.org/
+
+I am the background maintainer for this website, and [http://moog.concert.cs.cmu.edu moog] lives in my office. I developed the the [[Project:TwelfTag|TwelfTag]] extension for syntax highlighting automatically checking included Twelf code, the [[Project:Literate Twelf|Literate Twelf]] extension to facilitate offline editing, and generally attempt to keep things working. Leave me a [http://twelf.plparty.org/w/index.php?title=User_talk:Rsimmons&action=edit&section=new message] if anything needs to be done.
+
+## Scratch space
+
+Since writing [[Project:Literate Twelf|Literate Twelf]], I tend to incorporate the Wiki into my development process. Often I only use the preview feature, but sometimes I save drafts in my namespace. Some of these would probably make good case studies if I get around to it.
+
+* [[User:Rsimmons/primop.elf]] - Broken.
+* [[User:Rsimmons/Subtype]] - Incomplete - an attempt at doing a reasonable encoding of (width,depth) subtyping for n-ary tuples.
+* [User:Rsimmons/Handled exceptions](/wiki/user-rsimmons-handled-exceptions/) - An encoding of exceptions where the type system can statically determine code to be non-exception-raising.
+* [User:Rsimmons/Fluid binding](/wiki/user-rsimmons-fluid-binding/) - A more organized example than handled exceptions. This encodes "deep binding," requiring the dynamic semantics to search the stack for the correct binding; the type system ensures that some binding will be found. I was worried that the unsatisfactory encoding of sets would run into trouble, but it's actually a very context-like encoding of sets of fluid variables (weakening and exchange need to be proven explicitly, etc etc). This is the first encoding where I've wanted "Twelf functors" to abstract over the variable names - I can't use hypotheticals because I need decidable equality/inequality.
+
+## Things to do
+
+* [``%terminates``](/wiki/percent-terminates/)
+* [LF](/wiki/lf/) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons).
+!}%

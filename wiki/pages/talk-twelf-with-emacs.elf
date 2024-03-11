@@ -1,0 +1,22 @@
+%%! title: "Talk:Twelf with Emacs"
+
+%{! ## Emacs Mode maintenance
+
+I have some questions:
+
+- Are the changes suggested for use with frames useful for everyone?  If so, are they added to the CVS/SVN repository for future release?
+
+- I defined a ``twelf-check-declaration-forward`` command for checking all declarations in the current buffer starting from the point.  I have found it useful.  I sent Rob a diff.  Is that the right way to contribute changes?
+
+- Is the emacs code being maintained?  It seems the syntax highlighting is worse than linear.  Or at least has a high constant factor.  Highlighting a file of 8000 lines can take a minute on a fast machine (MacBook Pro with dual-core, 2GB RAM).  Since highlighting is done automatically when a twelf file is visited, this delay is frequent and unavoidable unless one turns off highlighting,
+
+- More on maintenance: the emacs mode in CVS (twelf -1.5 R3) used the wrong names for parameters (debugging etc).  Has this been fixed?
+
+[Boyland](/wiki/user-boyland/) 17:31, 7 May 2008 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Twelf_with_Emacs).
+!}%

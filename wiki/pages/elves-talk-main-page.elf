@@ -1,0 +1,210 @@
+%%! title: "Elves talk:Main Page"
+
+%{! __FORCETOC__
+## A Contest?
+
+Everyone seemed intriuged by the idea of getting a contest going. How could we make something like this work, and perhaps produce something useful. [Rsimmons](/wiki/user-rsimmons/) 20:21, 1 September 2006 (MST)
+
+## Categories
+
+I'd like to see categories for "twelf tricks"; things like putting a case in your theorem for closed terms, inducing extra subordination clauses, etc. Basically, something for people that understand Twelf but who might not have built a big enough toolbox yet (_e.g._, almost everyone but Karl). Deciding what is basic Twelf knowledge ([[:Category:tutorials]]) vs. advanced tricks might be an issue... thoughts? Maybe beginner/intermediate/advanced tutorials? &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 14:40, 7 September 2006 (MST)
+: The old wiki did have a general "beginner/intermediate/advanced" separation - I think that's a good first-order approximation - having a good number of code examples, plus "this is a good example of this idea" notes, will ultimately be a better guide. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 17:02, 7 September 2006 (MST)
+
+## Rephrasing "equality"
+
+I have been confused about this, and it makes more sense (to me) as a question than asking about [http://fp.logosphere.cs.cmu.edu/twelf/?n=Answers.Equality lebinitz equality] in the metalogic (this was answered, the answer just wasn't linked to from the question so I thought previously that it had not been answered. Is there a way to make the last metatheorem work? If not, is there a good explanation why not that we can put here?
+
+Also, I don't think I know how to do the equivalent of the _first_ metalemma in the higher order case, say the untyped lambda calculus, and even if it's not unbelievably difficult, if it's doable it seems like the thing that has been done. If the second metalemma is doable in the first order case, what about in the higher order case? Is one of these definitions of equality superior? My intuition is to want to trust an inductiely defined definition more... — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 17:36, 7 September 2006 (MST) !}%
+    
+tp : type.
+
+base : tp.
+pair : tp -> tp -> tp.
+list : tp -> tp.
+
+eq1 : tp -> tp -> type.
+
+eq1/i : eq1 T T.
+
+eq2 : tp -> tp -> type.
+
+eq2/base : eq2 base base.
+eq2/pair : eq2 (pair T1 T2) (pair T1' T2')
+	    <- eq2 T1 T1'
+	    <- eq2 T2 T2'.
+eq2/list : eq2 (list T) (list T')
+	    <- eq2 T T.
+
+eq1=>2 : {T1} eq1 T1 T2 -> eq2 T1 T2 -> type.
+%mode eq1=>2 +D0 +D1 -D2.
+
+- : eq1=>2 base _ eq2/base.
+- : eq1=>2 (pair T1 T2) _ (eq2/pair D2 D1)
+     <- eq1=>2 T1 eq1/i D1
+     <- eq1=>2 T2 eq1/i D2.
+- : eq1=>2 (list T) _ (eq2/list D)
+     <- eq1=>2 T eq1/i D.
+
+%worlds () (eq1=>2 _ _ _).
+%total T (eq1=>2 T _ _).
+
+eq2=>1 :  eq2 T1 T2 -> eq1 T1 T2 -> type.
+%mode eq2=>1 +D1 -D2.
+
+- : eq2=>1 eq2/base eq1/i.
+- : eq2=>1 (eq2/pair D2 D1) eq1/i
+     <- eq2=>1 D1 _
+     <- eq2=>1 D2 _.
+- : eq2=>1 (eq2/list D) eq1/i
+     <- eq2=>1 D eq1/i.
+
+%worlds () (eq2=>1 _ _).
+% total T (eq2=>1 T _). FAILS (for some obvious reasons)
+
+%{! : Here are the proofs of the equivalence of the two definitions. In practice, eq1 is more commonly used (and very flexible), because it is much easier to use the equivalence once you have it (the proofs have one case for eq1/i instead of having to be inductive over the structure of T). I threw in forall, to show how eq2 works in the higher-order case. You need a special block to make the proof of eq1=&gt;2 go through. The trick to showing eq2=&gt;1 is to also have lemmas that are equivalent to the eq2 intro rules. --[DanielKLee](/wiki/user-danielklee/) 22:59, 7 September 2006 (MST) !}%
+    
+tp : type.
+
+base    : tp.
+pair    : tp -> tp -> tp.
+list    : tp -> tp.
+forall  : (tp -> tp) -> tp.
+
+eq1 : tp -> tp -> type.
+
+eq1/i : eq1 T T.
+
+eq2 : tp -> tp -> type.
+
+eq2/base        : eq2 base base.
+eq2/pair        : eq2 (pair T1 T2) (pair T1' T2')
+                   <- eq2 T1 T1'
+                   <- eq2 T2 T2'.
+eq2/list        : eq2 (list T) (list T')
+                   <- eq2 T T'.
+eq2/forall      : eq2 (forall T) (forall T')
+                   <- ({a} eq2 a a -> eq2 (T a) (T' a)).
+
+
+
+%block tp-block         : block {a : tp}.
+%block eq2-block        : block {a : tp} {eqa: eq2 a a}.
+
+
+
+eq1=>2 : {T1} eq1 T1 T2 -> eq2 T1 T2 -> type.
+%mode eq1=>2 +D0 +D1 -D2.
+
+%block eq1=>2-block     : block {a : tp}{eqa:eq2 a a}{_ : eq1=>2 a eq1/i eqa}.
+
+-       : eq1=>2 base _ eq2/base.
+
+-       : eq1=>2 (pair T1 T2) _ (eq2/pair D2 D1)
+           <- eq1=>2 T1 eq1/i D1
+           <- eq1=>2 T2 eq1/i D2.
+
+-       : eq1=>2 (list T) _ (eq2/list D)
+           <- eq1=>2 T eq1/i D.
+
+-       : eq1=>2 (forall T') _ (eq2/forall D)
+           <- ({a}{eqa : eq2 a a} eq1=>2 a eq1/i eqa
+                 -> eq1=>2 (T' a) eq1/i (D a eqa)).
+
+%worlds (eq1=>2-block) (eq1=>2 _ _ _).
+%total T (eq1=>2 T _ _).
+
+
+
+eq1-resp-pair   : eq1 T1 T1'
+                   -> eq1 T2 T2'
+                   -> eq1 (pair T1 T2) (pair T1' T2')
+                   -> type.
+%mode eq1-resp-pair +D1 +D2 -D3.
+
+-       : eq1-resp-pair eq1/i eq1/i eq1/i.
+
+%worlds (tp-block) (eq1-resp-pair _ _ _).
+%total {} (eq1-resp-pair _ _ _).
+
+
+
+eq1-resp-list   : eq1 T1 T1'
+                   -> eq1 (list T1) (list T1')
+                   -> type.
+%mode eq1-resp-list +D1 -D2.
+
+-       : eq1-resp-list eq1/i eq1/i.
+
+%worlds (tp-block) (eq1-resp-list _ _).
+%total {} (eq1-resp-list _ _).
+
+
+
+eq1-resp-forall : ({a} eq1 (T1 a) (T1' a))
+                   -> eq1 (forall T1) (forall T1')
+                   -> type.
+%mode eq1-resp-forall +D1 -D2.
+
+-       : eq1-resp-forall ([a] eq1/i) eq1/i.
+
+%worlds (tp-block) (eq1-resp-forall _ _).
+%total {} (eq1-resp-forall _ _).
+
+
+
+eq2=>1  :  eq2 T1 T2 -> eq1 T1 T2 -> type.
+%mode eq2=>1 +D1 -D2.
+
+% the following case is a catch-all for variables and base
+
+-       : eq2=>1 _ eq1/i.
+
+-       : eq2=>1 (eq2/pair D2 D1) D12
+           <- eq2=>1 D1 D1'
+           <- eq2=>1 D2 D2'
+           <- eq1-resp-pair D1' D2' D12.
+
+-       : eq2=>1 (eq2/list D) D''
+           <- eq2=>1 D D'
+           <- eq1-resp-list D' D''.
+
+-       : eq2=>1 (eq2/forall D) D''
+           <- ({a}{eqa}
+                 eq2=>1 (D a eqa) (D' a))
+           <- eq1-resp-forall D' D''.
+
+%worlds (eq2-block) (eq2=>1 _ _).
+%total T (eq2=>1 T _).
+
+%{! ::: Thank you thank you! I'll tutorial-fy this because I'll understand it better if I do :). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 23:36, 7 September 2006 (MST)
+
+## CMMChallenge and POPLMark and CIVMark oh my
+
+http://www.cs.berkeley.edu/~adamc/poplmark/compile/compile.pdf - I may give it two hours over the weekend if I get tired of CIVMark again. Please someone else crack it to give me one less way to procrastinate...
+
+Everybody seems to be on the "Challenge" bandwagon, as a thought experiment what would we make if we made a &lt;small&gt;underscore&lt;/small&gt;Mark? I.E. something that many of us who aren't Karl would be able to do pretty easily, but which is nasty or tricky or just big? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 23:35, 7 September 2006 (MST)
+
+: I took a look at this benchmark. A lot of it seems pretty straightforward, but proving that a big step semantics is total for well-typed terms will be the biggest challenge. This is essentially a termination/normalization proof. Traditionally, you do this with a logical relations argument. The challenge gives you some leeway in your choice of dynamic semantics, but I imagine you'd either use a big step semantics or the reflexive transitive closure of a small step semantics. In the SVN twelf-lib, Dan Licata has an example of a termination proof using a canonizing substitution argument similar to (but a good deal simpler than) what Karl demonstrated on Thursday, that might be a good starting point. However, I suspect the heap in the imperative target language might make things... interesting. 
+
+: As for developing a "Challenge", I can't think of anything interesting off the top of my head. The real "challenge" in all of this is being able to do your actual day-to-day research in machine-checkable way. So a good challenge problem is something you'd want to do in your day-to-day research that for whatever reason seems rather difficult to mechanize. --[DanielKLee](/wiki/user-danielklee/) 04:06, 8 September 2006 (MST)
+
+## Competition
+
+Did anyone else know this existed? [http://cocorico.cs.ru.nl/coqwiki/Cocorico%21FrontPage Coq Wiki]. I don't know French. What does Cocorico mean? --[DanielKLee](/wiki/user-danielklee/) 10:41, 28 September 2006 (MST)
+* I think it has something to do with Final Fantasy IV. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 11:48, 28 September 2006 (MST)
+:*I'd seen it before, but hadn't put too much thought into its existance I suppose. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 15:10, 28 September 2006 (MST)
+
+## Announcement - changing tag system
+
+I'm changing the tag system slightly. This *shouldn't* break anything for more than ten minutes, with one exception. If you used &lt;nowiki&gt;&lt;php&gt;, &lt;perl&gt;, &lt;javascript&gt;&lt;/nowiki&gt; or any other syntax highlighting tags, those have to be changed to &lt;nowiki&gt;&lt;code php&gt;&lt;/code&gt;, &lt;code javascript&gt;&lt;/code&gt;&lt;/nowiki&gt; tags. &lt;nowiki&gt; !}%
+    
+
+
+%{! &lt;/nowiki&gt; tags will still work, I'm making these changes to be able to have more control over the Twelf tag-ness. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 17:46, 4 October 2006 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Elves_talk:Main_Page).
+!}%

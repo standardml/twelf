@@ -1,0 +1,22 @@
+%%! title: "Template:Bibtex:hhp93lf"
+
+%{! &lt;bibtex&gt;@article\{hhp93lf,
+ author = \{Robert Harper and Furio Honsell and Gordon Plotkin\},
+ title = \{A framework for defining logics\},
+ journal = \{J. ACM\},
+ volume = \{40\},
+ number = \{1\},
+ year = \{1993\},
+ issn = \{0004-5411\},
+ pages = \{143--184\},
+ doi = \{http://doi.acm.org/10.1145/138027.138060\},
+ publisher = \{ACM Press\},
+ address = \{New York, NY, USA\},
+ \}&lt;/bibtex&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Bibtex:hhp93lf).
+!}%

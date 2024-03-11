@@ -1,0 +1,25 @@
+%%! title: "Talk:Output factoring"
+
+%{! I think we should just delete the discussion of the hypothetical auto-factorer and Karl's comment at the end.  Thoughts? [Drl](/wiki/user-drl/) 00:01, 15 March 2007 (EDT)
+: Agreed, that's just from the old article :) — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 01:03, 15 March 2007 (EDT)
+
+## typo: "progress" should be "preservation"?
+
+In the section of this page labeled "Progress", this text appears:
+
+"We prove progress for the STLC presented in Representing the judgements of the STLC in the tutorial Proving metatheorems with Twelf. For review, here is the LF signature for the STLC:"
+
+Actually, that section (currently) discusses only preservation.  Should the word "progress" have instead been "preservation"?
+
+Hesitant to edit,
+
+[[User:Clements|Clements]] 16:16, 19 April 2007 (EDT)
+
+: Heh, English is fun. The parentheses I wanted were "We prove progress for (the STLC presented in Representing the judgements of the STLC in the tutorial Proving metatheorems with Twelf)", not the other association.  New wording should be less ambiguous.  Thanks for the suggestion!  [Drl](/wiki/user-drl/) 17:57, 19 April 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Output_factoring).
+!}%

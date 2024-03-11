@@ -1,0 +1,19 @@
+%%! title: "Unification"
+
+%{! **Unification** is an algorithm for comparing terms with holes (called **unification variables**) for equality, discovering substitutions for the unification variables which make those terms equal.  Unification of LF terms is used in a variety of ways in Twelf:
+- During type and term reconstruction, unification is used to infer omitted type and term information.
+- In the [logic programming](/wiki/logic-programming/) operational semantics of LF, unification is used to find solutions to unification variables in queries.
+
+Unification for LF terms requires higher-order unification, which is undecidable.  However, many instances of unification that arise in Twelf fall into the **pattern fragment**, which is decidable.  Those that are not in the pattern fragment are postponed as **constraints**; unresolved constraints are reported to the user.
+
+\{\{needs|examples of "unresolved constrants" error messages.\}\}
+
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Unification).
+!}%

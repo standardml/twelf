@@ -1,0 +1,29 @@
+%%! title: "Introductions to Twelf"
+%%! prev: false
+%%! next:
+%%!   link: /wiki/proving-metatheorems-with-twelf/
+%%!   label: Proving metatheorems with Twelf
+
+%{! The following introductory guides are available:
+
+* [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/): if you have some background in programming languages but no prior experience with LF and Twelf, start with this introduction.
+
+* [POPL Tutorial](/wiki/popl-tutorial/) 2009: course materials from a Twelf tutorial at POPL 2009.  This path through the material is the best introduction to Twelf, but it may be harder to follow along with online than [Proving metatheorems](/wiki/proving-metatheorems-with-twelf/).
+
+* [Summer school 2008](/wiki/summer-school-2008/): notes from a Twelf course at [http://www.cs.uoregon.edu/research/summerschool/summer08/ the University of Oregon Summer School on Logic and Theorem Proving in Programming Languages, July 2008]
+
+Basic mechanics:
+
+* [Twelf with Emacs](/wiki/twelf-with-emacs/): Using Twelf from within Emacs
+
+* [Twelf without Emacs](/wiki/twelf-without-emacs/): Running the twelf-server directly from the command line.
+
+We plan to add other introductory articles for other audiences.  If you have suggestions, please
+[http://twelf.plparty.org/w/index.php?title=Talk:Introductions_to_Twelf&action=edit&section=new leave us a message]. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Introductions_to_Twelf).
+!}%

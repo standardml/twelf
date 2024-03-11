@@ -1,0 +1,128 @@
+%%! title: "Simplifying dynamic clauses"
+%%! tags: ["tutorial"]
+
+%{! ### Summary
+
+When writing proofs about relations that introduce hypotheses, it is sometimes necessary to introduce dynamic clauses for the proof along with the hypothetical variable, to encode informal reasoning "at the variable case". In some cases, this reasoning is somewhat complicated, and can be streamlined by a judicious choice of lemma, so that the dynamic clause, while still present, is of a much simpler form, and the complicated reasoning is pushed to the top-level, where it can be more easily encoded.
+
+### Example
+
+Suppose that we have lists of items, some of which may be colored red. !}%
+    
+elt : type.
+cherry : elt.
+strawberry : elt.
+blueberry : elt.
+
+list : type.
+nil : list.
+cons : elt -> list -> list.
+
+is-red : elt -> type.
+is-red/cherry : is-red cherry.
+is-red/strawberry : is-red strawberry.
+
+%{! A property that a list may satisfy is that all of its elements are red, which is encoded as follows: !}%
+    
+all-red : list -> type.
+all-red/nil : all-red nil.
+all-red/cons : all-red (cons H L) 
+		<- all-red L 
+		<- is-red H.
+
+%{! We now define a nondeterministic function that take in a list, and outputs a list derived from the input by some combination of permutation, duplication, and dropping of its elements. !}%
+    
+mix : list -> list -> type.
+seed : elt -> type.
+
+mix/sow : (seed E -> mix L L') -> mix (cons E L) L'.
+mix/reap : mix nil L -> seed E -> mix nil (cons E L).
+mix/nil : mix nil nil.
+
+%{! The behavior of ``mix`` is as follows: it decomposes the input list, turning every element ``E`` in it into a hypothesis of type ``seed E``. Once the input list is empty, it builds up a new list by consing on some number of elements to the empty list, but each element must have come from some ``seed E``. Since there is no restriction on how many times a hypothesis is used, the resulting list may have many (or one, or no) copies of each element in the original list, and in any order. However, since the function ``mix`` cannot introduce elements &lt;I&gt;ex nihilo&lt;/I&gt;, we can state and prove some properties of it. For instance, when applied to an all-red list, it must yield an all-red list. !}%
+
+mix-pres : mix L L'
+	 -> all-red L
+	 -> all-red L'
+	 -> type.
+%mode mix-pres +MIX +AR -AR'.
+
+%{! #### First proof
+
+The proof of this theorem can be completed in the following way:
+
+```checkedtwelf
+- : mix-pres 
+	     (mix/sow ([s] MIX s)) 
+ 	     (all-red/cons RH AR)
+	     AR'
+     <- ({sd:seed E} 
+	   {dynclause: {L: list} {Mix : mix nil L} {Ared:all-red nil} {Ared':all-red L}
+		     mix-pres (mix/reap Mix sd) Ared (all-red/cons RH Ared')
+		     <- mix-pres Mix Ared Ared'}
+	   mix-pres (MIX sd) AR AR').
+
+- : mix-pres 
+     mix/nil
+     all-red/nil
+     all-red/nil.
+
+%block complicated_block : some {E:elt} {RH:is-red E} block {sd:seed E}
+	   {dynclause: {L: list} {Mix : mix nil L} {Ared:all-red nil} {Ared':all-red L}
+		     mix-pres (mix/reap Mix sd) Ared (all-red/cons RH Ared')
+		     <- mix-pres Mix Ared Ared'}.
+%worlds (complicated_block) (mix-pres _ _ _).
+%total X (mix-pres X _ _).
+```
+
+In this proof of the theorem, the block of variables introduced includes a _dynamic clause_; for the relation ``mix-pres`` that covers the variable case. It expresses the reasoning, "if the last rule used to derive ``mix`` was ``mix-pres`` applied to the seed ``sd`` just introduced, then appeal to the induction hypothesis on the smaller derivation of ``mix``". Without this dynamic clause, coverage would fail, and the theorem would not go through. !}%
+
+
+%{! Writing dynamic clauses like this can be annoying, because Twelf's type reconstruction cannot be used to elide implicit <Math formula="\Pi"/>s. If we left a variable such as ``Mix`` implicitly quantified inside the dynamic clause, it would be quantified at the very outside, which would be incorrect. 
+
+#### Second proof
+
+We can instead prove the same theorem in a different way, which has the advantage of working in older verisons of Twelf, and allowing more leverage of type reconstruction in any event, simplifying the presentation.
+The technique is to introduce another lemma that makes explicit the invariant represented by the worlds declaration for the main theorem. In this case, we know that for every ``seed E`` in the context, there is a derivation ``RH`` of type ``is-red E``. !}%
+
+has-rh : seed E -> is-red E -> type.
+%mode has-rh +A -C.
+
+%{! We can prove the `has-rh` theorem in a `%world` that is much simpler than the complicated world used before: !}%
+
+%block simpler_block : some {E:elt} {RH:is-red E} block {sd:seed E}
+	   {clause: has-rh sd RH}.
+
+%worlds (simpler_block) (has-rh _ _).
+%total X (has-rh X _).
+
+
+%{! The proof of the main theorem can be stated more simply in this less complicated world: !}%
+
+- : mix-pres (mix/reap Mix SEED) Ared (all-red/cons RH Ared')
+     <- has-rh SEED RH
+     <- mix-pres Mix Ared Ared'.
+
+- : mix-pres
+	     (mix/sow ([s] MIX s)) 
+ 	     (all-red/cons RH AR)
+	     AR'
+     <- ({sd:seed E} 
+	   {dynclause: has-rh sd RH}
+	   mix-pres(MIX sd) AR AR').
+
+- : mix-pres
+     mix/nil
+     all-red/nil
+     all-red/nil.
+
+%worlds (simpler_block) (mix-pres _ _ _).
+%total X (mix-pres X _ _).
+
+%{! Note how there is now an "explicit variable case", which covers any possible derivation ``SEED`` of ``seed E``, and appeals to the above lemma ``has-rh`` in order to get the derivation of ``is-red H``. The second case, which introduces a parametric ``sd : seed E``, needs only supply the comparatively simple dynamic clause ``{dynclause: has-rh sd RH}`` to ensure the proof of ``has-rh`` goes through.
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+You can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Simplifying_dynamic_clauses).
+!}%

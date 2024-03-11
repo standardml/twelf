@@ -1,0 +1,21 @@
+%%! title: "Template:Summer school 2008"
+
+%{! \{| style="width:40%; margin-bottom:5px; border: 1px solid #ADA; background-color: #E4F2E4; text-align:left; font-size:0.9em;"
+|&lt;big&gt;**[Summer school 2008](/wiki/summer-school-2008/)** &lt;/big&gt; 
+|-
+|style="text-align:left; font-size:0.9em;" |\{\{\{noprevious|Previous: [[Summer school 2008:\{\{\{prev\}\}\}|\{\{\{prevname\}\}\}]]\}\}\}
+|-
+|style="text-align:left;font-size:0.9em;" |\{\{\{nonext|Next: [[Summer school 2008:\{\{\{next\}\}\}|\{\{\{nextname\}\}\}]]\}\}\}
+|\}
+&lt;br /&gt;__NOTOC__&lt;noinclude&gt;
+
+This template is for use in the [Summer school 2008](/wiki/summer-school-2008/) course notes. It should be given arguments prev (a wiki page) and prevname (the short name to use in the link), as well as arguments next and nextname. If the arguments noprevious or nonext are specified, then these links will not show at all.
+
+&lt;/noinclude&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Summer_school_2008).
+!}%

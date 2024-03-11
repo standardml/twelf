@@ -1,0 +1,202 @@
+%%! title: "Summer school 2008:Type safety for MinML (intrinsic encoding)"
+
+%{! 
+
+\{\{Summer school 2008
+  |noprevious=
+  |next=Type safety for MinML (extrinsic encoding)
+  |nextname=Type safety for MinML (extrinsic encoding)
+\}\}
+
+Type safety for MinML: call-by-value, with recursive functions, in intrinsic form
+
+!}%
+
+%{! 
+
+## Syntax / static semantics
+
+Types:
+
+!}%
+
+tp : type.				%name tp T.
+nat : tp.
+arr : tp -> tp -> tp.
+
+%{! 
+
+Typed expressions (i.e., typing derivations):
+
+!}%
+
+exp : tp -> type.			%name exp E.  %postfix 1 exp.
+z : nat exp.
+s : nat exp -> nat exp.
+ifz : nat exp -> T exp -> (nat exp -> T exp) -> T exp.
+fun : {T1:tp} {T2:tp} ((arr T1 T2) exp -> T1 exp -> T2 exp) -> (arr T1 T2) exp.
+app : (arr T1 T2) exp -> T1 exp -> T2 exp.
+
+%{! 
+
+## Dynamic semantics / preservation
+
+Values:
+
+!}%
+
+value : T exp -> type.			%name value Dval.
+%mode value +E.
+
+value/z : value z.
+value/s : value (s E) <- value E.
+value/fun : value (fun _ _ _).
+
+%{! 
+
+Transition relation:
+
+!}%
+
+step : T exp -> T exp -> type.		%name step Dstep.
+%mode step +E1 -E2.
+
+step/s
+   : step (s E) (s E') <- step E E'.
+step/ifz/arg
+   : step (ifz E E1 ([x] E2 x)) (ifz E' E1 ([x] E2 x))
+      <- step E E'.
+step/ifz/z
+   : step (ifz z E1 ([x] E2 x)) E1.
+step/ifz/s
+   : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
+      <- value E.
+step/app/fun
+   : step (app E1 E2) (app E1' E2)
+      <- step E1 E1'.
+step/app/arg
+   : step (app E1 E2) (app E1 E2')
+      <- value E1 <- step E2 E2'.
+step/app/beta-v
+   : step
+      (app (fun T1 T2 ([f] [x] E f x)) E2)
+      (E (fun T1 T2 ([f] [x] E f x)) E2)
+      <- value E2.
+
+%{! 
+
+## Progress
+
+The sum type we return:
+
+!}%
+
+val-or-step : T exp -> type.		%name val-or-step Dvos.
+vos/val : val-or-step E <- value E.
+vos/step : val-or-step E <- step E _.
+
+%{! 
+
+### [Factoring](/wiki/output-factoring/) lemmas
+
+!}%
+
+prog/s
+   : val-or-step E -> val-or-step (s E) -> type.
+%mode prog/s +Dvos1 -Dvos2.
+
+- : prog/s
+     (vos/step Dstep)
+     (vos/step (step/s Dstep)).
+- : prog/s
+     (vos/val Dval)
+     (vos/val (value/s Dval)).
+
+%worlds () (prog/s _ _).
+%total {} (prog/s _ _).
+
+prog/ifz
+   : val-or-step (E : nat exp)
+      -> {E1} {E2} (step (ifz E E1 ([x] E2 x)) E')
+      -> type.
+%mode prog/ifz +E +E1 +E2 -Dstep.
+
+- : prog/ifz (vos/step Dstep) _ _ (step/ifz/arg Dstep).
+- : prog/ifz (vos/val value/z) _ _ step/ifz/z.
+- : prog/ifz (vos/val (value/s Dval)) _ _ (step/ifz/s Dval).
+
+%worlds () (prog/ifz _ _ _ _).
+%total {} (prog/ifz _ _ _ _).
+
+prog/app
+   : val-or-step (E1 : (arr T2 T) exp)
+      -> val-or-step (E2 : T2 exp)
+      -> step (app E1 E2) E'
+      -> type.
+%mode prog/app +Dvos1 +Dvos2 -Dstep.
+
+- : prog/app
+     (vos/step Dstep1)
+     _
+     (step/app/fun Dstep1).
+
+- : prog/app
+     (vos/val Dval1)
+     (vos/step Dstep2)
+     (step/app/arg Dstep2 Dval1).
+
+- : prog/app
+     (vos/val Dval1)
+     (vos/val Dval2)
+     (step/app/beta-v Dval2).
+
+%worlds () (prog/app _ _ _).
+%total {} (prog/app _ _ _).
+
+%{! 
+
+### Main theorem
+
+!}%
+
+prog : {E : T exp} val-or-step E -> type. %name prog Dprog.
+%mode prog +E -Dvos.
+
+- : prog z (vos/val value/z).
+
+- : prog (s E) Dvos'
+     <- prog E Dvos
+     <- prog/s Dvos Dvos'.
+
+- : prog (ifz E E1 ([x] E2 x)) (vos/step Dstep)
+     <- prog E Dvos
+     <- prog/ifz Dvos _ _ Dstep.
+
+- : prog (fun _ _ _) (vos/val value/fun).
+
+- : prog (app E1 E2) (vos/step Dstep)
+     <- prog E1 Dvos1
+     <- prog E2 Dvos2
+     <- prog/app Dvos1 Dvos2 Dstep.
+
+%worlds () (prog _ _).
+%total Dof (prog Dof _).
+
+%{! 
+And thus we have proved type safety for MinML!
+
+
+\{\{Summer school 2008
+  |noprevious=
+  |next=Type safety for MinML (extrinsic encoding)
+  |nextname=Type safety for MinML (extrinsic encoding)
+\}\}
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Type_safety_for_MinML_(intrinsic_encoding)).
+!}%

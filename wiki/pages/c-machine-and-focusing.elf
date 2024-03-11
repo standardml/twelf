@@ -1,0 +1,172 @@
+%%! title: "C machine and focusing"
+
+%{! 
+C Machine and Focusing
+!}%
+
+%{! ## Syntax !}%
+
+pos : type.  %name pos A+.
+neg : type.  %name neg A-.
+
+down : neg -> pos.
+plus : pos -> pos -> pos.
+times : pos -> pos -> pos.
+zero  : pos.
+one   : pos.
+
+up   : pos -> neg.
+arr  : pos -> neg -> neg.
+with : neg -> neg -> neg.
+top  : neg.
+
+%abbrev conc = neg.
+
+val+  : pos -> type.
+cont- : neg -> conc -> type.
+cont+ : pos -> conc -> type.
+val-  : neg  -> type.
+exp   : conc -> type.
+
+%% positive values
+
+mt+    : val+ one.
+%% no rule for zero
+pair+  : val+ A -> val+ B -> val+ (times A B).
+inl    : val+ A -> val+ (plus A B).
+inr    : val+ B -> val+ (plus A B).
+delay- : exp A- -> val+ (down A-).
+
+%% positive continuations (shallow matching)
+
+%% positive conts
+let1   : exp C -> cont+ one C.
+%% no rule for zero
+split  : (val+ A -> val+ B -> exp C) -> cont+ (times A B) C.
+case   : (val+ A -> exp C) -> (val+ B -> exp C) -> cont+ (plus A B) C.
+force- : cont- A- C -> cont+ (down A-) C.
+  %% wait to peel off the shift until you're ready to focus.
+
+%% negative continuations
+
+app    : val+ A+ -> cont- B C -> cont- (arr A+ B) C.
+fst    : cont- A C -> cont- (with A B) C.
+snd    : cont- B C -> cont- (with A B) C.
+force+ : (val+ A+ -> exp C) -> cont- (up A+) C.
+%% internalize identity so we don't need to eta-expand
+id-    : cont- A A.
+
+%% negative values (shallow)
+
+lam    : (val+ A+ -> exp B-) -> val- (arr A+ B-).
+pair-  : exp A- -> exp B- -> val- (with A- B-).
+mt-    : val- top.
+delay+ : val+ A+ -> val- (up A+).  %% wait to peel off shift until focus
+
+%% neutral sequents
+
+return : val- A -> exp A.
+
+  %% canonical when the value is a variable;
+  %% non-canonical otherwise
+cut+   : val+ A+ -> cont+ A+ C -> exp C.
+  %% non-canonical
+cut-   : val- A- -> cont- A- C -> exp C.
+
+%% value variables can be used to stop right focus early
+%block valb : some {A} block {x : val+ A}.
+%worlds (valb) (cont+ _ _) (cont- _ _) (val+ _) (exp _) (val- _).
+
+%{! ## Operational Semantics !}%
+
+%{! ### Composition !}%
+
+comp+- : cont+ A+ B- -> cont- B- C- -> cont+ A+ C- -> type.
+%mode comp+- +K1 +K2 -K3.
+
+compe- : exp A- -> cont- A- C- -> exp C- -> type.
+%mode compe- +E1 +K2 -E3.
+
+comp-- : cont- A- B- -> cont- B- C- -> cont- A- C- -> type.
+%mode comp-- +K1 +K2 -K3.
+
+%% + -
+
+comp+-/let1 : comp+- (let1 E) K (let1 E')
+	       <- compe- E K E'.
+
+comp+-/split : comp+- (split E) K (split E')
+		<- {x}{y} compe- (E x y) K (E' x y). 
+
+comp+-/case : comp+- (case E1 E2) K (case E1' E2')
+	       <- ({x} compe- (E1 x) K (E1' x))
+	       <- ({x} compe- (E2 x) K (E2' x)).
+	       
+comp+-/force : comp+- (force- K-) K (force- K-')
+	       <- comp-- K- K K-'.
+
+%% e -
+
+compe-/return : compe- (return V) K (cut- V K).
+compe-/cut-   : compe- (cut- V K1) K2 (cut- V K3)
+		 <- comp-- K1 K2 K3.
+compe-/cut+   : compe- (cut+ V K1) K2 (cut+ V K3)
+		 <- comp+- K1 K2 K3.
+
+%% - - 
+
+comp--/app : comp-- (app V K1) K2 (app V K3)
+	      <- comp-- K1 K2 K3.
+
+comp--/fst : comp-- (fst K1) K2 (fst K3)
+	      <- comp-- K1 K2 K3.
+
+comp--/snd : comp-- (snd K1) K2 (snd K3)
+	      <- comp-- K1 K2 K3.
+
+comp--/force : comp-- (force+ E) K2 (force+ E')
+		<- {x} compe- (E x) K2 (E' x).
+
+comp--/id : comp-- id- K2 K2.
+
+%worlds (valb) (comp+- _ _ _) (comp-- _ _ _) (compe- _ _ _).
+%total (D1 D2 D3) (comp+- D1 _ _) (comp-- D3 _ _) (compe- D2 _ _).
+
+%{! ### Stack Machine !}%
+
+%% the sum type that you'd define for progress is
+%% (val C) + (exp C)
+%% so let's just abuse exp C for this sum and write the
+%% operational semantics as the progress proof.
+%% the only downside is that you can't tell whether an expression
+%% took a real step towards a value or already was a value.
+
+step : exp C -> exp C -> type.
+%mode step +S1 -S2.
+
+step/return : step (return V) (return V).
+
+step/let1   : step (cut+ mt+ (let1 E)) E.
+step/split  : step (cut+ (pair+ V1 V2) (split E)) (E V1 V2).
+step/case1  : step (cut+ (inl V1) (case E1 E2)) (E1 V1).
+step/case2  : step (cut+ (inr V2) (case E1 E2)) (E2 V2).
+step/force- : step (cut+ (delay- E) (force- K)) E'
+	       <- compe- E K E'.
+step/app    : step (cut- (lam E) (app V K)) E'
+	       <- compe- (E V) K E'.
+step/fst   : step (cut- (pair- E1 E2) (fst K)) E'
+	       <- compe- E1 K E'.
+step/snd   : step (cut- (pair- E1 E2) (snd K)) E'
+	       <- compe- E2 K E'.
+step/force+ : step (cut- (delay+ V) (force+ E)) (E V).
+step/id     : step (cut- V id-) (return V).
+
+%worlds () (step _ _).
+%total D (step D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/C_machine_and_focusing).
+!}%

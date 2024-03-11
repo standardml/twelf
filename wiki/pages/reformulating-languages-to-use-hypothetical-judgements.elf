@@ -1,0 +1,300 @@
+%%! title: "Reformulating languages to use hypothetical judgements"
+
+%{! It's easy to represent [hypothetical judgement](/wiki/hypothetical-judgment/)s in LF, exploiting [higher-order](/wiki/higher-order-judgements/) representation techniques.  This tutorial presents some object-language judgements which are **not** typically phrased as hypothetical judgements, but can easily be reformulated as such, making the correspondence with their LF representation quite clear.  
+In particular, we discuss parallel reduction and complete development for the lambda-calculus; thanks to [[User:rpollack]] for suggesting this example.
+
+Before reading this tutorial, you should learn about hypothetical judgements and their representation in LF: [Proving metatheorems: Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/) shows how object-language hypothetical judgements can be represented using LF binding. [Proving metatheorems: Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/) shows an additional example, and discusses proving totality assertions about higher-order judgements. [Proving metatheorems: Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) shows how to use totality assertions to prove metatheorems about higher-order judgements. 
+
+## Syntax is a hypothetical judgement
+
+First, we need to define the syntax of the untyped lambda-calculus:
+
+&lt;code&gt;
+M ::= x | lam x.M | app M1 M2
+&lt;/code&gt;
+
+A traditional story about this definition is that variables ``x`` are some piece of first-order data such as strings or de Bruijn indices, ``lam x.M`` is a binder (which means it can be &lt;math&gt;\alpha&lt;/math&gt;-converted and can be substituted for) and so on.
+
+However, suppose we were given a single untyped datatype of tree-structured data with binding as a primitive notion, where such trees consist of variables ``x``, binders ``x.t``, and applications of constants such as ``lam`` and ``app``.  Then we can save ourselves the trouble of recapitulating the construction of binding for each object language by simply carving out those trees that represent the language in question.    We can do so with a hypothetical judgement of the form ``x1 trm ... xn trm |- M trm``, where the subjects of the judgement ``trm`` are untyped binding trees.  This judgement is defined as follows:
+
+&lt;code&gt;
+x trm in G
+----------
+G |- x trm
+
+G |- M1 trm  G |- M2 trm
+-------------------------
+G |- (app M1 M2) trm
+
+
+G , x trm |- M trm
+------------------
+G |- lam (x.M) trm
+&lt;/code&gt;
+
+A variable is a term if it was assumed to be a term; at a binder, we extend the context by assuming a new term.  The important point about this style of definition is that variables are inherently  _scoped_ and given meaning only by assumption: ``x`` is only meaningful if we are in a context where we have some assumptions about it.  Consequently, ``x1 trm ... xn trm |- M trm`` captures exactly the terms with free variables ``x1``...``xn``.  
+
+When you're working with an inherently scoped type of binding trees, you can't give an unconditional definition of what it means to be a term with rules like  
+
+&lt;code&gt;
+-----
+x trm
+
+M trm
+-------------
+lam (x.M) trm
+&lt;/code&gt;
+
+where the first rule means "all those trees that happen to be variables are terms": it would break the abstraction of variables-as-scoped-data to state a rule about all those trees that happen to be variables.    
+
+The moral of the story is that syntax with binding can be thought of as a hypothetical judgement.
+The LF encoding of this syntax can be thought of as an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of the above judgement ``x1 trm ... xn trm |- M trm``. LF provides typed binding trees, so we can define terms by specifying typed operators, rather than a predicate over untyped trees: !}%
+    
+trm : type.
+lam : (trm -> trm) -> trm.
+app : trm -> trm -> trm.
+
+%{! Then the judgement ``x1 trm ... xn trm |- M trm`` becomes the LF judgement 
+``x1 : trm ... xn : trm |- M : trm`` where ``x`` and ``M`` are LF variables and terms.
+
+## Parallel reduction
+
+Parallel reduction is traditionally defined as follows.  For conciseness, we write ``\x.M`` for ``lam x.M`` and ``M1 M2`` for ``app M1 M2``
+
+&lt;pre&gt;
+------- var
+x =&gt; x
+ 
+M =&gt; M'  N =&gt; N'
+-------------------- beta
+(\x.M) N =&gt; M'[N'/x]
+
+M =&gt; M'  N =&gt; N'
+---------------- app
+(M N) =&gt; (M' N')
+
+   M =&gt; N
+------------- lam
+\x.M =&gt; \x.N
+&lt;/pre&gt;
+
+However, if we want to treat variables as scoped data, we must be explicit about scoping:
+
+&lt;pre&gt;
+G ::= . | G , x trm
+
+x trm in G
+----------- var
+G |- x =&gt; x
+ 
+G, x trm |- M =&gt; M'  G |- N =&gt; N'
+--------------------------------- beta
+G |- (\x.M) N =&gt; M'[N'/x]
+
+G |- M =&gt; M'  G |- N =&gt; N'
+-------------------------- app
+G |- (M N) =&gt; (M' N')
+
+G, x trm |- M =&gt; N
+------------------- lam
+G |- \x.M =&gt; \x.N
+&lt;/pre&gt;
+
+Now at least the judgement only talks about well-scoped data. However, the ``var`` rule is somewhat problematic.  In the abstract, it says "derive ``G |- J'`` if ``J`` is in ``G``", where ``J`` and ``J'`` are _different judgements_.  This isn't one of the structural principles of a [hypothetical judgement](/wiki/hypothetical-judgment/), and allowing this strange sort of access to the context could invalidate the substitution principle (if I substitute for ``J``, I can no longer derive ``J'``!).  So what are we to do?
+
+### Reformulation 1: Hypothetical reductions
+
+While a rule that says "derive ``G |- J'`` if ``J`` is in ``G``" is suspicious, a rule that says 
+"derive ``G |- **J**`` if ``J`` is in ``G``" is just the usual hypothesis/identity axiom that we expect from all hypothetical judgements.  So, one solution is to change the notion of context we consider so that ``var`` is just an instance of hypothesis.  In particular, whenever we assume a variable ``x trm``, we also _assume_ a derivation ``x =&gt; x``:
+
+&lt;pre&gt;
+G ::= . | G , x trm,x =&gt; x
+
+x =&gt; x in G
+----------- var
+G |- x =&gt; x
+ 
+G, x trm, x =&gt; x |- M =&gt; M'  G |- N =&gt; N'
+----------------------------------------- beta
+G |- (\x.M) N =&gt; M'[N'/x]
+
+G |- M =&gt; M'  G |- N =&gt; N'
+-------------------------- app
+G |- (M N) =&gt; (M' N')
+
+G, x trm, x =&gt; x |- M =&gt; N
+--------------------------- lam
+G |- \x.M =&gt; \x.N
+&lt;/pre&gt;
+
+Now the ``var`` rule is unobjectionable.  In the premies of the rules ``beta`` and ``lam``, which deal with binding forms, the context is extended with the assumption that ``x =&gt; x`` for the bound variable ``x``.  The derivations of this version are isomorphic to the first definition of ``G |- M =&gt; N``, but the ``var`` rule here has a more generally acceptable form. 
+
+The LF representation of this formulation is quite direct: !}%
+    
+=> : trm -> trm -> type.  %infix none 10 =>.
+
+=>/beta : (app (lam M) N) => M' N'
+          <- ({x:trm} x => x -> M x => M' x) 
+          <- N => N'.
+=>/app  : (app M N) => (app M' N')
+          <- N => N'
+          <- M => M'.
+=>/lam  : lam M => lam M'
+          <- ({x:trm} x => x -> M x => M' x).
+
+%block =>b : block {x : trm} {=>/x : x => x}.
+%worlds (=>b) (=> _ _).
+
+%{! Derivations using ``var`` are represented by LF variables representing the reduction assumptions in ``G``.  The Twelf ``%worlds`` declaration documents the form of ``G`` in our informal definition.
+
+#### Substitution
+
+This reformulation elucidates a substitution principle for parallel reduction, as an instance of the general substitution principle for hypothetical judgements: 
+
+: If ``G, x trm, x =&gt; x |- M =&gt; N`` and ``G |- M' trm`` and ``G |- M' =&gt; M'`` then ``[M'/x]M =&gt; [M'/x]N``
+
+In the LF representation, this substitution principle comes "for free" from the general substitution principle for LF terms.
+
+### Reformulation 2: Change the definition
+
+Another option is to change the definition of the judgement so that it doesn't have a variable-specific rule.  In this case, we can generalize the variable rule to a general reflexivity rule:
+
+&lt;pre&gt;
+G ::= . | G , x trm
+
+----------- refl
+G |- M =&gt; M
+ 
+G, x trm |- M =&gt; M'  G |- N =&gt; N'
+--------------------------------- beta
+G |- (\x.M) N =&gt; M'[N'/x]
+
+G |- M =&gt; M'  G |- N =&gt; N'
+-------------------------- app
+G |- (M N) =&gt; (M' N')
+
+G, x trm |- M =&gt; N
+------------------- lam
+G |- \x.M =&gt; \x.N
+&lt;/pre&gt;
+
+In this case, this reformulation changes the structure of derivations (these are **not** isomorphic to what we started with) but does not change the relation defined by them, as reflexivity was admissible above.  This reformulation clearly would not be an option if reflexivity were not admissible, as in the example of complete development (below).
+
+The LF representation looks like this: !}%
+    
+=> : trm -> trm -> type.  %infix none 10 =>.
+
+=>/refl : M => M.
+=>/beta : (app (lam M) N) => M' N'
+          <- ({x:trm} M x => M' x)
+          <- N => N'.
+=>/app  : (app M N) => (app M' N')
+          <- N => N'
+          <- M => M'.
+=>/lam  : lam M => lam M'
+          <- ({x:trm} M x => M' x).
+
+%block trmb : block {x : trm}.
+%worlds (trmb) (=> _ _).
+
+%{! ### Reformulation 3 : tagged variables
+
+(coming soon!)
+
+## Complete development
+Parallel reduction is non-deterministic: any left-hand term that can be reduced by the ``beta`` rule can also be reduced by the ``app`` rule.  Complete development is a restriction of parallel reduction where ``beta`` takes precedence over ``app``.  In each step of complete development, all of the beta-redices in the left-hand term are reduced.
+
+Informally, we add a side condition to the ``app`` rule:
+&lt;pre&gt;
+G |- M ==&gt; M'  G |- N ==&gt; N'  (M is not a lambda)
+------------------------------------------------ app
+G |- (M N) ==&gt; (M' N')
+&lt;/pre&gt;
+
+How can we state this side condition more precisely?  We need a judgement ``notlam M`` which holds whenever ``M`` is not ``\x.M'``.  It's easy to define this as a hypothetical judgement if we choose our contexts correctly:
+
+&lt;pre&gt;
+G ::= . | G , x trm, notlam x
+
+notlam x in G
+-------------
+G |- notlam x
+
+-----------------------
+G |- notlam (app M1 M2)
+&lt;/pre&gt;
+
+That is, with each variable, we make the additional assumption that it is not a lambda.
+
+Then complete development is easy to define:
+&lt;pre&gt;
+G ::= . | G , x trm, notlam x, x ==&gt; x
+
+x ==&gt; x in G
+------------ var
+G |- x ==&gt; x
+ 
+G, x trm, notlam x, x =&gt; x |- M ==&gt; M'  G |- N ==&gt; N'
+----------------------------------------------------- beta
+G |- (\x.M) N ==&gt; M'[N'/x]
+
+G |- M ==&gt; M'  G |- N ==&gt; N'  G |- notlam M
+-------------------------------------------- app
+G |- (M N) ==&gt; (M' N')
+
+G, x trm, notlam x, x =&gt; x |- M ==&gt; N
+------------------------------------- lam
+G |- \x.M ==&gt; \x.N
+&lt;/pre&gt;
+
+The LF representation is direct: !}%
+    
+notlam : trm -> type.
+notlam/app : notlam (app _ _).
+
+%block nlb : block {x : trm} {nlx : notlam x}.
+%worlds (nlb) (notlam _).
+
+%{! Whenever we add a ``trm`` assumption to the LF context, we assume that it is not a lambda.  The Twelf ``%worlds`` declaration documents this fact, and causes Twelf to complain if we ever violate this convention.  
+
+Then complete development is a simple twist on parallel reduction: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+==> : trm -> trm -> type.  %infix none 10 ==>.
+
+==>/beta : (app (lam M) N) ==> M' N'
+          <- ({x:trm} notlam x -> x ==> x -> M x ==> M' x)
+          <- N ==> N'.
+==>/app  : (app M N) ==> (app M' N')
+          <- N ==> N'
+          <- M ==> M'
+	  <- notlam M.
+==>/lam  : lam M ==> lam M'
+          <- ({x:trm} notlam x -> x ==> x -> M x ==> M' x).
+
+%block ==>b : block {x : trm} {nlx : notlam x} {==>/x : x ==> x}.
+%worlds (==>b) (==> _ _).
+
+%{! Every time we extend the context, we add an assumption ``notlam x`` for that variable.  We also add a reflexivity assumption for each variable because the informal definition of complete development still has a reflexivity rule for variables (even though the relation is not reflexive in general).  
+
+#### Substitution
+
+As above, this formulation gives a "free" substitution principle for complete development: if we have a complete development derivation ``G , x trm, notlam x, x ==&gt; x |- M ==&gt; N`` 
+and ``G |- M' trm`` and ``G |- notlam M'`` and `` G |- M' ==&gt; M'``
+then  ``G |- M[M'/x] ==&gt; N[M'/x]``.  The form of the context ensures that we need a derivation of ``notlam M'`` to make this substitution: it's not obvious that you can substitute lambdas for variables while preserving complete development, since you'd have to replace instances of ``app`` with something else.    
+
+## See also
+
+* [Hypothetical judgement](/wiki/hypothetical-judgment/)s
+* [Higher-order judgement](/wiki/higher-order-judgements/)s
+* The case study on [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/) for some proofs about the judgements defined here, illustrating the use of [regular world](/wiki/percent-worlds/)s.
+
+\{\{tutorial\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Reformulating_languages_to_use_hypothetical_judgements).
+!}%

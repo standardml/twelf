@@ -1,0 +1,17 @@
+%%! title: "Talk:Mutable state"
+
+%{! Something looks screwy with the two families named "update-lemma", one of which's body gets escaped into normal text because it's block-commented out.  Otherwise, cool! [Drl](/wiki/user-drl/) 11:51, 16 March 2007 (EDT)
+:: Fixed. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 12:29, 16 March 2007 (EDT)
+
+## Rename?
+
+Somehow I think [language with references](/wiki/mutable-state/) is a little weird of a title for this page; can I suggest [mutable state](/wiki/mutable-state/) or encoding references or 
+encoding store or something like that? I think it would be more in line with our other tutorials/case studies. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 08:42, 19 March 2007 (EDT)
+: Agreed, I couldn't think of a good name when I wrote the page. I'll use [mutable state](/wiki/mutable-state/). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 11:21, 19 March 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Mutable_state).
+!}%

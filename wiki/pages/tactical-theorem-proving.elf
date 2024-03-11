@@ -1,0 +1,163 @@
+%%! title: "Tactical theorem proving"
+
+%{! 
+Logics can be defined in Twelf in such a way that it may not be possible
+to do proof search by the fixed search strategy of Twelf's 
+[logic programming](/wiki/logic-programming/) engine. In these cases, tactical theorem provers can 
+be written that may still be able to prove many theorems. This article
+defines two approaches to writing these tactical theorem provers.
+!}%
+
+%{! ## Logic definition !}%
+
+%{! 
+When we introduce numbers with addition on this wiki (see for example
+[natural numbers](/wiki/natural-numbers/)), we usually define a judgmental definition of addition
+and then prove that it has the properties we desire. This will be a rather
+different presentation, more in line with the [Zermelo Frankel](/wiki/zermelo-frankel/) case study.
+This is a signature for an object language (a logic) that has addition
+as a primitive operation.
+
+We define a type for numbers ``num``, and then make addition a
+primitive operation. We also define propositions; the only proposition we 
+define here is equality of two numbers.
+!}%
+
+num : type. %name num N.
++ : num -> num -> num. %infix left 10 +.
+0 : num.
+1 : num.
+
+prop : type.
+== : num -> num -> prop. %infix none 5 ==.
+
+%{! 
+We can create a valid proposition that may be obviously untrue; for instance,
+``(0 == 1)`` is a valid object of type ``prop``. Therefore,
+we create ``pf``, which is a particular little logic which
+will allow us to prove a large number of theorems about addition based
+on a small number of axioms. Eight axioms are defined below:
+!}%
+
+pf : prop -> type.
+
+refl : pf (N == N).
+symm : pf (N1 == N2) -> pf (N2 == N1).
+trans : pf (N1 == N2) -> pf (N2 == N3) -> pf (N1 == N3).
+
+plus_assoc : pf (N1 + N2 + N3 == N1 + (N2 + N3)).
+plus_comm : pf (N1 + N2 == N2 + N1).
+plus_zero : pf (N1 + 0 == N1).
+plus_cong : pf (N1 == N1') -> pf (N2 == N2') -> pf (N1 + N2 == N1' + N2').
+plus_elim1 : pf (N1 + N2 == N1 + N2') -> pf (N2 == N2').
+
+%freeze pf.
+
+%{! 
+We [freeze](/wiki/percent-freeze/) the type family ``pf`` to prevent any more 
+axioms from being defined,
+but we can still define (many!) more theorems using the axioms (for instance,
+the complement to ``plus_elim1``.
+!}%
+
+plus_elim2 : pf (N1 + N2 == N1' + N2) -> pf (N1 == N1') = 
+  [p1 : pf (N1 + N2 == N1' + N2)] 
+  plus_elim1 (trans (trans plus_comm p1) plus_comm).
+
+%{! ## Tactical theorem proving !}%
+
+%{! ### Motivation: "flattening" a numeric formula !}%
+%{! 
+Say we want to define a predicate ``mklist`` that takes some numeric 
+formula ``num`` and applies associativity exhaustively to "flatten" 
+the formula into a list, for instance transforming ``(a + (b + c) + d)``
+into ``(a + b + c + d)`` - addition was defined to be left-associative,
+so this is the same as ``(((a + b) + c) + d)``.
+
+The ``list`` type family below will do this when run as a logic program.
+!}%
+
+list : num -> num -> type.
+%mode list +A -B.
+
+list-swap : list (A + (B + C)) D
+	     <- list (A + B + C) D.
+list-step : list (A + C) (B + C)
+	     <- list A B.
+list-stop : list A A.
+
+%{! ### Returning a proof of equality !}%
+
+%{! 
+The operation of ``list`` may seem a bit mysterious - how
+do we know that the straightened out formula is equal to the old one? By using
+Twelf's [dependent types](/wiki/dependent-types/), we can define a new type family ``mklist``
+which operates in the same way but returns a proof that the two numeric
+formulas are equal. We do **not** prove that the second 
+formula is flattened, just that it is equal to the first formula.
+!}%
+
+mklist : {A}{B} pf (A == B) -> type.
+%mode mklist +A -B -Pf.
+
+mklist-swap : mklist (A + (B + C)) D (trans (symm plus_assoc) Pf)
+		<- mklist (A + B + C) D (Pf: pf (A + B + C == D)).
+mklist-step : mklist (A + C) (B + C) (plus_cong Pf refl)
+		<- mklist A B (Pf: pf (A == B)).
+mklist-stop : mklist A A refl.
+
+%{! ### Using the tactical theorem prover !}%
+
+%{! 
+We can then use [``%define``](/wiki/define-declaration/) and 
+[``%solve``](/wiki/percent-solve/) to create
+a proof that (a + (b + c) + d == a + b + c + d). In order for ``mklist``
+to terminate, it must be given a [ground](/wiki/ground/) term, so we introduce a four 
+atomic terms ``a`` through ``d``. The proof ``Pf``
+must be explicitly allowed to rely on those terms, which is why
+``(Pf a b c d)`` is written instead of just ``Pf``.
+|check=decl !}%
+
+%define p1 = Pf
+%solve _ : {a}{b}{c}{d} mklist (a + (b + c) + d) _ (Pf a b c d).
+
+
+%{! ## Tactics with ``%clause`` !}%
+
+%{! Another way to achieve the same goal is to _define_ ``(list A B)``
+as ``(pf (A == B))``, which we do for ``list'`` below. !}%
+
+list' : num -> num -> type = [a][b] pf (a == b).
+%mode list +A -B.
+
+%{! Then, we have to _justify_ each clause of the logic in the same way
+as we justified ``plus_elim2`` above. We have to write the 
+[``%clause``](/wiki/percent-clause/) because, if we do not, then Twelf will not use the
+definitions in logic programming search. !}%
+
+%clause
+list'-swap : list' (A + (B + C)) D
+	     <- list' (A + B + C) D 
+  = [Pf: pf (A + B + C == D)] (trans (symm plus_assoc) Pf).
+
+%clause
+list'-step : list' (A + C) (B + C)
+	     <- list' A B
+  = [Pf: pf (A == B)] (plus_cong Pf refl).
+
+%clause
+list'-stop : list' A A = refl.
+
+%{! Now we do not need to use ``%define``; ``p2`` proves the
+same thing as ``p1`` above. |check=decl !}%
+
+%solve p2 : {a}{b}{c}{d} list' (a + (b + c) + d) _.
+
+%{! This is not the recommended style for a number of reasons (metatheoretic parts of Twelf like [totality assertions](/wiki/totality-assertion/) won't work with ``%clause``), but a few large examples such as the [big algebraic solver](/wiki/big-algebraic-solver/) have been written in this style. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Tactical_theorem_proving).
+!}%

@@ -1,0 +1,188 @@
+%%! title: "Lexicographical orderings with density"
+
+%{! This is a fairly advanced example, but it illustrates a number of useful things. First, it adheres very closely to the [Twelf style guide](/wiki/twelf-style-guide/). Second, it has proofs of ``nat-less-trans`` and ``nat-less-immsucc`` which you usually need to get any mileage out of the natural numbers. Third, it is an example of how to prove ``uninhabited/void/false/absurd`` in order to user [reasoning from false](/wiki/reasoning-from-false/). 
+
+This is a lexicographical ordering with the property that it has a less-than relation that is irreflexive and transitive, like the natural numbers. In addition, it has the additional property that the ordering is "dense" in that there exists an index between any two indices.  This ordering should be isomorphic to the non-negative rationals. Density is admissible in this ordering without having to deal with multiplication, as would be necessary in a more obvious encoding of the non-negative rationals. !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+% natural numbers
+
+nat : type.
+
+nat/z : nat.
+nat/s : nat -> nat.
+
+
+
+% a list of natural numbers. we will use it as a lexicographical ordering
+
+lex : nat -> type.
+
+lex/z : lex nat/z.
+lex/s : nat -> lex N -> lex (nat/s N).
+
+
+
+% the less-than relation on natural numbers
+
+nat-less : nat -> nat -> type.
+
+nat-less/z : nat-less nat/z (nat/s N).
+
+nat-less/s : nat-less (nat/s N1) (nat/s N2)
+              <- nat-less N1 N2.
+
+
+
+% the less-than relation on our lexicographical ordering. 
+
+lex-less : lex _ -> lex _ -> type.
+
+lex-less/z : lex-less lex/z (lex/s _ _).
+
+lex-less/eq     : lex-less (lex/s N1 NL1) (lex/s N1 NL2)
+                   <- lex-less NL1 NL2.
+
+lex-less/gt     : lex-less (lex/s N1 _) (lex/s N2 _)
+                           <- nat-less N2 N1.
+
+
+
+
+nat-less-trans  : nat-less N1 N2
+                   -> nat-less N2 N3
+                   -> nat-less N1 N3
+                   -> type.
+%mode nat-less-trans  +D1 +D2 -D3.
+
+-       : nat-less-trans nat-less/z _ nat-less/z.
+
+-       : nat-less-trans (nat-less/s N1) (nat-less/s N2) (nat-less/s N3)
+           <- nat-less-trans N1 N2 N3.
+
+%worlds () (nat-less-trans _ _ _).
+%total {D1} (nat-less-trans D1 _ _).
+
+
+
+nat-less-immsucc	: {N}
+                           nat-less N (nat/s N)
+                           -> type.
+%mode nat-less-immsucc +D1 -D2.
+
+-       : nat-less-immsucc nat/z nat-less/z.
+
+-       : nat-less-immsucc (nat/s N1) (nat-less/s NL)
+           <- nat-less-immsucc N1 NL.
+
+%worlds () (nat-less-immsucc _ _).
+%total {D1} (nat-less-immsucc D1 _).
+
+
+
+
+lex-less-trans  : lex-less NL1 NL2
+		   -> lex-less NL2 NL3
+		   -> lex-less NL1 NL3
+		   -> type.
+%mode lex-less-trans +D1 +D2 -D3.
+
+-       : lex-less-trans lex-less/z _ lex-less/z.
+
+-       : lex-less-trans (lex-less/eq NL1)  (lex-less/eq NL2) (lex-less/eq NL3)
+           <- lex-less-trans NL1 NL2 NL3.
+
+-       : lex-less-trans (lex-less/gt NL1) (lex-less/gt NL2) (lex-less/gt NL3)
+           <- nat-less-trans NL2 NL1 NL3.
+
+-       : lex-less-trans (lex-less/gt NL) (lex-less/eq _) (lex-less/gt NL).
+
+-       : lex-less-trans (lex-less/eq _) (lex-less/gt NL) (lex-less/gt NL).
+
+%worlds () (lex-less-trans _ _ _).
+%total {D1} (lex-less-trans D1 _ _).
+
+
+
+% for any lexicographical index LL, there exists an index LL' that is greater
+
+lex-less-succ   : {LL}
+                   lex-less LL LL'
+                   -> type.
+%mode lex-less-succ +D1 -D2.
+
+-       : lex-less-succ lex/z (lex-less/z : lex-less _ (lex/s nat/z lex/z)).
+
+-       : lex-less-succ (lex/s N NL) (lex-less/eq NLL)
+           <- lex-less-succ NL NLL.
+
+%worlds () (lex-less-succ _ _).
+%total {N} (lex-less-succ N _).
+
+
+
+lex-less-dense	: lex-less N1 N3
+		   -> lex-less N1 N2
+		   -> lex-less N2 N3
+		   -> type.
+%mode lex-less-dense +D1 -D2 -D3.
+
+-       : lex-less-dense lex-less/z lex-less/z 
+           (lex-less/gt NL : lex-less (lex/s (nat/s N) lex/z) _ )
+           <- nat-less-immsucc N NL. 
+
+-       : lex-less-dense (lex-less/eq LL) (lex-less/eq LL1) (lex-less/eq LL2)
+           <- lex-less-dense LL LL1 LL2.
+
+-       : lex-less-dense (lex-less/gt NL) (lex-less/eq LL) (lex-less/gt NL)
+           <- lex-less-succ _ LL.
+
+%worlds () (lex-less-dense _ _ _).
+%total {D1} (lex-less-dense D1 _ _).
+
+
+
+uninhabited : type.
+%freeze uninhabited.
+
+
+
+
+nat-less-refl-uninhabited       : nat-less N1 N1
+                                   -> uninhabited
+                                   -> type.
+%mode nat-less-refl-uninhabited +D1 -D2.
+
+-       : nat-less-refl-uninhabited (nat-less/s NL) DU
+           <- nat-less-refl-uninhabited NL DU.
+
+%worlds () (nat-less-refl-uninhabited _ _).
+%total {D1} (nat-less-refl-uninhabited D1 _).
+
+
+
+lex-less-refl-uninhabited       : lex-less LL LL
+                                   -> uninhabited
+                                   -> type.
+%mode lex-less-refl-uninhabited +D1 -D2.
+
+-       : lex-less-refl-uninhabited (lex-less/eq LL) DU
+           <- lex-less-refl-uninhabited LL DU.
+
+-       : lex-less-refl-uninhabited (lex-less/gt DL) DU
+           <- nat-less-refl-uninhabited DL DU.
+
+%worlds () (lex-less-refl-uninhabited _ _).
+%total {DU} (lex-less-refl-uninhabited DU _).
+
+%{! [Category:Twelf code](/wiki/category-twelf-code/)
+
+\{\{case study\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Lexicographical_orderings_with_density).
+!}%

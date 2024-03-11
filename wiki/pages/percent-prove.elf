@@ -1,0 +1,17 @@
+%%! title: "%prove"
+
+%{! The **``%prove``** directive attempts to prove a theorem specified by a [``%theorem``](/wiki/percent-theorem/) directive using the [theorem prover](/wiki/theorem-prover/). It is therefore similar to the [``%establish``](/wiki/percent-establish/) directive. However, unlike the ``%establish`` directive, theorems shown to be true by the ``%prove`` directive are considered as potential lemmas when the theorem prover attempts to prove future theorems.
+
+## See also
+
+* [Theorem prover](/wiki/theorem-prover/)
+* \{\{guide|title=Theorem Prover|chapter=10|section=57\}\}
+
+\{\{keyword|key=prove\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25prove).
+!}%

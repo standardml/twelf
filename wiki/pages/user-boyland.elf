@@ -1,0 +1,307 @@
+%%! title: "User:Boyland"
+
+%{! John Boyland,
+Professor, University of Wisconsin--Milwaukee.
+
+I'm interested in using Twelf and have
+written a biased and under-informed [http://www.cs.uwm.edu/~boyland/proof/using-twelf.html tutorial] of Twelf.
+I also have defined some [https://github.com/boyland/twelf-library library signatures] for Twelf.
+
+## Desired Features
+
+Here are some features that I would like to see in Twelf.
+I start with the simplest to implement (in my opinion).
+
+### What free variables?
+
+In Twelf, if you neglect to declare all the free variables in a theorem, you
+get the error message "Free variables In theorem."  It would be nice
+if the error message included the names of these free variables.  Update: of course Control-C Control-L will tell you all the free variables that have names. Of course, the implicit ones don't show.  A %block declaration will show you the reconstructed term; it would be nice if %theorem did too.
+
+### An ``exists*`` keyword
+
+In Twelf currently, a theorem has the form
+
+```twelf
+my-theorem :
+    forall* {K1} {K2} {V1:term K1} {V2: term K2}
+    forall {D:rule V1 V2}
+    exists {K3} {V3:term K3} {DP:rule2 V1 V2 V3}
+    true.
+```
+
+Sometimes the existentially bound variables are as extraneous as the ``forall*``
+bound variables.  One would like to write
+
+```twelf
+my-theorem :
+    forall* {K1} {K2} {V1:term K1} {V2: term K2}
+    forall {D:rule V1 V2}
+    exists* {K3}
+    exists {V3:term K3} {DP:rule2 V1 V2 V3}
+    true.
+```
+
+Currently my workaround is to avoid the theorem syntax and use an explicit mode declaration:
+
+```twelf
+my-theorem : (rule V1 V2) -> ({V3} (rule2 V1 V2 V3)) -> type.
+%mode +{K1} +{K2} +{V1:term K1} +{V2: term K2} +{D:rule V1 V2}
+            -{K3} -{V3:term K3} -{DP:rule2 V1 V2 V3}
+            (my-theorem D DP).
+```
+
+An ``exists*`` keyword should be a trivial addition.
+
+### Multiple ``%reduces`` for a type family
+
+If one declares two ``%reduces`` for a type family, the first is forgotten.
+Since '%reduces` is very important for later reduction/totality checks, it would be
+very helpful to collect all that are attached.
+
+### Output coverage checking
+
+It would be desirable to have output coverage checking done at the same time as mode checking, or at least to have the ability to check output coverage before a total declaration.  I have often found it frustrating to get an output coverage error late in the process of writing a proof.  And the "covers" check doesn't include output coverage
+
+### Totality checker and theorem prover integration
+
+Currently the theorem prover and totality checker live in different worlds,
+and neither trusts the other.  This seems peculiar to a user of Twelf
+who may wish to use the theorem prover for certain obvious lemmas but
+the totality checker for more complex theorems.  Currently this is impossible
+except in unsafe mode with the addition of assertions and "trustme" declarations.
+
+I propose
+
+1. The theorem prover should accept proved theorems:  If a totality flag is set on a metatheorem, it should accept it as proved.
+
+2. The totality checker should accept metatheorems proved automatically. If necessary, the theorem prover should deliver the proof to the totality checker internally (invisibly) for re-checking.
+
+3. The ``%assert`` and ``%trustme`` declarations should have the same effect: in unsafe mode make the metatheorem trusted by both the totality checker and the theorem prover.
+
+### Local Type Inference
+
+After using Twelf for about a year and writing 100K lines of Twelf, the most frustrating and time consuming process is "debugging" coverage errors.  Because unification is bidirectional, any mistake in the middle of a theorem will cause the pattern taht one is trying to match to not be exhaustive, even though it appears to be.  It would be nice to use a system with a slightly less powerful type inference system that would prevent this long-distance effect of unification.  Pierce and Turner have defined "Local Type Inference".  It is interesting to wonder what this would mean for Twelf.
+
+## Known Bugs
+
+In decreasing order of imporance.
+
+### Type Reconstruction Nontermination
+Type reconstruction sometimes fails to terminate
+
+```twelf
+xxtag : type.
+
+xxtag/a : xxtag.
+
+
+xxterm : xxtag -> type.
+
+xxa : xxterm xxtag/a.
+
+
+xxoutput : xxtag -> type.
+
+xxoutput/base : xxterm K -> xxoutput K.
+
+xxoutput/exists : (xxterm K -> xxoutput K') -> xxoutput K'.
+
+
+xxtrans : xxoutput K -> xxoutput K -> type.
+
+xxtrans/transitive : xxtrans E1 E2 -> xxtrans E2 E3 -> xxtrans E1 E3.
+
+xxtrans/inside : ({v} xxtrans (FE1 v) (FE2 v)) ->
+	xxtrans (xxoutput/exists FE1) (xxoutput/exists FE2).
+
+xxtrans/gen-exists : {K1} {K2} {F:xxterm K1 -> xxoutput K2} {T}
+	xxtrans (F T) (xxoutput/exists F).
+
+
+xxtrans-open-exists :
+	(xxtrans (xxoutput/exists FE1) E2) ->
+	({v:xxterm K} xxtrans (FE1 v) E2) ->
+	type.
+
+- : {K1} {K2} {O}
+    xxtrans-open-exists
+	 (xxtrans/gen-exists K1 K2 ([v] (xxoutput/exists ([v'] FF v v'))) O)
+        ([v'] (xxtrans/transitive
+		 (xxtrans/gen-exists _ _
+		    ([v] (FF v v')) O)
+		 (xxtrans/inside ([v] (xxtrans/gen-exists _ _ _ v'))))).
+```
+
+The last term is incorrectly typed because ``FF`` depends on K1 and K2, but is not declared explicitly.
+But in my version of twelf (twelf 1.5R3, with trustme, allegedly from August 2005) doesn't
+appear to terminate when attempting to type it.
+
+:Update:  Apparently this is a known bug for which a fix was found by Jason Reed. http://en.scientificcommons.org/47856338
+
+:The bug is still is in Twelf 1.7.1+ (r1887M)
+
+### Coverage Checker Nontermination
+
+The coverage checker sometimes fails to terminate.
+
+```twelf
+%%%% coverage checking doesn't always terminate
+
+%%%% Definitions
+
+void : type.
+
+
+expr : type.
+
+unit : expr.
+add : expr -> expr -> expr.
+
+
+%%% Nested for evaluation
+
+
+expr-in-expr : (expr -> expr) -> type.
+
+
+expr-in-expr/add1 : expr-in-expr ([E] (add E _)).
+
+expr-in-expr/add2 : expr-in-expr ([E] (add unit E)).
+
+
+%%% ready for atomic evaluation
+
+
+atomic-expr : expr -> type.
+
+
+atomic-expr/add : atomic-expr (add unit unit).
+
+
+%% this "theorem" is actually false
+
+%theorem expr-in-atomic-expr-contradiction :
+	forall* {E} {T}
+	forall {AE:atomic-expr (T E)}
+               {Tok:expr-in-expr T}
+	exists {F:void}
+	true.
+
+%worlds () (expr-in-atomic-expr-contradiction _ _ _).
+%total { } (expr-in-atomic-expr-contradiction _ _ _).
+```
+
+### Broken Invariant in Coverage Checker
+
+Apparently (I learned of this problem from Rob Simmons), the coverage checker
+sometimes reports a broken invariant when checking code that
+uses the explicit-context idiom.  This problem is not well understood, but manifests itself in several examples from the wiki, including [Concrete representation](/wiki/concrete-representation/) and [Tethered modal logic](/wiki/tethered-modal-logic/).
+
+### Coverage checker checking with functions of type A -&gt; A when A is not subordinate to itself.
+
+If the coverage check, when expanding cases comes upon a term that might depend on a formal
+parameter of the same type, it will require a case that handles such a function, even if the
+type in question in not subordinate to itself.  Such a case normally cannot be written because of freezing.
+(Example to come later).
+
+### Higher-Order Blocks
+
+Again, I learned of this problem from Rob Simmons:
+If a "block" includes a higher order function, then the coverage checker doesn't work.
+No example yet.  This bug is considered low-priority.
+
+### Not a block
+
+If you use the name of something that is not a block
+where a block is expected:
+
+    %worlds (nat) (foo _ _ _).
+
+then there is an "uncaught exception" rather than a helpful error message.
+
+### Theorem Prover Nontermination
+
+The prover sometimes fails to terminate.
+See example in
+[http://cs.nju.edu.cn/boyland/proof/using-twelf.html my tutorial] (Section 2.3)
+I have copied it here for completeness:
+
+```twelf
+%%% Example of Twelf from "using-twelf" paper
+
+term : type.
+
+true : term.
+false : term.
+if : term -> term -> term -> term.
+zero : term.
+
+ty : type.
+
+bool : ty.
+int : ty.
+
+
+%% relations
+is_value : term -> type.
+
+is_value/true : is_value true.
+is_value/false : is_value false.
+is_value/zero : is_value zero.
+
+eval : term -> term -> type.
+
+eval/if_true : eval (if true X _) X.
+eval/if_false : eval (if false _ X) X.
+eval/if : eval (if E E1 E2) (if E' E1 E2)
+    <- eval E E'.
+
+not_stuck : term -> type.
+
+not_stuck/value : not_stuck X <- is_value X.
+not_stuck/eval : not_stuck X <- eval X X'.
+
+of : term -> ty -> type.
+
+of/true : of true bool.
+of/false : of false bool.
+of/zero : of zero int.
+of/if : of X bool -> of Y T -> of Z T -> of (if X Y Z) T.
+
+%% theorems
+
+progress : (of X T) -> (not_stuck X) -> type.
+%mode progress +D1 -D2.
+%prove 2 T (progress T _).
+```
+
+The theorem prover is deprecated in Twelf, and fixing this bug is not required before producing
+a new release of Twelf.
+
+## Challenges
+
+### Is HOAS countable?
+
+A challenge: define a mapping from HOAS to the natural numbers (or equivalently to a nameless term representation) and then prove that the mapping is isomorphic _using Twelf_.  For details and sample mappings, see question on the Twelf Elf page: [Talk:Ask_Twelf_Elf#Mapping_HOAS_isomorphically_to_the_natural_numbers](/wiki/talk-ask-twelf-elf/).
+
+Update: [Rob](/wiki/user-rsimmons/) has posted a solution ([Concrete_representation](/wiki/concrete-representation/)) that defines a mapping between HOAS and nameless terms and proves that it is bijective.
+(I asked for an "isomorphic" mapping between HOAS and natural numbers, but should have said "bijective mapping.")  Thanks Rob!
+
+My personal challenge is to write a general technique for generating bijective mappings (with proof) between many kinds of terms and natural numbers.
+In general, of course, this would be undecidable. I hope only to handle cases that are used as AST types.
+
+Update: I did it for a simple HOAS before POPL 2008
+(see [HOAS nat bijection](/wiki/hoas-nat-bijection/)), and in May 2008, finished a more complex
+example [Indexed HOAS nat bijection](/wiki/indexed-hoas-nat-bijection/) that handle an indexed term language.
+
+Success: I have implemented a bijection generator. See http://www.cs.uwm.edu/~boyland/papers/map-natural.html
+
+:: Cool! — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 02:08, 12 December 2010 (EST) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Boyland).
+!}%

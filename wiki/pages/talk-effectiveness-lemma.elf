@@ -1,0 +1,24 @@
+%%! title: "Talk:Effectiveness lemma"
+
+%{! Why "effectiveness" rather than "totality" ?  As far as I can tell, proving "effectiveness" is the same
+as proving totality at the meta-leval. [Boyland](/wiki/user-boyland/) 22:41, 25 February 2007 (EST)
+
+: I think it just dates back to some choices made in the Typed Assembly Language Two formalization. I think we thought that calling it a "totality lemma" would just cause confusion of a different sort, not that effectiveness is an obvious alternative by any means. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 23:40, 25 February 2007 (EST)
+
+This sentence is pretty confusing: "Proving an effectiveness lemma essentially establishes the same fact that a %total directive does, but does so in a way that can be used by other metatheorems." You use %total to prove any metatheorem, and any lemma so proved can be used by other metatheorems.
+
+An effectiveness lemma says that some relation is in fact an algorithm (hence "effective"), and returns for any inputs a derivation of the relation which witnesses that fact. [User:JakeD](/wiki/user-jaked/) 00:33, 26 February 2007 (EST)
+
+: I mean, that works for me too :) — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 01:04, 26 February 2007 (EST)
+:: I edited it to try to simplify. We definitely should not lead with confusing stuff about metatheorems (since that is hard to wrap ones head around, especially given all the different takes on what a metatheorem is!), but a section in this article about its relationship to [``%total``](/wiki/percent-total/) is warranted, I think, because it is an obvious question. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 09:33, 26 February 2007 (EST)
+
+: I think language that connects "effectivenss" with totality is warranted.  I don't see it in the article any more. There needs to be something on the order of "Proving an effectivessness lemma for a relation essentially establishes the same fact that a %total directive does for the relation, but does so in a way that the totality itself is named and can be used in proofs."  Otherwise people will wonder.  Also, personally (as an outsider), I find it annoying that one basically has to restate the entire definition of the relation in order to prove meta-totality ("effectivessness"), but Twelf's own wiki doesn't need to reflect my biased opinions. [Boyland](/wiki/user-boyland/) 21:03, 26 February 2007 (EST)
+
+:: I agree: effectiveness lemmas are just a workaround for limitations of Twelf.  When you do a %total for, say, plus, Twelf proves "for all N1, N2, there exists an N3 and D:plus N1 N2 N3".   When you do a %total for plus-effective, Twelf proves "for all N1, N2, there exist N3 and D:plus N1 N2 N3 and D':plus-effective N1 N2 N3 D D'".   The only reason to do this is to work around the fact that Twelf won't let you name the output of a subgoal.  [Drl](/wiki/user-drl/) 12:09, 1 March 2007 (EST) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Effectiveness_lemma).
+!}%

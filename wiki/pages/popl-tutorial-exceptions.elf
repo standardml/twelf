@@ -1,0 +1,368 @@
+%%! title: "POPL Tutorial/Exceptions"
+
+%{! 
+
+Type safety for MinML: call-by-value, with recursive functions, in extrinsic form, with exceptions
+
+## Syntax
+
+Types:
+
+!}%
+
+tp : type.				%name tp T.
+nat : tp.
+arr : tp -> tp -> tp.
+
+%{! 
+
+Raw expressions, which admit ill-typed terms
+
+!}%
+
+exp : type.				%name exp E.
+z : exp.
+s : exp -> exp.
+ifz : exp -> exp -> (exp -> exp) -> exp.
+fun : tp -> tp -> (exp -> exp -> exp) -> exp.
+app : exp -> exp -> exp.
+raise : tp -> exp.
+handle : exp -> exp -> exp. 
+
+%{! 
+
+## Static semantics
+
+A judgement picking out the well-typed terms:
+
+!}%
+
+of : exp -> tp -> type.			%name of Dof.
+%mode of +E -T.
+
+of/z
+   : of z nat.
+of/s
+   : of (s E) nat <- of E nat.
+of/ifz
+   : of (ifz E E1 ([x] E2 x)) T
+      <- of E nat
+      <- of E1 T
+      <- ({x:exp} of x nat -> of (E2 x) T).
+of/fun
+   : of (fun T1 T2 ([f] [x] E f x)) (arr T1 T2)
+      <- ({f:exp} of f (arr T1 T2) -> {x:exp} of x T1 -> of (E f x) T2).
+of/app
+   : of (app E1 E2) T
+      <- of E1 (arr T2 T)
+      <- of E2 T2.
+of/raise
+   : of (raise T) T.
+of/handle
+   : of (handle E1 E2) T
+      <- of E1 T
+      <- of E2 T. 
+
+%{! 
+
+## Dynamic semantics
+
+!}%
+
+value : exp -> type.			%name value Dval.
+%mode value +E.
+
+value/z : value z.
+value/s : value (s E) <- value E.
+value/fun : value (fun _ _ _).
+
+raises : exp -> type.
+%mode raises +E.
+
+raises/raise   
+   : raises (raise T).
+raises/app/fun
+   : raises (app E1 E2)
+      <- raises E1.
+raises/app/arg
+   : raises (app E1 E2)
+      <- value E1 
+      <- raises E2.
+raises/s
+   : raises (s E)
+      <- raises E.
+raises/ifz
+   : raises (ifz E1 E2 E3)
+      <- raises E1. 
+
+step : exp -> exp -> type.		%name step Dstep.
+%mode step +E1 -E2.
+
+step/s
+   : step (s E) (s E') <- step E E'.
+step/ifz/arg
+   : step (ifz E E1 ([x] E2 x)) (ifz E' E1 ([x] E2 x))
+      <- step E E'.
+step/ifz/z
+   : step (ifz z E1 ([x] E2 x)) E1.
+step/ifz/s
+   : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
+      <- value E.
+step/app/fun
+   : step (app E1 E2) (app E1' E2)
+      <- step E1 E1'.
+step/app/arg
+   : step (app E1 E2) (app E1 E2')
+      <- value E1 <- step E2 E2'.
+step/app/beta-v
+   : step
+      (app (fun T1 T2 ([f] [x] E f x)) E2)
+      (E (fun T1 T2 ([f] [x] E f x)) E2)
+      <- value E2.
+step/handle/body
+   : step
+      (handle E1 E2)
+      (handle E1' E2)
+      <- step E1 E1'.
+step/handle/raise
+   : step
+      (handle E1 E2)
+      E2
+      <- raises E1. 
+step/handle/body-v
+   : step
+      (handle E1 E2)
+      E1
+      <- value E1. 
+
+%{! 
+
+## Preservation
+
+With this encoding, we have to prove preservation explicitly, as the
+type of ``step`` doesn't guarantee it.
+
+!}%
+
+pres : step E E' -> of E T -> of E' T -> type. %name pres Dpres.
+%mode pres +Dstep +Dof -Dof.
+
+- : pres
+     (step/s Dstep)
+     (of/s Dof)
+     (of/s Dof')
+     <- pres Dstep Dof Dof'.
+
+- : pres
+     (step/ifz/arg Dstep)
+     (of/ifz ([x] [dx] Dof2 x dx) Dof1 Dof)
+     (of/ifz ([x] [dx] Dof2 x dx) Dof1 Dof')
+     <- pres Dstep Dof Dof'.
+
+- : pres
+     step/ifz/z
+     (of/ifz _ Dof1 _)
+     Dof1.
+
+- : pres
+     (step/ifz/s (_ : value E))
+     (of/ifz ([x] [dx] Dof2 x dx) _ (of/s Dof))
+     (Dof2 E Dof).
+
+- : pres
+     (step/app/fun Dstep1)
+     (of/app Dof2 Dof1)
+     (of/app Dof2 Dof1')
+     <- pres Dstep1 Dof1 Dof1'.
+
+- : pres
+     (step/app/arg Dstep2 _)
+     (of/app Dof2 Dof1)
+     (of/app Dof2' Dof1)
+     <- pres Dstep2 Dof2 Dof2'.
+
+- : pres
+     (step/app/beta-v _)
+     (of/app
+	Dof2
+	(of/fun [f] [df] [x] [dx] (Dof1 f df x dx)))
+     (Dof1
+	_
+	(of/fun [f] [df] [x] [dx] (Dof1 f df x dx))
+	_
+	Dof2).
+
+- : pres 
+     (step/handle/body Dstep)
+     (of/handle Dof2 Dof1)
+     (of/handle Dof2 Dof1')
+     <- pres Dstep Dof1 Dof1'.
+
+- : pres
+     (step/handle/raise Draise)
+     (of/handle Dof2 Dof1)
+     Dof2.
+
+- : pres
+     (step/handle/body-v Dval)
+     (of/handle Dof2 Dof1)
+     Dof1.
+
+%worlds () (pres Dstep Dof Dof').
+%total Dstep (pres Dstep _ _).
+
+%{! 
+
+## Progress
+
+!}%
+
+val-or-raises-or-step : exp -> type.		%name val-or-raises-or-step Dvrs.
+vrs/val : val-or-raises-or-step E <- value E.
+vrs/step : val-or-raises-or-step E <- step E _.
+vrs/raises : val-or-raises-or-step E <- raises E. 
+%{! 
+
+### [Factoring lemmas](/wiki/output-factoring/)
+
+!}%
+
+prog/s
+   : val-or-raises-or-step E -> val-or-raises-or-step (s E) -> type.
+%mode prog/s +Dvrs1 -Dvrs2.
+
+- : prog/s
+     (vrs/step Dstep)
+     (vrs/step (step/s Dstep)).
+
+- : prog/s
+     (vrs/val Dval)
+     (vrs/val (value/s Dval)).
+
+- : prog/s
+     (vrs/raises Draises)
+     (vrs/raises (raises/s Draises)).
+
+%worlds () (prog/s _ _).
+%total {} (prog/s _ _).
+
+prog/ifz
+   :  of E nat
+      -> val-or-raises-or-step E
+      -> {E1} {E2} (val-or-raises-or-step (ifz E E1 ([x] E2 x)))
+      -> type.
+%mode prog/ifz +Dof +Dvrs +E1 +E2 -Dstep.
+
+- : prog/ifz _ (vrs/step Dstep) _ _ (vrs/step (step/ifz/arg Dstep)).
+- : prog/ifz _ (vrs/val value/z) _ _ (vrs/step step/ifz/z).
+- : prog/ifz _ (vrs/val (value/s Dval)) _ _ (vrs/step (step/ifz/s Dval)).
+- : prog/ifz _ (vrs/raises Draises) _ _ (vrs/raises (raises/ifz Draises)).
+%worlds () (prog/ifz _ _ _ _ _).
+%total {} (prog/ifz _ _ _ _ _).
+
+prog/app
+   : of E1 (arr T2 T)
+      -> val-or-raises-or-step E1
+      -> val-or-raises-or-step E2
+      -> val-or-raises-or-step (app E1 E2)
+      -> type.
+%mode prog/app +Dof +Dvrs1 +Dvrs2 -Dstep.
+
+- : prog/app
+     _
+     (vrs/step Dstep1)
+     _
+     (vrs/step (step/app/fun Dstep1)).
+
+- : prog/app
+     _
+     (vrs/val Dval1)
+     (vrs/step Dstep2)
+     (vrs/step (step/app/arg Dstep2 Dval1)).
+
+- : prog/app
+     _
+     (vrs/val Dval1)
+     (vrs/val Dval2)
+     (vrs/step (step/app/beta-v Dval2)).
+
+- : prog/app
+     _
+     (vrs/raises Draise1)
+     _
+     (vrs/raises (raises/app/fun Draise1)).
+
+- : prog/app
+     _
+     (vrs/val Dval1)
+     (vrs/raises Draise2)
+     (vrs/raises (raises/app/arg Draise2 Dval1)).
+
+%worlds () (prog/app _ _ _ _).
+%total {} (prog/app _ _ _ _).
+
+prog/handle
+   : val-or-raises-or-step E1
+      -> {E2} val-or-raises-or-step (handle E1 E2)
+      -> type.
+%mode prog/handle +Dvrs1 +E2 -Dvrs2.
+
+- : prog/handle (vrs/val Dval) _
+     (vrs/step (step/handle/body-v Dval)).
+
+- : prog/handle (vrs/raises Draise) _
+     (vrs/step (step/handle/raise Draise)).
+
+- : prog/handle (vrs/step Dstep) _
+     (vrs/step (step/handle/body Dstep)).
+
+%worlds () (prog/handle _ _ _).
+%total {} (prog/handle _ _ _). 
+   
+%{! 
+
+### Main theorem
+
+!}%
+
+prog : of E T -> val-or-raises-or-step E -> type. %name prog Dprog.
+%mode prog +Dof -Dvrs.
+
+- : prog of/z (vrs/val value/z).
+
+- : prog (of/s Dof) Dvrs'
+     <- prog Dof Dvrs
+     <- prog/s Dvrs Dvrs'.
+
+- : prog (of/ifz ([x] [dx] Dof2 x dx) Dof1 Dof) Dvrs'
+     <- prog Dof Dvrs
+     <- prog/ifz Dof Dvrs _ _ Dvrs'.
+
+- : prog (of/fun _) (vrs/val value/fun).
+
+- : prog (of/app Dof2 Dof1) Dvrs3
+     <- prog Dof1 Dvrs1
+     <- prog Dof2 Dvrs2
+     <- prog/app Dof1 Dvrs1 Dvrs2 Dvrs3.
+
+- : prog (of/handle Dof2 Dof1) Dvrs2
+     <- prog Dof1 Dvrs1
+     <- prog/handle Dvrs1 _ Dvrs2.
+
+- : prog of/raise (vrs/raises raises/raise).
+
+%worlds () (prog _ _).
+%total Dof (prog Dof _).
+
+%{! 
+
+And thus we have proved type safety for minml with exceptions!
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Exceptions).
+!}%

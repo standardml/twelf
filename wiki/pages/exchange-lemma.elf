@@ -1,0 +1,75 @@
+%%! title: "Exchange lemma"
+%%! tags: ["tutorial"]
+
+%{! **Exchange** is the property of a hypothetical judgment that if <Math formula="\Gamma, A, B \vdash J"/>, then <Math formula="\Gamma, B, A \vdash J"/> (assuming A and B are independent hypotheses).  
+
+Often, we represent an an object-language hypothetical judgement by [using LF binding to model hypotheses](/wiki/higher-order-judgements/).  When a judgement is represented in such a fashion, exchange comes "for free" from the LF representation.  In particular, we can exchange hypotheses by re-arranging the order of the lambdas in a derivation.
+
+For example, consider the following simply typed λ-calculus: !}%
+    
+%% Syntax
+
+tp : type.
+ 
+tp/unit  : tp.
+tp/arrow : tp -> tp -> tp.
+ 
+exp : type.
+ 
+exp/unit : exp.
+exp/lam  : tp -> (exp -> exp) -> exp.
+exp/app  : exp -> exp -> exp.
+
+
+%% Typing 
+
+of : exp -> tp -> type.
+ 
+of/unit : of exp/unit tp/unit.
+ 
+of/lam  : of (exp/lam T E) (tp/arrow T T')
+           <- ({x:exp} of x T
+                -> of (E x) T').
+ 
+of/app  : of (exp/app E1 E2) T'
+           <- of E2 T
+           <- of E1 (tp/arrow T T').
+
+%{! Object-language typing is a hypothetical judgement; we represent it using LF variables to model hypotheses (see \{\{proving|title=Representing the judgements of the STLC\}\} for more discussion of this representation). 
+
+We can prove exchange for this judgement as follows: !}%
+
+exchange : ({x:exp}{dx:of x T}{y:exp}{dy:of y T'} of (E x y) T'')
+            -> ({y:exp}{dy:of y T'}{x:exp}{dx:of x T} of (E x y) T'')
+            -> type.
+%mode exchange +D1 -D2.
+
+- : exchange ([x][dx:of x T][y][dy:of y T'] D1 x dx y dy) 
+             ([y][dy:of y T'][x][dx:of x T] D1 x dx y dy).
+
+%block of-block : some {T:tp} block {x:exp}{dx:of x T}.
+%worlds (of-block) (exchange _ _).
+%total {} (exchange _ _).
+
+%{! The proof simply permutes the LF lambdas.
+
+In practice, it is rare for exchange to be proven and used as a metatheorem. Instead, exchange is inlined by  manipulating LF lambdas in the appropriate way. 
+
+It is common to use exchange in an inductive case for a constant with a higher-order premise.
+For example, in the [substitution lemma](/wiki/substitution-lemma/) article, exchange is used in the next-to-last case in the section [Substitution lemmas with a "var" rule](/wiki/substitution-lemma/#substitution-lemmas-with-a-var-rule). The exchange property is used there when ``x``, ``dx`` and ``y``, ``dy`` must be re-ordered to fit the correct sub-goal:
+
+```twelf    
+- : subst D1 ([x][dx] of/lam ([y][dy] D2 x dx y dy)) (of/lam D2')
+     <- ({y}{dy} subst D1 ([x][dx] D2 x dx y dy) (D2' y dy)).
+```
+
+## See also
+
+* [Weakening lemma](/wiki/weakening-lemma/)
+* [Substitution lemma](/wiki/substitution-lemma/)
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+You can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Exchange_lemma).
+!}%

@@ -1,0 +1,26 @@
+%%! title: "The Twelf Project:AJALF"
+
+%{! **AJALF** is the technology used to power [Twelf Live](/wiki/twelf-live/) and the [[Project:TwelfTag#Quick_check|Quick Twelf Check]] button. It stands for "Asynchronous Javascript and LF."
+
+## Quick check
+
+Quick check is implemented as a MediaWiki extension (extensions/AJALF.php) that introduces a new tag, &lt;nowiki&gt;&lt;ajalf&gt;...&lt;/ajalf&gt;&lt;/nowiki&gt;. The tag adds a button
+
+:&lt;ajalf&gt;(unused)&lt;/ajalf&gt;
+
+which gleans twelf code from the edit window and passes it to the Twelf server (currently at ``/tomtest.php``). The button only works on edit pages, so there is no reason to ever use this tag outside the editor interface. It is included in the interface via a customization of the [MediaWiki:Copyrightwarning](/wiki/mediawiki-copyrightwarning/) string.
+
+
+## Bugs and issues
+* Quick check does not support any of the [[Project:TwelfTag|TwelfTag]] parameters.
+* The output of Quick check appears to escape apostrophes for some reason.
+* The layout of the close and info buttons is terrible.
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:AJALF).
+!}%

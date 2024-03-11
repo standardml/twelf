@@ -1,0 +1,1029 @@
+%%! title: "Correctness of mergesort"
+
+%{! 
+This is an extended example of a proof of correctness of mergesort for lists without duplicates. In particular, it is an example of showing that an implementation of sorting (mergesort) matches up with a declarative definition that relates a list to its sort (i.e. the sorted list is a permutation of the unsorted list). 
+!}%
+
+
+%{! 
+### Definitions
+
+#### Declarative definitions
+
+We must first define natural numbers, lists of natural numbers, comparison on natural numbers, and what it means for one list to be the sorted version of another.
+!}%
+
+nat : type.
+
+z : nat.
+s : nat -> nat.
+
+
+
+nat-less	: nat -> nat -> type.
+
+nat-less/z	: nat-less z (s _).
+
+nat-less/s	: nat-less (s N) (s N')
+		   <- nat-less N N'. 
+
+
+nat-list	: type. 
+
+nat-list/nil	: nat-list.
+
+nat-list/cons	: nat -> nat-list -> nat-list. 
+
+
+
+nat-list-head-less	: nat -> nat-list -> type. 
+
+nat-list-head-less/nil	: nat-list-head-less N nat-list/nil. 
+
+nat-list-head-less/cons	: nat-list-head-less N (nat-list/cons N' _)
+			   <- nat-less N N'. 
+
+
+nat-list-sorted	: nat-list -> type. 
+
+nat-list-sorted/nil	: nat-list-sorted nat-list/nil.
+
+nat-list-sorted/cons	: nat-list-sorted (nat-list/cons N NL)
+			   <- nat-list-head-less N NL
+			   <- nat-list-sorted NL. 
+
+
+
+in-nat-list	: nat -> nat-list -> type. 
+
+in-nat-list/hit	: in-nat-list N (nat-list/cons N NL).
+
+in-nat-list/miss: in-nat-list N (nat-list/cons N' NL)
+		   <- in-nat-list N NL. 
+
+all-in-nat-list	: nat-list -> nat-list -> type. 
+
+all-in-nat-list/nil	: all-in-nat-list nat-list/nil NL. 
+
+all-in-nat-list/cons	: all-in-nat-list (nat-list/cons N NL) NL'
+			   <- in-nat-list N NL'
+			   <- all-in-nat-list NL NL'. 
+
+
+%{! 
+For the purposes of this proof, we use a set-theoretic extensional definition of permutation, where two lists are permutations of each other if they contain the same set of elements. This is only a proper definition of permutation if we assume both lists contain no duplicates. This invariant is baked into both our definition of sorted and our definition of mergesort. 
+!}%
+
+nat-list-permute	: nat-list -> nat-list -> type. 
+
+nat-list-permute/i	: nat-list-permute NL NL'
+			   <- all-in-nat-list NL NL'
+			   <- all-in-nat-list NL' NL. 
+
+
+
+nat-list-declarative-sort	: nat-list -> nat-list -> type. 
+
+nat-list-declarative-sort/i	: nat-list-declarative-sort NL NL'
+				   <- nat-list-permute NL NL'
+				   <- nat-list-sorted NL'.
+
+%{! 
+#### Definitions used to define mergesort
+!}%
+
+split	: nat-list -> nat-list -> nat-list -> type. 
+
+split/nil	: split nat-list/nil nat-list/nil nat-list/nil.
+
+split/1		: split (nat-list/cons N nat-list/nil) (nat-list/cons N nat-list/nil) 
+		   nat-list/nil.
+
+split/cons	: split (nat-list/cons N (nat-list/cons N' NL))
+		   (nat-list/cons N NL1)
+		   (nat-list/cons N' NL2)
+		   <- split NL NL1 NL2.
+
+
+merge	: nat-list -> nat-list -> nat-list -> type. 
+
+merge/nil-1	: merge nat-list/nil N N. 
+
+merge/nil-2	: merge (nat-list/cons N NL) nat-list/nil (nat-list/cons N NL). 
+
+merge/cons-1	: merge (nat-list/cons N1 NL1)
+		   (nat-list/cons N2 NL2) 
+		   (nat-list/cons N1 NL)
+		   <- nat-less N1 N2
+		   <- merge NL1 (nat-list/cons N2 NL2) NL.
+
+merge/cons-2	: merge (nat-list/cons N1 NL1)
+		   (nat-list/cons N2 NL2) 
+		   (nat-list/cons N2 NL)
+		   <- nat-less N2 N1
+		   <- merge NL2 (nat-list/cons N1 NL1) NL.
+
+mergesort	: nat-list -> nat-list -> type. 
+
+mergesort/nil	: mergesort nat-list/nil nat-list/nil. 
+
+mergesort/1	: mergesort (nat-list/cons N nat-list/nil) 
+		   (nat-list/cons N nat-list/nil). 
+
+mergesort/cons	: mergesort NL1 NL2
+		   <- split NL1 NLA NLB
+		   <- mergesort NLA NLA'
+		   <- mergesort NLB NLB'
+		   <- merge NLA' NLB' NL2. 
+
+%{! ### Helper definitions used in proofs
+
+``all-in-2 N1 N2 N3`` is a judgment that holds when all the elements in ``N1`` are in the union of ``N1`` and ``N2``/
+
+!}%
+
+% all-in-2 N1 N2 N3, everything in N1 is either in N2 or N3
+
+all-in-2	:  nat-list -> nat-list -> nat-list -> type. 
+
+all-in-2/nil	: all-in-2 nat-list/nil NL1 NL2. 
+
+all-in-2/cons-1	: all-in-2 (nat-list/cons N NL) NL1 NL2
+		   <- in-nat-list N NL1
+		   <- all-in-2 NL NL1 NL2.
+
+all-in-2/cons-2	: all-in-2 (nat-list/cons N NL) NL1 NL2
+		   <- in-nat-list N NL2
+		   <- all-in-2 NL NL1 NL2.
+
+%{! ### Proof that mergesort returns a sorted result !}%
+
+nat-less-trans	: nat-less N1 N2
+		   -> nat-less N2 N3
+		   -> nat-less N1 N3
+		   -> type.
+%mode nat-less-trans +D1 +D2 -D3.
+
+-	: nat-less-trans nat-less/z D1 nat-less/z.
+
+-	: nat-less-trans (nat-less/s D1) (nat-less/s D2) (nat-less/s D3)
+	   <- nat-less-trans D1 D2 D3.
+
+%worlds () (nat-less-trans _ _ _).
+%total (D1) (nat-less-trans D1 _ _). 
+
+
+
+merge-head-less	: nat-list-head-less N NL
+		   -> nat-less N N'
+		   -> merge NL (nat-list/cons N' NL') NL''
+		   -> nat-list-head-less N NL''
+		   -> type.
+%mode merge-head-less +D1 +D2 +D3 -D4.
+
+
+-	: merge-head-less _ DL merge/nil-1 (nat-list-head-less/cons DL).
+
+-	: merge-head-less _ DL (merge/cons-2 _ _)
+	   (nat-list-head-less/cons DL).
+
+-	: merge-head-less (nat-list-head-less/cons DL) _
+	   (merge/cons-1 _ _)
+	   (nat-list-head-less/cons DL). 
+
+
+%worlds () (merge-head-less _ _  _ _).
+%total (D1) (merge-head-less _ _ D1 _).
+
+
+merge-sorted	: nat-list-sorted NL1
+		   -> nat-list-sorted NL2
+		   -> merge NL1 NL2 NL3
+		   -> nat-list-sorted NL3
+		   -> type.
+%mode merge-sorted +D1 +D2 +D3 -D4.
+
+-	: merge-sorted _ D1 merge/nil-1 D1.
+
+-	: merge-sorted D1 _ merge/nil-2 D1.
+
+-	: merge-sorted (nat-list-sorted/cons D1 DHL) D2 
+	   (merge/cons-1 DM DL)
+	   (nat-list-sorted/cons DS DHL')
+	   <- merge-head-less DHL DL DM DHL'
+	   <- merge-sorted D1 D2 DM DS.
+
+-	: merge-sorted D2 (nat-list-sorted/cons D1 DHL)
+	   (merge/cons-2 DM DL)
+	   (nat-list-sorted/cons DS DHL')
+	   <- merge-head-less DHL DL DM DHL'
+	   <- merge-sorted D1 D2 DM DS.
+
+%worlds () (merge-sorted _ _ _ _).
+%total (D1) (merge-sorted _ _ D1 _).
+
+
+mergesort-sorted	: mergesort NL NL'
+			   -> nat-list-sorted NL'
+			   -> type.
+%mode mergesort-sorted +D1 -D2.
+
+-	: mergesort-sorted mergesort/nil nat-list-sorted/nil.
+
+-	: mergesort-sorted mergesort/1 (nat-list-sorted/cons nat-list-sorted/nil nat-list-head-less/nil).
+
+-	: mergesort-sorted (mergesort/cons DM D2 D1 _) DS
+	   <- mergesort-sorted D1 DS1
+	   <- mergesort-sorted D2 DS2
+	   <- merge-sorted DS1 DS2 DM DS.
+
+%worlds () (mergesort-sorted _ _). 
+%total (D1) (mergesort-sorted D1 _).
+
+
+
+%{! ### Proof that mergesort returns a permutation of the input !}%
+
+all-in-2-wkn-l	: {N}
+		   all-in-2 NL NA NB
+		   -> all-in-2 NL (nat-list/cons N NA) NB
+		   -> type. 
+%mode all-in-2-wkn-l +D1 +D2 -D3.
+
+-	: all-in-2-wkn-l _ all-in-2/nil all-in-2/nil.
+
+-	: all-in-2-wkn-l _ (all-in-2/cons-1 DHL DIN)
+	   (all-in-2/cons-1 DHL' (in-nat-list/miss DIN))
+	   <- all-in-2-wkn-l _ DHL DHL'. 
+
+-	: all-in-2-wkn-l _ (all-in-2/cons-2 DHL DIN)
+	   (all-in-2/cons-2 DHL' DIN)
+	   <- all-in-2-wkn-l _ DHL DHL'. 
+
+%worlds () (all-in-2-wkn-l _ _ _).
+%total (D1) (all-in-2-wkn-l _ D1 _). 
+
+
+
+all-in-2-wkn-r	: {N}
+		   all-in-2 NL NA NB
+		   -> all-in-2 NL NA (nat-list/cons N NB)
+		   -> type. 
+%mode all-in-2-wkn-r +D1 +D2 -D3.
+
+
+-	: all-in-2-wkn-r _ all-in-2/nil all-in-2/nil.
+
+-	: all-in-2-wkn-r _ (all-in-2/cons-2 DHL DIN)
+	   (all-in-2/cons-2 DHL' (in-nat-list/miss DIN))
+	   <- all-in-2-wkn-r _ DHL DHL'. 
+
+-	: all-in-2-wkn-r _ (all-in-2/cons-1 DHL DIN)
+	   (all-in-2/cons-1 DHL' DIN)
+	   <- all-in-2-wkn-r _ DHL DHL'. 
+
+%worlds () (all-in-2-wkn-r _ _ _).
+%total (D1) (all-in-2-wkn-r _ D1 _). 
+
+
+
+
+split-all-in-2	: split NL NA NB
+		   -> all-in-2 NL NA NB
+		   -> type. 
+%mode split-all-in-2 +D1 -D2.
+
+-	: split-all-in-2 split/nil all-in-2/nil.
+
+-	: split-all-in-2 split/1 
+	   (all-in-2/cons-1 all-in-2/nil in-nat-list/hit).
+
+-	: split-all-in-2 (split/cons DS1)
+	   (all-in-2/cons-1 
+	      (all-in-2/cons-2 DS1''' in-nat-list/hit) in-nat-list/hit)
+	   <- split-all-in-2 DS1 DS1'
+	   <- all-in-2-wkn-l _ DS1' DS1''
+	   <- all-in-2-wkn-r _ DS1'' DS1'''.
+
+%worlds () (split-all-in-2 _ _).
+%total (D1) (split-all-in-2 D1 _). 
+
+
+all-in-nat-list-wkn	: {N}
+			   all-in-nat-list NL NL'
+			   -> all-in-nat-list NL (nat-list/cons N NL')
+			   -> type. 
+%mode all-in-nat-list-wkn +D1 +D2 -D3.
+
+-	: all-in-nat-list-wkn _ all-in-nat-list/nil all-in-nat-list/nil.
+
+-	: all-in-nat-list-wkn _ (all-in-nat-list/cons DAS DIN)
+	   (all-in-nat-list/cons DAS' (in-nat-list/miss DIN))
+	   <- all-in-nat-list-wkn _ DAS DAS'.
+
+%worlds () (all-in-nat-list-wkn _ _ _). 
+%total (D1) (all-in-nat-list-wkn _ D1 _). 
+
+
+all-in-nat-list-refl	: {NL}
+			   all-in-nat-list NL NL
+			   -> type. 
+%mode all-in-nat-list-refl +D1 -D2. 
+
+-	: all-in-nat-list-refl _ all-in-nat-list/nil.
+
+-	: all-in-nat-list-refl (nat-list/cons _ NL)
+	   (all-in-nat-list/cons DHL' in-nat-list/hit)
+	   <- all-in-nat-list-refl NL DHL
+	   <- all-in-nat-list-wkn _ DHL DHL'.
+
+%worlds () (all-in-nat-list-refl _ _).
+%total (D1) (all-in-nat-list-refl D1 _). 
+
+
+merge-all-in	: merge NLA NLB NL
+		   -> all-in-nat-list NLA NL
+		   -> all-in-nat-list NLB NL
+		   -> type.
+%mode merge-all-in +D1 -D2 -D3.
+
+-	: merge-all-in merge/nil-1 all-in-nat-list/nil D1
+	   <- all-in-nat-list-refl _ D1.
+
+-	: merge-all-in merge/nil-2 D1 all-in-nat-list/nil
+	   <- all-in-nat-list-refl _ D1. 
+
+-	: merge-all-in (merge/cons-1 DM1 DL)
+	   (all-in-nat-list/cons DHL1' in-nat-list/hit)
+	   DHL2'
+	   <- merge-all-in DM1 DHL1 DHL2
+	   <- all-in-nat-list-wkn _ DHL1 DHL1'
+	   <- all-in-nat-list-wkn _ DHL2 DHL2'. 
+
+-	: merge-all-in (merge/cons-2 DM1 DL)
+	   DHL1'
+	   (all-in-nat-list/cons DHL2' in-nat-list/hit)
+	   <- merge-all-in DM1 DHL2 DHL1
+	   <- all-in-nat-list-wkn _ DHL1 DHL1'
+	   <- all-in-nat-list-wkn _ DHL2 DHL2'. 
+
+
+%worlds () (merge-all-in _ _ _). 
+%total (D1) (merge-all-in D1 _ _). 
+
+
+
+in-nat-list-trans	: in-nat-list N NL
+			   -> all-in-nat-list NL NL'
+			   -> in-nat-list N NL'
+			   -> type. 
+%mode in-nat-list-trans +D1 +D2 -D3. 
+
+-	: in-nat-list-trans in-nat-list/hit
+	   (all-in-nat-list/cons _ D1) D1.
+
+-	: in-nat-list-trans (in-nat-list/miss D1)
+	   (all-in-nat-list/cons D _)
+	   D1'
+	   <- in-nat-list-trans D1 D D1'.
+
+%worlds () (in-nat-list-trans _ _ _). 
+%total (D1) (in-nat-list-trans D1 _ _). 
+
+
+all-in-2-trans	: all-in-2 NL NA NB
+		   -> all-in-nat-list NA NL'
+		   -> all-in-nat-list NB NL'
+		   -> all-in-nat-list NL NL'
+		   -> type. 
+%mode all-in-2-trans +D1 +D2 +D3 -D4. 
+
+-	: all-in-2-trans all-in-2/nil _ _ all-in-nat-list/nil.
+
+-	: all-in-2-trans (all-in-2/cons-1 DHL DIN) 
+	   DA DB
+	   (all-in-nat-list/cons DHL' DIN')
+	   <- all-in-2-trans DHL DA DB DHL'
+	   <- in-nat-list-trans DIN DA DIN'.
+
+-	: all-in-2-trans (all-in-2/cons-2 DHL DIN) 
+	   DA DB
+	   (all-in-nat-list/cons DHL' DIN')
+	   <- all-in-2-trans DHL DA DB DHL'
+	   <- in-nat-list-trans DIN DB DIN'.
+
+%worlds () (all-in-2-trans _ _ _ _).
+%total (D1) (all-in-2-trans D1 _ _ _). 
+
+
+all-in-2-trans-a	: all-in-2 NL NA NB
+			   -> all-in-nat-list NA NA'
+			   -> all-in-nat-list NB NB'
+			   -> all-in-2 NL NA' NB'
+			   -> type. 
+%mode all-in-2-trans-a +D1 +D2 +D3 -D4. 
+
+-	: all-in-2-trans-a all-in-2/nil _ _ all-in-2/nil.
+
+-	: all-in-2-trans-a (all-in-2/cons-1 DHL DIN) 
+	   DA DB
+	   (all-in-2/cons-1 DHL' DIN')
+	   <- all-in-2-trans-a DHL DA DB DHL'
+	   <- in-nat-list-trans DIN DA DIN'.
+
+-	: all-in-2-trans-a (all-in-2/cons-2 DHL DIN) 
+	   DA DB
+	   (all-in-2/cons-2 DHL' DIN')
+	   <- all-in-2-trans-a DHL DA DB DHL'
+	   <- in-nat-list-trans DIN DB DIN'.
+
+%worlds () (all-in-2-trans-a _ _ _ _).
+%total (D1) (all-in-2-trans-a D1 _ _ _). 
+
+
+
+mergesort-all-in	: mergesort NL1 NL2
+			   -> all-in-nat-list NL1 NL2
+			   -> type. 
+%mode mergesort-all-in +D1 -D2. 
+
+-	: mergesort-all-in mergesort/nil all-in-nat-list/nil.
+
+-	: mergesort-all-in mergesort/1 (all-in-nat-list/cons all-in-nat-list/nil in-nat-list/hit).
+
+-	: mergesort-all-in (mergesort/cons Dmerge Dms2 Dms1 Dsplit)
+	   DHLtwo''
+	   <- split-all-in-2 Dsplit 
+	      (DHLtwo : all-in-2 NL NA NB)
+	   <- mergesort-all-in Dms1 
+	      (DHL1  : all-in-nat-list NA NA')
+	   <- mergesort-all-in Dms2 DHL2
+	   <- merge-all-in Dmerge DHL3 DHL4
+	   <- all-in-2-trans-a DHLtwo DHL1 DHL2 DHLtwo'
+	   <- all-in-2-trans DHLtwo' DHL3 DHL4 DHLtwo''.
+
+%worlds () (mergesort-all-in _ _).
+%total (D1) (mergesort-all-in D1 _).
+
+
+
+all-in-2-refl-r	: {NL} {NL'}
+		   all-in-2 NL NL' NL
+		   -> type. 
+%mode all-in-2-refl-r +D1 +D2 -D3.
+
+-	: all-in-2-refl-r _ _ all-in-2/nil.
+
+-	: all-in-2-refl-r (nat-list/cons N NL) _ 
+	   (all-in-2/cons-2 DHL' in-nat-list/hit)
+	   <- all-in-2-refl-r NL _ DHL
+	   <- all-in-2-wkn-r _ DHL DHL'.
+
+%worlds () (all-in-2-refl-r _ _ _).
+%total (D1) (all-in-2-refl-r D1 _ _). 
+
+
+
+all-in-2-refl-l	: {NL} {NL'}
+		   all-in-2 NL NL NL'
+		   -> type. 
+%mode all-in-2-refl-l +D1 +D2 -D3.
+
+-	: all-in-2-refl-l _ _ all-in-2/nil.
+
+-	: all-in-2-refl-l (nat-list/cons N NL) _ 
+	   (all-in-2/cons-1 DHL' in-nat-list/hit)
+	   <- all-in-2-refl-l NL _ DHL
+	   <- all-in-2-wkn-l _ DHL DHL'.
+
+%worlds () (all-in-2-refl-l _ _ _).
+%total (D1) (all-in-2-refl-l D1 _ _). 
+
+
+all-in-2-sym	: all-in-2 NL NA NB
+		   -> all-in-2 NL NB NA
+		   -> type. 
+%mode all-in-2-sym +D1 -D2. 
+
+-	: all-in-2-sym all-in-2/nil all-in-2/nil. 
+
+-	: all-in-2-sym (all-in-2/cons-1 DHL DIN) 
+	   (all-in-2/cons-2 DHL' DIN)
+	   <- all-in-2-sym DHL DHL'.
+
+-	: all-in-2-sym (all-in-2/cons-2 DHL DIN) 
+	   (all-in-2/cons-1 DHL' DIN)
+	   <- all-in-2-sym DHL DHL'.
+
+%worlds () (all-in-2-sym _ _).
+%total (D1) (all-in-2-sym D1 _).
+
+
+
+merge-all-in-2	: merge NA NB NL
+		   -> all-in-2 NL NA NB
+		   -> type. 
+%mode merge-all-in-2 +D1 -D2. 
+
+-	: merge-all-in-2 merge/nil-1  D1
+	   <- all-in-2-refl-r  _ _ D1.
+
+-	: merge-all-in-2 merge/nil-2  D1
+	   <- all-in-2-refl-l  _ _ D1.
+
+-	: merge-all-in-2 (merge/cons-1 DM _)
+	   (all-in-2/cons-1 DHL' in-nat-list/hit)
+	   <- merge-all-in-2 DM DHL
+	   <- all-in-2-wkn-l _ DHL DHL'. 
+
+-	: merge-all-in-2 (merge/cons-2 DM _)
+	   (all-in-2/cons-2 DHL'' in-nat-list/hit)
+	   <- merge-all-in-2 DM DHL
+	   <- all-in-2-wkn-l _ DHL DHL'
+	   <- all-in-2-sym DHL' DHL''. 
+
+%worlds () (merge-all-in-2 _ _). 
+%total (D1) (merge-all-in-2 D1 _). 
+
+
+
+split-all-in	: split NL NLA NLB
+		   -> all-in-nat-list NLA NL
+		   -> all-in-nat-list NLB NL
+		   -> type.
+%mode split-all-in +D1 -D2 -D3.
+
+-	: split-all-in split/nil all-in-nat-list/nil all-in-nat-list/nil.
+
+-	: split-all-in split/1 (all-in-nat-list/cons all-in-nat-list/nil in-nat-list/hit) all-in-nat-list/nil. 
+
+-	: split-all-in (split/cons DS)
+	   (all-in-nat-list/cons DHL'' in-nat-list/hit)
+	   (all-in-nat-list/cons DBL'' (in-nat-list/miss in-nat-list/hit))
+	   <- split-all-in DS DHL DBL
+	   <- all-in-nat-list-wkn _ DHL DHL'
+	   <- all-in-nat-list-wkn _ DHL' DHL''
+	   <- all-in-nat-list-wkn _ DBL DBL'
+	   <- all-in-nat-list-wkn _ DBL' DBL''.
+
+%worlds () (split-all-in _ _ _).
+%total (D1) (split-all-in D1 _ _). 
+
+
+
+mergesort-all-in-r	: mergesort NLA NLB
+			   -> all-in-nat-list NLB NLA
+			   -> type. 
+%mode mergesort-all-in-r +D1 -D2.
+
+-	: mergesort-all-in-r mergesort/nil all-in-nat-list/nil.
+
+-	: mergesort-all-in-r mergesort/1 (all-in-nat-list/cons all-in-nat-list/nil in-nat-list/hit).
+
+-	: mergesort-all-in-r (mergesort/cons Dmerge Dms2 Dms1 Dsplit)
+	   DHLtwo''
+	   <- merge-all-in-2 Dmerge
+	      (DHLtwo : all-in-2 NL NA NB)
+	   <- mergesort-all-in-r Dms1 
+	      (DHL1  : all-in-nat-list NA NA')
+	   <- mergesort-all-in-r Dms2 DHL2
+	   <- split-all-in Dsplit DHL3 DHL4
+	   <- all-in-2-trans-a DHLtwo DHL1 DHL2 DHLtwo'
+	   <- all-in-2-trans DHLtwo' DHL3 DHL4 DHLtwo''.
+
+%worlds () (mergesort-all-in-r _ _). 
+%total (D1) (mergesort-all-in-r D1 _). 
+
+
+
+mergesort-permute	: mergesort N1 N2
+			   -> nat-list-permute N1 N2
+			   -> type.
+%mode mergesort-permute +D1 -D2. 
+
+-	: mergesort-permute D1 (nat-list-permute/i DB DA)
+	   <- mergesort-all-in D1 DA
+	   <- mergesort-all-in-r D1 DB. 
+
+%worlds () (mergesort-permute _ _).
+%total {} (mergesort-permute _ _).
+
+
+%{! ### Final result
+Showing the final result merely requires composing the two big intermediate results, namely that mergesort produces a sorted output and that mergesort's output is a permutation of the input.
+
+!}%
+
+mergesort-correct	: mergesort N1 N2
+			   -> nat-list-declarative-sort N1 N2
+			   -> type. 
+%mode mergesort-correct +D1 -D2.
+
+-	: mergesort-correct D1 (nat-list-declarative-sort/i Dsorted Dpermute)
+	   <- mergesort-permute D1 Dpermute
+	   <- mergesort-sorted D1 Dsorted.
+
+%worlds () (mergesort-correct _ _).
+%total {} (mergesort-correct _ _). 
+
+
+%{! 
+
+----
+
+## Equivalence of definitions of permutations
+
+We can also show that ``nat-list-permute`` under the right constraints (implied by ``nat-list-sorted`` is equivalent to a definition of permutations as a composition of swaps.
+
+Note: Maybe this should be its own article?
+
+!}%
+
+
+all-in-nat-list-trans	: all-in-nat-list N1 N2
+			   -> all-in-nat-list N2 N3
+			   -> all-in-nat-list N1 N3
+			   -> type. 
+%mode all-in-nat-list-trans +D1 +D2 -D3. 
+
+-	: all-in-nat-list-trans all-in-nat-list/nil _ all-in-nat-list/nil.
+
+-	: all-in-nat-list-trans (all-in-nat-list/cons D2 D1) D3
+	   (all-in-nat-list/cons D5 D4)
+	   <- in-nat-list-trans D1 D3 D4
+	   <- all-in-nat-list-trans D2 D3 D5.
+
+%worlds () (all-in-nat-list-trans _ _ _).
+%total (D1) (all-in-nat-list-trans D1 _ _). 
+
+
+
+nat-list-permutes	: nat-list -> nat-list -> type. 
+
+nat-list-permutes/nil	: nat-list-permutes nat-list/nil nat-list/nil.
+
+nat-list-permutes/cons	: nat-list-permutes (nat-list/cons N1 NL)
+			   (nat-list/cons N1 NL')
+			   <- nat-list-permutes NL NL'.
+
+nat-list-permutes/swap	: nat-list-permutes 
+			   (nat-list/cons N1 (nat-list/cons N2 NL))
+			   (nat-list/cons N2 (nat-list/cons N1 NL)).
+
+nat-list-permutes/trans	: nat-list-permutes N1 N3
+			   <- nat-list-permutes N1 N2
+			   <- nat-list-permutes N2 N3.
+
+
+
+nat-list-permutes-all-in: nat-list-permutes N1 N2
+			   -> all-in-nat-list N1 N2
+			   -> type. 
+%mode nat-list-permutes-all-in +D1 -D2.
+
+-	: nat-list-permutes-all-in nat-list-permutes/nil
+	   all-in-nat-list/nil.
+
+-	: nat-list-permutes-all-in (nat-list-permutes/cons D1)
+	   (all-in-nat-list/cons D2' in-nat-list/hit)
+	   <- nat-list-permutes-all-in D1 D2
+	   <- all-in-nat-list-wkn _ D2 D2'.
+
+-	: nat-list-permutes-all-in nat-list-permutes/swap
+	   (all-in-nat-list/cons 
+	      (all-in-nat-list/cons D1'' in-nat-list/hit)
+	      (in-nat-list/miss in-nat-list/hit))
+	   <- all-in-nat-list-refl _ D1
+	   <- all-in-nat-list-wkn _ D1 D1'
+	   <- all-in-nat-list-wkn _ D1' D1''.
+
+-	: nat-list-permutes-all-in (nat-list-permutes/trans D2 D1) D3'
+	   <- nat-list-permutes-all-in D1 D1'
+	   <- nat-list-permutes-all-in D2 D2'
+	   <- all-in-nat-list-trans D1' D2' D3'. 
+
+%worlds () (nat-list-permutes-all-in _ _).
+%total (D1) (nat-list-permutes-all-in D1 _). 
+
+nat-neq	: nat -> nat -> type.
+
+nat-neq/l	: nat-neq N1 N2
+		   <- nat-less N1 N2.
+nat-neq/r	: nat-neq N1 N2
+		   <- nat-less N2 N1.  
+
+nin-nat-list	: nat -> nat-list -> type.
+
+nin-nat-list/nil	: nin-nat-list N1 nat-list/nil.
+
+nin-nat-list/cons	: nin-nat-list N1 (nat-list/cons N2 NL)
+			   <- nat-neq N1 N2
+			   <- nin-nat-list N1 NL.
+
+nat-list-no-dups	: nat-list -> type. 
+
+nat-list-no-dups/nil	: nat-list-no-dups nat-list/nil.
+
+nat-list-no-dups/cons	: nat-list-no-dups (nat-list/cons N1 NL)
+			   <- nin-nat-list N1 NL
+			   <- nat-list-no-dups NL.
+
+
+nat-list-permutes-refl	: {NL} nat-list-permutes NL NL
+			   -> type.
+%mode nat-list-permutes-refl +D1 -D2.
+
+-	: nat-list-permutes-refl nat-list/nil nat-list-permutes/nil.
+
+-	: nat-list-permutes-refl (nat-list/cons _ NL)
+	   (nat-list-permutes/cons D1)
+	   <- nat-list-permutes-refl NL D1. 
+
+%worlds () (nat-list-permutes-refl _ _).
+%total (D1) (nat-list-permutes-refl D1 _).
+
+
+
+nat-list-permutes-sym	: nat-list-permutes N1 N2
+			   -> nat-list-permutes N2 N1
+			   -> type.
+%mode nat-list-permutes-sym +D1 -D2.
+
+-	: nat-list-permutes-sym nat-list-permutes/nil nat-list-permutes/nil.
+
+-	: nat-list-permutes-sym (nat-list-permutes/cons D1)
+	   (nat-list-permutes/cons D1')
+	   <- nat-list-permutes-sym D1 D1'.
+
+-	: nat-list-permutes-sym nat-list-permutes/swap nat-list-permutes/swap. 
+
+-	: nat-list-permutes-sym (nat-list-permutes/trans D2 D1)
+	   (nat-list-permutes/trans D1' D2')
+	   <- nat-list-permutes-sym D1 D1'
+	   <- nat-list-permutes-sym D2 D2'.
+
+%worlds () (nat-list-permutes-sym _ _).
+%total (D1) (nat-list-permutes-sym D1 _).
+
+
+nat-list-permutes-swap-head-2	: nat-list-permutes  NN
+				   (nat-list/cons N1 (nat-list/cons N2 NL))
+				   -> nat-list-permutes 
+				      NN
+				      (nat-list/cons N2 (nat-list/cons N1 NL))
+				   -> type. 
+%mode nat-list-permutes-swap-head-2 +D1 -D4.
+
+-	: nat-list-permutes-swap-head-2 D1 
+	   (nat-list-permutes/trans nat-list-permutes/swap D1).
+
+%worlds () (nat-list-permutes-swap-head-2 _ _).
+%total {} (nat-list-permutes-swap-head-2 _ _).
+
+
+
+in-nat-list-permutes	: in-nat-list N1 NL
+			   -> nat-list-permutes NL (nat-list/cons N1 NL')
+			   -> type. 
+%mode in-nat-list-permutes +D1 -D2. 
+
+-	: in-nat-list-permutes in-nat-list/hit D1
+	   <- nat-list-permutes-refl _ D1.
+
+-	: in-nat-list-permutes 
+	   (in-nat-list/miss (D1 : in-nat-list N (nat-list/cons N2 NL)))
+	   DP
+	   <- in-nat-list-permutes D1 
+	      (DL : nat-list-permutes (nat-list/cons N2 NL) 
+		     (nat-list/cons N NL'))
+	   <- nat-list-permutes-swap-head-2 (nat-list-permutes/cons DL) DP.
+
+%worlds () (in-nat-list-permutes _ _).
+%total (D1) (in-nat-list-permutes D1 _). 
+
+
+
+nin-nat-list-permutes	: nin-nat-list N1 NL
+			   -> nat-list-permutes NL NL'
+			   -> nin-nat-list N1 NL'
+			   -> type.
+%mode nin-nat-list-permutes +D1 +D2 -D3.
+
+-	: nin-nat-list-permutes _ nat-list-permutes/nil nin-nat-list/nil.
+
+-	: nin-nat-list-permutes (nin-nat-list/cons D1 Dneq)
+	   (nat-list-permutes/cons D2)
+	   (nin-nat-list/cons D1' Dneq)
+	   <- nin-nat-list-permutes D1 D2 D1'.
+
+-	: nin-nat-list-permutes 
+	   (nin-nat-list/cons (nin-nat-list/cons D1 Dneq2) Dneq1)
+	   nat-list-permutes/swap
+	   (nin-nat-list/cons (nin-nat-list/cons D1 Dneq1) Dneq2).
+
+-	: nin-nat-list-permutes D1 (nat-list-permutes/trans D3 D2) 
+	   D1''
+	   <- nin-nat-list-permutes D1 D2 D1'
+	   <- nin-nat-list-permutes D1' D3 D1''.
+
+%worlds () (nin-nat-list-permutes _ _ _). 
+%total (D1) (nin-nat-list-permutes _ D1 _).
+
+
+nat-neq-sym	: nat-neq N1 N2
+		   -> nat-neq N2 N1
+		   -> type.
+%mode nat-neq-sym +D1 -D2.
+
+-	: nat-neq-sym (nat-neq/l D1) (nat-neq/r D1).
+
+-	: nat-neq-sym (nat-neq/r D1) (nat-neq/l D1).
+
+%worlds () (nat-neq-sym _ _).
+%total {} (nat-neq-sym _ _).
+
+
+no-dups-permutes	: nat-list-no-dups N1 
+			   -> nat-list-permutes N1 N2
+			   -> nat-list-no-dups N2
+			   -> type.
+%mode no-dups-permutes +D1 +D2 -D3.
+
+-	: no-dups-permutes _ nat-list-permutes/nil nat-list-no-dups/nil.
+
+-	: no-dups-permutes (nat-list-no-dups/cons D2 D1)
+	   (nat-list-permutes/cons D3) 
+	   (nat-list-no-dups/cons D2' D1')
+	   <- nin-nat-list-permutes D1 D3 D1'
+	   <- no-dups-permutes D2 D3 D2'.
+
+-	: no-dups-permutes 
+	   (nat-list-no-dups/cons 
+	      (nat-list-no-dups/cons D3 DninB)
+	      (nin-nat-list/cons DninA DneqA1))
+	   nat-list-permutes/swap 
+	   (nat-list-no-dups/cons 
+	      (nat-list-no-dups/cons D3 DninA)
+	      (nin-nat-list/cons DninB DneqA1'))
+	   <- nat-neq-sym DneqA1 DneqA1'.
+
+-	: no-dups-permutes D1 (nat-list-permutes/trans D3 D2) D1''
+	   <- no-dups-permutes D1 D2 D1'
+	   <- no-dups-permutes D1' D3 D1''.
+
+%worlds () (no-dups-permutes _ _ _).
+%total (D1) (no-dups-permutes _ D1 _).
+
+
+nat-list-length	: nat-list -> nat -> type.
+
+nat-list-length/z	: nat-list-length nat-list/nil z.
+
+nat-list-length/s	: nat-list-length (nat-list/cons _ NL) (s N)
+			   <- nat-list-length NL N.
+
+
+permutes-length	: nat-list-length NL N
+		   -> nat-list-permutes NL NL'
+		   -> nat-list-length NL' N
+		   -> type.
+%mode permutes-length +D1 +D2 -D3.
+
+-	: permutes-length _ nat-list-permutes/nil nat-list-length/z.
+
+-	: permutes-length (nat-list-length/s D1)
+	   (nat-list-permutes/cons D2)
+	   (nat-list-length/s D3)
+	   <- permutes-length D1 D2 D3.
+
+-	: permutes-length (nat-list-length/s (nat-list-length/s D1))
+	   nat-list-permutes/swap
+	   (nat-list-length/s (nat-list-length/s D1)).
+
+-	: permutes-length D1 (nat-list-permutes/trans D3 D2) 
+	   D3'
+	   <- permutes-length D1 D2 D1'
+	   <- permutes-length D1' D3 D3'.
+
+%worlds () (permutes-length _ _ _).
+%total (D1) (permutes-length _ D1 _).
+
+
+
+uninhabited	: type.
+
+nat-less-irrefl	: nat-less N1 N1
+		   -> uninhabited
+		   -> type.
+%mode nat-less-irrefl +D1 -D3.
+
+-	: nat-less-irrefl (nat-less/s D1) DU
+	   <- nat-less-irrefl D1 DU.
+
+%worlds () (nat-less-irrefl _ _).
+%total (D1) (nat-less-irrefl D1 _).
+
+nat-neq-irrefl	: nat-neq N1 N1
+		   -> uninhabited
+		   -> type.
+%mode nat-neq-irrefl +D1 -D2.
+
+-	: nat-neq-irrefl (nat-neq/l D1) DU
+	   <- nat-less-irrefl D1 DU.
+
+-	: nat-neq-irrefl (nat-neq/r D1) DU
+	   <- nat-less-irrefl D1 DU.
+
+%worlds () (nat-neq-irrefl _ _).
+%total {} (nat-neq-irrefl _ _).
+
+
+uninhabited-in-nat-list	: {N1}{NL}
+			   uninhabited
+			   -> in-nat-list N1 NL
+			   -> type.
+%mode uninhabited-in-nat-list +D1 +D2 +D3 -D4.
+
+%worlds () (uninhabited-in-nat-list _ _ _ _).
+%total {} (uninhabited-in-nat-list _ _ _ _).
+
+in-nat-list-strengthen	: nat-neq N1 NA
+			   -> in-nat-list NA (nat-list/cons N1 NL')
+			   -> in-nat-list NA NL'
+			   -> type.
+%mode in-nat-list-strengthen +D1 +D2 -D4.
+
+-	: in-nat-list-strengthen _ (in-nat-list/miss D1) D1.
+
+-	: in-nat-list-strengthen D1 in-nat-list/hit D1'
+	   <- nat-neq-irrefl D1 DU
+	   <- uninhabited-in-nat-list _ _ DU D1'.
+
+%worlds () (in-nat-list-strengthen _ _ _).
+%total (D1) (in-nat-list-strengthen _ D1 _). 
+
+all-in-strengthen	: nin-nat-list N1 NL
+			   -> all-in-nat-list NL (nat-list/cons N1 NL')
+			   -> all-in-nat-list NL NL'
+			   -> type. 
+%mode all-in-strengthen +D1 +D2 -D3.
+
+-	: all-in-strengthen _ all-in-nat-list/nil all-in-nat-list/nil.
+
+-	: all-in-strengthen (nin-nat-list/cons D1 Dneq)
+	   (all-in-nat-list/cons DB DA)
+	   (all-in-nat-list/cons DB' DA')
+	   <- all-in-strengthen D1 DB DB'
+	   <- in-nat-list-strengthen Dneq DA DA'.
+
+%worlds () (all-in-strengthen _ _ _).
+%total (D1) (all-in-strengthen _ D1 _).
+
+
+
+all-in-no-dups-permutes	: {N}
+			   nat-list-no-dups NL
+ 			   -> nat-list-length NL N
+ 			   -> nat-list-length NL' N
+			   -> all-in-nat-list NL NL'
+			   -> nat-list-permutes NL NL'
+			   -> type.
+%mode all-in-no-dups-permutes +N +D1 +D2 +D3 +D4 -D5.
+
+-	: all-in-no-dups-permutes _ _ _ _ all-in-nat-list/nil
+	   nat-list-permutes/nil.
+
+-	: all-in-no-dups-permutes 
+	   _
+	   (nat-list-no-dups/cons D1 DNINN)
+	   (nat-list-length/s Dl1)
+	   DN
+	   (all-in-nat-list/cons (DA : all-in-nat-list NL NL') DIN)
+	   (nat-list-permutes/trans DP' (nat-list-permutes/cons DPP))
+	   <- in-nat-list-permutes DIN 
+	      (DP : nat-list-permutes NL' (nat-list/cons N1 NL''))
+ 	   <- nat-list-permutes-all-in DP 
+	      (DIN' : all-in-nat-list NL' (nat-list/cons N1 NL''))
+	   <- permutes-length DN
+	      DP (nat-list-length/s D3')
+	   <- all-in-nat-list-trans DA DIN' DIN''
+ 	   <- all-in-strengthen DNINN DIN'' DIN'''
+	   <- all-in-no-dups-permutes _ D1 Dl1 D3' DIN''' DPP
+ 	   <- nat-list-permutes-sym DP DP'.
+
+%worlds () (all-in-no-dups-permutes _ _ _ _ _ _). 
+%total (D1) (all-in-no-dups-permutes D1 _ _ _ _ _).
+
+%{! 
+
+TODO: Finish commentary on the proof. 
+
+\{\{stub\}\}
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Correctness_of_mergesort).
+!}%

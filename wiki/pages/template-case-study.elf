@@ -1,0 +1,13 @@
+%%! title: "Template:Case study"
+
+%{! &lt;hr&gt;
+&lt;small&gt;Read more Twelf [case studies](/wiki/case-studies/) and other Twelf [documentation](/wiki/documentation/).&lt;/small&gt;
+
+&lt;includeonly&gt;&lt;!-- template isn't in the category, only uses of it --&gt;[Category:Case studies](/wiki/category-case-studies/)&lt;/includeonly&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Case_study).
+!}%

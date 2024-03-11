@@ -1,0 +1,84 @@
+%%! title: "Constraint domain"
+
+%{! A **constraint domain**, also called a **Twelf(X) extension**, is an extension to Twelf that allow users to work easily with an object, such as the integers, that can be tedious or inefficient to explicitly formalize within Twelf. Constraint domains are introduced with the [``%use``](/wiki/percent-use/) declaration.
+
+You should never use [constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/) in the same signature, but they are useful when using Twelf as a logic programming system or when reasoning _in_ an [object language](/wiki/object-logic/). This document shows brief examples of each of the constraint domains, which are treated more formally in the chapter on <Guide chapter="6" section="32">constraint domains</Guide>.
+
+## Rational numbers with equality: ``%use equality/rationals``
+
+The rational numbers with equality add a new type family, ``rational``, and operators for rational addition, subtraction, multiplication, and negation. The rational numbers are automatically simplified by Twelf 
+
+```checkedtwelf
+%use equality/rationals.
+mynum = 1/4 + ~ 9/2.
+```
+
+Because of this automatic simplification, equality is not actually added by the ``%use`` declaration, becuase it can be introduced the same way [identity](/wiki/equality/) is introduced for any other type family in Twelf.
+
+```twelf    
+eq : rational -> rational -> type.
+eq/is : eq X X.
+```
+
+## Rational numbers with inequality: ``%use inequality/rationals``
+
+This declaration introduces everything introduced by ``%use equality/rationals``, as well as ways to check for inequality:
+    
+```checkedtwelf
+%use inequality/rationals.
+```
+
+Inequality relations can be used like normal goals, as they are in the next example, even though the User's Guide explains that their internal behavior is different than other goals.
+
+```twelf    
+more-than-two : rational -> rational -> type.
+more-than-two/i : more-than-two R1 R2
+                   <- R1 + R2 > 2.
+```
+
+## Integers with equality: ``%use equality/integers``
+
+The introduction of integers with equality looks similar to the introduction of rationals with equality, but with a different type family, ``integer``.
+    
+```checkedtwelf
+%use equality/integers.
+```
+
+## Integers with inequality: ``%use inequality/integers``
+
+The introduction of integers with inequality is a good bit shorter than the introduction of rationals with inequality, because Twelf can take advantage of the facts like ``X + 1 > Y`` iff ``X >= Y``.
+    
+```checkedtwelf
+%use inequality/integers.
+```
+
+## Strings: ``%use equality/strings``
+
+This constraint domain allows Twelf to include strings of characters. Like the other constriant domains, using the operators automatically simplifies the operators away. The only one provided is concatenation, ``++``, which is shown below:
+    
+```checkedtwelf
+%use equality/strings.
+mystring = "Hello" ++ " " ++ "World" ++ "!".
+
+```
+
+## 32-bit integers: ``%use word32.``
+
+The ``word32`` extension behaves very differently than the others - operators are relations, not functions, and so Twelf does not simplify their application away. Behind the scenes, using the ``word32`` extension adds axioms to the signature like ``3+15`` shown in the below example. The ``prove+`` relations that are defined act like [effectiveness lemmas](/wiki/effectiveness-lemma/) for these relations.
+
+
+```checkedtwelf
+%use word32.
+myproof = 3+15.
+%solve _ : prove+ 92 _ 105 _.
+```
+
+## See also
+* [``%use``](/wiki/percent-use/)
+* <Guide chapter="6" section="32">Constraint domains</Guide>
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+You can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Constraint_domain).
+!}%

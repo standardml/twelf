@@ -1,0 +1,107 @@
+%%! title: "The Twelf Project:Subversion transition"
+
+%{! On Wednesday, April 23, 2008, the Twelf Project will switch from using CVS for its version control mechanism to using Subversion. 
+
+## Primary checkout
+
+The last version in CVS was Revision Number 1276 when the transition was prepped on April 17, 2008. Revisions between April 17 and April 23 will be manually applied by [Rob](/wiki/user-rsimmons/).
+
+The trunk is be available from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/trunk twelf``. As of April 17, it is only available for read-only access for people with login to the old Twelf repository; after April 23, it will be open to general access.
+
+### Tags
+
+Any tag is be accessible from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/tags/&lt;BRANCH NAME&gt;``. The tags as of April 10 are the following:
+
+&lt;code&gt;delphin_last_merge_main
+elphin
+input-cover
+output-cover1
+pre-roberto
+twelf-1-2
+twelf-1-2pl1
+twelf-1-2pl2
+twelf-1-2pl3
+twelf-1-2pl4
+twelf-1-2pl5
+twelf-1-2R1
+twelf-1-2R2
+twelf-1-2R4
+twelf-1-2R5
+twelf-1-2R5pl1
+twelf-1-2R6
+twelf-1-2R7
+twelf-1-2R7pl1
+twelf-1-2R8
+twelf-1-2R8pl2
+twelf-1-2R9pl1
+twelf-1-2R9pl2
+twelf-1-3
+twelf-1-3pl1
+twelf-1-3R0
+twelf-1-3R1
+twelf-1-3R2
+twelf-1-3R3
+twelf-1-3R5
+twelf-1-3R6
+twelf-1-4
+twelf-1-4-carsten
+twelf-1-4r1
+twelf-1-4-r2
+twelf-1-5-logosphere
+twelf-1-5R2
+twelf-1-5R4
+twelf-branch-meta
+twelf-poly&lt;/code&gt;
+
+### Branches
+
+Any branch is be accessible from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/branches/&lt;BRANCH NAME&gt;``. The branches as of April 10 are the following:
+
+&lt;code&gt;carsten-12-09
+delphin_last_merge_main
+elphin
+input-cover
+output-cover1
+pre-roberto
+twelf-1-2
+twelf-1-2pl1
+twelf-1-2pl2
+twelf-1-2pl3
+twelf-1-2pl4
+twelf-1-2pl5
+twelf-1-2R1
+twelf-1-2R2
+twelf-1-2R4
+twelf-1-2R5
+twelf-1-2R5pl1
+twelf-1-2R6
+twelf-1-2R7
+twelf-1-2R7pl1
+twelf-1-2R8
+twelf-1-2R8pl2
+twelf-1-2R9pl1
+twelf-1-2R9pl2
+twelf-1-3
+twelf-1-3pl1
+twelf-1-3R0
+twelf-1-3R1
+twelf-1-3R2
+twelf-1-3R3
+twelf-1-3R5
+twelf-1-3R6
+twelf-1-4
+twelf-1-4-carsten
+twelf-1-4r1
+twelf-1-4-r2
+twelf-1-5-logosphere
+twelf-1-5R2
+twelf-1-5R4
+twelf-branch-meta
+twelf-poly&lt;/code&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Subversion_transition).
+!}%

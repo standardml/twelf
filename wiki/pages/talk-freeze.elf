@@ -1,0 +1,17 @@
+%%! title: "Talk:%freeze"
+
+%{! ## Version
+Does anyone know what versions freeze and autofreeze are available in? I have the impression that they are new features (being undocumented). &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 14:22, 1 December 2006 (EST)
+: I think freeze has been available since around 1.5, but it wasn't in 1.4, I'm almost certain. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 18:53, 20 December 2006 (EST)
+
+## Soundness
+Can unsoundness also result if there is no autofreeze? I'm not sure what Twelf's behavior was in this case. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 14:22, 1 December 2006 (EST)
+: It should - you could prove ``eq (s N) N`` implied ``absurd``, and then add a case to ``eq`` to make that theorem no longer true... — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 18:52, 20 December 2006 (EST)
+::Certainly if it continued to accept the totality of that theorem for the new extended ``eq``. But if any worlds/total/etc. declarations were invalidated by new declarations for a type family, I think that might still be sound. Did Twelf do that? Probably not. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 00:15, 25 December 2006 (EST) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:%25freeze).
+!}%

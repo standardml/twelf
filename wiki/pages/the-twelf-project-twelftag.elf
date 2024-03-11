@@ -1,0 +1,213 @@
+%%! title: "The Twelf Project:TwelfTag"
+
+%{! TwelfTag is [Rob's](/wiki/user-rsimmons/) system for non-interactively checking Twelf code. This is a guide to TwelfTag for contributors; if you are a reader, then [this article](/wiki/twelftag/) may be more helpful. While [Twelf Live](/wiki/twelf-live/) allows people to interact with signatures, TwelfTag is designed for writing and checking code for use in wiki articles.
+
+Neither the (twelf) tag nor the &lt;nowiki&gt;``&gt;&lt;/nowiki&gt; tag have any required arguments. The optional arguments for (twelf) tags are:
+* ``check=\{true|false|decl\}`` (default ``false``) - cannot be used when hidden=true
+* ``discard=\{true|false\}`` (default ``false``)
+* ``hidden=\{true|false\}`` (default ``false``)
+* ``import="..something.."`` (default ``"main"``)
+* ``export="..something.."`` (default ``"main"``)
+
+The optional arguments for &lt;nowiki&gt;``&gt;&lt;/nowiki&gt; tags are:
+* ``check=\{true|false\}`` (default ``false``)
+* ``import="..something.."`` (default ``"main"``)
+
+The following document discusses the function of each of these tags.
+
+## The ``(twelf)`` tag for syntax highlighting
+
+The ``(twelf)`` tag itself is simple enough, it works much like an HTML &lt;nowiki&gt;&lt;pre&gt;&lt;/nowiki&gt; environment with [[Project:Syntax Highlighting|syntax highlighting]].
+
+However, the ``(twelf)`` tag also does a number of other interesting and useful things. At the most basic level, it crops out any whitespace at the beginning or end of the environment so that this:
+
+&lt;pre&gt; !}%
+    
+exp : type.
+
+abs : (exp -> exp) -> exp.
+
+%{! &lt;/pre&gt;
+
+Will look like this: !}%
+    
+exp : type.
+
+abs : (exp -> exp) -> exp.
+
+%{! ## The ``(twelf)`` and ````&gt;`` tags
+
+Behind the scenes, the content of every ``(twelf)`` tag is grouped together. So if you have a series of Twelf tags that are defining a single signature, like this (continuing from the example above): !}%
+    
+app : exp -> exp -> exp.
+
+%{! and this: !}%
+    
+step : exp -> exp -> type.
+
+%{! then TwelfTag, at this point in the process, has code for ``exp``, ``abs``, ``app``, and ``step`` gathered in a group (this group is named (``"main"``), though it hasn't done anything with it yet. 
+
+### The ````&gt;`` tag
+
+You can link to a collection of all the code that has been presented so far by using ````&gt;`` tags in the same way you would use ``&lt;a href=...&gt;`` tags in normal HTML code.
+
+As an example, ````&gt;OMG link!````, will appear like this: ``&gt;OMG link!``, pointing to the four lines of code declared so far throughout the file.
+
+The filenames are just the MD5 hashes of the code which they contain; the [http://twelf.plparty.org/code code directory] contains all these stored files.
+
+### The ``check=true`` option
+
+We are not collecting code in the background just to link to it, we're creating code so we can check it in Twelf! If you use the twelf tag with the ``check=true`` option, Twelf will execute the collected segments in Twelf and link to the output.
+
+&lt;pre&gt; !}%
+    
+%{! (options removed from twelftag: check=true) !}%
+
+step/app1 : step (app E1 E2) (app E1' E2)
+             <- step E1 E1'.
+step/app2 : step (app E1 E2) (app E1 E2')
+             <- step E2 E2'.
+step/appabs : step (app (abs [x] E x) E') (E E').
+
+%{! &lt;/pre&gt; !}%
+    
+%{! (options removed from twelftag: check=true) !}%
+
+step/app1 : step (app E1 E2) (app E1' E2)
+             <- step E1 E1'.
+step/app2 : step (app E1 E2) (app E1 E2')
+             <- step E2 E2'.
+step/appabs : step (app (abs [x] E x) E') (E E').
+
+%{! You may notice that the link above links to a file "twelf.plparty.org/code/&lt;obvious md5 hash&gt;.chk". The code that was checked is just at "twelf.plparty.org/code/&lt;exact sameobvious md5 hash&gt;" - that is, without the ".chk".
+
+You can use ```` check=true&gt;`` to link to the Twelf output of checking the most recent code instead of just linking to that code code - so ```` check=true&gt;See?```` just duplicates the link that was automatically entered in above. `` check=true&gt;See?``. This works even if you haven't set ``check=true`` in any of your ``(twelf)`` tags; you could just avoid using the ``check=true`` option in your code in favor of causing checks only with ```` check=true&gt;``.
+
+### The ``check=decl`` option
+
+If you want to concentrate on the output of the last code fragment, for instance to examine a particular case of type reconstruction, you can use the ``check=decl`` option for the Twelf tag. In the background, TwelfTag loads the previous portions of the signature on chatter 0, and then returns to the default chatter 3 to run the current code snippet. It then does some simple manipulations on Twelf's response to remove things like useless ``%% OK %%`` notices, and then inlines the result.
+
+&lt;pre&gt; !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
+
+test = step/app1(step/app2 step/appabs).
+
+%{! &lt;/pre&gt; !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
+
+test = step/app1(step/app2 step/appabs).
+
+%{! ### The ``discard=true`` option
+
+If you add ``(twelf discard=true)`` then it will syntax highlight but will not incorporate the segment into the collected code. This is important when you want to demonstrate mistake, because otherwise Twelf will get caught up on that mistake in the future. As a result, this option is frequently used with ``check=decl``.
+
+&lt;pre&gt; !}%
+    
+%{! (options removed from twelftag: discard=true check=decl) !}%
+
+% Don't do this!
+
+step/appabs : step E1 E2 <- step E1 E2.
+
+%{! &lt;/pre&gt; !}%
+    
+%{! (options removed from twelftag: discard=true check=decl) !}%
+
+% Don't do this!
+
+step/appabs : step E1 E2 <- step E1 E2.
+
+%{! ### The ``import=`` and ``export=`` options
+
+This is a tricky feature that allows you to run parallel segments of code on a single page. It should be used sparingly, as otherwise it can become extremely confusing to both readers and editors. Each ``(twelf)`` tag is associated with a value, ``import``, that defines where it gets its code _from_, and a value, ``export``, that defines where it binds the concatenation of the code the previous code and the new code within the tag. 
+
+* If ``import=`` is not defined, it is assumed to be ``"main"``.
+* If ``export=`` is not defined, it is assumed to be the value of ``import``. If you try to clobber an existing export, for instance by importing from ``"main"`` and exporting to ``"alt"`` twice, Twelf will complain.
+
+In most cases ``discard=true`` should be sufficient for one's purposes.
+
+This example is hopefully revealing:
+
+&lt;pre&gt; !}%
+    
+%{! (options removed from twelftag: import="nat") !}%
+
+nat : type.
+
+%{! This is a simple way of expressing nats: !}%
+    
+%{! (options removed from twelftag: import="nat" export="natsimple") !}%
+
+z : nat.
+s : nat -> nat.
+
+%{! This is a verbose way of expressing nats: !}%
+    
+%{! (options removed from twelftag: import="nat" export="natverbose") !}%
+
+nat/z : nat.
+nat/s : nat -> nat.
+
+%{! `` import="natsimple"&gt;See the simple code``
+
+`` import="natverbose"&gt;See the verbose code``&lt;/pre&gt; !}%
+    
+%{! (options removed from twelftag: import="nat") !}%
+
+nat : type.
+
+%{! This is a simple way of expressing nats: !}%
+    
+%{! (options removed from twelftag: import="nat" export="natsimple") !}%
+
+z : nat.
+s : nat -> nat.
+
+%{! This is a verbose way of expressing nats: !}%
+    
+%{! (options removed from twelftag: import="nat" export="natverbose") !}%
+
+nat/z : nat.
+nat/s : nat -> nat.
+
+%{! `` import="natsimple"&gt;See the simple code``
+
+`` import="natverbose"&gt;See the verbose code``
+
+### The ``hidden=true`` option
+
+You can use the ``hidden=true`` option to insert Twelf into a page without having it appear to the reader. You can't use the
+``check`` option in conjunction with this setting, but it is quite useful in conjunction with ``import`` and ``export``.
+
+By inserting this code into the wiki you can add a definition of "plus" to the code group named "natsimple".
+
+&lt;pre&gt; !}%
+    
+%{! (options removed from twelftag: import="natsimple" hidden=true) !}%
+
+plus : nat -> nat -> nat -> type.
+
+plus/z : plus z N N.
+plus/s : plus (s N1) N2 (s N3)
+          <- plus N1 N2 N3.
+
+%{! &lt;/pre&gt; !}%
+    
+%{! (options removed from twelftag: import="natsimple" hidden=true) !}%
+
+plus : nat -> nat -> nat -> type.
+
+plus/z : plus z N N.
+plus/s : plus (s N1) N2 (s N3)
+          <- plus N1 N2 N3.
+
+%{! `` import="natsimple"&gt;See the hidden code added to the existing natural number development.`` !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:TwelfTag).
+!}%

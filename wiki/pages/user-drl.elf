@@ -1,0 +1,17 @@
+%%! title: "User:Drl"
+
+%{! My name is Dan Licata.  I'm a PhD student at CMU.  Here's my [http://www.cs.cmu.edu/~drl/ Web site].
+
+Sometimes, I get the urge to write introductions to LF and Twelf.  The second time this happened, it resulted in a [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf journal article].  The first time this happened, it resulted in a very chatty tutorial, which, the third time this happened, turned into [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/).
+
+I also use Twelf regularly in my research; see the page on [research projects using Twelf](/wiki/research-projects-using-twelf/) or visit my Web site for some links.
+
+Random Bits of Twelf Code:
+* [Modally Propositional Logic](/wiki/modally-propositional-logic/) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Drl).
+!}%

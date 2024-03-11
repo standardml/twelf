@@ -1,0 +1,40 @@
+%%! title: "The Twelf Project:Literate Twelf/Sample Page"
+
+%{! 
+Some natural numbers; a demo of [[Project:Literate Twelf|Literate Twelf]]. 
+!}%
+ 
+%{! ## Syntax !}%
+ 
+nat: type.
+z : nat.
+s : nat -> nat. 
+
+%{! ## Judgments !}%
+ 
+%{! ### Equality !}%
+ 
+id-nat : nat -> nat -> type.
+id-nat/refl : id-nat N N.
+ 
+%{! ### Addition === | !}%
+ 
+plus : nat -> nat -> nat -> type.
+plus/z : plus z N N.
+plus/s : plus N1 N2 N3 -> plus (s N1) N2 (s N3).
+
+%{! Now we can see what it looks like to run a query: |check=decl !}%
+
+%solve _ : plus (s (s (s z))) (s (s z)) N.
+ 
+%. 
+ 
+This is a pretty boring presentation of the natural numbers;
+it is roughly like all the other ones, like the article on [natural numbers](/wiki/natural-numbers/).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Literate_Twelf/Sample_Page).
+!}%

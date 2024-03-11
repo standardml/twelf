@@ -1,0 +1,60 @@
+%%! title: "POPL Tutorial/Session 2 Starter"
+
+%{! 
+
+## Starter code for Session 2
+
+## Arithmetic primitives
+
+!}%
+
+nat : type.  
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) <- add M N P.
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%{! 
+
+## Expressions
+
+!}%
+
+val : type.
+num : nat -> val.
+
+exp : type.
+ret : val -> exp.
+plus  : exp -> exp -> exp.
+let : exp -> (val -> exp) -> exp.
+
+eval : exp -> val -> type.
+%mode eval +E1 -E2.
+
+eval/val : eval (ret V) V.
+
+eval/plus : eval (plus E1 E2) (num N)
+	     <- eval E1 (num N1)
+	     <- eval E2 (num N2)
+	     <- add N1 N2 N.
+
+eval/let : eval (let E1 ([x] E2 x)) A
+	    <- eval E1 V
+	    <- eval (E2 V) A.
+
+%worlds () (eval _ _).
+%total E (eval E _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Session_2_Starter).
+!}%

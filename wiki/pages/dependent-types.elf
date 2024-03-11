@@ -1,0 +1,21 @@
+%%! title: "Dependent types"
+
+%{! A language with **dependent types** has types which can mention the terms they classify. For example, [LF](/wiki/lf/) is a dependently typed language because LF types can mention LF terms. 
+
+
+## See also
+
+* [LF](/wiki/lf/) 
+* [[w:Dependent types|Dependent types]] at Wikipedia
+* Chapter 2 of [http://www.cis.upenn.edu/~bcpierce/attapl/main.html Advanced Topics in Types and Programming Languages]
+
+
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Dependent_types).
+!}%

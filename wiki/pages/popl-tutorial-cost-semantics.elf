@@ -1,0 +1,474 @@
+%%! title: "POPL Tutorial/Cost semantics"
+
+%{! ## Syntax !}%
+
+tp : type.				%name tp T.
+tunit : tp.
+arr : tp -> tp -> tp.
+
+exp : type.				%name exp E.
+unit : exp.
+fun : tp -> tp -> (exp -> exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+%{! ## Series-parallel graphs !}%
+
+graph : type.
+0 : graph.
+1 : graph.
++ : graph -> graph -> graph. %infix right 5 +.
+* : graph -> graph -> graph. %infix right 5 *.
+
+%{!  !}%
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+%{! ### Size of graphs !}%
+
+plus : nat -> nat -> nat -> type.
+plus/z : plus z N N.
+plus/s : plus (s N1) N2 (s N3)
+	  <- plus N1 N2 N3.
+
+sizeof : graph -> nat -> type.
+
+sizeof/0 : sizeof 0 z.
+sizeof/1 : sizeof 1 (s z).
+sizeof/+ : sizeof (G1 + G2) C3
+          <- sizeof G1 C1
+          <- sizeof G2 C2
+          <- plus C2 C1 C3.
+sizeof/* : sizeof (G1 * G2) C3
+          <- sizeof G1 C1
+          <- sizeof G2 C2
+          <- plus C2 C1 C3.
+
+%{! ### Depth of graphs !}%
+
+max : nat -> nat -> nat -> type.
+
+max/zz : max z z z.
+max/sz : max (s N) z (s M) 
+          <- max N z M.
+max/zs : max z (s N) (s M)
+          <- max z N M.
+max/ss : max (s N) (s M) (s P)
+          <- max N M P.
+
+depthof : graph -> nat -> type.
+
+depthof/0 : depthof 0 z.
+depthof/1 : depthof 1 (s z).
+depthof/+ : depthof (G1 + G2) C
+          <- depthof G1 C1
+          <- depthof G2 C2
+          <- plus C1 C2 C.
+depthof/* : depthof (G1 * G2) C
+          <- depthof G1 C1
+          <- depthof G2 C2
+          <- max C1 C2 C.
+
+%{! ## Cost Semantics !}%
+
+evcost : exp -> exp -> graph -> type. 
+
+evcost/unit 
+    : evcost unit unit 0.
+
+evcost/fun
+    : evcost (fun T1 T2 E) (fun T1 T2 E) 0.
+
+evcost/app
+    : evcost (app E1 E2) V ((G1 * G2) + 1 + G)
+       <- evcost E1 (fun T1 T2 ([f][x] E f x)) G1
+       <- evcost E2 V2 G2
+       <- evcost (E (fun T1 T2 ([f][x] E f x)) V2) V G.
+
+%{! ## Sequential Evaluation !}%
+
+value : exp -> type.			%name value Dval.
+%mode value +E.
+
+value/unit : value unit.
+value/fun : value (fun _ _ _).
+
+step : exp -> exp -> type.		%name step Dstep.
+%mode step +E1 -E2.
+
+step/app/fun
+   : step (app E1 E2) (app E1' E2)
+      <- step E1 E1'.
+step/app/arg
+   : step (app E1 E2) (app E1 E2')
+      <- value E1 <- step E2 E2'.
+step/app/beta-v
+   : step
+      (app (fun T1 T2 ([f] [x] E f x)) E2)
+      (E (fun T1 T2 ([f] [x] E f x)) E2)
+      <- value E2.
+
+%{!  !}%
+
+steps : exp -> exp -> nat -> type.
+%mode steps +X1 -X2 -X3.
+
+steps/refl : steps E E z.
+
+steps/trans : steps E E'' (s C)
+    <- step E E'
+    <- steps E' E'' C.
+
+%{! ## Parallel Evaluation !}%
+
+pstep : exp -> exp -> type.
+
+pstep/app/
+   : pstep (app E1 E2) (app E1' E2')
+      <- pstep E1 E1'
+      <- pstep E2 E2'.
+pstep/app/fun
+   : pstep (app E1 E2) (app E1' E2)
+      <- pstep E1 E1'
+      <- value E2.
+pstep/app/arg
+   : pstep (app E1 E2) (app E1 E2')
+      <- pstep E2 E2'
+      <- value E1.
+pstep/app/beta-v
+   : pstep
+      (app (fun T1 T2 ([f] [x] E f x)) E2)
+      (E (fun T1 T2 ([f] [x] E f x)) E2)
+      <- value E2.
+
+%{!  !}%
+
+psteps : exp -> exp -> nat -> type.
+
+psteps/refl : psteps E E z.
+
+psteps/trans : psteps E E'' (s C)
+          <- pstep E E'
+          <- psteps E' E'' C.
+
+%{! ### Cost of parallel evaluation !}%
+
+par_app 
+   :  max C1 C2 Cmax 
+      -> psteps E1 V1 C1 
+      -> value V1
+      -> psteps E2 V2 C2
+      -> value V2
+      -> psteps (app E1 E2) (app V1 V2) Cmax
+      -> type.
+%mode par_app +M +P1 +V1 +P2 +V2 -P.
+
+- : par_app max/zz psteps/refl Val1 psteps/refl Val2 psteps/refl.
+
+- : par_app 
+     (max/sz (Max: max C1 z Cmax))
+     (psteps/trans (P1s: psteps E1' V1 C1) (Step1: pstep E1 E1'))
+     (Val1: value V1)
+     (psteps/refl: psteps V2 V2 z)
+     (Val2: value V2)
+     (psteps/trans Psteps (pstep/app/fun Val2 Step1))
+     <- par_app Max P1s Val1 psteps/refl Val2 
+        (Psteps: psteps (app E1' V2) (app V1 V2) Cmax).
+
+- : par_app 
+     (max/zs (Max: max z C2 Cmax))
+     (psteps/refl: psteps V1 V1 z)
+     (Val1: value V1)
+     (psteps/trans (P2s: psteps E2' V2 C2) (Step2: pstep E2 E2'))
+     (Val2: value V2)
+     (psteps/trans Psteps (pstep/app/arg Val1 Step2))
+     <- par_app Max psteps/refl Val1 P2s Val2 
+        (Psteps: psteps (app V1 E2') (app V1 V2) Cmax).
+
+- : par_app 
+     (max/ss (Max: max C1 C2 Cmax))
+     (psteps/trans (P1s: psteps E1' V1 C1) (Step1: pstep E1 E1'))
+     (Val1: value V1)
+     (psteps/trans (P2s: psteps E2' V2 C2) (Step2: pstep E2 E2'))
+     (Val2: value V2)
+     (psteps/trans Psteps (pstep/app/ Step2 Step1))
+     <- par_app Max P1s Val1 P2s Val2 
+        (Psteps: psteps (app E1' E2') (app V1 V2) Cmax).
+
+%worlds () (par_app _ _ _ _ _ _).
+%total T (par_app T _ _ _ _ _).
+
+compose 
+   : plus C1 C2 C3 
+      -> psteps E1 E2 C1 
+      -> psteps E2 E3 C2 
+      -> psteps E1 E3 C3 
+      -> type.
+
+%mode compose +D +P1 +P2 -P.
+
+- : compose plus/z psteps/refl Psteps Psteps.
+- : compose (plus/s D) (psteps/trans Ps S) Ps' (psteps/trans Ps'' S)
+     <- compose D Ps Ps' Ps''.
+
+%worlds () (compose _ _ _ _).
+%total T (compose T _ _ _).
+
+schedule_parallel 
+   : evcost E V G 
+      -> depthof G N 
+      -> psteps E V N
+      -> value V 
+      -> type.
+%mode schedule_parallel +E +D -S -V.
+
+- : schedule_parallel evcost/unit depthof/0 psteps/refl value/unit.
+
+- : schedule_parallel evcost/fun depthof/0 psteps/refl value/fun.
+
+- : schedule_parallel 
+     (evcost/app 
+        (Dcost:  evcost (E (fun T1 T2 E) V2) V G)
+        (Dcost2: evcost E2 V2 G2) 
+        (Dcost1: evcost E1 (fun T1 T2 E) G1)) 
+     (depthof/+ 
+        (Dplus : plus DepthMax (s DepthG) Depth) 
+        (depthof/+ 
+           (plus/s plus/z)
+           (DdepthG : depthof G DepthG) 
+           depthof/1)
+        (depthof/*
+           (Dmax : max Depth1 Depth2 DepthMax)
+           (DdepthG2 : depthof G2 Depth2)
+           (DdepthG1 : depthof G1 Depth1)))
+     Dstep'' Val
+   <- schedule_parallel Dcost1 DdepthG1 
+      (Dstep1: psteps E1 (fun T1 T2 E) Depth1) 
+      (Val1: value (fun T1 T2 E))
+   <- schedule_parallel Dcost2 DdepthG2 
+      (Dstep2: psteps E2 V2 Depth2) 
+      (Val2: value V2)
+   <- schedule_parallel Dcost DdepthG 
+      (Dstep: psteps (E (fun T1 T2 E) V2) V DepthG)
+      (Val: value V)
+   <- par_app Dmax Dstep1 Val1 Dstep2 Val2 
+      (Dstep': psteps (app E1 E2) (app (fun T1 T2 E) V2) DepthMax)
+   <- compose Dplus Dstep' (psteps/trans Dstep (pstep/app/beta-v Val2)) 
+      (Dstep'' : psteps (app E1 E2) V Depth). 
+
+%worlds () (schedule_parallel _ _ _ _).
+%total T (schedule_parallel T _ _ _).
+
+%{! ### Random Plus Lemmas !}%
+
+plus_lemma : plus (s N1) N2 N3
+	      -> plus N1 (s N2) N3
+	      -> type.
+%mode plus_lemma -X1 +X2.
+
+-: plus_lemma 
+    (plus/s Dplus)
+    (plus/s Dplus')
+    <- plus_lemma Dplus Dplus'.
+
+-: plus_lemma
+    (plus/s plus/z)
+    plus/z.
+
+%worlds () (plus_lemma _ _).
+%total [D] (plus_lemma _ D).
+
+
+plus_lemma' : plus (s N1) N2 N3
+	       -> plus N1 (s N2) N3
+	       -> type.
+%mode plus_lemma' +X1 -X2.
+
+-: plus_lemma' 
+    (plus/s Dplus)
+    (plus/s Dplus')
+    <- plus_lemma' Dplus Dplus'.
+
+-: plus_lemma'
+    (plus/s plus/z)
+    plus/z.
+
+%worlds () (plus_lemma' _ _).
+%total [D] (plus_lemma' D _).
+
+
+plus_zero : {N} plus N z N -> type.
+%mode plus_zero +N -D.
+
+-: plus_zero z plus/z.
+
+-: plus_zero (s N) (plus/s Dplus)
+    <- plus_zero N Dplus.
+
+%worlds () (plus_zero _ _).
+%total [N] (plus_zero N _).
+
+plus_commute : plus N1 N2 N3
+		-> plus N2 N1 N3
+		-> type.
+%mode plus_commute +D1 -D2.
+
+-: plus_commute
+    (plus/s Dplus)
+    Dplus''
+    <- plus_commute Dplus Dplus'
+    <- plus_lemma' (plus/s Dplus') Dplus''.
+
+-: plus_commute
+    plus/z
+    Dplus
+    <- plus_zero _ Dplus.
+
+%worlds () (plus_commute _ _).
+%total [D] (plus_commute D _).
+
+
+
+%{! ### Cost of sequential evaluation !}%
+
+
+
+steps_lemma : steps E E' C
+	      -> step E' E''
+	      -> steps E E'' (s C) -> type.
+%mode steps_lemma +X1 +X2 -X3.
+
+-: steps_lemma 
+    steps/refl
+    E'step
+    (steps/trans steps/refl E'step).
+
+-: steps_lemma
+    (steps/trans
+       E'steps
+       Estep)
+    E''step
+    (steps/trans E'steps' Estep)
+    <- steps_lemma E'steps E''step E'steps'.
+
+%worlds () (steps_lemma _ _ _).
+%total [D] (steps_lemma D _ _).
+
+
+steps_lemma2 : steps E E' C1
+	      -> steps E' E'' C2
+	      -> plus C2 C1 C
+	      -> steps E E'' C -> type.
+%mode steps_lemma2 +X1 +X2 -X3 -X4.
+
+-: steps_lemma2
+    Esteps
+    steps/refl
+    plus/z
+    Esteps.
+
+-: steps_lemma2
+    Esteps
+    (steps/trans
+       E''steps
+       E'step)
+    Dplus'
+    Esteps''
+    <- steps_lemma Esteps E'step Esteps'
+    <- steps_lemma2 Esteps' E''steps Dplus Esteps''
+    <- plus_lemma Dplus' Dplus.
+
+%worlds () (steps_lemma2 _ _ _ _).
+%total [D] (steps_lemma2 _ D _ _).
+
+
+
+app_lemma1 : steps E1 E1' C
+	      -> steps (app E1 E2) (app E1' E2) C
+	      -> type.
+%mode +{E1:exp} +{E1':exp} +{E2:exp} +{C:nat} +{D:steps E1 E1' C}
+-{D':steps (app E1 E2) (app E1' E2) C} app_lemma1 D D'.
+
+-: app_lemma1 steps/refl steps/refl.
+
+-: app_lemma1
+    (steps/trans
+       E'steps
+       Estep)
+    (steps/trans
+       E'steps'
+       (step/app/fun Estep))
+    <- app_lemma1 E'steps E'steps'.
+
+%worlds () (app_lemma1 _ _).
+%total [D] (app_lemma1 D _).
+
+
+app_lemma2 : value V1
+	      -> steps E2 E2' C
+	      -> steps (app V1 E2) (app V1 E2') C
+	      -> type.
+%mode +{V1:exp} +{E2:exp} +{E2':exp} +{C:nat} +{D:value V1} +{D':steps E2 E2' C}
+-{D'':steps (app V1 E2) (app V1 E2') C} app_lemma2 D D' D''.
+
+-: app_lemma2 _ steps/refl steps/refl.
+
+-: app_lemma2
+    Vvalue
+    (steps/trans
+       E'steps
+       Estep)
+    (steps/trans
+       E'steps'
+       (step/app/arg Estep Vvalue))
+    <- app_lemma2 Vvalue E'steps E'steps'.
+
+%worlds () (app_lemma2 _ _ _).
+%total [D] (app_lemma2 _ D _).
+
+
+schedule_serial : evcost E1 E2 G -> sizeof G C -> steps E1 E2 C -> value E2 -> type.
+%mode schedule_serial +X1 -X2 -X3 -X4.
+
+-: schedule_serial
+    evcost/unit sizeof/0 steps/refl value/unit.
+
+-: schedule_serial
+    evcost/fun sizeof/0 steps/refl value/fun.
+
+-: schedule_serial
+    (evcost/app 
+       (Ecost)
+       (E2cost)
+       (E1cost))
+    ((sizeof/+
+       Dplus'
+       (sizeof/+
+	  Dplus''
+	  Esize
+	  sizeof/1)
+       (sizeof/*
+	  Dplus
+	  E2size
+	  E1size)))
+    E1steps'''
+    E'value
+    <- schedule_serial E1cost E1size E1steps _
+    <- schedule_serial E2cost E2size E2steps E2'value
+    <- schedule_serial Ecost Esize Esteps E'value
+    <- app_lemma1 E1steps E1steps'
+    <- app_lemma2 value/fun E2steps E2steps'
+    <- steps_lemma2 E1steps' E2steps' Dplus E1steps''
+    <- steps_lemma2 E1steps'' (steps/trans Esteps (step/app/beta-v E2'value)) Dplus' E1steps'''
+    <- plus_commute (plus/s plus/z) Dplus''.
+
+%worlds () (schedule_serial _ _ _ _).
+%total [D] (schedule_serial D _ _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Cost_semantics).
+!}%

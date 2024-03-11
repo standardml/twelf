@@ -1,0 +1,396 @@
+%%! title: "POPL Tutorial/Big step, small step: Solution"
+
+%{! This is the solution to [this exercise](/wiki/popl-tutorial-big-step-small-step/).
+|hidden = true !}%
+
+%% Syntax %%
+
+tp : type.				%name tp T.
+nat : tp.
+arr : tp -> tp -> tp.
+
+exp : type.				%name exp E.
+fn : tp -> (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+z : exp.
+s : exp -> exp.
+ifz : exp -> exp -> (exp -> exp) -> exp.
+
+%% Small-step dynamic semantics %%
+
+value : exp -> type.			%name value Dval.
+%mode value +E.
+
+value/z : value z.
+value/s : value (s E) 
+	   <- value E.
+value/fn : value (fn _ _).
+
+step : exp -> exp -> type.		%name step Dstep.
+%mode step +E1 -E2.
+
+step/app/fn : step (app E1 E2) (app E1' E2)
+	       <- step E1 E1'.
+step/app/arg : step (app E1 E2) (app E1 E2')
+		<- value E1 <- step E2 E2'.
+step/app/beta : step (app (fn _ ([x] E x)) E2) (E E2)
+		 <- value E2.
+step/s : step (s E) (s E') 
+	  <- step E E'.
+step/ifz/arg : step (ifz E E1 ([x] E2 x)) (ifz E' E1 ([x] E2 x))
+		<- step E E'.
+step/ifz/z : step (ifz z E1 ([x] E2 x)) E1.
+step/ifz/s : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
+	      <- value E.
+
+%%% Multi-step %%%
+
+step* : exp -> exp -> type.             %name step* Dstep*.
+
+step*/step : step* E E'
+              <- step E E'.
+step*/refl : step* E E.
+step*/trans : step* E E''
+               <- step* E' E''
+               <- step* E E'.
+
+%abbrev @ : step* E E' -> step* E' E'' -> step* E E''
+          = [d1] [d2] step*/trans d1 d2.
+
+%infix right 10 @.
+
+%% Big-step dynamic semantics %%
+
+eval : exp -> exp -> type.              %name eval Deval.
+
+eval/z : eval z z.
+eval/s : eval (s E) (s V)
+          <- eval E V.
+eval/ifz/z : eval (ifz E E0 ([x] E1 x)) V0
+              <- eval E z
+              <- eval E0 V0.
+eval/ifz/s : eval (ifz E E0 ([x] E1 x)) V1
+              <- eval E (s V)
+              <- eval (E1 V) V1.
+eval/fn : eval (fn T1 ([x] E x)) (fn T1 ([x] E x)).
+
+eval/app : eval (app E1 E2) V
+            <- eval E1 (fn T1 ([x] E x))
+            <- eval E2 V2
+            <- eval (E V2) V.
+
+%%% Lemmas about big-step dynamic semantics and values %%%
+
+eval-val : eval E V -> value V -> type.
+%mode eval-val +D1 -D2.
+
+- : eval-val eval/z value/z.
+- : eval-val (eval/s D) (value/s Dval)
+     <- eval-val D Dval.
+- : eval-val (eval/ifz/z (D0 : eval E0 V0)
+                         (Dz : eval E z))
+        Dval0
+     <- eval-val D0 (Dval0 : value V0).
+- : eval-val (eval/ifz/s (D1 : eval (E1 V) V1)
+                         (Ds : eval E (s V))
+                : eval (ifz E E0 [x] E1 x) V1)
+        Dval1
+     <- eval-val D1 (Dval1 : value V1).
+- : eval-val eval/fn value/fn.
+- : eval-val (eval/app (Dsub : eval (E V2) V)
+                       (D2 : eval E2 V2)
+                       (D1 : eval E1 (fn T1 ([x] E x))))
+        DvalV
+     <- eval-val Dsub (DvalV : value V).
+
+%worlds () (eval-val _ _).
+%total D (eval-val D _).
+
+val-eval : value V -> eval V V -> type.
+%mode val-eval +Dval -Dev.
+
+- : val-eval value/z eval/z.
+- : val-eval (value/s Dval) (eval/s Dev)
+     <- val-eval Dval Dev.
+- : val-eval value/fn eval/fn.
+
+%worlds () (val-eval _ _).
+%total D (val-eval D _).
+
+%{! ## Big-step implies multi-step !}%
+%{! ### Compatibility lemmas === |hidden=true !}%
+
+step*/s : step* E E' -> step* (s E) (s E') -> type.
+%mode step*/s +D* -D*s.
+
+- : step*/s (step*/step (D : step E E')) (step*/step (step/s D)).
+- : step*/s (step*/refl : step* E E) (step*/refl : step* (s E) (s E)).
+- : step*/s (step*/trans (D* : step* E E') (D*' : step* E' E''))
+            (step*/trans D*s D*'s)
+     <- step*/s D* (D*s : step* (s E) (s E'))
+     <- step*/s D*' (D*'s : step* (s E') (s E'')).
+
+%worlds () (step*/s _ _).
+%total D (step*/s D _).
+
+step*/ifz/arg : step* E E' -> step* (ifz E E0 [x] E1 x) (ifz E' E0 [x] E1 x)
+                 -> type.
+%mode +{E:exp} +{E':exp} +{E0:exp} +{E1:exp -> exp} +{D:step* E E'}
+   -{Difz:step* (ifz E E0 ([x:exp] E1 x)) (ifz E' E0 ([x:exp] E1 x))}
+   (step*/ifz/arg D Difz).
+
+- : step*/ifz/arg (step*/step (D : step E E')) (step*/step (step/ifz/arg D)).
+- : step*/ifz/arg step*/refl step*/refl.
+- : step*/ifz/arg (step*/trans D* D*') (step*/trans D*ifz D*'ifz)
+     <- step*/ifz/arg D* D*ifz
+     <- step*/ifz/arg D*' D*'ifz.
+
+%worlds () (step*/ifz/arg _ _).
+%total D (step*/ifz/arg D _).
+
+step*/app/fn : step* E1 E1' -> step* (app E1 E2) (app E1' E2) -> type.
+%mode +{E1:exp} +{E1':exp} +{E2:exp} +{D1:step* E1 E1'}
+    -{Dapp:step* (app E1 E2) (app E1' E2)}
+    (step*/app/fn D1 Dapp).
+
+- : step*/app/fn (step*/step (D1 : step E1 E1'))
+                  (step*/step (step/app/fn D1)).
+- : step*/app/fn step*/refl step*/refl.
+- : step*/app/fn (step*/trans D* D*') (step*/trans D*app D*'app)
+     <- step*/app/fn D* D*app
+     <- step*/app/fn D*' D*'app.
+
+%worlds () (step*/app/fn _ _).
+%total D (step*/app/fn D _).
+
+%{! #### TASK 1: Fill in the cases of the unfinished compatibility proof !}%
+
+step*/app/arg : step* E2 E2' -> value V1 -> step* (app V1 E2) (app V1 E2')
+                 -> type.
+%mode step*/app/arg +D2 +DvalV1 -Dapp.
+
+- : step*/app/arg (step*/step (D2 : step E2 E2'))
+                  (DvalV1 : value V1)
+                  (step*/step (step/app/arg D2 DvalV1)).
+- : step*/app/arg step*/refl _ step*/refl.
+- : step*/app/arg (step*/trans D* D*')
+                  (DvalV1 : value V1)
+                  (step*/trans D*app D*'app)
+     <- step*/app/arg D* DvalV1 D*app
+     <- step*/app/arg D*' DvalV1 D*'app.
+
+%worlds () (step*/app/arg _ _ _).
+%total D (step*/app/arg D _ _).
+
+%{! |hidden=true !}%
+
+%{! ### Main theorem !}%
+%{! #### TASK 2: Fill in the missing cases of the theorem !}%
+
+eval-multi : eval E V -> step* E V -> type.
+%mode eval-multi +D -D*.
+
+%{! |hidden=true !}%
+- : eval-multi (eval/z : eval z z) step*/refl.
+
+- : eval-multi (eval/s D : eval (s E) (s V)) D*s
+     <- eval-multi D (D* : step* E V)
+     <- step*/s D* (D*s : step* (s E) (s V)).
+
+- : eval-multi (eval/ifz/z (D0 : eval E0 V0) (Dz : eval E z))
+        (Difz* @ step*/step step/ifz/z @ D0*)
+     <- eval-multi Dz (Dz* : step* E z)
+     <- eval-multi D0 (D0* : step* E0 V0)
+     <- step*/ifz/arg Dz* (Difz* : step* (ifz E E0 [x] E1 x)
+                                         (ifz z E0 [x] E1 x)).
+
+- : eval-multi (eval/ifz/s (D1 : eval (E1 V) V1) (Ds : eval E (s V)))
+        (Difz* @ step*/step (step/ifz/s DvalV) @ D1*)
+     <- eval-multi Ds (Ds* : step* E (s V))
+     <- eval-multi D1 (D1* : step* (E1 V) V1)
+     <- step*/ifz/arg Ds* (Difz* : step* (ifz E E0 [x] E1 x)
+                                         (ifz (s V) E0 [x] E1 x))
+     <- eval-val Ds (value/s (DvalV : value V)).
+
+%{! ...snip... !}%
+
+- : eval-multi 
+     eval/fn 
+     step*/refl.
+
+- : eval-multi 
+     (eval/app (Dsub : eval (E V2) V)
+        (D2 : eval E2 V2)
+        (D1 : eval E1 (fn T1 ([x] E x))))
+        (Dfun* @ Darg* @ step*/step (step/app/beta DvalV2) @ Dsub*)
+     <- eval-multi D1 (D1* : step* E1 (fn T1 ([x] E x)))
+     <- eval-multi D2 (D2* : step* E2 V2)
+     <- eval-multi Dsub (Dsub* : step* (E V2) V)
+     <- step*/app/fn D1* (Dfun* : step* (app E1 E2)
+                                         (app (fn T1 ([x] E x)) E2))
+     <- step*/app/arg D2* value/fn
+                          (Darg* : step* (app (fn T1 ([x] E x)) E2)
+                                         (app (fn T1 ([x] E x)) V2))
+     <- eval-val D2 DvalV2.
+
+%worlds () (eval-multi _ _). 
+%total D (eval-multi D _).
+
+
+%{! ## Multi-step implies big step == |hidden=true !}%
+
+step** : exp -> exp -> type.            %name step** Dstep**.
+
+step**/refl : step** E E.
+step**/cons : step** E E''
+               <- step** E' E''
+               <- step E E'.
+
+step**/trans : step** E E' -> step** E' E'' -> step** E E'' -> type.
+%mode step**/trans +D1 +D2 -D3.
+
+- : step**/trans step**/refl (Dstep** : step** E E'') Dstep**.
+- : step**/trans (step**/cons (Dstep1 : step E E1)
+                              (Dstep**1 : step** E1 E'))
+                 (Dstep**2 : step** E' E'')
+        (step**/cons Dstep1 Dstep**)
+     <- step**/trans Dstep**1 Dstep**2 (Dstep** : step** E1 E'').
+
+%worlds () (step**/trans _ _ _).
+%total D (step**/trans D _ _).
+
+multi-step** : step* E E' -> step** E E' -> type.
+%mode multi-step** +D* -D**.
+
+- : multi-step** (step*/step Dstep) (step**/cons Dstep step**/refl).
+- : multi-step** step*/refl step**/refl.
+- : multi-step** (step*/trans (D1 : step* E E') (D2 : step* E' E'')) D**
+     <- multi-step** D1 (D1** : step** E E')
+     <- multi-step** D2 (D2** : step** E' E'')
+     <- step**/trans D1** D2** (D** : step** E E'').
+
+%worlds () (multi-step** _ _).
+%total D (multi-step** D _).
+
+
+%{! ### Expansion lemma !}%
+
+%{! #### TASK 3: Prove the three missing cases of the expansion lemma !}%
+
+expansion : eval E' V -> step E E' -> eval E V -> type.
+%mode expansion +D1 +D2 -D3.
+
+%{! |hidden=true !}%
+
+- : expansion (eval/s (Deval' : eval E' V) : eval (s E') (s V))
+              (step/s (Dstep  : step E E') : step (s E) (s E'))
+              (eval/s (Deval  : eval E V)  : eval (s E) (s V))
+     <- expansion Deval' Dstep (Deval : eval E V).
+
+- : expansion (eval/ifz/z (D0 : eval E0 V0) (Dz' : eval E' z)
+                  : eval (ifz E' E0 [x] E1 x) V0)
+              (step/ifz/arg (Dstep : step E E')
+                  : step (ifz E E0 [x] E1 x) (ifz E' E0 [x] E1 x))
+              (eval/ifz/z D0 Dz
+                  : eval (ifz E E0 [x] E1 x) V0)
+     <- expansion Dz' Dstep (Dz : eval E z).
+
+%{! ...snip... !}%
+
+- : expansion
+     (eval/ifz/s (D1 : eval (E1 V) V1) (Ds' : eval E' (s V))
+        : eval (ifz E' E0 [x] E1 x) V1)
+     (step/ifz/arg (Dstep : step E E')
+        : step (ifz E E0 [x] E1 x) (ifz E' E0 [x] E1 x))
+     (eval/ifz/s D1 Ds
+        : eval (ifz E E0 [x] E1 x) V1)
+     <- expansion Ds' Dstep (Ds : eval E (s V)).
+
+%{! |hidden=true !}%
+
+- : expansion (Deval' : eval E0 V0)
+              (step/ifz/z : step (ifz z E0 [x] E1 x) E0)
+              (eval/ifz/z Deval' eval/z).
+
+- : expansion
+     (Deval' : eval (E1 V) V1)
+     (step/ifz/s (Dval : value V)
+        : step (ifz (s V) E0 ([x] E1 x)) (E1 V))
+     (eval/ifz/s Deval' (eval/s DevalV))
+     <- val-eval Dval (DevalV : eval V V).
+
+- : expansion (Deval' : eval (E1 V) V1)
+              (step/ifz/s (Dval : value V)
+                  : step (ifz (s V) E0 ([x] E1 x)) (E1 V))
+              (eval/ifz/s Deval' (eval/s DevalV))
+     <- val-eval Dval (DevalV : eval V V).
+
+- : expansion (eval/app (Dsub : eval (E V2) V)
+                        (D2 : eval E2 V2)
+                        (D1' : eval E1' (fn T1 ([x] E x)))
+                  : eval (app E1' E2) V)
+              (step/app/fn (Dstep1 : step E1 E1')
+                  : step (app E1 E2) (app E1' E2))
+              (eval/app Dsub D2 D1)
+     <- expansion D1' Dstep1 (D1 : eval E1 (fn T1 ([x] E x))).
+
+%{! ...snip... !}%
+
+- : expansion 
+     (eval/app (Dsub : eval (E V2) V)
+        (D2' : eval E2' V2)
+        (D1 : eval V1 (fn T1 ([x] E x)))
+        : eval (app V1 E2') V)
+     (step/app/arg (Dstep2 : step E2 E2') (Dval1 : value V1)
+        : step (app V1 E2) (app V1 E2'))
+     (eval/app Dsub D2 D1)
+     <- expansion D2' Dstep2 (D2 : eval E2 V2).
+
+- : expansion 
+     (Deval' : eval (E V2) V)
+     (step/app/beta (Dval2 : value V2)
+        : step (app (fn T1 ([x] E x)) V2) (E V2))
+     (eval/app Deval' DevalV2 eval/fn)
+     <- val-eval Dval2 (DevalV2 : eval V2 V2).
+
+%worlds () (expansion _ _ _).
+%total D (expansion _ D _).
+
+
+%{! ### Main theorem !}%
+
+%{! #### TASK 4: Prove main theorem in the forward direction !}%
+
+multi**-eval : step** E V -> value V -> eval E V -> type.
+%mode multi**-eval +D1 +D2 -D3.
+
+- : multi**-eval step**/refl (Dval : value V) Deval
+     <- val-eval Dval (Deval : eval V V).
+
+- : multi**-eval (step**/cons (Dstep : step E E') (Dstep** : step** E' V))
+                 (Dval : value V)
+                 Deval
+     <- multi**-eval Dstep** Dval (Deval' : eval E' V)
+     <- expansion Deval' Dstep (Deval : eval E V).
+
+%worlds () (multi**-eval _ _ _).
+%total D (multi**-eval D _ _).
+
+%{! #### TASK 5: Complete proof by composing previous lemmas !}%
+
+multi-eval : step* E V -> value V -> eval E V -> type.
+%mode multi-eval +D1 +D2 -D3.
+
+- : multi-eval (D* : step* E V) (Dval : value V) Dev
+     <- multi-step** D* (D** : step** E V)
+     <- multi**-eval D** Dval (Dev : eval E V).
+
+%worlds () (multi-eval _ _ _).
+%total {} (multi-eval _ _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Big_step,_small_step:_Solution).
+!}%

@@ -1,0 +1,23 @@
+%%! title: "Talk:Proving metatheorems with Twelf"
+
+%{! The content is good, but I'm not sure if it's directed to the right
+audience.  It seems to be directed to someone who wants to
+know what's _really_ going on in Twelf.  If someone just wants to see
+how to use Twelf, they might get bogged down in Simply-Typed LF,
+wondering when the interesting content is going to come.
+[Boyland](/wiki/user-boyland/) 22:30, 25 February 2007 (EST)
+
+: I've actually been looking at the [http://haskell.org Haskell Wiki] lately - I see this as one way to get an idea of what we're going for here (Twelf's not Haskell, but it's a good successful model). They have an article [[haskell:Haskell in 5 steps|Haskell in 5 steps]] that might be a model for something a little simpler than this; however, I'm not sure what audience we'd be directing towards such a tutorial.  The thing we've tried to think about for the [introductions to Twelf](/wiki/introductions-to-twelf/) is how we want to direct various audiences, as the intro says this aims to be the "I've read Types and Programming Languages" audience - i.e. people that are interested in the type theory of what they're doing. What would your say is the audience we're missing here? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 23:30, 25 February 2007 (EST)
+
+:: The audience you're missing are the people who have read TAPL, have written their own natural language proofs and want to write machine-checked proofs.  I'm also assuming they understand pattern-matching and logic programming at a practical level.  The article claims to address the audience but then goes on a long time about LF's type system.  Their interested in _their own_ type system, not _yours._  Sure, if they find Twelf expressive, they'll want to learn more, but to expound upon the type system before you've sold them on the usefulness is probably counter-productive.  And anyway, if they are type aficionados, they'll turn up their nose(s) at the lack of higher-order. [Boyland](/wiki/user-boyland/) 20:01, 26 February 2007 (EST)
+
+## The third layer
+
+Does this line "The third layer presents some more-interesting proofs and introduces one additional feature of Twelf, the ability to do proofs about open terms." need to be tweaked with the restructuring of the tutorial? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 20:25, 14 March 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Proving_metatheorems_with_Twelf).
+!}%

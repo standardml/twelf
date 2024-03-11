@@ -1,0 +1,122 @@
+%%! title: "Summer school 2008:Arithmetic expressions with let-binding (hypothetical evaluation)"
+
+%{! 
+
+\{\{Summer school 2008
+   |prev=Arithmetic expressions with call-by-value let-binding
+   |prevname=Call-by-value let-binding syntax
+   |next=Typed arithmetic expressions
+   |nextname=Typed arithmetic expressions\}\}
+
+Numbers and addition are as before.
+
+|hidden="true" !}%
+
+nat : type.             %name nat M.
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) <- add M N P.
+
+%% addition is a total function on closed terms of type nat
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%{! 
+
+## Evaluation using a hypothetical judgement
+
+We use the call-by-value syntax for expressions here.
+
+Values, expressions, answers, and the first two cases of evaluation are as before:
+
+!}%
+
+val : type.				%name val V.
+num : nat -> val.
+
+exp : type.				%name exp E.
+ret : val -> exp.
+plus : exp -> exp -> exp.
+let : exp -> (val -> exp) -> exp.
+
+%%% evaluation, using hypothetical judgements
+
+ans : type.				%name ans A.
+anum : nat -> ans.
+
+eval : exp -> ans -> type.
+%mode eval +E1 -E2.
+
+eval/val
+   : eval (ret (num N)) (anum N).
+
+eval/plus
+   : eval (plus E1 E2) (anum N)
+      <- eval E1 (anum N1)
+      <- eval E2 (anum N2)
+      <- add N1 N2 N.
+
+eval/let
+   : eval (let E1 ([x] E2 x)) A2
+      <- eval E1 A1
+      <- ({x:val} eval (ret x) A1 -> eval (E2 x) A2).
+
+%{! 
+
+``eval/let`` deserves some explanation: the second recursive call says that we evaluate ``(E2 x)`` in an extended LF context.  In particular, we extend the context with ``x:val``, a variable ranging over values, and a derivation of ``eval (ret x) A1``.  In the scope of these assumptions, the expression ``ret x`` therefore evaluates to ``A1``.  In the terminology of [http://www.cs.cmu.edu/~rwh/plbook/book.pdf Practical Foundations for Programming Languages], ``eval`` is a [hypothetical](/wiki/hypothetical-judgment/) (because we add ``eval`` assumptions to the context) and general (because we add variables to the context) judgement. The context of ``eval`` is represented by the LF context, a technique called [higher-order judgements](/wiki/higher-order-judgements/).  
+
+### Totality in non-empty worlds
+
+Because evaluation recurs in an extend context, we must prove it total not just for the empty context, as we have done above, but for a [world](/wiki/percent-worlds/) of a particular form.  
+
+If we tried to prove it total in the empty context, Twelf would complain:
+
+&lt;twelf check="decl"&gt;
+%worlds () (eval _ _).
+&lt;/twelf&gt; 
+
+This error means "you said ``eval`` stays in the empty context, but it doesn't!".
+
+In what contexts in ``eval`` total?  Not in every context: if we ever assumed a variable ``x:val`` without also assuming ``eval (ret x) A`` for some ``A``, then ``ret x`` would be an expression without a value.  So we want to describe the invariant that the context looks like
+
+``x1:val, d1:eval (ret x) A1, ...... , xn:val, dn:eval (ret x) An``
+
+for some ``A1, ... , An``.  
+
+We do this by 
+- defining a block ``eval_block`` describing that pattern
+- stating ``eval`` for a world containing contexts made up of ``eval_block``s
+!}%
+
+%block eval_block : some {A:ans} block {x:val} {_:eval (ret x) A}.
+%worlds (eval_block) (eval _ _).
+
+%{! 
+
+Now Twelf can verify the totality of ``eval``:
+
+!}%
+
+%total E (eval E _).
+
+%{! 
+
+\{\{Summer school 2008
+   |prev=Arithmetic expressions with call-by-value let-binding
+   |prevname=Call-by-value let-binding syntax
+   |next=Typed arithmetic expressions
+   |nextname=Typed arithmetic expressions\}\}
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Arithmetic_expressions_with_let-binding_(hypothetical_evaluation)).
+!}%

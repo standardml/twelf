@@ -1,0 +1,33 @@
+%%! title: "Talk:Equality"
+
+%{! ## Deep equality
+
+Not all equalities that are are _not_ syntactic equality are "defined inductively over the structure of terms". I know of some algorithmic equalities that are a combination of syntax directed and type directed. Some declarative equality systems aren't necessarily anything directed. 
+
+Is "deep" equality meant to describe equalities that are defined as part of a logic? --[DanielKLee](/wiki/user-danielklee/) 18:23, 27 September 2006 (MST)
+
+## Equality vs. equivalence
+
+I don't really understand why people draw a distinction between "equality" and "equivalence". We often call things equal that are not the same; equality up to alpha-conversion is a great example. What purpose is the distinction supposed to serve? Originally, I had simply said: One can define equivalence relations in Twelf. You can choose to use LF's built-in notion of equality to do so, or you can define it yourself. To me, this is less confusing because it does not introduce distinctions between things that are not really different. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:39, 9 October 2006 (EDT)
+
+### Where I'm going
+
+In the (possibly if not probably non-standard) classification system in my head, "equivalence" is a special case of "equality" where equality is established by way of an equivalence relation rather than by way of being indistinguishable (i.e. "identity", which is then another special case of "equality"). Obviously I am tripping a bit over terminology here; I've also left the article in a series of inconsistant states - I'm going to shorten this article to something short but non-harmful and do work in User: space for a bit.
+
+I think this may need to turn into a disambiguation page going to two or three different tutorial-type articles. I don't know for sure what to *call* these articles.
+
+* _Two things are the same if they are indistinguishable_ - Equality via LF's built-in identity. This is what, at first, I saw this article being used for; essentially it is about what Dan Lee calls "respects lemmas" and Dan Licata calls "congruence lemmas," which are what make using this notion possible.
+* _Two things are the same if they are related by an equivalence relation_ - Equality via some relation - this can use the tree example by creating a notion of trees that are equivalent modulo swapping left and right children of a pair node.
+* _Two things are the same if they have the same canonical form_ - since Karl uses this approach successfully with the singleton kinds work I think it should be discussed - this uses the tree example by making a "canonical tree" one whose left branch is larger than the right (for some unambiguous value of "larger") - then I'd like to show that the canonical form definition is logically equivalent (yipes overloading!) to the canonical form usage.
+
+— [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 12:20, 9 October 2006 (EDT)
+:* But you can make _respects_ lemmas for both deep and shallow equality (and sometimes you have to). They're just really easy if you define equality by way of LF's notion of equality. The fact that we have to write these lemmas at all is a demonstration that Twelf has no special support that would distinguish the first and second bullets as being really different. The third is just another example of defining an equivalence relation (in this case by quotienting), which is a good example but not a distinct category. (IMO) (Maybe I should put "(IMO)" in my sig. ;)) &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 14:45, 9 October 2006 (EDT)
+
+::* I think I now have something that makes sense based on your comments - Tom, care to weigh in? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:03, 9 October 2006 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Equality).
+!}%

@@ -1,0 +1,33 @@
+%%! title: "Talk:Substitution lemma"
+
+%{! ## Suggestions for points that require clarification
+
+Go wild. --[DanielKLee](/wiki/user-danielklee/) 21:07, 24 September 2006 (MST)
+
+## exchange can be subtle
+
+the current draft suggests that exchange is valid whenever a variable cannot occur in a subsequent type, but unfortunately this simple statement is not true in general.  the reason is that the well-formation of a subsequent type may depend on the preceding variable, even if the type itself does not involve that variable!  this would come up in situations where the equational theory of types is such as to permit deduction of equations from existence of variables of preceding types, eg x : False, y : Garbage wouldn't permit exchange if the formation of Garbage depended on knowing that x : False is a contradiction!
+
+a related point is strengthening: it is NOT true in general that if a variable doesn't occur, then the variable can be dropped.  it is in general a deep property of a type theory that non-occurring variables can be dropped.  this was a main complication for the metatheory of lf itself: it is quite non-obvious how to prove strengthening, but this is necessary for some proofs of decidability for beta-eta conversion.
+
+[[User:Rwh|Rwh]] 21:18, 24 September 2006 (MST)
+
+: Point noted. Language modified. --[DanielKLee](/wiki/user-danielklee/) 21:36, 24 September 2006 (MST)
+
+## on the use of catch-all cases
+
+I want to pick a nit about the use of catch-all cases in definitions like substitution. They are no doubt convenient, since they obviate the need to introduce a base case for the new variable when recurring under a binder and save some of the associated complexity in the context blocks, but they are (IMHO) objectionable for at least two reasons, one minor and one more serious:
+
+- they violate the aesthetic principle that all information about fresh variables should be contained in the context along with the variable, which is after all the purpose of a context block; and
+- from a logic-programming standpoint, they introduce _exponential non-determinism_, since, in a vacuous substitution, the substitution goal will match both the catch-all case and the case for its outermost constructor, and the same will be true at _every one of its subterms_; thus a vacuous substitution into a term of size n will have 2^n different derivations.
+
+Of course, if we are just talking about truth, then something that is true 2^n different ways is not any more or less true than something that is true in just one way, but again, why not "code" things up more efficiently if we can? Anyway, just a thought.
+
+[Twilson](/wiki/user-twilson/) 22:32, 3 March 2015 (EST) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Substitution_lemma).
+!}%

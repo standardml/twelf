@@ -1,0 +1,211 @@
+%%! title: "First-order encodings"
+
+%{! A Twelf source file consists of a collection of _declarations_, each of which is either
+* a _type declaration_, in which a new type family is introduced (and named),
+* a _value declaration_, in which a new _value constructor_ is introduced and given a type,
+* a _signature check_, in which Twelf is asked to check a particular property of the type and value declarations given up to that point (collectively called the _signature_), or
+* another kind of directive that changes the behavior of Twelf in some way.
+Signature checks and directives are indicated with keywords beginning with the '``%``' symbol, such as &nbsp;``%mode``,&nbsp; ``%worlds``,&nbsp; ``%total``,&nbsp; ``%name``,&nbsp; etc., and comments are started with either '``%&nbsp;``' or '``%%``'.  Comments and judicious use of white space make source files more intelligible to readers.  We will have more to say about what we mean by type _families_ in the next section, but, first, we look at some simpler data types.
+
+As a first example, consider these declarations !}%
+    
+% Days of the week
+day : type.
+
+sunday    : day.
+monday    : day.
+tuesday   : day.
+wednesday : day.
+thursday  : day.
+friday    : day.
+saturday  : day.
+
+%{! The keyword ``type`` in the first (type) declaration indicates that ``day`` is a new type, and, having made this declaration, the following seven (value) declarations introduce elements of this type.  These seven elements can also be viewed as _nullary_ constructors, i.e., as operations that take an empty list of arguments and produce an element of type ``day``.  This is a finite data type, but the same principle works for infinite types with unary and binary constructors (and, indeed, constructors of any arity): !}%
+    
+% Natural numbers in "unary" form
+nat : type.
+
+0 : nat.            % zero element
+s : nat -> nat.     % unary successor operator
+
+
+% Natural number lists
+nat_list : type.
+
+nil  : nat_list.                       % empty list
+cons : nat -> nat_list -> nat_list.    % (cons N L) is the list whose first element is N and the rest of whose elements is L
+
+
+% Binary trees labelled with nats
+nat_tree : type.
+
+empty : nat_tree.                                    % empty tree
+node  : nat -> nat_tree -> nat_tree -> nat_tree.     % (node N L R) is the tree with label N, left subtree L, and right subtree R.
+
+%{! In each of these three data structure definitions, the first declaration is a type declaration, and the following two are value declarations.
+As with types in ML, the infix arrow, which associates to the right, indicates a "functional" type.  However, there is no computation here, just the declaration of types and constructors.  These declarations may be compared with the following ML definitions:
+&lt;pre&gt;datatype day      = sunday | monday | tuesday | wednesday | thursday | friday | saturday;
+datatype nat      = 0 | s of nat;                                (* s    : nat -&gt; nat                            *)
+datatype nat_list = nil | cons of nat * nat_list;                (* cons : nat * nat_list -&gt; nat_list            *)
+datatype nat_tree = empty | node of nat * nat_tree * nat_tree;   (* node : nat * nat_tree * nat_tree -&gt; nat_tree *)
+&lt;/pre&gt;
+One difference here is that Twelf has no built-in product type, so term constructors with arity two or greater, like ``cons`` (arity 2) and ``node`` (arity 3), have to be treated as curried higher-order functions.  The elements of type ``nat``, in both Twelf and ML, are:
+* ``0``,
+* ``s 0``,
+* ``s (s 0)``,
+* ``s (s (s 0))``,
+and so on; in fact, every element of ``nat`` results from applying the constructor ``s`` zero or more times to the constant (or nullary operator) ``0``.  In this way, each natural number has a unique representative as an element of type ``nat``, and each element of type ``nat`` corresponds to a unique natural number; this is the sense in which we say that we have represented the natural numbers in Twelf.
+Some of the elements of Twelf's type ``nat_list``, with their ML counterparts, are:
+* ``nil`` &nbsp;&nbsp;(ML: ``nil``),
+* ``cons 0 nil`` &nbsp;&nbsp;(ML: ``cons(0, nil)``),
+* ``cons (s 0) (cons (s (s 0)) nil)`` &nbsp;&nbsp;(ML: ``cons(s 0, cons(s (s 0), nil))``),
+* ``cons (s (s 0)) (cons (s 0) (cons 0 nil))`` &nbsp;&nbsp;(ML: ``cons(s (s 0), cons(s 0, cons(0, nil)))``);
+these correspond to the lists ``[]``, ``[0]``, ``[1,2]``, and ``[2,1,0]``, respectively.
+Finally, here are some elements of Twelf's type ``nat_tree`` (what are the corresponding ML terms?):
+* ``empty``,
+* ``node 0 empty empty``,
+* ``node (s 0) (node (s (s 0)) empty empty) empty``, and
+* ``node (s (s 0)) (node 0 empty empty) (node (s 0) empty empty)``.
+In a similar way, any signature determines some types and elements of those types.
+
+Twelf also has a definition facility, whereby we can introduce new identifiers to stand for already existing elements.  For example, we could introduce the identifiers ``zero``, ``one``, ``two``, etc., to stand for the corresponding elements of type ``nat``: !}%
+    
+zero  = 0 : nat.
+one   = s zero : nat.    % or: one   = s 0 : nat.
+two   = s one : nat.     % or: two   = s (s 0) : nat.
+three = s two : nat.     % or: three = s (s (s 0)) : nat.
+four  = s three : nat.   % or: four  = s (s (s (s 0))) : nat.  etc.
+
+%{! ## Type families
+
+The type ``nat_list`` from the previous subsection has as elements _all_ lists of natural numbers, of all lengths.  However, we can refine this type, replacing it with an infinite collection of types \{L&lt;sub&gt;0&lt;/sub&gt;, L&lt;sub&gt;1&lt;/sub&gt;, L&lt;sub&gt;2&lt;/sub&gt;, ...\}, where for each natural number _n_, the type L&lt;sub&gt;_n_&lt;/sub&gt; consists of all natural number lists _of length n_.  Thus L&lt;sub&gt;0&lt;/sub&gt; has only the element ``nil``; L&lt;sub&gt;1&lt;/sub&gt; contains exactly the one-element lists ``cons 0 nil``,&nbsp; ``cons (s 0) nil``,&nbsp; ``cons (s (s 0)) nil``,&nbsp; etc.; L&lt;sub&gt;2&lt;/sub&gt; contains exactly the two-element lists, and so on, and the ``cons`` operator becomes an infinite family of operators \{``cons``&lt;sub&gt;0&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;0&lt;/sub&gt; &rarr; L&lt;sub&gt;1&lt;/sub&gt;, ``cons``&lt;sub&gt;1&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;1&lt;/sub&gt; &rarr; L&lt;sub&gt;2&lt;/sub&gt;, ``cons``&lt;sub&gt;2&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;2&lt;/sub&gt; &rarr; L&lt;sub&gt;3&lt;/sub&gt;, ...\}.  This is how we could define each of these types and operations separately in Twelf: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
+nat_list0 : type.   % L_0:  lists of length 0
+nat_list1 : type.   % L_1:  lists of length 1
+nat_list2 : type.   % L_2:  lists of length 2
+nat_list3 : type.   % L_3:  lists of length 3
+
+nil : nat_list0.
+
+cons0 : nat -> nat_list0 -> nat_list1.
+cons1 : nat -> nat_list1 -> nat_list2.
+cons2 : nat -> nat_list2 -> nat_list3.
+
+%{! Now, the list [0, 1, 2] would be represented as ``cons2 0 (cons1 (s 0) (cons0 (s (s 0)) nil))``, and this term and its subterms would have types as follows:
+* ``cons2 0 (cons1 (s 0) (cons0 (s (s 0)) nil))`` : ``nat_list3``,
+* ``cons1 (s 0) (cons0 (s (s 0)) nil)`` : ``nat_list2``,
+* ``cons0 (s (s 0)) nil`` : ``nat_list1``, and
+* ``nil`` : ``nat_list0``.
+Now each natural number list and ``cons`` operator comes (via its type) with an explicit length.  This refinement of the type gives us extra information, but it can get very tedious, depending on how far we need to carry it out.  Moreover, however far out we go, we will still only have a finite number of types and operations (the signature being finite), so we will not have represented all possible natural number lists.
+
+This is where type families come in.  The index we are using to refine the list type is a natural number, but we have already defined a natural number type in Twelf, so let's use it to define this entire infinite family of types in one go: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
+% Natural number lists, indexed by length (a natural number)
+nat_list : nat -> type.                                        % subsumes nat_list0, nat_list1, nat_list2, ...
+
+nil : nat_list 0.
+cons : {N:nat} nat -> nat_list N -> nat_list (s N).            % subsumes cons0, cons1, cons2, ....
+
+%{! Thus, we are representing the family \{L&lt;sub&gt;0&lt;/sub&gt;, L&lt;sub&gt;1&lt;/sub&gt;, L&lt;sub&gt;2&lt;/sub&gt;, ...\} as a kind of function that takes a natural number _n_ and gives the type L&lt;sub&gt;_n_&lt;/sub&gt;.  We say that ``nat_list`` is a _family_ of types, indexed by elements of ``nat``.  Once this declaration is made, an infinite number of types come into existence, one for each element of ``nat``:
+* ``nat_list 0``,
+* ``nat_list (s 0)``,
+* ``nat_list (s (s 0))``,
+and so on.  Similarly, we are representing the family \{``cons``&lt;sub&gt;0&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;0&lt;/sub&gt; &rarr; L&lt;sub&gt;1&lt;/sub&gt;, ``cons``&lt;sub&gt;1&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;1&lt;/sub&gt; &rarr; L&lt;sub&gt;2&lt;/sub&gt;, ``cons``&lt;sub&gt;2&lt;/sub&gt; : ``nat`` &rarr; L&lt;sub&gt;2&lt;/sub&gt; &rarr; L&lt;sub&gt;3&lt;/sub&gt;, ...\} as a kind of function that takes a natural number _n_ and gives the associated operation of type ``nat`` &rarr; L&lt;sub&gt;_n_&lt;/sub&gt; &rarr; L&lt;sub&gt;_n_+1&lt;/sub&gt;.  The prefix ``\{N:nat\}`` in the declaration for ``cons`` above can be thought of both as a universal quantifier and as an additional argument to ``cons`` on which the rest of its type depends.  Thus, this declaration can be read, "for every element ``N`` of type ``nat``, ``cons`` applied to ``N`` is an operator of type ``nat -&gt; nat_list&nbsp;N -&gt; nat_list&nbsp;(s&nbsp;N)``.  In particular,
+* ``cons 0 : nat -&gt; nat_list 0 -&gt; nat_list (s 0)``,
+* ``cons (s 0) : nat -&gt; nat_list (s 0) -&gt; nat_list (s (s 0))``,
+* ``cons (s (s 0)) : nat -&gt; nat_list (s (s 0)) -&gt; nat_list (s (s (s 0)))``,
+and so on.  Thus, just as ``nat_list`` is a _type_ family indexed by elements of the type ``nat``, so ``cons`` is a _value_ family indexed by elements of type ``nat``, with the type dependent on what natural-number index ``cons`` is applied to.  With these declarations, the list [0, 1, 2] would be represented as
+ ``cons (s (s 0)) 0 (cons (s 0) (s 0) (cons 0 (s (s 0)) nil))``.
+(Compare this to ``cons2 0 (cons1 (s 0) (cons0 (s (s 0)) nil))`` above.)  We have thus effectively "internalized" our previous "external" family of types and operators, and extended it to all natural numbers.
+
+Let's examine this universal quantification more closely.  The general form of a universally quantified type is ``\{X:t\} P(X)``, where ``t`` is a type, called the index type, and ``P(X)`` is a type expression, called the body of the type, which has zero or more occurrences of the value variable ``X``.  The actual variable used in the quantification is immaterial:  the type ``\{X:t\} P(X)`` is the same as the type ``\{N:t\} P(N)``.  In the type of ``cons`` above, the type ``t`` is ``nat``, the value variable is ``N``, and the body is ``nat -&gt; nat_list&nbsp;N -&gt; nat_list&nbsp;(s&nbsp;N)``.  Twelf only allows value variables in quantifications; it does not allow type variables or quantifications of the form ``\{T:type\}``, which would require type variables.
+
+So, what are the elements of the ``t``-indexed type family ``\{X:t\} P(X)``?  As suggested above, they are ``t``-indexed _value families_, where the value at a particular index ``v`` of the value family has the type that is at the same index ``v`` of the type family, namely ``P(v)``.  Thus, they are functions ``f`` whose domain is ``t`` and are such that ``f v : P(v)`` for any value ``v:t``, i.e., functions whose result type depends (uniformly) on which value they are given as input.
+
+Now, it may turn out that ``P(X)`` doesn't actually have any occurrences of ``X``, in which case the body doesn't depend on the value of the index and is thus the same for all indices.  Let's call this common type ``p``.  Then, elements of ``\{X:t\}&nbsp;P(X)`` are just functions from ``t`` to ``p``, i.e., elements of the type ``t -&gt; p``.  This shows that universally quantified types subsume ordinary function types, and indeed, Twelf treats the function type ``A -&gt; B`` as an abbreviation for the quantified type ``\{X:A\} B``, where ``X`` is a value variable that doesn't occur in ``B``.  Thus, the actual type of ``cons`` above is
+ cons : \{N:nat\} \{M:nat\} \{L:nat_list N\} nat_list (s N),
+where the value variables ``M`` and ``L`` were chosen arbitrarily.
+
+Just like universal quantifiers, type families can be iterated.  For example, if we had a type declaration
+ iter : \{N:nat\} nat_list N -&gt; type.
+then we could introduce types with prefixes such as ``\{N:nat\} \{L:nat_list N\} \{I:iter N L\}`` ....  It may not seem so now, but such deeply nested quantifier prefixes are quite common and useful, and it is not unusual for a type constructor to have a dozen or more quantifiers in its type.  As you might imagine, however, it can get very tedious to supply all of these arguments every time the constructor is used, especially since they can, in most instances, be inferred from the context.  Fortunately, Twelf has a mechanism by which these prefixes can be omitted from both the type declarations of the constructors and from the uses of the constructors in terms.  For example, we could have left out the quantifier in the definition of ``cons``: !}%
+    
+% Natural number lists, indexed by length (a natural number)
+nat_list : nat -> type.
+
+nil : nat_list 0.
+cons : nat -> nat_list N -> nat_list (s N).
+
+%{! Now, the value variable ``N`` in ``cons`` is _free_ (i.e., not quantified), so Twelf automatically tries to infer the appropriate quantifier.  It can do so in this case, since ``N`` is being used as an argument to ``nat_list``, which expects to be applied to a ``nat``, so Twelf infers the quantifier ``\{N:nat\}`` for ``N``.  Also, the second occurrence of ``N`` in the type is consistent, since the type of ``s`` is ``nat -&gt; nat``, so the type of ``s N`` is ``nat``, which again is what ``nat_list`` expects.  With this abbreviated declaration, the list [0,1,2] would be represented by
+ cons 0 (cons 1 (cons 2 nil)),
+just as it was before we refined ``nat_list`` into a type family indexed by length.  Twelf is automatically supplying the correct first arguments to each instance of ``cons``, using the following reasoning.  The type of ``nil`` is ``nat_list 0``, so the missing argument of ``cons`` in ``cons 2 nil`` must be ``0``, the type of this expression being ``nat_list (s 0)``.  But then the missing argument in the middle instance of ``cons`` has to be ``s 0``, making the type of the expression ``cons 1 (cons 2 nil)`` be ``nat_list (s 0)``.  Finally, that means that the missing argument in the first instance of ``cons`` has to be ``s (s 0)``, and so the complete term can be reconstructed.  As we shall see, this kind of reconstruction is the rule, rather than the exception, and it makes working with Twelf much easier that it would without it.
+
+## Representing relations and functions
+
+A crucial feature of Twelf is that we can use it to represent not only data structures but also the logic we use to reason about them.  Ordinary predicate logic is built up from primitive predicates and relations using logical connectives such as "and", "or", and "implies", and quantifiers such as "for all" and "there exists".  In Twelf, we us a computational interpretation of logic based on the so-called "Propositions as Types" principle, meaning that we represent statements in our logic as types (or type families), and proofs of these statements as elements of the associated types.  This has two important consequences:  (1) the logic and reasoning methods we can use are somewhat restricted (technically, we are restricted to the &forall;&exist; fragment, and our reasoning must be _Intuitionistic_ or _constructive_, about which we will have more to say later), and (2) propositions, being types, are themselves data structures that can therefore be reasoned about in Twelf, allowing us to iterate the process of representation and reasoning to any desired level.
+
+A relation, R, among objects from sets A&lt;sub&gt;1&lt;/sub&gt;, ..., A&lt;sub&gt;n&lt;/sub&gt; is usually taken to be a subset of the cartesian product:  R ⊂ A&lt;sub&gt;1&lt;/sub&gt; Χ ... Χ A&lt;sub&gt;n&lt;/sub&gt;.  The elements of this cartesian product are tuples &lsaquo;a&lt;sub&gt;1&lt;/sub&gt;, ..., a&lt;sub&gt;n&lt;/sub&gt;&rsaquo;, where each a&lt;sub&gt;i&lt;/sub&gt; is an element of A&lt;sub&gt;i&lt;/sub&gt;.  The idea is that the subset R collects together all of the tuples that stand in the relation, thus providing a set-theoretic counterpart to the informal relation.  Unfortunately, the type theory underlying Twelf cannot directly represent general subsets, and, as we have noted above, it doesn't have products either.  But what we _can_ do is, in some ways, even better: we represent the relation R between A&lt;sub&gt;1&lt;/sub&gt;, ..., A&lt;sub&gt;n&lt;/sub&gt; as a type family
+ R : A&lt;sub&gt;1&lt;/sub&gt; -&gt; ... -&gt; A&lt;sub&gt;n&lt;/sub&gt; -&gt; type.
+Now, for every tuple &lsaquo;a&lt;sub&gt;1&lt;/sub&gt;, ..., a&lt;sub&gt;n&lt;/sub&gt;&rsaquo;, there is a type ``R a&lt;sub&gt;1&lt;/sub&gt; ... a&lt;sub&gt;n&lt;/sub&gt;``, and we take this to be the type of _evidence_ for the relationship between a&lt;sub&gt;1&lt;/sub&gt;, ..., a&lt;sub&gt;n&lt;/sub&gt; according to ``R``.  If this type has at least one element (and in practice it will then have exactly one element), then, there being evidence for the relationship, we say that the elements a&lt;sub&gt;1&lt;/sub&gt;, ..., a&lt;sub&gt;n&lt;/sub&gt; are related by R.  On the other hand, if this type is empty, i.e., it has no elements, then the indicated relationship does not hold.  To repeat, a relation is represented as a type family, and each instance of the relation is not just true or false but a separate _type_ whose elements represent _evidence_ of its truth.  The absence of such evidence means that the particular instance does not hold.
+
+Let's look at some examples.  Recall the type ``day`` with elements ``sunday``, ``monday``, ..., ``saturday``, and consider the "next day" relation that a relates a day with the following day.  Here is how we represent this relation in Twelf: !}%
+    
+% Next-day relation on day
+next_day : day -> day -> type.
+
+next_day_sun : next_day sunday monday.
+next_day_mon : next_day monday tuesday.
+next_day_tue : next_day tuesday wednesday.
+next_day_wed : next_day wednesday thursday.
+next_day_thu : next_day thursday friday.
+next_day_fri : next_day friday saturday.
+next_day_sat : next_day saturday sunday.
+
+%{! The ``next_day`` relation is a binary relation on ``day`` and is therefore represented as a type family doubly indexed by ``day``.  The next seven declarations introduce elements that stand for the evidence that specific instances of the "next day" relation hold (their names were chosen to be mnemonic but could be any identifiers).  Thus, these seven pairs of days stand in the relation and no others do.
+
+Given this relation, we can define another relation, called ``dat`` ("day after tomorrow"), that relates each day with the day two days later: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
+% Day after tomorrow relation on day
+dat : day -> day -> type.
+
+dat_def : {D1:day}{D2:day}{D3:day} next_day D1 D2 -> next_day D2 D3 -> dat D1 D3.
+
+%{! Logically, the declaration of ``dat_def`` can be read, "for all days ``D1``, ``D2``, and ``D3``, if the day after ``D1`` is ``D2``, and the day after ``D2`` is ``D3``, then the day two days after ``D1`` is ``D3``."  In terms of evidence, ``dat_def`` is a constructor that, given any days ``D1``, ``D2``, and ``D3``, along with evidence for ``next_day D1 D2`` and ``next_day D2 D3``, represents evidence for ``dat D1 D3``.  For example, we have
+ dat_def sunday monday tuesday next_day_sun next_day_mon : dat sunday tuesday.
+That is, Tuesday is two days after Sunday, according to these definitions, because there exists evidence for ``dat sunday tuesday``, namely the element to the left of the colon above; this element is well-typed, since ``dat_def`` is being applied correctly to five arguments, with
+* ``sunday : day`` (so that ``D1`` is instantiated to ``sunday``),
+* ``monday : day`` (so that ``D2`` is instantiated to ``monday``),
+* ``tuesday : day`` (so that ``D3`` is istantiated to ``tuesday``),
+* ``next_day_sun : next_day sunday monday`` (i.e., ``next_day D1 D2``), and
+* ``next_day_mon : next_day monday tuesday`` (i.e., ``next_day D2 D3``),
+the whole term thus having type ``dat sunday tuesday`` (i.e., ``dat D1 D3``).  In this way, the only pairs of days in the ``dat`` relation are those pairs where the second day is two days after the first.
+
+Just as we observed at the end of the previous section, the three quantifiers in the declaration of ``dat_def`` above can be omitted: !}%
+    
+% Day after tomorrow relation on day
+dat : day -> day -> type.
+
+dat_def : next_day D1 D2 -> next_day D2 D3 -> dat D1 D3.
+
+%{! Because the declarations of ``next_day`` and ``dat`` show that both constructors expect to be applied to two arguments of type ``day``, Twelf can reconstruct the quantifiers for ``D1``, ``D2``, and ``D3`` automatically.  Furthermore, we can define the identifier ``dat_sunday`` to stand for the evidence that Tuesday is two days after Sunday as follows: !}%
+    
+dat_sunday = dat_def next_day_sun next_day_mon : dat sunday tuesday.
+
+%{! where the first three arguments of ``dat_def`` corresponding to the omitted quantifiers can be reconstructed from the types of ``next_day_sun`` and ``next_day_mon``.  From this point on, we will engage in the standard practice in Twelf of omitting quantifiers whenever possible, relying on term reconstruction to supply them automatically.
+
+Finally, a word about **functions**.  Although we've encoded ``next_day`` and ``dat`` as relations, they are in fact (the graphs of) functions.  That is, there exist functions _f_ and _g_ such that for all elements _d_&lt;sub&gt;1&lt;/sub&gt; and _d_&lt;sub&gt;2&lt;/sub&gt; of type ``day``, _f_(_d_&lt;sub&gt;1&lt;/sub&gt;) = _d_&lt;sub&gt;2&lt;/sub&gt; if and only if ``next_day ``_d_&lt;sub&gt;1&lt;/sub&gt; _d_&lt;sub&gt;2&lt;/sub&gt;, and _g_(_d_&lt;sub&gt;1&lt;/sub&gt;) = _d_&lt;sub&gt;2&lt;/sub&gt; if and only if ``dat ``_d_&lt;sub&gt;1&lt;/sub&gt; _d_&lt;sub&gt;2&lt;/sub&gt;.  Relations that arise from functions in this way are special; we call them _functional_.  To make this more precise, let's take ``next_day`` as an example.  If we designate the first argument of ``next_day`` as an _input_ argument and the second argument as an _output_ argument, then this relation has the property that, for any possible combination of input arguments, there is exactly one combination of output arguments for which the relation holds, i.e., the associated type is non-empty&mdash;or, as we say in a more positive way, _inhabited_.  The same is true if we designate the first argument of ``dat`` as input and its second argument as output.  In fact, the same is true if we designate the second arguments of ``next_day`` and ``dat`` as inputs and their first arguments as outputs.  These latter designations would correspond to the inverse functions "previous day" and "two days ago".  We will see in a later section how we can designate certain arguments of relations as inputs and outputs and have Twelf verify that the relations are functional according to these designations.
+
+Here is a link to a ``&gt;file containing the Twelf declarations`` given so far, where, in the case of ``cons`` and ``dat_def``, we have chosen the versions that omitted the quantifiers.  Let's look at `` check="true"&gt;Twelf's output`` for these declarations.  As Twelf checks each declaration for type-correctness, it echoes the declaration in its output, including any reconstructed quantifiers, as you can see in the declarations of ``cons`` and ``dat_def``.  Notice that a couple of identifiers (``nil`` and ``cons``) were declared more than once; in this case, Twelf remembers only the last declaration for each identifier, silently replacing any previous declarations. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/First-order_encodings).
+!}%

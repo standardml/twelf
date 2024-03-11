@@ -1,0 +1,178 @@
+%%! title: "Equality"
+%%! tags: ["tutorial"]
+
+%{! In many circumstances, it is necessary to represent **equality** of LF terms as a relation.  
+
+One such circumstance is when we wish to prove a [uniqueness lemma](/wiki/uniqueness-lemma/) showing that an object-language judgement determines some outputs uniquely.  For example, consider the [addition judgement on natural numbers](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/).  To state this uniqueness lemma, we must define a judgement ``eq N N'`` representing equality of natural numbers.  Then the theorem is stated as follows:
+
+
+```twelf
+plus-unique : plus N1 N2 N3 
+              -> plus N1 N2 N3' 
+              -> eq N3 N3'
+              -> type.
+%mode plus-unique +D1 +D2 -D3.
+%worlds () (plus-unique _ _ _).
+```
+
+That is, any two ``plus`` derivations for the same summands have the same sum.  
+
+In general, equality of LF terms corresponds to syntactic equality of object-language syntax encoded with a first-order representation, and to α-equivalance of object-language terms encoded with a higher-order representation.  Consequently, equality is used in a variety of theorems and proofs (see the tutorials on [uniqueness lemma](/wiki/uniqueness-lemma/)s, [strengthening](/wiki/strengthening/) lemmas, and explicit [canonical forms lemma](/wiki/canonical-forms-lemma/)s for example applications).  
+
+The purpose of this article is to answer the following question: how should we internalize equality of LF terms as an LF type family?
+
+## Running example: A tree structure
+
+As a running example, we use a simple tree structure: !}%
+    
+tree: type.
+
+leaf: tree.
+node: tree -> tree -> tree.
+
+%{! ## Identity
+
+The simplest way to represent equality of LF terms is with an _identity type family_.  An identity type family represents a binary relation; it is defined by one constant expressing reflexivity.  For example: !}%
+    
+id-tree : tree -> tree -> type.
+id-tree/refl : id-tree T T.
+
+%{! With this definition, the type ``id T T'`` is inhabited exactly when ``T`` and ``T'`` are in fact the same LF term. 
+
+Various properties of ``id`` are admissible:
+* Identity is symmetric and transitive.  For example, we can prove the following metatheorems: !}%
+    
+id-tree-sym : id-tree T1 T2
+            -> id-tree T2 T1
+            -> type.
+%mode id-tree-sym +X1 -X2.
+- : id-tree-sym id-tree/refl id-tree/refl.
+%worlds () (id-tree-sym _ _).
+%total {} (id-tree-sym _ _).
+
+id-tree-trans : id-tree T1 T2
+              -> id-tree T2 T3
+              -> id-tree T1 T3
+              -> type.
+%mode id-tree-trans +X1 +X2 -X3.
+- : id-tree-trans id-tree/refl id-tree/refl id-tree/refl.
+%worlds () (id-tree-trans _ _ _).
+%total {} (id-tree-trans _ _ _).
+
+%{! * Identity is a congruence: equality of subterms entails equality of subterms. For example, we can prove the following metatheorem: !}%
+    
+id-tree-node-cong : id-tree T1 T1'
+                  -> id-tree T2 T2'
+                  -> id-tree (node T1 T2) (node T1' T2')
+                  -> type.
+%mode id-tree-node-cong +X1 +X2 -X3.
+- : id-tree-node-cong id-tree/refl id-tree/refl id-tree/refl.
+%worlds () (id-tree-node-cong _ _ _).
+%total {} (id-tree-node-cong _ _ _).
+
+%{! * Identity is invertible: equality of a constructed term entails equality of constructed terms.  For example, we can prove the following metatheorem: !}%
+    
+id-tree-node-inv : id-tree (node T1 T2) (node T1' T2')
+                  -> id-tree T1 T1'
+                  -> id-tree T2 T2'
+                  -> type.
+%mode id-tree-node-inv +X1 -X2 -X3.
+- : id-tree-node-inv id-tree/refl id-tree/refl id-tree/refl.
+%worlds () (id-tree-node-inv _ _ _).
+%total {} (id-tree-node-inv _ _ _).
+
+%{! * Other relations respect equality, in the sense that we can replace equals for equals.  For example, if we have a height relation on trees, then we will be able to prove the following metatheorem: !}%
+    
+%{!! begin hidden !!}%
+nat : type.
+%{!! end hidden !!}%
+    
+height : tree -> nat -> type.
+
+height-respects-id : height T N
+                    -> id-tree T T' 
+                    -> height T N'
+                    -> type.
+%mode height-respects-id +X1 +X2 -X3.
+%worlds () (height-respects-id _ _ _).
+
+%{! Each of these proofs is a one-liner: the only possible identity derivations are reflexivity, so all the trees involved are equal, and thus reflexivity derives the result.  The tutorial on [respects lemma](/wiki/respects-lemma/)s presents other examples of these metatheorems.  
+
+## Alternative definition of equality: More primitive rules
+
+Now, if symmetry, transitivity, congruence, and invertibility are all admissible, you might consider other sets of primitive rules.  For example, we could give a definition of equality by induction on the structure of the tree: !}%
+    
+eq-tree : tree -> tree -> type.
+
+eq-leaf : eq-tree leaf leaf.
+eq-node : eq-tree (node T1 T2) (node T1' T2')
+            <- eq-tree  T1 T1'
+            <- eq-tree  T2 T2'.
+
+%{! This definition is sometimes called _deep equality_, as it analyzes the structure of the term.  In contrast, identity is sometimes called _shallow equality_.  
+
+We could add to this definition by making the equivalence relation axioms primitive as well: !}%
+    
+eq-refl : eq-tree T T.
+eq-sym : eq-tree T1 T2 
+          <- eq-tree T2 T1.
+eq-trans : eq-tree  T1 T3
+            <- eq-tree T1 T2
+            <- eq-tree T2 T3.
+
+%{! We could even make the inversion principles primitive: !}%
+    
+eq-node-inv-1 : eq-tree T1 T1'
+                 <- eq-tree (node T1 T2) (node T1' T2').
+eq-node-inv-2 : eq-tree T2 T2'
+                 <- eq-tree (node T1 T2) (node T1' T2').
+
+%{! ## Which definition to use
+
+The type families ``id`` and ``eq`` (with any of the extensions) define the same binary relation on trees.  So is there any reason to prefer one set of primitive rules to another?
+
+Yes!  In either case, we must prove that other type families such as ``height`` respect equality.  For identity, these proofs are trivial, as case-analyzing the identity derivation immediately shows that the related terms are syntactically equal.  When equality is defined by additional primitive rules, these proofs require inductive arguments.  Put another way, identity gives you the strongest inductive hypothesis when reasoning _from_ equality, which we do often to prove respects lemmas.  Of course, the cost is that you must show that the other rules are admissible; but as we saw above, these proofs are one-liners.
+
+On the other hand, an inductive characterization like ``eq`` is useful if you are defining not equality but some other [equivalence relation](/wiki/equivalence-relation/).  
+
+## Identity at multiple types
+
+In general, it is necessary to define identity types not just for one type, but for all types that appear in the syntax.  For example, for trees that store natural numbers at the nodes, we would define: !}%
+    
+nat : type.
+z : nat.
+s : nat -> nat.
+
+tree : type.
+leaf : tree.
+node : tree -> nat -> tree -> tree.
+
+id-tree : tree -> tree -> type.
+id-tree/refl : id-tree T T.
+
+id-nat : nat -> nat -> type.
+id-nat/refl : id-nat T T.
+
+%{! Properties analogous to before are admissible, but the theorems for ``tree`` will have premises referring to ``id-nat``.  For example: !}%
+    
+%{! (options removed from twelftag: check=true) !}%
+
+id-tree-node-cong : id-tree T1 T1'
+                  -> id-tree T2 T2'
+                  -> id-nat N N'
+                  -> id-tree (node T1 N T2) (node T1' N' T2')
+                  -> type.
+%mode id-tree-node-cong +X1 +X2 +X3 -X4.
+- : id-tree-node-cong _ _ _ id-tree/refl.
+%worlds () (id-tree-node-cong _ _ _ _).
+%total {} (id-tree-node-cong _ _ _ _).
+
+%{! ## Other tutorials using equality
+
+See the tutorial on [respects lemma](/wiki/respects-lemma/)s for more detail on them.  The tutorials on [uniqueness lemma](/wiki/uniqueness-lemma/)s, [strengthening](/wiki/strengthening/) lemmas, and explicit [canonical forms lemma](/wiki/canonical-forms-lemma/)s show example applications of equality.
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+You can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Equality).
+!}%

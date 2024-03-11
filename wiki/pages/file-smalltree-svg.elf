@@ -1,0 +1,18 @@
+%%! title: "File:Smalltree.svg"
+
+%{! Graphic of a tree with four leaves
+
+Very strange, when Illustrator CS1 created this file it left a bad piece of code:
+
+ &lt;flowDef  xmlns="&ns_flows;"&gt;
+
+That I had to manually make a good XML tag with 
+
+ &lt;flowDef  xmlns="&ns_flows;" /&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/File:Smalltree.svg).
+!}%

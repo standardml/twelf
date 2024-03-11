@@ -1,0 +1,43 @@
+%%! title: "%solve"
+
+%{! A [``%solve``](/wiki/percent-solve/) declaration specifies a type and then uses Twelf's [logic programming](/wiki/logic-programming/) engine to search for an term with that type. It is different from [``%query``](/wiki/percent-query/), both because it can only cause Twelf to search for the _first_ proof it can find and because it can add the result of the search to the [Twelf signature](/wiki/twelf-signature/).
+
+## Example
+
+We can define [natural numbers](/wiki/natural-numbers/) with addition in the standard manner: !}%
+    
+nat : type.
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+pz : plus z N N.
+ps : plus N1 N2 N3 -> plus (s N1) N2 (s N3).
+
+%{! Then we can use ``%solve`` and ``%define`` to insert the result of adding two and two to the signature as ``four``, and the derivation itself to the signature as ``deriv``. !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
+
+%define four = N
+%solve deriv : plus (s (s z)) (s (s z)) N.
+
+%{! We can then use ``five`` and ``deriv`` as a defined constants for the rest of the program: !}%
+    
+%{! (options removed from twelftag: check=true) !}%
+
+six : nat = s (s four).
+deriv2 : plus four (s (s z)) six = ps (ps deriv).
+
+%{! ## See also
+
+* \{\{guide|title=Solve Declaration|section=24|chapter=5\}\}
+
+
+\{\{keyword|key=solve\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25solve).
+!}%

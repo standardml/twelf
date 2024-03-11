@@ -1,0 +1,200 @@
+%%! title: "POPL Tutorial/Sequent vs Natural Deduction: Solution"
+
+%{! This is the solution to [this exercise](/wiki/popl-tutorial-sequent-vs-natural-deduction/).
+|hidden = true !}%
+
+%% Syntax for Propositions %%
+
+prop : type.  %name prop A.
+
+top : prop.
+and : prop -> prop -> prop.
+imp : prop -> prop -> prop.
+
+
+%% Natural Deduction Inference Rules %%
+
+true : prop -> type.
+
+topI  : true top.
+
+andI  : true (and A B)
+             <- true B
+             <- true A.
+
+andE1 : true A
+         <- true (and A B).
+
+andE2 : true B
+         <- true (and A B).
+
+impI  : true (imp A B)
+         <- (true A -> true B).
+
+impE  : true B
+         <- true (imp A B)
+         <- true A.
+
+
+%% Sequent Calculus %%
+
+hyp : prop -> type.
+
+conc : prop -> type.
+
+init : conc A
+        <- hyp A.
+
+topR : conc top.
+
+andL : (hyp (and A B) -> conc C)
+        <- (hyp A -> hyp B -> conc C).
+
+andR : conc (and A B)
+        <- conc B
+        <- conc A.
+
+impL : (hyp (imp A B) -> conc C)
+        <- conc A
+        <- (hyp B -> conc C).
+
+impR : conc (imp A B)
+        <- (hyp A -> conc B).
+
+cut  : conc B
+        <- conc A
+        <- (hyp A -> conc B).
+
+
+%%  blocks  %%
+
+%block bhyp : some {A : prop} block {H : hyp A}.
+
+%{! 
+
+## Translation: Natural Deduction to Sequent Calculus
+
+!}%
+
+nd-to-seq : true A -> conc A -> type.
+%mode nd-to-seq +X1 -X2.
+
+-top      : nd-to-seq topI topR.
+
+-andI     : nd-to-seq (andI (DtrueA : true A) (DtrueB : true B)) %% true (and A B)
+                (andR DconcA DconcB)
+             <- nd-to-seq DtrueA (DconcA : conc A)
+             <- nd-to-seq DtrueB (DconcB : conc B).
+
+-andE1    : nd-to-seq (andE1 (DtrueAB : true (and A B))) %% true A
+                (cut (andL ([dA : hyp A] [_] (init dA))) DconcAB)
+             <- nd-to-seq DtrueAB (DconcAB : conc (and A B)).
+
+-andE2    : nd-to-seq (andE2 (DtrueAB : true (and A B))) %% true B
+                (cut (andL ([_] [dB : hyp B] (init dB))) DconcAB)
+             <- nd-to-seq DtrueAB (DconcAB : conc (and A B)).
+
+-impI     : nd-to-seq (impI ([dA : true A] Dimp dA : true B)) %% true (imp A B)
+                (impR [hA : hyp A] (DconcB hA))
+             <- ({dA : true A}
+                    {hA : hyp A}
+                    {dtrans : nd-to-seq dA (init hA)}
+                    nd-to-seq (Dimp dA) (DconcB hA : conc B)).
+
+-impE     : nd-to-seq (impE (DtrueA : true A) (DtrueAB : true (imp A B))) %% true B
+                (cut (impL ([hB : hyp B] init hB) DconcA) DconcAB)
+             <- nd-to-seq DtrueA (DconcA : conc A)
+             <- nd-to-seq DtrueAB (DconcAB : conc (imp A B)).
+
+%block truetohyp : some {A : prop} block 
+            {DA : true A} {HA : hyp A} {Dtrans : nd-to-seq DA (init HA)}.
+
+%worlds (truetohyp) (nd-to-seq _ _).
+%total D (nd-to-seq D _).
+
+
+%{! 
+
+## Translation: Sequent Calculus to Natural Deduction
+
+!}%
+
+hyp-to-true : hyp A -> true A -> type.
+%mode hyp-to-true +X1 -X2.
+
+%block hyptotrue : some {A : prop}
+           block {HA : hyp A} {DA : true A} {Dtrans : hyp-to-true HA DA}.
+%worlds (hyptotrue) (hyp-to-true _ _).
+%total {} (hyp-to-true _ _).
+
+
+seq-to-nd : conc A -> true A -> type.
+%mode seq-to-nd +X1 -X2.
+
+-init   : seq-to-nd (init (DhypA : hyp A)) DtrueA
+           <- hyp-to-true DhypA (DtrueA : true A).
+
+-top    : seq-to-nd (topR : conc top) topI.
+
+-andR   : seq-to-nd 
+              (andR
+                  (DconcA : conc A)
+                  (DconcB : conc B) : conc (and A B))
+              (andI
+                  DtrueA
+                  DtrueB)
+           <- seq-to-nd DconcA (DtrueA : true A)
+           <- seq-to-nd DconcB (DtrueB : true B).
+
+-andL   : seq-to-nd 
+              (andL 
+                  ([hA : hyp A] [hB : hyp B] DconcC hA hB : conc C)
+                  (Hab : hyp (and A B))
+                : conc C)
+              (DtrueC (andE1 DtrueAB) (andE2 DtrueAB))
+           <- ({hA} {dA : true A} {dtransA : hyp-to-true hA dA}
+                  {hB} {dB : true B} {dtransB : hyp-to-true hB dB}
+                      seq-to-nd (DconcC hA hB)
+                      (DtrueC dA dB : true C))
+           <- hyp-to-true Hab (DtrueAB : true (and A B)).
+
+-impR   : seq-to-nd
+              (impR
+                  ([hA] DconcB hA : conc B) : conc (imp A B))
+              (impI ([dA] DtrueB dA))
+           <- ({hA} {dA : true A} {dtrans : hyp-to-true hA dA}
+                  seq-to-nd (DconcB hA)
+                  (DtrueB dA : true B)).
+
+-impL   : seq-to-nd
+              (impL
+                  ([hB : hyp B] DconcC hB : conc C)
+                  (DconcA : conc A)
+                  (Hab : hyp (imp A B)))
+              (DtrueC (impE DtrueA DtrueAB))
+           <- ({hB} {dB : true B} {dtrans : hyp-to-true hB dB}
+                  seq-to-nd (DconcC hB)
+                  (DtrueC dB : true C))
+           <- seq-to-nd DconcA (DtrueA : true A)
+           <- hyp-to-true Hab (DtrueAB : true (imp A B)).
+
+-cut    : seq-to-nd
+              (cut
+                  ([hA : hyp A] DconcB hA : conc B)
+                  (DconcA : conc A))
+              (DtrueB DtrueA)
+           <- ({hA} {dA : true A} {dtrans : hyp-to-true hA dA}
+                  seq-to-nd (DconcB hA)
+                  (DtrueB dA : true B))
+           <- seq-to-nd DconcA
+              (DtrueA : true A).
+
+%worlds (hyptotrue) (seq-to-nd _ _).
+%total D (seq-to-nd D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Sequent_vs_Natural_Deduction:_Solution).
+!}%

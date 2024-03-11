@@ -1,0 +1,20 @@
+%%! title: "Template:Bibtex:af04dependent"
+
+%{! &lt;bibtex&gt;@article\{af04dependent,
+ author = "Andrew W. Appel and Amy P. Felty",
+ title = "Dependent Types Ensure Partial Correctness of Theorem Provers",
+ journal = "Journal of Functional Programming",
+ volume = "14",
+ number = "1",
+ pages = "3--19",
+ year = "2004",
+ month = "January",
+ note = "Available from \verb|http://www.cs.princeton.edu/~appel/papers/|",
+&lt;/bibtex&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Bibtex:af04dependent).
+!}%

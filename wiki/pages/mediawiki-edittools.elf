@@ -1,0 +1,24 @@
+%%! title: "MediaWiki:Edittools"
+
+%{! &lt;!-- Text here will be shown below edit and upload forms. --&gt;
+&lt;!-- nb. the charinsert extension doesn't work, so these have to be copy and pasted manually. we should probably install charinsert. --&gt;
+&lt;div id="editpage-specialchars" class="plainlinks" style="margin-top: 15px; border-width: 1px; border-style: solid; border-color: #aaaaaa; padding: 2px;"&gt;
+**Logic:** &lt;charinsert&gt;← → λ Π Σ α β γ Γ Δ η θ σ Ψ Ω ≡ ¬ ∧ ∨ ∩ ∪ ⊃ ⊂&lt;/charinsert&gt;
+
+**Workarounds:** \{&lt;nowiki&gt;\{vdash\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{dia\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{box\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{lolli\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{otimes\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{top\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{darrow\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{forall\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{exists\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{oplus\}&lt;/nowiki&gt;\} \{&lt;nowiki&gt;\{bottom\}&lt;/nowiki&gt;\}
+
+**Symbols:**  &lt;charinsert&gt;~ | ¡ ¿ † ‡ ↔ ↑ ↓ •&lt;/charinsert&gt; &nbsp; &lt;charinsert&gt;– — … ° ≈ ± − × ÷ ← → · §&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;# ¹ ² ³ ½ ⅓ ⅔ ¼ ¾ ⅛ ⅜ ⅝ ⅞&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;¢ $ € £ ¥&lt;/charinsert&gt;
+
+**Letters:** &lt;span class="latinx"&gt; Á á Ć ć É é Í í Ĺ ĺ Ń ń Ó ó Ŕ ŕ Ś ś Ú ú Ý ý Ź ź  &nbsp;  À à È è Ì ì Ò ò Ù ù  &nbsp;  Â â Ĉ ĉ Ê ê Ĝ ĝ Ĥ ĥ Î î Ĵ ĵ Ô ô Ŝ ŝ Û û Ŵ ŵ Ŷ ŷ  &nbsp;  Ä ä Ë ë Ï ï Ö ö Ü ü Ÿ ÿ  &nbsp;  ß  &nbsp;  Ã ã Ẽ ẽ Ĩ ĩ Ñ ñ Õ õ Ũ ũ Ỹ ỹ &nbsp;  Ç ç Ģ ģ Ķ ķ Ļ ļ Ņ ņ Ŗ ŗ Ş ş Ţ ţ  &nbsp;  Đ đ  &nbsp;  Ů ů  &nbsp;  Ǎ ǎ Č č Ď ď Ě ě Ǐ ǐ Ľ ľ Ň ň Ǒ ǒ Ř ř Š š Ť ť Ǔ ǔ Ž ž  &nbsp;  Ā ā Ē ē Ī ī Ō ō Ū ū  &nbsp;  ǖ ǘ ǚ ǜ  &nbsp;  Ă ă Ĕ ĕ Ğ ğ Ĭ ĭ Ŏ ŏ Ŭ ŭ  &nbsp;  Ċ ċ Ė ė Ġ ġ İ ı Ż ż  &nbsp;  Ł ł  &nbsp;  Ő ő Ű ű  &nbsp;  Ŀ ŀ  &nbsp;  Ħ ħ  &nbsp;  Ð ð Þ þ  &nbsp;  Œ œ  &nbsp;  Æ æ Ø ø Å å  &nbsp;  Ə ə &lt;/span&gt;
+
+**Greek:** &lt;charinsert&gt;Α α Β β Γ γ Δ δ&lt;/charinsert&gt; &nbsp; &lt;charinsert&gt;Ε ε Ζ ζ Η η Θ θ&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;Ι ι Κ κ Λ λ Μ μ&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;Ν ν Ξ ξ Ο ο Π π&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;Ρ ρ Σ σ ς Τ τ Υ υ&lt;/charinsert&gt;  &nbsp;  &lt;charinsert&gt;Φ φ Χ χ Ψ ψ Ω ω&lt;/charinsert&gt;
+&lt;/div&gt;
+
+On **talk pages**, please sign your comment by typing four tildes (&lt;nowiki&gt;~~~~&lt;/nowiki&gt;). !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/MediaWiki:Edittools).
+!}%

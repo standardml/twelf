@@ -1,0 +1,17 @@
+%%! title: "Talk:Incremental metatheorem development"
+
+%{! ## Bottom-up vs. Top-down
+
+I'm not sure if the motivation for using %trustme to maintain a bottom-up development style is completely accurate here. Without %trustme, proofs must be done in a bottom-up way. That's just how math is built up. In practice, I've seen two modes of use of %trustme. The first is to work bottom-up until you hit something that will be pretty time-consuming/hard/impossible to do, and then you %trustme that particular lemma so you can keep working bottom-up. The other, which I've seen used by a particular Twelf master who happens to have an office right next to a stairwell in a corner on the 8th floor of Wean, is to %trustme a lot of boring/uninteresting lemmas which you are pretty sure are true, and then focus on the actual hard proof, and then fill in the boring holes at some point. The second strategy is very much a top-down approach.
+--[DanielKLee](/wiki/user-danielklee/) 09:19, 22 September 2006 (MST)
+
+: I agree that there are multiple models of use, go ahead and put whatever you think is a more accurate motivation over what is there now (in general, I'd advocate a "change and explain why you did it on the Talk pages" as opposed to a "talk about changing on the Talk page" strategy here :) ). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 09:26, 22 September 2006 (MST)
+: I think that we are just using opposite definitions of "top-down" and "bottom-up"; for me, the end of the proof is the bottom. I guess it depends on how you think of it. (We had all sorts of similar terminological issues in automated theorem proving and computer graphics class..) We should just be more clear about what we mean. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 11:52, 22 September 2006 (MST)
+:: Yeah, I think that's where the confusion is. I think of the main result being at the "top", and being built up from the smaller ones "below" it, like a tree. --[DanielKLee](/wiki/user-danielklee/) 10:30, 23 September 2006 (MST) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Incremental_metatheorem_development).
+!}%

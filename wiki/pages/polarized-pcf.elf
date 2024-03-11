@@ -1,0 +1,332 @@
+%%! title: "Polarized PCF"
+
+%{! 
+
+Polarized PCF with a stack machine semantics 
+
+- Interalizes the composition/leftist substitution principles (left-commutative cuts), so there are no meta-ops in evaluation other than LF substitution
+- force+ binds a positive value variable, rather than requiring an immediate left inversion
+- Proves completeness of focusing, so you can see what direct-style terms mean
+- Does purely negative stream using (non-canonical) negative continuation variables; completeness of focusing does some sort of CPS conversion
+
+!}%
+
+%{! ## Syntax !}%
+
+pos : type.
+neg : type.
+
+down : neg -> pos.
+nat  : pos.
+
+up  : pos -> neg.
+arr : pos -> neg -> neg.
+stream : neg -> neg.
+
+val+  : pos -> type.
+cont+ : pos -> pos -> type.
+val-  : neg -> type.
+cont- : neg -> pos -> type.
+exp   : pos -> type.
+
+%% positive values
+zero   : val+ nat.
+succ   : val+ nat -> val+ nat.
+delay- : val- A- -> val+ (down A-).
+
+%% positive conts
+ifz      : exp A+ -> (val+ nat -> exp A+) -> cont+ nat A+.
+force-   : (val- A- -> exp C+) -> cont+ (down A-) C+.
+%% internalize composition
+comp+    : cont+ A+ B+ -> (val+ B+ -> exp C+) -> cont+ A+ C+.
+
+%% negative values
+lam    : (val+ A+ -> val- B-) -> val- (arr A+ B-).
+delay+ : exp A+ -> val- (up A+).
+fix    : (val- A- -> val- A-) -> val- A-.
+cons   : ({C+} cont- A- C+ -> exp C+) 
+	  -> ({C+} cont- (stream A-) C+ -> exp C+)
+	  -> val- (stream A-).
+
+%% negative conts
+app    : val+ A+ -> cont- B- C+ -> cont- (arr A+ B-) C+.
+force+ : (val+ A+ -> exp C+) -> cont- (up A+) C+.
+%% internalize composition
+comp-  : cont- A- B+ -> (val+ B+ -> exp C+) -> cont- A- C+.
+head   : cont- A- C+ -> cont- (stream A-) C+ .
+tail   : cont- (stream A-) A+ -> cont- (stream A-) A+.
+
+%% expressions
+ret : val+ A+ -> exp A+.
+%% internalize arbitrary cuts.
+%% these two are canonical when the value is a variable,
+%% but if we'ere only running closed terms, then that
+%% distinction is moot.  
+cut+ : val+ A+ -> cont+ A+ C+ -> exp C+. 
+cut- : val- A- -> cont- A- C+ -> exp C+.
+%% internalize composition
+let  : exp A+ -> (val+ A+ -> exp C+) -> exp C+.
+
+%% these terms are not eta-long, because we use the same
+%% val judgements on the left as on the right
+%block posb : some {A+ : pos} block {x : val+ A+}. 
+%block negb : some {A- : neg} block {x : val- A-}.
+%block negcb : some {A- : neg} block {A+ : pos} {k : cont- A- A+}.
+%worlds (posb | negb | negcb) (val+ _) (cont+ _ _) (val- _) (cont- _ _) (exp _).
+
+%% FIXME: weirldly asymetric: we need both pos and neg assumptions,
+%% but not both kinds of conclusion??
+
+%{! 
+
+### Step
+
+Note that all rules are axioms.
+
+!}%
+
+step : exp A+ -> exp A+ -> type.
+%mode step +X1 -X2.
+
+step/ifz-0 : step (cut+ zero (ifz E0 E1)) E0. 
+step/ifz-1 : step (cut+ (succ V) (ifz E0 E1)) (E1 V). 
+step/force- : step (cut+ (delay- V-) (force- E)) (E V-).
+step/fix    : step (cut- (fix E) K-) (cut- (E (fix E)) K-).
+step/app    : step (cut- (lam V-) (app V+ K-)) (cut- (V- V+) K-).
+step/force+ : step (cut- (delay+ E1) (force+ E)) (let E1 E).
+step/head   : step (cut- (cons E1 E2) (head K-)) (E1 _ K-).
+step/tail   : step (cut- (cons E1 E2) (tail K-)) (E2 _ K-).
+%% left commutative cuts:
+step/letret  : step (let (ret V+) E2) (E2 V+).
+step/letcut+ : step (let (cut+ V+ K+) E2) (cut+ V+ (comp+ K+ E2)).
+step/letcut- : step (let (cut- V- K-) E2) (cut- V- (comp- K- E2)).
+step/letlet  : step (let (let E1 E2) E3) (let E1 ([x] (let (E2 x) E3))).
+step/cconv-ifz    : step (cut+ V+ (comp+ (ifz E0 E1) E))
+		     (cut+ V+ (ifz (let E0 E) ([y] let (E1 y) E))). 
+step/cconv-force- : step (cut+ V+ (comp+ (force- E1) E))
+		     (cut+ V+ (force- [y] (let (E1 y) E))).
+step/cconv-comp+  : step (cut+ V+ (comp+ (comp+ E1 E2) E))
+		     (cut+ V+ (comp+ E1 ([y] (let (E2 y) E)))).
+step/cconv-app    : step (cut- V- (comp- (app V+ K-) E))
+		     (cut- V- (app V+ (comp- K- E))).
+step/cconv-force+ : step (cut- V- (comp- (force+ E1) E))
+		     (cut- V- (force+ ([y] (let (E1 y) E)))).
+step/cconv-comp- : step (cut- V- (comp- (comp- K- E1) E2))
+	  	     (cut- V- (comp- K- ([y] (let (E1 y) E2)))).
+step/cconv-head  : step (cut- V- (comp- (head K-) E))
+		    (cut- V- (head (comp- K- E))).
+step/cconv-tail  : step (cut- V- (comp- (tail K-) E))
+		    (cut- V- (tail (comp- K- E))).
+
+%worlds () (step _ _).
+
+%{! 
+
+## Progress
+
+!}%
+
+ok : exp A+ -> type.
+ok/final : ok (ret V+).
+ok/step  : ok E
+	    <- step E E'.
+
+progress : {E : exp A+} ok E -> type.
+%mode progress +E -O.
+
+- : progress _ ok/final.
+- : progress _ (ok/step step/ifz-0).
+- : progress _ (ok/step step/ifz-1).
+- : progress _ (ok/step step/force-).
+- : progress _ (ok/step step/fix).
+- : progress _ (ok/step step/app).
+- : progress _ (ok/step (step/force+)).
+- : progress _ (ok/step step/head).
+- : progress _ (ok/step step/tail).
+- : progress _ (ok/step step/letret).
+- : progress _ (ok/step step/letcut+).
+- : progress _ (ok/step step/letcut-).
+- : progress _ (ok/step step/letlet).
+- : progress _ (ok/step step/cconv-ifz).
+- : progress _ (ok/step step/cconv-force-).
+- : progress _ (ok/step step/cconv-comp+).
+- : progress _ (ok/step step/cconv-app).
+- : progress _ (ok/step step/cconv-force+).
+- : progress _ (ok/step step/cconv-head).
+- : progress _ (ok/step step/cconv-tail).
+- : progress _ (ok/step step/cconv-comp-).
+
+%worlds () (progress _ _).
+%total {} (progress _ _).
+
+
+%{! ## EL !}%
+
+%{! ### Syntax !}%
+
+etp : type.				%name etp T.
+enat : etp.
+earr : etp -> etp -> etp.
+estream : etp -> etp.
+
+eexp : etp -> type.			%name eexp E.  %postfix 1 eexp.
+ez : enat eexp.
+es : enat eexp -> enat eexp.
+eifz : enat eexp -> T eexp -> (enat eexp -> T eexp) -> T eexp.
+efun : {T1:etp} {T2:etp} ((earr T1 T2) eexp -> T1 eexp -> T2 eexp) -> (earr T1 T2) eexp.
+eapp : (earr T1 T2) eexp -> T1 eexp -> T2 eexp.
+econs : T eexp -> (estream T) eexp -> (estream T) eexp.
+estreamfix : ((estream T) eexp -> (estream T) eexp) -> (estream T) eexp.
+ehead : (estream T) eexp -> T eexp.
+etail : (estream T) eexp -> (estream T) eexp.
+
+%{! ### Completeness of focusing !}%
+
+poltp : etp -> pos -> type.
+%mode poltp +X1 -X2.
+
+poltp/nat : poltp enat nat.
+poltp/arr : poltp (earr T1 T2) (down (arr A1 (up A2)))
+	     <- poltp T1 A1
+	     <- poltp T2 A2.
+poltp/stream : poltp (estream T) (down (stream (up A)))
+		<- poltp T A.
+
+%worlds () (poltp _ _).
+%total T (poltp T _).
+%unique poltp +T -1A.
+
+can-poltp : {T} poltp T A -> type.
+%mode can-poltp +X1 -X3.
+%worlds () (can-poltp _ _).
+% not really a trustme: Twelf proved this totality above!
+%trustme %total {} (can-poltp _ _).
+
+id : pos -> pos -> type.
+refl : id A A.
+
+unique-poltp : poltp T A' -> poltp T A -> id A A' -> type.
+%mode unique-poltp +X1 +X2 -X3.
+%worlds () (unique-poltp _ _ _).
+% not really a trustme: Twelf proved this totality above!
+%trustme %total {} (unique-poltp _ _ _).
+
+retype : exp A -> id A A' -> exp A' -> type.
+%mode retype +X1 +X2 -X3.
+- : retype D refl D.
+%worlds (posb | negb) (retype _ _ _).
+%total {} (retype _ _ _).
+
+complete : poltp T A -> T eexp -> exp A -> type.
+%mode complete +X1 +X2 -X3.
+
+complete/z : complete poltp/nat ez (ret zero).
+complete/s : complete poltp/nat (es E) (let E' ([x] (ret (succ x))))
+	      <- complete poltp/nat E E'.
+complete/ifz : complete (Dpol : poltp T A) (eifz E E0 E1)
+		(let E' ([x] cut+ x (ifz E0' E1')))
+		<- complete poltp/nat E E'
+		<- complete Dpol E0 E0'
+		<- ({x : enat eexp} 
+		      {x' : val+ nat}
+		      {d : {A1' : pos} {D' : poltp enat A1'}
+			    {Did : id nat A1'} {E : exp A1'}
+ 			  complete D' x E
+			    <- unique-poltp D' poltp/nat Did
+			    <- retype (ret x') Did E}
+		      complete Dpol (E1 x) (E1' x')).
+
+complete/fun : complete (poltp/arr (Dp2 : poltp T2 A2) (Dp1 : poltp T1 A1))
+		(efun T1 T2 E) 
+		(ret (delay- (fix ([f'] (lam [x'] (delay+ (E' (delay- f') x')))))))
+		<- {f : (earr T1 T2) eexp} {f' : val+ (down (arr A1 (up A2)))} 
+		   {d : {A1' : pos} {D' : poltp (earr T1 T2) A1'} 
+			 {Did : id (down (arr A1 (up A2))) A1'} {E : exp A1'}
+ 			  complete D' f E
+			  <- unique-poltp D' (poltp/arr Dp2 Dp1) Did
+			  <- retype (ret f') Did E}
+		   {x : T1 eexp} {x' : val+ A1} 
+		   {d : {A1' : pos} {D' : poltp T1 A1'} 
+			 {Did : id A1 A1'} {E : exp A1'}
+ 			  complete D' x E
+			 <- unique-poltp D' Dp1 Did
+			 <- retype (ret x') Did E}
+		   complete Dp2 (E f x) (E' f' x').
+complete/app : complete (D : poltp T A) (eapp (E1 : (earr T2 T) eexp) E2) 
+		(let E1'
+		   ([f] 
+		      let E2'
+		      ([x]
+			 (cut+ f 
+			      (force- [y] 
+				 (cut- y (app x (force+ [z] (ret z)))))))))
+		<- can-poltp T2 (Dp2 : poltp T2 A2)
+		<- complete (poltp/arr D Dp2) E1 E1'
+		<- complete Dp2 E2 E2'.
+
+%% cons is lazy in both components
+complete/cons : complete (poltp/stream Dp) (econs E1 E2) 
+		 (ret (delay- (cons 
+				 ([C+] [k] (let E1' [y] (cut- (delay+ (ret y)) k)))
+				 ([C+] [k] (let E2' [y] 
+					      (cut+ y (force- [w] 
+							 (cut- w k))))))))
+		 <- complete Dp E1 E1'
+		 <- complete (poltp/stream Dp) E2 E2'.
+complete/head : complete D (ehead E) 
+		 (let E' 
+		    ([x] 
+		       (cut+ x (force- [y] 
+				  (cut- y (head 
+					     %% this is like an identity cont.
+					     (force+ ([z] ret z))))))))
+		 <- complete (poltp/stream D) E E'.
+complete/tail : complete (poltp/stream D) (etail E) 
+		 (let E' 
+		    ([x] 
+		       (cut+ x (force- [y] 
+				  (ret (delay- 
+					  (cons 
+					     ([C] [hobs] 
+						(cut- y (tail (head hobs))))
+					     ([C] [tobs]
+						(cut- y (tail (tail tobs))))
+					     )))))))
+		 <- complete (poltp/stream D) E E'.
+complete/streamfix : complete (poltp/stream D) (estreamfix E1) 
+		      (ret (delay- (fix [f] (cons 
+					       ([C] [hobs] 
+						  let (E1' (delay- f)) [r]
+						  (cut+ r (force- [r'] 
+							     (cut- r' (head hobs)))))
+					       ([C] [tobs] 
+						  let (E1' (delay- f)) [r]
+						  (cut+ r (force- [r'] 
+							     (cut- r' (tail tobs)))))
+					       ))))
+		      <- {x : _ eexp} {x' : val+ _} 
+			 {d : {A1' : pos} {D' : poltp _ A1'} 
+			       {Did : id _ A1'} {E : exp A1'}
+			       complete D' x E
+			       <- unique-poltp D' (poltp/stream D) Did
+			       <- retype (ret x') Did E}
+			 complete (poltp/stream D) (E1 x) (E1' x').
+
+%block completeb : some {T1:etp} {A1:pos} {D : poltp T1 A1} 
+		    block 
+		    {x : T1 eexp} {x' : val+ A1} 
+ 		    {d : {A1' : pos} {D' : poltp T1 A1'}
+			  {Did : id A1 A1'} {E : exp A1'}
+ 			  complete D' x E
+			  <- unique-poltp D' D Did
+			  <- retype (ret x') Did E}.
+
+%worlds (completeb) (complete _ E _).
+%total (E) (complete _ E _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Polarized_PCF).
+!}%

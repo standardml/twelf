@@ -1,0 +1,12 @@
+%%! title: "Talk:Define declaration"
+
+%{! ## Name
+
+Wow, that's weird. As near as I can tell, it's because 'de' (and also maybe 'f') are hex characters, so %25de is being interpreted as malformed unicode or something like that. I'm going to move to [define declaration](/wiki/define-declaration/) though, because the space is pretty weird for an article title. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 09:42, 14 October 2006 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Define_declaration).
+!}%

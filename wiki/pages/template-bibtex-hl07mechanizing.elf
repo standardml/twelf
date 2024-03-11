@@ -1,0 +1,17 @@
+%%! title: "Template:Bibtex:hl07mechanizing"
+
+%{! &lt;bibtex&gt;@Article\{hl07mechanizing,
+  author =       \{Robert Harper and Daniel R. Licata\},
+  title =        \{Mechanizing Metatheory in a Logical Framework\},
+  journal =      \{Journal of Functional Programming\},
+  year =         \{2007\},
+  note =         \{To appear. Available from \verb|http://www.cs.cmu.edu/~drl/|\},
+\}
+&lt;/bibtex&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Bibtex:hl07mechanizing).
+!}%

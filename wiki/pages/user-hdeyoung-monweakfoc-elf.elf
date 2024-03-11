@@ -1,0 +1,816 @@
+%%! title: "User:Hdeyoung/monweakfoc.elf"
+
+%{!
+Completeness
+
+```twelf
+
+pol : type.  %name pol S.
+
+pos : pol.
+neg : pol.
+
+
+
+sort : type.  %name sort S.
+
+prin : sort.
+
+%block sort-block : block {s : sort}.
+
+
+
+term : sort -> type.  %name term T x.
+
+%block term-block : some {S : sort} block {x : term S}.
+
+
+
+atm : pol -> type.  %name atm P.
+
+%block atm-block : some {S : pol} block {p : atm S}.
+
+
+
+atm-eq : atm S -> atm S -> type.
+
+atm-eq/refl : atm-eq P+- P+-.
+
+
+
+prop : pol -> type.  %name prop A.
+
+atom : atm S -> prop S.
+tensor : prop pos -> prop pos -> prop pos.
+one : prop pos.
+% exists : {S : sort} (term S -> prop pos) -> prop pos.
+down : prop neg -> prop pos.
+lolli : prop pos -> prop neg -> prop neg.
+% forall : {S : sort} (term S -> prop neg) -> prop neg.
+monad : prop pos -> prop neg.
+says : term prin -> prop pos -> prop neg.
+
+
+
+prop-eq : prop S -> prop S -> type.
+
+prop-eq/refl : prop-eq A+- A+-.
+
+
+
+prop-resp-atm-eq : {A+- : atm S -> prop S'} atm-eq P1+- P2+- -> prop-eq (A+- P1+-) (A+- P2+-) -> type.
+%mode prop-resp-atm-eq +A+- +Deq -Deq'.
+
+- : prop-resp-atm-eq A+- atm-eq/refl prop-eq/refl.
+
+%worlds (sort-block | term-block | atm-block) (prop-resp-atm-eq _ _ _).
+%total {} (prop-resp-atm-eq _ _ _).
+
+
+
+prop-eq-trans : prop-eq A+- B+- -> prop-eq B+- C+- -> prop-eq A+- C+- -> type.
+%mode prop-eq-trans +Deq1 +Deq2 -Deq3.
+
+- : prop-eq-trans prop-eq/refl prop-eq/refl prop-eq/refl.
+
+%worlds (sort-block | term-block | atm-block) (prop-eq-trans _ _ _).
+%total {} (prop-eq-trans _ _ _).
+
+
+prop-resp-prop-eq : {A+- : prop S -> prop S'} prop-eq B1+- B2+- -> prop-eq (A+- B1+-) (A+- B2+-) -> type.
+%mode prop-resp-prop-eq +A+- +Deq -Deq'.
+
+- : prop-resp-prop-eq A+- prop-eq/refl prop-eq/refl.
+
+%worlds (sort-block | term-block | atm-block) (prop-resp-prop-eq _ _ _).
+%total {} (prop-resp-prop-eq _ _ _).
+
+
+
+left : prop pos -> type.  %name left L l.
+
+%block left-block : some {A+ : prop pos} block {l : left A+}.
+
+
+
+left-resp-prop-eq : left A1+- -> prop-eq A1+- A2+- -> left A2+- -> type.
+%mode left-resp-prop-eq +L +Deq -L'.
+
+- : left-resp-prop-eq L prop-eq/refl L.
+
+%worlds (sort-block | term-block | atm-block | left-block) (left-resp-prop-eq _ _ _).
+%total {} (left-resp-prop-eq _ _ _).
+
+
+
+judgment : type.  %name judgment J.
+
+true : prop neg -> judgment.
+lax : prop pos -> judgment.
+affirms : term prin -> prop pos -> judgment.
+
+
+
+conclusion : type.  %name conclusion C.
+
+conclusion/right : judgment -> conclusion.
+conclusion/rfoc : prop pos -> conclusion.
+conclusion/lfoc : prop neg -> judgment -> conclusion.
+
+
+
+conseq : conclusion -> type.  %name conseq D.
+
+%abbrev right : judgment -> type = [j] conseq (conclusion/right j).
+%abbrev rfoc : prop pos -> type = [a+] conseq (conclusion/rfoc a+).
+%abbrev lfoc : prop neg -> judgment -> type = [a-] [j] conseq (conclusion/lfoc a- j).
+
+%block rfoc-block : some {A+ : prop pos} block {rf : rfoc A+}.
+
+init+ : left (atom P+) -> rfoc (atom P+).
+init- : lfoc (atom P-) (true (atom P-)).
+tensorR : rfoc A+ -> rfoc B+ -> rfoc (tensor A+ B+).
+tensorL : (left A+ -> left B+ -> right J) -> (left (tensor A+ B+) -> right J).
+oneR : rfoc one.
+oneL : right J -> (left one -> right J).
+% existsR : {T : term S} rfoc (A+ T) -> rfoc (exists S A+).
+% existsL : ({a : term S} left (A+ a) -> right J) -> (left (exists S A+) -> right J).
+downR : right (true A-) -> rfoc (down A-).
+downL : lfoc A- J -> (left (down A-) -> right J).
+lolliR : (left A+ -> right (true B-)) -> right (true (lolli A+ B-)).
+lolliL : rfoc A+ -> lfoc B- J -> lfoc (lolli A+ B-) J.
+% forallR : ({a : term S} right (true (A- a))) -> right (true (forall S A-)).
+% forallL : {T : term S} lfoc (A- T) J -> lfoc (forall S A-) J.
+laxR : rfoc A+ -> right (lax A+).
+monadR : right (lax A+) -> right (true (monad A+)).
+monadL : (left A+ -> right (lax C+)) -> lfoc (monad A+) (lax C+).
+affirmsR : rfoc A+ -> right (affirms K A+).
+saysR : right (affirms K A+) -> right (true (says K A+)).
+saysL : (left A+ -> right (affirms K C+)) -> lfoc (says K A+) (affirms K C+).
+
+
+
+eta+ : {A+} (rfoc A+ -> right J) -> (left A+ -> right J) -> type.
+%mode eta+ +A+ +D -E.
+eta- : {A-} ({J} lfoc A- J -> right J) -> right (true A-) -> type.
+%mode eta- +A- +D -E.
+
+- : eta+ (atom P+)
+     (D : rfoc (atom P+) -> right J)
+     ([l : left (atom P+)] D (init+ l)).
+
+- : eta+ (tensor A+ B+)
+     (D : rfoc (tensor A+ B+) -> right J)
+     ([l : left (tensor A+ B+)] tensorL E2 l)
+     <- ({rfb : rfoc B+}
+	   eta+ A+ ([rfa : rfoc A+] D (tensorR rfa rfb)) (E1 rfb : left A+ -> right J))
+     <- ({la : left A+}
+	   eta+ B+ ([rfb : rfoc B+] E1 rfb la) (E2 la : left B+ -> right J)).
+
+- : eta+ one
+     (D : rfoc one -> right J)
+     ([l : left one] oneL (D oneR) l).
+
+- : eta+ (down A-)
+     (D : rfoc (down A-) -> right J)
+     ([l : left (down A-)] D (downR (E l)))
+     <- ({l : left (down A-)}
+	   eta- A- ([j] [lfa : lfoc A- j] downL lfa l) (E l : right (true A-))).
+
+%worlds (sort-block | term-block | atm-block | left-block | rfoc-block) (eta+ _ _ _) (eta- _ _ _).
+%trustme %total (A+ A-) (eta+ A+ _ _) (eta- A- _ _).
+
+
+
+cut+ : {A+} rfoc A+ -> (left A+ -> conseq C) -> conseq C -> type.
+%mode cut+ +A+ +D +E -F.
+cut- : {A-} right (true A-) -> lfoc A- J -> right J -> type.
+%mode cut- +A- +D +E -F.
+cut< : {A-} lfoc B- (true A-) -> lfoc A- J -> lfoc B- J -> type.
+%mode cut< +A- +D +E -F.
+cut+lax : {A+} right (lax A+) -> (left A+ -> right (lax C+)) -> right (lax C+) -> type.
+%mode cut+lax +A+ +D +E -F.
+cut+lax-lfoc : {A+} lfoc B- (lax A+) -> (left A+ -> right (lax C+)) -> lfoc B- (lax C+) -> type.
+%mode cut+lax-lfoc +A+ +D +E -F.
+cut+affirms : {A+} right (affirms K A+) -> (left A+ -> right (affirms K C+)) -> right (affirms K C+) -> type.
+%mode cut+affirms +A+ +D +E -F.
+cut+affirms-lfoc : {A+} lfoc B- (affirms K A+) -> (left A+ -> right (affirms K C+)) -> lfoc B- (affirms K C+) -> type.
+%mode cut+affirms-lfoc +A+ +D +E -F.
+
+%worlds (sort-block | term-block | atm-block | left-block | rfoc-block)
+        (cut+ _ _ _ _)
+        (cut- _ _ _ _)
+        (cut< _ _ _ _)
+        (cut+lax _ _ _ _) (cut+lax-lfoc _ _ _ _)
+        (cut+affirms _ _ _ _) (cut+affirms-lfoc _ _ _ _).
+%trustme %total {(A1+ A2- A3- A4+ A5+ A6+ A7+) [(D1 D2 D3 D4 D5 D6 D7) (E1 E2 E3 E4 E5 E6 E7)]}
+        (cut+ A1+ D1 E1 _)
+        (cut- A2- D2 E2 _)
+        (cut< A3- D3 E3 _)
+        (cut+lax A4+ D4 E4 _) (cut+lax-lfoc A5+ D5 E5 _)
+        (cut+affirms A6+ D6 E6 _) (cut+affirms-lfoc A7+ D7 E7 _).
+
+
+
+
+atm' : type.  %name atm' P'.
+
+%block atm'-block : block {p' : atm'}.
+
+
+
+prop' : type.  %name prop' A'.
+
+atom' : atm' -> prop'.
+tensor' : prop' -> prop' -> prop'.
+one' : prop'.
+% exists' : {S : sort} (term S -> prop') -> prop'.
+lolli' : prop' -> prop' -> prop'.
+% forall' : {S : sort} (term S -> prop') -> prop'.
+monad' : prop' -> prop'.
+says' : term prin -> prop' -> prop'.
+
+
+
+hyp : prop' -> type.  %name hyp H h.
+
+%block hyp-block : some {A : prop'} block {h : hyp A}.
+
+
+
+judgment' : type.  %name judgment' J'.
+
+judgment'/true : prop' -> judgment'.
+judgment'/lax : prop' -> judgment'.
+judgment'/affirms : term prin -> prop' -> judgment'.
+
+
+
+conc : judgment' -> type.  %name conc D.
+
+%abbrev true' : prop' -> type = [a] conc (judgment'/true a).
+%abbrev lax' : prop' -> type = [a] conc (judgment'/lax a).
+%abbrev affirms' : term prin -> prop' -> type = [k] [a] conc (judgment'/affirms k a).
+
+init' : hyp (atom' P) -> true' (atom' P).
+tensor'R : true' A -> true' B -> true' (tensor' A B).
+tensor'L : (hyp A -> hyp B -> conc J') -> (hyp (tensor' A B) -> conc J').
+one'R : true' one'.
+one'L : conc J' -> (hyp one' -> conc J').
+% exists'R : {T : term S} true' (A T) -> true' (exists' S A).
+% exists'L : ({a : term S} hyp (A a) -> conc J') -> (hyp (exists' S A) -> conc J').
+lolli'R : (hyp A -> true' B) -> true' (lolli' A B).
+lolli'L : true' A -> (hyp B -> conc J') -> (hyp (lolli' A B) -> conc J').
+% forall'R : ({a : term S} true' (A a)) -> true' (forall' S A).
+% forall'L : {T : term S} (hyp (A T) -> conc J') -> (hyp (forall' S A) -> conc J').
+lax'R : true' A -> lax' A.
+monad'R : lax' A -> true' (monad' A).
+monad'L : (hyp A -> lax' C) -> (hyp (monad' A) -> lax' C).
+affirms'R : true' A -> affirms' K A.
+says'R : affirms' K A -> true' (says' K A).
+says'L : (hyp A -> affirms' K C) -> (hyp (says' K A) -> affirms' K C).
+
+
+
+
+erase-atm : atm S -> atm' -> type.
+
+%block erase-atm-block : some {S : pol}
+			 block {p : atm S} {p' : atm'} {erase-atm/p : erase-atm p p'}.
+
+%worlds (erase-atm-block) (erase-atm _ _).
+
+
+erase-atm-unique : erase-atm P1+- P -> erase-atm P2+- P -> atm-eq P1+- P2+- -> type.
+%mode erase-atm-unique +E1 +E2 -Deq.
+
+- : erase-atm-unique E E atm-eq/refl.
+
+%worlds (erase-atm-block) (erase-atm-unique _ _ _).
+%total {} (erase-atm-unique _ _ _).
+
+
+
+erase-prop : prop S -> prop' -> type.
+
+erase-prop/atom : erase-prop (atom P+-) (atom' P)
+		   <- erase-atm P+- P.
+erase-prop/tensor : erase-prop (tensor A+ B+) (tensor' A B)
+		     <- erase-prop A+ A
+		     <- erase-prop B+ B.
+erase-prop/one : erase-prop one one'.
+% erase-prop/exists : erase-prop (exists S A+) (exists' S A)
+% 		     <- ({a : term S} erase-prop (A+ a) (A a)).
+erase-prop/down : erase-prop (down A-) A
+		   <- erase-prop A- A.
+erase-prop/lolli : erase-prop (lolli A+ B-) (lolli' A B)
+		    <- erase-prop A+ A
+		    <- erase-prop B- B.
+% erase-prop/forall : erase-prop (forall S A-) (forall' S A)
+% 		     <- ({a : term S} erase-prop (A- a) (A a)).
+erase-prop/monad : erase-prop (monad A+) (monad' A)
+		    <- erase-prop A+ A.
+erase-prop/says : erase-prop (says K A+) (says' K A)
+		   <- erase-prop A+ A.
+
+%worlds (sort-block | term-block | erase-atm-block) (erase-prop _ _).
+
+
+
+erase-prop-unique : erase-prop A1+- A -> erase-prop A2+- A -> prop-eq A1+- A2+- -> type.
+%mode erase-prop-unique +E1 +E2 -Deq.
+
+- : erase-prop-unique
+     (erase-prop/atom (E : erase-atm P+- P))
+     (erase-prop/atom E)
+     prop-eq/refl.
+
+- : erase-prop-unique
+     (erase-prop/tensor (E12 : erase-prop B1+ B) (E11 : erase-prop A1+ A))
+     (erase-prop/tensor (E22 : erase-prop B2+ B) (E21 : erase-prop A2+ A))
+     Deq
+     <- erase-prop-unique E11 E21 (Deq1 : prop-eq A1+ A2+)
+     <- erase-prop-unique E12 E22 (Deq2 : prop-eq B1+ B2+)
+     <- prop-resp-prop-eq ([a1+] tensor a1+ B1+) Deq1 (Deq3 : prop-eq (tensor A1+ B1+) (tensor A2+ B1+))
+     <- prop-resp-prop-eq ([b1+] tensor A2+ b1+) Deq2 (Deq4 : prop-eq (tensor A2+ B1+) (tensor A2+ B2+))
+     <- prop-eq-trans Deq3 Deq4 (Deq : prop-eq (tensor A1+ B1+) (tensor A2+ B2+)).
+
+- : erase-prop-unique erase-prop/one erase-prop/one prop-eq/refl.
+
+- : erase-prop-unique
+     (erase-prop/down (E1 : erase-prop A1- A))
+     (erase-prop/down (E2 : erase-prop A2- A))
+     Deq'
+     <- erase-prop-unique E1 E2 (Deq : prop-eq A1- A2-)
+     <- prop-resp-prop-eq ([a-] down a-) Deq (Deq' : prop-eq (down A1-) (down A2-)).
+
+- : erase-prop-unique
+     (erase-prop/lolli (E12 : erase-prop B1- B) (E11 : erase-prop A1+ A))
+     (erase-prop/lolli (E22 : erase-prop B2- B) (E21 : erase-prop A2+ A))
+     Deq
+     <- erase-prop-unique E11 E21 (Deq1 : prop-eq A1+ A2+)
+     <- erase-prop-unique E12 E22 (Deq2 : prop-eq B1- B2-)
+     <- prop-resp-prop-eq ([a1+] lolli a1+ B1-) Deq1 (Deq3 : prop-eq (lolli A1+ B1-) (lolli A2+ B1-))
+     <- prop-resp-prop-eq ([b1-] lolli A2+ b1-) Deq2 (Deq4 : prop-eq (lolli A2+ B1-) (lolli A2+ B2-))
+     <- prop-eq-trans Deq3 Deq4 (Deq : prop-eq (lolli A1+ B1-) (lolli A2+ B2-)).
+
+- : erase-prop-unique
+     (erase-prop/monad (E1 : erase-prop A1+ A))
+     (erase-prop/monad (E2 : erase-prop A2+ A))
+     Deq'
+     <- erase-prop-unique E1 E2 (Deq : prop-eq A1+ A2+)
+     <- prop-resp-prop-eq ([a+] monad a+) Deq (Deq' : prop-eq (monad A1+) (monad A2+)).
+
+- : erase-prop-unique
+     (erase-prop/says (E1 : erase-prop A1+ A))
+     (erase-prop/says (E2 : erase-prop A2+ A))
+     Deq'
+     <- erase-prop-unique E1 E2 (Deq : prop-eq A1+ A2+)
+     <- prop-resp-prop-eq ([a+] says K a+) Deq (Deq' : prop-eq (says K A1+) (says K A2+)).
+
+%worlds (sort-block | term-block | erase-atm-block) (erase-prop-unique _ _ _).
+%total E1 (erase-prop-unique E1 _ _).
+
+
+
+erase-judgment : judgment -> judgment' -> type.
+
+erase-judgment/true : erase-judgment (true A-) (judgment'/true A)
+		       <- erase-prop A- A.
+erase-judgment/lax : erase-judgment (lax A+) (judgment'/lax A)
+		      <- erase-prop A+ A.
+erase-judgment/affirms : erase-judgment (affirms K A+) (judgment'/affirms K A)
+			  <- erase-prop A+ A.
+
+
+
+
+% adm-forallL : (left (down (A- T)) -> right J) -> (left (down (forall S A-)) -> right J) -> type.
+% %mode adm-forallL +D -E.
+
+% %worlds (sort-block | term-block | atm-block | left-block | rfoc-block) (adm-forallL _ _).
+% %trustme %total D (adm-forallL D _).
+
+
+
+cmp-conc : conc J' -> erase-judgment J J' -> right J -> type.
+%mode cmp-conc +D +E -F.
+cmp-lax : true' A -> erase-prop A+ A -> right (lax A+) -> type.
+%mode cmp-lax +D +E -F.
+cmp-affirms : true' A -> erase-prop A+ A -> right (affirms K A+) -> type.
+%mode +{A} +{A+} +{K} +{D : true' A} +{E : erase-prop A+ A} -{F : right (affirms K A+)} (cmp-affirms D E F).
+cmp-lolli : true' A -> erase-prop A+ A -> (left (down B-) -> right J) -> (left (down (lolli A+ B-)) -> right J) -> type.
+%mode cmp-lolli +D +E +F -G.
+cmp-hyp : hyp A -> erase-prop A+ A -> left A+ -> type.
+%mode cmp-hyp  +H -E -L.
+cmp-hyp+ : hyp (atom' P) -> erase-prop A+ (atom' P) -> left A+ -> type.
+%mode cmp-hyp+ +H +E -L.
+
+- : cmp-hyp+
+     (H : hyp (atom' P))
+     (E : erase-prop A+ (atom' P))
+     L'
+     <- cmp-hyp H (E' : erase-prop A'+ (atom' P)) (L : left A'+)
+     <- erase-prop-unique E' E (Deq : prop-eq A'+ A+)
+     <- left-resp-prop-eq L Deq (L' : left A+).
+
+
+- : cmp-conc
+     (init' (H : hyp (atom' P)))
+     (erase-judgment/true (erase-prop/atom (E : erase-atm P- P)))
+     (downL init- L)
+     <- cmp-hyp+ H (erase-prop/down (erase-prop/atom E)) L.
+
+- : cmp-conc
+     (tensor'L (D : hyp A -> hyp B -> conc J') (H : hyp (tensor' A B)))
+     (E : erase-judgment J J')
+     (tensorL F L)
+     <- cmp-hyp H (erase-prop/tensor (E2 : erase-prop B+ B) (E1 : erase-prop A+ A)) (L : left (tensor A+ B+))
+     <- ({ha : hyp A} {la : left A+} cmp-hyp ha E1 la
+	   -> {hb : hyp B} {lb : left B+} cmp-hyp hb E2 lb
+	   -> cmp-conc (D ha hb) E (F la lb : right J)).
+
+- : cmp-conc
+     (one'L (D : conc J') (H : hyp one'))
+     (E : erase-judgment J J')
+     (oneL F L)
+     <- cmp-hyp H erase-prop/one (L : left one)
+     <- cmp-conc D E (F : right J).
+
+% - : cmp-conc
+%      (exists'L (D : {a : term S} hyp (A a) -> conc J') (H : hyp (exists' S A)))
+%      (E : erase-judgment J J')
+%      (existsL F L)
+%     <- cmp-hyp H (erase-prop/exists (E1 : {x : term S} erase-prop (A+ x) (A x))) (L : left (exists S A+))
+%     <- ({a : term S}
+%	   {ha : hyp (A a)} {la : left (A+ a)} cmp-hyp ha (E1 a) la
+%	   -> cmp-conc (D a ha) E (F a la : right J)).
+
+- : cmp-conc
+     (lolli'R (D : hyp A -> true' B))
+     (erase-judgment/true (erase-prop/lolli (E2 : erase-prop B- B) (E1 : erase-prop A+ A)))
+     (lolliR F)
+     <- ({ha : hyp A} {la : left A+} cmp-hyp ha E1 la -> cmp-conc (D ha) (erase-judgment/true E2) (F la : right (true B-))).
+
+- : cmp-conc
+     (lolli'L (D1 : true' A) (D2 : hyp B -> conc J') (H : hyp (lolli' A B)))
+     (E : erase-judgment J J')
+     (F L)
+     <- cmp-hyp H (erase-prop/down (erase-prop/lolli (E2 : erase-prop B- B) (E1 : erase-prop A+ A))) (L : left (down (lolli A+ B-)))
+     <- ({hb : hyp B} {lb : left (down B-)} cmp-hyp hb (erase-prop/down E2) lb -> cmp-conc (D2 hb) E (F2 lb : right J))
+     <- cmp-lolli D1 E1 F2 (F : left (down (lolli A+ B-)) -> right J).
+
+% - : cmp-conc
+%     (forall'R (D : {a: term S} true' (A a)))
+%     (erase-judgment/true (erase-prop/forall (E : {x : term S} erase-prop (A- x) (A x))))
+%     (forallR F)
+%     <- ({a: term S} cmp-conc (D a) (erase-judgment/true (E a)) (F a)).
+
+% - : cmp-conc
+%     (forall'L (T : term S) (D : hyp (A T) -> conc J') (H : hyp (forall' S A)))
+%     (E : erase-judgment J J')
+%     (F' L)
+%     <- cmp-hyp H (erase-prop/down (erase-prop/forall (E1 : {x : term S} erase-prop (A- x) (A x)))) (L : left (down (forall S A-)))
+%     <- ({ha : hyp (A T)} {la : left (down (A- T))} cmp-hyp ha (erase-prop/down (E1 T)) la -> cmp-conc (D ha) E (F la : right J))
+%     <- adm-forallL F (F' : left (down (forall S A-)) -> right J).
+
+- : cmp-conc (lax'R (D : true' A)) (erase-judgment/lax (E : erase-prop A+ A)) F
+     <- cmp-lax D E (F : right (lax A+)).
+
+- : cmp-conc
+     (monad'R (D : lax' A))
+     (erase-judgment/true (erase-prop/monad (E : erase-prop A+ A)))
+     (monadR F)
+     <- cmp-conc D (erase-judgment/lax E) F.
+
+- : cmp-conc
+     (monad'L (D : hyp A -> lax' C) (H : hyp (monad' A)))
+     (erase-judgment/lax (E : erase-prop C+ C))
+     (downL (monadL F) L)
+     <- cmp-hyp H (erase-prop/down (erase-prop/monad (E1 : erase-prop A+ A))) (L : left (down (monad A+)))
+     <- ({ha : hyp A} {la : left A+} cmp-hyp ha E1 la
+	   -> cmp-conc (D ha) (erase-judgment/lax E) (F la : right (lax C+))).
+
+- : cmp-conc
+     (affirms'R (D : true' A))
+     (erase-judgment/affirms (E : erase-prop A+ A))
+     F
+     <- cmp-affirms D E (F : right (affirms K A+)).
+
+- : cmp-conc
+     (says'R (D : affirms' K A))
+     (erase-judgment/true (erase-prop/says (E : erase-prop A+ A)))
+     (saysR F)
+     <- cmp-conc D (erase-judgment/affirms E) F.
+
+- : cmp-conc
+     (says'L (D : hyp A -> affirms' K C) (H : hyp (says' K A)))
+
+
+
+     (erase-judgment/affirms (E : erase-prop C+ C))
+
+
+
+     (downL (saysL F) L)
+
+
+
+     <- cmp-hyp H (erase-prop/down (erase-prop/says (E1 : erase-prop A+ A))) (L )
+
+
+
+     <- ({ha : hyp A} {la : left A+} cmp-hyp ha E1 la
+
+
+
+	   -> cmp-conc (D ha) (erase-judgment/affirms E) (F la : right (affirms K C+))).
+
+
+- : cmp-lax
+     (init' (H : hyp (atom' P)))
+     (erase-prop/atom (E : erase-atm P+ P))
+     (laxR (init+ L))
+     <- cmp-hyp+ H (erase-prop/atom E) (L : left (atom P+)).
+
+- : cmp-lax
+     (tensor'R (D1 : true' A) (D2 : true' B))
+     (erase-prop/tensor (E2 : erase-prop B+ B) (E1 : erase-prop A+ A))
+     F6
+     <- cmp-lax D1 E1 (F1 : right (lax A+))
+     <- cmp-lax D2 E2 (F2 : right (lax B+))
+     <- ({rfa : rfoc A+} eta+ B+ ([rfb : rfoc B+] laxR (tensorR rfa rfb)) (F3 rfa : left B+ -> right (lax (tensor A+ B+))))
+     <- ({lb : left B+} eta+ A+ ([rfa : rfoc A+] F3 rfa lb) (F4 lb : left A+ -> right (lax (tensor A+ B+))))
+     <- ({lb : left B+} cut+lax A+ F1 (F4 lb) (F5 lb : right (lax (tensor A+ B+))))
+     <- cut+lax B+ F2 F5 (F6 : right (lax (tensor A+ B+))).
+
+- : cmp-lax
+     (tensor'L (D : hyp B1 -> hyp B2 -> true' A) (H : hyp (tensor' B1 B2)))
+     (E : erase-prop A+ A)
+     (tensorL F L)
+     <- cmp-hyp H (erase-prop/tensor (E2 : erase-prop B2+ B2) (E1 : erase-prop B1+ B1)) (L : left (tensor B1+ B2+))
+     <- ({hb1 : hyp B1} {lb1 : left B1+} cmp-hyp hb1 E1 lb1
+	   -> {hb2 : hyp B2} {lb2 : left B2+} cmp-hyp hb2 E2 lb2
+	   -> cmp-lax (D hb1 hb2) E (F lb1 lb2 : right (lax A+))).
+
+- : cmp-lax one'R erase-prop/one (laxR oneR).
+
+- : cmp-lax
+     (one'L (D : true' A) (H : hyp one'))
+     (E : erase-prop A+ A)
+     (oneL F L)
+     <- cmp-hyp H erase-prop/one (L : left one)
+     <- cmp-lax D E (F : right (lax A+)).
+
+% - : cmp-lax
+%     (exists'R (T : term S) (D : true' (A T)))
+%     (erase-prop/exists (E : {x : term S} erase-prop (A+ x) (A x)))
+%     F3
+%     <- cmp-lax D (E T) (F1 : right (lax (A+ T)))
+%     <- eta+ (A+ T) ([rfa : rfoc (A+ T)] laxR (existsR T rfa)) (F2 : left (A+ T) -> right (lax (exists S A+)))
+%     <- cut+lax (A+ T) F1 F2 (F3 : right (lax (exists S A+))).
+
+% - : cmp-lax
+%     (exists'L (D : {a : term S} hyp (B a) -> true' A) (H : hyp (exists' S B)))
+%     (E : erase-prop A+ A)
+%     (existsL F L)
+%     <- cmp-hyp H (erase-prop/exists (E1 : {x : term S} erase-prop (B+ x) (B x))) (L : left (exists S B+))
+%     <- ({a : term S}
+%	   {hb : hyp (B a)} {lb : left (B+ a)} cmp-hyp hb (E1 a) lb
+%	   -> cmp-lax (D a hb) E (F a lb : right (lax A+))).
+
+- : cmp-lax
+     (D : true' A)
+     (erase-prop/down (E : erase-prop A- A))
+     (laxR (downR F))
+     <- cmp-conc D (erase-judgment/true E) (F : right (true A-)).
+
+- : cmp-lax
+     (lolli'L (D1 : true' B1) (D2 : hyp B2 -> true' A) (H : hyp (lolli' B1 B2)))
+     (E : erase-prop A+ A)
+     (F L)
+     <- cmp-hyp H (erase-prop/down (erase-prop/lolli (E2 : erase-prop B2- B2) (E1 : erase-prop B1+ B1))) (L : left (down (lolli B1+ B2-)))
+     <- ({hb2 : hyp B2} {lb2 : left (down B2-)} cmp-hyp hb2 (erase-prop/down E2) lb2 -> cmp-lax (D2 hb2) E (F2 lb2 : right (lax A+)))
+     <- cmp-lolli D1 E1 F2 (F : left (down (lolli B1+ B2-)) -> right (lax A+)).
+
+% - : cmp-lax
+%     (forall'L (T : term S) (D : hyp (B T) -> true' A) (H : hyp (forall' S B)))
+%     (E : erase-prop A+ A)
+%     (F' L)
+%     <- cmp-hyp H (erase-prop/down (erase-prop/forall (E1 : {x : term S} erase-prop (B- x) (B x)))) (L : left (down (forall S B-)))
+%     <- ({hb : hyp (B T)} {lb : left (down (B- T))} cmp-hyp hb (erase-prop/down (E1 T)) lb -> cmp-lax (D hb) E (F lb : right (lax A+)))
+%     <- adm-forallL F (F' : left (down (forall S B-)) -> right (lax A+)).
+
+
+- : cmp-affirms
+     (init' (H : hyp (atom' P)))
+     (erase-prop/atom (E : erase-atm P+ P))
+     (affirmsR (init+ L))
+     <- cmp-hyp+ H (erase-prop/atom E) (L : left (atom P+)).
+
+- : cmp-affirms
+     (tensor'R (D1 : true' A) (D2 : true' B))
+     (erase-prop/tensor (E2 : erase-prop B+ B) (E1 : erase-prop A+ A))
+     F6
+     <- cmp-affirms D1 E1 (F1 : right (affirms K A+))
+     <- cmp-affirms D2 E2 (F2 : right (affirms K B+))
+     <- ({rfa : rfoc A+} eta+ B+ ([rfb : rfoc B+] affirmsR (tensorR rfa rfb)) (F3 rfa : left B+ -> right (affirms K (tensor A+ B+))))
+     <- ({lb : left B+} eta+ A+ ([rfa : rfoc A+] F3 rfa lb) (F4 lb : left A+ -> right (affirms K (tensor A+ B+))))
+     <- ({lb : left B+} cut+affirms A+ F1 (F4 lb) (F5 lb : right (affirms K (tensor A+ B+))))
+     <- cut+affirms B+ F2 F5 (F6 : right (affirms K (tensor A+ B+))).
+
+- : cmp-affirms
+     (tensor'L (D : hyp B1 -> hyp B2 -> true' A) (H : hyp (tensor' B1 B2)))
+     (E : erase-prop A+ A)
+     (tensorL F L)
+     <- cmp-hyp H (erase-prop/tensor (E2 : erase-prop B2+ B2) (E1 : erase-prop B1+ B1)) (L : left (tensor B1+ B2+))
+     <- ({hb1 : hyp B1} {lb1 : left B1+} cmp-hyp hb1 E1 lb1
+	   -> {hb2 : hyp B2} {lb2 : left B2+} cmp-hyp hb2 E2 lb2
+	   -> cmp-affirms (D hb1 hb2) E (F lb1 lb2 : right (affirms K A+))).
+
+- : cmp-affirms one'R erase-prop/one (affirmsR oneR).
+
+- : cmp-affirms
+     (one'L (D : true' A) (H : hyp one'))
+     (E : erase-prop A+ A)
+     (oneL F L)
+     <- cmp-hyp H erase-prop/one (L : left one)
+     <- cmp-affirms D E (F : right (affirms K A+)).
+
+% - : cmp-affirms
+%     (exists'R (T : term S) (D : true' (A T)))
+%     (erase-prop/exists (E : {x : term S} erase-prop (A+ x) (A x)))
+%     F3
+%     <- cmp-affirms D (E T) (F1 : right (affirms K (A+ T)))
+%     <- eta+ (A+ T) ([rfa : rfoc (A+ T)] affirmsR (existsR T rfa)) (F2 : left (A+ T) -> right (affirms K (exists S A+)))
+%     <- cut+affirms (A+ T) F1 F2 (F3 : right (affirms K (exists S A+))).
+
+% - : cmp-affirms
+%     (exists'L (D : {a : term S} hyp (B a) -> true' A) (H : hyp (exists' S B)))
+%     (E : erase-prop A+ A)
+%     (existsL F L)
+%     <- cmp-hyp H (erase-prop/exists (E1 : {x : term S} erase-prop (B+ x) (B x))) (L : left (exists S B+))
+%     <- ({a : term S}
+%	   {hb : hyp (B a)} {lb : left (B+ a)} cmp-hyp hb (E1 a) lb
+%	   -> cmp-affirms (D a hb) E (F a lb : right (affirms K A+))).
+
+- : cmp-affirms
+     (D : true' A)
+     (erase-prop/down (E : erase-prop A- A))
+     (affirmsR (downR F))
+     <- cmp-conc D (erase-judgment/true E) (F : right (true A-)).
+
+- : cmp-affirms
+     (lolli'L (D1 : true' B1) (D2 : hyp B2 -> true' A) (H : hyp (lolli' B1 B2)))
+     (E : erase-prop A+ A)
+     (F L)
+     <- cmp-hyp H (erase-prop/down (erase-prop/lolli (E2 : erase-prop B2- B2) (E1 : erase-prop B1+ B1))) (L : left (down (lolli B1+ B2-)))
+     <- ({hb2 : hyp B2} {lb2 : left (down B2-)} cmp-hyp hb2 (erase-prop/down E2) lb2 -> cmp-affirms (D2 hb2) E (F2 lb2 : right (affirms K A+)))
+     <- cmp-lolli D1 E1 F2 (F : left (down (lolli B1+ B2-)) -> right (affirms K A+)).
+
+% - : cmp-affirms
+%     (forall'L (T : term S) (D : hyp (B T) -> true' A) (H : hyp (forall' S B)))
+%     (E : erase-prop A+ A)
+%     (F' L)
+%     <- cmp-hyp H (erase-prop/down (erase-prop/forall (E1 : {x : term S} erase-prop (B- x) (B x)))) (L : left (down (forall S B-)))
+%     <- ({hb : hyp (B T)} {lb : left (down (B- T))} cmp-hyp hb (erase-prop/down (E1 T)) lb -> cmp-affirms (D hb) E (F lb : right (affirms K A+)))
+%     <- adm-forallL F (F' : left (down (forall S B-)) -> right (affirms K A+)).
+
+
+- : cmp-lolli
+     (init' (H : hyp (atom' P)))
+     (erase-prop/atom (E : erase-atm P+ P))
+     (F : left (down B-) -> right J)
+     G2
+     <- cmp-hyp+ H (erase-prop/atom E) (L : left (atom P+))
+     <- ({l : left (down (lolli (atom P+) B-))}
+	   eta- B- ([j] [lfb : lfoc B- j] downL (lolliL (init+ L) lfb) l) (G1 l : right (true B-)))
+     <- ({l : left (down (lolli (atom P+) B-))}
+	   cut+ (down B-) (downR (G1 l)) F (G2 l : right J)).
+
+- : cmp-lolli
+     (tensor'R (D1 : true' A1) (D2 : true' A2))
+     (erase-prop/tensor (E2 : erase-prop A2+ A2) (E1 : erase-prop A1+ A1))
+     (F : left (down B-) -> right J)
+     G6
+     <- cmp-lolli D2 E2 F (G1 : left (down (lolli A2+ B-)) -> right J)
+     <- cmp-lolli D1 E1 G1 (G2 : left (down (lolli A1+ (lolli A2+ B-))) -> right J)
+     <- ({l : left (down (lolli (tensor A1+ A2+) B-))} {rfa1 : rfoc A1+} {rfa2 : rfoc A2+}
+	   eta- B- ([j] [lfb : lfoc B- j] downL (lolliL (tensorR rfa1 rfa2) lfb) l) (G3 l rfa1 rfa2 : right (true B-)))
+     <- ({l : left (down (lolli (tensor A1+ A2+) B-))} {rfa1 : rfoc A1+}
+	   eta+ A2+ ([rfa2 : rfoc A2+] G3 l rfa1 rfa2) (G4 l rfa1 : left A2+ -> right (true B-)))
+     <- ({l : left (down (lolli (tensor A1+ A2+) B-))} {la2 : left A2+}
+	   eta+ A1+ ([rfa1 : rfoc A1+] G4 l rfa1 la2) (G5 l la2 : left A1+ -> right (true B-)))
+     <- ({l : left (down (lolli (tensor A1+ A2+) B-))}
+	   cut+ (down (lolli A1+ (lolli A2+ B-))) (downR (lolliR ([la1 : left A1+] lolliR ([la2 : left A2+] G5 l la2 la1)))) G2 (G6 l : right J)).
+
+- : cmp-lolli
+     (tensor'L (D : hyp B1 -> hyp B2 -> true' A) (H : hyp (tensor' B1 B2)))
+     (E : erase-prop A+ A)
+     (F : left (down B-) -> right J)
+     ([l : left (down (lolli A+ B-))] tensorL ([lb1 : left B1+] [lb2 : left B2+] G lb1 lb2 l) L)
+     <- cmp-hyp H (erase-prop/tensor (E2 : erase-prop B2+ B2) (E1 : erase-prop B1+ B1)) (L : left (tensor B1+ B2+))
+     <- ({hb1 : hyp B1} {lb1 : left B1+} cmp-hyp hb1 E1 lb1
+	   -> {hb2 : hyp B2} {lb2 : left B2+} cmp-hyp hb2 E2 lb2
+	   -> cmp-lolli (D hb1 hb2) E F (G lb1 lb2 : left (down (lolli A+ B-)) -> right J)).
+
+- : cmp-lolli
+     one'R
+     erase-prop/one
+     (F : left (down B-) -> right J)
+     G2
+     <- ({l : left (down (lolli one B-))}
+	   eta- B- ([j] [lfb : lfoc B- j] downL (lolliL oneR lfb) l) (G1 l : right (true B-)))
+     <- ({l : left (down (lolli one B-))}
+	   cut+ (down B-) (downR (G1 l)) F (G2 l : right J)).
+
+- : cmp-lolli
+     (one'L (D : true' A) (H : hyp one'))
+     (E : erase-prop A+ A)
+     (F : left (down B-) -> right J)
+     ([l : left (down (lolli A+ B-))] oneL (G l) L)
+     <- cmp-hyp H erase-prop/one (L : left one)
+     <- cmp-lolli D E F (G : left (down (lolli A+ B-)) -> right J).
+
+% - : cmp-lolli
+%     (exists'R (T : term S) (D : true' (A T)))
+%     (erase-prop/exists (E : {x : term S} erase-prop (A+ x) (A x)))
+%     (F : left (down B-) -> right J)
+%     G4
+%     <- cmp-lolli D (E T) F (G1 : left (down (lolli (A+ T) B-)) -> right J)
+%     <- ({l : left (down (lolli (exists S A+) B-))} {rfa : rfoc (A+ T)}
+%	   eta- B- ([j] [lfb : lfoc B- j] downL (lolliL (existsR T rfa) lfb) l) (G2 l rfa : right (true B-)))
+%     <- ({l : left (down (lolli (exists S A+) B-))}
+%	   eta+ (A+ T) ([rfa : rfoc (A+ T)] G2 l rfa) (G3 l : left (A+ T) -> right (true B-)))
+%     <- ({l : left (down (lolli (exists S A+) B-))}
+%	   cut+ (down (lolli (A+ T) B-)) (downR (lolliR ([la : left (A+ T)] G3 l la))) G1 (G4 l : right J)).
+
+% - : cmp-lolli
+%     (exists'L (D : {a : term S} hyp (B1 a) -> true' A) (H : hyp (exists' S B1)))
+%     (E : erase-prop A+ A)
+%     (F : left (down B-) -> right J)
+%     ([l : left (down (lolli A+ B-))] existsL ([a : term S] [lb1 : left (B1+ a)] G a lb1 l) L)
+%     <- cmp-hyp H (erase-prop/exists (E1 : {x : term S} erase-prop (B1+ x) (B1 x))) (L : left (exists S B1+))
+%     <- ({a : term S}
+%	   {hb1 : hyp (B1 a)} {lb1 : left (B1+ a)} cmp-hyp hb1 (E1 a) lb1
+%	   -> cmp-lolli (D a hb1) E F (G a lb1 : left (down (lolli A+ B-)) -> right J)).
+
+- : cmp-lolli
+     (D : true' A)
+     (erase-prop/down (E : erase-prop A- A))
+     (F : left (down B-) -> right J)
+     G3
+     <- cmp-conc D (erase-judgment/true E) (G1 : right (true A-))
+     <- ({l : left (down (lolli (down A-) B-))}
+	   eta- B- ([j] [lfb : lfoc B- j] downL (lolliL (downR G1) lfb) l) (G2 l : right (true B-)))
+     <- ({l : left (down (lolli (down A-) B-))}
+	   cut+ (down B-) (downR (G2 l)) F (G3 l : right J)).
+
+- : cmp-lolli
+     (lolli'L (D1 : true' B1) (D2 : hyp B2 -> true' A) (H : hyp (lolli' B1 B2)))
+     (E : erase-prop A+ A)
+     (F : left (down B-) -> right J)
+     ([l : left (down (lolli A+ B-))] G2 l L)
+     <- cmp-hyp H (erase-prop/down (erase-prop/lolli (E2 : erase-prop B2- B2) (E1 : erase-prop B1+ B1))) (L : left (down (lolli B1+ B2-)))
+     <- ({hb2 : hyp B2} {lb2 : left (down B2-)} cmp-hyp hb2 (erase-prop/down E2) lb2
+	   -> cmp-lolli (D2 hb2) E F (G1 lb2 : left (down (lolli A+ B-)) -> right J))
+     <- ({l : left (down (lolli A+ B-))}
+	   cmp-lolli D1 E1 ([lb2 : left (down B2-)] G1 lb2 l) (G2 l : left (down (lolli B1+ B2-)) -> right J)).
+
+% - : cmp-lolli
+%     (forall'L (T : term S) (D : hyp (B1 T) -> true' A) (H : hyp (forall' S B1)))
+%     (E : erase-prop A+ A)
+%     (F : left (down B-) -> right J)
+%     ([l : left (down (lolli A+ B-))] G2 l L)
+%     <- cmp-hyp H (erase-prop/down (erase-prop/forall (E1 : {x : term S} erase-prop (B1- x) (B1 x)))) (L : left (down (forall S B1-)))
+%     <- ({hb1 : hyp (B1 T)} {lb1 : left (down (B1- T))} cmp-hyp hb1 (erase-prop/down (E1 T)) lb1
+%	   -> cmp-lolli (D hb1) E F (G1 lb1 : left (down (lolli A+ B-)) -> right J))
+%     <- ({l : left (down (lolli A+ B-))}
+%	   adm-forallL ([lb1 : left (down (B1- T))] G1 lb1 l) (G2 l : left (down (forall S B1-)) -> right J)).
+
+
+
+%block cmp-hyp-block : some {A : prop'} {A+ : prop pos} {E : erase-prop A+ A}
+		       block {h : hyp A} {l : left A+} {cmp-hyp/h : cmp-hyp h E l}.
+%worlds (sort-block | term-block | erase-atm-block | cmp-hyp-block | rfoc-block | left-block)
+        (cmp-conc _ _ _)
+        (cmp-lax _ _ _)
+        (cmp-affirms _ _ _)
+        (cmp-lolli _ _ _ _)
+        (cmp-hyp _ _ _)
+        (cmp-hyp+ _ _ _).
+
+%total (D1 D2 D3 D4 H5 H6)
+       (cmp-conc D1 _ _)
+       (cmp-lax D2 _ _)
+       (cmp-affirms D3 _ _)
+       (cmp-lolli D4 _ _ _)
+       (cmp-hyp H5 _ _)
+       (cmp-hyp+ H6 _ _).
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Hdeyoung/monweakfoc.elf).
+!}%

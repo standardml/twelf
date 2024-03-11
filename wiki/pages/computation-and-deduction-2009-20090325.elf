@@ -1,0 +1,132 @@
+%%! title: "Computation and Deduction 2009/20090325"
+
+%{! Code from class, March 25. 
+
+```twelf
+tp : type.
+
+tensor : tp -> tp -> tp.
+1 : tp.
+with : tp -> tp -> tp.
+top : tp.
+plus : tp -> tp -> tp.
+0 : tp.
+
+exp : type.
+
+tens : exp -> exp -> exp.
+lett : exp -> (exp -> exp -> exp) -> exp.
+pair : exp -> exp -> exp.
+pi1  : exp -> exp.
+pi2  : exp -> exp.
+star : exp.
+lets : exp -> exp -> exp.
+unit : exp.
+in1  : exp -> exp.
+in2  : exp -> exp.
+case : exp -> (exp -> exp) -> (exp -> exp) -> exp.
+abort : exp -> exp.
+
+linear : (exp -> exp) -> type.
+
+of : exp -> tp -> type.
+
+
+linear/tens1 : linear ([x] tens (M x) N)
+	<- linear ([x] M x).
+
+linear/tens2 : linear ([x] tens M (N x))
+	<- linear ([x] N x).
+
+of/tens : of (tens M N) (tensor A B)
+	<- of M A
+	<- of N B.
+
+linear/lett1 : linear ([z] lett (M z) ([x] [y] N x y))
+	<- linear ([x] M x).
+
+linear/lett2 : linear ([z] lett M ([x] [y] N z x y))
+	<- ({x} {y} linear ([z] N z x y)).
+
+of/lett : of (lett M ([x] [y] N x y))  C
+	<- of M (tensor A B)
+	<- ({x:exp} of x A -> {y:exp} of y B -> of (N x y) C)
+	<- ({y:exp} linear ([x] N x y))
+	<- ({x:exp} linear ([y] N x y)).
+
+linear/pair : linear ([x] pair (M x) (N x))
+	<- linear ([x] M x)
+	<- linear ([x] N x).
+
+of/pair : of (pair M N) (with A B)
+	<- of M A
+	<- of N B.
+
+linear/pi1 : linear ([x] pi1 (M x))
+	<- linear ([x] M x).
+
+linear/pi2 : linear ([x] pi2 (M x))
+	<- linear ([x] M x).
+
+of/pi1 : of (pi1 M) A
+	<- of M (with A B).
+
+of/pi2 : of (pi2 M) B
+	<- of M (with A B).
+
+of/star : of star 1.
+
+linear/lets1 : linear ([x] lets (M x) N)
+	<- linear ([x] M x).
+
+linear/lets2 : linear ([x] lets M (N x))
+	<- linear ([x] N x).
+
+of/lets : of (lets M N) C
+	<- of M 1
+	<- of N C.
+
+linear/unit : linear ([x] unit).
+
+of/unit : of unit top.
+
+linear/in1 : linear ([x] in1 (M x))
+	<- linear ([x] M x).
+
+linear/in2 : linear ([x] in2 (M x))
+	<- linear ([x] M x).
+
+of/in1 : of (in1 M) (plus A B)
+	<- of M A.
+
+of/in2 : of (in2 M) (plus A B)
+	<- of M B.
+
+linear/case1 : linear ([z] case (M z) ([x] N x) ([x] O x))
+	<- linear ([z] M z).
+
+linear/case2 : linear ([z] case M ([x] N z x) ([x] O z x))
+	<- ({x:exp} linear ([z] N z x))
+	<- ({x:exp} linear ([z] O z x)).
+
+of/case : of (case M ([x] N x) ([x] O x)) C
+	<- of M (plus A B)
+	<- ({x} of x A -> of (N x) C)
+	<- ({x} of x B -> of (O x) C)
+	<- linear ([x] N x)
+	<- linear ([x] O x).
+
+linear/abort1 : linear ([x] abort (M x))
+	<- linear ([x] M x).
+
+linear/abort2 : linear ([x] abort M).
+
+of/abort : of (abort M) C
+	<- of M 0.
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090325).
+!}%

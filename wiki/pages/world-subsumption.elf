@@ -1,0 +1,14 @@
+%%! title: "World subsumption"
+
+%{! **World subsumption** is a sufficient condition that a [metatheorem](/wiki/metatheorem/) proved for one set of LF contexts can be reused in another set of contexts.
+
+Eventually, this page will contain a self-contained explanation for world subsumption.  For now, please read the discussion in \{\{proving|title=Proving totality assertions in non-empty contexts\}\} and on the [%worlds](/wiki/percent-worlds/) page.
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/World_subsumption).
+!}%

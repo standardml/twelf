@@ -1,0 +1,199 @@
+%%! title: "User:Rsimmons/Homework 7: Proofs In Twelf"
+
+%{! Due Wednesday, December 3, by 11:59pm. Turn in as hw07.elf in your handin directory. !}%
+
+%{! ## Definition !}%
+%{! ### Natural numbers !}%
+%{! #### On paper
+
+ n ::= z | s n
+
+!}%
+
+%{! #### In Twelf !}%
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+%{! ### Addition !}%
+%{! #### On paper
+
+ ---------------- sum/z
+ sum(z,n,n)
+
+ sum(n,m,p)
+ ---------------- sum/s
+ sum(s(n),m,s(p))
+
+!}%
+
+%{! #### In Twelf !}%
+
+sum : nat -> nat -> nat -> type.
+sum/z : sum z N N.
+sum/s : sum (s N) M (s P) <- sum N M P.
+
+%{! ### Less-than !}%
+%{! #### On paper
+
+**_QUESTION 1:**_ Give the inductive definition for the judgment ``n &lt; n'`` that corresponds to to what is defined below.
+
+!}%
+
+%{! #### In Twelf !}%
+
+lt : nat -> nat -> type.
+lt/z : lt z (s N).
+lt/s : lt (s N) (s M) <- lt N M.
+
+%{! ### Even/odd !}%
+%{! #### On paper
+
+ ---------------- even/z
+ even z
+
+ odd n
+ ---------------- even/s
+ even s(n)
+
+ even n
+ ---------------- odd/s
+ odd s(n)
+
+!}%
+
+%{! #### In Twelf !}%
+
+even : nat -> type.
+odd : nat -> type.
+
+%{! **_QUESTION 2:**_ Define in LF the rules for ``even`` and ``odd`` below. !}%
+
+
+
+
+%{! ## Proof: Sum Commutes !}%
+%{! ### Lemma:  N + 0 = N !}%
+%{! #### On paper
+
+For all natural numbers ``n``, ``sum(n,z,n)``.
+
+Proof by induction on ``n``.
+
+Case ``n=z``. We need to show ``sum(z,z,z)``, which we can show by rule ``sum/z``.
+
+Case ``n=s(n')``. We need to show ``sum(s(n'),z,s(n'))``. By the induction hypothesis, ``sum(n',z,n')``. By rule ``sum/s``, we have ``sum(s(n'),z,s(n'))``.
+
+!}%
+
+%{! #### In Twelf !}%
+
+sum-ident : {N: nat} sum N z N -> type.
+%mode sum-ident +N -D. 
+
+- : sum-ident z (sum/z : sum z z z).
+
+- : sum-ident (s N) (sum/s D : sum (s N) z (s N))
+   <- sum-ident N (D: sum N z N).
+
+%worlds () (sum-ident _ _).
+%total N (sum-ident N _).
+
+%{! ### Lemma: N + M = P implies N + (s M) = (s P) !}%
+%{! #### On paper
+
+**_QUESTION 3:**_ State the "on paper" version of the lemma below.
+
+!}%
+
+%{! #### In Twelf !}%
+
+sum-incr : sum N M P -> sum N (s M) (s P) -> type.
+%mode sum-incr +D1 -D2.
+
+- : sum-incr sum/z (sum/z : sum z (s N) (s N)).
+
+- : sum-incr (sum/s D) (sum/s D' : sum (s N) (s M) (s (s P))) 
+   <- sum-incr D (D': sum N (s M) (s P)).
+
+%worlds () (sum-incr _ _).
+%total D (sum-incr D _).
+
+
+
+
+
+%{! ### Theorem: N + M = P implies M + N = P !}%
+%{! #### On paper
+
+If ``sum(n,m,p)``, then ``sum(m,n,p)``.
+
+Proof by induction on the derivation of ``sum(n,m,p)``.
+
+Case sum/z:
+ |            | n = z
+ | ---------- | m = p 
+ | sum(z,m,m) |
+
+To show: ``sum(m,z,m)``. Immediate by the first lemma.
+
+Case sum/s:
+ | sum(n',m,p')      | n = s(n')
+ | ----------------- | p = s(p')
+ | sum(s(n'),m,s(p') |
+
+To show: ``sum(m,s(n'),s(p'))``.
+
+By the induction hypothesis, ``sum(m,n',p')``. By the second lemma, ``sum(m,s(n'),s(p'))``.
+
+!}%
+
+%{! #### In Twelf !}%
+
+sum-commutes : sum N M P -> sum M N P -> type.
+%mode sum-commutes +D1 -D2.
+
+- : sum-commutes (sum/z : sum z N N) D
+   <- sum-ident N (D : sum N z N).
+
+- : sum-commutes (sum/s D : sum (s N) M (s P)) D''
+   <- sum-commutes D (D': sum M N P)
+   <- sum-incr D' (D'' : sum M (s N) (s P)).
+
+%worlds () (sum-commutes _ _).
+%total D (sum-commutes D _).
+
+%{! ### Theorem :  N + (s M) = P implies N &lt; P !}%
+%{! #### On paper
+
+If ``sum(n,s(m),p)``, then ``n &lt; p``. Proof by induction on ``sum(n,s(m),p)``.
+
+Case ``sum/z``:
+ |                  | n = z
+ | ---------------- | p = s(m)
+ | sum(z,s(m),s(m)) |
+
+To show: ``z &lt; s(m)``. Immediate by rule ``lt/z``.
+
+Case ``sum/s``:
+ | sum(n',s(m),p')       | n = s(n')
+ | --------------------- | p = s(p')
+ | sum(s(n'),s(m),s(p')) |
+
+To show: ``s(n') &lt; s(p')``. 
+
+By the induction hypothesis, ``n' &lt; p'``. By rule ``lt/s``, we have ``s(n') &lt; s(p')``.
+
+!}%
+
+%{! #### In Twelf !}%
+
+%{! **_QUESTION 4:**_ State and prove the above theorem in Twelf. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Homework_7:_Proofs_In_Twelf).
+!}%

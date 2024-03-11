@@ -1,0 +1,25 @@
+%%! title: "The Twelf Project:To do/Syntax highlighting"
+
+%{! * An identifier within a lemma without a leading ``&lt;-`` is interpreted as a new keyword (is this fixable?)
+
+### Done
+* &lt;strike&gt;``*`` is not recognized as part of an identifier&lt;/strike&gt; — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 13:21, 30 September 2006 (EDT)
+* &lt;strike&gt;``%block`` is not recognized as a keyword&lt;/strike&gt; — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 13:21, 30 September 2006 (EDT)
+* &lt;strike&gt;[%infix](/wiki/fixity-declaration/), [%postfix](/wiki/fixity-declaration/), [%prefix](/wiki/fixity-declaration/) not keywords. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:49, 5 October 2006 (EDT)&lt;/strike&gt; — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 19:06, 5 October 2006 (EDT)
+* Doesn't dig many other characters in identifiers: &gt; &lt; &, etc. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:49, 5 October 2006 (EDT)
+:* Made some fixes, other ones will be more complicated (because it's actually syntax higlighting &lt;nowiki&gt;&gt&lt;/nowiki&gt;, not &gt;) — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 19:06, 5 October 2006 (EDT)
+::* Whoa: [CPS conversion](/wiki/cps-conversion/) (scroll down) &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 19:11, 5 October 2006 (EDT)
+:::* I think I fixed all the crazy stuff. Did I fix all the crazy stuff? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 00:51, 7 October 2006 (EDT)
+
+* !}%
+    
+fuNNY : type.
+
+%{! looks bad. &nbsp;&mdash;&nbsp;[Varming](/wiki/user-varming/) Sat Oct  7 00:52:14 EDT 2006 !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:To_do/Syntax_highlighting).
+!}%

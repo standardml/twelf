@@ -1,0 +1,265 @@
+%%! title: "Summer school 2008:Typed arithmetic expressions with sums"
+
+%{! 
+
+\{\{Summer school 2008
+  |prev=Typed arithmetic expressions
+  |prevname=Typed arithmetic expressions
+  |nonext=
+\}\}
+
+Arithmetic expressions with pairs and sums, where the answer type is values.
+
+For an alternate version of sums that doesn't involve output factoring, see [Chris's solution](/wiki/summer-school-2008-alternate-typed-arithmetic-expressions-with-sums/).  For a version that uses output factoring but avoids identity types, see [William's solution](/wiki/summer-school-2008-typed-arithmetic-expressions-with-sums-2/).
+
+!}%
+
+nat : type.             %name nat M.
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) <- add M N P.
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+char : type.				%name char X.
+a : char.
+b : char.
+
+str : type.				%name str S.
+emp : str.
+cons : char -> str -> str.
+
+cat : str -> str -> str -> type.
+%mode cat +S1 +S2 -S3.
+
+cat/e : cat emp S S.
+cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
+
+%worlds () (cat _ _ _).
+%total S (cat S _ _).
+
+%{! 
+
+## Typed expressions
+
+!}%
+
+tp : type.				%name tp T.
+number : tp.
+string : tp.
+prod   : tp -> tp -> tp.
+sum    : tp -> tp -> tp.
+
+val : tp -> type.			%name val V.  %postfix 1 val.
+num : nat -> number val.
+lit : str -> string val.
+pair : U val -> T val -> (prod U T) val.
+inl  : (U val) -> (sum U T) val.
+inr  : (T val) -> (sum U T) val.
+
+exp : tp -> type.			%name exp E.  %postfix 1 exp.
+ret : T val -> T exp.
+plus : number exp -> number exp -> number exp.
+append : string exp -> string exp -> string exp.
+let : T exp -> (T val -> U exp) -> U exp.
+fst : (prod U T) exp -> U exp.  %% (fst e)
+snd : (prod U T) exp -> T exp.  %% (snd e)
+case : (sum T U) exp -> (T val -> V exp) -> (U val -> V exp) -> V exp.
+
+%{! 
+
+## Evaluation
+
+For simplicity, take answers to be values. 
+
+!}%
+
+eval : T exp -> T val -> type.
+%mode eval +E1 -E2.
+
+%% eval
+
+eval/val
+   : eval (ret V) V.
+
+eval/plus
+   : eval (plus E1 E2) (num N)
+      <- eval E1 (num N1)
+      <- eval E2 (num N2)
+      <- add N1 N2 N.
+
+eval/append
+   : eval (append E1 E2) (lit S)
+      <- eval E1 (lit S1)
+      <- eval E2 (lit S2)
+      <- cat S1 S2 S.
+
+eval/let
+   : eval (let E1 ([x] E2 x)) A
+      <- eval E1 V
+      <- eval (E2 V) A.
+
+eval/fst 
+   : eval (fst E) A1
+      <- eval E (pair A1 A2).
+
+eval/snd 
+   : eval (snd (E : (prod T1 T2) exp)) A2
+      <- eval E (pair A1 A2).
+
+eval/case/inl
+   : eval (case E E1 E2) A'
+      <- eval E (inl A1)
+      <- eval (E1 A1) A'.
+
+eval/case/inr
+   : eval (case E E1 E2) A'
+      <- eval E (inr A2)
+      <- eval (E2 A2) A'.
+
+%worlds () (eval _ _).
+
+%{! 
+
+We can write the obvious rules for evaluation, but Twelf can't prove
+this definition total.  The reason is that the [output coverage](/wiki/coverage-checking/)
+checker looks at each constant in isolation, not at the whole set of
+constants.  In this case, it flags an error on the case
+``eval/case/inl``:
+
+&lt;twelf check="decl"&gt;
+%total E (eval E _).
+&lt;/twelf&gt;
+
+because it doesn't notice that the next constant,
+``eval/case/inr``, covers the other possible output of evaluating
+``E``.  We can fix this using a technique called [output factoring](/wiki/output-factoring/).
+
+## Output factored evaluation
+
+!}%
+
+id : A exp -> A exp -> type.
+refl : id E E.
+
+eval'-case : {E' : V exp} {E : (sum T U) exp} {E1} {E2} 
+	      id E' (case E E1 E2) 
+	      -> (sum T U) val 
+	      -> V val
+	      -> type.
+%mode eval'-case +X-2 +X-1 +X0 +X1 +X2 +X3 -X4.
+
+eval' : T exp -> T val -> type.
+%mode eval' +E1 -E2.
+
+%% eval'-case
+
+eval'-case/inl : eval'-case _ E E1 E2 refl (inl A1) A
+		 <- eval' (E1 A1) A.
+
+eval'-case/inr : eval'-case _ E E1 E2 refl (inr A2) A
+		 <- eval' (E2 A2) A.
+
+%% eval'
+
+eval'/val
+   : eval' (ret V) V.
+
+eval'/plus
+   : eval' (plus E1 E2) (num N)
+      <- eval' E1 (num N1)
+      <- eval' E2 (num N2)
+      <- add N1 N2 N.
+
+eval'/append
+   : eval' (append E1 E2) (lit S)
+      <- eval' E1 (lit S1)
+      <- eval' E2 (lit S2)
+      <- cat S1 S2 S.
+
+eval'/let
+   : eval' (let E1 ([x] E2 x)) A
+      <- eval' E1 V
+      <- eval' (E2 V) A.
+
+eval'/fst 
+   : eval' (fst E) A1
+      <- eval' E (pair A1 A2).
+
+eval'/snd 
+   : eval' (snd (E : (prod T1 T2) exp)) A2
+      <- eval' E (pair A1 A2).
+
+eval'/case 
+   : eval' (case E E1 E2) A'
+      <- eval' E A
+      <- eval'-case (case E E1 E2) E E1 E2 refl A A'.
+
+%worlds () (eval' _ _) (eval'-case _ _ _ _ _ _ _).
+%total (E E') (eval'-case E' _ _ _ _ _ _) (eval' E _).
+
+%{! 
+
+The constant ``eval'/case`` uses [output factoring](/wiki/output-factoring/): the
+subsidiary case-analysis of the result of ``eval' E A`` is broken
+out into a separate lemma, ``eval'-case``.  This solves the above
+problem, because while output coverage cannot be split across multiple
+constants, input coverage certainly can.  However, because
+``eval'-case`` recursively calls ``eval'``, the two relations
+must be proved total using [mutual induction](/wiki/mutual-induction/).  This is why we 
+- write both type families and modes before writing any constants
+- declare their worlds and modes at once
+- use the mutual termination metric ``(E E')``
+
+However, there is an additional subtlety that we need to address.  You
+might think ``eval'-case`` could be defined as follows:
+
+&lt;twelf ignore="true"&gt;
+eval'-case : \{E : (sum T U) exp\} \{E1 : T val -&gt; V exp\} \{E2 : U val -&gt; V exp\} 
+	      (sum T U) val 
+	      -&gt; A val
+	      -&gt; type.
+%mode eval'-case +X0 +X1 +X2 +X3 -X4.
+
+eval'-case/inl : eval'-case E E1 E2 (inl A1) A
+		 &lt;- eval' (E1 A1) A.
+
+eval'-case/inr : eval'-case E E1 E2 (inr A2) A
+		 &lt;- eval' (E2 A2) A.
+&lt;/twelf&gt;
+
+The problem is that Twelf can't justify the recursive calls to
+``eval'`` on ``E1`` and ``E2``.  In fact, why does this
+recursion pattern work at all?  The reason is that we don't call
+``eval'-case`` on just any ``E1`` and ``E2``, but on
+subexpressions of the ``E`` that ``eval'`` was originally
+called with.  Thus, when we call back to ``eval'`` from
+``eval'-case``, it's on a smaller expression.
+
+We make this invariant evident to Twelf as follows:
+- when ``eval'`` calls ``eval'-case``, we pass in the original expression ``(case E E1 E2)`` that ``eval'`` was called with
+- this argument is used as termination metric for ``eval-case'``
+- we constrain this position to be a case-analysis using an [identity type](/wiki/equality/), so that we don't have extraneous cases to consider.  
+
+This explains the somewhat-convoluted code above.  
+
+\{\{Summer school 2008
+  |prev=Typed arithmetic expressions
+  |prevname=Typed arithmetic expressions
+  |nonext=
+\}\}
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Typed_arithmetic_expressions_with_sums).
+!}%

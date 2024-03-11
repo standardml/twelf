@@ -1,0 +1,197 @@
+%%! title: "Computation and Deduction 2009/20090209"
+
+%{! Code from class, February 9 
+
+```twelf
+
+%% MinML language
+
+tp : type.
+
+num : tp.
+arr : tp -> tp -> tp.
+
+%worlds () (tp).
+
+term : type.
+
+z : term.
+s : term -> term.
+ifz : term -> term -> (term -> term) -> term.
+lam : tp -> (term -> term) -> term.
+app : term -> term -> term.
+
+%block var : block {x:term}.
+%worlds (var) (term).
+
+of : term -> tp -> type.
+
+of/z : of z num.
+
+of/s : of (s E) num
+        <- of E num.
+
+of/ifz : of (ifz En E0 ([x] Es x)) T
+          <- of En num
+          <- of E0 T
+          <- ({x : term} of x num -> of (Es x) T).
+
+of/lam : of (lam T1 ([x] E2 x)) (arr T1 T2)
+          <- ({x : term} of x T1 -> of (E2 x) T2).
+
+of/app : of (app E1 E2) T
+          <- of E1 (arr T2 T)
+          <- of E2 T2.
+
+
+%block stupid : some {x:term} {t:tp} block {d:of x t}.
+%block bind : some {T:tp} block {x:term} {d : of x T}.
+%worlds (bind) (of _ _).
+
+%% Here we are using subordination.
+%% It indicates when 
+%% You can see the transitive closure using Print.subord
+%% Non-subordination is what is really importing
+%% term is not subordinate to tp so a world made of terms might as well
+%% be the empty world as far as a tp is concerned.
+
+%% Similarly of is not subordinate to term and of is not subordinate to tp.
+%% So the of assumption in bind drops out as far as term is concerned.
+
+value : term -> type.
+
+val/z : value z.
+
+val/s : value (s E)
+         <- value E.
+
+val/lam : value (lam T ([x] E x)).
+
+%worlds () (value _).
+
+step : term -> term -> type.
+
+step/s : step (s E) (s E')
+          <- step E E'.
+
+step/ifz/arg : step (ifz En E0 ([x] Es x)) (ifz En' E0 ([x] Es x))
+                <- step En En'.
+
+step/ifz/z : step (ifz z E0 ([x] Es x)) E0.
+
+step/ifz/s : step (ifz (s E) E0 ([x] Es x)) (Es E)
+              <- value E.
+
+step/app/fn : step (app E1 E2) (app E1' E2)
+               <- step E1 E1'.
+
+step/app/arg : step (app E1 E2) (app E1 E2')
+                <- value E1
+                <- step E2 E2'.
+
+step/app/beta : step (app (lam T2 ([x] (E x))) E2) (E E2)
+                 <- value E2.
+
+%worlds () (step _ _).
+
+%% Progress
+%% If |- e : \tau then either value e or \exists e'. e \stepsto e'
+
+unstuck : term -> type.
+
+unstuck/val : unstuck E
+               <- value E.
+
+unstuck/step : unstuck E
+                <- step E E'.
+
+%worlds () (unstuck _).
+
+progress-s : unstuck E -> unstuck (s E) -> type.
+%mode progress-s +D1 -D2.
+
+- : progress-s (unstuck/val Dval) (unstuck/val (val/s Dval)).
+
+- : progress-s (unstuck/step Dstep) (unstuck/step (step/s Dstep)).
+
+%worlds () (progress-s _ _).
+%total {} (progress-s _ _).
+
+progress-ifz : of E num -> unstuck E -> {E0} {E1} unstuck (ifz E E0 E1) -> type.
+%mode progress-ifz +D1 +D2 +E0 +E1 -D3.
+
+- : progress-ifz _ (unstuck/step Dstep) _ _ (unstuck/step (step/ifz/arg Dstep)).
+
+- : progress-ifz of/z (unstuck/val val/z) _ _ (unstuck/step step/ifz/z).
+
+- : progress-ifz (of/s Dof) (unstuck/val (val/s Dval)) _ _ (unstuck/step (step/ifz/s Dval)).
+
+%worlds () (progress-ifz _ _ _ _ _).
+%total D (progress-ifz D _ _ _ _).
+
+progress-app : of E (arr T1 T2) -> unstuck E -> unstuck E1 -> unstuck (app E E1) -> type.
+%mode progress-app +D1 +D2 +D3 -D4.
+
+- : progress-app _ (unstuck/step Dstep) _ (unstuck/step (step/app/fn Dstep)).
+
+- : progress-app _ (unstuck/val Dval) (unstuck/step Dstep) (unstuck/step (step/app/arg Dstep Dval)).
+
+- : progress-app (of/lam _) (unstuck/val val/lam) (unstuck/val Dval) (unstuck/step (step/app/beta Dval)).
+
+%worlds () (progress-app _ _ _ _).
+%total D (progress-app D _ _ _).
+
+progress : of E T -> unstuck E -> type.
+%mode progress +D1 -D2.
+
+- : progress of/z (unstuck/val val/z).
+
+- : progress (of/s Dof) Dunstuck'
+     <- progress Dof Dunstuck
+     <- progress-s Dunstuck Dunstuck'.
+
+- : progress
+     (of/ifz
+        DofBody
+        DofE0
+        DofE)
+     Dunstuck'
+     <- progress DofE Dunstuck
+     <- progress-ifz DofE Dunstuck _ _ Dunstuck'.
+
+- : progress
+     (of/app
+        DofE1
+        DofE)
+     Dunstuck'
+     <- progress DofE Dunstuck
+     <- progress DofE1 Dunstuck1
+     <- progress-app DofE Dunstuck Dunstuck1 Dunstuck'.
+
+- : progress
+     (of/lam _)
+     (unstuck/val val/lam).
+
+%worlds () (progress _ _).
+%total D (progress D _).
+
+%% preservation
+preservation : of E T -> step E E' -> of E' T -> type.
+%mode preservation +D1 +D2 -D3.
+
+- : preservation (of/s D1) (step/s Dstep) (of/s D1')
+     <- preservation D1 Dstep D1'.
+
+- : preservation (of/ifz Dbody D0 of/z) step/ifz/z D0.
+
+- : preservation (of/ifz Dbody D0 (of/s Dn)) (step/ifz/s _) (Dbody _ Dn).
+
+%worlds () (preservation _ _ _).
+%total D (preservation _ D _).
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090209).
+!}%

@@ -1,0 +1,16 @@
+%%! title: "Talk:Alpha-equivalence"
+
+%{! The definition is not correct.
+It's not enough to say that y is not a free variable of e.
+You must also have y free for x in e.
+
+:: Not sure where you're taking issue here: a counterexample might be helpful, and you're welcome to edit the actual page to clarify if you'd like. Certainly it is the case that alpha equivalence is quite subtle, which is one of the reasons we like that Twelf takes care of all of it for us :-) — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 14:21, 27 February 2011 (EST)
+
+:::: The usual definition has the additional condition that y != x.  Is that what you meant? [Drl](/wiki/user-drl/) 22:46, 15 March 2011 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Alpha-equivalence).
+!}%

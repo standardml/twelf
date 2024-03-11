@@ -1,0 +1,157 @@
+%%! title: "Sets and supersets"
+
+%{! \{\{needs|this is really about multisets encoded as lists . s/set/multiset/g. BTW didn't I author the part to do with reflexivity? [Varming](/wiki/user-varming/) 03:52, 13 October 2006 (EDT)\}\}
+\{\{needs|editing for context and tone\}\}
+
+This is a simplification of your concept further to take away the need for subtyping. I think this is essentially as simple as you can get, and from here you can do one of two things:
+
+* Make the entries in the sets not strictly equal, but subject to a subtype relation (this is what you did, essentially)
+* Make the sets ordered
+
+Once you've done both of these things, which seem like they are relatively orthogonal to each other, *then* we've got the environments that Appel is looking for. I think what would be interesting is to see the progression of all of them, so what I'm probably going to do next (unless you want to crack at it) is to redo this file will well-ordered sets. !}%
+    
+%% Map subtyping - concept progression
+%% 1) Notion of sets and supersets of natural numbers
+
+%% Daniel K. Lee and Robert J. Simmons
+%% Carnegie Mellon University. August 2006.
+
+% Natural numbers 
+
+nat : type.
+
+z: nat.
+s: nat -> nat.
+
+% Sets of natural numbers
+
+set : type.
+
+set/nil : set.
+set/cons : nat -> set -> set.
+
+% The containment judgment
+%
+% Succeeds if a natural number is one of the items in the set
+
+in-set : nat -> set -> type.
+
+in-set/hit : in-set N (set/cons N SET).
+in-set/miss : in-set N (set/cons N' SET)
+	       <- in-set N SET.
+
+%{ 
+The superset relation
+
+This definition is "extensional" in that S1 is a superset of S2 if for
+every natural number n in S2, that natural number also exists in S1. 
+
+This relation says nothing about the frequency of these entries, so
+(1,2,1) is a superset of (2,2,2) (a strict superset, though we do not define the
+notion of "strict")
+}%
+
+superset : set -> set -> type.
+
+superset/nil : superset SET set/nil.
+superset/cons : superset SET1 (set/cons N SET2)
+		 <- in-set N SET1
+		 <- superset SET1 SET2.
+
+% BEGIN META-THEOREMS
+
+%{
+Weakening
+
+Weakening is the crucial lemma for the reflexivity - it states that if SET1 is
+a superset of SET2, you can add something to SET1 and the result is still a 
+superset of SET2.
+
+The second case goes as follows (using A >= B as shorthand for superset A B). 
+In the case that we have:
+
+ IN:(in-set N' SET1)   SUP:(SET1 >= SET2)
+---------------------------------------- superset/cons
+      SET1 >= (set/cons N' SET2)
+
+we can get from induction that, for some arbitrary N, 
+SUP':((set/cons N SET1) >= SET2)
+
+We can then build a derivation of the result that we want like so:
+
+     IN:(in-set N' SET1)
+----------------------------- in-set/miss
+ in-set N' (set/cons N SET1)              SUP':((set/cons N SET1) >= SET2)
+------------------------------------------------------------------ superset/cons
+      (set/cons N SET1) >= (set/cons N' SET2)
+}%
+
+superset-wkn : {N} superset SET1 SET2
+		-> superset (set/cons N SET1) SET2 -> type.
+%mode superset-wkn +D1 +D2 -D3.
+
+- : superset-wkn _ superset/nil superset/nil.
+- : superset-wkn N (superset/cons SUP IN) 
+                   (superset/cons SUP'  (in-set/miss IN))
+     <- superset-wkn N SUP SUP'.
+
+%worlds () (superset-wkn _ _ _). %total T (superset-wkn _ T _).
+
+% Reflexivity of the superset relation
+
+superset-refl : {SET} superset SET SET -> type.
+%mode superset-refl +D1 -D2.
+
+- : superset-refl set/nil superset/nil.
+- : superset-refl (set/cons N SET) (superset/cons SUP' in-set/hit)
+     <- superset-refl SET (SUP: superset SET SET)
+     <- superset-wkn N SUP (SUP': superset (set/cons N SET) SET).
+
+%worlds () (superset-refl _ _).
+%total T (superset-refl T _).
+
+%{
+The "Entry-in-superset" lemma
+
+Just as weakening was the crucial lemma for reflexivity, this is the crucial
+lemma for the transitivity lemma. It's statmement is simple - if N is in SET2,
+and SET1 is a supertype of SET2, then N is in SET1. 
+
+The proof is pretty straightforward induction - if the derivation of "in-set" 
+is the hit, you're done, if it's not, keep looking.
+}%
+
+in-superset : in-set N SET2
+	       -> superset SET1 SET2
+	       -> in-set N SET1 -> type.
+%mode in-superset +D1 +D2 -D3.
+
+- : in-superset in-set/hit (superset/cons SUP IN) IN.
+- : in-superset (in-set/miss IN) (superset/cons SUP _) IN'
+     <- in-superset IN SUP IN'.
+
+%worlds () (in-superset _ _ _). %total T (in-superset T _ _).
+
+% Transitivity of the superset relation
+
+superset-trans : superset SET1 SET2
+		  -> superset SET2 SET3
+		  -> superset SET1 SET3 -> type.
+%mode superset-trans +D1 +D2 -D3.
+
+- : superset-trans _ superset/nil superset/nil.
+- : superset-trans SUP1 (superset/cons SUP2 IN) (superset/cons SUP3 IN')
+     <- superset-trans SUP1 SUP2 SUP3
+     <- in-superset IN SUP1 IN'.
+
+%worlds () (superset-trans _ _ _). %total T (superset-trans _ T _).
+
+%{! [Category:Twelf code](/wiki/category-twelf-code/)
+\{\{stub tutorial\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Sets_and_supersets).
+!}%

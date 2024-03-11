@@ -1,0 +1,19 @@
+%%! title: "Template:Draft"
+
+%{! &lt;div style="float:right;border:solid #EEBBBB 1px;margin:1px;"&gt;
+\{| cellspacing="0" style="background:#FFE7E7;"
+| style="font-weight:bold;font-size:24pt;padding:6pt;line-height:1.25em;margin:12pt;" | Draft of \{\{&lt;includeonly&gt;subst:&lt;/includeonly&gt;CURRENTDAY\}\} \{\{&lt;includeonly&gt;subst:&lt;/includeonly&gt;CURRENTMONTHNAME\}\} \{\{&lt;includeonly&gt;subst:&lt;/includeonly&gt;CURRENTYEAR\}\}.
+|\}
+&lt;/div&gt;&lt;noinclude&gt;
+
+
+This template marks a page as a draft. To use it, write &lt;nowiki&gt;\{\{draft\}\}&lt;/nowiki&gt; at the top of an article. That produces the box (with date) shown at the right.
+
+&lt;/noinclude&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Draft).
+!}%

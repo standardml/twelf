@@ -1,0 +1,104 @@
+%%! title: "Indexed lists"
+
+%{!  !}%
+    
+%{! (options removed from twelftag: check=true) !}%
+
+% Lists
+% By Carsten Varming 2006
+
+tp : type.         %name tp Tp.
+list : tp -> type. %name list Ls.
+stuff : tp.
+%freeze tp.
+
+cons : {Tp} list Tp -> list Tp.
+nil : {Tp} list Tp.
+%freeze list.
+
+eq : list Tp -> list Tp -> type.
+%mode eq +Ls -Ls'.
+eq_ref : eq Ls Ls.
+%worlds () (eq _ _).
+%freeze eq.
+
+eq_symm : eq Ls Ls' -> eq Ls' Ls -> type.
+%mode eq_symm +Q -Q'.
+eq_symm_rule : eq_symm eq_ref eq_ref.
+%worlds () (eq_symm _ _).
+%freeze eq_symm.
+%total {} (eq_symm _ _).
+
+eq_trans : eq Ls Ls' -> eq Ls' Ls'' -> eq Ls Ls'' -> type.
+%mode eq_trans +Q +Q' -Q''.
+eq_trans_rule : eq_trans eq_ref eq_ref eq_ref.
+%worlds () (eq_trans _ _ _).
+%freeze eq_trans.
+%total {} (eq_trans _ _ _).
+rev : list Tp -> list Tp -> list Tp -> type.
+%mode rev +Ls +Ls'' -Ls'.
+rev_nil : rev (nil _) Ls' Ls'.
+rev_cons : rev (cons E Ls) Ls'' Ls'
+               <- rev Ls (cons E Ls'') Ls'.
+%worlds () (rev _ _ _).
+%freeze rev.
+%total D (rev D _ _).
+
+rev_exists : {Ls} {Ls'} rev Ls Ls' Ls'' -> type.
+%mode rev_exists +Ls +Ls' -R.
+rev_exists_nil : rev_exists (nil _) _ rev_nil.
+rev_exists_cons : rev_exists (cons E Ls) Ls' (rev_cons Ls'')
+            <- rev_exists Ls (cons E Ls') Ls''.
+%worlds () (rev_exists _ _ _).
+%freeze rev_exists.
+%total D (rev_exists D _ _).
+
+revDet : rev Ls Ls' Ls3 -> rev Ls Ls' Ls4 -> eq Ls3 Ls4 -> type.
+%mode revDet +R +R' -Q.
+revDet_nil : revDet rev_nil _ eq_ref.
+revDet_cons : revDet (rev_cons R) (rev_cons R') Q
+         <- revDet R R' Q.
+%worlds () (revDet _ _ _).
+%freeze revDet.
+%total D (revDet D _ _).
+
+revrev_id_lem : rev Ls Ls' Ls'' -> rev Ls'' (nil _) Ls4 -> rev Ls' Ls Ls6 -> eq Ls6 Ls4 -> type.
+%mode revrev_id_lem +R +R' +R'' -Q.
+
+revrev_id_lem_nil : revrev_id_lem rev_nil F F' Q
+          <- revDet F' F Q. 
+revrev_id_lem_cons : revrev_id_lem (rev_cons R) R' R'' Q
+          <- revrev_id_lem R R' (rev_cons R'') Q.
+
+%worlds () (revrev_id_lem _ _ _ _).
+%freeze revrev_id_lem.
+%total D (revrev_id_lem D _ _ _).
+
+revrev_id : rev Ls (nil Tp) Ls' -> rev Ls' (nil Tp) Ls'' -> eq Ls Ls'' -> type.
+%mode revrev_id +R +R' -Q.
+revrev_id_rule : revrev_id R R' Q 
+      <- revrev_id_lem R R' rev_nil Q.
+%worlds () (revrev_id _ _ _).
+%freeze revrev_id.
+%total {} (revrev_id _ _ _).
+
+rev_injective : rev Ls (nil Tp) Ls' -> rev Ls'' (nil Tp) Ls' -> eq Ls Ls'' -> type.
+%mode rev_injective +R +R' -Q.
+rev_injective_rule : rev_injective (R : rev Ls (nil Tp) Ls') R' Q
+      <- rev_exists Ls' (nil Tp) Rev
+      <- revrev_id R Rev Q'
+      <- eq_symm Q' Q'''
+      <- revrev_id R' Rev Q''
+      <- eq_trans Q'' Q''' Q1
+      <- eq_symm Q1 Q.
+%worlds () (rev_injective _ _ _).
+%freeze rev_injective.
+%total D (rev_injective D _ _).
+
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Indexed_lists).
+!}%

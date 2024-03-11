@@ -1,0 +1,12 @@
+%%! title: "Talk:Natural numbers with inequality"
+
+%{! It would probably be a good idea to standardize on one name for the uninhabited type in our tutorials. My vote goes to "void" since that is its common name in type theory. I think "false" is not a good choice since we often have terms inhabiting a type called false (in an encoding of classical logic, for instance). "Absurd" seems a little hokey to me, but I don't have a good argument against it... &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 13:28, 6 September 2006 (MST)
+
+: I'm all for void, I'll make a note of it in [Twelf style guide](/wiki/twelf-style-guide/), since that's exactly the sort of thing that goes in a twelf style guide. - [TheTwelfElf](/wiki/user-thetwelfelf/) 13:37, 6 September 2006 (MST) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Natural_numbers_with_inequality).
+!}%

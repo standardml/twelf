@@ -1,0 +1,213 @@
+%%! title: "POPL Tutorial/MinML encoding"
+
+%{! 
+
+## Syntax
+
+!}%
+
+tp : type.				%name tp T.
+num : tp.
+arr : tp -> tp -> tp.
+
+%% you can world-check syntax if you want
+%worlds () (tp).
+
+exp : type.				%name exp E.
+fn : tp -> (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+z : exp.
+s : exp -> exp.
+
+%{! 
+#### Exercise: constant for ifz
+!}%
+
+ifz : exp -> exp -> (exp -> exp) -> exp.
+
+%% you can world-check syntax if you want
+%block exp_block : block {x:exp}.
+%worlds (exp_block) (exp).
+
+%{! 
+
+## Static semantics
+
+!}%
+
+of : exp -> tp -> type.                %name of Dof.
+
+of/z : of z num.
+
+of/app : of (app E1 E2) T
+	  <- of E1 (arr T' T)
+	  <- of E2 T'.
+
+of/fn : of (fn T1 ([x] E x)) (arr T1 T2)
+	 <- ({x:exp} of x T1 -> of (E x) T2).
+
+%{! 
+#### Exercise: typing rules for s and ifz
+!}%
+
+of/s : of (s E) num
+	<- of E num.
+
+of/ifz : of (ifz E E0 ([x] E1 x)) T
+	  <- of E num
+	  <- of E0 T
+	  <- ({x:exp} of x num -> of (E1 x) T).
+
+%block of_block : some {T:tp} block {x:exp}{dx: of x T}.
+%worlds (of_block) (of _ _).
+
+%{! 
+
+## Dynamic semantics
+
+### value judgement
+
+
+!}%
+
+value : exp -> type.               %name value Dval.
+
+value/fn : value (fn T ([x] E x)).
+%{! 
+#### Exercise: value rules for z and s
+!}%
+value/z  : value z.
+value/s  : value (s E)
+	    <- value E.
+
+%{! 
+
+### step judgement
+
+!}%
+
+step : exp -> exp -> type.        %name step Dstep.
+
+step/app/fn : step (app E1 E2) (app E1' E2)
+	       <- step E1 E1'.
+
+step/app/arg : step (app E1 E2) (app E1 E2')
+		<- value E1
+		<- step E2 E2'.
+
+step/app/beta : step (app (fn T ([x] E x)) E2) (E E2)
+		 <- value E2.
+
+%{! 
+#### Exercise: step rules for s and ifz
+!}%
+
+step/s : step (s E) (s E')
+	  <- step E E'.
+
+step/ifz/arg : step (ifz E E0 ([x] E1 x)) (ifz E' E0 ([x] E1 x))
+		<- step E E'.
+
+step/ifz/z   : step (ifz z E0 ([x] E1 x)) E0.
+
+step/ifz/s   : step (ifz (s E) E0 ([x] E1 x)) (E1 E)
+		<- value E.
+
+%{! 
+
+## Progress theorem
+
+### Sum type for the result
+
+!}%
+
+val-or-step : exp -> type.        %name val-or-step Dvos.
+
+vos/value : val-or-step E
+	     <- value E.
+vos/step  : val-or-step E
+	     <- step E E'.
+
+%{! 
+
+### Lemmas
+
+!}%
+
+prog/app : of E1 (arr T' T) 
+	    -> val-or-step E1
+	    -> val-or-step E2
+	    -> val-or-step (app E1 E2)
+	    -> type.
+%mode prog/app +Dof +Dvos1 +Dvos2 -Dvos.
+
+- : prog/app 
+     _ 
+     (vos/step (Dstep1 : step E1 E1'))
+     _
+     (vos/step (step/app/fn Dstep1)).
+
+- : prog/app
+     _
+     (vos/value (Dval1 : value E1))
+     (vos/step (Dstep2 : step E2 E2'))
+     (vos/step (step/app/arg Dstep2 Dval1)).
+
+- : prog/app
+     (of/fn _ : of (fn T ([x] E' x)) (arr T T'))
+     (vos/value (Dval1 : value (fn T ([x] E' x))))
+     (vos/value (Dval2 : value E2))
+     (vos/step (step/app/beta Dval2)).
+
+%worlds () (prog/app _ _ _ _).
+%total {} (prog/app _ _ _ _).
+
+%{! 
+
+#### Exercise: lemma for s
+
+!}%
+
+
+%{! 
+
+#### Exercise: lemma for ifz
+
+!}%
+
+%{! 
+
+### Main theorem
+
+!}%
+
+prog : of E T -> val-or-step E -> type.
+%mode prog +Dof -Dvos.
+
+- : prog (of/z : of z num) (vos/value (value/z : value z)).
+
+- : prog (of/fn _) (vos/value value/fn).
+
+- : prog (of/app 
+	    (D2 : of E2 T') 
+	    (D1 : of E1 (arr T' T)))
+     DvosApp
+     <- prog D1 (Dvos1 : val-or-step E1)
+     <- prog D2 (Dvos2 : val-or-step E2)
+     <- prog/app D1 Dvos1 Dvos2 DvosApp.
+
+%{! 
+
+#### Exercise: cases for s and ifz
+
+!}%
+
+%worlds () (prog _ _).
+%total Dof (prog Dof _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/MinML_encoding).
+!}%

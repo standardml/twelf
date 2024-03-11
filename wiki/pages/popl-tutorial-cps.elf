@@ -1,0 +1,54 @@
+%%! title: "POPL Tutorial/cps"
+
+%{! 
+
+## CPS Conversion
+
+!}%
+
+tp : type.
+o : tp.
+=> : tp -> tp -> tp. %infix right 3 =>.
+
+e : tp -> type.
+v : tp -> type.
+app : e (A => B) -> e A -> e B.
+lam : (v A -> e B) -> v (A => B).
+inj : v A -> e A.
+%block sourceb : some {A : tp} block {x : v A}.
+%worlds (sourceb) (e _) (v _).
+
+ce : type.
+cv : tp -> type.
+capp : cv (A => B) -> cv A -> (cv B -> ce) -> ce.
+clam : (cv A -> (cv B -> ce) -> ce) -> cv (A => B).
+%block targetb1 : some {A : tp} block {x : cv A}.
+%block targetb2 : some {A : tp} block {y : cv A -> ce}.
+%worlds (targetb1 | targetb2) (ce) (cv _).
+
+cps : v A -> cv A -> type.
+%mode cps +X1 -X2.
+
+cpse : e A -> ((cv A -> ce) -> ce) -> type.
+%mode cpse +X1 -X2.
+
+cps/lam : cps (lam E) (clam E')
+	   <- ({x:v A}{x':cv A} cps x x' -> cpse (E x) (E' x')).
+cpse/app : cpse (app E1 E2)
+	    ([c : (cv A -> ce)] E1' ([w1] E2' ([w2]
+                                        capp w1 w2 c)))
+	    <- cpse E1 E1'
+	    <- cpse E2 E2'.
+cpse/inj : cpse (inj E) ([c : (cv A -> ce)] c E')
+	    <- cps E E'.
+
+%block cpsb : some {A : tp} block {x : v A} {x' : cv A} {d : cps x x'}.
+%worlds (cpsb) (cps _ _) (cpse _ _).
+%total (E V) (cps E _) (cpse V _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/cps).
+!}%

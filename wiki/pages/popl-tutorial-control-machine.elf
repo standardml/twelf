@@ -1,0 +1,137 @@
+%%! title: "POPL Tutorial/Control machine"
+
+%{!  !}%
+
+exp : type.
+
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+ev : exp -> exp -> type.
+ev_lam : ev (lam [x] E x) (lam [x] E x).
+ev_app : ev (app E1 E2) V
+         <- ev E1 (lam [x] E x)
+         <- ev E2 V2
+         <- ev (E V2) V.
+
+stack : type.
+# : stack.
+app1 : exp -> stack -> stack.
+app2 : exp -> stack -> stack.
+
+state : type.
+eval : stack -> exp -> state.
+return : stack -> exp -> state.
+
+step : state -> state -> type.
+
+step_lam : step (eval K (lam E)) (return K (lam E)).
+step_app1 : step (eval K (app E1 E2)) (eval (app1 E2 K) E1).
+step_app2 : step (return (app1 E2 K) V) (eval (app2 V K) E2).
+step_red : step (return (app2 (lam E) K) V) (eval K (E V)).
+
+steps : state -> state -> type.
+steps_refl : steps S S.
+steps_trans : step S S' -> steps S' S'' -> steps S S''.
+
+steps_steps : steps S S' -> steps S' S'' -> steps S S'' -> type.
+- : steps_steps steps_refl W W.
+- : steps_steps (steps_trans W Ws) Ws' (steps_trans W Ws'')
+    <- steps_steps Ws Ws' Ws''.
+%mode steps_steps +A +B -C.
+%worlds () (steps_steps _ _ _).
+%total T (steps_steps T _ _).
+
+sound : ev E V -> steps (eval K E) (return K V) -> type.
+%mode
+ +{E:exp} +{V:exp} +{K:stack} +{E1:ev E V} -{V1:steps (eval K E) (return K V)}
+  (sound E1 V1).
+
+- : sound ev_lam (steps_trans step_lam steps_refl).
+- : sound (ev_app D D2 D1) W123
+    <- sound D1 (W1: steps
+                      (eval (app1 E2 K) E1)
+                      (return (app1 E2 K) (lam E)))
+    <- sound D2 (W2: steps
+                      (eval (app2 (lam E) K) E2)
+                      (return (app2 (lam E) K) V2))
+    <- sound D (W3: steps
+                    (eval K (E V2))
+                    (return K V))
+    <- steps_steps (steps_trans step_app1 W1) (steps_trans step_app2 W2)
+       (W12: steps (eval K (app E1 E2)) (return (app2 (lam E) K) V2))
+    <- steps_steps W12 (steps_trans step_red W3)
+       (W123: steps (eval K (app E1 E2)) (return K V)).
+
+%worlds () (sound _ _).
+%total T (sound T _).
+
+invert_app2 : steps (return (app1 E2 K) V) (return # V')
+              -> steps (eval (app2 V K) E2) (return # V') -> type.
+
+- : invert_app2 (steps_trans step_app2 W) W.
+
+%mode invert_app2 +A -B.
+%worlds () (invert_app2 _ _).
+%total {} (invert_app2 _ _).
+%reduces C < A (invert_app2 A C).
+
+id : exp -> exp -> type.
+refl : id E E.
+
+invert_red : steps (return (app2 Vlam K) V) (return # V')
+             -> id Vlam (lam E)
+             -> steps (eval K (E V)) (return # V') -> type.
+
+- : invert_red (steps_trans step_red W) refl W.
+
+%mode invert_red +A -B -C.
+%worlds () (invert_red _ _ _).
+%total {} (invert_red _ _ _).
+%reduces C < A (invert_red A _ C).
+
+use_id : id V1 (lam E)
+         -> ev E1 V1
+         -> ev E2 V2
+         -> ev (E V2) V
+         -> ev (app E1 E2) V
+         -> type.
+- : use_id refl E1 E2 E (ev_app E E2 E1).
+%mode use_id +A +B +C +D -E.
+%worlds () (use_id _ _ _ _ _).
+%total {} (use_id _ _ _ _ _).
+
+complete : steps (eval K E) (return # V0)
+           -> ev E V
+           -> steps (return K V) (return # V0) -> type.
+%mode complete +A -B -C.
+
+- : complete (steps_trans step_lam W: steps (eval K (lam E)) (return # V0))
+    ev_lam W.
+- : complete (steps_trans step_app1 W
+               : steps (eval K (app E1 E2)) (return # V0))
+    D' W5
+    <- complete (W: steps (eval (app1 E2 K) E1) (return # V0))
+       (D1: ev E1 V1)
+       (W1: steps (return (app1 E2 K) V1) (return # V0))
+    <- invert_app2 W1 (W2: steps (eval (app2 V1 K) E2) (return # V0))
+    <- complete W2
+       (D2: ev E2 V2)
+       (W3: steps (return (app2 V1 K) V2) (return # V0))
+    <- invert_red W3 (ID: id V1 (lam E))
+       (W4: steps (eval K (E V2)) (return # V0))
+    <- complete W4
+       (D: ev (E V2) V)
+       (W5: steps (return K V) (return # V0))
+    <- use_id ID D1 D2 D D'.
+
+%worlds () (complete _ _ _).
+%reduces C < A (complete A _ C).
+%total T (complete T _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Control_machine).
+!}%

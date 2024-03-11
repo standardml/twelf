@@ -1,0 +1,50 @@
+%%! title: "Computation and Deduction 2009"
+
+%{! These are notes for Computation and Deduction 2009.
+
+[Code from February 4.](/wiki/computation-and-deduction-2009-20090204/)  Homework: complete the progress proof.
+
+[Code from February 9.](/wiki/computation-and-deduction-2009-20090209/)  Homework: complete the preservation proof.
+
+[http://www.cs.cmu.edu/~cmartens/canonical.pdf Writeup of the material on canonical forms LF presented on February 11.]
+
+[Code from February 23.](/wiki/computation-and-deduction-2009-20090223/)
+
+[Code from March 2.](/wiki/computation-and-deduction-2009-20090203/)
+
+[Code from March 4.](/wiki/computation-and-deduction-2009-20090304/)  Homework: complete the proof of the subst lemma.
+
+[Code from March 16.](/wiki/computation-and-deduction-2009-20090316/)  Homework: complete the trans/ifz and trans/app cases.  ([[Computation and Deduction 2009/20090316-sol | Incomplete solution.]])
+
+[Code from March 18.](/wiki/computation-and-deduction-2009-20090318/)
+
+[Code from March 25.](/wiki/computation-and-deduction-2009-20090325/)
+
+[Code from March 30.](/wiki/computation-and-deduction-2009-20090330/)
+
+[Code from April 1.](/wiki/computation-and-deduction-2009-20090401/)
+
+[Code from April 6.](/wiki/computation-and-deduction-2009-20090406/)
+
+[Code from April 8.](/wiki/computation-and-deduction-2009-20090408/)
+
+[Code from April 13.](/wiki/computation-and-deduction-2009-20090413/)
+
+[Code from April 15.](/wiki/computation-and-deduction-2009-20090415/)
+
+Project ideas from 15-851 1997: [http://www.cs.cmu.edu/~fp/courses/97-comp-ded/projects.html]
+
+[Code from April 20.](/wiki/computation-and-deduction-2009-20090420/)
+
+[Code from April 22.](/wiki/computation-and-deduction-2009-20090422/)
+
+[Code from April 27.](/wiki/computation-and-deduction-2009-20090427/)
+
+[Code from April 29.](/wiki/computation-and-deduction-2009-20090429/) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009).
+!}%

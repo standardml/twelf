@@ -1,0 +1,136 @@
+%%! title: "Summer school 2008:Typed arithmetic expressions with pairs"
+
+%{! 
+
+\{\{Summer school 2008
+  |prev=Exercises 1
+  |prevname=Exercises 1
+  |nonext=
+\}\}
+
+Arithmetic expressions with pairs.
+
+Numbers and strings are unchanged.
+
+|hidden="true" !}%
+
+nat : type.             %name nat M.
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) <- add M N P.
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+char : type.				%name char X.
+a : char.
+b : char.
+
+str : type.				%name str S.
+emp : str.
+cons : char -> str -> str.
+
+cat : str -> str -> str -> type.
+%mode cat +S1 +S2 -S3.
+
+cat/e : cat emp S S.
+cat/c : cat (cons X S1) S2 (cons X S3) <- cat S1 S2 S3.
+
+%worlds () (cat _ _ _).
+%total S (cat S _ _).
+
+%{! 
+
+## Typed expressions
+
+Add a type for products:
+
+!}%
+
+tp : type.				%name tp T.
+number : tp.
+string : tp.
+prod   : tp -> tp -> tp.
+
+%{! 
+
+Add pairs as a value, projections as expressions:
+
+!}%
+
+val : tp -> type.			%name val V.  %postfix 1 val.
+num : nat -> number val.
+lit : str -> string val.
+pair : T val -> U val -> (prod T U) val.
+
+exp : tp -> type.			%name exp E.  %postfix 1 exp.
+ret : T val -> T exp.
+plus : number exp -> number exp -> number exp.
+append : string exp -> string exp -> string exp.
+let : T exp -> (T val -> U exp) -> U exp.
+fst : (prod T U) exp -> T exp.
+snd : (prod T U) exp -> U exp.
+
+%{! 
+
+For simplicity, take answers to be values. 
+
+And we add cases to eval:
+
+!}%
+
+eval : T exp -> T val -> type.
+%mode eval +E1 -E2.
+
+eval/val
+   : eval (ret V) V.
+
+eval/plus
+   : eval (plus E1 E2) (num N)
+      <- eval E1 (num N1)
+      <- eval E2 (num N2)
+      <- add N1 N2 N.
+
+eval/append
+   : eval (append E1 E2) (lit S)
+      <- eval E1 (lit S1)
+      <- eval E2 (lit S2)
+      <- cat S1 S2 S.
+
+eval/let
+   : eval (let E1 ([x] E2 x)) A
+      <- eval E1 V
+      <- eval (E2 V) A.
+
+eval/fst
+   : eval (fst E) A
+      <- eval E (pair A _).
+
+eval/snd
+   : eval (snd E) B
+      <- eval E (pair _ B).
+
+%worlds () (eval _ _).
+%total E (eval E _).
+
+%{! 
+
+\{\{Summer school 2008
+  |prev=Exercises 1
+  |prevname=Exercises 1
+  |nonext=
+\}\}
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Typed_arithmetic_expressions_with_pairs).
+!}%

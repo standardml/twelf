@@ -1,0 +1,507 @@
+%%! title: "Church-Rosser via complete development"
+
+%{! 
+In this case study, we give a simple proof of the diamond property of
+untyped parallel reduction.  The proof, due to 
+Masako Takahashi (Parallel Reductions in &lt;math&gt;\lambda&lt;/math&gt;-Calculus, 
+Information and Computation 118(1), 1995) makes use of a auxilary relation called complete
+developement.  This case study is a good example of proving
+metatheorems in [regular worlds](/wiki/percent-worlds/): we use several different worlds, and
+transport theorems between them.
+!}%
+
+%{! ## Syntax and judgements
+
+First, we define the syntax of the language, along with parallel reduction and complete development.  
+See [Reformulating languages to use hypothetical judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/) for a discussion of these judgements and their encodings.
+The only difference between the two relations is the side condition on the complete development application rule, which forces the 
+beta-reduction rule to take precedence over it.  
+Thus, a single step of complete development contracts all beta-redices in the left-hand term one step.
+Consequently, all beta-redices must be reduced away before a term can take a reflexivity step.
+
+!}%
+
+trm : type.
+lam : (trm -> trm) -> trm.
+app : trm -> trm -> trm.
+
+%block trmb : block {x : trm}.
+%worlds (trmb) (trm).
+
+%{! ### Parallel reduction !}%
+
+=> : trm -> trm -> type.  %infix none 10 =>.
+%mode => +M -N.
+
+=>/beta : (app (lam M) N) => M' N'
+          <- ({x:trm} x => x -> M x => M' x)
+          <- N => N'.
+=>/app  : (app M N) => (app M' N')
+          <- M => M'
+          <- N => N'.
+=>/lam  : lam M => lam M'
+          <- ({x:trm} x => x -> M x => M' x).
+
+%block =>b : block {x : trm} {prx : x => x}.
+%worlds (=>b) (=> _ _).
+%total E (=> E _).
+
+%{! Note that Twelf can prove that parallel reduction is total automatically! !}%
+
+%{! ### Complete development !}%
+
+notlam : trm -> type.
+%mode notlam +M.
+
+notlam/app : notlam (app _ _).
+
+%block nlb : block {x : trm} {nlx : notlam x}.
+%worlds (nlb) (notlam _).
+
+==> : trm -> trm -> type.  %infix none 10 ==>.
+%mode ==> +M -N.
+
+==>/beta : (app (lam M) N) ==> M' N'
+          <- ({x:trm} notlam x -> x ==> x -> M x ==> M' x)
+          <- N ==> N'.
+==>/app  : (app M N) ==> (app M' N')
+          <- M ==> M'
+          <- N ==> N'
+	  <- notlam M.
+==>/lam  : lam M ==> lam M'
+          <- ({x:trm} notlam x -> x ==> x -> M x ==> M' x).
+
+%block ==>b : block {x : trm} {nlx : notlam x} {cdx : x ==> x}.
+%worlds (==>b) (==> _ _).
+
+%{! Twelf cannot prove that complete development is total automatically,
+but we will prove this fact ourselves below. !}%
+
+%{! 
+Below, we will want to work in a world where both parallel reduction and complete development exist.  
+Thus, we define a block that includes all the assumptions in both ``=&gt;b`` and ``==&gt;b``:
+!}%
+%block =>&==>b : block 
+		  {x : trm} 
+		  {prx : x => x}
+		  {nlx : notlam x} 
+		  {cdx : x ==> x} .
+
+%{! ## Diamond property of parallel reduction !}%
+
+%{! ### Every term either is or isn't a lambda
+
+As a lemma, we need to prove that every term either is or is not a lambda.
+
+!}%
+
+lam-or-not : trm -> type.
+lam-or-not/lam : lam-or-not (lam _).
+lam-or-not/not : lam-or-not E
+		  <- notlam E.
+
+decide : {E} lam-or-not E -> type.
+%mode decide +E -D.
+
+- : decide (lam _) lam-or-not/lam.
+- : decide (app _ _) (lam-or-not/not notlam/app).
+
+%{! 
+What world should this lemma be stated in?  
+It talks about ``trm``s, so we definitely need term assumptions, and ``notlam`` only makes sense with its assumptions.
+But neither of the reduction relations are relevant, so we should leave off their hypotheses.
+However, to prove the theorem, we need to cover the case of ``decide`` for variables ``x``, which we
+do by putting a case in the LF context.  
+(See [Proving metatheorems: Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) for a discussion of this technique.)
+Thus, we arrive at:
+!}%
+
+%block decideb : block 
+		{x : trm} 
+		{nlx : notlam x} 
+		{decx : decide x (lam-or-not/not nlx)}.
+%worlds (decideb) (decide _ _).
+%total E (decide E _).
+
+%{! ### Complete development is total
+
+To prove the diamond property, we need to know that every term is reducible under complete-development.  
+First, we prove a lemma showing that an application reduces if its components do:
+
+!}%
+
+==>-tot/app : lam-or-not E1 -> E1 ==> E1' -> E2 ==> E2' -> (app E1 E2) ==> E'' -> type.
+%mode ==>-tot/app +D0 +D1 +D2 -D3.
+
+- : ==>-tot/app 
+     lam-or-not/lam 
+     (==>/lam D1)
+     D2 
+     (==>/beta D2 D1).
+
+- : ==>-tot/app 
+     (lam-or-not/not Nl)
+     D1
+     D2 
+     (==>/app Nl D2 D1).
+
+%worlds (==>b) (==>-tot/app _ _ _ _).
+%total {} (==>-tot/app _ _ _ _).
+
+%{! 
+Note that the world ``==&gt;b`` is the minimal one in which both ``==&gt;`` and ``lam-or-not`` make sense,
+so it is the most appropriate world to use here.
+!}%
+
+==>-tot : {E : trm} E ==> E' -> type.
+%mode ==>-tot +E -D.
+
+- : ==>-tot (lam E) (==>/lam D)
+     <- {x : trm} {nlx : notlam x} 
+	{cdx : x ==> x}  
+	{_ : decide x (lam-or-not/not nlx)}
+	{_ : ==>-tot x cdx}
+	==>-tot (E x) (D x nlx cdx).
+
+- : ==>-tot (app E E') D
+     <- ==>-tot E  De
+     <- ==>-tot E' De'
+     <- decide E Dlon
+     <- ==>-tot/app Dlon De De' D.
+
+%{! 
+This lemma at least needs the assumptions in ``==&gt;b`` for complete development to be adequately represented.
+Additionally, because the above case uses ``decide`` as a lemma, we need to ensure that its assumptions are in 
+the world we choose here.  Additionally, to show that variables reduce, we need a theorem case in the context.
+Thus, we arrive at the following block:
+!}%
+
+%block ==>totb : block 
+		  {x : trm} 
+		  {nlx : notlam x} 
+		  {cdx : x ==> x}
+		  {_ : decide x (lam-or-not/not nlx)}
+		  {_ : ==>-tot x cdx}.
+
+%worlds (==>totb) (==>-tot _ _).
+%total D (==>-tot D _).
+
+%{! 
+Why may we call ``decide`` from contexts made up of ``==&gt;totb`` blocks when decide was only stated for
+contexts made up of ``decideb`` blocks?  In general, extending the context could create new cases that
+``decide`` would be unable to handle.  However, in this instance, both of the new assumptions, which have types
+``==&gt;`` and ``==&gt;-tot``, are irrelevant (in[[subordinate]]) to ``decide``, 
+so Twelf permits this world subsumption.  That is, ``decide`` is only concerned with ``trm``s and derivations of
+``notlam`` and derivations of ``decide`` itself, and neither ``==&gt;`` nor ``==&gt;-tot`` assumptions 
+influence those types.
+!}%
+
+%{! ### Substituting reductions into parallel reduction
+
+We also need to show that the substitution of a reduction is the reduction of the substitution.
+To prove this lemma, we distinguish cases on an LF function representing the 
+hypothetical derivation:
+
+!}%
+
+subst : ({x : trm} x => x -> (M x => M' x))
+	 -> (N => N')
+	 -> (M N) => M' N'
+	 -> type.
+%mode subst +D1 +D2 -D3.
+
+%{! (M x) is x: !}%
+- : subst ([x] [prx] prx) Dn Dn.
+
+%{! (M x) doesn't mention x at all (this covers all other variables in the context, as well any other x-closed term): !}%
+- : subst ([x] [prx] D) _ D.
+
+%{! The remaining cases proceed compositionally: !}%
+- : subst ([x] [prx] (=>/app (Dm2 x prx) (Dm1 x prx))) Dn (=>/app Dm2' Dm1')
+     <- subst Dm2 Dn Dm2'
+     <- subst Dm1 Dn Dm1'.
+
+- : subst ([x] [prx] (=>/beta (Dm2 x prx) ([y] [pry] Dm1 y pry x prx))) 
+     Dn 
+     (=>/beta Dm2' Dm1')
+     <- subst Dm2 Dn Dm2'
+     <- {y : trm} {pry : y => y}
+	subst ([x] [prx] Dm1 y pry x prx) Dn (Dm1' y pry).
+
+- : subst ([x] [prx] (=>/lam ([y] [pry] Dm y pry x prx))) 
+     Dn 
+     (=>/lam Dm')
+     <- {y : trm} {pry : y => y}
+	subst ([x] [prx] Dm y pry x prx) Dn (Dm' y pry).
+
+%{! 
+Because this theorem is property only of parallel reduction, 
+we use the block containing only parallel reduction assumptions:
+!}%
+%worlds (=>b) (subst _ _ _).
+%total D (subst D _ _).
+
+%{! ### The triangle property
+
+The key lemma in this proof is that given a split of parallel reduction on one side and
+complete development on the other, there is a parallel reduction on the other side
+of the triangle:
+
+!}%
+
+tri : (M ==> M') -> (M => M'') -> (M'' => M') -> type.
+%mode tri +X1 +X2 -X3.
+
+- : tri D1 D2 D2.
+
+- : tri 
+     (==>/app Dnl 
+	(Dn' : N ==> N')
+	(Dm' : M ==> M'))
+     (=>/app 
+	(Dn'' : N => N'')
+	(Dm''  : M => M'')
+	) 
+     (=>/app Dn Dm)
+     <- tri Dn' Dn'' Dn
+     <- tri Dm' Dm'' Dm.
+
+- : tri
+     (==>/lam Dn')
+     (=>/lam Dn'')
+     (=>/lam Dn)
+     <- {x : trm} 
+	{prx : x => x}
+	{nlx : notlam x} 
+	{cdx : x ==> x}
+	tri (Dn' x nlx cdx) (Dn'' x prx) (Dn x prx).
+
+- : tri 
+     (==>/beta 
+	(Dn' : N ==> N')
+	(Dm' : {x} {nlx} {cdx} (M x) ==> (M' x)))   
+     (=>/app 
+ 	(Dn'' : N => N'')
+ 	(=>/lam (Dm'' : {x} {prx} (M x) => (M'' x))))
+     (=>/beta Dn Dm)
+     <- tri Dn' Dn'' Dn
+     <- {x : trm} 
+	{prx : x => x}
+	{nlx : notlam x} 
+	{cdx : x ==> x}
+	tri (Dm' x nlx cdx) (Dm'' x prx) (Dm x prx).
+
+- : tri 
+     (==>/beta 
+	(Dn' : N ==> N')
+	(Dm' : {x} {nlx} {cdx} (M x) ==> (M' x)))   
+     (=>/beta
+ 	(Dn'' : N => N'')
+ 	(Dm'' : {x} {prx} (M x) => (M'' x)))
+     D
+     <- tri Dn' Dn'' Dn
+     <- ({x : trm} 
+	   {prx : x => x}
+	   {nlx : notlam x} 
+	   {cdx : x ==> x}
+	   tri (Dm' x nlx cdx) (Dm'' x prx) (Dm x prx))
+     <- subst Dm Dn D.
+
+%{! The best world for this proof is the one where both parallel reduction
+and complete development exist, and we don't need any additional assumptions
+for the proof, so this is the world we use:
+!}%
+
+%worlds (=>&==>b) (tri _ _ _).
+%total D (tri D _ _).
+
+%{! Let's investigate why complete development is necessary for this proof to go through.
+Without the side condition on application, we'd have an additional case to consider, 
+where the complete development was by the application rule, and the parallel reduction was by the beta rule.  We'd set up this case as follows:
+
+&lt;twelf ignore="true"&gt;
+- : tri 
+     (==&gt;/app 
+	IMPOSSIBLE
+ 	(Dn' : N ==&gt; N')
+ 	(==&gt;/lam (Dm' : \{x\} \{nlx\} \{cdx\} (M x) ==&gt; (M' x))))
+     (=&gt;/beta 
+	(Dn_ : N =&gt; N_)
+	(Dm_ : \{x\} \{prx\} (M x) =&gt; (M_ x)))  
+     (XXX : M_ N_ =&gt; app (lam M') N')
+     &lt;- tri Dn' Dn_ 
+	(Dn : N_ =&gt; N')
+     &lt;- \{x : trm\} 
+	\{prx : x =&gt; x\}
+	\{nlx : notlam x\} 
+	\{cdx : x ==&gt; x\}
+	tri (Dm' x nlx cdx) 
+	(Dm_ x prx)
+	((Dm : \{x\} x =&gt; x -&gt; (M_ x) =&gt; (M' x)) x prx).
+&lt;/twelf&gt;
+
+From the inductive hypotheses, we know that ``M_ x =&gt; M' x`` for all ``x`` and that ``N_ =&gt; N'``.
+However, we need to prove that ``M_ N_ =&gt; app (lam M') N'``.  By ``subst``, we can get that the left-hand side reduces
+to the **beta-reduction** of the right-hand side, but there the proof breaks down.
+
+!}%
+
+
+%{! ### The diamond property
+
+We prove the diamond property by first generating a parallel reduction for ``M`` and 
+then making two triangles, which complete the square.
+
+!}%
+
+dia : (M => M') -> (M => M'') -> (M' => N) -> (M'' => N) -> type.
+%mode dia +X1 +X2 -X3 -X4.
+
+- : dia 
+     (Dleft  : M => Mleft)
+     (Dright : M => Mright)
+     Dleftmiddle
+     Drightmiddle
+     <- ==>-tot M D==>middle
+     <- tri D==>middle Dleft  Dleftmiddle
+     <- tri D==>middle Dright Drightmiddle.
+
+%{! 
+Because we call both ``==&gt;-tot`` and ``tri``, 
+we need to maintain all the assumptions of both of them.  
+This is the block ``=&gt;&==&gt;b`` extended with the theorem cases for
+``decide`` and ``==&gt;-tot`` (a.k.a.
+``==&gt;-totb`` extended with a parallel reduction assumption).
+Twelf verifies the world subsumption showing that 
+``==&gt;-tot`` and ``tri`` remain true under such extensions of 
+the context.
+!}%
+
+%block diab : block 
+	       {x : trm} 
+	       {prx : x => x}
+	       {nlx : notlam x} 
+	       {cdx : x ==> x}
+	       {_ : decide x (lam-or-not/not nlx)}
+	       {_ : ==>-tot x cdx}.
+
+%worlds (diab) (dia _ _ _ _).
+%total {} (dia _ _ _ _).
+
+%{! ## Other properties of complete development
+
+To complete the development of complete development, we can prove two other simple lemmas.
+
+### Soundness of complete development wrt parallel reduction
+
+First, every complete development reduction is a parallel reduction: 
+we simply forget the proof of the side condition on the application rule.
+
+!}%
+
+sound : E ==> E' -> E => E' -> type.
+%mode sound +X1 -X2.
+
+- : sound (==>/beta Dn Dm) (=>/beta Dn' Dm')
+     <- sound Dn Dn'
+     <- ({x} {nlx : notlam x} 
+	   { cdx : x ==> x} { prx : x => x} 
+	   {_ : sound cdx prx}
+	   sound (Dm  x nlx cdx) (Dm' x prx)).
+
+- : sound (==>/app _ Dn Dm) (=>/app Dn' Dm')
+     <- sound Dm Dm'
+     <- sound Dn Dn'.
+
+- : sound (==>/lam Dm) (=>/lam Dm')
+     <- ({x} {nlx : notlam x} 
+	   { cdx : x ==> x} { prx : x => x} 
+	   {_ : sound cdx prx}
+	   sound (Dm  x nlx cdx) (Dm' x prx)).
+
+%{! For this theorem, we need both complete development and parallel reduction,
+as well as a theorem case, so we extend ``=&gt;&==&gt;b`` as follows:
+!}%
+
+%block soundb : block 
+		 {x : trm} {nlx : notlam x} 
+		 {cdx : x ==> x} 
+		 {prx : x => x} 
+		 {_ : sound cdx prx}.
+%worlds (soundb) (sound _ _).
+%total D (sound D _).
+
+%{! ### Complete development is deterministic
+
+Finally, we can show that complete development is derministic.
+
+!}%
+
+id : trm -> trm -> type.
+refl : id E E.
+
+id-app-cong : id E1 E1' -> id E2 E2' -> id (app E1 E2) (app E1' E2') -> type.
+%mode id-app-cong +X1 +X2 -X3.
+
+- : id-app-cong refl refl refl.
+
+%worlds (trmb) (id-app-cong _ _ _).
+%total {} (id-app-cong _ _ _).
+
+id-lam-cong : ({x : trm} id (E x) (E' x)) -> id (lam E) (lam E') -> type.
+%mode id-lam-cong +X1 -X3.
+
+- : id-lam-cong _ refl.
+
+%worlds (trmb) (id-lam-cong _ _).
+%total {} (id-lam-cong _ _).
+
+id-func : ({x : trm} id (E x) (E' x)) 
+	   -> id E1 E1' 
+	   -> id (E E1) (E' E1') -> type.
+%mode id-func +X1 +X2 -X3.
+
+- : id-func ([_] refl) refl refl.
+
+%worlds (trmb) (id-func _ _ _).
+%total {} (id-func _  _ _).
+
+==>-det : E ==> E' -> E ==> E'' -> id E' E'' -> type.
+%mode ==>-det +X1 +X2 -X3.
+
+- : ==>-det D D refl.
+
+- : ==>-det (==>/beta D1 D2) (==>/beta D1' D2') Id
+     <- ==>-det D1 D1' Id1
+     <- ({x} {nlx} {cdx} ==>-det (D2 x nlx cdx) (D2' x nlx cdx) (Id2 x))
+     <- id-func Id2 Id1 Id.
+
+- : ==>-det (==>/lam D) (==>/lam D') Id'
+     <- ({x} {nlx} {cdx} ==>-det (D x nlx cdx) (D' x nlx cdx) (Id x))
+     <- id-lam-cong Id Id'.
+
+- : ==>-det (==>/app Dnl D2 D1) (==>/app Dnl' D2' D1') Id
+     <- ==>-det D1 D1' Id1
+     <- ==>-det D2 D2' Id2
+     <- id-app-cong Id1 Id2 Id.
+
+%{! 
+
+Twelf rules out the off-diagonal cases for us.  For example, an ``app`` vs. ``beta`` 
+case would have a contradictory derivation of ``notlam (lam _)`` as an argument to ``==&gt;/app``.
+
+!}%
+
+%worlds (==>b) (==>-det _ _ _).
+%total D (==>-det D _ _).
+
+%{! 
+\{\{case study\}\}
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Church-Rosser_via_complete_development).
+!}%

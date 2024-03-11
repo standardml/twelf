@@ -1,0 +1,128 @@
+%%! title: "Summer school 2008:Arithmetic expressions with let-binding"
+
+%{! 
+
+\{\{Summer school 2008
+  |prev=Arithmetic expressions
+  |prevname=Arithmetic expressions
+  |next=Arithmetic expressions with call-by-value let-binding
+  |nextname=Arithmetic expressions with call-by-value let-binding
+\}\}
+
+Next, we add let-binding to our expression language.  Natural numbers
+and addition are the same as before.
+
+|hidden="true" !}%
+
+nat : type.             %name nat M.
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) <- add M N P.
+
+%% addition is a total function on closed terms of type nat
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%{! 
+
+## Arithmetic expressions with let-binding
+
+### Syntax
+
+First, the syntax:
+
+!}%
+
+exp : type.				%name exp E.
+num : nat -> exp.
+plus : exp -> exp -> exp.
+let : exp -> (exp -> exp) -> exp.
+
+%{! 
+
+Let-binding is represented using [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/):
+&lt;math&gt;\mathsf\{let\} \, x \, = e_1 \, \mathsf\{in\} \, e_2&lt;/math&gt; is
+represented by ``let e_1 ([x] e_2)``; an LF variable is used to
+represent the bound-variable.  So the body of the ``let`` has LF
+type ``(exp -&gt; exp)``.
+
+!}%
+
+%{! 
+
+### Evaluation, using substitution
+
+!}%
+
+ans : type.				%name ans A.
+anum : nat -> ans.
+
+eval : exp -> ans -> type.
+%mode eval +E1 -E2.
+
+eval/num
+   : eval (num N) (anum N).
+
+eval/plus
+   : eval (plus E1 E2) (anum N)
+      <- eval E1 (anum N1)
+      <- eval E2 (anum N2)
+      <- add N1 N2 N.
+
+eval/let
+   : eval (let E1 ([x] E2 x)) A
+      <- eval E1 (anum N)
+      <- eval (E2 (num N)) A.
+
+%{! 
+That is, to evaluate a ``let``, we 
+* evaluate the let-bound term ``E1`` to an answer ``anum N``
+* substitute its value into the body.  Substitution is represented by the LF application of ``E2`` to ``(num N)``.
+* evaluate the result
+
+Twelf cannot prove this total without some help, because it's not
+obvious that the substitution instance ``(E2 (num N))`` is smaller
+than the input expression.
+
+!}%
+
+%worlds () (eval _ _).
+
+%{! 
+
+&lt;twelf ignore="true" check="decl"&gt;
+%total E (eval E _).
+&lt;/twelf&gt;
+
+However, evaluation does terminate.  There are two different ways to see
+this: 
+
+- Observe that we only substitute _values_ for variables. Consequently, it is possible to give a size metric on terms where all the substitution instances of ``E2`` are the same size as ``E2``, by taking the size of a variable = the size of a value = one.  We can formalize this reasoning in Twelf in two ways:
+-# We can prove termination ourselves as a [metatheorem](/wiki/metatheorem/).  We'll learn about this in class 3.
+-# We can make the invariant that variables stand for values explicit in the syntax of the language, in which case Twelf can prove termination itself.  See [Variation: Call-by-value let-binding syntax](/wiki/summer-school-2008-arithmetic-expressions-with-call-by-value-let-binding/)
+- Rather than recursively evaluating the substitution instance, we can give an environment semantics where the values of variables are tracked off to the side.  To evaluate a ``let``, we recursively evaluate body (so evaluation is structurally inductive on the expression) in an extended environment.  See [Variation: Defining evaluation with a hypothetical judgement](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding-hypothetical-evaluation/)
+
+At this point, you should explore one or both of these variations, and then proceed to see how we represent typed arithmetic expressions.
+
+
+\{\{Summer school 2008
+  |prev=Arithmetic expressions
+  |prevname=Arithmetic expressions
+  |next=Arithmetic expressions with call-by-value let-binding
+  |nextname=Arithmetic expressions with call-by-value let-binding
+\}\}
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Arithmetic_expressions_with_let-binding).
+!}%

@@ -1,0 +1,94 @@
+%%! title: "Iterated inductive definitions and defunctionalization"
+
+%%%%%%%%%%%%
+% RUN-TIME %
+%%%%%%%%%%%%
+
+i : type.
+z : i.
+s : i -> i.  %prefix 10 s.
+
+add : i -> i -> i -> type.
+add/z : add z N N.
+add/s : add (s M) N (s P) <- add M N P.
+%mode add +M +N -P.
+
+%worlds () (add M _ _).
+%total (M) (add M _ _).
+%unique add +M +N -P.
+
+mult : i -> i -> i -> type.
+mult/z : mult z N z.
+mult/s : mult (s M) N P' <- mult M N P <- add P N P'.
+%mode mult +M +N -P.
+
+%worlds () (mult M _ _).
+%total (M) (mult M _ _).
+%unique mult +M +N -P.
+
+%%%%%%%%%%%%
+%  SYNTAX  %
+%%%%%%%%%%%%
+
+tm : type.
+binop : type.
+
+n : i -> tm.
+let : tm -> (tm -> tm) -> tm.
+@ : binop -> tm -> tm -> tm.
+
+apply : binop -> i -> i -> i -> type.
+%mode apply +F +M1 +M2 -N.
+
+%worlds () (apply F M1 M2 _).
+%total {F M1 M2} (apply F M1 M2 _).
+%unique apply +F +M1 +M2 -N.
+
+%%%%%%%%%%%%%
+% SEMANTICS %
+%%%%%%%%%%%%%
+
+eval : tm -> i -> type.
+%mode eval +E -N.
+
+eval/n : eval (n N) N.
+eval/let : eval (let E E*) N
+        <- eval (E* E) N.
+eval/@ : eval (@ F E1 E2) N
+      <- eval E1 M1
+      <- eval E2 M2
+      <- apply F M1 M2 N.
+
+%worlds () (eval E _).
+%covers eval +E -N.
+%unique eval +E -N.
+
+%%%%%%%%%%%%
+% EXAMPLES %
+%%%%%%%%%%%%
+
+%thaw binop.
+
+plus : binop.
+plus/_ : apply plus M N P <- add M N P.
+
+times : binop.
+times/_ : apply times M N P <- mult M N P.
+
+%total (M1) (apply F M1 M2 _).
+%unique apply +F +M1 +M2 -N.
+
+%worlds () (eval E _).
+%covers eval +E -N.
+%unique eval +E -N.
+
+%query 1 * eval (let (n (s s z)) [two]
+		 let (n (s s s z)) [three]
+		 @ plus two (@ times two three)) N.
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Iterated_inductive_definitions_and_defunctionalization).
+!}%

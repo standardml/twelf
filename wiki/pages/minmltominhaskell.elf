@@ -1,0 +1,178 @@
+%%! title: "MinMLToMinHaskell"
+
+%{! 
+
+Translation from MinML (unencapsulated effects) to MiniHaskell (monadic effects).
+Uses third-order coverage checking.
+
+!}%
+
+%{! 
+
+## MiniHaskell
+
+!}%
+
+tp : type.
+
+unit : tp.
+arr  : tp -> tp -> tp.
+plus : tp -> tp -> tp.
+circ : tp -> tp.
+
+conc : type.
+
+true : tp -> conc.
+lax  : tp -> conc.
+
+| : conc -> type.
+%prefix 0 |.
+
+<> : | true unit.
+lam : (| true A -> | true B) -> | true (arr A B).
+app : | true (arr A B) -> | true A -> | true B.
+inl : | true A -> | true (plus A B).
+inr : | true B -> | true (plus A B).
+case : | true (plus A B) -> (| true A -> | J) -> (| true B -> | J) -> | J.
+comp : | lax A -> | true (circ A).
+
+return : | true A -> | lax A.
+let    : | true (circ A) -> (| true A -> | lax C) -> | lax C.  
+print  : | lax C -> | lax C.
+
+%block trueb : some {A : _} block {x : | true A}.
+%worlds (trueb) (| _).
+
+%{! 
+
+## MinML
+
+!}%
+
+mtp : type.
+
+munit : mtp.
+marr  : mtp -> mtp -> mtp.
+mplus : mtp -> mtp -> mtp.
+
+mtrue : mtp -> type.
+m<> : mtrue munit.
+mlam : (mtrue A -> mtrue B) -> mtrue (marr A B).
+mapp : mtrue (marr A B) -> mtrue A -> mtrue B.
+minl : mtrue A -> mtrue (mplus A B).
+minr : mtrue B -> mtrue (mplus A B).
+mcase : mtrue (mplus A B) -> (mtrue A -> mtrue C) -> (mtrue B -> mtrue C) -> mtrue C.
+mprint : mtrue C -> mtrue C.
+
+%{! 
+
+## Translation
+
+!}%
+
+tptrans : mtp -> tp -> type.
+%mode tptrans +A -B.
+
+tptrans/unit : tptrans munit unit.
+tptrans/arr : tptrans (marr A B) (arr A' (circ B'))
+	     <- tptrans A A'
+	     <- tptrans B B'.
+tptrans/plus : tptrans (mplus A B) (plus A' B')
+	     <- tptrans A A'
+	     <- tptrans B B'.
+ 
+%worlds () (tptrans _ _).
+%total A (tptrans A _).
+%unique tptrans +A -1A'.
+
+id-tp : tp -> tp -> type.
+id-tp/refl : id-tp A A.
+
+trueresp : | true A -> id-tp A A' -> | true A' -> type.
+%mode trueresp +X1 +X2 -X3.
+- : trueresp E id-tp/refl E.
+%worlds (trueb) (trueresp _ _ _).
+%total {} (trueresp _ _ _).
+
+laxresp : | lax A -> id-tp A A' -> | lax A' -> type.
+%mode laxresp +X1 +X2 -X3.
+- : laxresp E id-tp/refl E.
+%worlds (trueb) (laxresp _ _ _).
+%total {} (laxresp _ _ _).
+
+can-tptrans : {A} tptrans A A' -> type.
+%mode can-tptrans +A -D.
+%worlds () (can-tptrans _ _).
+%trustme %total A (can-tptrans A _).
+
+tptrans-unique : tptrans A A' -> tptrans A A'' -> id-tp A' A'' -> type.
+%mode tptrans-unique +D1 +D2 -D3.
+%worlds () (tptrans-unique _ _ _).
+%trustme %total D (tptrans-unique D _ _).
+
+
+trans : mtrue A -> tptrans A A' -> | lax A' -> type.
+%mode trans +E +TT -E'.
+
+- : trans m<> tptrans/unit (return <>).
+- : trans 
+     (mlam E) 
+     (tptrans/arr (DB : tptrans B B') DA) 
+     (return (lam ([x] (comp (E' x)))))
+     <- ({x : mtrue A} {x' : | true A'} 
+	   {_ : {A'' : _} {DA'' : tptrans A A''} {Did : id-tp A' A''} {E'' : | lax A''}
+		 trans x DA'' E''
+		 <- tptrans-unique DA DA'' Did
+		 <- laxresp (return x') Did E''}
+	   trans (E x) DB (E' x')).
+- : trans (mapp (E1 : mtrue (marr A B)) E2)
+     DB
+     (let (comp E1') 
+	[x1] (let (comp E2') 
+		[x2] (let (app x1 x2) 
+			([r] (return r)))))
+     <- can-tptrans A DA
+     <- trans E1 (tptrans/arr DB DA) E1'
+     <- trans E2 DA E2'.
+- : trans (minl E) (tptrans/plus DB DA) (let (comp E') [x] (return (inl x)))
+     <- trans E DA E'.
+- : trans (minr E) (tptrans/plus DB DA) (let (comp E') [x] (return (inr x)))
+     <- trans E DB E'.
+- : trans 
+     (mcase (E : mtrue (mplus A B)) E1 E2)
+     DC
+     (let (comp E') ([x] case x E1' E2'))
+     <- can-tptrans A DA
+     <- can-tptrans B DB
+     <- trans E (tptrans/plus DB DA) E'
+     <- ({x : mtrue A} {x' : | true A'} 
+	   {_ : {A'' : _} {DA'' : tptrans A A''} {Did : id-tp A' A''} {E'' : | lax A''}
+		 trans x DA'' E''
+		 <- tptrans-unique DA DA'' Did
+		 <- laxresp (return x') Did E''}
+	   trans (E1 x) DC (E1' x'))
+     <- ({x : mtrue B} {x' : | true B'} 
+	   {_ : {B'' : _} {DB'' : tptrans B B''} {Did : id-tp B' B''} {E'' : | lax B''}
+		 trans x DB'' E''
+		 <- tptrans-unique DB DB'' Did
+		 <- laxresp (return x') Did E''}
+	   trans (E2 x) DC (E2' x')).
+- : trans (mprint E) DC (print E')
+     <- trans E DC E'.
+     
+%block transb : some {A : _} {A' : _} {DA : tptrans A A'}
+		 block 
+		 {x : mtrue A} {x' : | true A'} 
+		 {_ : {A'' : _} {DA'' : tptrans A A''} {Did : id-tp A' A''} {E'' : | lax A''}
+		       trans x DA'' E''
+		       <- tptrans-unique DA DA'' Did
+ 		       <- laxresp (return x') Did E''}.
+%worlds (transb) (trans _ _ _).
+%total E (trans E _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/MinMLToMinHaskell).
+!}%

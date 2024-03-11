@@ -1,0 +1,13 @@
+%%! title: "MediaWiki talk:Sidebar"
+
+%{! Here's my attempt at rationalizing the organization of the sidebar:
+* Everything on the wiki should be reachable from the links in the top navigation section.  Right now, this amounts to saying that [documentation](/wiki/documentation/) indexes mostly everything.
+* the remaining space above the search box should be used for quick links to things we think people will go to often (right now, the main documentation sections).  
+[Drl](/wiki/user-drl/) 11:43, 15 March 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/MediaWiki_talk:Sidebar).
+!}%

@@ -1,0 +1,17 @@
+%%! title: "Computation and Deduction 2009/Test Page 1"
+
+%{! Notes 
+
+```twelf
+nat : type.
+z: nat.
+s: nat -> nat.
+
+plus : nat -> type. 
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/Test_Page_1).
+!}%

@@ -1,0 +1,79 @@
+%%! title: "Programming language theory with Twelf"
+
+%{! ## Preface
+
+The study of programming languages generally proceeds in two parallel directions.  In one direction,
+students are introduced to several specific programming languages representing different
+_programming paradigms_ (functional, object-oriented, logic programming, scripting, etc.) and are
+shown many examples of how these languages are used.  They learn about the strengths and weaknesses
+of the languages and about techniques that can be used to program effectively with them.  In the
+other direction, students are introduced to _programming language theory_, a body of knowledge
+that attempts to organize and analyze the wide variety of programming languages and programming
+language features.  Such knowledge can be used to explain why certain languages _adhere_ better
+than others, or why certain kinds of run-time errors in a particular language are impossible, and it
+can serve as a reliable guide to designing new programming languages.
+
+Although several approaches to programming language theory exist, the most effective is the approach
+that represents both the abstract syntax and the static and dynamic semantics of a programming
+language using inductively-defined hypothetical judgments given by sets of rules&mdash;essentially
+treating the language as a formal system.  Coupled with a systematic classification of program
+fragments using types, even when types are not explicitly part of the language under consideration,
+a powerfully uniform treatment of programming language theory emerges.  This approach is
+developed in the two textbooks
+
+* PFPL: [http://www.cs.cmu.edu/~rwh/plbook/book.pdf Practical Foundations for Programming Languages] (PDF), by Robert Harper (draft, 2008), and
+* TAPL: [http://www.cis.upenn.edu/~bcpierce/tapl/ Types and Programming Languages], by Benjamin Pierce (MIT Press, 2002).
+
+Despite the success of this approach to programming language theory, one of its disadvantages,
+especially for students seeing it for the first time, is that it can be quite abstract.  This is
+where Twelf comes in.  The rules for the hypothetical judgments associated with a particular
+programming language, and much of the resulting metatheory (i.e., the theorems about these
+representations and their relations), are very naturally represented using Twelf.  Further, the
+correctness of the proofs can often be checked by Twelf, with feedback given when the proof is
+incomplete or incorrect.  This gives students concrete artifacts they can manipulate, interact and
+experiment with, and test ideas on.
+
+The aim of these notes is to act as a kind of "laboratory handbook" for the above two books,
+introducing students of programming language theory to the Twelf system so that they can use it as a
+supplement to their study, as well as, eventually, a tool for programming language research.  Our
+goal here is not to _teach_ programming language theory&mdash;that is done very well already by
+the two books above&mdash;but to _illustrate_ it and make it more concrete.  To that end, after a
+tutorial introduction to Twelf, we will give complete and carefully explained formalizations of the
+various systems, examples, proofs, and exercises in each of the above two books, pausing frequently
+to discuss the techniques used in the formalizations and the obstacles faced producing them.  In the
+case of TAPL, we will be making use of some notes of Benjamin Pierce for his course at Penn,
+[http://www.seas.upenn.edu/~cis500/cis500-f07/schedule.html CIS 500], which uses the
+[http://coq.inria.fr Coq system] where we have used Twelf.
+
+## Table of Contents
+
+Part 1:  [[Introduction to Twelf]]
+- [First-order encodings](/wiki/first-order-encodings/)
+- [Signatures as logic programs](/wiki/signatures-as-logic-programs/)
+- [Signature checking](/wiki/signature-checking/): modes, termination, coverage, totality
+- [[Higher-order encodings]]
+- [[Common patterns and pitfalls]]
+
+Part 2:  [[Logical Foundations of Programming Languages]]
+- [[LFPL:Chapter  1|Chapter  1]]: Inductive Definitions
+- [[LFPL:Chapter  4|Chapter  4]]: Transition Systems
+- [[LFPL:Chapter  5|Chapter  5]]: Basic Syntactic Objects
+- [[LFPL:Chapter  6|Chapter  6]]: Binding and Scope
+- [[LFPL:Chapter  7|Chapter  7]]: Concrete Syntax
+- [[LFPL:Chapter  8|Chapter  8]]: Abstract Syntax
+- [[LFPL:Chapter  9|Chapter  9]]: Static Semantics
+- [[LFPL:Chapter 10|Chapter 10]]: Dynamic Semantics
+- [[LFPL:Chapter 11|Chapter 11]]: Type Safety
+- [[LFPL:Chapter 12|Chapter 12]]: Evaluation Semantics
+- [[LFPL:Chapter 14|Chapter 14]]: Functions
+- [[LFPL:Chapter 15|Chapter 15]]: Gödel's System T
+- [[LFPL:Chapter 16|Chapter 16]]: Plotkin's PCF
+
+Part 3: [[Types and Programming Languages]] !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Programming_language_theory_with_Twelf).
+!}%

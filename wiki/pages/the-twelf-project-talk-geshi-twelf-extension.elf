@@ -1,0 +1,27 @@
+%%! title: "The Twelf Project talk:GeSHi Twelf extension"
+
+%{! ## Tom's suggestions
+
+Can I make a few suggestions?
+
+* Since red is used for links that don't exist, I think it ought to be avoided for the twelf syntax mode. When I'm editing wikis my eyes are immediately drawn to red as indicating a problem.
+* Similarly, I think we should color comments and constants differently. 
+* Is there a way to have a regular expression for %[a-z] to catch all %commands? That way we don't have to have a keyword table.
+:: &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 18:38, 23 September 2006 (MST)
+
+### Rob's replies
+
+* Not using red: what color do you think we should use? I think we'd confuse people that want to use syntax highlighting in Emacs, if we did that with constants. I'm open to suggestions, however.
+:* I don't think it will be very confusing because many people customize their emacs colors anyway (the defaults are like eye poison to me). Anything else is fine; I don't think you're using anything on, say, the brown end of the spectrum. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 17:37, 30 September 2006 (EDT)
+* This I've tried to do - making comments bold dark grey. What do you think?
+:* Looks good to me. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 17:37, 30 September 2006 (EDT)
+* That's what I tried at first, it didn't work so well for reasons I don't entirely understand - I think the problem is the interaction between it and other regexp searches. It's not the worst thing in the world to have a keyword table for, in any case.
+:: — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:05, 30 September 2006 (EDT)
+:* Okay, just wonderin'. =) &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 17:37, 30 September 2006 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project_talk:GeSHi_Twelf_extension).
+!}%

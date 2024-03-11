@@ -1,0 +1,254 @@
+%%! title: "Verifications and uses"
+
+%{! This article describes a Twelf formalization of
+logic in terms of _verifications_ and _uses_ and a Twelf proof of global soundness and completeness 
+for this logic. For a full discussion of logics of verifications and uses, see 
+Frank Pfenning's [http://www.cs.cmu.edu/~fp/courses/15816-s10/lectures/01-judgments.pdf lecture notes] 
+from the spring 2010 course on Modal Logic. 
+Two critical properties of a logic are  its _global completeness_ - that in any situation where we can 
+use a proof of ``A`` we can also verify ``A`` - 
+and its _global soundness_ - if we can verify the truth of proposition ``A``, and then use an assumption
+that ``A`` is true to verify the truth of ``B``, then we can also verify the truth of 
+``B`` without the assumption that ``A`` is true.
+
+We can also think of the logic of verifications of uses, by way of the [[w:Curry-Howard correspondence|Curry-Howard correspondence]], as
+a ("Church-style") [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of the [canonical forms](/wiki/canonical-form/) of the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/). In this view, the
+constructive content of the global completeness theorem is η-expansion and the constructive content of
+global soundness is [hereditary substitution](/wiki/hereditary-substitution/). Therefore, this article is closely connected to the case
+study on [hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/). The case study is structured quite differently than this
+article, however. That article defines a terminating partial function called "hereditary substitution" 
+that operates on untyped ("Curry-style") lambda-calculus terms, and then works through the process of showing that, 
+given well-typed inputs, the function is actually total. That view is helpful when thinking about dependent type 
+systems, [[bidirectional type checking]], or the implementation of a logical framework, but
+certain problems can be greatly simplified when we think of terms as intrinsically typed. !}%
+
+%{! ## Propositions and rules !}%
+
+%{! The following is a straightforward representation of a natural deduction
+system with verifications and uses, with one exception: in most presentations, 
+``use A`` and ``hyp A`` are conflated, which makes the 
+``var`` rule unnecessary. However, it is somewhat convenient 
+to do things this way, and also foreshadows a number of other interesting
+developments. !}%
+
+prop : type.
+atom : type.
+%block bl_atom : block {qp : atom}.
+
+a : atom -> prop.
+⊃ : prop -> prop -> prop. %infix right 9 ⊃.
+∧ : prop -> prop -> prop. %infix right 8 ∧.
+
+hyp   : prop -> type.
+verif : prop -> type.
+use   : prop -> type.
+%block bl_hyp : some {A : prop} block {x : hyp A}.
+
+var : hyp A -> use A.
+atm : use (a Q) -> verif (a Q).
+⊃I  : (hyp A -> verif B) -> verif (A ⊃ B).
+⊃E  : use (A ⊃ B) -> verif A -> use B.
+∧I  : verif A -> verif B -> verif (A ∧ B).
+∧E₁ : use (A ∧ B) -> use A.
+∧E₂ : use (A ∧ B) -> use B.
+
+%{! ## Global completeness !}%
+
+%{! The global completeness (or η-expansion) theorem for the logic of verifications and uses
+is expressed by the  theorem: if we can use a proof that use ``A`` under certain assumptions, then
+under the same assumptions we can verify that ``A`` is true. It is therefore critical to note that 
+the output of the global completeness theorem is a function ``(use A -&gt; verif A)`` and not a function 
+``(hyp A -&gt; verif A)``. Assumptions of ``hyp A`` alone are sufficient to describe the logic itself, 
+but in order to describe completeness we have to actually assume proofs of ``use A``. !}%
+
+eta : {A : prop} (use A -> verif A) -> type.
+%mode eta +A -N.
+
+- : eta (a Q) ([r] atm r).
+- : eta (A ⊃ B) ([r] ⊃I ([y] (N₂ (⊃E r (N₁ (var y))))))
+     <- eta A ([r₁] N₁ r₁)
+     <- eta B ([r₂] N₂ r₂).
+- : eta (A ∧ B) ([r] ∧I (N₁ (∧E₁ r)) (N₂ (∧E₂ r)))
+     <- eta A ([r₁] N₁ r₁)
+     <- eta B ([r₂] N₂ r₂).
+
+%worlds (bl_atom | bl_hyp) (eta _ _).
+%total A (eta A _).
+
+%{! ## Detour !}%
+
+%{! Before we proceed to global soundness, we
+have to deal with the core annoyance of doing things 
+natural-deduction style as opposed to sequent-calculus style. 
+It is unavoidable that we must consider the case where we substitute
+a verification into a use - if we associate the the metavariables 
+``M`` and ``N`` with derivations of ``verif A`` and 
+the metavariable ``R`` with 
+derivations of ``use B``, this looks like ``[N/x]R``. In these
+cases, we have to do something very different depending on whether
+the "head variable" (the variable all the way on the inside of ``R``) 
+is ``x`` (the variable we're substituting for) or
+whether it is something else. 
+Specifically, if the variable is ``x`` we need to substitute
+``N`` in and then perform a series of reductions, but 
+if it is something else we can leave the structure of the term basically the 
+same. 
+
+The tutorial on [hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/) deals with this 
+problem by defining hereditary substitution in such a way that Twelf cannot
+immediately establish that it is total, and then showing totality after the
+fact. We want to immediately establish totality, and to do this we will
+define a judgment that asks "am I in the case where I need to have a series
+of reductions performed (``reduce_me``), or are such
+reductions unnecessary (``just_fine``)? !}%
+
+just_fine : (hyp A -> use B) -> type.
+jfx  : just_fine ([x] var Y).
+jf⊃  : just_fine ([x] R x) -> just_fine ([x] ⊃E (R x) (M x)).
+jf∧₁ : just_fine ([x] R x) -> just_fine ([x] ∧E₁ (R x)).
+jf∧₂ : just_fine ([x] R x) -> just_fine ([x] ∧E₂ (R x)).
+
+reduce_me : (hyp A -> use B) -> type.
+rmx  : reduce_me ([x] var x).
+rm⊃  : reduce_me ([x] R x) -> reduce_me ([x] ⊃E (R x) (M x)).
+rm∧₁ : reduce_me ([x] R x) -> reduce_me ([x] ∧E₁ (R x)).
+rm∧₂ : reduce_me ([x] R x) -> reduce_me ([x] ∧E₂ (R x)).
+
+jf_or_rm : (hyp A -> use B) -> type.
+rm : reduce_me ([x] R x) -> jf_or_rm ([x] R x).
+jf : just_fine ([x] R x) -> jf_or_rm ([x] R x).
+
+%{! Now, we prove a metatheorem that _every_ possible substitution instance
+either needs to ask hereditary substitution to ``reduce_me``
+or else is ``just_fine``. This has to use a bunch of 
+[output factoring](/wiki/output-factoring/) lemmas but is otherwise straightforward. !}%
+
+always_jf_or_rm : {R : hyp A -> use B} jf_or_rm ([x] R x) -> type.
+%mode always_jf_or_rm +R -JFRM. 
+
+- : always_jf_or_rm ([x] var x) (rm rmx).
+- : always_jf_or_rm ([x] var Y) (jf jfx).
+
+lem : jf_or_rm ([x] R x) -> {N} jf_or_rm ([x] ⊃E (R x) (N x)) -> type.
+- : lem (jf JF) _ (jf (jf⊃ JF)).
+- : lem (rm RM) _ (rm (rm⊃ RM)).
+%mode lem +JFRM +N -JFRM'. 
+%worlds (bl_atom | bl_hyp) (lem _ _ _). 
+%total {} (lem _ _ _).
+
+- : always_jf_or_rm ([x] ⊃E (R x) (N x)) JFRM'
+     <- always_jf_or_rm ([x] R x) (JFRM : jf_or_rm ([x] R x))
+     <- lem JFRM ([x] N x) (JFRM' : jf_or_rm ([x] ⊃E (R x) (N x))).
+
+lem : jf_or_rm ([x] R x) -> jf_or_rm ([x] ∧E₁ (R x)) -> type.
+- : lem (jf JF) (jf (jf∧₁ JF)).
+- : lem (rm RM) (rm (rm∧₁ RM)).
+%mode lem +JFRM -JFRM'.
+%worlds (bl_atom | bl_hyp) (lem _ _).
+%total {} (lem _ _).
+
+- : always_jf_or_rm ([x] ∧E₁ (R x)) JFRM'
+     <- always_jf_or_rm ([x] R x) (JFRM : jf_or_rm ([x] R x))
+     <- lem JFRM (JFRM' : jf_or_rm ([x] ∧E₁ (R x))).
+
+lem : jf_or_rm ([x] R x) -> jf_or_rm ([x] ∧E₂ (R x)) -> type.
+- : lem (jf JF) (jf (jf∧₂ JF)).
+- : lem (rm RM) (rm (rm∧₂ RM)).
+%mode lem +JFRM -JFRM'.
+%worlds (bl_atom | bl_hyp) (lem _ _).
+%total {} (lem _ _).
+
+- : always_jf_or_rm ([x] ∧E₂ (R x)) JFRM'
+     <- always_jf_or_rm ([x] R x) (JFRM : jf_or_rm ([x] R x))
+     <- lem JFRM (JFRM' : jf_or_rm ([x] ∧E₂ (R x))).
+
+%worlds (bl_atom | bl_hyp) (always_jf_or_rm _ _).
+%total R (always_jf_or_rm R _).
+
+%{! One way to avoid this ugly detour is to use [[spine form]], another way is considered in the page on [verifications and uses with zippers](/wiki/verifications-and-uses-with-zippers/). !}%
+
+%{! ## Global soundness !}%
+
+%{! Showing that every (hyp A -&gt; use B) always either is ``just_fine``
+or needs hereditary substitution to ``reduce_me`` is the entirety of the 
+"ugly" part of the hereditary substitution/global completeness, theorem. The 
+theorem is made up of four mutually inductive theorems. 
+
+* ``hsubst_n`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]M``.
+* ``hsubst_r`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]R`` where ``R`` has atomic type. It is basically an [output factoring](/wiki/output-factoring/) lemma that dispatches to ``hsubst_rr`` and ``hsubst_rn``.
+* ``hsubst_rr`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]R`` where the variable ``x`` is not the root of ``R``.
+* ``hsubst_rn`` represents substitutions ``[M&lt;sub&gt;0&lt;/sub&gt;/x]R`` where the variable ``x`` **is** the root of ``R``. This means that if we substitute ``M&lt;sub&gt;0&lt;/sub&gt;`` for x and then start reducing the use ``R``, we will get back a verification ``N``. Luckily, the type of ``N`` is known ahead of time, and so we can use this to know something about the shape of ``N``. This case makes critical use of a [``%reduces``](/wiki/percent-reduces/) declaration, and is also the only case where the type ``A`` is different in a recursive call. !}%
+
+hsubst_n : {A}{M₀ : verif A}{M : hyp A -> verif B} verif B -> type.
+hsubst_r : {A}{M₀ : verif A}{R : hyp A -> use (a Q)} jf_or_rm R -> verif (a Q) -> type.
+hsubst_rr: {A}{M₀ : verif A}{R : hyp A -> use B} just_fine R -> use B -> type.
+hsubst_rn: {A}{B}{M₀ : verif A}{R : hyp A -> use B} reduce_me R -> verif B -> type.
+%mode hsubst_n +A +M₀ +M -N.
+%mode hsubst_r +A +M₀ +R +JFRM -N.
+%mode hsubst_rr +A +M +R +JF -N.
+%mode hsubst_rn +A +B +M +R +RM -N.
+
+- : hsubst_n A M₀ ([x] ⊃I [y] M x y) (⊃I [y] N y)
+     <- {y : hyp B₁} hsubst_n A M₀ ([x] M x y) (N y : verif B₂).
+- : hsubst_n A M₀ ([x] ∧I (M₁ x) (M₂ x)) (∧I N₁ N₂)
+     <- hsubst_n A M₀ ([x] M₁ x) (N₁ : verif B₁)
+     <- hsubst_n A M₀ ([x] M₂ x) (N₂ : verif B₂).
+- : hsubst_n A M₀ ([x] atm (R x)) N
+     <- always_jf_or_rm ([x] R x) (JFRM : jf_or_rm ([x] R x))
+     <- hsubst_r A M₀ ([x] R x) JFRM N.
+
+- : hsubst_r A M₀ ([x] R x) (jf JF) (atm R')
+     <- hsubst_rr A M₀ ([x] R x) JF R'.
+- : hsubst_r A M₀ ([x] R x) (rm RM) N
+     <- hsubst_rn A _ M₀ ([x] R x) RM N.
+
+- : hsubst_rr A M₀ ([x] ⊃E (R x) (M x)) (jf⊃ JF) (⊃E R' N)
+     <- hsubst_rr A M₀ ([x] R x) JF R' 
+     <- hsubst_n A M₀ ([x] M x) N.
+- : hsubst_rr A M₀ ([x] ∧E₁ (R x)) (jf∧₁ JF) (∧E₁ R')
+     <- hsubst_rr A M₀ ([x] R x) JF R'.
+- : hsubst_rr A M₀ ([x] ∧E₂ (R x)) (jf∧₂ JF) (∧E₂ R')
+     <- hsubst_rr A M₀ ([x] R x) JF R'.
+- : hsubst_rr A M₀ ([x] var Y) jfx (var Y).
+
+- : hsubst_rn A B₂ M₀ ([x] ⊃E (R x) (M x)) (rm⊃ RM) N'
+     <- hsubst_rn A (B₁ ⊃ B₂) M₀ ([x] R x) RM ((⊃I [y] N y) : verif (B₁ ⊃ B₂))
+     <- hsubst_n A M₀ ([x] M x) (M' : verif B₁)
+     <- hsubst_n B₁ M' N (N': verif B₂).
+- : hsubst_rn A B₁ M₀ ([x] ∧E₁ (R x)) (rm∧₁ RM) N₁
+     <- hsubst_rn A (B₁ ∧ B₂) M₀ ([x] R x) RM (∧I N₁ N₂ : verif (B₁ ∧ B₂)).
+- : hsubst_rn A B₂ M₀ ([x] ∧E₂ (R x)) (rm∧₂ RM) N₂
+     <- hsubst_rn A (B₁ ∧ B₂) M₀ ([x] R x) RM (∧I N₁ N₂ : verif (B₁ ∧ B₂)).
+- : hsubst_rn A A M₀ ([x] var x) rmx M₀.
+
+%worlds (bl_atom | bl_hyp)
+(hsubst_n _ _ _ _)
+(hsubst_r _ _ _ _ _) 
+(hsubst_rr _ _ _ _ _) 
+(hsubst_rn _ _ _ _ _ _).
+
+%{! A critical part of proving termination is showing that, during the hereditary substitution process, the second argument is no larger than the first - this is why
+we are allowed to make the recursive call ``hsubst_n B&lt;sub&gt;1&lt;/sub&gt; M' N (N': verif B&lt;sub&gt;2&lt;/sub&gt;)`` in the ``&sup;E`` case of ``hsubst_rn``: we know ``A`` is no larger than ``B&lt;sub&gt;1&lt;/sub&gt; &sup; B&lt;sub&gt;2&lt;/sub&gt;``, and therefore ``B&lt;sub&gt;2&lt;/sub&gt;`` is strictly smaller.
+This is established by the following [``%reduces``](/wiki/percent-reduces/) declaration. !}%
+
+%reduces B <= A (hsubst_rn A B _ _ _ _).
+
+%{! The completeness of hereditary substitution is established first by lexicographic induction,
+first on the type ``A`` and second on the term ``M``
+that we are substituting into.
+The statement of ``hsubst_r`` has to come after ``hsubst_rr`` and
+``hsubst_rn`` in order for termination checking to work, because the 
+former theorem calls the latter two theorems with all the same arguments. !}%
+
+%total {(A B C D) (M R S T)}
+(hsubst_n A _ M _)
+(hsubst_rr C _ S _ _) 
+(hsubst_rn D _ _ T _ _)
+(hsubst_r B _ R _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Verifications_and_uses).
+!}%

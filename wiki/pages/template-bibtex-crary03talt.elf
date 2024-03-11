@@ -1,0 +1,15 @@
+%%! title: "Template:Bibtex:crary03talt"
+
+%{! &lt;bibtex&gt;@InProceedings\{crary03talt,
+  author = "Karl Crary",
+  title = "Toward a Foundational Typed Assembly Language",
+  booktitle = "2003 Symposium on Principles of Programming Languages",
+  year = "2003",
+\}&lt;/bibtex&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Bibtex:crary03talt).
+!}%

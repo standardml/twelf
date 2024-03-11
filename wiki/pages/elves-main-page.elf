@@ -1,0 +1,35 @@
+%%! title: "Elves:Main Page"
+
+%{! This is the "portal" page for the Principles of Programming Group at Carnegie Mellon. The entire namespace starting with POPGroup: and POPGroup talk: are restricted to users which I have the special permission "pop-group" in their [[Special:Listusers | user profile]]. People listed in that list which are called "Bureaucrat" are the people who can give people that permission.
+
+The RSS feed for recent changes will show edits made on this page, so don't say anything silly. In general the use of this namespace should be avoided in favor of the project namespace (for example, [[Project:To do]]) and should only be used for things like
+
+* Discussing preperation for the [[Elves:Server]]
+* Discussing strategies for releaseing the wiki on an unsuspecting world (that's what this page is for)
+
+
+## Contest?
+
+There are some discussions it might be useful to have in this written-down forum on the [talk page](/wiki/elves-talk-main-page/), for instance the idea of having a contest of some sort.
+
+## Things You &lt;strike&gt;Can't&lt;/strike&gt; Can Do In Twelf
+
+We talked about in the meeting some of the bits we'd need for having there be some recognizable activity going on. This whole setup comes attached to a [[http://redundancymanman.org/wordpress/ blog]] for which we have lots of RSS subscribable goodness. We need to come up with topics (perhaps over at the talk page?) and get people to write things with a rough completion date. People should probably write in the POPGroup namespace and then move stuff into the main namespace when we put notice up on the blog. Note that the completion date could be long before we put it on the blog, but having estimated completion dates will help plan if/how the blog will work.
+
+* **TOPIC** --- **WRITER** --- **EST. DATE**
+* Context Subtyping --- Rob and Dan Lee --- September 14?
+* Closure Conversion --- ? (karl) --- ?
+
+### Other ideas
+
+* **Logical Relations Arguments** - _logical relations arguments cannot be carried out (except via heavy encodings)_ [http://fling-l.seas.upenn.edu/~plclub/cgi-bin/poplmark/index.php?title=Submission_from_Carnegie_Mellon]
+* **Coinduction** - I'm not even certain what coinduction _is_, but the poplmark submissions page says _the status of coinduction is uncertain_ [http://fling-l.seas.upenn.edu/~plclub/cgi-bin/poplmark/index.php?title=Submission_from_Carnegie_Mellon]
+* **Linear Logic/Type system** - Unanswered question from The Twelf Wiki: _How do I represent a linear logic or type system in Twelf?_ [http://fp.logosphere.cs.cmu.edu/twelf/?n=Main.Questions]
+* **Orderd Linear Logic/Type system** - Unanswered question from The Twelf Wiki: _How do I represent an ordered linear logic or type system in Twelf?_ [http://fp.logosphere.cs.cmu.edu/twelf/?n=Main.Questions] !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Elves:Main_Page).
+!}%

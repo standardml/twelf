@@ -1,0 +1,239 @@
+%%! title: "CADE Tutorial/Basic error messages"
+
+%{! ## How Twelf checks assertions
+
+Twelf proves a totality assertion for a type family such as
+``mult`` by checking several properties.  These properties, taken
+together, constitute a proof by induction on canonical forms that the
+type family defines a total relation.
+
+### Running Example
+
+We'll start from the following code: !}%
+    
+nat : type.  
+zero : nat.
+succ : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add zero N N.
+add/s : add (succ M) N (succ P) 
+	 <- add M N P.
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+mult : nat -> nat -> nat -> type.
+%mode mult +M +N -P.
+
+mult/z : mult zero N zero.
+mult/s : mult (succ M) N P'
+	  <- mult M N P
+	  <- add N P P'.
+
+%{! ### Mode
+
+Twelf checks that each constant inhabiting the type family is
+_well-moded_.  Roughly, this means that the inputs to the conclusion
+of a constant determine the inputs of the first premise, and that these
+together with the outputs of the first premise determine the inputs of
+the second premise, and so on, until the outputs of all the premises
+determine the outputs of the conclusion.
+For example, the constant
+    
+
+```checkedtwelf
+mult/s : mult (succ M) N P'
+	  <- mult M N P
+	  <- add N P P'.
+```
+
+has mode ``+M +N -P`` because the input ``M`` and ``N``
+in the conclusion determine the inputs of the premise, and the
+``P`` output by the premise determines the first input to the second
+premise (add), and the output of that determines the conclusion.  
+On the other hand, a constant 
+    
+```checkedtwelf
+mult/bad-mode-output : mult zero N P.
+```
+
+is not well-moded---the output ``P`` is not determined by the
+inputs.  Similarly, 
+    
+```checkedtwelf
+mult/bad-mode-input : mult (succ M) N zero
+ 		       <- mult M Q P.
+```
+
+is not well-moded---the second input to the premise is not determined
+by the inputs of the conclusion.
+
+Note that subgoal order matters: 
+
+```checkedtwelf
+mult/s : mult (succ M) N Q
+	  <- add P N Q
+	  <- mult M N P.
+```
+
+The premises are mode-checked in order; the outputs from one subgoal are
+consider ground in subsequent premises.
+
+### Worlds
+
+Twelf checks that each constant inhabiting the type family obeys the
+worlds declaration.  Because we are only proving theorems about closed
+terms right now, we will not run across any problems with world
+checks.  
+
+### Termination
+
+Twelf checks that each constant inhabiting the type family obeys the
+induction order specified in the ``%total`` declaration.  In each
+inductive premise of a constant, the specified induction position must
+be a strict subterm of the corresponding argument in the conclusion.
+For example, the constant 
+
+```checkedtwelf
+mult/s : mult (s M) N Q
+	  <- mult M N P
+	  <- add P N Q.
+```
+
+obeys the induction order ``M`` specified in the above totality
+assertion because the term ``M`` is a strict subterm of the term
+``(s M)``.
+
+Recuring on exactly the same term is obviously a termination error: 
+
+```checkedtwelf
+mult/bad-termination-1 : mult M N P
+			  <- mult M N P.
+%total M (mult M _ _).
+```
+
+As is recuring on an entirely unrelated argumenet:
+    
+```checkedtwelf
+mult/bad-termination-2 : mult M N P
+			  <- mult N N P.
+%total M (mult M _ _).
+```
+
+For example Twelf would not accept the totality of ``mult``
+if ``N`` were used as the induction order&mdash;the same term
+``N`` in the conclusion of this constant appears in the premise:
+
+```checkedtwelf
+%total N (mult _ N _).
+```
+
+%In addition to the subterm ordering on a single argument, Twelf supports
+[mutual induction](/wiki/mutual-induction/) and <Todo>lexicographic induction</Todo>.
+
+### Output coverage
+
+In the definition of a type family, you may pattern-match the outputs of
+a premise.  For example, we might write 
+
+```checkedtwelf
+mult/bad-output-cov : mult (succ M) N zero
+		       <- mult M N (succ P).
+%worlds () (mult _ _ _).
+%total N1 (mult N1 N2 N3).
+```
+
+Here we have insisted that the output of the premise has the form
+``succ P`` for some ``P``.  Twelf correctly reports an output
+coverage error because this condition can fail.
+
+Pattern-matching the output of a premise is like an <Todo>inversion</Todo> step
+in a proof: you're insisting that the premise derivation must conclude a
+particular fact that is more specific than the judgement form itself.
+For Twelf to accept a relation as total, Twelf must notice that all of
+these inversions are permissible.  Twelf permits such inversions when it
+is readily apparent that they are justified, and those inversions that
+Twelf does not accept can be proved explicitly.
+
+In this example, we got an output coverage error because we constrained
+the output of the premise by insisting it be formed by a particular
+constant.  The other way to get output coverage errors is to insist that
+the output of a premise be a variable that occurs elsewhere in the type.
+For example: 
+
+```checkedtwelf
+mult/bad-output-free : mult (succ M) N zero
+			<- mult M N N.
+%worlds () (mult _ _ _).
+%total N1 (mult N1 N2 N3).
+```
+
+Here, we insisted that the output of the premise be the number
+``N`` that we put in.  Twelf is very conservative in checking
+[output freeness](/wiki/output-freeness/): a type family will not be judged total if you
+constrain the outputs of any premise at all in this manner.
+
+### Input coverage
+
+Mode, worlds, termination, and output coverage ensure that each constant
+really does cover the part of the relation indicated by its conclusion.
+For example, if ``mult`` passes these four checks, we know that
+``mult/z`` and ``mult/s`` cover ``(zero, N, _)`` and ``(succ M,
+N, _)``, respectively.  What else is necessary to know that
+``mult`` defines a total relation?  We need to know that all the
+constants inhabiting ``mult``, taken together, cover all of the
+inputs.  Input coverage checks exactly this.
+
+For example, if we forgot ``mult/z``, input coverage for
+``mult`` would fail.  For example:
+
+```checkedtwelf
+mult' : nat -> nat -> nat -> type.
+%mode mult' +N1 +N2 -X3.
+
+mult'/s : mult' (succ M) N Q
+	  <- mult' M N P
+	  <- add P N Q.
+
+%worlds () (mult' _ _ _).
+%total M (mult' M _ _).
+```
+
+Here's an analogy that might be helpful: You can think of each constant
+of a type as being a clause in an ML pattern matching declaration.  Then
+input coverage is like the exhaustiveness checker for pattern matching.
+
+Twelf checks input coverage by <Todo>splitting</Todo> the input types to
+case-analyze the various constants that could have been used to inhabit
+them.  For ``add``, Twelf splits the first ``nat`` argument
+``M``, and then checks that the cases ``plus z N N`` and
+``add (succ M) N P`` are covered.  Fortunately, these are exactly
+the cases we wrote down.  If we had case-analyzed further in the
+definition of the judgement (e.g., if the definition of ``plus``
+case-analyzed the second argument as well), Twelf would continue
+splitting the input space.  Because Twelf separates termination checking
+and coverage checking, the constants defining a type family do not need
+to follow any particular primitive recursion schema-the constants may
+pattern-match the inputs in a general manner.
+
+## When Twelf checks what
+
+To a first approximation, you can think of the ``%mode`` and ``%worlds`` declarations as specifying a totality assertion and the ``%total`` declaration as checking it.  This isn't exactly how Twelf works, though:
+
+- When a ``%mode`` declaration is entered, Twelf checks that all previous constants inhabiting the specified type family are well-moded; further, it then mode-checks any subsequent constants inhabiting that family.  
+- When a ``%worlds`` declaration is entered, Twelf world-checks the type family; further, it then reports an error if any new constants contributing to the family at all are added.
+- When a ``%total`` declaration is entered, Twelf checks termination, then input coverage, then output coverage.  When checking output coverage, Twelf checks for unjustified constant pattern-matching in a first pass and then output freeness problems in a second pass.
+
+This separation allows you to, for example, check that each constant in a family is well-moded (i.e., takes specified inputs to specified outputs) without checking that the entire type family is total.  You can also use the declarations [%terminates](/wiki/percent-terminates/) and [%covers](/wiki/percent-covers/) to check termination and input coverage independently.
+
+If any constant in a type family fails mode, worlds, or output coverage, then mode, worlds, or totality checking fails for the whole type family.  One could imagine that Twelf instead would just disregard the offending constant: it is possible that the type family as a whole satisfies a totality assertion without that constant, and, in a mathematical sense, adding additional constants never invalidates the fact a totality assertion is true of a family.    The reason Twelf does not work this way is that ``%total`` actually has a more specific meaning, as we discuss in the next section. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+You can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/CADE_Tutorial/Basic_error_messages).
+!}%

@@ -1,0 +1,68 @@
+%%! title: "POPL Tutorial/cps-problem"
+
+%{! 
+
+## Problem 1: CPS Conversion with Administrative Redices
+
+In this problem we define a translation from the following simply-typed
+λ-calculus to a language in continuation passing style (CPS).
+
+!}%
+
+tp : type.
+o  : tp.
+=> : tp -> tp -> tp.           %infix right 3 =>.
+
+exp   : tp -> type.
+value : tp -> type.
+app   : exp (A => B) -> exp A -> exp B.
+lam   : (value A -> exp B) -> value (A => B).
+ret   : value A -> exp A.
+%block sourceb : some {A : tp} block {x : value A}.
+%worlds (sourceb) (exp _) (value _).
+
+%{! 
+
+The terms are divided into expressions and values as in the previous exercise, but there is also an injection of values into expressions.  We define the language so that an expression or value of type A will have the type exp A or value A, respectively.  We will initially define a translation into the following CPS language.
+
+!}%
+
+contra : type.
+cvalue : tp -> type.
+ccont  : tp -> type.
+capp   : cvalue (A => B) -> cvalue A -> ccont B -> contra.
+clam   : (cvalue A -> ccont B -> contra) -> cvalue (A => B).
+cconti : (cvalue A -> contra) -> ccont A.
+cthrow : ccont A -> cvalue A -> contra.
+%block targetb1 : some {A : tp} block {x : cvalue A}.
+%block targetb2 : some {A : tp} block {x : ccont A}.
+%worlds (targetb1 | targetb2) (contra) (cvalue _) (ccont _).
+%{! 
+
+Here we have divided the terms into values, continuations, and contradictions.  Values have a similar interpretation as in the source language.  The continuations represent the remainder of the computation given a value.  From a logical perspective, a continuation of type A may be viewed as a proof of not A. Notice that the introduction and elimination rules for continuations are inverses.  Intuitively, a contradiction is a computation.
+
+A value of type A =&gt; B can be interpreted as proofs of (not (A and (not B))).  Consequently, the function in the target language is defined by deriving a contradiction from A value of type A and a continuation of type B, and the application in the target language is the inverse of the function introduction taking a value of type A =&gt; B and giving back a proof that a value of type A and a continuation of type B yield a contradiction.
+
+It remains to define a translation from the source to the target language:
+
+!}%
+cps : value A -> cvalue A -> type.
+%mode cps +X1 -X2.
+
+cpse : exp A -> (ccont A -> contra) -> type.
+%mode cpse +X1 -X2.
+
+%{! 
+
+We translate values in the source language to values in the target language of the same type.  We translate expressions in the source language to computations in the target language which depend on a continuation of the given type.  For this problem, fill in the three cases of the translation and check that it is total.  The translation defined on the bottom of page 147 in [http://homepages.inf.ed.ac.uk/gdp/publications/cbn_cbv_lambda.pdf Plotkin's Call-by-name, Call-by-value and the λ-Calculus] may be helpful.  Note that the translation of functions given there is the composition of the translations of ret and lam in our setting.
+
+When you complete this problem you can learn another technique in the second part: [POPL Tutorial/cps-problem2](/wiki/popl-tutorial-cps-problem2/)
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/cps-problem).
+!}%

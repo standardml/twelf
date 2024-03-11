@@ -1,0 +1,97 @@
+%%! title: "CADE Tutorial/Combinators Support"
+
+%{! 
+Adapted from the case study on [Typed combinators soundness and completeness](/wiki/typed-combinators-soundness-and-completeness/).
+
+## Syntax
+
+!}%
+
+% lambda calculus
+
+term : type.                    %name term M x.
+
+app : term -> term -> term.
+lam : (term -> term) -> term.
+
+
+% combinator calculus
+
+comb : type.                    %name comb A y.
+
+s : comb.
+k : comb.
+i : comb.
+capp : comb -> comb -> comb.
+
+
+
+%{! 
+
+## Translation
+
+!}%
+
+% bracket abstraction
+% XXX fill in
+
+% translation
+% XXX fill in
+
+
+%{! 
+
+## Equational theory
+
+!}%
+
+% lambda term equality
+
+% (elided)
+
+% combinator equality
+
+ceq : comb -> comb -> type.
+
+% betas
+ceq/i : ceq (capp i A) A.
+ceq/k : ceq (capp (capp k A) B) A.
+ceq/s : ceq (capp (capp (capp s A) B) C) (capp (capp A C) (capp B C)).
+
+% extensionality
+ceq/ext : ceq A A'
+           <- ({y:comb} ceq (capp A y) (capp A' y)).
+
+% compatibility
+ceq/app : ceq (capp A B) (capp A' B')
+           <- ceq A A'
+           <- ceq B B'.
+
+% equivalence
+ceq/refl : ceq A A.
+
+ceq/symm : ceq A A'
+            <- ceq A' A.
+
+ceq/trans : ceq A A'
+             <- ceq A B
+             <- ceq B A'.
+
+%block comb-block : block {y:comb}.
+%worlds (comb-block) (ceq _ _).
+
+%{! 
+
+## Correctness of the translation
+
+!}%
+
+% substitution lemma
+% XXX fill in
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/CADE_Tutorial/Combinators_Support).
+!}%

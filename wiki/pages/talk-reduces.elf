@@ -1,0 +1,20 @@
+%%! title: "Talk:%reduces"
+
+%{! ## Splitting this up
+
+At this point, this article is pretty incomplete as there is still much to be said about the %reduces directive. I did want to get a code example in, though. The addition of the ``nat-less-reduces`` stuff makes the code example longer than necessary. We might want to just cut it off after ``nat-plus-reduces-s`` or ``nat-plus-reduces`` and have the entire proof of ``nat-less-reduces`` as its own code example/tutorial. --[DanielKLee](/wiki/user-danielklee/) 10:08, 27 September 2006 (MST)
+* In my opinion it's important to be as brief as possible with code snippets; they should be only the minimal size needed to illustrate the relevant point. Perhaps breaking it up into two sections would be the right way to go. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:39, 27 September 2006 (MST)
+
+## Mutual recursion
+
+Sometimes when I prove an inversion lemma, I need to use recursion sometimes but not all always
+and determining whether to use recursion requires a case analysis.  This means we have a mutual
+meta-theorem.  I would like to show that the main inversion lemma has a '&lt;' reduction, but the helper lemma
+only has a '&lt;=' recursion.  I just figured out how to handle this: first prove the mutual reduction with '&lt;=', and then separately prove the main reduction with '&lt;'. [Boyland](/wiki/user-boyland/) 09:53, 3 June 2013 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:%25reduces).
+!}%

@@ -1,0 +1,117 @@
+%%! title: "Proving metatheorems:Proving metatheorems about the STLC"
+
+%{! \{\{proving metatheorems
+  | prev = Representing the judgements of the STLC
+  | prevname = Representing judgements
+  | next = Proving totality assertions in non-empty contexts
+  | nextname = Proving totality assertions in non-empty contexts\}\}
+
+In this section, we show how to prove type preservation for the STLC.  As you will see, this theorem is really no harder than the metatheorems about the natural numbers that we proved above.  For reference, we recap the entire LF signature representing the STLC: !}%
+    
+%% Syntax
+
+tp    : type.
+unit  : tp.
+arrow : tp -> tp -> tp.
+
+tm    : type.
+empty : tm.
+app   : tm -> tm -> tm.
+lam   : tp -> (tm -> tm) -> tm.
+
+%% Static Semantics
+
+of       : tm -> tp -> type.
+of-empty : of empty unit.
+of-lam   : of (lam T2 ([x] E x)) (arrow T2 T)
+            <- ({x: tm} of x T2 -> of (E x) T).
+of-app   : of (app E1 E2) T
+            <- of E1 (arrow T2 T)
+            <- of E2 T2.
+
+%% Dynamic Semantics
+
+value       : tm -> type.
+value-empty : value empty.
+value-lam   : value (lam T ([x] E x)).
+
+step          : tm -> tm -> type.
+step-app-1    : step (app E1 E2) (app E1' E2)
+                 <- step E1 E1'.
+step-app-2    : step (app E1 E2) (app E1 E2') 
+                 <- value E1
+                 <- step E2 E2'.
+step-app-beta : step (app (lam T2 ([x] E x)) E2) (E E2)
+                 <- value E2.
+
+%{! ## Preservation
+
+Here is a complete Twelf proof of preservation for the STLC: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+preserv : step E E' -> of E T -> of E' T -> type.                                                                                                                     
+%mode preserv +Dstep +Dof -Dof'.                                                                                                                                      
+                                                                                                                                                                      
+preserv-app-1    : preserv                                                                                                                                            
+                    (step-app-1 (DstepE1 : step E1 E1'))                                                                                                              
+                    (of-app (DofE2 : of E2 T2)                                                                                                                        
+                            (DofE1 : of E1 (arrow T2 T)))                                                                                                             
+                    (of-app DofE2 DofE1')                                                                                                                             
+                    <- preserv DstepE1 DofE1 (DofE1' : of E1' (arrow T2 T)).                                                                                          
+                                                                                                                                                                      
+preserv-app-2    : preserv                                                                                                                                            
+                    (step-app-2 (DstepE2 : step E2 E2') (DvalE1 : value E1))                                                                                          
+                    (of-app (DofE2 : of E2 T2)                                                                                                                        
+                            (DofE1 : of E1 (arrow T2 T)))                                                                                                             
+                    (of-app DofE2' DofE1)                                                                                                                             
+                    <- preserv DstepE2 DofE2 (DofE2' : of E2' T2).                                                                                                    
+                                                                                                                                                                      
+preserv-app-beta : preserv                                                                                                                                            
+                    (step-app-beta (Dval : value E2))                                                                                                                 
+                    (of-app (DofE2 : of E2 T2)                                                                                                                        
+                            (of-lam (([x] [dx] DofE x dx)                                                                                                             
+                                       : {x : tm} {dx : of x T2} of (E x) T)))                                                                                        
+                    (DofE E2 DofE2).                                                                                                                                  
+                                                                                                                                                                      
+%worlds () (preserv _ _ _).                                                                                                                                           
+%total D (preserv D _ _).
+
+%{! Now, let's examine the pieces of the proof in more detail.
+
+**Correctness of the theorem statement.** We should check that this Twelf theorem statement actually corresponds to the notion of type preservation that we have in mind, which is stated as follows:
+
+: If &lt;math&gt;e \mapsto e'&lt;/math&gt; and &lt;math&gt;\cdot \vdash e : \tau&lt;/math&gt; then &lt;math&gt;\cdot \vdash e' : \tau&lt;/math&gt;.  
+
+This corresponds to the following statement about LF terms:
+
+: If ``Dstep : step E E'`` and ``Dof : of E T`` then ``Dof' : of E' T``.
+
+By adequacy, these two theorem statements are equivalent; note that closed LF terms represent closed object-language terms and typing derivations in the empty object-language context.  
+
+The above totality assertion for the type family ``preserv`` clearly implies this statement.  Thus, the Twelf proof proves the informal statement of preservation.
+
+**Reading the cases.**  As we have discussed, the LF constants implementing a proof correspond to the cases of an informal proof.  For preservation, the three LF constants correspond to the three cases of an informal proof by induction on the dynamic semantics derivation, where in each case we invert the static semantics derivation.  For example, in the case ``preserv-app-1`` for ``step-app-1``, we invert the typing derivation for the application, appeal to the inductive hypothesis (the premise of type ``preserv``), and then use ``of-app`` to derive the result.  The other two cases use similar inversions.  Because of the higher-order representation of the hypothetical typing judgement, there is no need for a substitution lemma in the case ``preserv-app-beta``: the LF term ``DofE`` representing the hypothetical derivation can simply be applied to the derivation ``DofE2``.  
+
+The ``%total`` directive asks Twelf to verify that ``preserv`` defines a total relation—i.e., that it is a correct proof.  We call attention to a few of Twelf's checks:
+* **Termination:** In all premises, the dynamic semantics derivation is a subterm of the input dynamic semantics derivation.  In this proof, it happens that the typing derivation is always smaller as well, so we could equivalently have verified totality by induction on the second argument.  
+* **Input coverage:** The inversion steps in the above reading of the proof create input-coverage-checking obligations. For example, Twelf's coverage checker justifies the inversion of the typing derivation in ``preserv-app-1`` by using index information (i.e., that the subject of the derivation is ``app E1 E2``) to show that ``of-app`` is the only way to construct an LF term of the appropriate type.  If there were another way to derive the well-typedness of an application, the inversion of the typing derivation in ``step-app-1`` would not be justified.  This would manifest itself as an input coverage error, as not all possible inputs would be derived by ``of-app``.
+
+## Other theorems
+
+Other properties of the STLC are proved elsewhere on this wiki.  Several [tutorials](/wiki/tutorials/) use theorems about the STLC to illustrate various Twelf devices.  For example, proving progress for the STLC uses [output factoring](/wiki/output-factoring/); proving determinacy of the operational semantics is an example of a [uniqueness lemma](/wiki/uniqueness-lemma/).  You may wish to read these tutorials at this point.  Neither requires any more machinery than what we have already introduced; the tutorials simply show how to use Twelf in a fashion that may be somewhat subtle until you've seen it once.
+
+The next section of this introduction describes one new piece of Twelf machinery: the ability to prove totality assertions for non-empty contexts.
+
+\{\{proving metatheorems
+  | prev = Representing the judgements of the STLC
+  | prevname = Representing judgements
+  | next = Proving totality assertions in non-empty contexts
+  | nextname = Proving totality assertions in non-empty contexts\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_metatheorems_about_the_STLC).
+!}%

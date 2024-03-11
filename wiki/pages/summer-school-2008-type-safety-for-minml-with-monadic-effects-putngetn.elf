@@ -1,0 +1,339 @@
+%%! title: "Summer school 2008:Type safety for MinML with monadic effects (putngetn)"
+
+%{! 
+
+\{\{Summer school 2008
+  |prev=Exercises 3
+  |prevname=Exercies 3
+  |nonext=
+\}\}
+
+Type safety for MinML with monadic effects, with putn and getn primitives.
+
+!}%
+
+%{! 
+
+## Syntax / static semantics
+
+Types:
+
+!}%
+
+tp : type.				%name tp T.
+nat : tp.
+arr : tp -> tp -> tp.
+circle : tp -> tp.
+
+%{! 
+
+Typed expressions (i.e., typing derivations):
+
+!}%
+
+exp  : tp -> type.			%name exp E.  %postfix 1 exp.
+command : tp -> type.			%name command M.  %postfix 1 command.
+
+z : nat exp.
+s : nat exp -> nat exp.
+ifz : nat exp -> T exp -> (nat exp -> T exp) -> T exp.
+fun : {T1:tp} {T2:tp} ((arr T1 T2) exp -> T1 exp -> T2 exp) -> (arr T1 T2) exp.
+app : (arr T1 T2) exp -> T1 exp -> T2 exp.
+comp : T command -> (circle T) exp.
+
+return : T exp -> T command.
+let    : (circle T) exp -> (T exp -> U command) -> U command.
+getn   : (nat exp -> U command) -> U command.
+putn   : nat exp -> U command -> U command.
+
+%{! 
+
+## Dynamic semantics / preservation
+
+### Values and final states
+
+!}%
+
+value : T exp -> type.			%name value Dval.
+%mode value +E.
+
+value/z : value z.
+value/s : value (s E) <- value E.
+value/fun : value (fun _ _ _).
+value/comp : value (comp _).
+
+final : T command -> type.                 %name final Dfin.
+%mode final +M.
+
+final/ret : final (return E)
+	     <- value E.
+
+%{! 
+
+### Transition relation for expressions
+
+!}%
+
+step : T exp -> T exp -> type.		%name step Dstep.
+%mode step +E1 -E2.
+
+step/s
+   : step (s E) (s E') <- step E E'.
+step/ifz/arg
+   : step (ifz E E1 ([x] E2 x)) (ifz E' E1 ([x] E2 x))
+      <- step E E'.
+step/ifz/z
+   : step (ifz z E1 ([x] E2 x)) E1.
+step/ifz/s
+   : step (ifz (s E) E1 ([x] E2 x)) (E2 E)
+      <- value E.
+step/app/fun
+   : step (app E1 E2) (app E1' E2)
+      <- step E1 E1'.
+step/app/arg
+   : step (app E1 E2) (app E1 E2')
+      <- value E1 <- step E2 E2'.
+step/app/beta-v
+   : step
+      (app (fun T1 T2 ([f] [x] E f x)) E2)
+      (E (fun T1 T2 ([f] [x] E f x)) E2)
+      <- value E2.
+
+%{! 
+
+### Labelled transition relation for commands
+
+!}%
+
+label : type.  %name label L.
+label/read  : (value (N : nat exp)) -> label.
+label/write : (value (N : nat exp)) -> label.
+label/sil   : label. %% silent transition
+
+mstep : T command -> T command -> label -> type.		%name mstep Dstep.
+%mode mstep +E1 *E2 *L.
+
+mstep/ret : mstep (return E) (return E') label/sil
+	     <- step E E'.
+mstep/let-e : mstep (let E ([x] M x)) (let E' ([x] M x)) label/sil
+	       <- step E E'.
+mstep/let-m : mstep (let (comp M1) ([x] M2 x)) (let (comp M1') ([x] M2 x)) L
+	       <- mstep M1 M1' L.
+mstep/let-beta : mstep (let (comp (return E)) ([x] M x)) (M E) label/sil
+		  <- final (return E).
+mstep/getn : mstep (getn ([x] M x)) (M E) (label/read (Dval : value E)).
+mstep/putn : mstep (putn E M) (putn E' M) label/sil
+	      <- step E E'.
+mstep/putn-put : mstep (putn E M) M (label/write (Dval : value E)).
+
+%{! 
+
+## Progress
+
+### Return sums
+
+!}%
+
+val-or-step : T exp -> type.		%name val-or-step Dvos.
+vos/val : val-or-step E <- value E.
+vos/step : val-or-step E <- step E _.
+
+fin-or-mstep : T command -> type.       %name fin-or-mstep Dfos.
+fos/fin : fin-or-mstep M <- final M.
+fos/step : fin-or-mstep M <- mstep M _ _.
+
+%{! 
+
+### [Factoring](/wiki/output-factoring/) lemmas
+
+!}%
+
+prog/s
+   : val-or-step E -> val-or-step (s E) -> type.
+%mode prog/s +Dvos1 -Dvos2.
+
+- : prog/s
+     (vos/step Dstep)
+     (vos/step (step/s Dstep)).
+- : prog/s
+     (vos/val Dval)
+     (vos/val (value/s Dval)).
+
+%worlds () (prog/s _ _).
+%total {} (prog/s _ _).
+
+prog/ifz
+   : val-or-step (E : nat exp)
+      -> {E1} {E2} (step (ifz E E1 ([x] E2 x)) E')
+      -> type.
+%mode prog/ifz +E +E1 +E2 -Dstep.
+
+- : prog/ifz (vos/step Dstep) _ _ (step/ifz/arg Dstep).
+- : prog/ifz (vos/val value/z) _ _ step/ifz/z.
+- : prog/ifz (vos/val (value/s Dval)) _ _ (step/ifz/s Dval).
+
+%worlds () (prog/ifz _ _ _ _).
+%total {} (prog/ifz _ _ _ _).
+
+prog/app
+   : val-or-step (E1 : (arr T2 T) exp)
+      -> val-or-step (E2 : T2 exp)
+      -> step (app E1 E2) E'
+      -> type.
+%mode prog/app +Dvos1 +Dvos2 -Dstep.
+
+- : prog/app
+     (vos/step Dstep1)
+     _
+     (step/app/fun Dstep1).
+
+- : prog/app
+     (vos/val Dval1)
+     (vos/step Dstep2)
+     (step/app/arg Dstep2 Dval1).
+
+- : prog/app
+     (vos/val Dval1)
+     (vos/val Dval2)
+     (step/app/beta-v Dval2).
+
+%worlds () (prog/app _ _ _).
+%total {} (prog/app _ _ _).
+
+%{! 
+
+### Progress for expressions
+
+!}%
+
+prog : {E : T exp} val-or-step E -> type. %name prog Dprog.
+%mode prog +E -Dvos.
+
+- : prog z (vos/val value/z).
+
+- : prog (s E) Dvos'
+     <- prog E Dvos
+     <- prog/s Dvos Dvos'.
+
+- : prog (ifz E E1 ([x] E2 x)) (vos/step Dstep)
+     <- prog E Dvos
+     <- prog/ifz Dvos _ _ Dstep.
+
+- : prog (fun _ _ _) (vos/val value/fun).
+
+- : prog (app E1 E2) (vos/step Dstep)
+     <- prog E1 Dvos1
+     <- prog E2 Dvos2
+     <- prog/app Dvos1 Dvos2 Dstep.
+
+- : prog (comp M) (vos/val value/comp).
+
+%worlds () (prog _ _).
+%total Dof (prog Dof _).
+
+%{! 
+
+### Factoring lemmas for commands
+
+!}%
+
+mprog/ret : val-or-step E -> fin-or-mstep (return E) -> type.
+%mode mprog/ret +X1 -X2.
+
+- : mprog/ret (vos/val Dval) (fos/fin (final/ret Dval)).
+- : mprog/ret (vos/step Dstep) (fos/step (mstep/ret Dstep)).
+
+%worlds () (mprog/ret _ _).
+%total {} (mprog/ret _ _).
+
+mprog/let-comp : fin-or-mstep (M1 : T command) -> {M2 : (T exp -> U command) } mstep (let (comp M1) M2) M' L -> type.
+%mode mprog/let-comp +X1 +X2 -X3.
+
+- : mprog/let-comp 
+     (fos/fin ((final/ret Dval) : final (return E))) 
+     M2 
+     ((mstep/let-beta (final/ret Dval)) : mstep (let (comp (return E)) M2) (M2 E) label/sil).
+
+- : mprog/let-comp 
+     (fos/step 
+	(Dmstep : mstep M1 M1' L)
+	)
+     M2
+     ((mstep/let-m Dmstep) : mstep (let (comp M1) M2) (let (comp M1') M2) L).
+
+%worlds () (mprog/let-comp _ _ _).
+%total {} (mprog/let-comp _ _ _).
+
+mprog/putn : val-or-step E -> {M} mstep (putn E M) M' L -> type.
+%mode mprog/putn +X1 +X3 -X2.
+
+- : mprog/putn (vos/val Dval) M (mstep/putn-put : mstep (putn E M) M (label/write Dval)).
+- : mprog/putn (vos/step Dstep) _ (mstep/putn Dstep).
+
+%worlds () (mprog/putn _ _ _).
+%total {} (mprog/putn _ _ _).
+
+%{! 
+
+### Progress for commands
+
+One of the factoring lemmas is mutually recursive with the main theorem:
+
+!}%
+
+mprog/let : {E : (circle T) exp} val-or-step E -> {M : (T exp -> U command) } mstep (let E M) M' L -> type.
+%mode mprog/let +X1 +X2 +X3 -X4.
+
+mprog : {M : T command} fin-or-mstep M -> type.
+%mode mprog +M -Dfos.
+
+%% mprog/let
+
+- : mprog/let (comp M) (vos/val value/comp) _ Dmstep
+     <- mprog M Dfos
+     <- mprog/let-comp Dfos _ Dmstep.
+
+- : mprog/let _ (vos/step Dstep) _ (mstep/let-e Dstep).
+
+%% mprog
+
+- : mprog (return E) Dfos
+     <- prog E Dvos
+     <- mprog/ret Dvos Dfos.  
+
+- : mprog 
+     (let (E : (circle T) exp)
+	(M : (T exp -> U command)))
+     (fos/step Dmstep)
+     <- prog E (Dvos : val-or-step E)
+     <- mprog/let E Dvos M (Dmstep : mstep (let E M) M' L).
+
+%%FIXME: weird that we have to pick a number here...
+%%       maybe this isn't the right theorem
+- : mprog (getn M) (fos/step (mstep/getn : mstep (getn M) (M z) (label/read (value/z)))).
+
+- : mprog (putn E M) (fos/step Dmstep)
+     <- prog E Dvos
+     <- mprog/putn Dvos M Dmstep.
+
+%worlds () (mprog _ _) (mprog/let _ _ _ _).
+%total (M E) (mprog M _) (mprog/let E _ _ _).
+
+
+%{! 
+And thus we have proved type safety for MinML with monadic effects!
+
+\{\{Summer school 2008
+  |prev=Exercises 3
+  |prevname=Exercies 3
+  |nonext=
+\}\}
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Type_safety_for_MinML_with_monadic_effects_(putngetn)).
+!}%

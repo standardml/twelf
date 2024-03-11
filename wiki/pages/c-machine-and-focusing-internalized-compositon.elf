@@ -1,0 +1,143 @@
+%%! title: "C machine and focusing (internalized compositon)"
+
+%{! 
+C Machine and Focusing
+!}%
+
+%{! ## Syntax !}%
+
+pos : type.  %name pos A+.
+neg : type.  %name neg A-.
+
+down : neg -> pos.
+plus : pos -> pos -> pos.
+times : pos -> pos -> pos.
+zero  : pos.
+one   : pos.
+
+up   : pos -> neg.
+arr  : pos -> neg -> neg.
+with : neg -> neg -> neg.
+top  : neg.
+
+%abbrev conc = neg.
+
+val+  : pos -> type.
+cont- : neg -> conc -> type.
+cont+ : pos -> conc -> type.
+val-  : neg  -> type.
+exp   : conc -> type.
+
+%% positive values
+
+mt+    : val+ one.
+%% no rule for zero
+pair+  : val+ A -> val+ B -> val+ (times A B).
+inl    : val+ A -> val+ (plus A B).
+inr    : val+ B -> val+ (plus A B).
+delay- : exp A- -> val+ (down A-).
+
+%% positive continuations (shallow matching)
+
+%% positive conts
+let1   : exp C -> cont+ one C.
+%% no rule for zero
+split  : (val+ A -> val+ B -> exp C) -> cont+ (times A B) C.
+case   : (val+ A -> exp C) -> (val+ B -> exp C) -> cont+ (plus A B) C.
+%% wait to peel off the shift until you're ready to focus.
+force- : cont- A- C -> cont+ (down A-) C.
+comp+- : cont+ A+ B- -> cont- B- C- -> cont+ A+ C-.
+
+%% negative continuations
+
+app    : val+ A+ -> cont- B C -> cont- (arr A+ B) C.
+fst    : cont- A C -> cont- (with A B) C.
+snd    : cont- B C -> cont- (with A B) C.
+force+ : (val+ A+ -> exp C) -> cont- (up A+) C.
+%% internalize identity so we don't need to eta-expand
+id-    : cont- A A.
+comp-- : cont- A- B- -> cont- B- C- -> cont- A- C-.
+
+%% negative values (shallow)
+
+lam    : (val+ A+ -> exp B-) -> val- (arr A+ B-).
+pair-  : exp A- -> exp B- -> val- (with A- B-).
+mt-    : val- top.
+delay+ : val+ A+ -> val- (up A+).  %% wait to peel off shift until focus
+
+%% neutral sequents
+
+return : val- A -> exp A.
+
+  %% canonical when the value is a variable;
+  %% non-canonical otherwise
+cut+   : val+ A+ -> cont+ A+ C -> exp C.
+  %% non-canonical
+cut-   : val- A- -> cont- A- C -> exp C.
+
+compe- : exp A- -> cont- A- C- -> exp C-.
+
+%{! ### Stack Machine !}%
+
+%% the sum type that you'd define for progress is
+%% (val C) + (exp C)
+%% so let's just abuse exp C for this sum and write the
+%% operational semantics as the progress proof.
+%% the only downside is that you can't tell whether an expression
+%% took a real step towards a value or already was a value.
+
+step : exp C -> exp C -> type.
+%mode step +S1 -S2.
+
+step/return : step (return V) (return V).
+
+step/let1   : step (cut+ mt+ (let1 E)) E.
+step/split  : step (cut+ (pair+ V1 V2) (split E)) (E V1 V2).
+step/case1  : step (cut+ (inl V1) (case E1 E2)) (E1 V1).
+step/case2  : step (cut+ (inr V2) (case E1 E2)) (E2 V2).
+step/force- : step (cut+ (delay- E) (force- K)) (compe- E K).
+step/app    : step (cut- (lam E) (app V K)) (compe- (E V) K).
+step/fst    : step (cut- (pair- E1 E2) (fst K)) (compe- E1 K).
+step/snd    : step (cut- (pair- E1 E2) (snd K)) (compe- E2 K).
+step/force+ : step (cut- (delay+ V) (force+ E)) (E V).
+step/id     : step (cut- V id-) (return V).
+
+%% find the redex
+step/compe-/compe- : step (compe- (compe- E K1) K2) (compe- E (comp-- K1 K2)).
+step/compe-/cut+   : step (compe- (cut+ V K1) K2) (cut+ V (comp+- K1 K2)).
+step/compe-/cut-   : step (compe- (cut- V K1) K2) (cut- V (comp-- K1 K2)).
+step/compe-/cut-   : step (compe- (return V) K2) (cut- V K2).
+
+%% find the top of the stack
+step/comp+-/let1   : step (cut+ V (comp+- (let1 E) K)) 
+		          (cut+ V (let1 (compe- E K))).
+step/comp+-/split  : step (cut+ V (comp+- (split E) K)) 
+		          (cut+ V (split [x] [y] (compe- (E x y) K))).
+step/comp+-/case   : step (cut+ V (comp+- (case E1 E2) K)) 
+		          (cut+ V (case ([x] (compe- (E1 x) K)) ([x] (compe- (E2 x) K)))).
+step/comp+-/force  : step (cut+ V (comp+- (force- K1) K2)) 
+		          (cut+ V (force- (comp-- K1 K2))).
+step/comp+-/force  : step (cut+ V (comp+- (comp+- K1 K2) K3)) 
+		          (cut+ V (comp+- K1 (comp-- K2 K3))).
+step/comp--/app    : step (cut- V1 (comp-- (app V2 K) K2))
+		          (cut- V1 (app V2 (comp-- K K2))).
+step/comp--/fst    : step (cut- V1 (comp-- (fst K) K2))
+		          (cut- V1 (fst (comp-- K K2))).
+step/comp--/snd    : step (cut- V1 (comp-- (snd K) K2))
+		          (cut- V1 (snd (comp-- K K2))).
+step/comp--/snd    : step (cut- V1 (comp-- (force+ E) K2))
+		          (cut- V1 (force+ ([x] compe- (E x) K2))).
+step/comp--/id     : step (cut- V1 (comp-- id- K))
+		          (cut- V1 K).
+step/comp--/id     : step (cut- V1 (comp-- (comp-- K1 K2) K))
+		          (cut- V1 (comp-- K1 (comp-- K2 K))).
+
+%worlds () (step _ _).
+%total D (step D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/C_machine_and_focusing_(internalized_compositon)).
+!}%

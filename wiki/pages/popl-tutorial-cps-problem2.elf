@@ -1,0 +1,46 @@
+%%! title: "POPL Tutorial/cps-problem2"
+
+%{! 
+## Problem 2: Elimination of Administrative Redices
+
+Rather than introducing the administrative redices of explicitly introducing and eliminating continuations (see [POPL Tutorial/cps-problem](/wiki/popl-tutorial-cps-problem/)), we can simply use the function from values to computations itself wherever we previously used a continuation.  Therefore, the new definition of the CPS language is obtained by replacing all instances of ccont A with (cvalue A -&gt; contra).
+| hidden="true" !}%
+tp : type.
+o : tp.
+=> : tp -> tp -> tp.           %infix right 3 =>.
+
+exp   : tp -> type.
+value : tp -> type.
+app   : exp (A => B) -> exp A -> exp B.
+lam   : (value A -> exp B) -> value (A => B).
+ret   : value A -> exp A.
+%block sourceb : some {A : tp} block {x : value A}.
+%worlds (sourceb) (exp _) (value _).
+%{!  !}%
+contra : type.
+cvalue : tp -> type.
+capp   : cvalue (A => B) -> cvalue A -> (cvalue B -> contra) -> contra.
+clam   : (cvalue A -> (cvalue B -> contra) -> contra) -> cvalue (A => B).
+%block targetb1 : some {A : tp} block {x : cvalue A}.
+%block targetb2 : some {A : tp} block {y : cvalue A -> contra}.
+%worlds (targetb1 | targetb2) (contra) (cvalue _).
+%{! 
+Notice that we no longer need terms for continuations as they are implicitly represented by the functions from values to contradictions.
+
+For this problem, write the translation to this version of the CPS language:
+!}%
+cps : value A -> cvalue A -> type.
+%mode cps +X1 -X2.
+
+cpse : exp A -> ((cvalue A -> contra) -> contra) -> type.
+%mode cpse +X1 -X2.
+%{! 
+The code for this problem should be similar to the code from the previous problem except that the introduction of continuations with cfalsei and their elimination with throw is replaced by Twelf function introduction and application.
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/cps-problem2).
+!}%

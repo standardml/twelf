@@ -1,0 +1,380 @@
+%%! title: "User:Rsimmons/Handled exceptions"
+
+%{! ## Syntax !}%
+
+%{! ### Types !}%
+
+ty : type.
+ty/nat : ty.               % nat
+ty/arrow : ty -> ty -> ty. % tau1 tau2
+ty/mayraise : ty -> ty.    % [*] tau
+
+%{! We have to pick some type associated with exceptions.
+Here, we'll just use nat. !}%
+
+ty/exn = ty/nat.
+
+%{! #### Type equality !}%
+
+eqty : ty -> ty -> type.
+eqty/refl : eqty T T.
+
+%{! ### Terms !}%
+
+tm : type.
+tm/lam : ty -> (tm -> tm) -> tm.
+tm/app : tm -> tm -> tm.
+tm/z : tm.
+tm/s : tm -> tm.
+tm/if : tm -> tm -> (tm -> tm) -> tm.
+tm/fix : ty -> (tm -> tm) -> tm.
+tm/raise : tm -> tm.
+tm/handle : tm -> (tm -> tm) -> tm.
+tm/susp : tm -> tm.
+tm/unsusp : tm -> tm.
+tm/let : tm -> ty -> (tm -> tm) -> tm = [e][t][f] tm/app (tm/lam t f) e.
+
+
+
+%{! ## Static semantics !}%
+
+of : tm -> ty -> type.   % Will not throw exceptions
+of* : tm -> ty -> type.  % May or may not throw exceptions
+
+of*/weaken : of E T -> of* E T.
+
+of/lam : ({x} of x T -> of (E x) T') -> of (tm/lam T E) (ty/arrow T T').
+of/app : of E1 (ty/arrow T T') -> of E2 T -> of (tm/app E1 E2) T'.
+of/z : of tm/z ty/nat.
+of/s : of E ty/nat -> of (tm/s E) ty/nat.
+of/if : of E ty/nat -> of E1 T -> ({x} of x ty/nat -> of (E2 x) T) 
+ -> of (tm/if E E1 ([x] E2 x)) T. 
+of/fix : ({x} of x T -> of (E x) T) -> of (tm/fix T ([x] E x)) T.
+of/handle : of* E T -> ({x} of x ty/exn -> of (E' x) T) 
+ -> of (tm/handle E ([x] E' x)) T.
+of/susp : of* E T -> of (tm/susp E) (ty/mayraise T).
+
+of*/app : of* E1 (ty/arrow T T') -> of* E2 T -> of* (tm/app E1 E2) T'.
+of*/s : of* E ty/nat -> of* (tm/s E) ty/nat.
+of*/if : of* E ty/nat -> of* E1 T -> ({x} of x ty/nat -> of* (E2 x) T) 
+ -> of* (tm/if E E1 ([x] E2 x)) T. 
+of*/raise : of* E ty/exn -> of* (tm/raise E) T.
+of*/handle : of* E T -> ({x} of x ty/exn -> of* (E' x) T) 
+ -> of* (tm/handle E ([x] E' x)) T.
+of*/unsusp : of* E (ty/mayraise T) -> of* (tm/unsusp E) T.
+
+
+%{! ## Dynamic semantics !}%
+
+%{! ### Values !}%
+
+v : tm -> type.
+v/lam : v (tm/lam T ([x] E x)).
+v/z : v tm/z.
+v/s : v E -> v (tm/s E).
+v/susp : v (tm/susp E).
+
+%{! ### Small-step evaluation !}%
+
+step : tm -> tm -> type.
+step/app1   : step E1 E1' -> step (tm/app E1 E2) (tm/app E1' E2).
+step/app1x  : v E -> step (tm/app (tm/raise E) _) (tm/raise E).
+step/app2   : v E1 -> step E2 E2' -> step (tm/app E1 E2) (tm/app E1 E2').
+step/app2x  : v E -> v E1 -> step (tm/app E1 (tm/raise E)) (tm/raise E).
+step/appr   : v E2 -> step (tm/app (tm/lam T ([x] E x)) E2) (E E2).
+step/s      : step E E' -> step (tm/s E) (tm/s E').
+step/sx     : v E -> step (tm/s (tm/raise E)) (tm/raise E).
+step/if     : step E E' -> step (tm/if E E1 ([x] E2 x))(tm/if E' E1 ([x] E2 x)).
+step/ifz    : step (tm/if tm/z E1 ([x] E2 x)) E1.
+step/ifs    : v E -> step (tm/if (tm/s E) E1 ([x] E2 x)) (E2 E). 
+step/ifx    : v E -> step (tm/if (tm/raise E) E1 ([x] E2 x)) (tm/raise E).
+step/fix    : step (tm/fix T ([x] E x)) (E (tm/fix T ([x] E x))).
+step/raise  : step E E' -> step (tm/raise E) (tm/raise E').
+step/raisex : v E -> step (tm/raise (tm/raise E)) (tm/raise E).
+step/handle : step E1 E1' -> step (tm/handle E1 ([x] E2 x)) (tm/handle E1' E2).
+step/handler: v E -> step (tm/handle E _) E.
+step/handlex: v E -> step (tm/handle (tm/raise E) ([x] E2 x)) (E2 E).
+step/unsusp : step E E' -> step (tm/unsusp E) (tm/unsusp E').
+step/unsuspr: step (tm/unsusp (tm/susp E)) E.
+step/unsuspx: v E -> step (tm/unsusp (tm/raise E)) (tm/raise E).
+
+
+
+%{! ## Progress !}%
+
+%{! ### Not stuck !}%
+
+nstuck : tm -> type.
+nstuck/step  : step E E' -> nstuck E.
+nstuck/value : v E -> nstuck E.
+
+nstuck* : tm -> type.
+nstuck*/step  : step E E' -> nstuck* E.
+nstuck*/value : v E -> nstuck* E.
+nstuck*/raise : v E -> nstuck* (tm/raise E).
+
+ns-weaken : nstuck E -> nstuck* E -> type.
+- : ns-weaken (nstuck/step E) (nstuck*/step E).
+- : ns-weaken (nstuck/value V) (nstuck*/value V).
+%mode ns-weaken +A -B. %worlds () (ns-weaken _ _). %total {} (ns-weaken _ _).
+
+%{! ### Mobile value !}%
+
+%{! This theorem really isn't as interesting as its name makes
+it sound, though it is necessary in one place. Otherwise,
+all of the little factoring lemmas are only case analysis, not induction. !}%
+
+mobile : v E -> of* E T -> of E T -> type.
+- : mobile v/lam (of*/weaken (of/lam F)) (of/lam F).
+- : mobile v/z (of*/weaken of/z) of/z.
+- : mobile (v/s V) (of*/weaken (of/s S)) (of/s S).
+- : mobile (v/s V) (of*/s S) (of/s S') <- mobile V S S'.
+- : mobile v/susp (of*/weaken (of/susp T)) (of/susp T).
+%mode mobile +A +B -C. %worlds () (mobile _ _ _). %total T (mobile T _ _).
+
+%{! ### Progress !}%
+
+progress : of E T -> nstuck E -> type.
+progress* : of* E T -> nstuck* E -> type.
+%mode progress +A -B.
+%mode progress* +A -B.
+
+- : progress* (of*/weaken T) NS* <- progress T NS <- ns-weaken NS NS*.
+
+- : progress (of/lam _) (nstuck/value v/lam).
+p0 : of E (ty/arrow T1 T2)
+      -> nstuck E -> nstuck E' -> nstuck (tm/app E E') -> type.
+- : p0 _ (nstuck/step E) _ (nstuck/step (step/app1 E)).
+- : p0 _ (nstuck/value V) (nstuck/step E) (nstuck/step (step/app2 V E)).
+- : p0 (of/lam _) (nstuck/value _) (nstuck/value V) (nstuck/step (step/appr V)).
+%mode p0 +A +B +C -D. %worlds () (p0 _ _ _ _). %total {} (p0 _ _ _ _).
+- : progress (of/app T1 T2) NS 
+     <- progress T1 NS1 <- progress T2 NS2 <- p0 T1 NS1 NS2 NS.
+- : progress of/z (nstuck/value v/z).
+p1 : of E ty/nat -> nstuck E -> nstuck (tm/s E) -> type.
+- : p1 _ (nstuck/step E) (nstuck/step (step/s E)).
+- : p1 _ (nstuck/value V) (nstuck/value (v/s V)).
+%mode p1 +A +B -C. %worlds () (p1 _ _ _). %total {} (p1 _ _ _). 
+- : progress (of/s T) NS <- progress T NS1 <- p1 T NS1 NS.
+p2 : {E1}{E2} of E ty/nat -> nstuck E -> nstuck (tm/if E E1 ([x] E2 x)) -> type.
+- : p2 _ _ _ (nstuck/step E) (nstuck/step (step/if E)).
+- : p2 _ _ _ (nstuck/value v/z) (nstuck/step step/ifz).
+- : p2 _ _ _ (nstuck/value (v/s V)) (nstuck/step (step/ifs V)).
+%mode p2 +E +F +A +B -C. %worlds () (p2 _ _ _ _ _). %total {} (p2 _ _ _ _ _).
+- : progress (of/if T T1 T2) NS <- progress T NS1 <- p2 _ _ T NS1 NS.
+- : progress (of/fix T) (nstuck/step step/fix).
+p3 : {E'} of* E T -> nstuck* E -> nstuck (tm/handle E E') -> type.
+- : p3 _ _ (nstuck*/step E) (nstuck/step (step/handle E)).
+- : p3 _ _ (nstuck*/value V) (nstuck/step (step/handler V)).
+- : p3 _ _ (nstuck*/raise V) (nstuck/step (step/handlex V)).
+%mode p3 +A +B +C -D. %worlds () (p3 _ _ _ _). %total {} (p3 _ _ _ _).
+- : progress (of/handle T T2) NS <- progress* T NS1 <- p3 _ T NS1 NS.
+- : progress (of/susp _) (nstuck/value v/susp).
+
+p9 : of* E (ty/arrow T1 T2)
+      -> nstuck* E -> nstuck* E' -> nstuck* (tm/app E E') -> type.
+- : p9 _ (nstuck*/step E) _ (nstuck*/step (step/app1 E)).
+- : p9 _ (nstuck*/raise V) _ (nstuck*/step (step/app1x V)).
+- : p9 _ (nstuck*/value V) (nstuck*/step E) (nstuck*/step (step/app2 V E)).
+- : p9 _ (nstuck*/value V') (nstuck*/raise V) (nstuck*/step (step/app2x V V')).
+- : p9 (of*/weaken T) (nstuck*/value V1) (nstuck*/value V2) NS*
+     <- p0 T (nstuck/value V1) (nstuck/value V2) NS <- ns-weaken NS NS*.
+%mode p9 +A +B +C -D. %worlds () (p9 _ _ _ _). %total {} (p9 _ _ _ _).
+- : progress* (of*/app T1 T2) NS 
+     <- progress* T1 NS1 <- progress* T2 NS2 <- p9 T1 NS1 NS2 NS.
+p5 : of* E ty/nat -> nstuck* E -> nstuck* (tm/s E) -> type.
+- : p5 _ (nstuck*/step E) (nstuck*/step (step/s E)).
+- : p5 _ (nstuck*/value V) (nstuck*/value (v/s V)).
+- : p5 _ (nstuck*/raise V) (nstuck*/step (step/sx V)).
+%mode p5 +A +B -C. %worlds () (p5 _ _ _). %total {} (p5 _ _ _).
+- : progress* (of*/s T) NS <- progress* T NS1 <- p5 T NS1 NS.
+p6 : {E1}{E2} of* E ty/nat -> nstuck* E -> nstuck* (tm/if E E1 E2) -> type.
+- : p6 _ _ _ (nstuck*/step E) (nstuck*/step (step/if E)).
+- : p6 _ _ T* (nstuck*/value V) NS*
+     <- mobile V T* T <- p2 _ _ T (nstuck/value V) NS <- ns-weaken NS NS*.
+- : p6 _ _ _ (nstuck*/raise V) (nstuck*/step (step/ifx V)).
+%mode p6 +A +B +C +D -E. %worlds () (p6 _ _ _ _ _). %total {} (p6 _ _ _ _ _).
+- : progress* (of*/if T T1 T2) NS <- progress* T NS1 <- p6 _ _ T NS1 NS.
+pA : nstuck* E -> nstuck* (tm/raise E) -> type.
+- : pA (nstuck*/step E) (nstuck*/step (step/raise E)).
+- : pA (nstuck*/value V) (nstuck*/raise V).
+- : pA (nstuck*/raise V) (nstuck*/step (step/raisex V)).
+%mode pA +A -B. %worlds () (pA _ _). %total {} (pA _ _).
+- : progress* (of*/raise T) NS <- progress* T NS1 <- pA NS1 NS.
+- : progress* (of*/handle T T2) NS 
+     <- progress* T NS1 <- p3 _ T NS1 NS* <- ns-weaken NS* NS.
+p7 : v E -> of E (ty/mayraise T) -> step (tm/unsusp E) E' -> type.
+- : p7 _ _ step/unsuspr.
+%mode p7 +A +B -C. %worlds () (p7 _ _ _). %total {} (p7 _ _ _).
+p8 : of* E (ty/mayraise T) -> nstuck* E -> nstuck* (tm/unsusp E) -> type.
+- : p8 _ (nstuck*/step E) (nstuck*/step (step/unsusp E)).
+- : p8 (of*/weaken T) (nstuck*/value V) (nstuck*/step E) <- p7 V T E.
+- : p8 _ (nstuck*/raise V) (nstuck*/step (step/unsuspx V)).
+%mode p8 +A +B -C. %worlds () (p8 _ _ _). %total {} (p8 _ _ _).
+- : progress* (of*/unsusp T) NS <- progress* T NS1 <- p8 T NS1 NS.
+
+%worlds () (progress _ _) (progress* _ _). 
+%total (T T*) (progress T _) (progress* T* _).
+
+
+%{! ## Preservation !}%
+
+%{! ### Inversion !}%
+
+inv-lam : of* (tm/lam T' E) T
+           -> ({x} of x T' -> of (E x) T'') -> eqty T (ty/arrow T' T'') -> type.
+- : inv-lam (of*/weaken (of/lam F)) F eqty/refl.
+%mode inv-lam +A -B -C. %worlds () (inv-lam _ _ _). %total {} (inv-lam _ _ _).
+
+inv-app : of* (tm/app E1 E2) T -> of* E1 (ty/arrow T' T) -> of* E2 T' -> type.
+- : inv-app (of*/app T1 T2) T1 T2.
+- : inv-app (of*/weaken (of/app T1 T2)) (of*/weaken T1) (of*/weaken T2).
+%mode inv-app +A -B -C. %worlds () (inv-app _ _ _). %total {} (inv-app _ _ _).
+
+inv-s : of* (tm/s E) T -> of* E ty/nat -> eqty T ty/nat -> type.
+- : inv-s (of*/s T) T eqty/refl.
+- : inv-s (of*/weaken (of/s T)) (of*/weaken T) eqty/refl.
+%mode inv-s +A -B -C. %worlds () (inv-s _ _ _). %total {} (inv-s _ _ _).
+
+inv-if : of* (tm/if E E1 E2) T 
+   -> of* E ty/nat -> of* E1 T -> ({x} of x ty/nat -> of* (E2 x) T) -> type.
+- : inv-if (of*/if T T1 T2) T T1 T2.
+- : inv-if (of*/weaken (of/if T T1 T2)) 
+     (of*/weaken T) (of*/weaken T1) ([x][d] of*/weaken (T2 x d)).
+%mode inv-if +A -B -C -D. %worlds () (inv-if _ _ _ _). 
+%total {} (inv-if _ _ _ _).
+
+inv-raise : of* (tm/raise E) T -> of* E ty/exn -> type.
+- : inv-raise (of*/raise T) T.
+%mode inv-raise +A -B. %worlds () (inv-raise _ _). %total {} (inv-raise _ _).
+
+inv-handle : of* (tm/handle E ([x] H x)) T 
+              -> of* E T -> ({x} of x ty/exn -> of* (H x) T) -> type.
+- : inv-handle (of*/handle T H) T H.
+- : inv-handle (of*/weaken (of/handle T H)) T
+     ([x][d] (of*/weaken (H x d))).
+%mode inv-handle +A -B -C. %worlds () (inv-handle _ _ _). 
+%total {} (inv-handle _ _ _).
+
+inv-susp : of* (tm/susp E) T -> of* E T' -> eqty T (ty/mayraise T') -> type.
+- : inv-susp (of*/weaken (of/susp T)) T eqty/refl.
+%mode inv-susp +A -B -C. %worlds () (inv-susp _ _ _). 
+%total {} (inv-susp _ _ _).
+
+inv-unsusp : of* (tm/unsusp E) T -> of* E (ty/mayraise T) -> type.
+- : inv-unsusp (of*/unsusp T) T.
+%mode inv-unsusp +A -B. %worlds () (inv-unsusp _ _). %total {} (inv-unsusp _ _).
+
+%{! ### Preservation !}%
+
+preservation: step E E' -> of E T -> of E' T -> type.
+preservation*: step E E' -> of* E T -> of* E' T -> type.
+%mode preservation +A +B -C.
+%mode preservation* +A +B -C.
+
+%{! #### Application !}%
+
+- : preservation (step/app1 E) (of/app T1 T2) (of/app T1' T2)
+     <- preservation E T1 T1'.
+- : preservation (step/app2 V E) (of/app T1 T2) (of/app T1 T2')
+     <- preservation E T2 T2'.
+- : preservation (step/appr V) (of/app (of/lam Tf) (T2 : of E T)) (Tf E T2).
+
+- : preservation* (step/app1 E) T (of*/app T1' T2)
+     <- inv-app T T1 T2 <- preservation* E T1 T1'.
+- : preservation* (step/app1x V) T (of*/raise Texn)
+     <- inv-app T T1 T2 <- inv-raise T1 Texn.
+- : preservation* (step/app2 V E) T (of*/app T1 T2')
+     <- inv-app T T1 T2 <- preservation* E T2 T2'.
+- : preservation* (step/app2x V V') T (of*/raise Texn)
+     <- inv-app T T1 T2 <- inv-raise T2 Texn.
+q2 : eqty (ty/arrow T3 T4) (ty/arrow T1 T5)
+      -> ({x} of x T1 -> of (E2 x) T5)
+      -> of E6 T3
+      -> of (E2 E6) T4 -> type.
+- : q2 eqty/refl F E (F _ E).
+%mode q2 +A +B +C -D. %worlds () (q2 _ _ _ _). %total {} (q2 _ _ _ _).
+- : preservation* (step/appr V) T (of*/weaken Tres)
+     <- inv-app T T1 T2* <- mobile V T2* T2 
+     <- inv-lam T1 F Eq <- q2 Eq F T2 Tres.
+
+%{! #### Natural numbers !}%
+
+- : preservation (step/s E) (of/s T) (of/s T') <- preservation E T T'.
+- : preservation (step/if E) (of/if T T1 T2) (of/if T' T1 T2)
+     <- preservation E T T'.
+- : preservation (step/ifz) (of/if of/z T1 _) T1.
+- : preservation (step/ifs V) (of/if (of/s T) _ T2) (T2 _ T).
+
+q1 : of* E ty/nat -> eqty T ty/nat -> of* (tm/s E) T -> type.
+- : q1 T _ (of*/s T). 
+%mode q1 +A +B -C. %worlds () (q1 _ _ _). %total {} (q1 _ _ _).
+- : preservation* (step/s E) Ts Ts'
+     <- inv-s Ts T Eq <- preservation* E T T' <- q1 T' Eq Ts'.
+q3 : of* (tm/raise E) ty/nat -> eqty TN ty/nat -> of* (tm/raise E) TN -> type.
+- : q3 T _ T.
+%mode q3 +A +B -C. %worlds () (q3 _ _ _). %total {} (q3 _ _ _).
+- : preservation* (step/sx V) DTs DT'
+   <- inv-s DTs (DT: of* (tm/raise E) ty/nat) (Eq: eqty TN ty/nat)
+   <- q3 DT Eq DT'.
+- : preservation* (step/if E) Tif (of*/if T' T1 T2)
+     <- inv-if Tif T T1 T2 <- preservation* E T T'.
+- : preservation* (step/ifz) Tif T1
+     <- inv-if Tif (DT: of* tm/z ty/nat) (T1: of* E1 T) _.
+- : preservation* (step/ifs (V: v N)) DTif (T2 N Tn)
+     <- inv-if DTif Tsn* T1 (T2: {x} of x ty/nat -> of* (E2 x) T)
+     <- inv-s Tsn* (Tn* : of* N ty/nat) _
+     <- mobile V Tn* Tn.
+- : preservation* (step/ifx V) DTif (of*/raise DTexn)
+     <- inv-if DTif DT _ _
+     <- inv-raise DT DTexn.
+
+%{! #### Fix/raise/handle !}%
+
+- : preservation (step/fix) (of/fix F) (F _ (of/fix F)).
+- : preservation (step/handle E) (of/handle T* T) (of/handle T'* T)
+     <- preservation* E T* T'*.
+- : preservation (step/handler V) (of/handle T* T) T' <- mobile V T* T'.
+- : preservation (step/handlex V) (of/handle (of*/raise Texn*) T) (T _ Texn)
+     <- mobile V Texn* Texn.
+
+- : preservation* (step/fix) (of*/weaken T) (of*/weaken T')
+     <- preservation step/fix T T'.
+- : preservation* (step/raise E) (of*/raise T) (of*/raise T')
+     <- preservation* E T T'.
+- : preservation* (step/raisex E) (of*/raise T) (of*/raise Texn)
+     <- inv-raise T Texn.
+- : preservation* (step/handle DE) (DT: of* (tm/handle E H) T) 
+     (of*/handle DT1' DT2)
+     <- inv-handle DT DT1 DT2 
+     <- preservation* DE DT1 DT1'.
+- : preservation* (step/handler V) (DT) DT1
+     <- inv-handle DT DT1 DT2.
+- : preservation* (step/handlex V) (DT: of* (tm/handle (tm/raise E) H) T) 
+     (DT2 E DTexn')
+     <- inv-handle DT (DT1 : of* (tm/raise E) T) DT2
+     <- inv-raise DT1 (DTexn : of* E ty/exn)
+     <- mobile V DTexn DTexn'.
+- : preservation* (step/unsusp DE) (DT: of* (tm/unsusp E) T) (of*/unsusp DT'')
+     <- inv-unsusp DT (DT': of* E (ty/mayraise T))
+     <- preservation* DE DT' (DT'': of* E' (ty/mayraise T)).
+d4 : eqty (ty/mayraise T) (ty/mayraise T') -> of* E T' -> of* E T -> type.
+- : d4 _ T T. %mode d4 +A +B -C. %worlds () (d4 _ _ _). %total {} (d4 _ _ _).
+- : preservation* (step/unsuspr) (DT: of* (tm/unsusp (tm/susp E)) T) DT'''
+     <- inv-unsusp DT (DT': of* (tm/susp E) (ty/mayraise T))
+     <- inv-susp DT' (DT'': of* E T') 
+        (Eq: eqty (ty/mayraise T) (ty/mayraise T'))
+     <- d4 Eq DT'' DT'''.
+- : preservation* (step/unsuspx V) DT (of*/raise DTexn)
+     <- inv-unsusp DT (DT' : of* (tm/raise E) (ty/mayraise T))
+     <- inv-raise DT' (DTexn : of* E ty/exn).
+
+%worlds () (preservation _ _ _) (preservation* _ _ _).
+%total (E E*) (preservation E _ _) (preservation* E* _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Handled_exceptions).
+!}%

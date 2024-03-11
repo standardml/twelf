@@ -1,0 +1,154 @@
+%%! title: "POPL Tutorial/Session 4 Starter"
+
+%{! 
+
+## Session 4: Type Preservation Starter
+
+### Syntax
+
+!}%
+
+tp : type.  %name tp T.
+
+nat	: tp.
+arr	: tp -> tp -> tp.
+
+
+exp : type.  %name exp E.
+
+z	: exp.
+fun	: tp -> tp -> (exp -> exp -> exp) -> exp.
+app	: exp -> exp -> exp.
+
+%{! 
+TASK 1:
+
+Add constants for successor and ifz:
+
+!}%
+
+%{! 
+
+### Static Semantics
+
+!}%
+
+of : exp -> tp -> type.  %name of Dof.
+
+of/z		: of z nat.
+
+of/fun		: of (fun T1 T2 ([f] [x] E f x)) (arr T1 T2)
+		   <- ({f} of f (arr T1 T2)
+			 -> {x} of x T1
+			 -> of (E f x) T2).
+
+of/app		: of (app E1 E2) T'
+		   <- of E1 (arr T T')
+		   <- of E2 T.
+
+%{! 
+TASK 2:
+
+Add two new typing rules for successor and ifz
+
+!}%
+
+
+%{! 
+
+### Dynamic Semantics
+
+!}%
+
+value : exp -> type.  %name value Dval.
+
+value/z		: value z.
+
+%{! 
+Task 3a: Add a value rule for successor
+!}%
+
+value/fun	: value (fun _ _ _).
+
+
+step : exp -> exp -> type.  %name step Dstep.
+
+step/app/fun	: step (app E1 E2) (app E1' E2)
+		   <- step E1 E1'.
+
+step/app/arg	: step (app E1 E2) (app E1 E2')
+		   <- value E1
+		   <- step E2 E2'.
+
+step/app/beta-v	: step (app (fun T1 T2 ([f] [x] E1 f x)) E2) (E1 (fun T1 T2 ([f] [x] E1 f x)) E2)
+		   <- value E2.
+
+%{! 
+TASK 3:
+
+Add four more operational semantics rules for successor and ifz.
+
+!}%
+
+%{! 
+
+### Preservation
+
+!}%
+
+
+preservation : of E T
+		-> step E E' 
+%%
+		-> of E' T
+		-> type.
+%mode preservation +Dof +Dstep -Dof'.
+
+-	: preservation
+	   (of/app
+	      (DofE2 : of E2 T)
+	      (DofE1 : of E1 (arr T T')))
+	   (step/app/fun
+	      (Dstep : step E1 E1')
+	      : step (app E1 E2) (app E1' E2))
+	   %%
+	   (of/app DofE2 DofE1')
+	   <- preservation DofE1 Dstep (DofE1' : of E1' (arr T T')).
+
+-	: preservation
+	   (of/app
+	      (DofE2 : of E2 T)
+	      (DofE1 : of E1 (arr T T')))
+	   (step/app/arg
+	      (Dstep : step E2 E2')
+	      _
+	      : step (app E1 E2) (app E1 E2'))
+	   %%
+	   (of/app DofE2' DofE1)
+	   <- preservation DofE2 Dstep (DofE2' : of E2' T).
+
+-	: preservation
+	   (of/app
+	      (DofE2 : of E2 T1)
+	      (of/fun
+		 (DofE1 : {f} of f (arr T1 T2) -> {x} of x T1 -> of (E1 f x) T2)
+		 : of (fun T1 T2 ([f] [x] E1 f x)) (arr T1 T2)))
+	   (step/app/beta-v _
+	      : step (app (fun T1 T2 ([f] [x] E1 f x)) E2) (E1 (fun T1 T2 ([f] [x] E1 f x)) E2))
+	   %%
+	   (DofE1 (fun T1 T2 ([f] [x] E1 f x)) (of/fun DofE1) E2 DofE2).
+
+
+%{! 
+TASK 4: Finish the proof!
+!}%
+
+%worlds () (preservation _ _ _).
+%total D (preservation _ D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Session_4_Starter).
+!}%

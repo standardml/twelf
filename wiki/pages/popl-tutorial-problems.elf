@@ -1,0 +1,37 @@
+%%! title: "POPL Tutorial/Problems"
+
+%{! * [POPL Tutorial/cps](/wiki/popl-tutorial-cps/) by jcreed
+* [POPL Tutorial/cps-rp](/wiki/popl-tutorial-cps-rp/) by dklee, based on code by jcreed
+* [POPL Tutorial/cps-problem](/wiki/popl-tutorial-cps-problem/) by arbob, based on code by jcreed
+** [POPL Tutorial/CPS_Solutions](/wiki/popl-tutorial-cps-solutions/) by arbob, based on code by jcreed
+* [POPL Tutorial/cps-problem2](/wiki/popl-tutorial-cps-problem2/) by arbob, based on code by jcreed
+** [POPL Tutorial/CPS_Solution2](/wiki/popl-tutorial-cps-solution2/) by arbob, based on code by jcreed
+* [POPL_Tutorial/Sequent_vs_Natural_Deduction](/wiki/popl-tutorial-sequent-vs-natural-deduction/) by cmartens/wlovas
+** [POPL Tutorial/Sequent vs Natural Deduction: Solution](/wiki/popl-tutorial-sequent-vs-natural-deduction-solution/)
+* [POPL_Tutorial/Pattern_matching](/wiki/popl-tutorial-pattern-matching/) by dklee
+* [POPL_Tutorial/Control machine](/wiki/popl-tutorial-control-machine/) by [Rob](/wiki/user-rsimmons/)
+* [POPL Tutorial/Church Rosser (Problem)](/wiki/popl-tutorial-church-rosser-problem/) by [Rob](/wiki/user-rsimmons/), based on code by Karl
+** [POPL Tutorial/Church Rosser](/wiki/church-rosser-w-identity-reduction/) by [Rob](/wiki/user-rsimmons/) solution to the above
+* [POPL_Tutorial/Properties_of_Typing_and_Reduction](/wiki/popl-tutorial-properties-of-typing-and-reduction/) by [Todd](/wiki/user-twilson/).
+* [POPL_Tutorial/Cost_semantics](/wiki/popl-tutorial-cost-semantics/) by Rob and mpa
+* [POPL_Tutorial/Combinators](/wiki/popl-tutorial-combinators/) by Karl
+* [Bracket abstraction](/wiki/bracket-abstraction/) by wlovas (can this be made into a problem?)
+* [POPL Tutorial/Typed bracket abstraction](/wiki/popl-tutorial-typed-bracket-abstraction/) by wlovas (types make it combinatory logic)
+* [POPL Tutorial/Typed bracket abstraction with equivalence](/wiki/popl-tutorial-typed-bracket-abstraction-with-equivalence/) by wlovas (full beta/eta equivalence)
+* [POPL Tutorial/Big step, small step](/wiki/popl-tutorial-big-step-small-step/) by wlovas
+** [POPL Tutorial/Big step, small step: Solution](/wiki/popl-tutorial-big-step-small-step-solution/)
+* [POPL Tutorial/Exceptions-problem](/wiki/popl-tutorial-exceptions-problem/) by dklee
+** [POPL Tutorial/Exceptions](/wiki/popl-tutorial-exceptions/) by dklee, a solution to the above problem.
+* [POPL Tutorial/Evaluation_Contexts_Intrinsic](/wiki/popl-tutorial-evaluation-contexts-intrinsic/) by drl
+
+* CPS variations (Dklee and arbob are working on this for wednesday)
+* Stack machine vs. SOS vs. evaluation (Will and Chris are working on this for Weds)
+* Authorization logic
+* ML5 !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Problems).
+!}%

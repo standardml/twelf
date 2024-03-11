@@ -1,0 +1,66 @@
+%%! title: "Error messages"
+
+%{! This page lists many **error messages** that may be encountered using Twelf.  The explanations given below are not a complete but will hopefully be helpful when using Twelf as described in this wiki.
+
+;**Ambiguous reconstruction** 
+:This error may indicate not passing enough “parameters” to a theorem.
+
+;**Definition violation**
+:This error happens sporadically when doing line-by-line (Control-C Control-D) interactions.  Try loading the whole file instead. It also happens when you write a theorem or relation abbreviation and don't declare it as an abbreviation.
+
+;**Expected ... to be moded**
+:Modes are necessary for termination and totality checking. See [%mode](/wiki/percent-mode/).
+
+;**Expected type family, found object constant**
+:This can occur when you define a judgment but forget "-&gt; type". (Have you read [judgments as types](/wiki/judgment/)?)
+
+;**Free variable clash**
+: When you write a pattern and give names to the variables then Twelf won't let two user-named variables to be unified.  If they end up the same thing, it usually means your theorem is mixing up the variables and would not be as general as it appears in the pattern.  
+
+;**Freezing violation ...**
+:The metatheory features freeze type families, making it illegal to extend them. See [%freeze](/wiki/percent-freeze/).
+
+;**Left-hand side of arrow must be a type**
+:This often happens when passing too many “parameters” to a theorem.
+
+; **No mode declaration for XXX**
+: If a theorem includes a relation in its proof (rather than a theorem _about_ the relation) you get this error, assuming you haven't declared modes on your relation. The location of the offending relation may a variable declaration where the variable isn't used: ``\{T:plus X Y Z\}`` converts into a an arrow type ``plus X Y Z -&gt;`` if ``T`` isn't used.
+
+;Omitted term has ambiguous hyperkind
+:This only happens in pathological cases, see [ambiguous hyperkind](/wiki/ambiguous-hyperkind/).
+
+;Occurrence of variable ... in output (-) argument not necessarily ground
+:Twelf expects that in [mode checking](/wiki/percent-mode/), all things declared to be outputs (-) are completely determined by inputs to the relation or the outputs of [[subgoals]], and gives this error when that assumption is violated. See [``%mode``](/wiki/percent-mode/).
+
+;Occurrence of variable ... in input (+) argument not necessarily ground
+:Twelf expects that in [mode checking](/wiki/percent-mode/), when a [[subgoal]] is used, then all things declared to be inputs (+) of the subgoal are entirely determined by inputs to the relation, and gives this error when that assumption is violated. See [``%mode``](/wiki/percent-mode/).
+
+;**Signature error: Global signature size 20000 exceeded**
+:You have loaded and reloaded so many signatures that the maximum number has been exceeded.
+:You can reset or restart the Twelf server to start with a clean slate. If you frequently get the error, or if you are proving a very large system and need more (and your computer has sufficient memory), you can change the maximum in the file ``src/global/global.sml`` from the default (19999) to something larger.
+
+;**Termination violation: no order assigned for ...**
+:This happens when you are trying to run a [``%terminates``](/wiki/percent-terminates/) or [``%total``](/wiki/percent-total/) directive on a type family that calls on a _different_ type family for which you have not established termination/totality. Go back and make sure that that the previous type family has its termination behavior/totality established. 
+
+;**Totality: Output of subgoal not covered**
+:There is an [output coverage](/wiki/coverage-checking/) error within a proof case.  You may need to use [output factoring](/wiki/output-factoring/).
+
+;**Typing ambiguous -- unresolved constraints**
+:This is often caused by an overuse of wild cards (underscores), which can cause the [unification](/wiki/unification/) algorithm to fail. Another common cause is superfluous or missing arguments.
+
+;**Undeclared identifier** 
+:This error often happens when misspelling the name of something, or when trying to use a variable that doesn't start with a capital letter.
+
+;World violation
+:This can occur when you make use of a theorem (perhaps inductively) in a non-empty context.  Try using [``%block``](/wiki/percent-block/).  Also, see [substitution lemma](/wiki/substitution-lemma/) for several examples.
+
+In general, trying to find the exact cause of the error in a long proof may require binary search (ending the proof early and seeing at what point the error changes from "output not ground" to the error in question).
+
+\{\{needs|a more complete list of errors and better explanations\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Error_messages).
+!}%

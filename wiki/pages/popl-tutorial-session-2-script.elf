@@ -1,0 +1,170 @@
+%%! title: "POPL Tutorial/Session 2 Script"
+
+%{! 
+
+```twelf
+% Arithmetic primitives
+
+nat : type.  
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) <- add M N P.
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+% Multiplication
+
+mult : nat -> nat -> nat -> type.
+
+mult/z : mult z N z.
+mult/s : mult (s M) N Q
+	  <- mult M N P
+	  <- add P N Q.
+
+%mode mult +M +N -P.
+%worlds () (mult _ _ _).
+%total M (mult M _ _).
+
+%% Mode failures:
+mult-bad-mode : mult M N P.
+mult-badmode2 : mult N1 N2 N3 
+		 <- mult N4 N2 N3.  
+mult/s : mult (s M) N Q
+	  <- add P N Q
+	  <- mult M N P.
+
+%% Termination failure
+%total N (mult _ N _).
+
+%% Output cov:
+mult-bad-output : mult (s N1) N2 (s (s N3))
+                   <- mult N1 N2 (s N3).
+mult-bad-output-freeness : mult (s N1) N2 (s N2)
+                            <- mult N1 N2 N2.
+
+%% Input coverage:
+mult' : nat -> nat -> nat -> type.
+%mode mult' +N1 +N2 -X3.
+
+mult'/s : mult' (s M) N Q
+	  <- mult' M N P
+	  <- add P N Q.
+
+%worlds () (mult' _ _ _).
+%total M (mult'' M _ _).
+
+
+% Expressions with times, pairs
+
+% - Add syntax for times; eval is still total
+% - Add syntax for pairs; eval is no longer total
+
+val : type.
+num  : nat -> val.
+%% NEW
+pair : val -> val -> val.
+
+exp : type.
+ret : val -> exp.
+plus  : exp -> exp -> exp.
+let : exp -> (val -> exp) -> exp.
+%% NEW
+times : exp -> exp -> exp.
+fst : exp -> exp.
+snd : exp -> exp.
+
+eval : exp -> val -> type.
+%mode eval +E1 -E2.
+
+eval/val : eval (ret V) V.
+
+eval/plus : eval (plus E1 E2) (num N)
+	     <- eval E1 (num N1)  %% OUTPUT COV ERROR HERE
+	     <- eval E2 (num N2)
+	     <- add N1 N2 N.
+
+eval/let : eval (let E1 ([x] E2 x)) A
+	    <- eval E1 V
+	    <- eval (E2 V) A.
+
+%% NEW
+eval/times : eval (times E1 E2) (num N)
+	     <- eval E1 (num N1)
+	     <- eval E2 (num N2)
+	     <- mult N1 N2 N.
+
+eval/fst : eval (fst E) V1
+	    <- eval E (pair V1 V2).
+
+eval/snd : eval (snd E) V2
+	    <- eval E (pair V1 V2).
+
+%worlds () (eval _ _).
+%% %total E (eval E _).
+
+% Typing judgement
+% 
+% - Write the rules, don't add typing assumption in of/let, get a world error
+% - Define block, get a world subsumption error for of-val
+% - Put of-val in the right world; now of world-checks
+% - Try example; get stuck
+% - Add typing assumption, change of/let, finish example
+
+% Finished product:
+
+tp : type.
+natural : tp.
+prod : tp -> tp -> tp.
+
+%% relates a value to a type.
+of/val : val -> tp -> type.
+
+of/num : of/val (num N) natural.  
+of/pair : of/val (pair V1 V2) (prod T1 T2)
+	   <- of/val V1 T1
+	   <- of/val V2 T2.
+
+%% synthesis 
+%mode of/val +E -T.
+%block ofb : some {T : tp} block {x : val} {dx : of/val x T}.
+%worlds (ofb) (of/val _ _).
+
+of : exp -> tp -> type.
+
+of/ret : of (ret V) T
+	  <- of/val V T.
+of/plus : of (plus E1 E2) natural
+	   <- of E1 natural
+	   <- of E2 natural.
+of/times : of (times E1 E2) natural
+	   <- of E1 natural
+	   <- of E2 natural.
+of/fst : of (fst E) T1
+	  <- of E (prod T1 T2). 
+of/snd : of (snd E) T2
+	  <- of E (prod T1 T2). 
+of/let : of (let E1 ([x] E2 x)) T
+	  <- of E1 T1
+ 	  <- ({x : val} of/val x T1 -> of (E2 x) T).
+
+%mode of +E -T.
+%worlds (ofb) (of _ _).
+
+
+% example : of (let (ret (num z)) ([y] (ret y))) natural 
+% 	   = of/let ([x] (of/ret (XXX x))) (of/ret of/num).
+example : of (let (ret (num z)) ([y] (ret y))) natural 
+	   = of/let ([x] [dx : of/val x natural] (of/ret dx)) (of/ret of/num).
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Session_2_Script).
+!}%

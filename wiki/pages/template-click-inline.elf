@@ -1,0 +1,21 @@
+%%! title: "Template:Click-inline"
+
+%{! &lt;includeonly&gt;&lt;span style="position:relative; overflow:hidden; width:\{\{\{width\}\}\}; height:\{\{\{height\}\}\}; z-index:2;"&gt;[[Image:\{\{\{image\}\}\}|\{\{\{width\}\}\}]]&lt;span style="position:absolute; top:0; left:0; padding-top:3px; z-index:3;"&gt;[[\{\{\{link\}\}\}|&lt;span style="float:left; width:\{\{\{width\}\}\}; height:\{\{\{height\}\}\}; font-size:\{\{\{height\}\}\}; line-height:\{\{\{height\}\}\}; word-spacing:\{\{\{width\}\}\}; cursor:pointer;"&gt;&nbsp; &nbsp;&lt;/span&gt;]]&lt;/span&gt;&lt;/span&gt;&lt;/includeonly&gt;&lt;noinclude&gt;
+Copy of the wikipedia template for clicky images of the same name.
+Usage:
+ &lt;nowiki&gt;\{\{&lt;/nowiki&gt;click-inline
+   | image = some icon of size 20x30.png
+   | link = destination page link
+   | width = 20px
+   | height = 30px
+ &lt;nowiki&gt;\}\}&lt;/nowiki&gt;
+
+This template doesn't work in all browsers; perhaps the [http://www.mediawiki.org/wiki/Extension:ImageMap imagemap] extension is better. 
+&lt;/noinclude&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Click-inline).
+!}%

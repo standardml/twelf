@@ -1,0 +1,46 @@
+%%! title: "Subordination"
+
+%{! A **subordination relation** determines when terms of one LF type may appear in terms of another.  Subordination is used in Twelf to determine how the inhabitants of a type change when considered in different LF contexts.
+
+Twelf infers a subordination relation from a signature.  For example, consider the following signature for the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/): !}%
+    
+tp : type.
+unit : tp.
+arrow : tp -> tp -> tp.
+
+tm : type.
+empty : tm.
+lam : tp -> (tm -> tm) -> tm.
+app : tm -> tm -> tm.
+
+%{! \{\{needs|syntax consistent with Print.subord\}\}
+
+Twelf infers the following subordination relation:
+&lt;pre&gt;
+tm &lt;| tm
+tp &lt;| tp
+tp &lt;| tm
+&lt;/pre&gt;
+This subordination relation says that ``tm`` is subordinate to ``tm``, and ``tp`` is subordinate to ``tp`` and ``tm``.  That is, terms can appear in terms, types can appear in types, and types can appear in terms, but terms cannot appear in types.  This makes sense for the language that we have given.  
+
+However, if we add dependent types to this object language, Twelf extends the subordination relation with
+&lt;pre&gt;
+tm &lt;| tp
+&lt;/pre&gt;
+because now terms may appear in types.
+
+\{\{needs|a formal account of subordination\}\}
+
+Subordination has several uses, including:
+* It enables modular [adequacy](/wiki/adequacy/) proofs.
+* It enables a Twelf [metatheorem](/wiki/metatheorem/) that is proved for one set of LF contexts to be reused in other sets of contexts.  This is called [world subsumption](/wiki/world-subsumption/).
+The reason is that subordination gives rise to a general condition under which the terms of a type remain invariant when the type is considered in different LF contexts.  Roughly, the terms of a type are invariant when the context is changed by adding or deleting declarations that are **not** subordination to that type.  
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Subordination).
+!}%

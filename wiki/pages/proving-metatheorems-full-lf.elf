@@ -1,0 +1,182 @@
+%%! title: "Proving metatheorems:Full LF"
+
+%{! \{\{proving metatheorems
+  | prev = Representing the judgements of the natural numbers
+  | prevname = Representing judgements
+  | next = Proving totality assertions about the natural numbers
+  | nextname = Proving totality assertions\}\}
+
+In the previous section, we saw how dependently-typed LF can be used to represent object-language judgements. We now discuss dependently-typed LF in more detail.
+
+## Definition of LF
+
+Full LF has the following syntax:
+
+&lt;math&gt;
+K ::= \texttt\{type\} \, | \, \Pi x:A. K 
+&lt;/math&gt;
+
+&lt;math&gt;
+A ::= b \, | \, A \, M \, | \, \Pi x:A_1. A_2 
+&lt;/math&gt;
+
+&lt;math&gt;
+R ::= c \, | \, x \, | \, R \, M 
+&lt;/math&gt;
+
+&lt;math&gt;
+M ::= R \, | \, \lambda x. M
+&lt;/math&gt;
+
+In Twelf's concrete syntax, the type &lt;math&gt;\texttt\{\}\Pi x:A_1.A_2&lt;/math&gt; is written ``\{x:A1\} A2``, the kind &lt;math&gt;\texttt\{\}\Pi x:A.K&lt;/math&gt; is written ``\{x:A\} K``, and the term &lt;math&gt;\texttt\{\}\lambda x.M&lt;/math&gt; is written ``[x] M``.  The terms are unchanged from the previous grammar.  The type families now include both dependent function types and applications &lt;math&gt;A \, M&lt;/math&gt; of type families to terms.  The kind level classifies type families. Type families of kind &lt;math&gt;\texttt\{type\}&lt;/math&gt; classify terms. Type families that are not yet fully instantiated have kinds ``\{x:A\} K``.  In both types and kinds, we use ``-&gt;`` as an abbreviation when the argument is not free in the result.  
+
+For example, in the previous section, we declared the type family ``plus`` to have kind ``nat -&gt; nat -&gt; nat -&gt; type``.  This means that when  ``plus`` is applied to three terms of type ``nat``, it forms a type.  This kind is syntactic sugar for the kind ``\{_:nat\} \{_:nat\} \{_:nat\} type``.  The partial application ``plus z`` has kind ``nat -&gt; nat -&gt; type``.  Below, we will see examples where the type of one index of a type family depends on a previous argument, which motivates permitting general ``\{x:A\} K`` kinds in the general case.
+
+We do not present the typing rules for LF in detail here.  However, we do call attention to the typing rule for application.  In a dependently typed language, the application typing rules must substitute the argument into the body of the dependent function type:
+
+&lt;math&gt;
+\{R : \Pi x : A. B \;\;\;\; M : A \over R \; M : [M/x]B\}
+&lt;/math&gt;
+
+In LF, this substitution is in fact a [hereditary substitution](/wiki/hereditary-substitution/), ensuring that the terms embedded in the result of the substitution are in canonical form.  
+
+This typing rule is how constants representing inference rules are specialized to particular instances.  For example, constant ``even-s`` from the previous section has type ``\{N:nat\} even N -&gt; even (s (s N))``, so the application ``even-s z`` has type ``even z -&gt; even (s (s z))``.
+
+The typing rule for family applications &lt;math&gt;\mathsf\{\}A \; M&lt;/math&gt; has a similar substitution into the result kind.
+
+## Twelf conveniences
+
+Twelf permits several syntactic conveniences for writing LF signatures.  The purpose of this list is to introduce you to these conveniences;  we will see examples of them later in this introduction or elsewhere on the wiki.
+
+### Definitions
+
+In Twelf, you can define an LF constant for later use.  For example: !}%
+    
+%{! (options removed from twelftag: hidden="true") !}%
+
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+even    : nat -> type.
+even-z  : even z.
+even-s  : {N:nat} even N -> even (s (s N)).
+
+plus : nat -> nat -> nat -> type.
+%{!  !}%
+    
+2 : nat = s (s z).
+even-2 : even 2 = even-s z even-z.
+
+%{! The first constant names a natural number ``2``; the second names a derivation that ``2`` is even.
+
+You can name terms of higher type as well: !}%
+    
+ss : nat -> nat = [x:nat] s (s x).
+
+%{! This constant might be used as follows: !}%
+    
+even-4 : even (ss 2) = even-s 2 even-2.
+
+%{! Note that defined constants do not contribute any new inhabitants to the canonical forms of the given types.  
+
+### Non-canonical forms
+
+Twelf permits non-canonical forms, which are treated as syntactic sugar for the associated canonical form.  Here are some examples:
+
+* [Beta-equivalence](/wiki/beta-equivalence/): the term ``ss 2``, which, if we expand the definitions, reads ``([x] (s (s x))) (s (s z))``, has the canonical form ``s (s (s (s z)))``.  As an optimization, Twelf tries not to expand definitions, but the defined form should be thought of as another way of writing the expanded canonical form.
+
+* [Eta-equivalence](/wiki/eta-equivalence/): the term ``s``, which has type ``nat -&gt; nat`` can be used instead of its eta-expansion ``[x] s x``.  We will discuss eta-equivalence more in the context of [higher-order representations.](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/)
+
+### Implicit arguments
+
+Writing out all of the parameters to a constant becomes tedious, so Twelf permits these parameters to be left implicit.  Specifically, if a variable starting with a lower-case letter is left unbound in a constant's type, Twelf reports an error.  If a variable beginning with an upper-case letter is left unbound, Twelf implicitly binds it in a ``\{N\}`` at the outside of the type.  For example, the following two ways of declaring the constant ``plus-s`` give it the same type:
+
+```twelf    
+%% explicit
+plus-s : {N1:nat} {N2:nat} {N3:nat} plus N1 N2 N3 -> plus (s N1) N2 (s N3).
+%% implicit
+plus-s : plus N1 N2 N3 -> plus (s N1) N2 (s N3).
+```
+
+Similarly, we can make the parameter to ``plus-z`` implicit:
+    
+```twelf
+%%explicit
+plus-z : {N2:nat} plus z N2 N2.
+%%implicit
+plus-z : plus z N2 N2.
+```
+
+In most circumstances, Twelf can infer the types of the implicit parameters from their use in the constant's type.  If it cannot, it reports an error---the type of a constant must be fully determined when the constant is processed.
+
+The application of a constant to its implicit parameters is then inferred from context.  For example, using the fully explicit definition of ``plus``, the derivation that 2 + 1 = 3 is written as follows: !}%
+
+%{!! begin hidden !!}%
+plus-z : {N2} plus z N2 N2.
+plus-s : {N1:nat} {N2:nat} {N3:nat} plus N1 N2 N3 -> plus (s N1) N2 (s N3).
+%{!! end hidden !!}%
+
+%{!! begin checked !!}%
+d2+1e = plus-s (s z) (s z) (s (s z)) 
+        (plus-s z (s z) (s z) 
+                (plus-z (s z))).
+%{!! end checked !!}%
+
+%{! Using the implicit version, it is much shorter: !}%
+
+%{!! begin hidden !!}%
+plus-z : plus z N2 N2.
+plus-s : plus N1 N2 N3 -> plus (s N1) N2 (s N3).
+%{!! end hidden !!}%
+
+%{!! begin checked !!}%
+d2+1i = plus-s (plus-s plus-z).
+%{!! end checked !!}%
+
+%{! The type of this term is ambiguous, but Twelf will attempt to use [unification](/wiki/unification/) to infer the most general possible type.
+
+### Backwards arrow
+
+Twelf permits a type ``A -&gt; B`` to be written ``B &lt;- A``.  This makes it easier to see the result of applying a constant to all of its arguments.  For example: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
+plus-s : plus (s N1) N2 (s N3)
+           <- plus N1 N2 N3.
+
+%{! When we write ``C &lt;- Pn &lt;- ... P1``, we will refer to ``C`` as the _conclusion_ of the constant and each ``Pi`` as a _premise_, by analogy with the terminology for the inference rule that this constant represents.  
+
+The backwards-arrow also has implications on the logic programming operational semantics for LF, as we discuss below; the conclusion/premise terminology is consistent with the use of these words in logic programming as well.
+
+### Type and term inference
+
+Twelf permits type annotations, which are written ``M:A``, on all terms.  Type annotations can be used for documentation.  Additionally, in some cases they are necessary to help guide type inference.  We can also use a type annotation to determine the type of an implicit parameter: !}%
+    
+d2+1i' = plus-s (plus-s (plus-z : plus z (s z) (s z))).
+
+%{! This term unambiguously has type ``plus (s (s z)) (s z) (s (s (s z)))``
+
+Type annotations on the arguments of lambda-terms ``[x:A] M`` are sometimes necessary, but they can often be elided.  Type annotations on Pi-types ``\{x:A2\} A`` can sometimes be elided when the type of the variable is determined by its use.
+
+When they are determined from context, terms can be elided by writing an underscore.  For example, if the constants defining ``plus`` were declared with explicit ``nat`` parameters, we could still write the derivation of 2+1=3 as follows: !}%
+
+%{!! begin hidden !!}%
+plus-z : {N2} plus z N2 N2.
+plus-s : {N1:nat} {N2:nat} {N3:nat} plus N1 N2 N3 -> plus (s N1) N2 (s N3).
+%{!! end hidden !!}%
+
+d2+1e' = plus-s _ _ _ (plus-s _ _ _ (plus-z (s z))).
+
+%{! \{\{proving metatheorems
+  | prev = Representing the judgements of the natural numbers
+  | prevname = Representing judgements
+  | next = Proving totality assertions about the natural numbers
+  | nextname = Proving totality assertions\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Full_LF).
+!}%

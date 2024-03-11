@@ -1,0 +1,10 @@
+%%! title: "Talk:Debugging coverage errors"
+
+%{! When I have higher-order terms (in particular if I have a judgment that handles transitivity of higher-order contexts -- I can given an example) and do case analysis on them, I frequently get a nasty case of inactive splits AND nontermination.  The only solution I have found is to split the metatheorem into two parts: one to handle the higher-order term in general and a second to do a case analysis between fixed terms. [Boyland](/wiki/user-boyland/) 09:31, 27 December 2009 (EST) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Debugging_coverage_errors).
+!}%

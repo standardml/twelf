@@ -1,0 +1,63 @@
+%%! title: "POPL Tutorial/cps-ctp"
+
+%{! ## CPS conversion with target types !}%
+    
+%% Source types
+
+tp : type.
+o : tp.
+=> : tp -> tp -> tp.           %infix right 3 =>.
+
+%% Destination types
+ctp : type.
+co : ctp.
+cnot : ctp -> ctp.
+cand : ctp -> ctp -> ctp.      %infix right 3 cand.
+
+%% Source expressions and values annotated by the translation of their types.
+e : ctp -> type.
+v : ctp -> type.
+app : e (cnot (A cand (cnot B))) -> e A -> e B.
+lam : (v A -> e B) -> v (cnot (A cand (cnot B))).
+inj : v A -> e A.
+%block sourceb : some {A : ctp} block {x : v A}.
+%worlds (sourceb) (e _) (v _).
+
+%% Destination expression and values annotated by their types.
+ce : type.
+cv : ctp -> type.
+% This is the only kind of conjunction we need but it seems pretty odd.
+capp : cv A -> cv (cnot B) -> (cv (cnot (cnot (A cand (cnot B))))).
+clam : (cv A -> cv (cnot B) -> ce) -> cv (cnot (A cand (cnot B))).
+cnoti : (cv A -> ce) -> cv (cnot A).
+throw : cv A -> cv (cnot A) -> ce.
+%block targetb : some {A : ctp} block {x : cv A}.
+%worlds (targetb) (ce) (cv _).
+
+cps : v A -> cv A -> type.
+%mode cps +X1 -X2.
+
+cpse : e A -> (cv (cnot A) -> ce) -> type.
+%mode cpse +X1 -X2.
+
+cps/lam : cps (lam (E:v A -> e B)) (clam (E':cv A -> cv (cnot B) -> ce))
+              <- ({x:v A}{x':cv A} cps x x' -> cpse (E x) (E' x')).
+cpse/app : cpse (app (E1:e (cnot (B cand (cnot A)))) (E2:e B))
+                ([c:cv (cnot A)] E2' (cnoti ([arg:cv B]
+                                               E1' (capp arg c))))
+                <- cpse E1 (E1':(cv (cnot (cnot (B cand (cnot A))))) -> ce)
+                <- cpse E2 (E2':(cv (cnot B)) -> ce).
+cpse/inj : cpse (inj (V:v A)) ([c:cv (cnot A)] throw V' c)
+                <- cps V (V':cv A).
+
+%block cpsb : some {A : ctp} block {x : v A} {x' : cv A} {d : cps x x'}.
+%worlds (cpsb) (cps _ _) (cpse _ _).
+%total (E V) (cps E _) (cpse V _).
+
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/cps-ctp).
+!}%

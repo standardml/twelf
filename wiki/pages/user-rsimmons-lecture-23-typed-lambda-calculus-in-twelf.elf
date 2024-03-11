@@ -1,0 +1,197 @@
+%%! title: "User:Rsimmons/Lecture 23: Typed Lambda Calculus in Twelf"
+
+%{! ## Syntax !}%
+%{! 
+
+We have a programming language that we started last time that we want to represent in Twelf. First the types "on paper:"
+ 
+ τ ::= unit | τ → τ
+
+... and then, we can see those types in Twelf:
+
+!}%
+
+tp : type.
+
+unit : tp.
+arrow : tp -> tp -> tp.
+
+%{! 
+
+Next, the terms "on paper:"
+
+ e ::= x | * | λx:τ.e | e e
+
+... and in Twelf:
+
+!}%
+
+exp : type.
+
+* : exp.
+lam : tp -> (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+%{! 
+
+Note that there is no case for "variables" ``x``. 
+
+!}%
+
+%{! ## Static semantics (typing rules) !}%
+%{! 
+
+The old judgment for typing was ``e : τ`` - in other words, it was a two-place relation that took an expression and a type. We will describe this in Twelf as ``of``.
+
+!}%
+
+of : exp -> tp -> type.
+
+%{! 
+
+Okay - now we need to describe this rule:
+
+ -------- of/star
+ * : unit
+
+!}%
+
+of/star : of * unit.
+
+
+%{! 
+
+Next we describe the more interesting rule for application:
+
+ e&lt;sub&gt;1&lt;/sub&gt; : τ → τ'
+ e&lt;sub&gt;2&lt;/sub&gt; : τ
+ ------------ of/app
+ e&lt;sub&gt;1&lt;/sub&gt; e&lt;sub&gt;2&lt;/sub&gt; : τ'
+!}%
+
+of/app : of (app E1 E2) T
+  <- of E1 (arrow T T')
+  <- of E2 T.
+
+%{! 
+
+The rule for abstractions uses a hypothetical! We're going to pull this off by using a Pi-binding (represented in Twelf as ``\{x: exp\}`` to create a _fresh_ variable, and then using an LF arrow ``-&gt;`` to say that you are proving ``of (E x) T'`` under the _hypothetical assumption_ that ``of x T``, which matches exactly with how we've been using assumptions all semester.
+
+ x : τ |- e : τ'
+ --------------- of/lam
+ λx:τ.e : τ → τ'
+
+!}%
+
+of/lam : of (lam T ([x] E x)) (arrow T T')
+  <- ({x: exp} of x T -> of (E x) T').
+
+
+%{! ### Example derivation !}%
+%{! On paper:
+
+ -------------------- hyp
+ x : unit |- e : unit
+ ----------------------- of/lam
+ λx:unit.e : unit → unit
+
+In Twelf:
+
+| check=decl !}%
+
+_ = of/lam (_) : of (lam unit ([x] x)) (arrow unit unit).
+
+%{! Okay, it looks like we need something (``X1``) of type ``\{x:exp\} of x unit -&gt; of x unit``, in other words, something of type ``Πx:exp. of x unit -&gt; of x unit`` - this is the type of a (dependent) function that takes a term with type ``exp`` (call it ``x``), and returns a (not dependent) function that takes a term with type ``of x unit`` and then returns a term with type ``of x unit``. In other words, take an expression and then give me the identity function!
+
+You guys should know what to do from here (it's just like what you were doing in Homework 5, but for LF instead of System F!). We want ``λx:exp. λd:of x unit. d``.
+| check=decl !}%
+
+_ = of/lam ([x: exp] [d: of x unit] d) : of (lam unit ([x] x)) (arrow unit unit).
+
+%{! The absolutely correct observation made about this in class was that **Hypotheticals in the object language are represented as functions in the metalanguage.** !}%
+
+
+%{! ## Dynamic semantics (evaluation rules) !}%
+%{! 
+
+First, values ``e value``:
+
+ ------------ value/star
+ * value
+
+ ------------ value/lam
+ λx:τ.e value
+
+!}%
+
+value : exp -> type.
+
+value/star : value *.
+
+value/lam : value (lam T ([x] E x)).
+
+%{! 
+
+Next, evaluation rules ``e -&gt; e``
+
+ e&lt;sub&gt;1&lt;/sub&gt; -&gt; e'&lt;sub&gt;1&lt;/sub&gt;
+ --------------------- step/app1
+ e&lt;sub&gt;1&lt;/sub&gt; e&lt;sub&gt;2&lt;/sub&gt; -&gt; e'&lt;sub&gt;1&lt;/sub&gt; e&lt;sub&gt;2&lt;/sub&gt;
+
+ e&lt;sub&gt;1&lt;/sub&gt; value
+ e&lt;sub&gt;2&lt;/sub&gt; -&gt; e'&lt;sub&gt;2&lt;/sub&gt;
+ --------------------- step/app2
+ e&lt;sub&gt;1&lt;/sub&gt; e&lt;sub&gt;2&lt;/sub&gt; -&gt; e&lt;sub&gt;1&lt;/sub&gt; e'&lt;sub&gt;2&lt;/sub&gt;
+
+ e&lt;sub&gt;2&lt;/sub&gt; value
+ --------------------- step/applam
+ (λx:τ.e) e&lt;sub&gt;2&lt;/sub&gt; -&gt; e&lt;sub&gt;1&lt;/sub&gt; e'&lt;sub&gt;2&lt;/sub&gt;
+
+!}%
+
+step : exp -> exp -> type.
+
+step/app1 : step (app E1 E2) (app E1' E2)
+  <- step E1 E1'.
+
+step/app2 : step (app E1 E2) (app E1 E2')
+  <- value E1
+  <- step E2 E2'.
+
+step/applam : step (app (lam T ([x] E x)) E2) (E E2)
+  <- value E2.
+
+
+%{! ## Coda: Type Safety !}%
+%{! 
+
+[Last time](/wiki/user-rsimmons-homework-7-proofs-in-twelf/), we used the commutativity of addition to write a logic program that took in a term of type ``sum N1 N2 N3&lt;/tT&gt; and produced a term of type ``sum N2 N1 N3``. In other words, we proved this theorem:
+
+**_Sum commutes**_: if ``sum(n&lt;sub&gt;1&lt;/sub&gt;, n&lt;sub&gt;2&lt;/sub&gt;, n&lt;sub&gt;3&lt;/sub&gt;)`` then ``sum(n&lt;sub&gt;1&lt;/sub&gt;, n&lt;sub&gt;1&lt;/sub&gt;, n&lt;sub&gt;1&lt;/sub&gt;)``
+
+...by writing this in Twelf and proving it to be a total relation: 
+
+&lt;twelf&gt;
+sum-commutes : sum N1 N2 N3 -&gt; sum N2 N1 N3 -&gt; type.
+%mode sum-commutes +D1 -D2.
+&lt;/twelf&gt;
+
+So we an prove this theorem:
+
+**_Preservation**_: if ``e : τ`` and ``e -&gt; e'``, then ``e' : τ``
+
+...by writing this in Twelf and proving it to be a total relation:
+
+!}%
+
+preservation : of E T -> step E E' -> of E' T -> type.
+%mode preservation +D1 +D2 -D2.
+
+%{! Thus ends today's lesson. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User:Rsimmons/Lecture_23:_Typed_Lambda_Calculus_in_Twelf).
+!}%

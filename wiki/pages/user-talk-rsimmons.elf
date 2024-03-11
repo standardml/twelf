@@ -1,0 +1,125 @@
+%%! title: "User talk:Rsimmons"
+
+%{! ## Twelf Blog
+
+I think the environment subtyping stuff will make a great early entry into the Twelf Blog. On the announcement for it on the frontpage, I noticed that you referred to a "Dan" doing the entry. It takes a while for it to set it, but there are a lot of Dans in the POP group, and unfortunately both Dans who do Twelf related stuff are Dan Ls. I'm a wiki n00b, so I can't figure out how to edit that particular column (it seems locked down), but it might be less confusing to disambiguate that. Will I need to register for the blog seperately? --[DanielKLee](/wiki/user-danielklee/) 21:53, 5 September 2006 (MST)
+
+## linking to cats
+
+You can link to a category by writing &lt;nowiki&gt;[[:Category:tutorials|tutorials]]&lt;/nowiki&gt;, which looks like [[:Category:tutorials|tutorials]]. [Tom7](/wiki/user-tom7/) 09:42, 6 September 2006 (MST)
+
+## most wanted articles
+
+My list of most-wanted articles:
+* [[um.elf]] 
+* [[Image:Tom_Twelfelf2.jpg|thumb|left]]
+&nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 13:54, 14 September 2006 (MST)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Tiny issue with syntax highlighting
+
+The syntax highlighter does not consider * to be part of an identifier. See the second half of [substitution lemma](/wiki/substitution-lemma/) to see an example of what I mean. This is a pretty minor issue, all things considered. --[DanielKLee](/wiki/user-danielklee/) 14:30, 24 September 2006 (MST)
+
+## Wiki
+You keep breakin' it! ;) &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 19:43, 4 October 2006 (EDT)
+
+## noinclude
+
+[http://twelf.plparty.org/w/index.php?title=User_talk%3ATom7&diff=2569&oldid=2384 re] My favorite would be if noinclude="true" were a derived form for name="_", meaning to bind the useless name _. If you want to rename it, I would vote for discard="true", but I can't think of any reason to do that... &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 18:31, 10 October 2006 (EDT)
+* Oh, sorry, I forgot the confusion between "include" and "noinclude". I support renaming it to discard="true", but maybe people can just do name="_"? Is that too weird? &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 18:35, 10 October 2006 (EDT)
+
+## I LF Bees
+
+I started a page at [[Project:1.0]] where we can plan for a wide release, and seeded it with demands. Your thoughts are welcome... &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 13:49, 16 October 2006 (EDT)
+
+## Sad
+
+I yearn for the era of daily Twelfwiki breakage! Thesisland is just not as much fun... &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 13:09, 13 December 2006 (EST)
+* Hooray, someone else is editing! &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 00:18, 25 December 2006 (EST)
+
+## mlton builds
+
+Hey, I was just helping a student build Twelf at Dagstuhl; he used the experimental mlton release for x86-Darwin. Experimental builds of mlton return a version string of 'MLTONVERSION' which then fails in the build process. Can we fix this so that the report "version XXXX or greater required" is actually a warning? I think a large fraction of mlton users are using experimental or CVS releases since they are programmers themselves. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 05:29, 31 January 2007 (EST)
+:: I believe that the change has been commited to Twelf CVS. If you can, check it out and verify that it works? I just added a new if-branch for MLTONVERSION, and if that does not work I'll change the error to a warning. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:13, 31 January 2007 (EST)
+
+## spam filter
+
+Also, can you disable the spam filter for admins?? It won't let me save my changes. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 05:50, 31 January 2007 (EST)
+: It would be tricky to disable the spam filter regex just for admins, because if the forbidden string appears on the page then only admins would be able to edit it henceforth. However, if you need to disable some things, go ahead - just deleting style from the LocalSettings was the right thing to do; if it didn't work, go ahead and replace it with the more html-fu permissive setting from http://meta.wikimedia.org/wiki/Anti-spam_Features — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:11, 31 January 2007 (EST)
+:: After a few minutes (I realize you aren't up at 5:50am) I found the place where the spam filter was defined and temporarily disabled it so that I could make the edits I need to. If it continues to be a problem I'll see about improving the filter... &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 17:15, 31 January 2007 (EST)
+::: I'm up then more than I should be; just make sure to leave the spam filter "weakened", like I said, pages with spam-filter-opposing content are effectively uneditable. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 17:57, 31 January 2007 (EST)
+:::: Point taken, but this is for \{\{tl|click-inline\}\} which IMO should never be edited by non-admins (or really ever at all). &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 06:11, 1 February 2007 (EST)
+
+## Tex broke
+
+The &lt;nowiki&gt;&lt;math&gt;&lt;/nowiki&gt; tag ain't workin'; viz [lists](/wiki/lists/). &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 23:32, 24 February 2007 (EST)
+: This is why I keep the old mediawiki files around for awhile after an upgrade; we're back up and running, I'll have to add "make texvc work again" to my list of upgrade tasks. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 01:24, 25 February 2007 (EST)
+
+## SVG
+
+Thanks for making more keyword articles. Do you think it makes sense perhaps to separate them into "rarely used" and "frequently used" or perhaps by category of what kind of thing you want to do? A lot of these keywords I don't even know what they are because I've never used them, even though I've written like tens of thousands of lines of Twelf.
+
+: Instead of that distinction, as you use Twelf in a distinctive way like most here :), and I'm not sure how to clearly categorize things, I was imagining an additional Big Four template of some sort that described %mode %block %worlds %total - the keywords you need to specify [totality assertions](/wiki/totality-assertion/). This is a tricky distinction - what about %covers %reduces %terminates - but however you slice it, I was going to just specify that set, and leave the rest in the big jumble on the template - I think the idea is people find these by clicking on a link in an article, anyway. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 12:20, 28 February 2007 (EST)
+:: OK, that sounds good! It's just that if I click on some of those keywords, I might get the sense that I need to understand them in order to use Twelf. As long as there is something to dispell that myth, I'm on board. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 14:21, 28 February 2007 (EST)
+
+Also, if you install SVG support I will make you some nice tree graphics. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:23, 28 February 2007 (EST)
+
+: I already have some trees in Adobe Illustrator I was going to use, I've been unable to track down clear and decisive information about SVG and mediawiki (are you sure it doesn't already support it?) but I'll try the IRC channel again today. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 12:20, 28 February 2007 (EST)
+:: I tried uploading a SVG file and it wouldn't let me, so I'm pretty sure the extension isn't there. If you are using AI then SVG is the right format to upload in, so they can be resized and edited without losing the original form. It might be hard to get the SVG extension working though, I don't know. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 14:21, 28 February 2007 (EST)
+
+## done
+
+I made reasonable stubs for most of the remaining glossary entries.  As far as I'm concerned, if you patch [%total](/wiki/percent-total/) a little, we can announce. [Drl](/wiki/user-drl/) 00:54, 21 March 2007 (EDT)
+
+## twelf sources with .cm
+
+FYI: the Twelf source tarball on your snazzy download page includes SML/NJ .cm directories, which are worse than useless because they can confuse/crash SML/NJ and make the tarball 3x the size it needs to be. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 16:50, 23 October 2007 (EDT)
+: This broke because I ran a rogue compile a few weeks ago; I should be able to put it back together tomorrow. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 01:08, 24 October 2007 (EDT)
+:: Should be fixed. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 12:09, 24 October 2007 (EDT)
+
+## front page news
+
+Hallo!
+I'm not a twelf guy, and am just looking into logic programming.
+I am unfamiliar with your specialized terms... which means that this doesn't parse for me - could you perhaps translate it back into a form of natural language?
+
+"Rob has a case study on lax logic that uses the admissibility of cut and identity show a sound and complete correspondence between two sequent calculus presentations of lax logic."
+
+1. Rob [presents] a case study on lax logic.
+
+2. The lax logic model used assumes the admissibility of "cut and identity".
+
+*** help! Brain overflow... does not parse! *** So we guess...
+3. The lax logic model shows a "sound and complete correspondence" when tested using two sequent calculus presentations of lax logic?
+
+Is it self referential? Does lax logic mean something different each time it is used?
+
+I suspect there's a decent tutorial to be had just explaining that sentence. :)
+
+## Twelf Live broken?
+
+Hi Rob. It says on the front page to contact you if anything is broken. Well, Twelf Live doesn't seem to work. I was looking forward to trying it. Cheers.
+:: Hi! Thanks for noticing that, I moved some stuff and deleted some code and forgot to update links and test that. Twelf Live is a bit rougher than it's supposed to be at the moment (lots of superfluous %% OK %%s) but it's the best I could do on short notice; I'll get back around to it. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 11:41, 9 September 2010 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User_talk:Rsimmons).
+!}%

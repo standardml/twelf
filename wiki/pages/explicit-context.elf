@@ -1,0 +1,18 @@
+%%! title: "Explicit context"
+
+%{! **Explicit contexts** are an alternative technique for encoding an [object language](/wiki/object-logic/). Standard practice is to use [higher-order judgment](/wiki/higher-order-judgements/)s in order to implicitly use the [LF](/wiki/lf/) context as the context for the object language semantics. While this affords many benefits, there are a number of proof techniques (such as [hereditary substitution](/wiki/hereditary-substitution/) for [dependently typed languages](/wiki/dependent-types/)) which require isolating an entry in the middle of the object language context. This is not possible in general using [higher-order judgment](/wiki/higher-order-judgements/)s for languages whose context does not admit exchange. 
+
+It is possible to prove such theorems in an encoding of the object language semantics with an explicit reconstruction of the context. In order to maximally enjoy the benefits of [higher-order judgment](/wiki/higher-order-judgements/)s, standard practice is to use the explicit context system only as necessary, and prove theorems that convert derivations from the implicit and explicit systems. 
+
+This technique was used in the code associated with [http://www.cs.cmu.edu/~dklee/papers/tslf.tgz Towards a Mechanized Metatheory of Standard ML]. 
+
+Although explicit contexts are the most general technique for proving theorems that mention entries in the middle of contexts that do not admit exchange, very often there are tricks to avoid using explicit contexts. A section of the page on [substitution lemmas](/wiki/substitution-lemma/) illustrates one such technique. 
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Explicit_context).
+!}%

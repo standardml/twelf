@@ -1,0 +1,65 @@
+%%! title: "Talk:Tutorials"
+
+%{! ## Tutorials that need written
+
+* Double negation translation - _Jcreed_
+* Classical logic - _Will_
+* Lexographic induction - _Jcreed_ (it would be good to have something more direct than cut elimination, which certainly uses lexicographic induction, but that's not the main point of the article)
+* Translating between logics - 
+* Reverse the polarity -
+* Closure conversion - _tom_ if he does it for his thesis
+* from svn repository: ipc-taut?, systemf-bidi?
+* dklee's as-pattern trick
+
+## Output factoring/freeness
+
+Output factoring/freeness _are_ similar problems - output factoring is the way you solve the fact that Twelf thinks you have a problem with output freeness, to put it simply. Do you think it's more or less confusing to have the two different tutorials and just have them perhaps refer to each other? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 01:05, 12 October 2006 (EDT)
+* Factoring is more generally a problem with output _coverage_. Output freeness is part of output coverage, but we needed to do factoring even with the unsound Twelf before the freeness check was introduced. Freeness is not documented anywhere, which is why it's important to have a page about it on the wiki. The articles should definitely be separate, IMO. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 08:34, 12 October 2006 (EDT)
+
+## order?
+
+What does everyone think about moving the proof techniques and illustrative examples up and the troubleshooting down?  Right now, when you go to this page it says to me "Twelf is hard to use; here's how you work around the trouble."
+We can compensate by outlining a path through the tutorials.
+[Drl](/wiki/user-drl/) 00:18, 24 October 2006 (EDT)
+
+: Agreed. Also, we can factor things out of this page whenever it gets too large, and "troubleshooting" is a good canidate for factoring whenever that point comes. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:00, 24 October 2006 (EDT)
+
+## What is the difference between troubleshooting and proof techniques?
+
+I don't understand the difference between troubleshooting and proof techniques.  At what point does "a way to fix a common problem" become a proof technique?  If we want to make any distinction at all, I propose that there should be an "Understanding error messages" section that contains articles about what went wrong, and a "proof techniques" section that tells you how to fix it (if the fix requires enough of an idiom to warrant a separate page).  In particular, I moved output factoring to the "techniques" rather than "troubleshooting", and then either someone moved it back or I screwed up the edit and forgot to delete it.  But I don't think it should be in both places, since this page should read like a table of contents, not like a list of tags.  Thoughts? [Drl](/wiki/user-drl/) 16:39, 13 March 2007 (EDT)
+
+: So I think we've reached the point of needing to factor things out that I mention above... I propose we just have "Beginner" "Advanced" and "Illustrative examples," and we say in the preamble of "Illustrative examples" that  there is significant overlap between 'illustrative examples' and [Case studies](/wiki/case-studies/). I would then say that "Data structures in Twelf" and "Error messages" get their own articles, but I don't know how to organize that in the greater structure of the wiki... — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 22:27, 14 March 2007 (EDT)
+
+:: I dunno, I think this is a good place for articles on understanding error messages.  What about collapsing data structures into an appropriate category (illustrative examples?)  That might make it feel less sprawling.  I think we have about as many top-level places to look for documentation (i.e., what's in the sidebar) as we can handle already.  Maybe I'll play with this page later to try some ideas.  [Drl](/wiki/user-drl/) 23:34, 14 March 2007 (EDT)
+
+::: So collapse troubleshooting into proof techniques, or just some of the troubleshooting things into proof techniques (like [output factoring](/wiki/output-factoring/))? Also, I'd like to think about where we put other extended introductions (Computation and Deduction, Hints on Proving Theorems (appel), Boyland's tutorial, etc) - on this page or in a less-privlidged section in the "Introductions" page (my mind reacts negatively to all the whitespace on the introductions page, though I know this is a false reaction). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 00:47, 15 March 2007 (EDT)
+
+## the problem with the organization of this page
+
+The problem with the organization of this page is that there are multiple ways of indexing this data: what we prove, and how we prove it.  Right now, the breakdown seems to be
+* proof techniques: here's **how** you prove this in twelf
+* illustrative examples: here's how you prove **this** in twelf (as long as it's not too involved, in which case it's a case study instead)
+
+The current organization puts an article in the category that best describes it, but there are overlaps (e.g., output factoring could be an example of proving progress, but the focus is more on the technique than the theorem; cut elim could be a proof technique for lexicographic induction, but the focus is on the example, not the technique).  Then troubleshooting gets used for debugging hints that don't require any particular devices (so output factoring is a proof technique, not a troubleshooting).  
+
+Alternative organizations:
+- list articles under both indexings on one page
+- have two different "sortings" for the tutorials page
+The downside is that these might appear more complicated, and it will be harder for the reader to figure out what he's read and what he hasn't.  And we'd have to maintain multiple indices as we add new tutorials.  Also, there are some tutorials that fit into one sort but not the other (e.g., proof techniques that only have a toy examples).
+
+Since this is relatively early in the learning-Twelf chain, I think the interface here needs to be particularly clean.  
+
+Thoughts on what's best?  I think I'm in favor of the current organization, where we put something into the best category for it, even though that makes it a little unclear where things should go.
+
+[Drl](/wiki/user-drl/) 11:04, 15 March 2007 (EDT)
+
+:: I think I'm currently questioning the "too involved" line between case studies and illustrative examples... maybe those we could factor out, but then where would data structures go? I'd argue "case studies," but I'm not sure. Or perhaps "Case studies" should just move to "Illustrative examples" — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 11:58, 16 March 2007 (EDT)
+
+::: I think you're right---let's move the whole illustrative examples section (including data structures) to the case studies.  I do think we should then make a beginner/advanced distinction on the case studies page, since some of them are more accessible and more heavily commented than others.  This will simplify the organization considerably (tutorial for **how**, case study for **this**).  Just because of the length, I'm thinking we should maintain separate pages, rather than moving the case studies here. [Drl](/wiki/user-drl/) 17:40, 16 March 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Tutorials).
+!}%

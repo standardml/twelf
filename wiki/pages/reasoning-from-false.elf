@@ -1,0 +1,106 @@
+%%! title: "Reasoning from false"
+
+%{! Twelf's coverage checker often rules out contradictory cases for you (see, for example, the [proof of determinacy for the simply typed λ-calculus](/wiki/uniqueness-lemma/)).  However, you will sometimes need to reason from contradictory assumptions yourself. You can do this by declaring an _uninhabited type_, proving that certain assumptions are contradictory, and then writing lemmas that conclude anything from a term of the uninhabited type. 
+
+## The uninhabited type !}%
+    
+uninhabited : type. 
+%freeze uninhabited.
+
+%{! Freezing the intentionally uninhabited type (which is also sometimes called ``void``, ``false``, or ``absurd``) is not strictly necessary, but it clarifies the programmer's intent—Twelf will signal an error if any later part of the signature introduces a term of this type.
+
+## Proving contradictions
+
+We use some simple judgements on natural numbers to illustrate proving contradictions. !}%
+    
+nat   : type. 
+nat/z : nat.
+nat/s : nat -> nat.
+
+nat-less   : nat -> nat -> type.
+nat-less/z : nat-less nat/z (nat/s N).
+nat-less/s : nat-less (nat/s N1) (nat/s N2)
+              <- nat-less N1 N2.
+
+nat-plus   : nat -> nat -> nat -> type.
+nat-plus/z : nat-plus nat/z N N.
+nat-plus/s : nat-plus (nat/s N1) N2 (nat/s N3)
+              <- nat-plus N1 N2 N3.
+
+%{! ### Contradiction by coverage checking
+
+First, we prove that no number is less than zero: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+nat-less-z-uninhabited : nat-less N nat/z 
+                          -> uninhabited
+                          -> type.
+%mode nat-less-z-uninhabited +D1 -D2.
+%worlds () (nat-less-z-uninhabited _ _).
+%total {} (nat-less-z-uninhabited _ _).
+
+%{! The coverage checker accepts this proof without any cases because there are no rules for deriving ``nat-less _ nat/z``.  This is the simplest way to create a contradiction.  
+
+### Inductive contradictions
+
+Some contradictions require an inductive argument.  For example, we can prove that if ``N1 &lt; N2`` then there is no ``N3`` such that ``N2 + N3 = N1``. !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+nat-less-plus-uninhabited : nat-less N1 N2
+                             -> nat-plus N2 N3 N1
+                             -> uninhabited
+                             -> type.
+%mode nat-less-plus-uninhabited +D1 +D2 -D3.
+
+- : nat-less-plus-uninhabited (nat-less/s NL) (nat-plus/s NP) DU
+     <- nat-less-plus-uninhabited NL NP DU.
+
+%worlds () (nat-less-plus-uninhabited _ _ _).
+%total (D1) (nat-less-plus-uninhabited D1 _ _).
+
+%{! In this theorem, the coverage checker rules out all cases but the one where the first input is of the form
+&lt;code&gt;
+nat-less N1 N2
+------------------------------nat-less/s
+nat-less (nat/s N1) (nat/s N2)
+&lt;/code&gt;
+and the second input is of the form
+&lt;code&gt;
+nat-plus N2 N3 N1
+----------------------------------nat-plus/s
+nat-plus (nat/s N2) N3 (nat/s N1)
+&lt;/code&gt;
+To show that this remaining case is contradictory. we apply the inductive hypothesis on the subderivations to derive ``uninhabited``, and then return the resulting derivation of ``uninhabited`` to meet our proof obligations.
+
+With this theorem, the coverage checker rules out all the base cases, so we are able to return a term of type ``uninhabited`` in the one remaining case by writing a loop.
+
+## Reasoning from contradiction
+
+Once you have a contradiction, it is easy to write a lemma that reasons from it.  For example, from ``uninhabited`` we can conclude that any two numbers are ``nat-less``: !}%
+    
+%{! (options removed from twelftag: check="true") !}%
+
+uninhabited-nat-less : {N1:nat}{N2:nat}
+                         uninhabited
+                        -> nat-less N1 N2
+                        -> type.
+%mode uninhabited-nat-less +D1 +D2 +D3 -D4.
+%worlds () (uninhabited-nat-less _ _ _ _).
+%total {} (uninhabited-nat-less _ _ _ _).
+
+%{! This proof requires no cases because any case would involve a canonical form of type ``uninhabited``.
+
+This lemma could be used in a proof that requires coming up with a derivation of some ``less-than`` fact in contradictory circumstances.  
+
+For an example where reasoning from contradiction is necessary, see the tutorial on [hereditary substitution for the STLC](/wiki/hereditary-substitution-for-the-stlc/).
+
+\{\{tutorial\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Reasoning_from_false).
+!}%

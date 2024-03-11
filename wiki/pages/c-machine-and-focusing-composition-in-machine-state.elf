@@ -1,0 +1,169 @@
+%%! title: "C machine and focusing (composition in machine state)"
+
+%{! 
+C Machine and Focusing
+!}%
+
+%{! ## Syntax !}%
+
+pos : type.  %name pos A+.
+neg : type.  %name neg A-.
+
+down : neg -> pos.
+plus : pos -> pos -> pos.
+times : pos -> pos -> pos.
+zero  : pos.
+one   : pos.
+
+up   : pos -> neg.
+arr  : pos -> neg -> neg.
+with : neg -> neg -> neg.
+top  : neg.
+
+%abbrev conc = neg.
+
+%{! 
+
+### Proofs
+
+To mimic direct style, we don't internalize continuation composition
+(because continuations aren't separate syntactic categories in direct
+style).  Also, we treat negative cuts as a special case of the
+internalized exp/cont composition principle; there is no need to
+distinguish the redices.
+
+Unlike higher-order focusing, neutral sequents are "pos entails neg",
+and the shifts hand around until we choose to focus on a formula.
+
+!}%
+
+val+  : pos -> type.
+cont- : neg -> conc -> type.
+cont+ : pos -> conc -> type.
+val-  : neg  -> type.
+exp   : conc -> type.
+
+%% positive values
+
+mt+    : val+ one.
+%% no rule for zero
+pair+  : val+ A -> val+ B -> val+ (times A B).
+inl    : val+ A -> val+ (plus A B).
+inr    : val+ B -> val+ (plus A B).
+delay- : exp A- -> val+ (down A-).
+
+%% positive continuations (shallow matching)
+
+let1   : exp C -> cont+ one C.
+%% no rule for zero
+split  : (val+ A -> val+ B -> exp C) -> cont+ (times A B) C.
+case   : (val+ A -> exp C) -> (val+ B -> exp C) -> cont+ (plus A B) C.
+force- : cont- A- C -> cont+ (down A-) C.
+
+%% negative continuations
+
+app    : val+ A+ -> cont- B C -> cont- (arr A+ B) C.
+fst    : cont- A C -> cont- (with A B) C.
+snd    : cont- B C -> cont- (with A B) C.
+force+ : (val+ A+ -> exp C) -> cont- (up A+) C.
+%% internalize identity so we don't need to eta-expand
+id-    : cont- A A.
+
+%% negative values (shallow)
+
+lam    : (val+ A+ -> exp B-) -> val- (arr A+ B-).
+pair-  : exp A- -> exp B- -> val- (with A- B-).
+mt-    : val- top.
+delay+ : val+ A+ -> val- (up A+).  %% wait to peel off shift until focus
+
+%% neutral sequents
+
+return : val- A -> exp A.
+
+%% canonical when the value is a variable;
+%% non-canonical otherwise
+cut+   : val+ A+ -> cont+ A+ C -> exp C.
+
+%% internalize exp / cont composition
+compose : exp A- -> cont- A- C- -> exp C-.
+
+%{! ### Stack Machine
+
+Lists of continuations:
+
+!}%
+
+conts- : neg -> conc -> type.
+conts-/cons : cont- A B -> conts- B C -> conts- A C.
+conts-/nil  : conts- A A.
+
+conts+ : pos -> conc -> type.
+conts+/cons : cont+ A B -> conts- B C -> conts+ A C.
+
+%{! 
+
+Machine states are basically expressions, except (1) they have lists of
+continuations in place of continuations and (2) they distinguish
+exp/cont composition states from negative redex states.
+
+!}%
+
+state : conc -> type.
+done  : val- A -> state A.                %% answer
+st-   : exp  A -> conts- A C -> state C.  %% composition
+stv-  : val- A -> conts- A C -> state C.  %% negative cut
+stv+  : val+ A -> conts+ A C -> state C.  %% positive cut
+
+%{! 
+
+The sum type that you'd define for progress is (val C) + (exp C) so
+let's just abuse exp C for this sum and write the operational semantics
+as the progress proof.  The only downside is that you can't tell whether
+an expression took a real step towards a value or already was a value.
+
+!}%
+
+step : state C -> state C -> type.
+%mode step +S1 -S2.
+
+step/return : step (done V) (done V).
+
+step/let1   : step (stv+ mt+ (conts+/cons (let1 E) Ks)) (st- E Ks).
+step/split  : step (stv+ (pair+ V1 V2) (conts+/cons (split E) Ks)) 
+	           (st- (E V1 V2) Ks).
+step/case1  : step (stv+ (inl V1) (conts+/cons (case E1 E2) Ks)) 
+	           (st- (E1 V1) Ks).
+step/case2  : step (stv+ (inr V2) (conts+/cons (case E1 E2) Ks)) 
+	           (st- (E2 V2) Ks).
+step/force- : step (stv+ (delay- E) (conts+/cons (force- K) Ks)) 
+	           (st- E (conts-/cons K Ks)).
+
+step/app    : step (stv- (lam E) (conts-/cons (app V K) Ks)) 
+	           (st- (E V) (conts-/cons K Ks)).
+step/fst    : step (stv- (pair- E1 E2) (conts-/cons (fst K) Ks)) 
+	           (st- E1 (conts-/cons K Ks)).
+step/snd    : step (stv- (pair- E1 E2) (conts-/cons (snd K) Ks)) 
+	           (st- E2 (conts-/cons K Ks)).
+step/force+ : step (stv- (delay+ V) (conts-/cons (force+ E) Ks)) 
+	           (st- (E V) Ks).
+step/id-    : step (stv- V (conts-/cons id- Ks)) 
+	           (stv- V Ks).
+step/ids    : step (stv- V conts-/nil) 
+	           (done V).
+
+step/compose : step (st- (compose E K) Ks) 
+		         (st- E (conts-/cons  K Ks)).
+step/return  : step (st- (return V) Ks) 
+		    (stv- V Ks).
+step/cut+    : step (st- (cut+ V K) Ks) 
+		    (stv+ V (conts+/cons K Ks)).
+
+%worlds () (step _ _).
+%total D (step D _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/C_machine_and_focusing_(composition_in_machine_state)).
+!}%

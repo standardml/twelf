@@ -1,0 +1,207 @@
+%%! title: "Proving metatheorems:Natural numbers: Answers to exercises"
+
+%{! This page contains answers to the exercises listed [here](/wiki/proving-metatheorems-summary-the-natural-numbers/).  If you've solved an exercise that isn't answered on this page, or if you have a different solution to an exercise, please add it here.
+
+## Commutativity of Addition
+
+_State and prove a metatheorem showing that ``plus`` is commutative._ !}%
+    
+%{! (options removed from twelftag: import="pluscommute" hidden="true") !}%
+
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+plus   : nat -> nat -> nat -> type.
+plus-z : plus z N2 N2.
+plus-s : plus (s N1) N2 (s N3)
+          <- plus N1 N2 N3.
+
+even : nat -> type.
+even-z : even z.
+even-s : even (s (s N)) 
+          <- even N.
+
+%{! The theorem may be stated: !}%
+    
+%{! (options removed from twelftag: discard="true") !}%
+
+plus-commutes : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
+%mode plus-commutes +D1 -D2.
+
+%{! However, before we prove this theorem, we first prove two lemmas.  The first says that for any natural number &lt;math&gt;n&lt;/math&gt;, &lt;math&gt;n+0=n&lt;/math&gt;.  This is similar to the constant ``plus-z``, but the order of the arguments to ``plus`` has been changed: !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
+
+plus-zero-id :  {N1 : nat} plus N1 z N1 -> type.
+%mode plus-zero-id +N -D.
+
+pzidz : plus-zero-id
+         z
+         plus-z.
+
+pzids : plus-zero-id
+         (s N)
+         (plus-s D : plus (s N) z (s N))
+          <- plus-zero-id N D.
+
+%worlds () (plus-zero-id _ _).
+%total N (plus-zero-id N _).
+
+%{! Our second lemma states that if &lt;math&gt;\mathsf\{plus\}(n_1,n_2,n_3)&lt;/math&gt; then &lt;math&gt;\mathsf\{plus\}(n_1, \mathsf\{succ\}(n_2), \mathsf\{succ\}(n_3))&lt;/math&gt;.  This lemma is similar to the constant ``plus-s``, but the order of the arguments to ``plus`` has been changed: !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
+
+plus-flip : plus N1 N2 N3 -> plus N1 (s N2) (s N3) -> type.
+%mode plus-flip +D1 -D2.
+
+pfz : plus-flip 
+       _
+       plus-z.
+
+pfs : plus-flip
+       (plus-s Dplus : plus (s N1) N2 (s N3))
+       (plus-s DIH   : plus (s N1) (s N2) (s (s N3)))
+         <- plus-flip Dplus DIH.
+
+%worlds () (plus-flip _ _).
+%total D (plus-flip D _).
+
+%{! Finally, using these two lemmas, we may prove the theorem itself: !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
+
+plus-commutes : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
+%mode plus-commutes +D1 -D2.
+
+pcz : plus-commutes
+       _
+       D
+        <- plus-zero-id N1 D.
+       
+pcs : plus-commutes       
+       (plus-s Dplus: plus (s N1') N2 (s N3'))
+       D
+        <- plus-commutes Dplus DIH
+        <- plus-flip DIH D.
+
+%worlds () (plus-commutes _ _).
+%total D (plus-commutes D _).
+
+%{! ## Even/odd numbers and addition
+
+### Define the odd numbers !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
+
+odd   : nat -> type.
+odd-1 : odd (s z).
+odd-s : odd N -> odd (s (s N)).
+
+%{! ### The successor of an even number is an odd number, and vice versa !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
+
+succ-even : even N -> odd (s N) -> type.
+%mode succ-even +D1 -D2.
+
+sez : succ-even even-z odd-1.
+
+ses : succ-even (even-s EvenA) (odd-s OddA)
+       <- succ-even EvenA OddA.
+
+%worlds () (succ-even _ _).
+%total D (succ-even D _).
+
+succ-odd : odd N -> even (s N) -> type.
+%mode succ-odd +D1 -D2.
+
+so1 : succ-odd odd-1 (even-s even-z).
+
+sos : succ-odd (odd-s OddA) (even-s EvenA)
+       <- succ-odd OddA EvenA.
+
+%worlds () (succ-odd _ _).
+%total D (succ-odd D _).
+
+%{! ### The sum of an even and an odd number is odd !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
+
+sum-even-odd : even N1 -> odd N2 -> plus N1 N2 N3 -> odd N3 -> type.
+%mode sum-even-odd +D1 +D2 +D3 -D4.
+
+seoz : sum-even-odd even-z OddN2 plus-z OddN2.
+
+seos : sum-even-odd
+       (even-s EvenN1)
+       OddN2
+       (plus-s (plus-s PlusN1N2N3))
+       (odd-s OddN3)
+       <- sum-even-odd EvenN1 OddN2 PlusN1N2N3 OddN3.
+
+%worlds () (sum-even-odd _ _ _ _).
+%total D (sum-even-odd D _ _ _).
+
+%{! ### The sum of an odd plus an even number is odd !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
+
+sum-odd-even : odd N1 -> even N2 -> plus N1 N2 N3 -> odd N3 -> type.
+%mode sum-odd-even +D1 +D2 +D3 -D4.
+
+soe1 : sum-odd-even odd-1 EvenN2 _ OddN3
+        <- succ-even EvenN2 OddN3.
+
+soes : sum-odd-even
+        (odd-s OddN1)
+        EvenN2
+        (plus-s (plus-s PlusN1N2N3))
+        (odd-s OddN3)
+        <- sum-odd-even OddN1 EvenN2 PlusN1N2N3 OddN3.
+
+%worlds () (sum-odd-even _ _ _ _).
+%total D (sum-odd-even D _ _ _).
+
+%{! or we can use the previously proved commutativity lemma of plus: !}%
+    
+%{! (options removed from twelftag: import="pluscommute") !}%
+
+sum-odd-even : odd M -> even N -> plus M N P -> odd P -> type.
+%mode sum-odd-even +O +E +P -O2.
+
+soe : sum-odd-even
+       (O : odd M)
+       (E : even N)
+       (A : plus M N P)
+       (O0 : odd P)
+       <- plus-commutes A A0
+       <- sum-even-odd E O A0 O0.
+
+%worlds () (sum-odd-even _ _ _ _).
+%total D (sum-odd-even D _ _ _).
+
+%{! ### The sum of two odd numbers is even !}%
+    
+%{! (options removed from twelftag: import="pluscommute" check="true") !}%
+
+sum-odds : odd N1 -> odd N2 -> plus N1 N2 N3 -> even N3 -> type.
+%mode sum-odds +D1 +D2 +D3 -D4.
+
+soz : sum-odds odd-1 OddN2 _ EvenN3
+       <- succ-odd OddN2 EvenN3.
+
+sos : sum-odds (odd-s OddN1) OddN2 (plus-s (plus-s PlusN1N2N3)) (even-s
+EvenN3)
+       <- sum-odds OddN1 OddN2 PlusN1N2N3 EvenN3.
+
+%worlds () (sum-odds _ _ _ _).
+%total D (sum-odds D _ _ _).
+
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Natural_numbers:_Answers_to_exercises).
+!}%

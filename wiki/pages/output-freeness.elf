@@ -1,0 +1,86 @@
+%%! title: "Output freeness"
+%%! tags: ["tutorial"]
+
+%{!
+When Twelf [proves that an LF type family defines a total relation](/wiki/percent-total/), it checks that the output of each premise of each constant can never fail to unify with an output that is actually produced.  This is called [output coverage](/wiki/coverage-checking/) checking.  One way in which a premise can fail output coverage checking is if its output is a metavariable that is constrained by appearing elsewhere in the constant.
+
+**Output freeness checking** ensures that no outputs are constrained in such a manner.  More precisely, the output freeness check ensures that a metavariable in an output position does not occur in any previous input or output (where "previous" is the same order used in [%mode](/wiki/percent-mode/) checking—i.e., the search order of the [logic programming](/wiki/logic-programming/) operational semantics).
+
+Prior to Twelf 1.5, output freeness checking was not implemented, allowing some false metatheorems to check.
+
+## Simple example
+
+As a first output freeness violation, consider the natural numbers
+
+!}%
+nat : type.
+s : nat -> nat.
+z : nat.
+%{!
+
+and following buggy definition of the addition relation:
+
+```checkedtwelf
+add : nat -> nat -> nat -> type.
+%mode add +M +N -O.
+
+add/z : add M z M.
+
+add/s-incorrect : add M (s N) (s N)
+                   <- add M N N.
+
+%worlds () (add _ _ _).
+%total N (add _ N _).
+```
+
+This type family ``add`` clearly does not define a total relation: the constant ``add/s-incorrect`` only applies when ``add M N N``, but in general it is possible to derive ``add M N O`` for ``O`` not equal to ``N`` (and the constant ``add-s-incorrect`` is the only constant that covers the case when the second number is a successor, so the relation is clearly not total without this constant).
+
+Thus, Twelf reports an output coverage error on this constant when we attempt to check totality.
+Specifically, an output freeness error: the output metavariable ``N`` occurs previously because ``N`` is an input to the relation.
+
+## Uniqueness example
+
+It is common to encounter output freeness errors when working with relations that have unique outputs.  For example, consider a correct definition of ``add``: !}%
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -O.
+
+add/z : add M z M.
+
+add/s-incorrect : add M (s N) (s O)
+                   <- add M N O.
+%worlds () (add _ _ _).
+%total N (add _ N _).
+
+%{! This relation satisfies a [uniqueness lemma](/wiki/uniqueness-lemma/) stating that the first two indices (the summands) uniquely determine the third (the sum).
+
+Now, suppose we use ``add`` to define another relation:
+
+```checkedtwelf
+add2 : nat -> nat -> type.
+%mode add2 +N -O.
+
+- : add2 N O
+      <- add (s (s z)) N O
+      <- add (s (s z)) N O.
+
+%worlds () (add2 _ _).
+%total {} (add2 _ _).
+```
+
+Here, we have unnecessarily copied the ``add`` premise twice.  However, because ``add`` satisfies the aforementioned uniqueness lemma, it is, in fact, correct to insist that we get the same output ``O`` in each case.  Unfortunately, Twelf is not aware of this uniqueness lemma, so it flags an error.
+The second output occurrence of ``O`` occurs previously in the first one.
+
+This example, where we explicitly repeat a premise, is clearly avoidable.  However, analogous situations do come up in practice, and to work around them, you must prove and use the [uniqueness lemma](/wiki/uniqueness-lemma/) explicitly.
+
+## Non-free implicit outputs
+
+Another common source of output freeness errors is constraining implicit outputs that appear in the types of other outputs.
+
+This is where output freeness violations usually come up in connection with unique relations: if we have a derivation ``D : add M N O`` and a premise that returns another derivation of ``D' : add M N O'``, a common error is to insist that ``O'`` be ``O`` (which in fact it must be, but Twelf doesn't know this).  Even though we match the output derivation ``D'`` with a fresh metavariable, we get an output freeness error because we constrain the type of ``D'``.
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Output_freeness).
+!}%

@@ -1,0 +1,10 @@
+%%! title: "MediaWiki:Previewnote"
+
+%{! &lt;strong&gt;This is only a preview; changes have not yet been saved!&lt;/strong&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/MediaWiki:Previewnote).
+!}%

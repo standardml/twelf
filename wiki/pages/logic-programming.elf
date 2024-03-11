@@ -1,0 +1,28 @@
+%%! title: "Logic programming"
+
+%{! Most of the articles and examples on this wiki are focused towards using Twelf as a specification language, useful for encoding an [object logic](/wiki/object-logic/) and then stating and proving [metatheorems](/wiki/metatheorem/) about that object logic. However, Twelf originated from [[Elf]], and like Elf it is a dependently-typed, higher-order **logic programming language** based on the logic [LF](/wiki/lf/).
+
+A Twelf [signature](/wiki/twelf-signature/) may contain, among other things, some **type family** declarations and some **constants** inhabiting those type families. A logic programming language takes a _type_ as an input, and it then uses a simple search strategy to try and discover a term that has that type using the constants that have been defined. By the [judgments as types](/wiki/judgment/) principle, this means that Twelf is searching for a derivation - a **proof witness** - of a particular judgment.
+
+Twelf's logic programming engine is activated by [``%solve``](/wiki/percent-solve/) and [``%query``](/wiki/percent-query/) directives. It can also be activated directly inside ML; see the section on \{\{guide|title=interactive queries|chapter=5|section=22\}\} for more information. Twelf's [tabled logic programming](/wiki/tabled-logic-programming/) engine is activated by the [``%querytabled``](/wiki/percent-querytabled/) directive.
+
+## Uses of logic programming in Twelf
+
+* **Implementing a reference typechecker/evaluator** - If the static and dynamic semantics of a programming language are written correctly, then the specification of the static semantics can be . This was a component to the [[poplmark:The POPLmark Challenge|The POPLmark Challenge]] challenge; the case study of a [language with references](/wiki/mutable-state/), among other examples, demonstarte Twelf in this capacity.
+* Writing  programs and then proving things about them: The TALT project &lt;ref&gt;\{\{bibtex:crary03talt\}\}&lt;/ref&gt; includes a code checker written as a Twelf logic program, along with a proof in Twelf that code that passes the checker is safe according to a safety policy.
+* [Tactical theorem proving](/wiki/tactical-theorem-proving/) - in the style described by Appel and Felty in &lt;ref&gt;\{\{bibtex:af04dependent\}\}&lt;/ref&gt;.
+
+## See also
+* \{\{guide|title=Logic Programming|chapter=5|section=22\}\}
+* [[w:Logic programming|Logic programming]] at Wikipedia
+
+## References
+
+&lt;references /&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Logic_programming).
+!}%

@@ -1,0 +1,23 @@
+%%! title: "User's Guide"
+
+%{! The current version of the Twelf **User's Guide** is for Twelf version 1.4. [http://www.cs.cmu.edu/~twelf/guide-1-4/]
+
+It is available in
+* [http://www.cs.cmu.edu/~twelf/guide-1-4/twelf_toc.html HTML]
+* [http://www.cs.cmu.edu/~twelf/guide-1-4/twelf.ps Postscript]
+* [http://www.cs.cmu.edu/~twelf/guide-1-4/twelf.ps.gz Gzipped Postscript]
+* [http://www.cs.cmu.edu/~twelf/guide-1-4/twelf.pdf PDF]
+
+## Undocumented features
+
+The documentation has not yet been updated for the 1.5 release of Twelf. The [[:category:undocumented features|category for undocumented features]] collects articles on the wiki describing these features.
+
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/User%27s_Guide).
+!}%

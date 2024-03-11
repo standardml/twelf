@@ -1,0 +1,36 @@
+%%! title: "Talk:Lists"
+
+%{! ## Heterogeneous?
+
+I don't understand in what sense these are heterogeneous lists; it seems that they only hold terms of type 'tp'. Is this a mistake in terminology, or am I missing something? &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 09:44, 20 October 2006 (EDT)
+: You can define lists that all have to be the same 'tp,' I think is the distinction. However, I think that is a confusing distinction as well, because this is what we think of when we think of lists in Twelf and it's not what we think of when we think of heterogeneous lists. Move to move page to [Lists](/wiki/lists/) — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 09:53, 20 October 2006 (EDT)
+:: In that interpretation homogeneous lists are trivial: they are just natural numbers saying how many of the one allowed element are in the list. That can't be right. I agree: move to [lists](/wiki/lists/). &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:37, 20 October 2006 (EDT)
+
+## Tp
+
+Also, rather than defining one thing of type ``tp``, ``stuff``, wouldn't it be better to do the proofs in a world with arbitrary types? I'm still learning how worlds are used in practice, so I'm not certain; would it make the definitions and proofs less easily usable elsewhere, perhaps, because people would have to modify the worlds? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 09:58, 20 October 2006 (EDT)
+
+: Eek - Carsten, ``tp`` is a confusing list object to use - this is a list of types, but to narrate you have to use "list of types" and "things that have [LF] type list" and it would be much less confusing if it was "list of nats" and "things that have type nat or type list." I probably should have argued this point with you better earlier on, but how would you feel about switching ``tp`` to something less ``tp``-ey? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:26, 20 October 2006 (EDT)
+:: Yes, agreed: ``elt`` for element? &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:33, 20 October 2006 (EDT)
+
+## Math
+
+What do we think about the BNF notation introducing the object language? I think I like it but would like comments. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:28, 20 October 2006 (EDT)
+
+## Dependent lists
+
+Lists are a poster child for dependent types: the type ``list N`` with ``N : nat`` has as members lists of length ``N``. If this article is expanded to a general tutorial on lists, then this possibility should be considered. (It also has some drawbacks!) &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 10:37, 20 October 2006 (EDT)
+: That might be better as a second article - [Lists](/wiki/lists/) and [Indexed lists](/wiki/indexed-lists/) perhaps. But yes, totally in agreement, I was going to say it so I'm glad you did. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:47, 20 October 2006 (EDT)
+:: I was thinking of doing an article on indexed lists. Apparently other people had similar thoughts! It's somewhere on my queue, so I'll end up doing it if no one beats me to it. --[DanielKLee](/wiki/user-danielklee/) 13:56, 20 October 2006 (EDT)
+
+## Polymorphic list type?
+
+Twelf doesn't like \{\{\{list : type -&gt; type.\}\}\} very much.  Is there a simple (no nasty encoding tricks like Google pointed me to) way to express polymorphic lists and list lemmata in Twelf? -- [[User:Stefan O'Rear|Stefan O&#39;Rear]] 05:27, 10 August 2007 (EDT)
+:: The short answer is no; Twelf is not polymorphic because making it so would complicate Twelf's ability to deal with [metatheorems](/wiki/metatheorem/). Depending on what it is you want to do, however, there are any number of techniques that can be used to do what you want to do (though some of them probably fall into the "nasty encoding tricks" category). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 07:19, 10 August 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Lists).
+!}%

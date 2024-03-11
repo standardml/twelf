@@ -1,0 +1,43 @@
+%%! title: "Computation and Deduction 2009/20090304-support"
+
+%{! 
+
+Support code for March 4 guest lecture on worlds-checking and combinators.
+
+```twelf
+% combinator equality
+
+ceq : comb -> comb -> type.
+
+% betas
+ceq/i : ceq (capp i A) A.
+ceq/k : ceq (capp (capp k A) B) A.
+ceq/s : ceq (capp (capp (capp s A) B) C) (capp (capp A C) (capp B C)).
+
+% extensionality
+ceq/ext : ceq A A'
+           <- ({y:comb} ceq (capp A y) (capp A' y)).
+
+% compatibility
+ceq/app : ceq (capp A B) (capp A' B')
+           <- ceq A A'
+           <- ceq B B'.
+
+% equivalence
+ceq/refl : ceq A A.
+
+ceq/symm : ceq A A'
+            <- ceq A' A.
+
+ceq/trans : ceq A A'
+             <- ceq A B
+             <- ceq B A'.
+
+%worlds (comb-block) (ceq _ _).
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090304-support).
+!}%

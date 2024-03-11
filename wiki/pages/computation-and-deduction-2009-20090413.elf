@@ -1,0 +1,80 @@
+%%! title: "Computation and Deduction 2009/20090413"
+
+%{! Code from class, April 13.
+
+```twelf
+tp : type. %name tp T.
+
+exp : type. %name exp E x.
+
+o : tp.
+arr : tp -> tp -> tp.
+
+p : exp.
+lam : tp ->  (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+%% - : (exp -> tp) -> type.
+
+of : exp -> tp -> type.
+
+of/p : of p o.
+of/lam : of (lam T ([x] E x)) (arr T T')
+	  <- ({x} of x T -> of (E x) T').
+of/app : of (app E1 E2) T'
+	  <- of E1 (arr T T')
+	  <- of E2 T.
+
+%block bind : some {T : tp} block {x :exp} {dx : of x T}.
+
+subst : ({x} of x T1 -> of (E1 x) T2) -> of E2 T1 -> of (E1 E2) T2 -> type.
+%mode subst +D1 +D2 -D3.
+
+%% - : subst D1 D2 (D1 _ D2).
+
+- : subst ([x] [d : of x T1] d) (D2 : of E2 T1) D2.
+
+- : subst ([x] [d : of x T1] D1) _ D1.
+
+- : subst 
+     ([x] [d : of x T1]
+	of/app
+	(D12 x d : of (E12 x) T2)
+	(D11 x d : of (E11 x) (arr T2 T3)))
+     (D2 : of E2 T1)
+     (of/app D12' D11')
+     <- subst D11 D2 (D11' : of (E11 E2) (arr T2 T3))
+     <- subst D12 D2 (D12' : of (E12 E2) T2).
+
+- : subst
+     ([x] [dx : of x T1] of/lam (D1 x dx : {y} of y T2 -> of (E1 x y) T3))
+     (D2 : of E2 T1)
+     (of/lam D)
+     <- ({y} {dy : of y T2}
+	   subst ([x] [dx] D1 x dx y dy) D2 (D y dy : of (E1 E2 y) T3)).
+
+
+%worlds (bind) (subst _ _ _).
+%total D (subst D _ _).
+
+ctx : type. %name ctx G.
+nil : ctx.
+cons : ctx -> exp -> tp -> ctx.
+
+ofe : ctx -> exp -> tp -> type.
+
+ofe/p : ofe G p o.
+
+ofe/app : ofe G (app E1 E2) T'
+	   <- ofe G E1 (arr T T')
+	   <- ofe G E2 T.
+
+ofe/lam : ofe G (lam T ([x] E x)) (arr T T')
+	   <- ({x} ofe (cons G x T) (E x) T').
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090413).
+!}%

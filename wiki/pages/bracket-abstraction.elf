@@ -1,0 +1,228 @@
+%%! title: "Bracket abstraction"
+
+%{! 
+This is a case study translating the untyped lambda calculus into S, K, and I
+combinators.  The correctness of the translation is proven in the following
+sense: if a term steps to a reduct, its translation multi-steps to its
+reduct's translation.
+
+[William Lovas](/wiki/user-william-lovas/)
+!}%
+
+
+%{! ---- !}%
+
+%{! 
+First we define the syntax of the two languages.  ``term`` is the
+type of untyped lambda-calculus terms; ``cterm`` is the type of
+untyped combinator terms.
+!}%
+
+term : type.    %name term M x.
+
+app : term -> term -> term.
+lam : (term -> term) -> term.
+
+cterm : type.   %name cterm N y.
+
+s : cterm.
+k : cterm.
+i : cterm.
+
+capp : cterm -> cterm -> cterm.
+
+%{! We can use Twelf's abbreviation mechanism to obtain some cute syntax. !}%
+
+%abbrev @ = app.
+%infix left 10 @.
+
+%abbrev @@ = capp.
+%infix left 10 @@.
+
+%{! ---- !}%
+
+%{! 
+Then we define reduction relations on both languages.  ``step`` is the
+single-step reduction relation on lambda terms; ``cstep`` is the
+single-step reduction relation on combinator terms.
+!}%
+ 
+step : term -> term -> type.
+
+s-β : step (app (lam [x] M1 x) M2) (M1 M2).
+
+s-1 : step (app M1 M2) (app M1' M2)
+       <- step M1 M1'.
+
+s-2 : step (app M1 M2) (app M1 M2')
+       <- step M2 M2'.
+
+
+cstep : cterm -> cterm -> type.
+
+cs-i : cstep (capp i X) X.
+cs-k : cstep (capp (capp k X) Y) X.
+cs-s : cstep (capp (capp (capp s X) Y) Z) (capp (capp X Z) (capp Y Z)).
+
+cs-1 : cstep (capp X Y) (capp X' Y)
+        <- cstep X X'.
+
+cs-2 : cstep (capp X Y) (capp X Y')
+        <- cstep Y Y'.
+
+%{! 
+We also define multi-step reduction on combinator terms.
+
+Our simulation will relate single-step derivations in the lambda-calculus
+to multi-step derivations on the translated terms.
+!}%
+
+cstep* : cterm -> cterm -> type.
+
+cs-cons : cstep* N N''
+           <- cstep N N'
+           <- cstep* N' N''.
+
+cs-nil  : cstep* N N.
+
+
+%{! 
+We can pre-emptively prove some compatibility lemmas about multi-step
+reduction.
+!}%
+
+cs-1* : cstep* N1 N1' -> cstep* (capp N1 N2) (capp N1' N2) -> type.
+%mode +{N1:cterm} +{N1':cterm} +{N2:cterm}
+      +{CS1:cstep* N1 N1'} -{CS2:cstep* (capp N1 N2) (capp N1' N2)}
+      (cs-1* CS1 CS2).
+
+- : cs-1* cs-nil cs-nil.
+- : cs-1* (cs-cons CS C) (cs-cons CS' (cs-1 C))
+     <- cs-1* CS CS'.
+
+%worlds () (cs-1* _ _).
+%total {CS} (cs-1* CS _).
+
+cs-2* : cstep* N2 N2' -> cstep* (capp N1 N2) (capp N1 N2') -> type.
+%mode +{N1:cterm} +{N2:cterm} +{N2':cterm}
+      +{CS1:cstep* N2 N2'} -{CS2:cstep* (capp N1 N2) (capp N1 N2')}
+      (cs-2* CS1 CS2).
+
+- : cs-2* cs-nil cs-nil.
+- : cs-2* (cs-cons CS C) (cs-cons CS' (cs-2 C))
+     <- cs-2* CS CS'.
+
+%worlds () (cs-2* _ _).
+%total {CS} (cs-2* CS _).
+
+cs-trans : cstep* N1 N2 -> cstep* N2 N3 -> cstep* N1 N3 -> type.
+%mode cs-trans +Cs1 +Cs2 -Cs3.
+
+- : cs-trans cs-nil Cs2 Cs2.
+- : cs-trans (cs-cons Cs1 C) Cs2 (cs-cons Cs12 C)
+     <- cs-trans Cs1 Cs2 Cs12.
+
+%worlds () (cs-trans _ _ _).
+%total {Cs} (cs-trans Cs _ _).
+
+%{! ---- !}%
+
+%{! 
+We can now define our translation in the standard way.  Bracket abstraction
+is represented by a judgement relating LF-level abstractions in the combinator
+language to closed combinator terms.  This is essentially 
+[higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
+!}%
+
+trans : term -> cterm -> type.
+bracket : (cterm -> cterm) -> cterm -> type.
+
+
+t-app : trans (app M1 M2) (capp N1 N2)
+         <- trans M1 N1
+         <- trans M2 N2.
+
+t-lam : trans (lam [x] M x) N'
+         <- ({x:term} {y:cterm} trans x y -> trans (M x) (N y))
+         <- bracket ([y] N y) N'.
+
+
+b-i : bracket ([x] x) i.
+
+b-k : bracket ([x] Y) (capp k Y).
+
+b-s : bracket ([x] capp (N1 x) (N2 x)) (capp (capp s N1') N2')
+       <- bracket ([x] N1 x) N1'
+       <- bracket ([x] N2 x) N2'.
+
+%{! ---- !}%
+
+%{! 
+First, we prove the correctness of bracket abstraction itself:
+the application of a bracket abstraction reduces to a substitution.
+!}%
+
+subst : bracket ([x] N x) N' -> {N0} cstep* (capp N' N0) (N N0) -> type.
+%mode subst +B +N0 -CS.
+
+- : subst b-i N0 (cs-cons cs-nil cs-i).
+
+- : subst b-k N0 (cs-cons cs-nil cs-k).
+
+% developing incrementally, it's useful to write down the type of each output
+- : subst (b-s (B2 : bracket ([x] N2 x) N2')
+               (B1 : bracket ([x] N1 x) N1'))
+          N0
+          (cs-cons CS12' cs-s)
+     <- subst B1 N0 (CS1 : cstep* (N1' @@ N0) (N1 N0))
+     <- subst B2 N0 (CS2 : cstep* (N2' @@ N0) (N2 N0))
+     <- cs-1* CS1 (CS1' : cstep* ((N1' @@ N0) @@ (N2' @@ N0)) (N1 N0 @@ (N2' @@ N0)))
+     <- cs-2* CS2 (CS2' : cstep* (N1 N0 @@ (N2' @@ N0)) (N1 N0 @@ N2 N0))
+     <- cs-trans CS1' CS2' CS12'.
+
+% turns out that once the case is done, the types are unnecessary!
+%%- : subst (b-s B2 B1) N0 (cs-cons CS12' cs-s)
+%%     <- subst B1 N0 CS1
+%%     <- subst B2 N0 CS2
+%%     <- cs-1* CS1 CS1'
+%%     <- cs-2* CS2 CS2'
+%%     <- cs-trans CS1' CS2' CS12'.
+
+%worlds () (subst _ _ _).
+%total {B} (subst B _ _).
+
+%{! 
+Then, we can prove simulation, the correctness of translation, by a
+straightforward induction on single-step derivations in the lambda-calculus,
+using the correctness of bracket abstraction as a lemma in the case of a
+beta-reduction.
+!}%
+
+simulate : step M M' -> trans M N -> trans M' N' -> cstep* N N' -> type.
+%mode simulate +S +T -T' -CS.
+
+%{! 
+NB: in this step, on paper, you have to prove two compositionality lemmas.
+In Twelf, using higher-order abstract syntax, we get them for free -- see
+(T1 _ _ T2) output.
+!}%
+- : simulate s-β (t-app T2 (t-lam B1 T1)) (T1 _ _ T2) CS
+     <- subst B1 N2 CS.
+
+- : simulate (s-1 S1) (t-app T2 T1) (t-app T2 T1') CSapp
+     <- simulate S1 T1 T1' CS1
+     <- cs-1* CS1 CSapp.
+
+- : simulate (s-2 S2) (t-app T2 T1) (t-app T2' T1) CSapp
+     <- simulate S2 T2 T2' CS2
+     <- cs-2* CS2 CSapp.
+
+%worlds () (simulate _ _ _ _).
+%total D (simulate D _ _ _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Bracket_abstraction).
+!}%

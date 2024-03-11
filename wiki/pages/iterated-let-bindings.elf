@@ -1,0 +1,114 @@
+%%! title: "Iterated Let Bindings"
+
+%{! 
+
+Let with iterated bindings.
+
+## Preliminaries
+!}%
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +N1 +N2 -N3.
+
+add/z : add z N N.
+add/s : add (s N) M (s P)
+         <- add N M P.
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%{! 
+## Syntax
+!}%
+
+exp   : type.
+
+%% oexp N is morally exp^N -> exp, but curried
+oexp  : nat -> type.
+
+%% binds N M is a list of length M - N with types
+%% (oexp N , oexp (s N) , ... , oexp (M - 1))
+binds : nat -> nat -> type.
+
+
+oexp/done : exp -> oexp z.
+oexp/bind : (exp -> oexp N) -> oexp (s N).
+
+binds/done : binds N N.
+binds/cons : oexp F -> binds (s F) L -> binds F L.
+
+let* : binds z N   % N terms, with (0, 1, ... N) free vars
+        -> oexp N  % body has N free vars
+        -> exp.
+num  : nat -> exp.
+plus : exp -> exp -> exp.
+
+%{! 
+## Evaluation
+!}%
+
+%% substitute the expression for the first var in each of the binds
+map-subst : exp -> binds (s N) (s M) -> binds N M -> type.
+%mode map-subst +E +B -B'.
+
+- : map-subst E binds/done binds/done.
+- : map-subst E (binds/cons (oexp/bind OE) B) (binds/cons (OE E) B')
+     <- map-subst E B B'.
+
+%worlds () (map-subst _ _ _).
+%total D (map-subst _ D _).
+
+%% contradict the existence of binds (s N) z;
+%% return a nat
+binds-imposs : binds (s N) z -> nat -> type.
+%mode binds-imposs +B -E.
+- : binds-imposs (binds/cons _ B) X
+     <- binds-imposs B X.
+%worlds () (binds-imposs _ _).
+%total D (binds-imposs D _).
+
+eval : exp -> nat -> type.
+%mode eval +E1 -E2.
+
+- : eval (let* binds/done (oexp/done E)) N
+     <- eval E N.
+- : eval (let* (binds/cons (oexp/done E) Bs)
+               (oexp/bind E')) N
+     <- map-subst E Bs Bs'
+     <- eval (let* Bs' (E' E)) N.
+- : eval (plus E1 E2) N
+     <- eval E1 N1
+     <- eval E2 N2
+     <- add N1 N2 N.
+- : eval (num N) N.
+%% silly contradictory case so it coverage checks
+- : eval (let* (binds/cons _ B)
+               (oexp/done E)) X
+     <- binds-imposs B X.
+
+%worlds () (eval _ _).
+%covers eval +E1 -E2.
+
+%{! 
+## Example
+!}%
+
+%% let* x = 3
+%%      y = x + 2
+%%   in x + y
+%% N should be 8
+%solve D : eval (let* (binds/cons (oexp/done (num (s (s (s z)))))
+                      (binds/cons (oexp/bind [x] oexp/done (plus x (num (s (s z)))))
+                       binds/done))
+                      (oexp/bind [x] oexp/bind [y] oexp/done (plus x y)))
+            N.
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Iterated_Let_Bindings).
+!}%

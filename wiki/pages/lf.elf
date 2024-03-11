@@ -1,0 +1,34 @@
+%%! title: "LF"
+
+%{! **LF** is the abbreviation commonly used for the **Edinburgh Logical Framework** presented by Harper, Honsell, and Plotkin in _A Framework for Defining Logics_&lt;ref&gt;\{\{bibtex:hhp93lf\}\}&lt;/ref&gt;. Harper, Honsell, and Plotkin introduce both LF, which is a [dependently typed](/wiki/dependent-types/) lambda-calculus, and a systematic methodology for representing [deductive system](/wiki/object-logic/)s, such as programming languages and logics, in this lambda-calculus.  This methodology is often called the [judgments as types](/wiki/judgment/) principle, because a judgment in a deductive system is represented as an LF type family classifiying (the representations of) derivations of the judgement.  Derivations in a deductive system can be checked by type checking their LF representations.  An LF representation is [adequate](/wiki/adequacy/) iff it is isomorphic to the original description of the deductive system.
+
+Twelf includes:
+* an implementation of the LF logical framework, which can be used to type check LF representations
+* a [logic programming](/wiki/logic-programming/) language based on LF
+* a [metatheorem](/wiki/metatheorem/) checker, which can be used to verify proofs of theorems about LF representations
+
+
+## See also
+
+* Read the  [Introductions to Twelf](/wiki/introductions-to-twelf/) to learn more about LF and Twelf.
+* [Canonical form](/wiki/canonical-form/)s: describes the modern way of thinking about the LF type theory.
+* [Higher-order abstract syntax](/wiki/higher-order-abstract-syntax/)
+* [Judgments as types](/wiki/judgment/)
+* [Higher-order judgements](/wiki/higher-order-judgements/)
+* [Bibliography of LF](/wiki/bibliography-of-lf/)
+* [[w:LF (logical framework)|LF (logical framework)]] on Wikipedia
+
+
+## References
+
+&lt;references /&gt;
+
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/LF).
+!}%

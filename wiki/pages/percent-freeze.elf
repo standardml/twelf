@@ -1,0 +1,71 @@
+%%! title: "%freeze"
+
+%{! The **``%freeze``** declaration _freezes_ a set of type families. A frozen family cannot be extended: new constants at that type cannot be added, nor can the [subordination](/wiki/subordination/) relation be extended such that the family could depend on other types. The [``%thaw``](/wiki/percent-thaw/) declaration can be used to reenable the extension of a type family.
+
+## Syntax
+
+The syntax is as follows:
+
+``%freeze t1 t2 ... tn.``
+
+The type families ``t1``&ndash;``tn`` are frozen.
+
+## Example
+
+Suppose we define addition in the natural way: !}%
+
+nat : type.
+z : nat.
+s : nat -> nat.    %prefix 9999 s.
+
+plus : nat -> nat -> nat -> type.
+%mode plus +N +M -O.
+
+plus/z : plus z N N.
+plus/s : plus (s N) M (s P)
+      <- plus N M P.
+
+%{! At this point, we may still extend the definition of addition:
+
+```checkedtwelf
+plus/zz : plus M z M.
+```
+
+However, if we freeze ``plus`` then this will not be allowed:
+
+```checkedtwelf
+%freeze plus.
+plus/zzz : plus z z z.
+```
+
+More subtly, we will not be able to extend the [subordination](/wiki/subordination/) relation for ``plus``:
+
+```checkedtwelf
+%freeze plus.
+thing : type.
+
+oops : (thing -> plus _ _ _) -> type.
+```
+
+The subordination relation can be extended such that other non-frozen types depend on a frozen type, of course:
+
+```checkedtwelf
+%freeze plus.
+thing : type.
+
+okay : (plus _ _ _ -> thing) -> type.
+```
+
+Because types are automatically frozen in common cases (see below), one may occasionally need to induce subordination relations in anticipation of code that follows freezing. This can be done as in the type ``oops`` above, before using ``%freeze`` or metatheory like ``%worlds``.
+
+## Autofreeze
+
+Twelf CVS automatically freezes any family for which there has been a [``%worlds``](/wiki/percent-worlds/) declaration. This prevents mistakes where a metatheorem is proved for a type family but then that type family is extended, invalidating the theorem.
+
+<Keyword name="freeze"/>
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25freeze).
+!}%

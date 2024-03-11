@@ -1,0 +1,514 @@
+%%! title: "POPL Tutorial/Pattern matching"
+
+%{! 
+This is a case study on pattern matching using Twelf.
+!}%
+
+
+
+% 
+
+nat : type.
+
+z	: nat.
+s	: nat -> nat.
+
+
+tp : type.
+
+o	: tp.
+arrow	: tp -> tp -> tp.
+prod	: tp -> tp -> tp.
+sum	: tp -> tp -> tp.
+
+
+tplist	: type. 
+
+tplist/nil	: tplist.
+tplist/cons	: tp -> tplist -> tplist.
+
+
+pat	: type.
+
+pat/underscore	: pat.
+pat/pair	: pat -> pat -> pat.
+pat/inl		: pat -> pat.
+pat/inr		: pat -> pat.
+pat/var		: pat. 
+pat/as		: pat -> pat -> pat.
+
+
+exp	: type. 
+oexp	: type.  % oexp N is an expression with N bound vars
+match	: type.
+
+exp/unit	: exp. 
+exp/lam		: match -> exp. 
+exp/app		: exp -> exp -> exp. 
+exp/pair	: exp -> exp -> exp.
+exp/inl		: exp -> exp. 
+exp/inr		: exp -> exp. 
+exp/handle	: exp -> exp -> exp. 
+
+
+oexp/c	: exp -> oexp.
+oexp/o	: (exp -> oexp) -> oexp. 
+
+
+match/nil	: match. 
+match/cons	: pat -> oexp -> match -> match.
+
+
+
+%{! static semantics !}%
+
+tplist-append	: tplist -> tplist -> tplist -> type. 
+
+tplist-append/nil	: tplist-append tplist/nil TL TL.
+tplist-append/cons	: tplist-append (tplist/cons T TL) TL' 
+			   (tplist/cons T TL'')
+			   <- tplist-append TL TL' TL''.
+
+
+
+tplist-get	: nat -> tplist -> tp -> type. 
+
+tplist-get/hit	: tplist-get z (tplist/cons T TL) T.
+tplist-get/miss	: tplist-get (s N) (tplist/cons T TL) T'
+		   <- tplist-get N TL T'.
+
+
+
+of-pat	: pat -> tp -> tplist -> type. 
+
+of-pat/underscore	: of-pat pat/underscore T tplist/nil. 
+of-pat/pair		: of-pat (pat/pair P1 P2) (prod T1 T2) TL'
+			   <- of-pat P1 T1 TL1
+			   <- of-pat P2 T2 TL2
+			   <- tplist-append TL1 TL2 TL'.
+of-pat/inl		: of-pat (pat/inl P) (sum T1 T2) TL
+			   <- of-pat P T1 TL. 
+of-pat/inr		: of-pat (pat/inr P) (sum T1 T2) TL
+			   <- of-pat P T2 TL. 
+of-pat/var		: of-pat pat/var T (tplist/cons T tplist/nil). 
+of-pat/as		: of-pat (pat/as P1 P2) T TL3
+			   <- of-pat P1 T TL1
+			   <- of-pat P2 T TL2
+			   <- tplist-append TL1 TL2 TL3. 
+
+
+of-exp	: exp -> tp -> type. 
+of-match: match -> tp -> tp -> type. 
+of-oexp	: tplist -> oexp -> tp -> type. 
+
+
+
+of-oexp/c	: of-oexp tplist/nil (oexp/c E) T
+		   <- of-exp E T. 
+of-oexp/o	: of-oexp (tplist/cons T TL) (oexp/o ([x] EL x)) T'
+		   <- ({x} of-exp x T
+			 -> of-oexp TL (EL x) T').
+
+
+
+of-match/nil	: of-match match/nil T T'.
+of-match/cons	: of-match (match/cons P OE M) T T'
+		   <- of-pat P T TL
+		   <- of-oexp TL OE T'
+		   <- of-match M T T'.
+
+
+
+of-exp/unit	: of-exp exp/unit o. 
+of-exp/lam	: of-exp (exp/lam M) (arrow T1 T2)
+		   <- of-match M T1 T2.  
+of-exp/app	: of-exp (exp/app E1 E2) T2
+		   <- of-exp E1 (arrow T1 T2) 
+		   <- of-exp E2 T1.
+of-exp/pair	: of-exp (exp/pair E1 E2) (prod T1 T2)
+		   <- of-exp E1 T1
+		   <- of-exp E2 T2. 
+of-exp/inl	: of-exp (exp/inl E) (sum T1 T2)
+		   <- of-exp E T1.
+of-exp/inr	: of-exp (exp/inr E) (sum T1 T2)
+		   <- of-exp E T2. 
+of-exp/handle	: of-exp (exp/handle E1 E2) T
+		   <- of-exp E1 T
+		   <- of-exp E2 T.
+
+
+% syntax only needed for dynamic semantics of the language
+
+explist	: type. 
+
+explist/nil	: explist.
+explist/cons	: exp -> explist -> explist.
+
+
+
+% static semantics of explists
+
+of-explist	: explist -> tplist -> type. 
+
+of-explist/nil	: of-explist explist/nil tplist/nil.
+of-explist/cons	: of-explist (explist/cons E EL) (tplist/cons T TL)
+		   <- of-exp E T
+		   <- of-explist EL TL. 
+
+
+
+subst-oexp	: explist -> oexp -> exp -> type. 
+
+subst-oexp/c	: subst-oexp explist/nil (oexp/c E) E. 
+subst-oexp/o	: subst-oexp (explist/cons E EL) (oexp/o ([x] OE x)) E'
+		   <- subst-oexp EL (OE E) E'.
+
+
+
+explist-get	: nat -> explist -> exp -> type. 
+
+explist-get/hit	: explist-get z (explist/cons T TL) T.
+explist-get/miss: explist-get (s N) (explist/cons T TL) T'
+		   <- explist-get N TL T'.
+
+
+
+explist-append	: explist -> explist -> explist -> type.
+
+explist-append/nil	: explist-append explist/nil EL EL. 
+explist-append/cons	: explist-append (explist/cons E EL) EL' 
+			   (explist/cons E EL'')
+			   <- explist-append EL EL' EL''.
+
+
+
+apply-pat	: pat -> exp -> explist -> type. 
+
+% only have to define failure over well-typed pattern/expression pairs
+% failures arise from inl/inr mismatches
+
+fail-pat	: pat -> exp -> type. 
+
+apply-pat/underscore	
+   : apply-pat pat/underscore E explist/nil. 
+apply-pat/pair		
+   : apply-pat (pat/pair P1 P2) (exp/pair E1 E2) EL'
+      <- apply-pat P1 E1 EL1
+      <- apply-pat P2 E2 EL2
+      <- explist-append EL1 EL2 EL'.
+apply-pat/inl
+   : apply-pat (pat/inl P) (exp/inl E) EL
+      <- apply-pat P E EL.
+apply-pat/inr
+   : apply-pat (pat/inr P) (exp/inr E) EL
+      <- apply-pat P E EL. 
+apply-pat/var
+   : apply-pat pat/var E (explist/cons E explist/nil). 
+apply-pat/as		
+   : apply-pat (pat/as P1 P2) E EL'
+      <- apply-pat P1 E EL1
+      <- apply-pat P2 E EL2
+      <- explist-append EL1 EL2 EL'.
+
+
+fail-pat/pair-1	: fail-pat (pat/pair P1 P2) (exp/pair E1 E2) 
+		   <- fail-pat P1 E1.
+fail-pat/pair-2	: fail-pat (pat/pair P1 P2) (exp/pair E1 E2)
+		   <- apply-pat P1 E1 EL
+		   <- fail-pat P2 E2. 
+fail-pat/inl-t	: fail-pat (pat/inl P) (exp/inl E)
+		   <- fail-pat P E. 
+fail-pat/inl-f	: fail-pat (pat/inl P) (exp/inr E).
+fail-pat/inr-t	: fail-pat (pat/inr P) (exp/inr E)
+		   <- fail-pat P E. 
+fail-pat/inr-f	: fail-pat (pat/inr P) (exp/inl E).
+fail-pat/as-1	: fail-pat (pat/as P1 P2) E
+		   <- fail-pat P1 E.
+fail-pat/as-2	: fail-pat (pat/as P1 P2) E
+		   <- apply-pat P1 E EL
+		   <- fail-pat P2 E. 
+
+
+
+apply-or-fail-pat	: pat -> exp -> type. 
+
+apply-or-fail-pat/apply	: apply-or-fail-pat P E 
+				   <- apply-pat P E EL.
+apply-or-fail-pat/fail	: apply-or-fail-pat P E
+				   <- fail-pat P E. 
+
+
+
+apply-match	: match -> exp -> exp -> type. 
+
+apply-match/cons-1	: apply-match (match/cons P OE M) E E'
+			   <- apply-pat P E EL
+			   <- subst-oexp EL OE E'. 
+apply-match/cons-2	: apply-match (match/cons P OE M) E E'
+			   <- fail-pat P E
+			   <- apply-match M E E'. 
+
+
+fail-match	: match -> exp -> type. 
+
+fail-match/nil	: fail-match match/nil E.
+fail-match/cons	: fail-match (match/cons P OE M) E
+		   <- fail-pat P E
+		   <- fail-match M E.
+
+
+
+apply-or-fail-match	: match -> exp -> type. 
+
+apply-or-fail-match/apply	: apply-or-fail-match M E
+				   <- apply-match M E E'. 
+apply-or-fail-match/fail	: apply-or-fail-match M E
+				   <- fail-match M E.
+
+
+
+exception	: type. 
+exception/match	: exception. 
+
+
+
+value	: exp -> type.
+
+value/unit	: value exp/unit. 
+value/lam	: value (exp/lam M).
+value/pair	: value (exp/pair E1 E2)
+		   <- value E1
+		   <- value E2.
+value/inl	: value (exp/inl E)
+		   <- value E.
+value/inr	: value (exp/inr E)
+		   <- value E.
+
+
+
+raises	: exp -> exception -> type. 
+
+raises/app-1	: raises (exp/app E1 E2) X
+		   <- raises E1 X.
+raises/app-2	: raises (exp/app E1 E2) X
+		   <- value E1
+		   <- raises E2 X.
+raises/app-fail	: raises (exp/app (exp/lam M) E2) exception/match
+		   <- value E2
+		   <- fail-match M E2.
+raises/pair-1	: raises (exp/pair E1 E2) X
+		   <- raises E1 X.
+raises/pair-2	: raises (exp/pair E1 E2) X
+		   <- value E1
+		   <- raises E2 X. 
+raises/inl	: raises (exp/inl E) X
+		   <- raises E X. 
+raises/inr	: raises (exp/inr E) X
+		   <- raises E X.
+
+
+
+step	: exp -> exp -> type. 
+
+step/app-1		: step (exp/app E1 E2) (exp/app E1' E2)
+			   <- step E1 E1'.
+step/app-2		: step (exp/app E1 E2) (exp/app E1 E2')
+			   <- value E1
+			   <- step E2 E2'.
+step/app-beta		: step (exp/app (exp/lam M) E) E'
+			   <- value E2
+			   <- apply-match M E E'.
+step/pair-1		: step (exp/pair E1 E2) (exp/pair E1' E2)
+			   <- step E1 E1'.
+step/pair-2		: step (exp/pair E1 E2) (exp/pair E1 E2')
+			   <- value E1
+			   <- step E2 E2'.
+step/inl		: step (exp/inl E) (exp/inl E')
+			   <- step E E'.
+step/inr		: step (exp/inr E) (exp/inr E')
+			   <- step E E'.
+step/handle		: step (exp/handle E1 E2) (exp/handle E1' E2)
+			   <- step E1 E1'.
+step/handle-beta	: step (exp/handle E1 E2) E1
+			   <- value E1.
+step/handle-fail	: step (exp/handle E1 E2) E2
+			   <- raises E1 X.
+
+
+preservation-subst-oexp	: of-explist EL TL
+			   -> of-oexp TL OE T
+			   -> subst-oexp EL OE E
+			   -> of-exp E T
+			   -> type.
+%mode preservation-subst-oexp +D1 +D2 +D3 -D4.
+
+-	: preservation-subst-oexp _ (of-oexp/c D1) subst-oexp/c D1.
+
+-	: preservation-subst-oexp (of-explist/cons D1 D) (of-oexp/o D2)
+	   (subst-oexp/o D3) D4
+	   <- preservation-subst-oexp D1 (D2 _ D) D3 D4.
+
+%worlds () (preservation-subst-oexp _ _ _ _).
+%total (D1) (preservation-subst-oexp _ _ D1 _).
+
+
+
+preservation-append	: of-explist EL1 TL1
+			   -> of-explist EL2 TL2
+			   -> explist-append EL1 EL2 EL3
+			   -> tplist-append TL1 TL2 TL3
+			   -> of-explist EL3 TL3
+			   -> type. 
+%mode preservation-append +D1 +D2 +D3 +D4 -D5.
+
+-	: preservation-append _ D explist-append/nil tplist-append/nil D.
+
+-	: preservation-append (of-explist/cons D1 D) D2 (explist-append/cons D3)
+	   (tplist-append/cons D4) (of-explist/cons D5 D)
+	   <- preservation-append D1 D2 D3 D4 D5.
+
+%worlds () (preservation-append _ _ _ _ _).
+%total (D1) (preservation-append _ _ _ D1 _).
+
+
+
+preservation-get	: of-explist EL TL
+			   -> explist-get M EL E
+			   -> tplist-get M TL T
+			   -> of-exp E T
+			   -> type.
+%mode preservation-get +D1 +D2 +D3 -D4.
+
+-	: preservation-get (of-explist/cons _ D) explist-get/hit tplist-get/hit D.
+
+-	: preservation-get (of-explist/cons DL _) (explist-get/miss D') 
+	   (tplist-get/miss D'') D
+	   <- preservation-get DL D' D'' D.
+
+%worlds () (preservation-get _ _ _ _).
+%total (D1) (preservation-get _ _ D1 _).
+
+
+preservation-apply-pat	: of-exp E T
+			   -> of-pat P T TL
+			   -> apply-pat P E EL
+			   -> of-explist EL TL
+			   -> type.
+%mode preservation-apply-pat +D1 +D2 +D3 -D4.
+
+-	: preservation-apply-pat D1 of-pat/underscore apply-pat/underscore
+	   of-explist/nil.
+
+-	: preservation-apply-pat (of-exp/pair DE2 DE1) 
+	   (of-pat/pair DTA DP2 DP1)
+	   (apply-pat/pair DEA DA2 DA1) D3
+	   <- preservation-apply-pat DE1 DP1 DA1 D1
+	   <- preservation-apply-pat DE2 DP2 DA2 D2
+	   <- preservation-append D1 D2 DEA DTA D3.
+
+-	: preservation-apply-pat DE
+	   (of-pat/as DTA DP2 DP1)
+	   (apply-pat/as DEA DA2 DA1) D3
+	   <- preservation-apply-pat DE DP1 DA1 D1
+	   <- preservation-apply-pat DE DP2 DA2 D2
+	   <- preservation-append D1 D2 DEA DTA D3.
+
+-	: preservation-apply-pat (of-exp/inl DE) (of-pat/inl DP)
+	   (apply-pat/inl DA) D
+	   <- preservation-apply-pat DE DP DA D.
+
+-	: preservation-apply-pat (of-exp/inr DE) (of-pat/inr DP)
+	   (apply-pat/inr DA) D
+	   <- preservation-apply-pat DE DP DA D.
+
+-	: preservation-apply-pat D1 of-pat/var apply-pat/var
+	   (of-explist/cons of-explist/nil D1).
+
+
+%worlds () (preservation-apply-pat _ _ _ _).
+%total (D1) (preservation-apply-pat _ _ D1 _).
+
+
+
+preservation-apply-match	: of-exp E T
+				   -> of-match M T T'
+				   -> apply-match M E E'
+				   -> of-exp E' T'
+				   -> type.
+%mode preservation-apply-match +D1 +D2 +D3 -D4.
+
+-	: preservation-apply-match D1 (of-match/cons _ DOE D2)
+	   (apply-match/cons-1 DS DA) D'
+	   <- preservation-apply-pat D1 D2 DA D
+	   <- preservation-subst-oexp D DOE DS D'.
+
+-	: preservation-apply-match D1 (of-match/cons D2 _ _)
+	   (apply-match/cons-2 DA _) D'
+	   <- preservation-apply-match D1 D2 DA D'.
+
+%worlds () (preservation-apply-match _ _ _ _).
+%total (D1) (preservation-apply-match _ _ D1 _).
+
+
+
+preservation	: of-exp E T
+		   -> step E E'
+		   -> of-exp E' T
+		   -> type.
+%mode preservation +D1 +D2 -D3.
+
+-	: preservation (of-exp/app D2 D1) (step/app-1 DS)
+	   (of-exp/app D2 D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/app D2 D1) (step/app-2 DS V)
+	   (of-exp/app D2' D1)
+	   <- preservation D2 DS D2'.
+
+-	: preservation (of-exp/app D2 (of-exp/lam D1)) (step/app-beta DA _) D
+	   <- preservation-apply-match D2 D1 DA D.
+
+-	: preservation (of-exp/pair D2 D1) (step/pair-1 DS)
+	   (of-exp/pair D2 D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/pair D2 D1) (step/pair-2 DS V)
+	   (of-exp/pair D2' D1)
+	   <- preservation D2 DS D2'.
+
+-	: preservation (of-exp/handle D2 D1) (step/handle DS)
+	   (of-exp/handle D2 D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/inl D1) (step/inl DS)
+	   (of-exp/inl D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/inr D1) (step/inr DS)
+	   (of-exp/inr D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/handle D2 D1) (step/handle DS)
+	   (of-exp/handle D2 D1')
+	   <- preservation D1 DS D1'.
+
+-	: preservation (of-exp/handle D2 D1) (step/handle-beta _) D1.
+
+-	: preservation (of-exp/handle D2 D1) (step/handle-fail _) D2.
+
+%worlds () (preservation _ _ _).
+%total (D1) (preservation _ D1 _).
+
+%{! 
+--[DanielKLee](/wiki/user-danielklee/) 01:46, 11 October 2007 (EDT)
+
+TODO: Finish commentary.
+\{\{stub\}\}
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Pattern_matching).
+!}%

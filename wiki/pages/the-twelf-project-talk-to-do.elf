@@ -1,0 +1,22 @@
+%%! title: "The Twelf Project talk:To do"
+
+%{! ## "Flying tour"
+
+One of the helpful things that ACL2 has is a [http://www.cs.utexas.edu/users/moore/acl2/v3-0/The_Tours.html flying tour] that takes people through the real basics of using ACL2 - they also have a walking tour which is much more in-depth. Right now we see the need for tutorials, and I think the glossary idea is a good one. Do you think Dan Licata's document might be effectively turned into a good "flying tour of twelf" through the wiki? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 05:56, 25 September 2006 (MST)
+
+## Namespaces
+
+Do you think we need a new Tour: namespace that signals "this information is safe for n003s, don't put your crazy HOAS-filled coinductive hackbind here"? I'm realizing I'm creating tutorials like [equality](/wiki/equality/) that teach towards a number of levels of experience and sophistication, and might want a place to put an article, like, say, Tour:Equality that only covers shallow equality briefly, and then have forward/backward links that say _if you want \{more/less\} information you can go to the \{tutorial on shallow and deep [Equality](/wiki/equality/) / 'introductory tour' article Tour:Equality\}_ Thoughts? — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 18:57, 27 September 2006 (MST)
+
+: Tour namespaces sound like a reasonable idea. Deriving/using equality is somewhat of an intermediate topic in my opinion; I think we could do a fine n00best tour without it. --[DanielKLee](/wiki/user-danielklee/) 20:25, 27 September 2006 (MST)
+
+## Alt+D
+
+This wiki seems to have captured Alt+D as a "delete page" command. Other wikis I use don't seem to have this behavior. The default behavior for this in my browser is "go-to location bar", so I find myself regularly faced with the "Confirm delete" screen when really I just wanted to go somewhere else. Is there some preference to turn this off? I can't seem to find it. --[DanielKLee](/wiki/user-danielklee/) 20:25, 27 September 2006 (MST) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project_talk:To_do).
+!}%

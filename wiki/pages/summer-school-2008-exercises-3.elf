@@ -1,0 +1,34 @@
+%%! title: "Summer school 2008:Exercises 3"
+
+%{! ## Polymorphic MinML [(solution)](/wiki/summer-school-2008-type-safety-for-polymorphic-minml-intrinsic-encoding/)
+
+Add explicit polymorphism to MinML and prove type safety:
+
+- Add a type &lt;math&gt;\forall \alpha.\tau&lt;/math&gt;
+- Add terms &lt;math&gt;\Lambda \alpha.e&lt;/math&gt; and &lt;math&gt;e [\tau]&lt;/math&gt;, with the appropriate typing rules and dynamic semantics
+- Extend the type safety proof to cover the new cases.
+
+You can start from either encoding:
+* [The intrinsic encoding](/wiki/summer-school-2008-type-safety-for-minml-intrinsic-encoding/) will be easier, because it takes full advantage of dependent types.
+* [The extrinsic encoding](/wiki/summer-school-2008-type-safety-for-minml-extrinsic-encoding/) is closer to what people usually write on paper.
+
+## Monadic Effects [(solution)](/wiki/summer-school-2008-type-safety-for-minml-with-monadic-effects/)
+
+Add monadically encapsulated effects (i.e., an ``IO`` monad) to MinML, following [http://www.cs.cmu.edu/~rwh/plbook/book.pdf PFPL Chapter 39].  
+
+If you're feeling ambitious, add the following specific effects [(solution)](/wiki/summer-school-2008-type-safety-for-minml-with-monadic-effects-putngetn/):
+* ``getn ; x.m`` reads a natural number from an input buffer (i.e., stdin).  ``x`` stands for the number in ``m``.
+* ``putn(e) ; m`` writes a natural number, the value of ``e`` to an output buffer (i.e., stdout).  
+
+These primitives are simpler than full mutable references because their dynamic semantics can be given as a labeled transition system with labels ``read n`` and ``write n``---you do not need a store as part of the judgement form. 
+
+## Determinacy of Evaluation
+
+Prove that the dynamic semantics of MinML are deterministic (every expression steps to at most one other expression).  Hint: you will need to use [equality](/wiki/equality/) to state the theorem.  See the discussion of [uniqueness lemma](/wiki/uniqueness-lemma/)s for a proof of determinacy for the simply-typed λ-calculus. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Exercises_3).
+!}%

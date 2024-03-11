@@ -1,0 +1,13 @@
+%%! title: "The Twelf Project:Protected page"
+
+%{! Pages on the Twelf project wiki will be protected for one of the following reasons:
+
+* Software links - any pages that decribe download procedures or that link to downloadable resources must be protected to prevent anyone from tampering with the links.
+* Vandalism - any pages subject to vandalism will be protected. Anyone tampering with or vandalizing the Twelf project wiki will be blocked, permanently and without warning. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Protected_page).
+!}%

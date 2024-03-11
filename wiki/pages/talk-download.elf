@@ -1,0 +1,62 @@
+%%! title: "Talk:Download"
+
+%{! Perhaps this will be controversial, but I think the software page should have instructions about how to get/install Twelf CVS. %trustme is commonly used by myself, Karl, and Dan Licata in our Twelf code development, and occasionally Twelf code that requires it is publically released. --[DanielKLee](/wiki/user-danielklee/) 21:46, 5 September 2006 (MST)
+
+* I completely agree. In fact, that's a decent way of giving this page a purpose - to say "either go to the static software page over here, or get stuff from the CVS repository here". Does the repository have read-only anon. access? I'm actually using 1.5R1 :-P. [Rsimmons](/wiki/user-rsimmons/) 06:48, 6 September 2006 (MST)
+
+* Definitely. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 16:15, 9 September 2006 (MST)
+
+## Solved, yet confusing, problem
+
+I downloaded the CVS version, and it has the same problem with my SML as other versions have. I don't understand the source of this problem but can't believe I'm the only one who has been tripped up by it. The files ``twelf-server.sml`` looks like this, and ``twelf-sml.sml`` is similar.
+
+&lt;code&gt;(* comment out first line if undefined in your version of SMLofNJ *)
+(* call sml-cm with @SMLdebug=/dev/null instead *)
+SMLofNJ.Internals.GC.messages false;
+CM.make' "server.cm";
+SMLofNJ.exportFn ("bin/.heap/twelf-server", Server.server);&lt;/code&gt;
+
+No version of SML I've used in the last year supports ``CM.make'``, I've had to manually delete the apostrophe. If we include CVS information publicly, we should either fix this problem or explain the workaround. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 10:28, 8 September 2006 (MST)
+: Does the mlton build work? mlton will produce code that is several times faster, so we ought recommend that in my opinion. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 16:15, 9 September 2006 (MST)
+:: I've built the CVS version with MLton, but it requires changing around a .cm file (dependencies, I guess). I suppose I should inform the Twelf developers of that... --[DanielKLee](/wiki/user-danielklee/) 16:21, 9 September 2006 (MST)
+::: Yeah - at the very least, the code should work for mlton *OR* SML/NJ. And we should explain the changes that need to be made on the installation page, if it only works for one or the other (as it seems currently to work "out of box" for neither...) — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 18:01, 9 September 2006 (MST)
+:: And of course, if you're me and not Carsten you can't make mlton work on a 64-bit box... — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 18:02, 9 September 2006 (MST)
+::: I sshed onto linux1.gp.cs.cmu.edu and used the MLton there to build my twelf-server, which then runs fine off my normal machine. Your afs home is the same on both machines. --[DanielKLee](/wiki/user-danielklee/) 19:34, 9 September 2006 (MST)
+
+## Protection
+
+Rob suggested the possibility of protecting this page, since it points to executable software and could be vandalized. Protection would mean that no users that have not been marked administrators by Rob or myself would be able to edit the page. They would still be able to leave messages on this talk page. Since we have so many administrators and all know each other, I think there's no reason not to protect the software page. Any objections? &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 11:59, 22 September 2006 (MST)
+
+: **_Do**_ it. --[DanielKLee](/wiki/user-danielklee/) 12:18, 22 September 2006 (MST)
+
+Protecting the page might be give some sense of security, *but* I've just lost some time asking around for a solution of the make' problem; now I've created a wiki account to add a hint to the Download page about this, and find it protected. If you protect that page, I suggest you at least move such information to the protected page. Thanks. (BTW speaking for myself, I like if software is released with an OpenPGP (gpg) signature; this is more secure, and then wouldn't really require protecting the page.) --[[User:pflanze]] Tue Mar 17 17:25:44 EDT 2009
+
+: I thought in the currently available version, running ``make -f smlnj/Makefile`` circumvented the ``make'`` bizarreness, does it not? You're right about the OpenPGP signature, and we should definitely do that, though that doesn't necessarily change the point that we want to have those links protected. Sorry you were forced to run in circles, though, can you give me a better idea what you need help with/wanted to fix? ----
+
+## cvsnt?
+
+Doesn't cygwin have CVS? I think we should instruct them to install that version, which will simplify the process a little. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 14:14, 9 January 2007 (EST)
+
+: Cygwin is 1) heavyweight and 2) not available on my home computer, which I get in trouble for installing lots of things on. I agree, essentially. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 20:24, 9 January 2007 (EST)
+:: Sorry, I misread the article. I thought it said to install cygwin and then install cvsnt. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 09:58, 10 January 2007 (EST)
+::: I've removed most of said information; now that I can create new executible distributions in ~5minutes, I don't see the need as much. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 00:21, 28 January 2007 (EST)
+:::: Good, I think that frequent binary releases are a good way to go. I think most potential Twelf users will know how to use CVS anyway. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 01:33, 30 January 2007 (EST)
+
+## Software links?
+
+Is it possible to get the "CVS build" links right on this page? I'd do it myself but the windows installer filename seems to be generated from the date (this might be a bad idea). &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 11:11, 21 March 2007 (EDT)
+
+: I have to do some manual work to update windows anyway; I may change the PHP script in the future, but for now I've just created a symlink http://twelf.plparty.org/builds/twelf.exe to the most recent version. I'm not sure what you have in mind, so feel free to go wild :). — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 11:38, 21 March 2007 (EDT)
+
+## Building with MLTon
+
+Twelf cannot be built with latest MLTon, which complains about invalid file suffix, “.cm”.
+
+By the way, the binary archive cannot work on current Linux distributions, which does not provide libgmp 3 anymore, only libgmp 10. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Download).
+!}%

@@ -1,0 +1,18 @@
+%%! title: "MediaWiki:Monobook.css"
+
+%{! /* edit this file to customize the monobook skin for the entire site */
+ 
+ #p-logo a \{ background: url(/images/mediumelf.png) center center no-repeat !important; \}
+ #p-logo a:hover \{ background: url(/images/mediumelf.png) center center no-repeat !important; \}
+ body \{background: #f9f9f9 url(/images/raster.gif) 0 0 repeat-x; \}
+
+ #n-Documentation \{
+    margin: 0em 0em .5em 0em;
+ \} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/MediaWiki:Monobook.css).
+!}%

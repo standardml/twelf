@@ -1,0 +1,74 @@
+%%! title: "%reduces"
+
+%{! \{\{needswork|Example should be broken up in to more literate-code-like pieces\}\}
+
+The **``%reduces``** declaration checks a specified subderivation relationship between two derivations in a judgment. Once a ``%reduces`` relationship has been established for a judgment, the termination checker can use that information to verify that inductive calls are always on smaller derivations. Its primary use is for termination checking in inductive proofs that induct on the output of some other judgment, rather than directly on a subderivation.
+
+## Example !}%
+    
+nat : type.
+
+nat/z	: nat.
+nat/s	: nat -> nat.
+
+
+
+nat-plus : nat -> nat -> nat -> type.
+
+nat-plus/z	: nat-plus nat/z N N.
+
+nat-plus/s	: nat-plus (nat/s N1) N2 (nat/s N3)
+		   <- nat-plus N1 N2 N3.
+
+
+
+nat-plus-reduces	: {N2}{N3}
+			   nat-plus N1 N2 N3
+			   -> type.
+%mode nat-plus-reduces +D1 +D2 +D3.
+
+-	: nat-plus-reduces _ _ nat-plus/z.
+
+-	: nat-plus-reduces _ _ (nat-plus/s DL)
+	   <- nat-plus-reduces _ _ DL.
+
+%worlds () (nat-plus-reduces _ _ _).
+%reduces N2 <= N3 (nat-plus-reduces N2 N3 _).
+%total {D1} (nat-plus-reduces _ _ D1).
+
+
+
+nat-plus-reduces-s	: {N2}{N3}
+			   nat-plus (nat/s N1) N2 N3
+			   -> type.
+%mode nat-plus-reduces-s +D1 +D2 +D3.
+
+-	: nat-plus-reduces-s _ _ (nat-plus/s nat-plus/z).
+
+-	: nat-plus-reduces-s _ _ (nat-plus/s DL)
+	   <- nat-plus-reduces-s _ _ DL.
+
+%worlds () (nat-plus-reduces-s _ _ _).
+%reduces N2 < N3 (nat-plus-reduces-s N2 N3 _).
+%total {D1} (nat-plus-reduces-s _ _ D1).
+
+%{! In the above example, addition over the natural numbers was defined in the standard way. Two properties about ``nat-plus`` were proven. The first is that if ``nat-plus N1 N2 N3``, then ``N2`` is a subderivation of ``N3``. The second is that if ``nat-plus (nat/s N1) N2 N3``, then ``N2`` is a strict subderivation of ``N3``. In this particular case, these theorems do not produce any output derivations. Instead, verifying the subderivation relation through the ``%reduces`` declaration is the output.
+
+Twelf also permits the relations ``&lt;=`` and ``=`` to be established via ``%reduces``. The former may be useful when the [termination order](/wiki/percent-terminates/) (of the theorem using the lemma in question) is complex, such as a lexicographic or mutual order.
+
+&lt;!-- maybe these should be in see also? -Tom --&gt;
+A good example of making use of ``%reduces`` information in another proof is available in the tutorial on [division over the natural numbers](/wiki/division-over-the-natural-numbers/). An extended version of this example is in [using nat-less with %reduces](/wiki/using-nat-less-with-reduces/).
+
+## See also
+* \{\{guide|chapter=8|section=47|title=%reduces declaration\}\}
+
+\{\{keyword|key=reduces\}\}
+
+## Headline text !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25reduces).
+!}%

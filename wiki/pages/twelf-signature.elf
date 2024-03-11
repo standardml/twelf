@@ -1,0 +1,17 @@
+%%! title: "Twelf signature"
+
+%{! A **Twelf signature** is the thing you are writing when you are writing Twelf code - when you create a [[configuration file]], all the Twelf code in all the files you are working with makes up a Twelf signature. 
+
+\{\{needs|a simple description of how the term arises from the LF theory\}\}
+
+## See also
+* See the [introductions to Twelf](/wiki/introductions-to-twelf/) to learn how to write Twelf signatures.
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Twelf_signature).
+!}%

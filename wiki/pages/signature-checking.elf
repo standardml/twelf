@@ -1,0 +1,16 @@
+%%! title: "Signature checking"
+
+%{! \{\{needswork|To be completed\}\}
+If all Twelf had were the features we've introduced so far, it would still be a useful tool: we can represent a large variety of complex types and do searches and logic programming over them.  But where Twelf really shines is in its signature checks.  Having created a Twelf signature&mdash;which, as we've seen, we can interpret as a labeled logic program&mdash;we can then ask Twelf to check certain properties of that signature.  In particular, as we will see shortly, we can designate the arguments of a type family as inputs and outputs, and then ask
+* whether this designation is consistent with the reading of the signature as a logic program, that is, whether the outputs of the constructor will be ground (involve no logic variables) if the inputs are all ground (a **mode** check),
+* whether the constructor will produce at most one combination of outputs for any given combination of ground inputs (a **uniqueness** check),
+* whether the logic program will always terminate if it is given ground inputs (a **termination** check), or
+* whether the constructor will always produce at least one combination of ground outputs for any possible combination of ground inputs (a **totality** check).
+The totality check subsumes termination, but it has a couple of additional elements: **input coverage** and **output coverage**.  Input coverage involves checking whether there are enough clauses for the constructor to match any possible combination of inputs; we then say that all possible inputs are _covered_.  Output coverage involves checking that certain assumptions made about the form of outputs from "subroutine" calls are justified.  Let's now take a look at these checks in more detail and see some examples. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Signature_checking).
+!}%

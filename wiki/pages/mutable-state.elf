@@ -1,0 +1,725 @@
+%%! title: "Mutable state"
+
+%{! 
+This article presents a simple language with mutable state—it has 
+``let``-statements but, unlike many other examples such as the 
+[simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/), it does not have functions, though this is for simplicity and is not an inherent limitation. It is based on 
+Chapter 2 of [Rob Simmons's](/wiki/user-rsimmons/) undergraduate thesis,&lt;ref&gt;&lt;bibtex&gt;@TechReport\{simmons05thesis,
+ author =       \{Robert J. Simmons\},
+ title =        \{Twelf as a Unified Framework for Language Formalization and Implementation\},
+ Institution =  \{Princeton University\},
+ year =         \{2005\},
+ note =   \{Undergraduate Senior Thesis 18679\},
+\}&lt;/bibtex&gt;&lt;/ref&gt; which contains more commentary—this account includes a simple extension, the ability to update state. That  account is in turn based on Pierce's description in TAPL.&lt;ref&gt;\{\{bibtex:pierce02tapl\}\}&lt;/ref&gt;  This example can be seen as an extension of the one from the tutorial on [strengthening](/wiki/strengthening/); that example defines a language with references but no way to use them.
+
+## Language definition
+
+### Natural numbers
+
+First we need [natural numbers](/wiki/natural-numbers/), which we will use in the object language 
+to represent both locations and actual numbers (this is why we define 
+``sum`` as well.)
+!}%
+
+nat : type.
+z : nat. 
+s : nat -> nat. 
+
+sum : nat -> nat -> nat -> type. 
+%mode sum +A +B -C. 
+sum-z : sum z N N. 
+sum-s : sum (s N1) N2 (s N3) 
+	 <- sum N1 N2 N3. 
+%worlds () (sum A B C). 
+%total A (sum A B C). 
+
+
+%{! 
+### Syntax
+
+Using this we can define the syntax of the language; natural numbers will be 
+used both for locations (which the programmer cannot access) and as numbers, 
+which can be added—the typing rules will ensure that natural numbers 
+representing heap locations cannot be confused with natural numbers that may 
+be added.
+
+* ``n N`` - integrates natural numbers into the language as &lt;math&gt;\mathsf\{n\}(n)&lt;/math&gt;, where &lt;math&gt;\texttt\{\}n&lt;/math&gt; is a natural number 0, 1, 2...
+* ``E1 + E2`` - addition, &lt;math&gt;\texttt\{\}e_1 + e_2&lt;/math&gt;
+* ``ref E`` - creating a reference cell, &lt;math&gt;\mathsf\{ref\}(e)&lt;/math&gt;
+* ``! E`` - dereferencing a reference cell, &lt;math&gt;\texttt\{\}!e&lt;/math&gt;
+* ``gets E1 E2`` - updating a reference cell, &lt;math&gt;\texttt\{\}e_1 := e_2&lt;/math&gt;
+* ``loc L`` - locations (not available to the programmer), &lt;math&gt;\mathsf\{loc\}(l)&lt;/math&gt;, where &lt;math&gt;\texttt\{\}l&lt;/math&gt; is an abstract location.
+* ``let E1 ([x] E2 x)`` - let statements &lt;math&gt;\mathsf\{let~\} x = e_1 \mathsf\{~in~\} e_2&lt;/math&gt;
+!}%
+
+%abbrev location = nat. 
+exp : type. 
+n : nat -> exp. 
++ : exp -> exp -> exp. %infix left 10 +. 
+ref : exp -> exp. 
+! : exp -> exp. 
+gets : exp -> exp -> exp. 
+loc : location -> exp. 
+let : exp -> (exp -> exp) -> exp. 
+
+%{! 
+### Types
+
+Because we do not have functions, our language has a very simple language of types, only integers and references to other types.
+!}%
+
+tp : type. 
+int-tp : tp. 
+ref-tp : tp -> tp. 
+
+%{! 
+### Lists
+
+We will represent the store as a list of expressions, and define several 
+operations on lists—projecting the _n_th element from a list, appending a new element to the end of a list, updating the _n_th element of the list, and having a list that is the subset of another list. We also define a similar list of types that is omitted.
+!}%
+
+explist : type. 
+
+$exp : exp -> explist -> explist.  %infix right 5 $exp. 
+nil-exp : explist. 
+
+
+proj-exp : explist -> nat -> exp -> type. 
+%mode proj-exp +EL +N -E. 
+proj-exp-z : proj-exp (E $exp EL) z E. 
+proj-exp-s : proj-exp (E $exp EL) (s N) E’ 
+	     <- proj-exp EL N E’. 
+
+
+append-exp : explist -> exp -> explist -> nat -> type. 
+%mode append-exp +EL +E -EL’ -N. 
+append-exp-z : append-exp nil-exp E (E $exp nil-exp) z. 
+append-exp-s : append-exp (E’ $exp EL) E (E’ $exp EL’) (s N) 
+		<- append-exp EL E EL’ N. 
+
+
+subset-exp : explist -> explist -> type. 
+%mode subset-exp +EL +EL'.
+subset-exp-z : subset-exp nil-exp E. 
+subset-exp-s : subset-exp (E $exp EL) (E $exp EL’) 
+		<- subset-exp EL EL’. 
+
+
+update-exp : explist -> nat -> exp -> explist -> type.
+%mode update-exp +EL +N +E -EL'.
+update-exp-z : update-exp (E $exp EL) z E' (E' $exp EL).
+update-exp-s : update-exp (E $exp EL) (s N) E' (E $exp EL')
+	       <- update-exp EL N E' EL'.
+
+%{! |hidden=true !}%
+
+
+tplist : type. 
+
+$tp : tp -> tplist -> tplist. %infix right 5 $tp. 
+nil-tp : tplist. 
+
+
+proj-tp : tplist -> nat -> tp -> type. 
+%mode proj-tp +TL +N -T. 
+proj-tp-z : proj-tp (T $tp TL) z T. 
+proj-tp-s : proj-tp (T $tp TL) (s N) T’ 
+	     <- proj-tp TL N T’. 
+
+
+append-tp : tplist -> tp -> tplist -> nat -> type. 
+%mode append-tp +TL +T -TL’ -N. 
+append-tp-z : append-tp nil-tp T (T $tp nil-tp) z. 
+append-tp-s : append-tp (T’ $tp TL) T (T’ $tp TL’) (s N) 
+	       <- append-tp TL T TL’ N.
+
+ 
+subset-tp : tplist -> tplist -> type. 
+subset-tp-z : subset-tp nil-tp T. 
+subset-tp-s : subset-tp (T $tp TL) (T $tp TL’) 
+	       <- subset-tp TL TL’. 
+
+
+update-tp : tplist -> nat -> tp -> tplist -> type.
+%mode update-tp +TL +N +T -TL'.
+update-tp-z : update-tp (T $tp TL) z T' (T' $tp TL).
+update-tp-s : update-tp (T $tp TL) (s N) T' (T $tp TL')
+	       <- update-tp TL N T' TL'.
+
+
+%{! 
+We create abbreviations to indicate that we are using expression
+lists to represent stores and type lists to represent store typings.
+!}%
+
+%abbrev store = explist. 
+%abbrev storetp = tplist. 
+
+%{! 
+### Values and evaluation
+
+The predicate ``isval`` 
+!}%
+
+isval : exp -> type. 
+%mode isval +E. 
+v-int : isval (n N). 
+v-loc : isval (loc L). 
+
+isval-list : explist -> type. 
+%mode isval-list +E. 
+vl-z : isval-list nil-exp. 
+vl-s : isval-list (E $exp EL) 
+	<- isval E 
+	<- isval-list EL. 
+
+eval : store -> exp -> store -> exp -> type. 
+%mode eval +S +E -S’ -E’. 
+
+s1-add : eval S (E1 + E2) S’ (E1’ + E2) 
+	  <- eval S E1 S’ E1’. 
+s2-add : eval S (E1 + E2) S’ (E1 + E2’) 
+	  <- isval E1 
+	  <- eval S E2 S’ E2’. 
+e-add : eval S (n N1 + n N2) S (n N3) 
+	 <- sum N1 N2 N3. 
+s-ref : eval S (ref E) S’ (ref E’) 
+	 <- eval S E S’ E’. 
+e-ref : eval S (ref E) S’ (loc L) 
+	 <- isval E 
+	 <- append-exp S E S’ L. 
+s-bang : eval S (! E) S’ (! E’) 
+	  <- eval S E S’ E’. 
+e-bang : eval S (! (loc L)) S E 
+	  <- proj-exp S L E. 
+s1-gets : eval S (gets E1 E2) S' (gets E1' E2)
+	   <- eval S E1 S' E1'.
+s2-gets : eval S (gets E1 E2) S' (gets E1 E2')
+	   <- isval E1
+	   <- eval S E2 S' E2'.
+e-gets : eval S (gets (loc L1) E) S' E
+	  <- isval E
+	  <- update-exp S L1 E S'.
+s-let : eval S (let E EF) S’ (let E’ EF) 
+	 <- eval S E S’ E’. 
+e-let : eval S (let E EF) S (EF E) 
+	 <- isval E. 
+
+
+%{! 
+### Typing judgment
+
+As we do in the article on [strengthening](/wiki/strengthening/), we need to define a separate 
+judgment ``var-of`` that we will use to represent hypothetical typing
+judgments—the hypothetical judgment simply associates an expression with 
+a type, whereas the typing judgment ``of`` associates an expression with
+a type in a specific store typing.
+!}%
+
+var-of : exp -> tp -> type. 
+%mode var-of +E -T. 
+of : storetp -> exp -> tp -> type. 
+%mode of +ST +E -T. 
+of-list : storetp -> explist -> tplist -> type. 
+%mode of-list +ST +E -T. 
+
+
+tl-z : of-list ST nil-exp nil-tp. 
+tl-s : of-list ST (E $exp EL) (T $tp TL) 
+	<- of ST E T 
+	<- of-list ST EL TL. 
+
+
+t-int : of ST (n N) int-tp. 
+t-add : of ST (E1 + E2) int-tp 
+	 <- of ST E1 int-tp 
+	 <- of ST E2 int-tp. 
+t-ref : of ST (ref E) (ref-tp T) 
+	 <- of ST E T. 
+t-bang : of ST (! E) T 
+	  <- of ST E (ref-tp T). 
+t-gets : of ST (gets E1 E2) T
+	  <- of ST E1 (ref-tp T)
+	  <- of ST E2 T.
+t-loc : of ST (loc L) (ref-tp T) 
+	 <- proj-tp ST L T. 
+t-let : of ST (let E EF) T 
+	 <- of ST E T’ 
+	 <- ({x} var-of x T’ -> of ST (EF x) T). 
+t-var : of ST E T 
+	 <- var-of E T. 
+
+
+%{! The typing judgment exists in an LF context where new expression
+variables can be introduced if they are related with ``var-of``
+to a well-formed type. This requirement is expressed by the [block](/wiki/percent-block/) 
+``var-tp``. !}%
+
+%block var-tp : some {T:tp} block {x:exp}{v:var-of x T}.
+
+%{! 
+We also define a judgment ``of-store``, that expresses a store being
+well-typed and containing only values.
+!}%
+
+of-store : storetp -> store -> type. 
+&of-store : of-store TL EL 
+	     <- isval-list EL 
+	     <- of-list TL EL TL. 
+
+
+%{! ### Multi-step evaluation !}%
+
+run : store -> exp 
+	    -> store -> exp -> type. 
+%mode run +S +E -S’ -E’. 
+run-step : run S E S’’ E’’ 
+	    <- eval S E S’ E’ 
+	    <- run S’ E’ S’’ E’’. 
+run-end : run S E S E.
+
+
+
+%{! ## Language theory !}%
+
+%{! 
+### Effectiveness lemmas
+
+We need a few [effectiveness lemmas](/wiki/effectiveness-lemma/) that show that the ``sum`` and ``append`` judgments are always derivable. 
+
+The ``can-update`` theorem is slightly different, establishing that if a particular store has a particular type, then any index that has a corresponding type can be updated.
+!}%
+
+can-sum : {A: nat}{B: nat} sum A B C -> type. 
+%mode can-sum +A +B -SUM. 
+& : can-sum z N sum-z. 
+& : can-sum (s N1) N2 (sum-s SUM) 
+<- can-sum N1 N2 SUM. 
+%worlds () (can-sum _ _ _). 
+%total T (can-sum T _ _). 
+
+
+can-append-exp : {EL:explist}{E:exp} append-exp EL E EL' N -> type.
+%mode can-append-exp +EL +E -APPEND.
+& : can-append-exp nil-exp E append-exp-z.
+& : can-append-exp (E $exp EL) E' (append-exp-s APPEND)
+     <- can-append-exp EL E' APPEND.
+%worlds () (can-append-exp _ _ _).
+%total T (can-append-exp T _ _).
+
+
+%{! ### Other auxillary lemmas !}%
+
+of-projection : of-list ST EL TL 
+		 -> proj-tp TL N T 
+		 %% implies
+		 -> proj-exp EL N E 
+		 -> of ST E T -> type. 
+%mode of-projection +TL +PT -PE -T. 
+& : of-projection (tl-s TL T) proj-tp-z proj-exp-z T. 
+& : of-projection (tl-s TL T’) (proj-tp-s PT) (proj-exp-s PE) T 
+<- of-projection TL PT PE T. 
+%worlds () (of-projection _ _ _ _). 
+%total PT (of-projection _ PT _ _). 
+
+of-projection' : of-list ST EL TL 
+		 -> proj-tp TL N T 
+		 %% implies
+		 -> proj-exp EL N E 
+		 -> of ST E T -> type. 
+%mode of-projection' +TL +PT +PE -T. 
+& : of-projection' (tl-s TL T) proj-tp-z proj-exp-z T. 
+& : of-projection' (tl-s TL T’) (proj-tp-s PT) (proj-exp-s PE) T 
+<- of-projection' TL PT PE T. 
+%worlds () (of-projection' _ _ _ _). 
+%total PT (of-projection' _ PT _ _). 
+
+subset-projectable : proj-tp ST N T 
+		      -> subset-tp ST ST’ 
+		      -> proj-tp ST’ N T -> type. 
+%mode subset-projectable +P +S -P’. 
+& : subset-projectable proj-tp-z (subset-tp-s SUB) proj-tp-z. 
+& : subset-projectable (proj-tp-s P) (subset-tp-s SUB) (proj-tp-s P’) 
+     <- subset-projectable P SUB P’. 
+%worlds () (subset-projectable _ _ _). 
+%total P (subset-projectable P S P’). 
+
+
+subset-refl : {ST} subset-tp ST ST -> type. 
+%mode subset-refl +ST -S. 
+& : subset-refl nil-tp subset-tp-z.
+& : subset-refl (T $tp ST) (subset-tp-s SUB)
+     <- subset-refl ST SUB.
+%worlds () (subset-refl _ _).
+%total T (subset-refl T _).
+
+of-update : of-list ST EL TL 
+	     -> proj-tp TL L T
+	     %% implies
+	     -> {E} update-exp EL L E EL' 
+	     -> type.
+%mode of-update +T +PT +E -PE.
+& : of-update (tl-s _ _) proj-tp-z _ update-exp-z.
+& : of-update (tl-s T _) (proj-tp-s PT) E (update-exp-s PE)
+     <- of-update T PT E PE.
+%worlds () (of-update _ _ _ _).
+%total T (of-update T _ _ _).
+
+
+
+append-lemma : isval E 
+		-> of ST E T 
+		-> isval-list EL 
+		-> of-list ST EL TL 
+		-> append-exp EL E EL’ N 
+		%% implies
+		-> subset-tp TL TL’ 
+		-> isval-list EL’ 
+		-> of-list ST EL’ TL’ 
+		-> proj-tp TL’ N T -> type. 
+%mode append-lemma +V +T +VL +TL +AE -S -VL’ -TL’ -P. 
+& : append-lemma V T vl-z tl-z append-exp-z subset-tp-z (vl-s vl-z V) (tl-s tl-z T) proj-tp-z. 
+& : append-lemma V T (vl-s VL V*) (tl-s TL T*) (append-exp-s AE) (subset-tp-s S) (vl-s VL’ V*) (tl-s TL’ T*) (proj-tp-s P) 
+     <- append-lemma V T VL TL AE S VL’ TL’ P. 
+%worlds () (append-lemma _ _ _ _ _ _ _ _ _). 
+%total [VL TL AE] (append-lemma V T VL TL AE AT VL’ TL’ P). 
+
+
+
+update-lemma : isval E
+		-> of ST E T
+		-> isval-list EL
+		-> of-list ST EL TL 
+		-> proj-tp TL N T
+		-> update-exp EL N E EL'
+		%% implies
+		-> isval-list EL'
+		-> of-list ST EL' TL -> type.
+%mode update-lemma +V +T +VL +TL +P +UE -TL' -VL'.
+& : update-lemma V T (vl-s VL V*) (tl-s TL T*) proj-tp-z  update-exp-z (vl-s VL V) (tl-s TL T).
+& : update-lemma V T (vl-s VL V*) (tl-s TL T*) (proj-tp-s P) (update-exp-s UE) (vl-s VL' V*) (tl-s TL' T*)
+     <- update-lemma V T VL TL P UE VL' TL'.
+%worlds () (update-lemma _ _ _ _ _ _ _ _).
+%total T (update-lemma _ _ T _ _ _ _ _).
+
+
+
+%{! 
+### Progress
+
+Progress, as usual, relies on an auxillary notion of what it means for an
+expression to not be stuck that is captured by the judgement ``notstuck``,
+which states that in a certain store ``S`` an expression ``E`` is 
+either a value or can take a step.
+!}%
+
+notstuck : store -> exp -> type. 
+ns-steps : notstuck S E 
+	    <- eval S E S’ E’. 
+ns-isval : notstuck S E 
+	    <- isval E. 
+
+%{! The statement of the progress theorem then utilizes the progress
+theorem in a straightforward manner. !}%
+
+progress : of ST E T 
+	    -> of-store ST S 
+	    %% implies
+	    -> notstuck S E -> type. 
+%mode progress +T +TS -NS. 
+
+%{! A natural number is already a value !}%
+
+prog-int : progress t-int _ (ns-isval v-int). 
+
+%{! To show progress for references, we show that a new reference cell can
+always be created on the end of the list we use to represent the heap. !}%
+
+lemma : notstuck S E -> notstuck S (ref E) -> type. 
+%mode lemma +NS1 -NS. 
+& : lemma (ns-steps E) (ns-steps (s-ref E)). 
+& : lemma (ns-isval V) (ns-steps (e-ref APPEND V)) 
+     <- can-append-exp EL E APPEND. 
+%worlds () (lemma _ _). %total NS (lemma NS _). 
+prog-ref : progress (t-ref T) TS NS 
+	    <- progress T TS NS1 
+	    <- lemma NS1 NS. 
+
+
+%{! To prove progress for addition, we will need to use the fact that the subexpressions both have type ``int-tp``—that way, once they are reduced to values, they must be numbers, not locations. !}%
+
+lemma : of ST E1 int-tp
+	 -> notstuck S E1 
+	 -> of ST E2 int-tp
+	 -> notstuck S E2 
+	 %% implies
+	 -> notstuck S (E1 + E2) -> type. 
+%mode lemma +T1 +NS1 +T2 +NS2 -NS. 
+& : lemma _ (ns-steps E) _ _ (ns-steps (s1-add E)). 
+& : lemma _ (ns-isval V) _ (ns-steps E) (ns-steps (s2-add E V)). 
+& : lemma t-int (ns-isval v-int) t-int (ns-isval v-int) (ns-steps (e-add SUM)) 
+     <- can-sum N1 N2 SUM. 
+%worlds () (lemma _ _ _ _ _). %total [NS1 NS2] (lemma T1 NS1 T2 NS2 NS). 
+prog-add : progress (t-add T2 T1) TS NS
+	    <- progress T1 TS NS1
+	    <- progress T2 TS NS2
+	    <- lemma T1 NS1 T2 NS2 NS.
+
+%{! We use both the notstuckness of the subexpressions and the ability to always project from a well-typed store (``of-projection``) to prove the ``gets`` case. !}%
+
+lemma : of-store ST S 
+	 -> of ST E (ref-tp T) 
+	 -> notstuck S E 
+	 %% implies
+	 -> notstuck S (! E) -> type. 
+%mode lemma +ST +T +NS1 -NS. 
+& : lemma _ _ (ns-steps E) (ns-steps (s-bang E)). 
+& : lemma (&of-store TL VL) (t-loc PROJ-T) (ns-isval v-loc) (ns-steps (e-bang PROJ-E)) 
+     <- of-projection TL PROJ-T PROJ-E _. 
+%worlds () (lemma _ _ _ _). %total NS1 (lemma ST T NS1 NS). 
+prog-bang : progress (t-bang T) TS NS 
+	     <- progress T TS NS1 
+	     <- lemma TS T NS1 NS. 
+
+%{! A location is already a value. !}%
+
+prog-loc : progress (t-loc PROJ-T) TS (ns-isval v-loc). 
+
+%{! We use both the notstuckness of the subexpressions and the ability to always update from a well-typed store (``of-update``) to prove the ``gets`` case. !}%
+
+lemma : of-store ST S 
+	 -> of ST E1 (ref-tp T) 
+	 -> notstuck S E1
+	 -> notstuck S E2
+	 %% implies
+	 -> notstuck S (gets E1 E2) -> type.
+%mode lemma +TL +T +NS1 +NS2 -NS.
+& : lemma _ _ (ns-steps E) _ (ns-steps (s1-gets E)).
+& : lemma _ _ (ns-isval V) (ns-steps E) (ns-steps (s2-gets E V)).
+& : lemma (&of-store TL _) (t-loc PROJ) (ns-isval v-loc) 
+     (ns-isval (V:isval E)) (ns-steps (e-gets UPD V))
+     <- of-update TL PROJ E UPD.
+%worlds () (lemma _ _ _ _ _).
+%total {} (lemma _ _ _ _ _).
+proj-gets : progress (t-gets T2 T1) TS NS
+	     <- progress T1 TS NS1
+	     <- progress T2 TS NS2
+	     <- lemma TS T1 NS1 NS2 NS.
+
+%{! We use a lemma about the nonstuckness of the subexpression to prove the ``let`` case. !}%
+
+lemma : {EF: exp -> exp} notstuck S E -> notstuck S (let E EF) -> type. 
+%mode lemma +EF +NS1 -NS. 
+& : lemma _ (ns-steps E) (ns-steps (s-let E)). 
+& : lemma _ (ns-isval V) (ns-steps (e-let V)). 
+%worlds () (lemma _ _ _). %total NS1 (lemma T NS1 NS). 
+prog-let : progress (t-let _ T) TS NS 
+	    <- progress T TS NS1 
+	    <- lemma EF NS1 NS. 
+
+
+
+%worlds () (progress _ _ _). 
+%total T (progress T TS NS). 
+
+%{! 
+### Substitution
+
+As in the article on [strengthening](/wiki/strengthening/), progress will need to appeal to a simple substitution lemma.
+!}%
+
+substitute : ({x} var-of x Tp -> of ST (EF x) T) 
+	      -> of ST E Tp 
+	      %% implies
+	      -> of ST (EF E) T -> type. 
+%mode substitute +F +T -T’. 
+
+sub-refl : substitute ([x][v: var-of x Tp] T) T* T. 
+sub-sum : substitute ([x][v: var-of x Tp] t-add (T2 x v) (T1 x v)) T* (t-add T2’ T1’) 
+	   <- substitute ([x][v: var-of x Tp] T2 x v) T* T2’ 
+	   <- substitute ([x][v: var-of x Tp] T1 x v) T* T1’. 
+sub-ref : substitute ([x][v: var-of x Tp] t-ref (T x v)) T* (t-ref T’) 
+	   <- substitute ([x][v: var-of x Tp] T x v) T* T’. 
+sub-bang : substitute ([x][v: var-of x Tp] t-bang (T x v)) T* (t-bang T’) 
+	    <- substitute ([x][v: var-of x Tp] T x v) T* T’. 
+sub-gets : substitute ([x][v: var-of x Tp] t-gets (T2 x v) (T1 x v)) T* (t-gets T2' T1')
+	    <- substitute ([x][v: var-of x Tp] T2 x v) T* T2'
+	    <- substitute ([x][v: var-of x Tp] T1 x v) T* T1'. 
+sub-let : substitute ([x][v: var-of x Tp] t-let (F x v) (T x v)) T* (t-let F’ T’) 
+	   <- substitute ([x][v: var-of x Tp] T x v) T* T’ 
+	   <- {x’}{v’: var-of x’ Tp2} 
+	      substitute ([x][v: var-of x Tp] F x v x’ v’) T* (F’ x’ v’). 
+sub-var : substitute ([x][v: var-of x Tp] t-var v) T* T*. 
+%worlds (var-tp) (substitute _ _ _). 
+%total F (substitute F T T’). 
+
+
+%{! 
+### Weakening
+
+In order to be able to evaluate reference cells, we need to be able to show 
+that adding new things to the store typing will leave all current programs 
+well-typed. The only interesting case is ``weak-loc``.
+!}%
+
+weakening : of ST E T -> subset-tp ST ST’ -> of ST’ E T -> type. 
+%mode weakening +T +SUB -T’. 
+
+weak-var : weakening (t-var V) _ (t-var V).
+weak-int : weakening (t-int) _ (t-int).
+weak-ref : weakening (t-ref T) S (t-ref T')
+	    <- weakening T S T'.
+weak-sum : weakening (t-add T2 T1) S (t-add T2’ T1’) 
+	    <- weakening T1 S T1’ 
+	    <- weakening T2 S T2’. 
+weak-bang : weakening (t-bang T) S (t-bang T')
+	     <- weakening T S T'.
+weak-loc : weakening (t-loc PROJ) S (t-loc PROJ’) 
+	    <- subset-projectable PROJ S PROJ’. 
+weak-gets : weakening (t-gets T2 T1) S (t-gets T2' T1')
+	     <- weakening T2 S T2'
+	     <- weakening T1 S T1'.
+weak-let : weakening (t-let F T) S (t-let F’ T’) 
+	    <- weakening T S T’ 
+	    <- {x}{v: var-of x Tp} weakening (F x v) S (F’ x v). 
+%worlds (var-tp) (weakening _ _ _). 
+%total T (weakening T S T’). 
+
+%{! A comparable notion of weakening must be defined for lists: !}%
+
+weakening-list : of-list ST EL TL 
+		  -> subset-tp ST ST’ 
+		  -> of-list ST’ EL TL -> type. 
+%mode weakening-list +T +SUB -T’. 
+weak-z : weakening-list tl-z S tl-z. 
+weak-s : weakening-list (tl-s TL T) S (tl-s TL’ T’) 
+	  <- weakening T S T’ 
+	  <- weakening-list TL S TL’. 
+%worlds () (weakening-list _ _ _). 
+%total T (weakening-list T S T’). 
+
+%{! 
+### Preservation
+
+!}%
+
+preservation : of ST E T 
+		-> of-store ST S 
+		-> eval S E S’ E’ 
+		%% implies
+		-> subset-tp ST ST’ 
+		-> of ST’ E’ T 
+		-> of-store ST’ S’ -> type. 
+%mode preservation +T +TS +E -S -T’ -TS’. 
+
+%{! In the cases where evaluation is passed on to a later step, the cases are mostly a straightforward call to the induction hypothesis and the weakening lemma. !}%
+
+pres-s1-add : preservation (t-add T2 T1) ST (s1-add E) S (t-add T2’ T1’) ST’ 
+	       <- preservation T1 ST E S T1’ ST’ 
+	       <- weakening T2 S T2’. 
+pres-s2-add : preservation (t-add T2 T1) ST (s2-add E V) S (t-add T2’ T1’) ST’ 
+	       <- preservation T2 ST E S T2’ ST’ 
+	       <- weakening T1 S T1’. 
+pres-s-ref : preservation (t-ref T) ST (s-ref E) S (t-ref T’) ST’ 
+	      <- preservation T ST E S T’ ST’. 
+pres-s-bang : preservation (t-bang T) ST (s-bang E) S (t-bang T’) ST’ 
+	       <- preservation T ST E S T’ ST’. 
+pres-s1-gets : preservation (t-gets T2 T1) ST (s1-gets E) S (t-gets T2' T1') ST'
+		<- preservation T1 ST E S T1' ST'
+		<- weakening T2 S T2'.
+pres-s2-gets : preservation (t-gets T2 T1) ST (s2-gets E V) S (t-gets T2' T1') ST'
+		<- preservation T2 ST E S T2' ST'
+		<- weakening T1 S T1'.
+pres-s-let : preservation (t-let F T) ST (s-let E) S (t-let F’ T’) ST’ 
+	      <- preservation T ST E S T’ ST’ 
+	      <- {x}{v} weakening (F x v) S (F’ x v). 
+
+%{! The cases where evaluation happens are more involved—for instance, the ``ref`` case relies on the very involved ``append-lemma`` from the auxillary lemmas. !}%
+
+
+
+pres-e-add : preservation (t-add t-int t-int) ST (e-add SUM) S t-int ST 
+	      <- subset-refl _ S. 
+pres-e-ref : preservation (t-ref T) 
+	      (&of-store TL VL) 
+	      (e-ref AE V) S (t-loc P) 
+	      (&of-store TL’ VL’) 
+	      <- append-lemma V T VL TL AE S VL’ TL’’ P 
+	      <- weakening-list TL’’ S TL’. 
+pres-e-bang : preservation (t-bang (t-loc PROJ-T)) 
+	       (&of-store TL VL) (e-bang PROJ-E) 
+	       S T (&of-store TL VL) 
+	       <- subset-refl _ S
+	       <- of-projection' TL PROJ-T PROJ-E T.
+pres-e-gets : preservation (t-gets T (t-loc PROJ-T))
+	       (&of-store TL VL)
+	       (e-gets UL V) S T 
+	       (&of-store TL' VL')
+	       <- subset-refl _ S
+	       <- update-lemma V T VL TL PROJ-T UL VL' TL'.
+pres-e-let : preservation (t-let F T’) ST (e-let V) S T ST 
+	      <- substitute F T’ T 
+	      <- subset-refl _ S. 
+%worlds () (preservation _ _ _ _ _ _). 
+%total T (preservation T ST E S T’ ST’). 
+
+
+
+%{! ### Safety !}%
+
+safety : of ST E T 
+	  -> of-store ST S 
+	  -> run S E S’ E’ 
+	  -> notstuck S’ E’ -> type. 
+%mode safety +T +TS +R -NS. 
+safe-end : safety T ST run-end NS 
+	    <- progress T ST NS. 
+safe-step : safety T ST (run-step R E) NS 
+	     <- preservation T ST E S T’ ST’ 
+	     <- safety T’ ST’ R NS. 
+%worlds () (safety _ _ _ _). 
+%total R (safety T TS R NS). 
+
+
+
+%{! 
+## Example
+
+We will define the following simple program as ``prog1``, and use Twelf's [logic programming](/wiki/logic-programming/) abilities to actually run the typechecker ``of E T`` and multi-step evaluation ``run S E S' E'``. Because ``gets`` returns the result of the assignment in the same way C does, &lt;math&gt;\texttt\{\}y&lt;/math&gt; should have the same value as &lt;math&gt;\texttt\{\}!x&lt;/math&gt; at the end of the program, namely 4.
+
+&lt;math&gt;\begin\{array\}\{l\}\mathsf\{let~\}x = \mathsf\{ref\}(2 + 1) \mathsf\{~in\}\\
+\mathsf\{let~\}y = x := !x + 1\mathsf\{~in~\}\\
+!x + 1\end\{array\}&lt;/math&gt;
+!}%
+
+prog1 = 
+let (ref (n (s (s z)) + n (s z))) 
+   [x] 
+let (gets x (! x + n (s z)))
+   [y]
+! x + n (s z).
+
+
+%{! We can typecheck the program (in the empty store typing ``nil-tp``). The syntax we use for [``%query``](/wiki/percent-query/) indicates that we only expect there to be one solution (because type checking should be syntax directed): |check=decl !}%
+
+%query 1 * (of nil-tp prog1 T).
+
+%{! We can then run the program to completion (starting in the empty store ``nil-exp``). We expect the final state ``S`` to include the number 4, and we expect the program to evaluate to value ``V`` 5. The multi-step evaluation judgment ``run`` is defined to run arbitrarily until stopping, so we only want the first solution—it will be the solution resulting in running ``run-step`` as many times as possible: |check=decl !}%
+
+%query 1 1 (run nil-exp prog1 S V).
+
+%.
+
+== References ==
+
+<references />
+
+{{case study}}
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Mutable_state).
+!}%

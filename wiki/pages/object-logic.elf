@@ -1,0 +1,19 @@
+%%! title: "Object logic"
+
+%{! An **object logic** is a logic encoded as an [LF](/wiki/lf/) signature, with the intent of studying it with Twelf. The term "logic" is used very broadly here, as it can refer to any **deductive system** with an [abstract syntax](/wiki/abstract-syntax/) and a set of [relation](/wiki/relation/)s that can be encoded in LF. We use the term **object language** as a synonym.  Examples of object logics include arithmetic over [natural numbers](/wiki/natural-numbers/), a theory of [lists](/wiki/lists/), propositional logic, [linear logic](/wiki/linear-logic/), or programming languages like the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/).  
+
+In general, anything defined using an LF signature is an object logic of some form. The term object logic is used to contrast the logic from the [meta-logic](/wiki/meta-logic/) used to encode  it.
+
+## See also
+
+* [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)
+* [Meta-logic](/wiki/meta-logic/)
+
+\{\{stub\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Object_logic).
+!}%

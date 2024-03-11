@@ -1,0 +1,58 @@
+%%! title: "Summer school 2008"
+
+%{! __NOTOC__
+This page contains course materials for the Twelf course at [http://www.cs.uoregon.edu/research/summerschool/summer08/ the University of Oregon Summer School on Logic and Theorem Proving in Programming Languages, July 2008].  In this course, you will learn to represent [deductive system](/wiki/object-logic/)s in [LF](/wiki/lf/) and prove [metatheorem](/wiki/metatheorem/)s about them with [Twelf](/wiki/about-the-twelf-project/).
+
+## New: Feedback Form
+
+Please fill out our [http://gs4080.sp.cs.cmu.edu/servlets/summerschool2008/feedback.ss feedback form]!
+
+## Get Twelf
+
+Pre-built binaries of Twelf are available for most operating systems through the [http://twelf.plparty.org/builds Twelf Night(ly)].
+* [http://twelf.plparty.org/builds/twelf-linux.tar.gz Linux (tgz)]
+* [http://twelf.plparty.org/builds/twelf.exe Windows (exe)]
+* [http://twelf.plparty.org/builds/twelf-osx-intel.dmg Mac OS 10.4 or 10.5 (Intel only) (dmg)]
+
+Otherwise:
+* you can build Twelf from the [http://twelf.plparty.org/builds/twelf-src.tar.gz source tarball].  You will need [http://www.mlton.org MLton] or [http://www.smlnj.org sml/nj]. 
+* you can make yourself an account on the wiki, and do the exercises on your User:&lt;login&gt; page (linked at the top after you log in).
+
+Then see [Twelf with Emacs](/wiki/twelf-with-emacs/) for the basics of interacting with Twelf.  (You can also use [Twelf without Emacs](/wiki/twelf-without-emacs/), by interacting with the Twelf server directly.)
+
+## Lectures and Labs [http://www.cs.cmu.edu/~rwh/talks/UO_Summer08.pdf (slides)]
+
+### Class 1: Overview
+* [Arithmetic expressions](/wiki/summer-school-2008-arithmetic-expressions/)
+* [Arithmetic expressions with let-binding](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding/)
+** Variation: [Call-by-value let-binding syntax](/wiki/summer-school-2008-arithmetic-expressions-with-call-by-value-let-binding/)
+** Variation: [Defining evaluation with a hypothetical judgement](/wiki/summer-school-2008-arithmetic-expressions-with-let-binding-hypothetical-evaluation/)
+* [Typed arithmetic expressions](/wiki/summer-school-2008-typed-arithmetic-expressions/)
+** Variation: [Typed arithmetic expressions (extrinsic encoding)](/wiki/summer-school-2008-typed-arithmetic-expressions-extrinsic-encoding/)
+
+* [Exercises 1](/wiki/summer-school-2008-exercises-1/)
+
+### Class 2: Representation
+* [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf Mechanizing Metatheory in a Logical Framework] discusses this material in detail.
+* [Exercises 2](/wiki/summer-school-2008-exercises-2/)
+
+### Class 3: Mechanizing Metatheory
+
+* [Type safety for MinML (intrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-intrinsic-encoding/)
+* [Type safety for MinML (extrinsic encoding)](/wiki/summer-school-2008-type-safety-for-minml-extrinsic-encoding/)
+
+* [Exercises 3](/wiki/summer-school-2008-exercises-3/)
+
+## Additional reading
+
+* PFPL: We will use [http://www.cs.cmu.edu/~rwh/plbook/book.pdf Practical Foundations for Programming Languages] as a reference for basic PL concepts.
+* MMLF: [http://www.cs.cmu.edu/~drl/pubs/hl07mechanizing/hl07mechanizing.pdf Mechanizing Metatheory in a Logical Framework] discusses LF, representation, and mechanized metatheory in technical detail.
+* [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) is a self-contained intro tutorial on this wiki.
+* After you get spun up, there are lots of [tutorials](/wiki/tutorials/) and [case studies](/wiki/case-studies/). !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008).
+!}%

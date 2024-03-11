@@ -1,0 +1,48 @@
+%%! title: "Higher-order abstract syntax"
+
+%{! **Higher-order abstract syntax** is a technique for the representation of [abstract syntax](/wiki/abstract-syntax/) trees for languages with <Todo>bound variables</Todo>. It is often abbreviated as **HOAS**. In the context of mechanizing metatheory, HOAS refers to a specific technique where binding constructs in the [object language](/wiki/object-logic/) are represented by the binding construct of the [meta-language](/wiki/meta-logic/). When the meta language is Twelf, this is the λ construct.
+
+An abstract syntax tree is _abstract_ because it is a mathematical object that has certain structure by its very nature. For instance, in first-order abstract syntax (FOAS) trees, as commonly used in compilers, the tree structure implies the subexpression relation, meaning that no parentheses are required to disambiguate programs (as they are in the <Todo>concrete syntax</Todo>). HOAS exposes additional structure: the relationship between variables and their binding sites. In FOAS representations, a variable is typically represented with an identifier and the relation between binding site and use is indicated by the use of the _same_ identifier. FOAS representations thus need to formalize the rules of identifier lookup, and often need to formalize other conventions of language metatheory, such as [alpha-equivalence](/wiki/alpha-equivalence/), [weakening](/wiki/weakening-lemma/), [exchange](/wiki/exchange-lemma/), and type-preserving [substitution](/wiki/substitution-lemma/). When it can be used, HOAS is powerful because the metalanguage can provide these properties for free, reducing the amount of boilerplate code in an encoding.
+
+## Example
+For example, LF has a λ construct, which has arrow (→) type. A first-order encoding of an object language construct ``let`` might be (using Twelf syntax): !}%
+    
+exp : type.
+var : type.
+v   : var -> exp.
+let : exp -> var -> exp -> exp.
+
+%{! Here, ``exp`` is the family of object language expressions. The family ``var`` is the representation of variables (implemented perhaps as natural numbers, which is not shown); the constant ``v`` witnesses the fact that variables are expressions. The constant ``let`` is an expression that takes three arguments: an expression (that is being bound), a variable (that it is bound to) and another expression (that the variable is bound within).
+
+The natural HOAS representation of the same object language would be: !}%
+    
+exp : type.
+let : exp -> (exp -> exp) -> exp.
+
+%{! In this representation, object level variables do not appear explicitly. The constant ``let`` takes an expression (that is being bound) and a meta-level function ``exp`` → ``exp`` (the body of the let). This function is the _higher-order_ part: an expression with a free variable is represented as an expression with _holes_ that are filled in by the meta-level function when applied. As a concrete example, we would construct the object level expression
+
+```
+let x = 1 + 2
+in x + 3
+```
+
+(assuming the natural constructors for numbers and addition) using the HOAS signature above as 
+
+```    
+let (plus 1 2) ([y] plus y 3)
+```
+
+where ``[y] e`` is Twelf's syntax for the function _λy.e_.
+
+Because this technique reuses the mechanism of the meta-language to encode a concept in the object language, it is generally only applicable when the meta-language and object-language notions of binding coincide. This is often the case, but not always: for instance, it is unlikely that a HOAS encoding of dynamic scope such as in Lisp would be possible in a statically-scoped language like LF.
+
+## See also
+* [Higher-order judgment](/wiki/higher-order-judgements/)s: a related LF representation technique, in which object-language [hypothetical judgment](/wiki/hypothetical-judgment/)s are represented using LF binding.
+* [Equality](/wiki/equality/): when an object language is represented using HOAS, equality of LF terms corresponds with [α-equivalence](/wiki/alpha-equivalence/) of object language terms. !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Higher-order_abstract_syntax).
+!}%

@@ -1,0 +1,95 @@
+%%! title: "Summer school 2008:Encoding of System F"
+
+%{! 
+
+\{\{Summer school 2008
+   |prev=Exercises 2
+   |prevname=Exercises 2
+   |nonext= 
+\}\}
+
+## Syntax
+
+Types:
+
+!}%
+
+tp : type.  
+
+arrow : tp -> tp -> tp.
+forall : (tp -> tp) -> tp.
+
+%{! 
+
+Terms: 
+
+!}%
+
+tm : type. 
+
+fn : tp -> (tm -> tm) -> tm.
+app : tm -> tm -> tm.
+
+tfn : (tp -> tm) -> tm.
+tapp : tm -> tp -> tm.
+
+%{! 
+
+## Static semantics
+
+!}%
+
+of : tm -> tp -> type.
+
+of-fn : of (fn T2 ([x:tm] (E x))) (arrow T2 T)
+	   <- ({x : tm} {dx : of x T2} of (E x) T).
+of-app : of (app E1 E2) T
+	    <- of E1 (arrow T2 T)
+	    <- of E2 T2.
+of-tfn : of (tfn ([u:tp] (E u))) (forall ([u:tp] T u))
+	    <- ({u : tp} of (E u) (T u)).
+of-tapp : of (tapp E T2) (T T2)
+	      <- of E (forall ([u] T u)).
+
+%{! 
+
+## Dynamic semantics
+
+!}%
+
+value    : tm -> type.
+value-fn : value (fn A E).
+value-tfn : value (tfn E).
+
+
+step : tm -> tm -> type.
+
+step-app-1 : step (app E1 E2) (app E1' E2)
+		<- step E1 E1'.
+step-app-2 : step (app V1 E2) (app V1 E2')
+		<- value V1
+		<- step E2 E2'.
+step-app-beta : step (app (fn T2 ([x:tm] (E x))) E2) (E E2)
+		   <- value E2.
+step-tapp-1 : step (tapp E1 T) (tapp E1' T)
+		 <- step E1 E1'.
+step-tapp-beta : step (tapp (tfn ([u:tp] E u)) T2) (E T2).
+
+%{! 
+
+
+\{\{Summer school 2008
+   |prev=Exercises 2
+   |prevname=Exercises 2
+   |nonext= 
+\}\}
+
+
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Summer_school_2008:Encoding_of_System_F).
+!}%

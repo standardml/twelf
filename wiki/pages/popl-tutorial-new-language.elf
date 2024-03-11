@@ -1,0 +1,431 @@
+%%! title: "POPL Tutorial/New language"
+
+%{! 
+
+## Arithmetic Primitives
+
+!}%
+
+nat : type.  
+z : nat.
+s : nat -> nat.
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+
+add/s : add (s M) N (s P)
+         <- add M N P.
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+
+mult : nat -> nat -> nat -> type.
+%mode mult +M +N -P.
+
+mult/z : mult z N z.
+
+mult/s : mult (s M) N Q
+          <- mult M N P
+          <- add P N Q.
+
+%worlds () (mult _ _ _).
+%total M (mult M _ _).
+
+
+%{! 
+
+## Language Syntax
+
+!}%
+
+tp : type.
+
+num : tp.
+arrow : tp -> tp -> tp.
+prod : tp -> tp -> tp.
+
+exp : type.
+
+numeral : nat -> exp.
+plus : exp -> exp -> exp.
+times : exp -> exp -> exp.
+
+lam : tp -> (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+pair : exp -> exp -> exp.
+split : exp -> (exp -> exp -> exp) -> exp.
+
+
+%{! 
+
+## Dynamic Semantics
+
+!}%
+
+value : exp -> type.
+step : exp -> exp -> type.
+
+%%% argh, too many rules!
+
+value/numeral : value (numeral N).
+
+value/lam : value (lam T [x] E x).
+
+value/pair : value (pair E1 E2)
+              <- value E1
+              <- value E2.
+
+
+step/plus/1 : step (plus E1 E2) (plus E1' E2)
+               <- step E1 E1'.
+
+step/plus/2 : step (plus V1 E2) (plus V1 E2')
+               <- value V1
+               <- step E2 E2'.
+
+step/plus/add : step (plus (numeral N1) (numeral N2)) (numeral N3)
+                 <- add N1 N2 N3.
+
+step/times/1 : step (times E1 E2) (times E1' E2)
+                <- step E1 E1'.
+
+step/times/2 : step (times V1 E2) (times V1 E2')
+                <- value V1
+                <- step E2 E2'.
+
+step/times/mult : step (times (numeral N1) (numeral N2)) (numeral N3)
+                   <- mult N1 N2 N3.
+
+step/app/fun : step (app E1 E2) (app E1' E2)
+                <- step E1 E1'.
+
+step/app/arg : step (app V1 E2) (app V1 E2')
+                <- value V1
+                <- step E2 E2'.
+
+step/app/beta : step (app (lam T ([x] E x)) V) (E V)
+                 <- value V.
+
+step/pair/1 : step (pair E1 E2) (pair E1' E2)
+               <- step E1 E1'.
+
+step/pair/2 : step (pair V1 E2) (pair V1 E2')
+               <- value V1
+               <- step E2 E2'.
+
+step/split/arg : step (split E1 ([x] [y] E2 x y)) (split E1' ([x] [y] E2 x y))
+                  <- step E1 E1'.
+
+step/split/pair : step (split (pair V1 V2) ([x] [y] E x y)) (E V1 V2)
+                   <- value V1
+                   <- value V2.
+
+%worlds () (value _).
+%worlds () (step _ _).
+
+
+%{! 
+
+## Static Semantics
+
+!}%
+
+of : exp -> tp -> type.
+
+of/numeral : of (numeral N) num.
+
+of/plus : of (plus E1 E2) num
+           <- of E1 num
+           <- of E2 num.
+
+of/times : of (times E1 E2) num
+            <- of E1 num
+            <- of E2 num.
+
+of/lam : of (lam T1 [x] E x) (arrow T1 T2)
+          <- ({x} of x T1 -> of (E x) T2).
+
+of/app : of (app E1 E2) T
+          <- of E1 (arrow T2 T)
+          <- of E2 T2.
+
+of/pair : of (pair E1 E2) (prod T1 T2)
+           <- of E1 T1
+           <- of E2 T2.
+
+of/split : of (split E ([x] [y] Ebody x y)) T
+            <- of E (prod T1 T2)
+            <- ({x} of x T1 -> {y} of y T2 -> of (Ebody x y) T).
+
+%block tbind : some {T:tp} block {x:exp} {dx:of x T}.
+%worlds (tbind) (of _ _).
+
+
+
+%{! 
+
+## Progress
+
+!}%
+
+notstuck : exp -> type.
+
+notstuck/value	: notstuck E
+		   <- value E.
+
+notstuck/step	: notstuck E
+		   <- step E E'.
+
+
+progress-app	: of E1 (arrow T1 T2)
+		   -> notstuck E1
+		   -> notstuck E2
+		   -> notstuck (app E1 E2)
+		   -> type.
+%mode progress-app +Dof +Dns1 +Dns2 -Dns3.
+
+-	: progress-app Dof (notstuck/step Dstep) Dns2
+	   (notstuck/step (step/app/fun Dstep)).
+
+-	: progress-app Dof (notstuck/value Dval) (notstuck/step Dstep)
+	   (notstuck/step (step/app/arg Dstep Dval)).
+
+-	: progress-app (of/lam Dof') (notstuck/value value/lam)
+	   (notstuck/value Dval2)
+	   (notstuck/step (step/app/beta Dval2)).
+
+%worlds () (progress-app _ _ _ _).
+%total {} (progress-app _ _ _ _).
+
+
+
+progress-pair	: notstuck E1
+		   -> notstuck E2
+		   -> notstuck (pair E1 E2)
+		   -> type.
+%mode progress-pair +Dns1 +Dns2 -Dns3.
+
+-	: progress-pair (notstuck/step Dstep) Dns2
+	   (notstuck/step (step/pair/1 Dstep)).
+
+-	: progress-pair (notstuck/value Dval1) (notstuck/step Dstep2)
+	   (notstuck/step (step/pair/2 Dstep2 Dval1)).
+
+-	: progress-pair (notstuck/value Dval1) (notstuck/value Dval2)
+	   (notstuck/value (value/pair Dval2 Dval1)).
+
+%worlds () (progress-pair _ _ _).
+%total {} (progress-pair _ _ _).
+
+
+
+progress-split	: of E1 (prod T1 T2)
+		   -> notstuck E1
+		   -> {Ebody} notstuck (split E1 Ebody)
+		   -> type.
+%mode progress-split +Dof1 +Dns1 +Ebody -Dns2.
+
+-	: progress-split Dof (notstuck/step Dstep) Ebody
+	   (notstuck/step (step/split/arg Dstep)).
+
+-	: progress-split (of/pair Dof2 Dof1) 
+	   (notstuck/value (value/pair Dval2 Dval1)) Ebody
+	   (notstuck/step (step/split/pair Dval2 Dval1)).
+
+%worlds () (progress-split _ _ _ _).
+%total {} (progress-split _ _ _ _). 
+
+
+
+can-add	: {N1} {N2} add N1 N2 N3
+	   -> type.
+%mode can-add +N1 +N2 -Dadd.
+
+-	: can-add z N add/z.
+
+-	: can-add (s N1) N2 (add/s Dadd)
+	   <- can-add N1 N2 Dadd.
+
+%worlds () (can-add _ _ _).
+%total (D1) (can-add D1 _ _). 
+
+
+
+progress-plus	: of E1 num
+		   -> of E2 num
+		   -> notstuck E1
+		   -> notstuck E2
+		   -> notstuck (plus E1 E2)
+		   -> type.
+%mode progress-plus +Dof1 +Dof2 +Dns1 +Dns2 -Dns3.
+
+-	: progress-plus Dof1 Dof2 (notstuck/step Dstep) Dns2
+	   (notstuck/step (step/plus/1 Dstep)).
+
+-	: progress-plus Dof1 Dof2 (notstuck/value Dval1) (notstuck/step Dstep2)
+	   (notstuck/step (step/plus/2 Dstep2 Dval1)).
+
+-	: progress-plus of/numeral of/numeral
+	   (notstuck/value value/numeral) (notstuck/value value/numeral)
+	   (notstuck/step (step/plus/add Dadd))
+	   <- can-add N1 N2 (Dadd : add N1 N2 N3).
+
+%worlds () (progress-plus _ _ _ _ _).
+%total {} (progress-plus _ _ _ _ _).
+
+
+
+can-mult	: {N1} {N2} mult N1 N2 N3
+	   -> type.
+%mode can-mult +N1 +N2 -Dmult.
+
+-	: can-mult z N mult/z.
+
+-	: can-mult (s N1) N2 (mult/s Dadd Dmult)
+	   <- can-mult N1 N2 (Dmult : mult N1 N2 N3)
+	   <- can-add N3 N2 Dadd.
+
+%worlds () (can-mult _ _ _).
+%total (D1) (can-mult D1 _ _). 
+
+
+
+progress-times	: of E1 num
+		   -> of E2 num
+		   -> notstuck E1
+		   -> notstuck E2
+		   -> notstuck (times E1 E2)
+		   -> type.
+%mode progress-times +Dof1 +Dof2 +Dns1 +Dns2 -Dns3.
+
+-	: progress-times Dof1 Dof2 (notstuck/step Dstep) Dns2
+	   (notstuck/step (step/times/1 Dstep)).
+
+-	: progress-times Dof1 Dof2 (notstuck/value Dval1) (notstuck/step Dstep2)
+	   (notstuck/step (step/times/2 Dstep2 Dval1)).
+
+-	: progress-times of/numeral of/numeral
+	   (notstuck/value value/numeral) (notstuck/value value/numeral)
+	   (notstuck/step (step/times/mult Dmult))
+	   <- can-mult N1 N2 (Dmult : mult N1 N2 N3).
+
+%worlds () (progress-times _ _ _ _ _).
+%total {} (progress-times _ _ _ _ _).
+
+
+
+progress : of E T
+	    -> notstuck E
+	    -> type.
+%mode progress +Dof -Dns.
+
+-	: progress of/numeral
+	   (notstuck/value value/numeral). 
+
+-	: progress (of/plus Dof2 Dof1) Dns3
+	   <- progress Dof1 Dns1
+	   <- progress Dof2 Dns2
+	   <- progress-plus Dof1 Dof2 Dns1 Dns2 Dns3.
+
+-	: progress (of/times Dof2 Dof1) Dns3
+	   <- progress Dof1 Dns1
+	   <- progress Dof2 Dns2
+	   <- progress-times Dof1 Dof2 Dns1 Dns2 Dns3.
+
+-	: progress (of/lam Dof1)
+	   (notstuck/value value/lam). 
+
+-	: progress (of/app Dof2 Dof1) Dns3
+	   <- progress Dof1 Dns1
+	   <- progress Dof2 Dns2
+	   <- progress-app Dof1 Dns1 Dns2 Dns3.
+
+-	: progress (of/pair Dof2 Dof1) Dns3
+	   <- progress Dof1 Dns1
+	   <- progress Dof2 Dns2
+	   <- progress-pair Dns1 Dns2 Dns3.
+
+-	: progress (of/split 
+		      (Dbody : {x} of x T1 -> {y} of y T2 -> of (Ebody x y) T)
+		      Dof1) Dns2
+	   <- progress Dof1 Dns1
+	   <- progress-split Dof1 Dns1 Ebody Dns2.
+
+%worlds () (progress _ _).
+%total (D1) (progress D1 _).
+
+
+
+%{! 
+## Preservation
+!}%
+
+
+preservation	: of E1 T1
+		   -> step E1 E2
+		   -> of E2 T1
+		   -> type.
+%mode preservation +Dof1 +Dstep -Dof2.
+
+-	: preservation (of/plus Dof2 Dof1) (step/plus/1 Dstep1)
+	   (of/plus Dof2 Dof1')
+	   <- preservation Dof1 Dstep1 Dof1'.
+
+-	: preservation (of/plus Dof2 Dof1) (step/plus/2 Dstep2 Dval1)
+	   (of/plus Dof2' Dof1)
+	   <- preservation Dof2 Dstep2 Dof2'.
+
+-	: preservation (of/plus Dof2 Dof1) (step/plus/add Dadd) 
+	   of/numeral.
+
+-	: preservation (of/times Dof2 Dof1) (step/times/1 Dstep1)
+	   (of/times Dof2 Dof1')
+	   <- preservation Dof1 Dstep1 Dof1'.
+
+-	: preservation (of/times Dof2 Dof1) (step/times/2 Dstep2 Dval1)
+	   (of/times Dof2' Dof1)
+	   <- preservation Dof2 Dstep2 Dof2'.
+
+-	: preservation (of/times Dof2 Dof1) (step/times/mult Dmult) 
+	   of/numeral.
+
+-	: preservation (of/pair Dof2 Dof1) (step/pair/1 Dstep1)
+	   (of/pair Dof2 Dof1')
+	   <- preservation Dof1 Dstep1 Dof1'.
+
+-	: preservation (of/pair Dof2 Dof1) (step/pair/2 Dstep2 Dval)
+	   (of/pair Dof2' Dof1)
+	   <- preservation Dof2 Dstep2 Dof2'.
+
+-	: preservation (of/split Dbody Dof1) (step/split/arg Dstep1)
+	   (of/split Dbody Dof1')
+	   <- preservation Dof1 Dstep1 Dof1'.
+
+-	: preservation (of/split Dbody (of/pair Dof2 Dof1))
+	   (step/split/pair Dval2 Dval1)
+	   (Dbody E1 Dof1 E2 Dof2).
+
+-	: preservation (of/app Dof2 Dof1) (step/app/fun Dstep1)
+	   (of/app Dof2 Dof1')
+	   <- preservation Dof1 Dstep1 Dof1'.
+
+-	: preservation (of/app Dof2 Dof1) (step/app/arg Dstep2 Dval)
+	   (of/app Dof2' Dof1)
+	   <- preservation Dof2 Dstep2 Dof2'.
+
+-	: preservation (of/app Dof2 (of/lam Dbody)) (step/app/beta Dval1)
+	   (Dbody E2 Dof2).
+
+%worlds () (preservation _ _ _).
+%total (D1) (preservation _ D1 _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/New_language).
+!}%

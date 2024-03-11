@@ -1,0 +1,22 @@
+%%! title: "Template:Bibtex:pd01modal"
+
+%{! &lt;bibtex&gt;@article\{pd01modal,
+ author = \{Frank Pfenning and Rowan Davies\},
+ title = \{A judgmental reconstruction of modal logic\},
+ journal = \{Mathematical. Structures in Comp. Sci.\},
+ volume = \{11\},
+ number = \{4\},
+ year = \{2001\},
+ issn = \{0960-1295\},
+ pages = \{511--540\},
+ doi = \{http://dx.doi.org/10.1017/S0960129501003322\},
+ publisher = \{Cambridge University Press\},
+ address = \{New York, NY, USA\},
+ \}&lt;/bibtex&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Bibtex:pd01modal).
+!}%

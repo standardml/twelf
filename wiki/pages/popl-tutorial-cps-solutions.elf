@@ -1,0 +1,62 @@
+%%! title: "POPL Tutorial/CPS Solutions"
+
+%{! 
+
+## Problem 1: CPS Conversion with Administrative Redices
+
+!}%
+tp : type.
+o  : tp.
+=> : tp -> tp -> tp.           %infix right 3 =>.
+
+exp   : tp -> type.
+value : tp -> type.
+app   : exp (A => B) -> exp A -> exp B.
+lam   : (value A -> exp B) -> value (A => B).
+ret   : value A -> exp A.
+%block sourceb : some {A : tp} block {x : value A}.
+%worlds (sourceb) (exp _) (value _).
+
+contra : type.
+cvalue : tp -> type.
+ccont  : tp -> type.
+capp   : cvalue (A => B) -> cvalue A -> ccont B -> contra.
+clam   : (cvalue A -> ccont B -> contra) -> cvalue (A => B).
+cconti : (cvalue A -> contra) -> ccont A.
+cthrow : ccont A -> cvalue A -> contra.
+%block targetb1 : some {A : tp} block {x : cvalue A}.
+%block targetb2 : some {A : tp} block {x : ccont A}.
+%worlds (targetb1 | targetb2) (contra) (cvalue _) (ccont _).
+
+cps : value A -> cvalue A -> type.
+%mode cps +X1 -X2.
+
+cpse : exp A -> (ccont A -> contra) -> type.
+%mode cpse +X1 -X2.
+
+cps/lam : cps (lam (E:value A -> exp B))
+              (clam (E':cvalue A -> ccont B -> contra))
+           <- ({x:value A}{x':cvalue A} cps x x' -> cpse (E x) (E' x')).
+cpse/app : cpse (app (E1:exp (B => A)) (E2:exp B))
+                ([c:ccont A] E1' (cconti ([f:cvalue (B => A)]
+                                            E2' (cconti([x:cvalue B]
+                                                          capp f x c)))))
+            <- cpse E1 (E1':ccont (B => A) -> contra)
+            <- cpse E2 (E2':ccont B -> contra).
+cpse/ret : cpse (ret (V:value A)) ([c:ccont A] cthrow c V')
+            <- cps V (V':cvalue A).
+
+%block cpsb : some {A : tp} block {x : value A} {x' : cvalue A} {d : cps x x'}.
+%worlds (cpsb) (cps _ _) (cpse _ _).
+%total (E V) (cps E _) (cpse V _).
+
+%{! 
+See [POPL Tutorial/CPS_Solution2](/wiki/popl-tutorial-cps-solution2/) for the solution to the second CPS problem.
+!}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/CPS_Solutions).
+!}%

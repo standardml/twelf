@@ -1,0 +1,89 @@
+%%! title: "Zermelo Frankel"
+
+%{! This [case study](/wiki/case-studies/) is an encoding of **Zermelo Frankel** (**ZFC**) set theory.
+
+\{\{needs|some explanatory text\}\} !}%
+    
+%% ZFC 
+%% by Daniel C. Wang
+%% Transliterated from AUTOMATH definition 
+%% http://www.cs.ru.nl/~freek/zfc-etc/zfc.aut
+prop : type.
+pf: prop -> type.
+set : type.
+
+%% First Order Logic
+false : prop.
+imp : prop -> prop -> prop.
+all : (set -> prop) -> prop. 
+eq : set -> set -> prop.
+in : set -> set -> prop.
+not : prop -> prop = [a] imp a false.
+and : prop -> prop -> prop = [a][b] not (imp a (not b)).
+or : prop -> prop -> prop = [a][b] imp (not a) b.
+iff : prop -> prop -> prop = [a][b] and (imp a b) (imp b a).
+ex : (set -> prop) -> prop = [p] not(all([z]not (p z))).
+unique : (set -> prop) -> prop =
+ [p] all([z] imp (p z) (all ([z'] imp (p z') (eq z z')))).
+ex_unique : (set -> prop) -> prop = [p]
+   and (ex p) (unique p).
+imp_i : (pf A -> pf B) -> pf (imp A B).
+imp_e : pf (imp A B) -> pf A -> pf B.
+all_i : ({z}pf (P z)) -> pf (all P).
+all_e : pf (all P) -> {z}pf (P z).
+classical : pf (not(not A)) -> pf A. 
+
+eq_i : pf (eq A A).
+eq_e : pf (eq A B) -> {s:(set -> prop)} pf (s A) -> pf (s B).
+
+if : prop -> set -> set -> set.
+if_then : pf P -> pf (eq (if P X Y) X). 
+if_else : pf (not P) -> pf (eq (if P X Y) Y).
+
+%% Set Theory theory
+empty    : set.
+double   : set -> set -> set.  % {x,y} 
+unions   : set -> set.         % union sets in sets 
+powerset : set -> set.
+replace  : set -> (set -> set) -> set.
+omega    : set.
+
+single : set -> set = [x] double x x.
+restrict : set -> (set -> prop) -> set =
+ [x][q] unions (replace x ([z] if (q z) (single z) empty)).
+inter : set -> set -> set = [x][y] restrict x ([z] in z y).
+union : set -> set -> set = [x][y] unions (double x y).
+zero : set = empty.
+succ : set -> set = [x] union x (single x).
+subset : set -> set -> prop = [x][y]all[z] imp (in z x) (in z y).
+disjoint : set -> set -> prop = [x][y] eq (inter x y) empty.
+omega_closed : set -> prop = [x]
+ and (in empty x) (all [n] imp (in n x) (in (succ n) x)).
+
+%% Axioms ZF
+extensionality : pf (iff (eq X Y) (all[z] iff (in z X) (in z Y))).
+foundation     : pf (ex([z] and (in z X) (disjoint z X))).
+emtpy_ax       : pf (not (in X empty)).
+double_ax      : pf (iff (in Z (double X Y)) (or (in Z X) (in Z Y))).
+union_ax       : pf (iff (in Z (unions X)) (ex[y] and (in Z y) (in y X))).
+powerset_ax    : pf (iff (in Z (powerset X)) (subset Z X)).
+replace_ax     : pf (iff (in Z (replace X F)) (ex[y] and (in y X) (eq Z (F y)))).
+omega_ax       : pf (and (omega_closed omega)
+  		          (all[o] imp (omega_closed o) (subset omega o))).
+
+%% C
+choice_ax      : pf
+ (imp (all[y1] imp (in y1 X)
+        (all[y2] imp (in y2 X) (disjoint y1 y2)))
+     (ex [x'](all[y] imp (in y X)
+  		 (ex_unique ([y'] (and (in y' x') (in y' y))))))).
+
+%{! [Category:Twelf code](/wiki/category-twelf-code/)
+\{\{case study\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Zermelo_Frankel).
+!}%

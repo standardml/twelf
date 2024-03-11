@@ -1,0 +1,22 @@
+%%! title: "Template:Bibtex:fm97lax"
+
+%{! &lt;bibtex&gt;@article\{264412,
+ author = \{Matt Fairtlough and Michael Mendler\},
+ title = \{Propositional lax logic\},
+ journal = \{Inf. Comput.\},
+ volume = \{137\},
+ number = \{1\},
+ year = \{1997\},
+ issn = \{0890-5401\},
+ pages = \{1--33\},
+ doi = \{http://dx.doi.org/10.1006/inco.1997.2627\},
+ publisher = \{Academic Press, Inc.\},
+ address = \{Duluth, MN, USA\},
+ \}&lt;/bibtex&gt; !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Template:Bibtex:fm97lax).
+!}%

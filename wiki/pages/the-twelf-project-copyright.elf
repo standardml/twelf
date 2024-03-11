@@ -1,0 +1,55 @@
+%%! title: "The Twelf Project:Copyright"
+
+%{! **The following policy applies _only_ to code and content posted to this wiki, NOT to any version of the Twelf program itself or to documentation linked to from the wiki (for instance, the Twelf User's Guide.)**
+
+In general, all edits to The Twelf Project wiki are covered by the [[Project:MIT license | MIT License]] which allows essentially unlimited use for any reason. If a page on the wiki is not tagged with one of the license tags described in the section below, then it is under the MIT License, and if you edit an article with no tag and do not add one, you are agreeing to also licence your edits under the MIT License.
+
+## Restrictive licenses
+
+Some code and content is already licensed under different rules, and some authors do not wish to release their work to open use. While we suggest using the default open license, we want to allow the most content to be accessed from this wiki in the complicated world in which we live.
+
+In service of this goal, we support the following four licenses, which can be invoked by placing the corresponding tag at the bottom of a page. 
+
+If you edit a page with one of these tags, you agree that your contributions are released under and controlled by that license. License tags may not be deleted unless 
+* you are the one that added the tag, and
+* no one else has edited the article since you added the tag.
+* you are only removing a subset of multiple tags on a page (effectively de-multi-licensing the page)
+
+Please contact the [[Project:Administrators | project administrators]] if you need a different license supported for some reason.
+
+### Adding a tag to an existing page
+
+A page in the Twelf Project wiki can either start out with one of the license tags, or one can be added after the page's creation. 
+
+Legally, existing content under the default MIT license can be changed to any one of the four licenses below by adding a tag. **This is strongly discouraged and is only permitted in exceptional circumstances**, as the original author(s) intended to release the page under the MIT License. If you edit an existing page and add a license tag, [[Project:Administrators|administrators]] can and will delete all your changes (as well as the tag) if your changes are not substantial and positive.
+
+### GNU General Public License
+
+For GNU GPL content, add the &lt;nowiki&gt;\{\{license-gpl\}\}&lt;/nowiki&gt; tag to the bottom of your page. See [[Project:GPL]] for more information.
+
+\{\{license-gpl\}\}
+
+### GNU Free Documentation License
+
+For GNU FDL content, add the &lt;nowiki&gt;\{\{license-gfd\}\}&lt;/nowiki&gt; tag to the bottom of your page. See [[Project:GFDL]] for more information.
+
+\{\{license-gfdl\}\}
+
+### Creative Commons Attribution-ShareAlike License
+
+For CC BY-SA content, add the &lt;nowiki&gt;\{\{license-by-sa\}\}&lt;/nowiki&gt; tag to the bottom of your page.
+
+\{\{license-by-sa\}\}
+
+### Creative Commons Attribution-Noncommercial License
+
+For CC BY-NC content, add the &lt;nowiki&gt;\{\{license-by-nc\}\}&lt;/nowiki&gt; tag to the bottom of your page. _Note: we discourage use of this license because of its extreme incompatibility with other free licenses._
+
+\{\{license-by-nc\}\} !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/The_Twelf_Project:Copyright).
+!}%

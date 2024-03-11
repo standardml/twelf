@@ -1,0 +1,88 @@
+%%! title: "Deterministic declaration"
+
+%{! The **``%determinstic``** declaration influences the way [logic programming](/wiki/logic-programming/) behaves in Twelf. If a type family is deterministic, then once Twelf finds a single solution through logic programming search it cannot backtrack to find different solutions.
+
+## Example: Tree search
+
+We define a tree with labeled nodes, and a distinguished tree ``testtree``. 
+
+<center>
+![A starry night sky.](../../../assets/smalltree.png)
+
+Graphical representation of the tree ``testtree`` used in this example.
+</center>
+!}%
+    
+label : type.
+a : label.
+b : label.
+c : label.
+d : label.
+
+tree : type.
+node : tree -> tree -> tree.
+leaf : label -> tree.
+
+testtree = node (node (leaf a) (leaf b)) (node (leaf c) (leaf d)).
+
+%{! ### Searching for a leaf
+
+We also define a judgment, ``findlabel``, that looks for a label at leaves of the tree. Because Twelf tries to use the first-defined rule first, the operational behavior of this is to search for the leftmost node, then to backtrack and find the next-to-leftmost node, etc. !}%
+    
+findlabel : tree -> label -> type.
+findlabel/leaf : findlabel (leaf L) L.
+findlabel/left : findlabel (node T1 T2) L
+                  <- findlabel T1 L.
+findlabel/right : findlabel (node T1 T2) L
+                  <- findlabel T2 L.
+
+%{! If ``findlabel`` is not declared deterministic, all four solutions can be returned, but with ``findlabel`` declared deterministic only one will be found. !}%
+    
+%{!! begin checked !!}%
+%query 4 * findlabel testtree L.
+%{!! end checked !!}%
+
+%{!
+
+```checkedtwelf
+%deterministic findlabel.
+%query 1 * findlabel testtree L.
+```
+
+### Causing search to fail
+
+When using **``%deterministic``**, [[finite failure]] no longer means that no derivation can be found, becuase the deterministic search may put constraints on later results that causes them to fail. Take the ``searchfor`` predicate, which first looks up a label with ``findlabel`` and then checks to see if it is equal to some other label. !}%
+    
+eq : label -> label -> type.
+eq/refl : eq L L.
+
+searchfor : tree -> label -> type.
+- : searchfor T L
+     <- findlabel T L'
+     <- eq L L'.
+
+%{! Using ``searchfor`` to look for ``c`` in our test tree will cause backtracking, because ``findlabel`` first make ``L'`` equal to ``a``, then ``b``, then ``c``. !}%
+    
+%{!! begin checked !!}%
+%query 1 * P : searchfor testtree c.
+%{!! end checked !!}%
+
+%{! If ``findlabel`` is deterministic, then the same search will make ``L'`` equal ``a``, and will then be unable to backtrack.
+
+```checkedtwelf
+%deterministic findlabel.
+%query 1 * P : searchfor testtree c.
+```
+
+## See also
+
+* <Guide chapter="5" section="30">Deterministic Type Families</Guide>
+* [Cut](https://en.wikipedia.org/wiki/Cut_(logic_programming)) on Wikipedia
+
+<Keyword name="deterministic"/>
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Deterministic_declaration).
+!}%

@@ -1,0 +1,373 @@
+%%! title: "POPL Tutorial/Combinators (karl)"
+
+%{! ## Lambda Terms !}%
+
+exp : type.  %name exp E.
+
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+
+
+
+%{! ## Reduction !}%
+
+reduce : exp -> exp -> type.
+
+reduce/refl	: reduce E E.
+
+reduce/trans	: reduce E1 E3
+		   <- reduce E1 E2
+		   <- reduce E2 E3.
+
+reduce/lam	: reduce (lam ([x] E x)) (lam ([x] E' x))
+		   <- ({x} reduce (E x) (E' x)).
+
+reduce/app	: reduce (app E1 E2) (app E1' E2')
+		   <- reduce E1 E1'
+		   <- reduce E2 E2'.
+
+reduce/beta	: reduce (app (lam ([x] E1 x)) E2) (E1 E2).
+
+
+
+
+
+%{! ## Combinators !}%
+
+s : exp = lam ([a] lam ([b] lam ([x] app (app a x) (app b x)))).
+
+k : exp = lam ([x] lam ([y] x)).
+
+i : exp = lam ([x] x).
+
+
+
+
+%{! ## Bracket Abstraction !}%
+
+abstract : (exp -> exp) -> exp -> type.
+%mode abstract +E -E'.
+
+abstract/var	: abstract ([x] x) i.
+
+abstract/closed	: abstract ([x] E) (app k E).
+
+abstract/app	: abstract ([x] app (E1 x) (E2 x)) (app (app s E1') E2')
+		   <- abstract E1 E1'
+		   <- abstract E2 E2'.
+
+
+
+translate : exp -> exp -> type.
+%mode translate +E -E'.
+
+translate/lam	: translate (lam ([x] E x)) E''
+		   <- ({x:exp} 
+			 translate x x
+			 -> translate (E x) (E' x))
+		   <- abstract ([x] E' x) E''.
+
+translate/app	: translate (app E1 E2) (app E1' E2')
+		   <- translate E1 E1'
+		   <- translate E2 E2'.
+
+
+
+
+%{! ## Soundness !}%
+
+abstract-sound : abstract ([x] E x) E'
+%%
+		  -> reduce E' (lam ([x] E x))
+		  -> type.
+%mode abstract-sound +X1 -X2.
+
+%block abstract-sound-block
+   : block {x:exp}.
+
+-	: abstract-sound
+	   (abstract/var : abstract ([x] x) i)
+	   %%
+	   (reduce/refl
+	      : reduce i (lam ([x] x))).
+
+-	: abstract-sound
+	   (abstract/closed : abstract ([x] E) (app k E))
+	   %%
+	   (reduce/beta
+	      : reduce (app k E) (lam ([x] E))).
+
+-	: abstract-sound
+	   (abstract/app
+	      (Dabstract2 : abstract ([x] E2 x) E2')
+	      (Dabstract1 : abstract ([x] E1 x) E1'))
+	   %%
+	   (reduce/trans
+	      (reduce/lam
+		 ([x] reduce/app reduce/beta reduce/beta))
+	      (reduce/trans
+		 reduce/beta
+		 (reduce/app
+		    Dreduce2
+		    (reduce/trans
+		       reduce/beta
+		       (reduce/app
+			  Dreduce1
+			  reduce/refl)))))
+	   <- abstract-sound Dabstract1
+	      (Dreduce1 : reduce E1' (lam ([x] E1 x)))
+	   <- abstract-sound Dabstract2
+	      (Dreduce2 : reduce E2' (lam ([x] E2 x))).
+		 
+%worlds (abstract-sound-block) (abstract-sound _ _).
+%total D (abstract-sound D _).
+
+
+
+translate-sound : translate E E'
+%%
+		   -> reduce E' E
+		   -> type.
+%mode translate-sound +X1 -X2.
+
+%block translate-sound-block
+   : block 
+      {x:exp}
+      {d_translate:translate x x}
+      {_:translate-sound d_translate reduce/refl}.
+
+-	: translate-sound
+	   (translate/lam
+	      (Dabstract : abstract ([x] E' x) E'')
+	      (Dtranslate : {x:exp}
+			     translate x x
+			     -> translate (E x) (E' x))
+	      : translate (lam ([x] E x)) E'')
+	   %%
+	   (reduce/trans
+	      (reduce/lam ([x] Dreduce1 x))
+	      Dreduce2)
+	   <- ({x} {d_translate:translate x x}
+		 translate-sound d_translate reduce/refl
+		 -> translate-sound (Dtranslate x d_translate)
+		    (Dreduce1 x : reduce (E' x) (E x)))
+	   <- abstract-sound Dabstract
+	      (Dreduce2 : reduce E'' (lam ([x] E' x))).
+
+-	: translate-sound
+	   (translate/app
+	      (Dtranslate2 : translate E2 E2')
+	      (Dtranslate1 : translate E1 E1')
+	      : translate (app E1 E2) (app E1' E2'))
+	   %%
+	   (reduce/app Dreduce2 Dreduce1)
+	   <- translate-sound Dtranslate1
+	      (Dreduce1 : reduce E1' E1)
+	   <- translate-sound Dtranslate2
+	      (Dreduce2 : reduce E2' E2).
+
+%worlds (translate-sound-block) (translate-sound _ _).
+%total D (translate-sound D _).
+
+
+
+
+%{! ## Completeness !}%
+
+clean : exp -> type.
+
+clean/s		: clean s.
+
+clean/k		: clean k.
+
+clean/i		: clean i.
+
+clean/app	: clean (app E1 E2)
+		   <- clean E1
+		   <- clean E2.
+
+
+
+abstract-clean : ({x} clean x -> clean (E x))
+		  -> abstract ([x] E x) E'
+%%
+		  -> clean E'
+		  -> type.
+%mode abstract-clean +X1 +X2 -X3.
+
+%block abstract-clean-block
+   : block {x:exp} {d_clean:clean x}.
+
+-	: abstract-clean 
+	   _ 
+	   (abstract/var : abstract ([x] x) i)
+	   %%
+	   clean/i.
+
+-	: abstract-clean
+	   (Dclean : {x} clean x -> clean E)  %% NOTE not "clean (E x)"
+	   abstract/closed
+	   %%
+	   (clean/app
+	      (Dclean i clean/i : clean E)  %% strengthening via substitution here
+	      clean/k).
+
+-	: abstract-clean 
+	   ([x] [d_clean:clean x]
+	      clean/app
+	      (Dclean2 x d_clean : clean (E2 x))
+	      (Dclean1 x d_clean : clean (E1 x)))
+	   (abstract/app
+	      (Dabstract2 : abstract ([x] E2 x) E2')
+	      (Dabstract1 : abstract ([x] E1 x) E1'))
+	   %%
+	   (clean/app Dclean2' (clean/app Dclean1' clean/s)
+	      : clean (app (app s E1') E2'))
+	   <- abstract-clean Dclean1 Dabstract1 (Dclean1' : clean E1')
+	   <- abstract-clean Dclean2 Dabstract2 (Dclean2' : clean E2').
+
+%worlds (abstract-clean-block) (abstract-clean _ _ _).
+%total D (abstract-clean _ D _).
+
+
+
+translate-clean : translate E E'
+%%
+		   -> clean E'
+		   -> type.
+%mode translate-clean +X1 -X2.
+
+%block translate-clean-block
+   : block
+      {x:exp}
+      {d_translate:translate x x}
+      {d_clean:clean x}
+      {_:translate-clean d_translate d_clean}.
+
+-	: translate-clean
+	   (translate/lam
+	      (Dabstract : abstract ([x] E' x) E'')
+	      (Dtranslate : {x:exp}
+			     translate x x
+			     -> translate (E x) (E' x))
+	      : translate (lam ([x] E x)) E'')
+	   %%
+	   Dclean'
+	   <- ({x} 
+		 {d_translate:translate x x} 
+		 {d_clean:clean x}
+		 translate-clean d_translate d_clean
+		 -> translate-clean (Dtranslate x d_translate)
+		    (Dclean x d_clean : clean (E' x)))
+	   <- abstract-clean Dclean Dabstract
+	      (Dclean' : clean E'').
+
+-	: translate-clean
+	   (translate/app
+	      (Dtranslate2 : translate E2 E2')
+	      (Dtranslate1 : translate E1 E1')
+	      : translate (app E1 E2) (app E1' E2'))
+	   %%
+	   (clean/app Dclean2 Dclean1
+	      : clean (app E1' E2'))
+	   <- translate-clean Dtranslate1
+	      (Dclean1 : clean E1')
+	   <- translate-clean Dtranslate2
+	      (Dclean2 : clean E2').
+
+%worlds (translate-clean-block) (translate-clean _ _).
+%total D (translate-clean D _).
+
+
+
+can-abstract : ({x} clean x -> clean (E x))
+%%
+		-> abstract ([x] E x) E'
+		-> type.
+%mode can-abstract +X1 -X2.
+
+%block can-abstract-block
+   : block {x:exp} {d_clean:clean x}.
+
+-	: can-abstract
+	   ([x] [d:clean x] d)
+	   %%
+	   abstract/var.
+
+-	: can-abstract
+	   (_ : {x} clean x -> clean E)
+	   %%
+	   abstract/closed.
+
+-	: can-abstract
+	   ([x] [d_clean:clean x]
+	      clean/app
+	      (Dclean2 x d_clean : clean (E2 x))
+	      (Dclean1 x d_clean : clean (E1 x)))
+	   %%
+	   (abstract/app Dabstract2 Dabstract1)
+	   <- can-abstract Dclean1
+	      (Dabstract1 : abstract ([x] E1 x) E1')
+	   <- can-abstract Dclean2
+	      (Dabstract2 : abstract ([x] E2 x) E2').
+
+%worlds (can-abstract-block) (can-abstract _ _).
+%total D (can-abstract D _).
+
+
+
+can-translate : {E:exp}
+%%
+		 translate E E'
+		 -> type.
+%mode can-translate +E -X.
+
+%block can-translate-block
+   : block
+      {x:exp}
+      {d_translate:translate x x}
+      {d_clean:clean x}
+      {_:translate-clean d_translate d_clean}
+      {_:can-translate x d_translate}.
+
+-	: can-translate
+	   (lam ([x] E x))
+	   %%
+	   (translate/lam Dabstract Dtranslate
+	      : translate (lam ([x] E x)) E'')
+	   <- ({x} 
+		 {d_translate:translate x x} 
+		 {d_clean:clean x}
+		 translate-clean d_translate d_clean
+		 -> can-translate x d_translate
+		 -> can-translate (E x)
+		    (Dtranslate x d_translate : translate (E x) (E' x)))
+	   <- ({x} 
+		 {d_translate:translate x x} 
+		 {d_clean:clean x}
+		 translate-clean d_translate d_clean
+		 -> translate-clean (Dtranslate x d_translate)
+		    (Dclean x d_clean : clean (E' x)))
+	   <- can-abstract Dclean
+	      (Dabstract : abstract ([x] E' x) E'').
+
+-	: can-translate
+	   (app E1 E2)
+	   %%
+	   (translate/app Dtranslate2 Dtranslate1
+	      : translate (app E1 E2) (app E1' E2'))
+	   <- can-translate E1
+	      (Dtranslate1 : translate E1 E1')
+	   <- can-translate E2
+	      (Dtranslate2 : translate E2 E2').
+
+%worlds (can-translate-block) (can-translate _ _).
+%total E (can-translate E _).
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/POPL_Tutorial/Combinators_(karl)).
+!}%

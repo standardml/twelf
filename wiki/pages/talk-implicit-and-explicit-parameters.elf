@@ -1,0 +1,43 @@
+%%! title: "Talk:Implicit and explicit parameters"
+
+%{! ## Universal quantification
+
+Is the implication supposed to be that only implicit parameters are universally quantified? In the type theory, both are exactly the same: Πs. I think this may be misleading. (Or is there some interpretation in logic programming that I'm missing?) &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 13:35, 16 October 2006 (EDT)
+:: No, you're right - seems like the right way to say it is that this is two different ways to do universal quantification, in fact. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 11:26, 12 November 2006 (EST)
+
+## This article or section needs a moral stand
+
+Is there a reason that this article doesn't say "don't use explicit parameters unless there is a good reason to; here are the only good reasons: \{termination, mode\}"? [Drl](/wiki/user-drl/) 20:29, 14 March 2007 (EDT)
+* Well, I think there are good stylistic reasons to use explicit parameters (much like it is sometimes good style to use explicit type annotations or explicit quantification in SML) which are hard to circumscribe. I'd rather describe it in terms of pros and cons. (And actually, I don't think [%mode](/wiki/percent-mode/) is even necessarily a good reason, since it is possible to give modes to implicit arguments.) &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 21:43, 14 March 2007 (EDT)
+:* I would be inclined to agree, in that we should take "moral stands" where such are clear - don't start constants with capital letters, don't define an inductive notion of equality when what you mean is identity on LF terms. However, the article should probably say "we usually default to this style," which is what I tried to say. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 22:20, 14 March 2007 (EDT)
+
+## Always prints out the parameters
+
+I don't think it's true that Twelf always prints out the implicit parameters. For example, I think that implicit parameters to parameters are not always shown? This is why sometimes you see a ``\{A:typ\}`` where ``A`` appears nowhere else. Does anyone understand the actual rules? (Jason?) &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 17:01, 26 October 2007 (EDT)
+
+It prints out implicit _parameters_ but not implicit _arguments._ I think this demonstrates the ``\{A:typ\}`` thing, I think I should change the example to something more like this. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 11:55, 28 October 2007 (EDT) !}%
+    
+tp : type.
+tp/unit : tp.
+
+exp : tp -> type.
+unit : exp tp/unit.
+abort/1 : exp A.
+abort/2 : {A} exp A.
+
+%{!  !}%
+    
+%{! (options removed from twelftag: check=decl) !}%
+
+step : exp A -> exp B -> type.
+step/raise : step unit abort/1.
+step/raise : step unit (abort/2 A).
+
+%{! :: What's the difference between an implicit argument and an implicit parameter? Or you mean, it always prints out the implicit Π bindings, but never the implicit occurrences? Anyway, yes, I think this is a good example. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 18:47, 28 October 2007 (EDT) !}%
+
+%{!
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Talk:Implicit_and_explicit_parameters).
+!}%

@@ -1,0 +1,8 @@
+---
+const { chapter = 1, section = 1 } = Astro.props;
+---
+
+<a
+  href={`http://www.cs.cmu.edu/~twelf/guide-1-4/twelf_${chapter}.html#SEC${section}`}
+  ><slot /></a
+> in the legacy Twelf User's Guide

@@ -1,0 +1,178 @@
+%%! title: "Computation and Deduction 2009/20090316"
+
+%{! Code from class, March 16. 
+
+```twelf
+ttp : type. %name ttp T.
+
+tnum : ttp.
+tnot : ttp -> ttp.
+tprod : ttp -> ttp -> ttp.
+
+texp : type. %name texp E.
+tval : type. %name tval V.
+
+tlet : tval -> (tval -> texp) -> texp.
+tpi1 : tval -> (tval -> texp) -> texp.
+tpi2 : tval -> (tval -> texp) -> texp.
+tifz : tval -> texp -> (tval -> texp) -> texp.
+tapp : tval -> tval -> texp.
+
+tz : tval.
+ts : tval -> tval.
+tpair : tval -> tval -> tval.
+tlam : ttp -> (tval -> texp) -> tval.
+
+tof : tval -> ttp -> type.
+twf : texp -> type.
+
+tof/z : tof tz tnum.
+
+tof/s : tof (ts V) tnum
+	 <- tof V tnum.
+
+tof/pair : tof (tpair V1 V2) (tprod T1 T2)
+	    <- tof V1 T1
+	    <- tof V2 T2.
+
+tof/lam : tof (tlam T ([x] E x)) (tnot T)
+	   <- ({x} tof x T -> twf (E x)).
+
+twf/let : twf (tlet V ([x] E x))
+	   <- tof V T
+	   <- ({x} tof x T -> twf (E x)).
+
+twf/pi1 : twf (tpi1 V ([x] E x))
+	   <- tof V (tprod T1 T2)
+	   <- ({x} tof x T1 -> twf (E x)).
+
+twf/pi2 : twf (tpi2 V ([x] E x))
+	   <- tof V (tprod T1 T2)
+	   <- ({x} tof x T2 -> twf (E x)).
+
+twf/ifz : twf (tifz V E0 ([x] E1 x))
+	   <- tof V tnum
+	   <- twf E0
+	   <- ({x} tof x tnum -> twf (E1 x)).
+
+twf/app : twf (tapp V1 V2)
+	   <- tof V1 (tnot T)
+	   <- tof V2 T.
+
+ttrans : tp -> ttp -> type.
+
+ttrans/num : ttrans num tnum.
+
+ttrans/arr : ttrans (arr T1 T2) (tnot (tprod T1' (tnot T2')))
+	      <- ttrans T1 T1'
+	      <- ttrans T2 T2'.
+
+suspend : ttp -> tval -> tval
+        = [t] [v] (tlam (tnot t) ([f] tapp f v)).
+
+trans : term -> tp -> tval -> type.
+
+trans/z : trans z num (suspend tnum tz).
+
+trans/s : trans (s E) num (tlam (tnot tnum) ([f] tapp V (tlam tnum ([x] tapp f (ts x)))))
+	   <- trans E num V.
+
+trans/ifz : trans (ifz E E0 ([x] E1 x)) T
+	     (tlam (tnot T')
+		([f] tapp V (tlam tnum ([y] tifz y (tapp V0 f)
+					  ([y'] tlet (tlam (tnot tnum) ([g] tapp g y'))
+					     ([x'] tapp (V1 x') f))))))
+	     <- ttrans T T'
+	     <- trans E num V
+	     <- trans E0 T V0
+	     <- ({x} {x'} trans x num x' -> trans (E1 x) T (V1 x')).
+
+trans/lam : trans (lam T1 ([x] E x)) (arr T1 T2)
+             (suspend (tnot (tprod T1' (tnot T2')))
+	              (tlam (tprod T1' (tnot T2'))
+			       ([y] tpi1 y
+				  ([y'] (tpi2 y
+					   ([g] tlet (suspend T1' y')
+					      ([x'] tapp (V x') g)))))))
+	     <- ttrans T1 T1'
+	     <- ttrans T2 T2'
+	     <- ({x} {x'} trans x T1 x' -> trans (E x) T2 (V x')).
+
+trans/app : trans (app E1 E2) T2
+             (tlam (tnot T2') 
+                ([f] tapp V1
+                   (tlam (tnot (tprod T1' (tnot T2')))
+                      ([x1] tapp V2 (tlam T1' ([x2] tapp x1 (tpair x2 f)))))))
+             <- ttrans T1 T1'
+             <- ttrans T2 T2'
+             <- trans E1 (arr T1 T2) V1
+             <- trans E2 T1 V2.
+
+tof/suspend : tof (suspend T V) (tnot (tnot T))
+               <- tof V T
+            = [D : tof V T] (tof/lam ([x] [d : tof x (tnot T)] (twf/app D d))).
+
+
+correct : trans E T V -> ttrans T T' -> tof V (tnot (tnot T')) -> type.
+%mode correct +D1 -D2 -D3.
+
+correct' : trans E T V -> ttrans T T' -> tof V (tnot (tnot T')) -> type.
+%mode correct' +D1 +D2 -D3.
+
+- : correct trans/z ttrans/num (tof/suspend tof/z).
+
+- : correct 
+     (trans/s 
+	(D : trans E num V))
+     ttrans/num 
+     (tof/lam 
+	([f] [df:tof f (tnot tnum)] 
+	   twf/app 
+	   (tof/lam ([x] [dx:tof x tnum] (twf/app (tof/s dx) df))) 
+	   D'))
+     <- correct' D ttrans/num (D': tof V (tnot (tnot tnum))).
+
+- : correct 
+     (trans/lam 
+	(D3: ({x} {x'} trans x T1 x' -> trans (E x) T2 (V x')))
+	(D2: ttrans T2 T2')
+	(D1: ttrans T1 T1'))
+     (ttrans/arr D2 D1)
+     (tof/suspend 
+	(tof/lam 
+	   ([y] [dy:tof y (tprod T1' (tnot T2'))] 
+	      twf/pi1 
+	      ([y'][dy': tof y' T1']  
+		 twf/pi2 
+		 ([g][dg:tof g (tnot T2')] 
+		    (twf/let 
+		       ([x'] [dx':tof x' (tnot (tnot T1'))] 
+			  twf/app 
+			  dg 
+			  (DV x' dx'))
+		       (tof/suspend dy'))) 
+		 dy)
+	      dy)))
+     <- ({x} {x'} {dx': tof x' (tnot (tnot T1'))}  
+	   {dt: trans x T1 x'}
+	   correct dt D1 dx' 
+	   -> correct' (D3 x x' dt) D2 (DV x' dx' : tof (V x') (tnot (tnot T2')))).
+
+
+%block transbind : some {T : tp} {T' : ttp} {DTT : ttrans T T'}
+                    block
+                    {x : term} 
+                    {x' : tval} {dx' : tof x' (tnot (tnot T'))}
+                    {dt : trans x T x'}
+                    {thm : correct dt DTT dx'}.
+
+
+%worlds (transbind) (correct _ _ _) (correct' _ _ _).
+%total (D D') (correct D _ _) (correct' D' _ _).
+```
+
+-----
+This page was copied from the MediaWiki version of the Twelf Wiki.
+If anything looks wrong, you can refer to the
+[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Computation_and_Deduction_2009/20090316).
+!}%
