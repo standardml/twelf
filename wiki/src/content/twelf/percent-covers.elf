@@ -86,7 +86,7 @@ cf : zero X 0
 * [Input coverage](/wiki/coverage-checking/)
 * [Coverage checking](/wiki/coverage-checking/)
 
-<Keyword name="covers">
+<Keyword name="covers" />
 
 -----
 This page was copied from the MediaWiki version of the Twelf Wiki.
