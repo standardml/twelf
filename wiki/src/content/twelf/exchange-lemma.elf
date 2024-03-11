@@ -56,7 +56,7 @@ exchange : ({x:exp}{dx:of x T}{y:exp}{dy:of y T'} of (E x y) T'')
 In practice, it is rare for exchange to be proven and used as a metatheorem. Instead, exchange is inlined by  manipulating LF lambdas in the appropriate way. 
 
 It is common to use exchange in an inductive case for a constant with a higher-order premise.
-For example, in the [substitution lemma](/wiki/substitution-lemma/) article, exchange is used in the next-to-last case in the section [Substitution lemmas with a "var" rule](/wiki/substitution-lemma/). The exchange property is used there when ``x``, ``dx`` and ``y``, ``dy`` must be re-ordered to fit the correct sub-goal:
+For example, in the [substitution lemma](/wiki/substitution-lemma/) article, exchange is used in the next-to-last case in the section [Substitution lemmas with a "var" rule](/wiki/substitution-lemma/#substitution-lemmas-with-a-var-rule). The exchange property is used there when ``x``, ``dx`` and ``y``, ``dy`` must be re-ordered to fit the correct sub-goal:
 
 ```twelf    
 - : subst D1 ([x][dx] of/lam ([y][dy] D2 x dx y dy)) (of/lam D2')
