@@ -65,8 +65,9 @@ export function spanHighlight<State, Token>(
       reduce(response.tag, currentMatch);
       state = response.state;
       column = currentStartColumn;
-      if (++i > 10000)
-        throw new Error(`loop ${workingContents} /// ${remainingLine}`);
+      if (i++ > 10000) {
+        throw new Error(`loop parsing line ${line}: '${remainingLine}'`);
+      }
     } while (remainingLine !== "");
 
     if (workingContents !== "") {

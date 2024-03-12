@@ -2,8 +2,6 @@
 import { spanHighlight } from "./twelf-highlight/tokenizer-highlighter";
 import { twelfTokenizer } from "./twelf-highlight/twelf-tokenizer";
 
-// import { response } from './twelf-highlight/evaluate.ts';
-
 function trimSlightly(code: string): string {
   const code2 = code[0] === "\n" ? code.slice(1) : code;
   const code3 =
@@ -46,12 +44,7 @@ const highlit = spanHighlight(twelfTokenizer, trimSlightly(code))
     return `${htmlLine.join("")}`;
   })
   .join("\n");
-
-// const text = await response;
 ---
 
-<!-- pre set:html={typeof contents} / --><!-- pre set:text={JSON.stringify(newly)} / -->
 <pre tabindex="0" dir="ltr" set:html={highlit} />
 {Astro.props.checked ? "(placeholder for twelf's feedback)" : null}
-<!-- pre set:html={text} /-->
-<!-- pre set:html={response} /-->
