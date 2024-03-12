@@ -21,10 +21,10 @@ const highlit = spanHighlight(twelfTokenizer, trimSlightly(code))
   .map((line) => {
     const htmlLine = line.map(({ tag, contents }) => {
       switch (tag) {
+        case "atom":
+          return `<span class="tok-atom">${htmlEscape(contents)}</span>`;
         case "variableName":
           return `<span class="tok-variableName">${htmlEscape(contents)}</span>`;
-        case "variableName.special":
-          return `<span class="tok-variableName2">${htmlEscape(contents)}</span>`;
         case "punctuation":
           return `<span class="tok-punctuation">${htmlEscape(contents)}</span>`;
         case "keyword":
@@ -33,8 +33,6 @@ const highlit = spanHighlight(twelfTokenizer, trimSlightly(code))
           return `<span class="tok-comment">${htmlEscape(contents)}</span>`;
         case "literal":
           return `<span class="tok-literal">${htmlEscape(contents)}</span>`;
-        case "meta":
-          return `<span class="tok-meta">${htmlEscape(contents)}</span>`;
         case "invalid":
           return `<span class="tok-invalid">${htmlEscape(contents)}</span>`;
         default:

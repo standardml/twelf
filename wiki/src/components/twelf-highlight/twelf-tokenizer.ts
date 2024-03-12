@@ -1,91 +1,18 @@
-import type {
-  ParserResponse,
-  SourceLocation,
-  StreamParser,
-} from "./tokenizer-types";
+import type { ParserResponse, StreamParser } from "./tokenizer-types";
 
-const punct = [
-  ".",
-  ":",
-  "(",
-  ")",
-  "[",
-  "]",
-  "{",
-  "}",
-  "<-",
-  "->",
-  "=",
-  "_",
-] as const;
-type PUNCT = (typeof punct)[number];
 const IDCHARS = /^[_!&$^+/<=>?@~|#*`;,\-\\a-zA-Z0-9'\u{80}-\u{10FFFF}]+/u;
-
-const directive = [
-  "infix",
-  "prefix",
-  "postfix",
-  "name",
-  "define",
-  "solve",
-  "query",
-  "fquery",
-  "compile",
-  "querytabled",
-  "mode",
-  "unique",
-  "covers",
-  "total",
-  "terminates",
-  "block",
-  "worlds",
-  "reduces",
-  "tabled",
-  "keepTable",
-  "theorem",
-  "prove",
-  "establish",
-  "assert",
-  "abbrev",
-  "trustme",
-  "freeze",
-  "thaw",
-  "subord",
-  "deterministic",
-  "clause",
-  "sig",
-  "struct",
-  "where",
-  "include",
-  "open",
-  "use",
-];
-type DIRECTIVE = (typeof directive)[number];
-
-export type Token =
-  | { loc: SourceLocation; type: PUNCT }
-  | { loc: SourceLocation; type: "pathsep" }
-  | { loc: SourceLocation; type: "type" }
-  | {
-      loc: SourceLocation;
-      type: "id";
-      case: "Upper" | "Lower" | "Bound";
-      value: string;
-    }
-  | { loc: SourceLocation; type: "directive"; value: DIRECTIVE }
-  | { loc: SourceLocation; type: "string"; value: string };
 
 type State =
   | { type: "Toplevel" }
   | { type: "Eolcomment" }
   | { type: "Multilinecomment"; stack: number };
 
-export const twelfTokenizer: StreamParser<State, Token> = {
+export const twelfTokenizer: StreamParser<State, null> = {
   startState: { type: "Toplevel" },
 
   handleEof: () => null,
 
-  advance: (stream, state): ParserResponse<State, Token> => {
+  advance: (stream, state): ParserResponse<State, null> => {
     let tok: string | null;
 
     if (stream.eol()) {
@@ -129,7 +56,6 @@ export const twelfTokenizer: StreamParser<State, Token> = {
       return {
         state,
         tag: "punctuation",
-        tree: { type: tok as PUNCT, loc: stream.matchedLocation() },
       };
     }
 
@@ -147,7 +73,7 @@ export const twelfTokenizer: StreamParser<State, Token> = {
         return { state, tag: "comment" };
       }
       if (stream.eat(IDCHARS)) {
-        return { state, tag: "meta" };
+        return { state, tag: "keyword" };
       }
       stream.eat("/^./");
       return { state, tag: "invalid" };
@@ -176,7 +102,7 @@ export const twelfTokenizer: StreamParser<State, Token> = {
         default:
           return {
             state,
-            tag: tok.match(/^[A-Z_]/) ? "variableName.special" : "variableName",
+            tag: tok.match(/^[A-Z_]/) ? "variableName" : "atom",
           };
       }
     }

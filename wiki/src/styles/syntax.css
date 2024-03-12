@@ -1,8 +1,8 @@
-span.tok-variableName {
+span.tok-atom {
   color: var(--astro-code-token-constant);
 }
 
-span.tok-variableName2 {
+span.tok-variableName {
   color: var(--astro-code-token-parameter);
 }
 
@@ -16,10 +16,6 @@ span.tok-keyword {
 
 span.tok-literal {
   color: var(--astro-code-token-string);
-}
-
-span.tok-meta {
-  color: var(--astro-code-token-function);
 }
 
 span.tok-comment {
