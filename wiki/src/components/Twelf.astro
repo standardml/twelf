@@ -1,4 +1,7 @@
 ---
+import { spanHighlight } from "./twelf-highlight/tokenizer-highlighter";
+import { twelfTokenizer } from "./twelf-highlight/twelf-tokenizer";
+
 // import { response } from './twelf-highlight/evaluate.ts';
 
 function trimSlightly(code: string): string {
@@ -9,16 +12,38 @@ function trimSlightly(code: string): string {
 }
 
 const { code = "" } = Astro.props;
-const lines = trimSlightly(code).split("\n");
-const newly = lines.map((line, i: number) =>
-  i % 2 === 0 ? line : `<span style="color: red;">${line}</span>`
-);
+function htmlEscape(code) {
+  return code
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+const highlit = spanHighlight(twelfTokenizer, trimSlightly(code))
+  .map(({ tag, contents }) => {
+    switch (tag) {
+      case "variableName":
+        return `<span style="color: blue;">${htmlEscape(contents)}</span>`;
+      case "keyword":
+        return `<span style="color: green;">${htmlEscape(contents)}</span>`;
+      case "comment":
+        return `<span style="font-style: italic;">${htmlEscape(contents)}</span>`;
+      case "invalid":
+        return `<span style="color: red;">${htmlEscape(contents)}</span>`;
+      case "literal":
+        return `<span style="color: purple;">${htmlEscape(contents)}</span>`;
+      case "meta":
+        return `<span style="color: orange;">${htmlEscape(contents)}</span>`;
+      default:
+        return htmlEscape(contents);
+    }
+  })
+  .join("");
 
 // const text = await response;
 ---
 
 <!-- pre set:html={typeof contents} / --><!-- pre set:text={JSON.stringify(newly)} / -->
-<pre set:html={newly.join("\n")} />
+<pre set:html={highlit} />
 {Astro.props.checked ? "(placeholder for twelf's feedback)" : null}
 <!-- pre set:html={text} /-->
 <!-- pre set:html={response} /-->
