@@ -3,7 +3,8 @@ import type { StreamParser, StringStream } from "./tokenizer-types";
 export function spanHighlight<State, Token>(
   tokenizer: StreamParser<State, Token>,
   string: string
-): { tag: string | null; contents: string }[] {
+): { tag: string | null; contents: string }[][] {
+  let outputLines: { tag: string | null; contents: string }[][] = [];
   let output: { tag: string | null; contents: string }[] = [];
   let workingTag: string | undefined = undefined;
   let workingContents: string = "";
@@ -56,6 +57,7 @@ export function spanHighlight<State, Token>(
       }),
     };
 
+    let i = 0;
     do {
       currentMatch = "";
       currentStartColumn = column;
@@ -63,12 +65,17 @@ export function spanHighlight<State, Token>(
       reduce(response.tag, currentMatch);
       state = response.state;
       column = currentStartColumn;
+      if (++i > 10000)
+        throw new Error(`loop ${workingContents} /// ${remainingLine}`);
     } while (remainingLine !== "");
-    workingContents += "\n";
+
+    if (workingContents !== "") {
+      output.push({ tag: workingTag ?? null, contents: workingContents });
+      workingContents = "";
+    }
+    outputLines.push(output);
+    output = [];
   }
 
-  if (workingContents !== "") {
-    output.push({ tag: workingTag ?? null, contents: workingContents });
-  }
-  return output;
+  return outputLines;
 }
