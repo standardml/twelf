@@ -8,8 +8,11 @@
 set -e
 
 BRANCH=$2
-if [ -z $BRANCH ] then BRANCH="main" end 
-URL='https://api.github.com/repos/standardml/twelf/actions/artifacts?per_page=100&name=wiki-ssg'
+if [ -z $BRANCH ]
+then BRANCH="main"
+fi
+
+URL='https://api.github.com/repos/standardml/twelf/actions/artifacts?per_page=100&name=wiki-ssg-'"$BRANCH"
 
 while true
 do
@@ -44,4 +47,4 @@ curl -o dist/wiki.zip -L \
   $ARTIFACT_ACCESS_URL 2> /dev/null
 
 cd dist
-unzip wiki.zip
+unzip -q wiki.zip
