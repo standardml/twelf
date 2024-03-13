@@ -1,0 +1,28 @@
+span.tok-atom {
+  color: var(--astro-code-token-constant);
+}
+
+span.tok-variableName {
+  color: var(--astro-code-token-parameter);
+}
+
+span.tok-punctuation {
+  color: var(--astro-code-token-punctuation);
+}
+
+span.tok-keyword {
+  color: var(--astro-code-token-keyword);
+}
+
+span.tok-literal {
+  color: var(--astro-code-token-string);
+}
+
+span.tok-comment {
+  font-style: italic;
+  color: var(--astro-code-token-comment);
+}
+
+span.tok-invalid {
+  color: #ff0000;
+}

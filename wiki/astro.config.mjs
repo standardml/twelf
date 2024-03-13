@@ -24,6 +24,7 @@ export default defineConfig({
       // editLink: { baseUrl: 'TODO' },
       head: [{ tag: "link", attrs: KATEX_CSS }],
       components: { Footer: "./src/components/Footer.astro" },
+      customCss: ["./src/styles/syntax.css"],
       sidebar: [
         { label: "About", link: "/wiki/about-the-twelf-project/" },
         { label: "Download", link: "/wiki/download/" },

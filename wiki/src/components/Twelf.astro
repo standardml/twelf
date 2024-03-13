@@ -1,5 +1,7 @@
 ---
-// import { response } from './twelf-highlight/evaluate.ts';
+import { spanHighlight } from "./twelf-highlight/tokenizer-highlighter";
+import { twelfTokenizer } from "./twelf-highlight/twelf-tokenizer";
+import { twelfExec } from "./twelf-highlight/twelf-runner";
 
 function trimSlightly(code: string): string {
   const code2 = code[0] === "\n" ? code.slice(1) : code;
@@ -9,16 +11,51 @@ function trimSlightly(code: string): string {
 }
 
 const { code = "" } = Astro.props;
-const lines = trimSlightly(code).split("\n");
-const newly = lines.map((line, i: number) =>
-  i % 2 === 0 ? line : `<span style="color: red;">${line}</span>`
-);
+function htmlEscape(code: string) {
+  return code
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
 
-// const text = await response;
+const highlit = spanHighlight(twelfTokenizer, trimSlightly(code))
+  .map((line) => {
+    const htmlLine = line.map(({ tag, contents }) => {
+      switch (tag) {
+        case "atom":
+          return `<span class="tok-atom">${htmlEscape(contents)}</span>`;
+        case "variableName":
+          return `<span class="tok-variableName">${htmlEscape(contents)}</span>`;
+        case "punctuation":
+          return `<span class="tok-punctuation">${htmlEscape(contents)}</span>`;
+        case "keyword":
+          return `<span class="tok-keyword">${htmlEscape(contents)}</span>`;
+        case "comment":
+          return `<span class="tok-comment">${htmlEscape(contents)}</span>`;
+        case "literal":
+          return `<span class="tok-literal">${htmlEscape(contents)}</span>`;
+        case "invalid":
+          return `<span class="tok-invalid">${htmlEscape(contents)}</span>`;
+        default:
+          return htmlEscape(contents);
+      }
+    });
+    return `${htmlLine.join("")}`;
+  })
+  .join("\n");
+
+const twelfResponse = await (Astro.props.checked
+  ? twelfExec(Astro.props.context || "", Astro.props.code || "")
+  : null);
 ---
 
-<!-- pre set:html={typeof contents} / --><!-- pre set:text={JSON.stringify(newly)} / -->
-<pre set:html={newly.join("\n")} />
-{Astro.props.checked ? "(placeholder for twelf's feedback)" : null}
-<!-- pre set:html={text} /-->
-<!-- pre set:html={response} /-->
+<pre class="twelf" set:html={highlit} />
+{twelfResponse ? <pre class="twelf-feedback" set:text={twelfResponse} /> : null}
+
+<style>
+  pre.twelf-feedback {
+    margin-top: 0 !important;
+    border-top: none;
+    color: var(--astro-code-token-string-expression);
+  }
+</style>
