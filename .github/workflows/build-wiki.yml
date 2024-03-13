@@ -17,7 +17,15 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: "18.x"
 
       - name: Build wiki
         run: cd wiki && npm i && npm run build
+
+      - name: Upload wiki as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiki-ssg-${{ github.head_ref || github.ref_name }}
+          path: wiki/dist/
+          compression-level: 9
+          retention-days: 1
