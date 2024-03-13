@@ -21,3 +21,10 @@ jobs:
 
       - name: Build wiki
         run: cd wiki && npm i && npm run build
+
+      - name: Upload wiki as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiki-ssg
+          path: wiki/dist/
+          compression-level: 9
