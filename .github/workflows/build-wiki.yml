@@ -25,7 +25,7 @@ jobs:
       - name: Upload wiki as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wiki-ssg
+          name: wiki-ssg-${{ github.head_ref || github.ref_name }}
           path: wiki/dist/
           compression-level: 9
           retention-days: 1

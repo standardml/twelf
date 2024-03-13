@@ -2,11 +2,13 @@
 # Used by render.com to get the artifact
 #
 # Usage:
-# GITHUB_AUTH_TOKEN=ghp_BLAHBLAHBLAH wiki/get-artifact GIT_SHA
+# GITHUB_AUTH_TOKEN=ghp_BLAHBLAHBLAH wiki/get-artifact GIT_SHA [BRANCH]
 
 # Exit on error
 set -e
 
+BRANCH=$2
+if [ -z $BRANCH ] then BRANCH="main" end 
 URL='https://api.github.com/repos/standardml/twelf/actions/artifacts?per_page=100&name=wiki-ssg'
 
 while true
