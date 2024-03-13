@@ -27,7 +27,7 @@ jobs:
 
       - name: Build Twelf
         run: |
-          make twelf
+          make mlton
           make twelf-regression
 
       - name: Set up Node
