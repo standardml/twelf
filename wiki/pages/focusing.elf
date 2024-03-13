@@ -1574,12 +1574,14 @@ single unique proof. | check=decl !}%
 %{! Different polarizations may lead to very differently shaped derivations.
 | check=decl !}%
 
+%{!! begin checked !!}%
 %query 1 * {p}{q}{r}{s} complete _ (d2 + p q r s) 
   (tp (tdn (t+ p q r s))) 
   (N p q r s).
 %query 1 * {p}{q}{r}{s} complete _ (d2 + p q r s) 
   (tp (tdn (te p q r s))) 
   (N p q r s).
+%{!! end checked !!}%
 
 %{!
 -----
