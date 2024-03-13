@@ -1,6 +1,7 @@
 ---
 import { spanHighlight } from "./twelf-highlight/tokenizer-highlighter";
 import { twelfTokenizer } from "./twelf-highlight/twelf-tokenizer";
+import { twelfExec } from "./twelf-highlight/twelf-runner";
 
 function trimSlightly(code: string): string {
   const code2 = code[0] === "\n" ? code.slice(1) : code;
@@ -42,7 +43,19 @@ const highlit = spanHighlight(twelfTokenizer, trimSlightly(code))
     return `${htmlLine.join("")}`;
   })
   .join("\n");
+
+const twelfResponse = await (Astro.props.checked
+  ? twelfExec(Astro.props.context || "", Astro.props.code || "")
+  : null);
 ---
 
-<pre tabindex="0" dir="ltr" set:html={highlit} />
-{Astro.props.checked ? "(placeholder for twelf's feedback)" : null}
+<pre class="twelf" set:html={highlit} />
+{twelfResponse ? <pre class="twelf-feedback" set:text={twelfResponse} /> : null}
+
+<style>
+  pre.twelf-feedback {
+    margin-top: 0 !important;
+    border-top: none;
+    color: var(--astro-code-token-string-expression);
+  }
+</style>
