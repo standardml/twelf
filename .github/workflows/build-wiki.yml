@@ -28,3 +28,4 @@ jobs:
           name: wiki-ssg
           path: wiki/dist/
           compression-level: 9
+          retention-days: 1
