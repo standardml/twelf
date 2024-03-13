@@ -2,6 +2,8 @@
 title: Syntax for Wiki Twelf pages
 ---
 
+import Twelf from "../../components/Twelf.astro";
+
 This website runs off of the [Astro Starlight](https://starlight.astro.build/)
 static site generator, which builds the website from markdown files (`.md`)
 and [extended markdown](https://mdxjs.com/) files (`.mdx`).
@@ -19,41 +21,45 @@ files to some other markdown-ish target in the future.
 
 ## High level structure of a Twelf wiki file
 
-Here's a simple Twelf wiki file:
+Here's a simple Wiki Twelf file:
 
-    %%! title: A simple Twelf wiki file
+<Twelf code={`
+%%! title: A simple Wiki Twelf file
 
-    %{! Here's code that defines the natural numbers: either zero `z`
-    or `s N`, the successor of the natural number `z`. !}%
+%{! Here's code that defines the natural numbers: either zero \`z\`
+or \`s N\`, the successor of the natural number \`z\`. !}%
 
-    nat : type.
-    z : nat.
-    s : nat -> nat.
+nat : type.
+z : nat.
+s : nat -> nat.
 
-    %{! ## Level two heading !}%
+%{! ## Level two heading !}%
 
-    %{! The [`%freeze`](/wiki/percent-freeze) declaration freezes. !}%
-    %freeze nat.
+%{! The [\`%freeze\`](/wiki/percent-freeze) declaration freezes. !}%
+%freeze nat.
+`} />
 
 This will get turned by the `/wiki/elf-to-mdx.mjs` script into the following
-extended markdown file that the Astro Starlight SSG understands.
+extended markdown file that the Astro Starlight SSG understands.`
 
-    ---
-    title: A simple Twelf wiki file
-    ---
-    import Twelf from "../../../components/Twelf.astro";
+```mdx
+---
+title: A simple Wiki Twelf file
+---
+import Twelf from "../../../components/Twelf.astro";
 
-    Here's code that defines the natural numbers: either zero `z`
-    or `s N`, the successor of the natural number `z`.
+Here's code that defines the natural numbers: either zero `z`
+or `s N`, the successor of the natural number `z`.
 
-    <Twelf code={`nat : type.
-    z : nat.
-    s : nat -> nat.`}/>
+<Twelf code={`nat : type.
+z : nat.
+s : nat -> nat.`}/>
 
-    ## Level two heading
-    The [`%freeze`](/wiki/percent-freeze) declaration freezes.
+## Level two heading
+The [`%freeze`](/wiki/percent-freeze) declaration freezes.
+```
 
-A wiki Twelf file begins with a series of lines beginning with `%%!` that
+A Wiki Twelf file begins with a series of lines beginning with `%%!` that
 directly become the frontmatter of the output file.
 
 Then, the rest of the parser turns the file "inside out", making special
@@ -71,52 +77,74 @@ Within a Twelf section, code within `%{!! begin checked !!}%` and
 `%{!! end checked !!}%` lines will be displayed on the wiki along with
 the Twelf output of running that code in context.
 
-    %{!! begin checked !!}%
-    three : nat : s (s (s z)).
-    %{!! end checked !!}%
+<Twelf code={`
+%{!! begin checked !!}%
+three: nat = (s (s (s z))).
+%{!! end checked !!}%
+`}/>
+
 
 This code will be checked in the context of the Twelf code in the page up to
 that point.
+
+<Twelf checked context={`
+nat : type.
+z : nat.
+s : nat -> nat.
+`} code={`
+three: nat = (s (s (s z))).
+`}/>
 
 Within a Twelf section, code within `%{!! begin hidden !!}%` and
 `%{!! end hidden !!}%` lines will be omitted from the wiki, while remaining
 part of the overall Twelf document.
 
-    %{!! begin hidden !!}%
-    % These declarations are necessary but would interrupt
-    % the flow of the page if we showed them in the wiki text:
-    nat : type.
-    times : nat -> nat -> nat.
-    %{!! end hidden !!}%
+<Twelf code={`
+%{!! begin hidden !!}%
+% These declarations are necessary but would interrupt
+% the flow of the page if we showed them in the wiki text:
+nat : type.
+times : nat -> nat -> nat.
+%{!! end hidden !!}%
+`}/>
 
 ## Recognized behavior within Markdown sections
 
 Within Markdown sections, centered math in non indented ` ```math `
 blocks is recognized:
 
-    ```math
-    \bigvee_i \mathcal{C}_i
-    ```
+<pre set:text={`
+\`\`\`math
+\\bigvee_i \\mathcal{C}_i
+\`\`\`
+`}/>
 
 It's possible to display syntax-highlighted Twelf code that doesn't appear
 in the regular flow of the document:
 
-    ```twelf
-    % Don't do this, it will run forever:
-    loop : type.
-    fix : loop <- loop.
-    %solve x : loop.
-    ```
+<pre set:text={`
+\`\`\`twelf
+% Don't do this, it will run forever:
+loop : type.
+fix : loop <- loop.
+%solve x : loop.
+\`\`\`
+`} />
+
 
 It's also possible to display checked Twelf code that shows its response:
 
-    ```checkedtwelf
-    % This won't work at all.
-    nat : type.
-    %trustme nat -> nat = nat -> nat.
-    ```
+<pre set:text={`
+\`\`\`checkedtwelf
+% This won't work at all.
+nat : type.
+%trustme nat -> nat = nat -> nat.
+\`\`\`
+`} />
 
 These commands are important because they allow the wiki page itself to work
 as a complete Twelf file that loads correctly in Twelf, while still being
 able to contain, in what are effectively Twelf comments, non-running
 code examples.
+
+

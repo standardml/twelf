@@ -1,0 +1,76 @@
+---
+title: Contributing
+---
+
+[The standardml/twelf repository on
+GitHub](https://github.com/standardml/twelf) contains both the source code for
+Twelf and the code for this website.
+
+Twelf, the software, is not under active development, and changes to the
+code of Twelf are unlikely to be accepted unless you're working with Twelf's
+original authors, [Frank Pfenning](https://www.cs.cmu.edu/~fp/) and [Carsten
+Schürmann](https://www.itu.dk/people/carsten/).
+
+This website, on the other hand, welcomes contributions through GitHub's 
+[pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests)
+mechanism. Any PRs that makes non-destructive changes to the website should
+be quickly accepted, in keeping with the legacy of twelf.org as "The Twelf
+Wiki."
+
+## How to contribute
+
+Any page under the `/wiki/` prefix of this website, for example
+`twelf.org/wiki/abstract-syntax/`, corresponds to an Twelf file in the GitHub
+repository, like [`wiki/pages/abstract-syntax.elf`](https://github.com/standardml/twelf/blob/main/wiki/pages/abstract-syntax.elf).
+
+All `/wiki/` pages are written in [Wiki Twelf](/wiki-syntax/), which is a
+hopefully-intuitive way of combining [Markdown](https://www.markdownguide.org/)
+with Twelf.
+
+### Making small changes (using GitHub's editor)
+
+There's a link from every `/wiki/` page that lets you view the Twelf code on
+GitHub. If you're logged in to GitHub, you can click the pencil icon highlighted
+below to edit the file:
+
+![Viewing a Wiki Twelf file on GitHub](../../assets/github-view.png)
+
+Once you've edited the file, the green "Commit changes" button will become
+active.
+
+![Editing a Wiki Twelf file on GitHub](../../assets/github-edit.png)
+
+Clicking that "**Commit changes**" button will open a modal: you can ignore the
+options and click the green button that says "**Propose changes**." That will
+open a new page: ignore the options and click "**Create pull request**."
+
+### Making bigger changes (running the site locally)
+
+If you [check out the Twelf repository on
+GitHub](https://github.com/standardml/twelf), you can preview the website by
+running the following commands:
+
+```bash
+cd wiki
+npm install
+npm run dev
+```
+
+It's not necessary to build Twelf itself, though your local preview won't show
+Twelf's responses if you don't build Twelf.
+
+The development server is much more permissive than the actual static site
+builder, which can be invoked with `npm run build`, and then viewed locally
+with `npm run preview`.
+
+## Code of conduct
+
+Participation with the Twelf Wiki should be a harassment-free experience for
+everyone, regardless of age, body size, visible or invisible disability,
+ethnicity, sex characteristics, gender identity and expression, level of
+experience, education, socio-economic status, nationality, personal appearance,
+race, caste, color, religion, or sexual identity and orientation. Harrassing
+behavior will lead to being blocked from contributing.
+
+Please report any issues to [Rob Simmons](https://social.wub.site/@simrob). We
+will not name harassment victims without their affirmative consent.
