@@ -32,10 +32,11 @@ do
           )
     if [ -z $ARTIFACT_ACCESS_URL ]
     then
-        echo "No SSG artifact found for commit $1"
+        echo "No SSG artifact found for commit $1 on branch $BRANCH"
         echo "Pausing."
         sleep 10
     else
+        echo "SSG artifact found for commit $1 on branch $BRANCH"
         break
     fi
 done
