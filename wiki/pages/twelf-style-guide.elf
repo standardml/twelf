@@ -1,10 +1,20 @@
 %%! title: "Twelf style guide"
+%%! next: false
 
-%{! _This page is a style guide for Twelf code. For a style guide for contributions to the Twelf Project Wiki, see [Project:Style guide](/wiki/the-twelf-project-style-guide/)._
+%{! 
+The style you use to write Twelf code should be consistent so that it is
+readable by others now and by you in the future. However, the general
+objectives of _consistency and readability of code_ is more important than
+anything that is or possibly could be said on this page. Therefore, this page
+should be seen as attempt to collect a set of good practices from experience
+that can be used as recommendations for new users. 
 
-The style you use to write Twelf code should be consistent so that it is readable by others now and by you in the future. However, the general objectives of _consistency and readability of code_ is more important than anything that is or possibly could be said on this page. Therefore, this page should be seen as attempt to collect a set of good practices from experience that can be used as recommendations for new users. 
-
-The first two sections are about whitespace & comments, which are extremely important aspects of readability. The final section is on conventions used for writing identifiers, which is less important as long as consistency is maintained within a project. The article on [naming conventions](/wiki/naming-conventions/) also considers ways of standardizing identifier names.
+The first two sections are about whitespace & comments, which are extremely
+important aspects of readability. The final section is on conventions used for
+writing identifiers, which is less important as long as consistency is
+maintained within a project. The article on [naming
+conventions](/wiki/naming-conventions/) also considers ways of standardizing
+identifier names.
 
 ## Whitespace
 
@@ -30,7 +40,6 @@ color-neq/red-black : color-neq color/red color/black.
 color-neq/black-red : color-neq color/black color/red.
 
 
-
 color-swap : color -> color -> type.
 %mode color-swap +C1 -C2.
 
@@ -54,7 +63,7 @@ can-color-neq : {C:color} color-neq C C' -> type.
 
 %{! ### Additional guidelines
 
-* There should be at least 3 empty lines between any "groups", where a group is something on the scale of declarations for a type family or proof of a metatheorem. 4 or more empty lines should between super-groups of related groups, such as the proofs for a set of related lemmas.
+* There should be at least 2 empty lines between any "groups", where a group is something on the scale of declarations for a type family or proof of a metatheorem. 4 or more empty lines should between super-groups of related groups, such as the proofs for a set of related lemmas.
 
 * The colons following the names of the constants for a group should all line up.
 
@@ -68,7 +77,7 @@ Comments are at least as important a consideration when writing Twelf code inten
 
 * Each file should begin with single-line comments establishing a title and authorship. If several more lines about the purpose of the file are needed, those should go into a multi-line comment immediately underneath the title/author information.
 
-* Single line comments should annotate most "groups" and "super-groups" explaining, briefly, their purpose. They should be associated with a relatively strong visual indicator that is consistent across the file, such as one of the following. Be conscious of the interaction of your comment style with the [Twelf Emacs mode](/wiki/twelf-with-emacs/) syntax highlighting – some comment styles which use percent signs at the end and the beginning of a line cause the syntax highlighting to behave unpredictably. !}%
+* Single line comments should annotate most "groups" and "super-groups" explaining, briefly, their purpose. They should be associated with a relatively strong visual indicator that is consistent across the file, but there aren't any standards here, and the following are all used: !}%
     
 %%%%% Syntax %%%%%
 % ===== Type system ===== 
@@ -77,7 +86,9 @@ Comments are at least as important a consideration when writing Twelf code inten
 %%%%% Metatheorems about nat
 %%%%{ Type preservation }%%%%
 
-%{! * Comments are most useful as multi-line comments at the beginning of "groups" and "super-groups" as defined in the previous section. Listing the important metatheorems at the beginning of a long group of metatheorems is also helpful.
+%{! Be conscious of the interaction of your comment style with the [Twelf Emacs mode](/wiki/twelf-with-emacs/) syntax highlighting – some comment styles which use percent signs at the end and the beginning of a line cause the syntax highlighting to behave unpredictably.
+
+* Comments are most useful as multi-line comments at the beginning of "groups" and "super-groups" as defined in the previous section. Listing the important metatheorems at the beginning of a long group of metatheorems is also helpful.
 
 * Multi-line comments should be as free of visual cruft (borders, horizontal lines) as possible. The <tt>%<span/>\{   \}<span/>%</tt> construct should be used for most multi-line comments.
 
@@ -87,7 +98,7 @@ Due to the absence of a module system for Twelf, careful identifier choice is cr
 
 The names of constants and [type families](/wiki/type-family/) should _always_ begin with a lower case letter. Type families should only contain lower-case letters, numbers, and dashes ("-") which are used to separate words in an identifier, as in ``this-is-my-neat-proof``. The other options using underscores (as in ``this_is_my_neat_proof``), an option that is often used but which is currently generally avoided. Using ``camelCase`` is generally to be avoided: it is easier to distinguish an [implicit parameter](/wiki/implicit-and-explicit-parameters/) from a constant if only implicit parameters use capital letters.
 
-[Implicit parameters](/wiki/implicit-and-explicit-parameters/) must be capitalized; when using [explicit parameters](/wiki/implicit-and-explicit-parameters/)it is sometimes clearer to capitalize them, but it is often more clear and less error-prone to make explicit parameters lower case.
+[Implicit parameters](/wiki/implicit-and-explicit-parameters/) must be capitalized; when using [explicit parameters](/wiki/implicit-and-explicit-parameters/) it is sometimes clearer to capitalize them, but it is often more clear and less error-prone to make explicit parameters lower case.
 
 Twelf code can generally be sorted into one of three categories: **[object logic syntax](/wiki/syntax-object-logic/)**, **[judgments](/wiki/judgment/)** about the object logic syntax and other judgments, and **[metatheorem](/wiki/metatheorem/)s** about the object logic. Each of the three categories has distinct style conventions.
 
@@ -200,13 +211,11 @@ and put that in.
 }%
 
 
-
 %%%%%{ Syntax }%%%%%
 
 exp : type.
 
 exp/unit : exp.
-
 
 
 %%%%%{ Types }%%%%%
@@ -224,7 +233,6 @@ typed : exp -> tp -> type.
 %mode typed +E -T.
 
 typed/unit : typed exp/unit tp/unit.
-
 
 
 isvalue : exp -> type.
@@ -254,10 +262,3 @@ isvalue-implies-typed : isvalue E -> typed E T -> type.
 %worlds () (isvalue-implies-typed _ _).
 %total T (isvalue-implies-typed T _).
 
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Twelf_style_guide).
-!}%

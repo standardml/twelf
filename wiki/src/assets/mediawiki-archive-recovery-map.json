@@ -1,0 +1,2106 @@
+{
+  "percent-eof": {
+    "timestamp": "20240309171310",
+    "page": "%25."
+  },
+  "percent-assert": {
+    "timestamp": "20240309171338",
+    "page": "%25assert"
+  },
+  "percent-block": {
+    "timestamp": "20240309171410",
+    "page": "%25block"
+  },
+  "percent-clause": {
+    "timestamp": "20240309171447",
+    "page": "%25clause"
+  },
+  "percent-covers": {
+    "timestamp": "20240309171605",
+    "page": "%25covers"
+  },
+  "percent-establish": {
+    "timestamp": "20240309171748",
+    "page": "%25establish"
+  },
+  "percent-freeze": {
+    "timestamp": "20240309171928",
+    "page": "%25freeze"
+  },
+  "percent-mode": {
+    "timestamp": "20240309171949",
+    "page": "%25mode"
+  },
+  "percent-name": {
+    "timestamp": "20240309172038",
+    "page": "%25name"
+  },
+  "percent-prove": {
+    "timestamp": "20240309172151",
+    "page": "%25prove"
+  },
+  "percent-query": {
+    "timestamp": "20240309172231",
+    "page": "%25query"
+  },
+  "percent-querytabled": {
+    "timestamp": "20240309172257",
+    "page": "%25querytabled"
+  },
+  "percent-reduces": {
+    "timestamp": "20240309172447",
+    "page": "%25reduces"
+  },
+  "percent-solve": {
+    "timestamp": "20240309172603",
+    "page": "%25solve"
+  },
+  "percent-subord": {
+    "timestamp": "20240309172630",
+    "page": "%25subord"
+  },
+  "percent-tabled": {
+    "timestamp": "20240309172744",
+    "page": "%25tabled"
+  },
+  "percent-terminates": {
+    "timestamp": "20240309172912",
+    "page": "%25terminates"
+  },
+  "percent-thaw": {
+    "timestamp": "20240309173031",
+    "page": "%25thaw"
+  },
+  "percent-theorem": {
+    "timestamp": "20240309211809",
+    "page": "%25theorem"
+  },
+  "percent-total": {
+    "timestamp": "20240309211948",
+    "page": "%25total"
+  },
+  "percent-trustme": {
+    "timestamp": "20240309212007",
+    "page": "%25trustme"
+  },
+  "percent-unique": {
+    "timestamp": "20240309212032",
+    "page": "%25unique"
+  },
+  "percent-use": {
+    "timestamp": "20240309212057",
+    "page": "%25use"
+  },
+  "percent-worlds": {
+    "timestamp": "20240309212209",
+    "page": "%25worlds"
+  },
+  "abbrev-declaration": {
+    "timestamp": "20240309212234",
+    "page": "Abbrev_declaration"
+  },
+  "about-the-twelf-project": {
+    "timestamp": "20240309212430",
+    "page": "About_The_Twelf_Project"
+  },
+  "abstract-syntax": {
+    "timestamp": "20240309212608",
+    "page": "Abstract_syntax"
+  },
+  "ad-hoc-binding-structures": {
+    "timestamp": "20240309212654",
+    "page": "Ad_hoc_binding_structures"
+  },
+  "adequacy": {
+    "timestamp": "20240309212714",
+    "page": "Adequacy"
+  },
+  "admissibility-of-cut": {
+    "timestamp": "20240309212740",
+    "page": "Admissibility_of_cut"
+  },
+  "alpha-equivalence": {
+    "timestamp": "20240309212805",
+    "page": "Alpha-equivalence"
+  },
+  "ambiguous-hyperkind": {
+    "timestamp": "20240309212829",
+    "page": "Ambiguous_hyperkind"
+  },
+  "ask-twelf-elf": {
+    "timestamp": "20240309213030",
+    "page": "Ask_Twelf_Elf"
+  },
+  "ask-twelf-elf-short-answers": {
+    "timestamp": "20240309213055",
+    "page": "Ask_Twelf_Elf:Short_answers"
+  },
+  "beta-equivalence": {
+    "timestamp": "20240309213114",
+    "page": "Beta-equivalence"
+  },
+  "bibliography-of-lf": {
+    "timestamp": "20240309213139",
+    "page": "Bibliography_of_LF"
+  },
+  "big-algebraic-solver": {
+    "timestamp": "20240309213314",
+    "page": "Big_algebraic_solver"
+  },
+  "bracket-abstraction": {
+    "timestamp": "20240309213509",
+    "page": "Bracket_abstraction"
+  },
+  "cade-tutorial": {
+    "timestamp": "20240309213529",
+    "page": "CADE_Tutorial"
+  },
+  "cade-tutorial-basic-error-messages": {
+    "timestamp": "20240309213554",
+    "page": "CADE_Tutorial/Basic_error_messages"
+  },
+  "cade-tutorial-basics": {
+    "timestamp": "20240309213753",
+    "page": "CADE_Tutorial/Basics"
+  },
+  "cade-tutorial-basics-answer": {
+    "timestamp": "20240309213934",
+    "page": "CADE_Tutorial/Basics_Answer"
+  },
+  "cade-tutorial-combinators": {
+    "timestamp": "20240309214124",
+    "page": "CADE_Tutorial/Combinators"
+  },
+  "cade-tutorial-combinators-answer": {
+    "timestamp": "20240309214145",
+    "page": "CADE_Tutorial/Combinators_Answer"
+  },
+  "cade-tutorial-combinators-support": {
+    "timestamp": "20240309214210",
+    "page": "CADE_Tutorial/Combinators_Support"
+  },
+  "cade-tutorial-minml": {
+    "timestamp": "20240309214408",
+    "page": "CADE_Tutorial/MinML"
+  },
+  "cade-tutorial-minml-answer": {
+    "timestamp": "20240309214536",
+    "page": "CADE_Tutorial/MinML_Answer"
+  },
+  "cade-tutorial-minml-encoding": {
+    "timestamp": "20240309214824",
+    "page": "CADE_Tutorial/MinML_encoding"
+  },
+  "cade-tutorial-next": {
+    "timestamp": "20240309214940",
+    "page": "CADE_Tutorial/Next"
+  },
+  "cps-conversion": {
+    "timestamp": "20240309215237",
+    "page": "CPS_conversion"
+  },
+  "c-machine-and-focusing": {
+    "timestamp": "20240309215425",
+    "page": "C_machine_and_focusing"
+  },
+  "c-machine-and-focusing-composition-in-machine-state": {
+    "timestamp": "20240309215658",
+    "page": "C_machine_and_focusing_(composition_in_machine_state)"
+  },
+  "c-machine-and-focusing-internalized-compositon": {
+    "timestamp": "20240309215740",
+    "page": "C_machine_and_focusing_(internalized_compositon)"
+  },
+  "canonical-form": {
+    "timestamp": "20240309215916",
+    "page": "Canonical_form"
+  },
+  "canonical-forms-lemma": {
+    "timestamp": "20240309220222",
+    "page": "Canonical_forms_lemma"
+  },
+  "case-studies": {
+    "timestamp": "20240309230330",
+    "page": "Case_studies"
+  },
+  "catch-all-case": {
+    "timestamp": "20240309220713",
+    "page": "Catch-all_case"
+  },
+  "church-rosser-w-catch-all-case": {
+    "timestamp": "20240309220916",
+    "page": "Church-Rosser_(w/_catch-all_case)"
+  },
+  "church-rosser-w-identity-reduction": {
+    "timestamp": "20240309221107",
+    "page": "Church-Rosser_(w/_identity_reduction)"
+  },
+  "church-rosser-via-complete-development": {
+    "timestamp": "20240309221156",
+    "page": "Church-Rosser_via_complete_development"
+  },
+  "classical-s5": {
+    "timestamp": "20240309221217",
+    "page": "Classical_S5"
+  },
+  "computation-and-deduction-2009": {
+    "timestamp": "20240309221355",
+    "page": "Computation_and_Deduction_2009"
+  },
+  "computation-and-deduction-2009-20090203": {
+    "timestamp": "20240309221427",
+    "page": "Computation_and_Deduction_2009/20090203"
+  },
+  "computation-and-deduction-2009-20090204": {
+    "timestamp": "20240309221449",
+    "page": "Computation_and_Deduction_2009/20090204"
+  },
+  "computation-and-deduction-2009-20090209": {
+    "timestamp": "20240309221513",
+    "page": "Computation_and_Deduction_2009/20090209"
+  },
+  "computation-and-deduction-2009-20090223": {
+    "timestamp": "20240309221556",
+    "page": "Computation_and_Deduction_2009/20090223"
+  },
+  "computation-and-deduction-2009-20090304": {
+    "timestamp": "20240309221626",
+    "page": "Computation_and_Deduction_2009/20090304"
+  },
+  "computation-and-deduction-2009-20090304-support": {
+    "timestamp": "20240309221652",
+    "page": "Computation_and_Deduction_2009/20090304-support"
+  },
+  "computation-and-deduction-2009-20090316": {
+    "timestamp": "20240309221817",
+    "page": "Computation_and_Deduction_2009/20090316"
+  },
+  "computation-and-deduction-2009-20090318": {
+    "timestamp": "20240309221847",
+    "page": "Computation_and_Deduction_2009/20090318"
+  },
+  "computation-and-deduction-2009-20090325": {
+    "timestamp": "20240309221914",
+    "page": "Computation_and_Deduction_2009/20090325"
+  },
+  "computation-and-deduction-2009-20090330": {
+    "timestamp": "20240309221939",
+    "page": "Computation_and_Deduction_2009/20090330"
+  },
+  "computation-and-deduction-2009-20090401": {
+    "timestamp": "20240309222004",
+    "page": "Computation_and_Deduction_2009/20090401"
+  },
+  "computation-and-deduction-2009-20090406": {
+    "timestamp": "20240309222028",
+    "page": "Computation_and_Deduction_2009/20090406"
+  },
+  "computation-and-deduction-2009-20090408": {
+    "timestamp": "20240309222201",
+    "page": "Computation_and_Deduction_2009/20090408"
+  },
+  "computation-and-deduction-2009-20090413": {
+    "timestamp": "20240309222223",
+    "page": "Computation_and_Deduction_2009/20090413"
+  },
+  "computation-and-deduction-2009-20090415": {
+    "timestamp": "20240309222421",
+    "page": "Computation_and_Deduction_2009/20090415"
+  },
+  "computation-and-deduction-2009-20090420": {
+    "timestamp": "20240309222445",
+    "page": "Computation_and_Deduction_2009/20090420"
+  },
+  "computation-and-deduction-2009-20090422": {
+    "timestamp": "20240309222616",
+    "page": "Computation_and_Deduction_2009/20090422"
+  },
+  "computation-and-deduction-2009-20090427": {
+    "timestamp": "20240309222818",
+    "page": "Computation_and_Deduction_2009/20090427"
+  },
+  "computation-and-deduction-2009-20090429": {
+    "timestamp": "20240309223014",
+    "page": "Computation_and_Deduction_2009/20090429"
+  },
+  "computation-and-deduction-2009-test-page-1": {
+    "timestamp": "20240309223159",
+    "page": "Computation_and_Deduction_2009/Test_Page_1"
+  },
+  "concrete-representation": {
+    "timestamp": "20240309223351",
+    "page": "Concrete_representation"
+  },
+  "congruence-relation": {
+    "timestamp": "20240309223418",
+    "page": "Congruence_relation"
+  },
+  "constraint-domain": {
+    "timestamp": "20240309223613",
+    "page": "Constraint_domain"
+  },
+  "constraint-domains-and-coverage-checking": {
+    "timestamp": "20240309223632",
+    "page": "Constraint_domains_and_coverage_checking"
+  },
+  "constructivesemantics": {
+    "timestamp": "20240309223657",
+    "page": "ConstructiveSemantics"
+  },
+  "converting-between-implicit-and-explicit-parameters": {
+    "timestamp": "20240309223828",
+    "page": "Converting_between_implicit_and_explicit_parameters"
+  },
+  "correctness-of-mergesort": {
+    "timestamp": "20240309223859",
+    "page": "Correctness_of_mergesort"
+  },
+  "coverage-checking": {
+    "timestamp": "20240309223921",
+    "page": "Coverage_checking"
+  },
+  "debugging-coverage-errors": {
+    "timestamp": "20240309223946",
+    "page": "Debugging_coverage_errors"
+  },
+  "define-declaration": {
+    "timestamp": "20240309224010",
+    "page": "Define_declaration"
+  },
+  "dependent-types": {
+    "timestamp": "20240309224215",
+    "page": "Dependent_types"
+  },
+  "deterministic-declaration": {
+    "timestamp": "20240309224236",
+    "page": "Deterministic_declaration"
+  },
+  "division-over-the-natural-numbers": {
+    "timestamp": "20240309224306",
+    "page": "Division_over_the_natural_numbers"
+  },
+  "documentation": {
+    "timestamp": "20240309224326",
+    "page": "Documentation"
+  },
+  "double-negation-translation": {
+    "timestamp": "20240309224441",
+    "page": "Double-negation_translation"
+  },
+  "download": {
+    "timestamp": "20240309224515",
+    "page": "Download"
+  },
+  "effectiveness-lemma": {
+    "timestamp": "20240309224540",
+    "page": "Effectiveness_lemma"
+  },
+  "equality": {
+    "timestamp": "20240309224635",
+    "page": "Equality"
+  },
+  "equivalence-relation": {
+    "timestamp": "20240309224659",
+    "page": "Equivalence_relation"
+  },
+  "error-messages": {
+    "timestamp": "20240309224726",
+    "page": "Error_messages"
+  },
+  "eta-equivalence": {
+    "timestamp": "20240309224744",
+    "page": "Eta-equivalence"
+  },
+  "evaluation-contexts": {
+    "timestamp": "20240309224844",
+    "page": "Evaluation_contexts"
+  },
+  "exchange-lemma": {
+    "timestamp": "20240309225038",
+    "page": "Exchange_lemma"
+  },
+  "explicit-context": {
+    "timestamp": "20240309225247",
+    "page": "Explicit_context"
+  },
+  "first-order-encodings": {
+    "timestamp": "20240309225254",
+    "page": "First-order_encodings"
+  },
+  "fixity-declaration": {
+    "timestamp": "20240309225401",
+    "page": "Fixity_declaration"
+  },
+  "focusing": {
+    "timestamp": "20240309225559",
+    "page": "Focusing"
+  },
+  "function": {
+    "timestamp": "20240309225808",
+    "page": "Function"
+  },
+  "general-description-of-twelf": {
+    "timestamp": "20240309225836",
+    "page": "General_description_of_Twelf"
+  },
+  "glossary": {
+    "timestamp": "20240309230059",
+    "page": "Glossary"
+  },
+  "ground": {
+    "timestamp": "20240309230137",
+    "page": "Ground"
+  },
+  "hoas-nat-bijection": {
+    "timestamp": "20240309230302",
+    "page": "HOAS_nat_bijection"
+  },
+  "hereditary-substitution": {
+    "timestamp": "20240310143550",
+    "page": "Hereditary_substitution"
+  },
+  "hereditary-substitution-for-the-stlc": {
+    "timestamp": "20240310143611",
+    "page": "Hereditary_substitution_for_the_STLC"
+  },
+  "hereditary-substitution-for-the-stlc-part-2": {
+    "timestamp": "20240310143829",
+    "page": "Hereditary_substitution_for_the_STLC_(part_2)"
+  },
+  "hereditary-substitution-with-a-zipper": {
+    "timestamp": "20240310143848",
+    "page": "Hereditary_substitution_with_a_zipper"
+  },
+  "higher-order-abstract-syntax": {
+    "timestamp": "20240310143908",
+    "page": "Higher-order_abstract_syntax"
+  },
+  "higher-order-judgements": {
+    "timestamp": "20240310144146",
+    "page": "Higher-order_judgements"
+  },
+  "hypothetical-judgment": {
+    "timestamp": "20240310144421",
+    "page": "Hypothetical_judgment"
+  },
+  "implicit-and-explicit-parameters": {
+    "timestamp": "20240310144446",
+    "page": "Implicit_and_explicit_parameters"
+  },
+  "incremental-metatheorem-development": {
+    "timestamp": "20240310144658",
+    "page": "Incremental_metatheorem_development"
+  },
+  "indexed-hoas-nat-bijection": {
+    "timestamp": "20240310144937",
+    "page": "Indexed_HOAS_nat_bijection"
+  },
+  "indexed-lists": {
+    "timestamp": "20240310145213",
+    "page": "Indexed_lists"
+  },
+  "intrinsic-and-extrinsic-encodings": {
+    "timestamp": "20240310145232",
+    "page": "Intrinsic_and_extrinsic_encodings"
+  },
+  "introductions-to-twelf": {
+    "timestamp": "20240310145304",
+    "page": "Introductions_to_Twelf"
+  },
+  "iterated-let-bindings": {
+    "timestamp": "20240310145543",
+    "page": "Iterated_Let_Bindings"
+  },
+  "iterated-inductive-definitions-and-defunctionalization": {
+    "timestamp": "20240310145747",
+    "page": "Iterated_inductive_definitions_and_defunctionalization"
+  },
+  "judgment": {
+    "timestamp": "20240310150057",
+    "page": "Judgment"
+  },
+  "lf": {
+    "timestamp": "20240310150240",
+    "page": "LF"
+  },
+  "lax-logic": {
+    "timestamp": "20220818130955",
+    "page": "Lax_logic"
+  },
+  "letrec": {
+    "timestamp": "20240310150416",
+    "page": "Letrec"
+  },
+  "lexicographical-orderings-with-density": {
+    "timestamp": "20240310150523",
+    "page": "Lexicographical_orderings_with_density"
+  },
+  "lily": {
+    "timestamp": "20240310150644",
+    "page": "Lily"
+  },
+  "linear-logic": {
+    "timestamp": "20240310150736",
+    "page": "Linear_logic"
+  },
+  "lists": {
+    "timestamp": "20240310150910",
+    "page": "Lists"
+  },
+  "logic-programming": {
+    "timestamp": "20240310151038",
+    "page": "Logic_programming"
+  },
+  "mailing-lists": {
+    "timestamp": "20240310151100",
+    "page": "Mailing_lists"
+  },
+  "main-page": {
+    "timestamp": "20240310151212",
+    "page": "Main_Page"
+  },
+  "manipulating-proof-witnesses-as-inputs": {
+    "timestamp": "20240310151248",
+    "page": "Manipulating_proof_witnesses_as_inputs"
+  },
+  "mediawiki-formatting-description": {
+    "timestamp": "20240310151309",
+    "page": "MediaWiki_formatting_description"
+  },
+  "meta-logic": {
+    "timestamp": "20240310151327",
+    "page": "Meta-logic"
+  },
+  "metatheorem": {
+    "timestamp": "20240310151349",
+    "page": "Metatheorem"
+  },
+  "minmltominhaskell": {
+    "timestamp": "20240310151446",
+    "page": "MinMLToMinHaskell"
+  },
+  "modal-logic": {
+    "timestamp": "20240310151506",
+    "page": "Modal_logic"
+  },
+  "modally-propositional-logic": {
+    "timestamp": "20240310151525",
+    "page": "Modally_Propositional_Logic"
+  },
+  "modes-of-use": {
+    "timestamp": "20240310151550",
+    "page": "Modes_of_use"
+  },
+  "mutable-state": {
+    "timestamp": "20240310151610",
+    "page": "Mutable_state"
+  },
+  "mutual-induction": {
+    "timestamp": "20240310151636",
+    "page": "Mutual_induction"
+  },
+  "naming-conventions": {
+    "timestamp": "20240310151655",
+    "page": "Naming_conventions"
+  },
+  "natural-numbers": {
+    "timestamp": "20240310151731",
+    "page": "Natural_numbers"
+  },
+  "natural-numbers-with-inequality": {
+    "timestamp": "20240310151810",
+    "page": "Natural_numbers_with_inequality"
+  },
+  "negation-as-failure": {
+    "timestamp": "20240310151846",
+    "page": "Negation_as_failure"
+  },
+  "numeric-termination-metrics": {
+    "timestamp": "20240310151914",
+    "page": "Numeric_termination_metrics"
+  },
+  "object-logic": {
+    "timestamp": "20240310151941",
+    "page": "Object_logic"
+  },
+  "output-factoring": {
+    "timestamp": "20240310152000",
+    "page": "Output_factoring"
+  },
+  "output-freeness": {
+    "timestamp": "20240310152025",
+    "page": "Output_freeness"
+  },
+  "pltheory-introduction-to-twelf": {
+    "timestamp": "20240310152043",
+    "page": "PLTheory:Introduction_to_Twelf"
+  },
+  "popl-tutorial": {
+    "timestamp": "20240310152109",
+    "page": "POPL_Tutorial"
+  },
+  "popl-tutorial-basic-error-messages": {
+    "timestamp": "20240310152135",
+    "page": "POPL_Tutorial/Basic_error_messages"
+  },
+  "popl-tutorial-basics": {
+    "timestamp": "20240310152200",
+    "page": "POPL_Tutorial/Basics"
+  },
+  "popl-tutorial-basics-answer": {
+    "timestamp": "20240310152224",
+    "page": "POPL_Tutorial/Basics_Answer"
+  },
+  "popl-tutorial-basics-starter": {
+    "timestamp": "20240310152248",
+    "page": "POPL_Tutorial/Basics_Starter"
+  },
+  "popl-tutorial-big-step-small-step": {
+    "timestamp": "20240310152313",
+    "page": "POPL_Tutorial/Big_step,_small_step"
+  },
+  "popl-tutorial-big-step-small-step-solution": {
+    "timestamp": "20240310152334",
+    "page": "POPL_Tutorial/Big_step,_small_step:_Solution"
+  },
+  "popl-tutorial-cps-solution2": {
+    "timestamp": "20240310152357",
+    "page": "POPL_Tutorial/CPS_Solution2"
+  },
+  "popl-tutorial-cps-solutions": {
+    "timestamp": "20240310152417",
+    "page": "POPL_Tutorial/CPS_Solutions"
+  },
+  "popl-tutorial-church-rosser-problem": {
+    "timestamp": "20240310152442",
+    "page": "POPL_Tutorial/Church_Rosser_(Problem)"
+  },
+  "popl-tutorial-combinators": {
+    "timestamp": "20240310152507",
+    "page": "POPL_Tutorial/Combinators"
+  },
+  "popl-tutorial-combinators-karl": {
+    "timestamp": "20240310152547",
+    "page": "POPL_Tutorial/Combinators_(karl)"
+  },
+  "popl-tutorial-combinators-answer": {
+    "timestamp": "20240310152609",
+    "page": "POPL_Tutorial/Combinators_Answer"
+  },
+  "popl-tutorial-combinators-support": {
+    "timestamp": "20240310152633",
+    "page": "POPL_Tutorial/Combinators_Support"
+  },
+  "popl-tutorial-combinators-session": {
+    "timestamp": "20240310152658",
+    "page": "POPL_Tutorial/Combinators_session"
+  },
+  "popl-tutorial-combinators-session-answers": {
+    "timestamp": "20240310152720",
+    "page": "POPL_Tutorial/Combinators_session_(answers)"
+  },
+  "popl-tutorial-control-machine": {
+    "timestamp": "20240310152742",
+    "page": "POPL_Tutorial/Control_machine"
+  },
+  "popl-tutorial-cost-semantics": {
+    "timestamp": "20240310152802",
+    "page": "POPL_Tutorial/Cost_semantics"
+  },
+  "popl-tutorial-evaluation-contexts-intrinsic": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Evaluation_Contexts_Intrinsic"
+  },
+  "popl-tutorial-exceptions": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Exceptions"
+  },
+  "popl-tutorial-exceptions-problem": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Exceptions-problem"
+  },
+  "popl-tutorial-minml": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/MinML"
+  },
+  "popl-tutorial-minml-answer": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/MinML_Answer"
+  },
+  "popl-tutorial-minml-preservation-theorem": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/MinML_Preservation_Theorem"
+  },
+  "popl-tutorial-minml-preservation-theorem-solution": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/MinML_Preservation_Theorem:_Solution"
+  },
+  "popl-tutorial-minml-starter": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/MinML_Starter"
+  },
+  "popl-tutorial-minml-encoding": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/MinML_encoding"
+  },
+  "popl-tutorial-nat": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Nat"
+  },
+  "popl-tutorial-new-language": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/New_language"
+  },
+  "popl-tutorial-next": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Next"
+  },
+  "popl-tutorial-pattern-matching": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Pattern_matching"
+  },
+  "popl-tutorial-problems": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Problems"
+  },
+  "popl-tutorial-properties-of-typing-and-reduction": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Properties_of_Typing_and_Reduction"
+  },
+  "popl-tutorial-saturday": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Saturday"
+  },
+  "popl-tutorial-sequent-vs-natural-deduction": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Sequent_vs_Natural_Deduction"
+  },
+  "popl-tutorial-sequent-vs-natural-deduction-solution": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Sequent_vs_Natural_Deduction:_Solution"
+  },
+  "popl-tutorial-session-2": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_2"
+  },
+  "popl-tutorial-session-2-answer": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_2_Answer"
+  },
+  "popl-tutorial-session-2-script": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_2_Script"
+  },
+  "popl-tutorial-session-2-starter": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_2_Starter"
+  },
+  "popl-tutorial-session-4": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_4"
+  },
+  "popl-tutorial-session-4-answer": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_4_Answer"
+  },
+  "popl-tutorial-session-4-live": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_4_Live"
+  },
+  "popl-tutorial-session-4-starter": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_4_Starter"
+  },
+  "popl-tutorial-session-5": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Session_5"
+  },
+  "popl-tutorial-thursday": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Thursday"
+  },
+  "popl-tutorial-typed-bracket-abstraction": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Typed_bracket_abstraction"
+  },
+  "popl-tutorial-typed-bracket-abstraction-solution": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Typed_bracket_abstraction_(solution)"
+  },
+  "popl-tutorial-typed-bracket-abstraction-with-equivalence": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/Typed_bracket_abstraction_with_equivalence"
+  },
+  "popl-tutorial-cps": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/cps"
+  },
+  "popl-tutorial-cps-ctp": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/cps-ctp"
+  },
+  "popl-tutorial-cps-problem": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/cps-problem"
+  },
+  "popl-tutorial-cps-problem2": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/cps-problem2"
+  },
+  "popl-tutorial-cps-rp": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/cps-rp"
+  },
+  "popl-tutorial-cps-truefalse": {
+    "timestamp": "202403",
+    "page": "POPL_Tutorial/cps-truefalse"
+  },
+  "pattern-matching": {
+    "timestamp": "202403",
+    "page": "Pattern_matching"
+  },
+  "polarized-pcf": {
+    "timestamp": "202403",
+    "page": "Polarized_PCF"
+  },
+  "programming-language-theory-with-twelf": {
+    "timestamp": "202403",
+    "page": "Programming_language_theory_with_Twelf"
+  },
+  "proving-metatheorems-with-twelf": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems_with_Twelf"
+  },
+  "reasoning-from-false": {
+    "timestamp": "202403",
+    "page": "Reasoning_from_false"
+  },
+  "reformulating-languages-to-use-hypothetical-judgements": {
+    "timestamp": "202403",
+    "page": "Reformulating_languages_to_use_hypothetical_judgements"
+  },
+  "relation": {
+    "timestamp": "202403",
+    "page": "Relation"
+  },
+  "release-history": {
+    "timestamp": "202403",
+    "page": "Release_history"
+  },
+  "research-projects-using-twelf": {
+    "timestamp": "202403",
+    "page": "Research_projects_using_Twelf"
+  },
+  "respects-lemma": {
+    "timestamp": "202403",
+    "page": "Respects_lemma"
+  },
+  "sets-and-supersets": {
+    "timestamp": "202403",
+    "page": "Sets_and_supersets"
+  },
+  "signature-checking": {
+    "timestamp": "202403",
+    "page": "Signature_checking"
+  },
+  "signatures-as-logic-programs": {
+    "timestamp": "202403",
+    "page": "Signatures_as_logic_programs"
+  },
+  "simplifying-dynamic-clauses": {
+    "timestamp": "202403",
+    "page": "Simplifying_dynamic_clauses"
+  },
+  "simply-typed-lambda-calculus": {
+    "timestamp": "202403",
+    "page": "Simply-typed_lambda_calculus"
+  },
+  "strengthening": {
+    "timestamp": "202403",
+    "page": "Strengthening"
+  },
+  "structural-metrics": {
+    "timestamp": "202403",
+    "page": "Structural_metrics"
+  },
+  "subordination": {
+    "timestamp": "202403",
+    "page": "Subordination"
+  },
+  "substitution-lemma": {
+    "timestamp": "202403",
+    "page": "Substitution_lemma"
+  },
+  "sudoku": {
+    "timestamp": "202403",
+    "page": "Sudoku"
+  },
+  "summer-school-2008": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008"
+  },
+  "summer-school-2008-alternate-typed-arithmetic-expressions-with-sums": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Alternate_typed_arithmetic_expressions_with_sums"
+  },
+  "summer-school-2008-arithmetic-expressions": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Arithmetic_expressions"
+  },
+  "summer-school-2008-arithmetic-expressions-with-call-by-value-let-binding": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Arithmetic_expressions_with_call-by-value_let-binding"
+  },
+  "summer-school-2008-arithmetic-expressions-with-let-binding": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Arithmetic_expressions_with_let-binding"
+  },
+  "summer-school-2008-arithmetic-expressions-with-let-binding-hypothetical-evaluation": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Arithmetic_expressions_with_let-binding_(hypothetical_evaluation)"
+  },
+  "summer-school-2008-encoding-of-system-f": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Encoding_of_System_F"
+  },
+  "summer-school-2008-exercises-1": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Exercises_1"
+  },
+  "summer-school-2008-exercises-2": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Exercises_2"
+  },
+  "summer-school-2008-exercises-3": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Exercises_3"
+  },
+  "summer-school-2008-type-safety-for-minml-extrinsic-encoding": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Type_safety_for_MinML_(extrinsic_encoding)"
+  },
+  "summer-school-2008-type-safety-for-minml-intrinsic-encoding": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Type_safety_for_MinML_(intrinsic_encoding)"
+  },
+  "summer-school-2008-type-safety-for-minml-with-monadic-effects": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Type_safety_for_MinML_with_monadic_effects"
+  },
+  "summer-school-2008-type-safety-for-minml-with-monadic-effects-putngetn": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Type_safety_for_MinML_with_monadic_effects_(putngetn)"
+  },
+  "summer-school-2008-type-safety-for-polymorphic-minml-intrinsic-encoding": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Type_safety_for_polymorphic_MinML_(intrinsic_encoding)"
+  },
+  "summer-school-2008-typed-arithmetic-expressions": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Typed_arithmetic_expressions"
+  },
+  "summer-school-2008-typed-arithmetic-expressions-extrinsic-encoding": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Typed_arithmetic_expressions_(extrinsic_encoding)"
+  },
+  "summer-school-2008-typed-arithmetic-expressions-value": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Typed_arithmetic_expressions_(value)"
+  },
+  "summer-school-2008-typed-arithmetic-expressions-with-pairs": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Typed_arithmetic_expressions_with_pairs"
+  },
+  "summer-school-2008-typed-arithmetic-expressions-with-sums": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Typed_arithmetic_expressions_with_sums"
+  },
+  "summer-school-2008-typed-arithmetic-expressions-with-sums-2": {
+    "timestamp": "202403",
+    "page": "Summer_school_2008:Typed_arithmetic_expressions_with_sums_2"
+  },
+  "syntax-object-logic": {
+    "timestamp": "202403",
+    "page": "Syntax_(Object_logic)"
+  },
+  "tat-church-elf": {
+    "timestamp": "20240310160908",
+    "page": "TAT/church.elf"
+  },
+  "tat-plus-elf": {
+    "timestamp": "202403",
+    "page": "TAT/plus.elf"
+  },
+  "tabled-logic-programming": {
+    "timestamp": "202403",
+    "page": "Tabled_logic_programming"
+  },
+  "tactical-theorem-proving": {
+    "timestamp": "202403",
+    "page": "Tactical_theorem_proving"
+  },
+  "tethered-modal-logic": {
+    "timestamp": "202403",
+    "page": "Tethered_modal_logic"
+  },
+  "theorem-prover": {
+    "timestamp": "202403",
+    "page": "Theorem_prover"
+  },
+  "totality-assertion": {
+    "timestamp": "202403",
+    "page": "Totality_assertion"
+  },
+  "tutorials": {
+    "timestamp": "202403",
+    "page": "Tutorials"
+  },
+  "twelftag": {
+    "timestamp": "202403",
+    "page": "TwelfTag"
+  },
+  "twelf-elf-rotation-charter": {
+    "timestamp": "202403",
+    "page": "Twelf_Elf_Rotation_Charter"
+  },
+  "twelf-live": {
+    "timestamp": "202403",
+    "page": "Twelf_Live"
+  },
+  "twelf-signature": {
+    "timestamp": "202403",
+    "page": "Twelf_signature"
+  },
+  "twelf-style-guide": {
+    "timestamp": "202403",
+    "page": "Twelf_style_guide"
+  },
+  "twelf-with-emacs": {
+    "timestamp": "202403",
+    "page": "Twelf_with_Emacs"
+  },
+  "twelf-without-emacs": {
+    "timestamp": "202403",
+    "page": "Twelf_without_Emacs"
+  },
+  "type-family": {
+    "timestamp": "202403",
+    "page": "Type_family"
+  },
+  "typed-combinators-soundness-and-completeness": {
+    "timestamp": "202403",
+    "page": "Typed_combinators_soundness_and_completeness"
+  },
+  "unification": {
+    "timestamp": "202403",
+    "page": "Unification"
+  },
+  "uniqueness-lemma": {
+    "timestamp": "202403",
+    "page": "Uniqueness_lemma"
+  },
+  "unsafe-mode": {
+    "timestamp": "202403",
+    "page": "Unsafe_mode"
+  },
+  "users-guide": {
+    "timestamp": "202403",
+    "page": "User%27s_Guide"
+  },
+  "user-defined-constraint-domain": {
+    "timestamp": "202403",
+    "page": "User-defined_constraint_domain"
+  },
+  "using-nat-less-with-reduces": {
+    "timestamp": "202403",
+    "page": "Using_nat-less_with_%25reduces"
+  },
+  "verifications-and-uses": {
+    "timestamp": "202403",
+    "page": "Verifications_and_uses"
+  },
+  "verifications-and-uses-in-hlf": {
+    "timestamp": "202403",
+    "page": "Verifications_and_uses_in_HLF"
+  },
+  "verifications-and-uses-with-zippers": {
+    "timestamp": "202403",
+    "page": "Verifications_and_uses_with_zippers"
+  },
+  "weak-focusing": {
+    "timestamp": "202403",
+    "page": "Weak_focusing"
+  },
+  "weakening-lemma": {
+    "timestamp": "202403",
+    "page": "Weakening_lemma"
+  },
+  "whats-new": {
+    "timestamp": "202403",
+    "page": "What%27s_new"
+  },
+  "world-subsumption": {
+    "timestamp": "202403",
+    "page": "World_subsumption"
+  },
+  "zermelo-frankel": {
+    "timestamp": "202403",
+    "page": "Zermelo_Frankel"
+  },
+  "talk-covers": {
+    "timestamp": "202403",
+    "page": "Talk:%25covers"
+  },
+  "talk-freeze": {
+    "timestamp": "202403",
+    "page": "Talk:%25freeze"
+  },
+  "talk-reduces": {
+    "timestamp": "202403",
+    "page": "Talk:%25reduces"
+  },
+  "talk-thaw": {
+    "timestamp": "202403",
+    "page": "Talk:%25thaw"
+  },
+  "talk-theorem": {
+    "timestamp": "202403",
+    "page": "Talk:%25theorem"
+  },
+  "talk-worlds": {
+    "timestamp": "202403",
+    "page": "Talk:%25worlds"
+  },
+  "talk-ad-hoc-binding-structures": {
+    "timestamp": "202403",
+    "page": "Talk:Ad_hoc_binding_structures"
+  },
+  "talk-admissibility-of-cut": {
+    "timestamp": "202403",
+    "page": "Talk:Admissibility_of_cut"
+  },
+  "talk-alpha-equivalence": {
+    "timestamp": "202403",
+    "page": "Talk:Alpha-equivalence"
+  },
+  "talk-ask-twelf-elf": {
+    "timestamp": "202403",
+    "page": "Talk:Ask_Twelf_Elf"
+  },
+  "talk-ask-twelf-elf-archive-1": {
+    "timestamp": "202403",
+    "page": "Talk:Ask_Twelf_Elf/Archive_1"
+  },
+  "talk-ask-twelf-elf-archive-2": {
+    "timestamp": "202403",
+    "page": "Talk:Ask_Twelf_Elf/Archive_2"
+  },
+  "talk-cps-conversion": {
+    "timestamp": "202403",
+    "page": "Talk:CPS_conversion"
+  },
+  "talk-canonical-forms-lemma": {
+    "timestamp": "202403",
+    "page": "Talk:Canonical_forms_lemma"
+  },
+  "talk-case-studies": {
+    "timestamp": "202403",
+    "page": "Talk:Case_studies"
+  },
+  "talk-classical-s5": {
+    "timestamp": "202403",
+    "page": "Talk:Classical_S5"
+  },
+  "talk-constraint-domains-and-coverage-checking": {
+    "timestamp": "202403",
+    "page": "Talk:Constraint_domains_and_coverage_checking"
+  },
+  "talk-converting-between-implicit-and-explicit-parameters": {
+    "timestamp": "202403",
+    "page": "Talk:Converting_between_implicit_and_explicit_parameters"
+  },
+  "talk-coverage-checking": {
+    "timestamp": "202403",
+    "page": "Talk:Coverage_checking"
+  },
+  "talk-debugging-coverage-errors": {
+    "timestamp": "202403",
+    "page": "Talk:Debugging_coverage_errors"
+  },
+  "talk-define-declaration": {
+    "timestamp": "202403",
+    "page": "Talk:Define_declaration"
+  },
+  "talk-documentation": {
+    "timestamp": "202403",
+    "page": "Talk:Documentation"
+  },
+  "talk-download": {
+    "timestamp": "202403",
+    "page": "Talk:Download"
+  },
+  "talk-effectiveness-lemma": {
+    "timestamp": "202403",
+    "page": "Talk:Effectiveness_lemma"
+  },
+  "talk-equality": {
+    "timestamp": "202403",
+    "page": "Talk:Equality"
+  },
+  "talk-exchange-lemma": {
+    "timestamp": "202403",
+    "page": "Talk:Exchange_lemma"
+  },
+  "talk-general-description-of-twelf": {
+    "timestamp": "202403",
+    "page": "Talk:General_description_of_Twelf"
+  },
+  "talk-glossary": {
+    "timestamp": "202403",
+    "page": "Talk:Glossary"
+  },
+  "talk-implicit-and-explicit-parameters": {
+    "timestamp": "202403",
+    "page": "Talk:Implicit_and_explicit_parameters"
+  },
+  "talk-incremental-metatheorem-development": {
+    "timestamp": "202403",
+    "page": "Talk:Incremental_metatheorem_development"
+  },
+  "talk-introductions-to-twelf": {
+    "timestamp": "202403",
+    "page": "Talk:Introductions_to_Twelf"
+  },
+  "talk-letrec": {
+    "timestamp": "202403",
+    "page": "Talk:Letrec"
+  },
+  "talk-lily": {
+    "timestamp": "202403",
+    "page": "Talk:Lily"
+  },
+  "talk-lists": {
+    "timestamp": "202403",
+    "page": "Talk:Lists"
+  },
+  "talk-main-page": {
+    "timestamp": "202403",
+    "page": "Talk:Main_Page"
+  },
+  "talk-meta-logic": {
+    "timestamp": "202403",
+    "page": "Talk:Meta-logic"
+  },
+  "talk-metatheorem": {
+    "timestamp": "202403",
+    "page": "Talk:Metatheorem"
+  },
+  "talk-modes-of-use": {
+    "timestamp": "202403",
+    "page": "Talk:Modes_of_use"
+  },
+  "talk-mutable-state": {
+    "timestamp": "202403",
+    "page": "Talk:Mutable_state"
+  },
+  "talk-natural-numbers-with-inequality": {
+    "timestamp": "202403",
+    "page": "Talk:Natural_numbers_with_inequality"
+  },
+  "talk-numeric-termination-metrics": {
+    "timestamp": "202403",
+    "page": "Talk:Numeric_termination_metrics"
+  },
+  "talk-output-factoring": {
+    "timestamp": "202403",
+    "page": "Talk:Output_factoring"
+  },
+  "talk-output-freeness": {
+    "timestamp": "202403",
+    "page": "Talk:Output_freeness"
+  },
+  "talk-programming-language-theory-with-twelf": {
+    "timestamp": "202403",
+    "page": "Talk:Programming_language_theory_with_Twelf"
+  },
+  "talk-proving-metatheorems-with-twelf": {
+    "timestamp": "202403",
+    "page": "Talk:Proving_metatheorems_with_Twelf"
+  },
+  "talk-reformulating-languages-to-use-hypothetical-judgements": {
+    "timestamp": "202403",
+    "page": "Talk:Reformulating_languages_to_use_hypothetical_judgements"
+  },
+  "talk-respects-lemma": {
+    "timestamp": "202403",
+    "page": "Talk:Respects_lemma"
+  },
+  "talk-strengthening": {
+    "timestamp": "202403",
+    "page": "Talk:Strengthening"
+  },
+  "talk-substitution-lemma": {
+    "timestamp": "202403",
+    "page": "Talk:Substitution_lemma"
+  },
+  "talk-totality-assertion": {
+    "timestamp": "202403",
+    "page": "Talk:Totality_assertion"
+  },
+  "talk-tutorials": {
+    "timestamp": "202403",
+    "page": "Talk:Tutorials"
+  },
+  "talk-twelf-live": {
+    "timestamp": "202403",
+    "page": "Talk:Twelf_Live"
+  },
+  "talk-twelf-style-guide": {
+    "timestamp": "202403",
+    "page": "Talk:Twelf_style_guide"
+  },
+  "talk-twelf-with-emacs": {
+    "timestamp": "202403",
+    "page": "Talk:Twelf_with_Emacs"
+  },
+  "talk-uniqueness-lemma": {
+    "timestamp": "202403",
+    "page": "Talk:Uniqueness_lemma"
+  },
+  "talk-users-guide": {
+    "timestamp": "202403",
+    "page": "Talk:User%27s_Guide"
+  },
+  "talk-using-nat-less-with-reduces": {
+    "timestamp": "202403",
+    "page": "Talk:Using_nat-less_with_%25reduces"
+  },
+  "talk-whats-new": {
+    "timestamp": "202403",
+    "page": "Talk:What%27s_new"
+  },
+  "user-boyland": {
+    "timestamp": "202403",
+    "page": "User:Boyland"
+  },
+  "user-carsten": {
+    "timestamp": "202403",
+    "page": "User:Carsten"
+  },
+  "user-ccasin": {
+    "timestamp": "202403",
+    "page": "User:Ccasin"
+  },
+  "user-cmartens": {
+    "timestamp": "202403",
+    "page": "User:Cmartens"
+  },
+  "user-crary": {
+    "timestamp": "202403",
+    "page": "User:Crary"
+  },
+  "user-danielklee": {
+    "timestamp": "202403",
+    "page": "User:DanielKLee"
+  },
+  "user-drl": {
+    "timestamp": "202403",
+    "page": "User:Drl"
+  },
+  "user-hdeyoung": {
+    "timestamp": "202403",
+    "page": "User:Hdeyoung"
+  },
+  "user-hdeyoung-monweakfoc-elf": {
+    "timestamp": "202403",
+    "page": "User:Hdeyoung/monweakfoc.elf"
+  },
+  "user-jaked": {
+    "timestamp": "202403",
+    "page": "User:JakeD"
+  },
+  "user-jcreed": {
+    "timestamp": "202403",
+    "page": "User:Jcreed"
+  },
+  "user-jcreed-sandbox": {
+    "timestamp": "202403",
+    "page": "User:Jcreed/Sandbox"
+  },
+  "user-newtestuser": {
+    "timestamp": "202403",
+    "page": "User:NewTestUser"
+  },
+  "user-rsimmons": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons"
+  },
+  "user-rsimmons-cr2": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons/CR2"
+  },
+  "user-rsimmons-fluid-binding": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons/Fluid_binding"
+  },
+  "user-rsimmons-handled-exceptions": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons/Handled_exceptions"
+  },
+  "user-rsimmons-homework-6": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons/Homework_6"
+  },
+  "user-rsimmons-homework-7-proofs-in-twelf": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons/Homework_7:_Proofs_In_Twelf"
+  },
+  "user-rsimmons-lecture-20-logic-programming": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons/Lecture_20:_Logic_Programming"
+  },
+  "user-rsimmons-lecture-23-typed-lambda-calculus-in-twelf": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons/Lecture_23:_Typed_Lambda_Calculus_in_Twelf"
+  },
+  "user-rsimmons-fillholes-elf": {
+    "timestamp": "202403",
+    "page": "User:Rsimmons/fillholes.elf"
+  },
+  "user-spoons": {
+    "timestamp": "202403",
+    "page": "User:Spoons"
+  },
+  "user-testuser": {
+    "timestamp": "202403",
+    "page": "User:TestUser"
+  },
+  "user-thetwelfelf": {
+    "timestamp": "202403",
+    "page": "User:TheTwelfElf"
+  },
+  "user-tom7": {
+    "timestamp": "202403",
+    "page": "User:Tom7"
+  },
+  "user-tom7-test-elf": {
+    "timestamp": "202403",
+    "page": "User:Tom7/test.elf"
+  },
+  "user-twilson": {
+    "timestamp": "202403",
+    "page": "User:Twilson"
+  },
+  "user-varming": {
+    "timestamp": "202403",
+    "page": "User:Varming"
+  },
+  "user-william-lovas": {
+    "timestamp": "202403",
+    "page": "User:William_Lovas"
+  },
+  "user-talk-128-2-223-28": {
+    "timestamp": "202403",
+    "page": "User_talk:128.2.223.28"
+  },
+  "user-talk-128-237-241-108": {
+    "timestamp": "202403",
+    "page": "User_talk:128.237.241.108"
+  },
+  "user-talk-aleffert": {
+    "timestamp": "202403",
+    "page": "User_talk:Aleffert"
+  },
+  "user-talk-alepa": {
+    "timestamp": "202403",
+    "page": "User_talk:Alepa"
+  },
+  "user-talk-boyland": {
+    "timestamp": "202403",
+    "page": "User_talk:Boyland"
+  },
+  "user-talk-ccasin": {
+    "timestamp": "202403",
+    "page": "User_talk:Ccasin"
+  },
+  "user-talk-crary": {
+    "timestamp": "202403",
+    "page": "User_talk:Crary"
+  },
+  "user-talk-danielklee": {
+    "timestamp": "202403",
+    "page": "User_talk:DanielKLee"
+  },
+  "user-talk-drdreyer": {
+    "timestamp": "202403",
+    "page": "User_talk:Drdreyer"
+  },
+  "user-talk-drl": {
+    "timestamp": "202403",
+    "page": "User_talk:Drl"
+  },
+  "user-talk-hdeyoung": {
+    "timestamp": "202403",
+    "page": "User_talk:Hdeyoung"
+  },
+  "user-talk-jaked": {
+    "timestamp": "202403",
+    "page": "User_talk:JakeD"
+  },
+  "user-talk-jcreed": {
+    "timestamp": "202403",
+    "page": "User_talk:Jcreed"
+  },
+  "user-talk-neel": {
+    "timestamp": "202403",
+    "page": "User_talk:Neel"
+  },
+  "user-talk-popik": {
+    "timestamp": "202403",
+    "page": "User_talk:Popik"
+  },
+  "user-talk-rpollack": {
+    "timestamp": "202403",
+    "page": "User_talk:Rpollack"
+  },
+  "user-talk-rsimmons": {
+    "timestamp": "202403",
+    "page": "User_talk:Rsimmons"
+  },
+  "user-talk-spoons": {
+    "timestamp": "202403",
+    "page": "User_talk:Spoons"
+  },
+  "user-talk-twilson": {
+    "timestamp": "202403",
+    "page": "User_talk:Twilson"
+  },
+  "user-talk-varming": {
+    "timestamp": "202403",
+    "page": "User_talk:Varming"
+  },
+  "user-talk-william-lovas": {
+    "timestamp": "202403",
+    "page": "User_talk:William_Lovas"
+  },
+  "the-twelf-project-1-0": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:1.0"
+  },
+  "the-twelf-project-ajalf": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:AJALF"
+  },
+  "the-twelf-project-by-nc": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:BY-NC"
+  },
+  "the-twelf-project-by-sa": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:BY-SA"
+  },
+  "the-twelf-project-contributing": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Contributing"
+  },
+  "the-twelf-project-contributors": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Contributors"
+  },
+  "the-twelf-project-copyright": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Copyright"
+  },
+  "the-twelf-project-gfdl": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:GFDL"
+  },
+  "the-twelf-project-gpl": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:GPL"
+  },
+  "the-twelf-project-geshi-twelf-extension": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:GeSHi_Twelf_extension"
+  },
+  "the-twelf-project-literate-twelf": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Literate_Twelf"
+  },
+  "the-twelf-project-literate-twelf-sample-page": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Literate_Twelf/Sample_Page"
+  },
+  "the-twelf-project-mit-license": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:MIT_license"
+  },
+  "the-twelf-project-policy": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Policy"
+  },
+  "the-twelf-project-protected-page": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Protected_page"
+  },
+  "the-twelf-project-style-guide": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Style_guide"
+  },
+  "the-twelf-project-subversion-transition": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Subversion_transition"
+  },
+  "the-twelf-project-syntax-highlighting": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:Syntax_highlighting"
+  },
+  "the-twelf-project-to-do": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:To_do"
+  },
+  "the-twelf-project-to-do-syntax-highlighting": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:To_do/Syntax_highlighting"
+  },
+  "the-twelf-project-twelftag": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project:TwelfTag"
+  },
+  "the-twelf-project-talk-ajalf": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project_talk:AJALF"
+  },
+  "the-twelf-project-talk-copyright": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project_talk:Copyright"
+  },
+  "the-twelf-project-talk-geshi-twelf-extension": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project_talk:GeSHi_Twelf_extension"
+  },
+  "the-twelf-project-talk-policy": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project_talk:Policy"
+  },
+  "the-twelf-project-talk-style-guide": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project_talk:Style_guide"
+  },
+  "the-twelf-project-talk-to-do": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project_talk:To_do"
+  },
+  "the-twelf-project-talk-twelftag": {
+    "timestamp": "202403",
+    "page": "The_Twelf_Project_talk:TwelfTag"
+  },
+  "file-disk-download-gif": {
+    "timestamp": "202403",
+    "page": "File:Disk_download.gif"
+  },
+  "file-serverok-png": {
+    "timestamp": "202403",
+    "page": "File:ServerOK.png"
+  },
+  "file-smalltree-svg": {
+    "timestamp": "202403",
+    "page": "File:Smalltree.svg"
+  },
+  "file-sudokuexample-svg": {
+    "timestamp": "202403",
+    "page": "File:Sudokuexample.svg"
+  },
+  "file-twelflive-1-png": {
+    "timestamp": "202403",
+    "page": "File:TWELFLIVE-1.png"
+  },
+  "file-twelflive-2-png": {
+    "timestamp": "202403",
+    "page": "File:TWELFLIVE-2.png"
+  },
+  "file-twelflive-3-png": {
+    "timestamp": "202403",
+    "page": "File:TWELFLIVE-3.png"
+  },
+  "file-tom-twelfelf2-jpg": {
+    "timestamp": "202403",
+    "page": "File:Tom_Twelfelf2.jpg"
+  },
+  "mediawiki-copyrightwarning": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Copyrightwarning"
+  },
+  "mediawiki-copyrightwarning2": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Copyrightwarning2"
+  },
+  "mediawiki-edittools": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Edittools"
+  },
+  "mediawiki-fileinfo": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Fileinfo"
+  },
+  "mediawiki-loginreqpagetext": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Loginreqpagetext"
+  },
+  "mediawiki-monobook-css": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Monobook.css"
+  },
+  "mediawiki-newwindow": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Newwindow"
+  },
+  "mediawiki-previewnote": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Previewnote"
+  },
+  "mediawiki-privacy": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Privacy"
+  },
+  "mediawiki-privacypage": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Privacypage"
+  },
+  "mediawiki-sidebar": {
+    "timestamp": "202403",
+    "page": "MediaWiki:Sidebar"
+  },
+  "mediawiki-talk-sidebar": {
+    "timestamp": "202403",
+    "page": "MediaWiki_talk:Sidebar"
+  },
+  "template-bibtex-af04dependent": {
+    "timestamp": "202403",
+    "page": "Template:Bibtex:af04dependent"
+  },
+  "template-bibtex-crary03talt": {
+    "timestamp": "202403",
+    "page": "Template:Bibtex:crary03talt"
+  },
+  "template-bibtex-fm97lax": {
+    "timestamp": "202403",
+    "page": "Template:Bibtex:fm97lax"
+  },
+  "template-bibtex-hhp93lf": {
+    "timestamp": "202403",
+    "page": "Template:Bibtex:hhp93lf"
+  },
+  "template-bibtex-hl07mechanizing": {
+    "timestamp": "202403",
+    "page": "Template:Bibtex:hl07mechanizing"
+  },
+  "template-bibtex-lch07ml": {
+    "timestamp": "202403",
+    "page": "Template:Bibtex:lch07ml"
+  },
+  "template-bibtex-pd01modal": {
+    "timestamp": "202403",
+    "page": "Template:Bibtex:pd01modal"
+  },
+  "template-bibtex-pierce02tapl": {
+    "timestamp": "202403",
+    "page": "Template:Bibtex:pierce02tapl"
+  },
+  "template-bottom": {
+    "timestamp": "202403",
+    "page": "Template:Bottom"
+  },
+  "template-box": {
+    "timestamp": "202403",
+    "page": "Template:Box"
+  },
+  "template-case-study": {
+    "timestamp": "202403",
+    "page": "Template:Case_study"
+  },
+  "template-click-inline": {
+    "timestamp": "202403",
+    "page": "Template:Click-inline"
+  },
+  "template-darrow": {
+    "timestamp": "202403",
+    "page": "Template:Darrow"
+  },
+  "template-dia": {
+    "timestamp": "202403",
+    "page": "Template:Dia"
+  },
+  "template-discuss": {
+    "timestamp": "202403",
+    "page": "Template:Discuss"
+  },
+  "template-draft": {
+    "timestamp": "202403",
+    "page": "Template:Draft"
+  },
+  "template-exists": {
+    "timestamp": "202403",
+    "page": "Template:Exists"
+  },
+  "template-forall": {
+    "timestamp": "202403",
+    "page": "Template:Forall"
+  },
+  "template-front-getting-started": {
+    "timestamp": "202403",
+    "page": "Template:Front-Getting_Started"
+  },
+  "template-front-release-history": {
+    "timestamp": "202403",
+    "page": "Template:Front-Release_History"
+  },
+  "template-front-whats-new": {
+    "timestamp": "202403",
+    "page": "Template:Front-What%27s_new"
+  },
+  "template-guide": {
+    "timestamp": "202403",
+    "page": "Template:Guide"
+  },
+  "template-keyword": {
+    "timestamp": "202403",
+    "page": "Template:Keyword"
+  },
+  "template-license-by-nc": {
+    "timestamp": "202403",
+    "page": "Template:License-by-nc"
+  },
+  "template-license-by-sa": {
+    "timestamp": "202403",
+    "page": "Template:License-by-sa"
+  },
+  "template-license-gfdl": {
+    "timestamp": "202403",
+    "page": "Template:License-gfdl"
+  },
+  "template-license-gpl": {
+    "timestamp": "202403",
+    "page": "Template:License-gpl"
+  },
+  "template-literatetwelf": {
+    "timestamp": "202403",
+    "page": "Template:Literatetwelf"
+  },
+  "template-lolli": {
+    "timestamp": "202403",
+    "page": "Template:Lolli"
+  },
+  "template-needs": {
+    "timestamp": "202403",
+    "page": "Template:Needs"
+  },
+  "template-needswork": {
+    "timestamp": "202403",
+    "page": "Template:Needswork"
+  },
+  "template-oplus": {
+    "timestamp": "202403",
+    "page": "Template:Oplus"
+  },
+  "template-otimes": {
+    "timestamp": "202403",
+    "page": "Template:Otimes"
+  },
+  "template-proving": {
+    "timestamp": "202403",
+    "page": "Template:Proving"
+  },
+  "template-proving-metatheorems": {
+    "timestamp": "202403",
+    "page": "Template:Proving_metatheorems"
+  },
+  "template-repository": {
+    "timestamp": "202403",
+    "page": "Template:Repository"
+  },
+  "template-rule": {
+    "timestamp": "202403",
+    "page": "Template:Rule"
+  },
+  "template-stub": {
+    "timestamp": "202403",
+    "page": "Template:Stub"
+  },
+  "template-stub-tutorial": {
+    "timestamp": "202403",
+    "page": "Template:Stub_tutorial"
+  },
+  "template-summer-school-2008": {
+    "timestamp": "202403",
+    "page": "Template:Summer_school_2008"
+  },
+  "template-the-twelf-project-getting-started": {
+    "timestamp": "202403",
+    "page": "Template:The_Twelf_Project/Getting_Started"
+  },
+  "template-the-twelf-project-introduction": {
+    "timestamp": "202403",
+    "page": "Template:The_Twelf_Project/Introduction"
+  },
+  "template-tl": {
+    "timestamp": "202403",
+    "page": "Template:Tl"
+  },
+  "template-top": {
+    "timestamp": "202403",
+    "page": "Template:Top"
+  },
+  "template-tutorial": {
+    "timestamp": "202403",
+    "page": "Template:Tutorial"
+  },
+  "template-twelf-code": {
+    "timestamp": "202403",
+    "page": "Template:Twelf_code"
+  },
+  "template-undocumented": {
+    "timestamp": "202403",
+    "page": "Template:Undocumented"
+  },
+  "template-vdash": {
+    "timestamp": "202403",
+    "page": "Template:Vdash"
+  },
+  "template-talk-bibtex-hl07mechanizing": {
+    "timestamp": "202403",
+    "page": "Template_talk:Bibtex:hl07mechanizing"
+  },
+  "template-talk-click-inline": {
+    "timestamp": "202403",
+    "page": "Template_talk:Click-inline"
+  },
+  "template-talk-guide": {
+    "timestamp": "202403",
+    "page": "Template_talk:Guide"
+  },
+  "template-talk-the-twelf-project-introduction": {
+    "timestamp": "202403",
+    "page": "Template_talk:The_Twelf_Project/Introduction"
+  },
+  "category-case-studies": {
+    "timestamp": "202403",
+    "page": "Category:Case_studies"
+  },
+  "category-keywords": {
+    "timestamp": "202403",
+    "page": "Category:Keywords"
+  },
+  "category-literate-twelf-code": {
+    "timestamp": "202403",
+    "page": "Category:Literate_Twelf_code"
+  },
+  "category-pages-needing-attention": {
+    "timestamp": "202403",
+    "page": "Category:Pages_needing_attention"
+  },
+  "category-stubs": {
+    "timestamp": "202403",
+    "page": "Category:Stubs"
+  },
+  "category-tutorials": {
+    "timestamp": "202403",
+    "page": "Category:Tutorials"
+  },
+  "category-tutorials-needing-attention": {
+    "timestamp": "202403",
+    "page": "Category:Tutorials_needing_attention"
+  },
+  "category-twelf-code": {
+    "timestamp": "202403",
+    "page": "Category:Twelf_code"
+  },
+  "category-undocumented-features": {
+    "timestamp": "202403",
+    "page": "Category:Undocumented_features"
+  },
+  "elves-main-page": {
+    "timestamp": "202403",
+    "page": "Elves:Main_Page"
+  },
+  "elves-talk-main-page": {
+    "timestamp": "202403",
+    "page": "Elves_talk:Main_Page"
+  },
+  "proving-metatheorems-full-lf": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Full_LF"
+  },
+  "proving-metatheorems-natural-numbers-answers-to-exercises": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Natural_numbers:_Answers_to_exercises"
+  },
+  "proving-metatheorems-proving-metatheorems-about-the-stlc": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Proving_metatheorems_about_the_STLC"
+  },
+  "proving-metatheorems-proving-metatheorems-about-the-natural-numbers": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Proving_metatheorems_about_the_natural_numbers"
+  },
+  "proving-metatheorems-proving-metatheorems-in-non-empty-contexts": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Proving_metatheorems_in_non-empty_contexts"
+  },
+  "proving-metatheorems-proving-totality-assertions-about-the-natural-numbers": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Proving_totality_assertions_about_the_natural_numbers"
+  },
+  "proving-metatheorems-proving-totality-assertions-in-non-empty-contexts": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Proving_totality_assertions_in_non-empty_contexts"
+  },
+  "proving-metatheorems-representing-the-judgements-of-the-stlc": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Representing_the_judgements_of_the_STLC"
+  },
+  "proving-metatheorems-representing-the-judgements-of-the-natural-numbers": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Representing_the_judgements_of_the_natural_numbers"
+  },
+  "proving-metatheorems-representing-the-syntax-of-the-stlc": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Representing_the_syntax_of_the_STLC"
+  },
+  "proving-metatheorems-representing-the-syntax-of-the-natural-numbers": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Representing_the_syntax_of_the_natural_numbers"
+  },
+  "proving-metatheorems-stlc-answers-to-exercises": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:STLC:_Answers_to_exercises"
+  },
+  "proving-metatheorems-simply-typed-lf": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Simply_typed_LF"
+  },
+  "proving-metatheorems-summary-the-stlc": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Summary:_the_STLC"
+  },
+  "proving-metatheorems-summary-the-natural-numbers": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems:Summary:_the_natural_numbers"
+  },
+  "proving-metatheorems-talk-representing-the-judgements-of-the-stlc": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems_talk:Representing_the_judgements_of_the_STLC"
+  },
+  "proving-metatheorems-talk-representing-the-judgements-of-the-natural-numbers": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems_talk:Representing_the_judgements_of_the_natural_numbers"
+  },
+  "proving-metatheorems-talk-representing-the-syntax-of-the-stlc": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems_talk:Representing_the_syntax_of_the_STLC"
+  },
+  "proving-metatheorems-talk-simply-typed-lf": {
+    "timestamp": "202403",
+    "page": "Proving_metatheorems_talk:Simply_typed_LF"
+  }
+}

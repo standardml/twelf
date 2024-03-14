@@ -1,10 +1,10 @@
 %%! title: "Twelf with Emacs"
 
-%{! The preferred way to interact with Twelf is through its emacs mode, which is included in the Twelf distribution. The [Download](/wiki/download/) page has basic information for setting up Emacs mode with Twelf.
+%{! The preferred way to interact with Twelf is through its emacs mode, which is included in the Twelf distribution. The [Download](/download/) page has basic information for setting up Emacs mode with Twelf.
 
 ## Prerequisites
 
-These instructions assume you've already [downloaded Twelf](/wiki/download/), and that either 
+These instructions assume you've already [downloaded Twelf](/download/), and that either 
 * You used the Windows/OSX installer
 * You downloaded a pre-compiled tarball
 * You downloaded a source tarball and have already built Twelf
@@ -12,6 +12,9 @@ These instructions assume you've already [downloaded Twelf](/wiki/download/), an
 These instructions should easily translate to using Subversion to get Twelf, however.
 
 ## Installing the Twelf emacs mode
+
+If you put Twelf in the directory `/somewhere/twelf/` then you should have
+these two lines (just replace `somewhere` with wherever you put your Twelf):
 
 Add the following to your Emacs configuration file, which should be the file .emacs in your home directory. 
 

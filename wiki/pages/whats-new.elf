@@ -24,7 +24,7 @@
 * We've finally moved from twelf.plparty.org to twelf.org! All old links will continue to work through at least August 2013 (and they should actually continue to work indefinitely).
 
 ;March 19, 2011
-* After many years of new features being added only to the subversion branch, Twelf now has a new official point release! Twelf 1.7.1 contains many fixes and new features that are documented on this site, and using any version of Twelf prior to 1.7 is highly discouraged. The "development" version of Twelf in the subversion repository remains quite stable and is also recommended. Go to the [download](/wiki/download/) page to get Twelf.
+* After many years of new features being added only to the subversion branch, Twelf now has a new official point release! Twelf 1.7.1 contains many fixes and new features that are documented on this site, and using any version of Twelf prior to 1.7 is highly discouraged. The "development" version of Twelf in the subversion repository remains quite stable and is also recommended. Go to the [download](/download/) page to get Twelf.
 
 ;September 1, 2010
 * The Twelf Wiki has undergone an upgrade, and in the process code underlying the syntax-highlighing [TwelfTag](/wiki/twelftag/) system has been substantially rewritten and simplified. However, this meant several deprecated-but-still-used options to the (twelf) tags now don't work and print error messages. Leave a note on [Rob's talk page](/wiki/user-talk-rsimmons/) if you see any weird error messages around Twelf code.
@@ -116,7 +116,7 @@
 **September 28, 2006**
 
 * [Substitution lemma](/wiki/substitution-lemma/) &mdash; [Dan Lee](/wiki/user-danielklee/)'s thorough explanation of the different ways substitution lemmas are dealt with by Twelf.
-* [Twelf CVS](/wiki/download/) &mdash; We have instructions from the Software page on downloading the development version of Twelf from the CVS repository. The CVS version of Twelf has undocumented features which are being described on the wiki, such as its capacity for working with [holes in metatheorems](/wiki/incremental-metatheorem-development/).
+* [Twelf CVS](/download/) &mdash; We have instructions from the Software page on downloading the development version of Twelf from the CVS repository. The CVS version of Twelf has undocumented features which are being described on the wiki, such as its capacity for working with [holes in metatheorems](/wiki/incremental-metatheorem-development/).
 
 &lt;/noinclude&gt; !}%
 

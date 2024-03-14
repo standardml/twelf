@@ -1,6 +1,12 @@
 ---
 title: Contributing
+prev: false
+next: false
 ---
+
+import { Image } from "astro:assets";
+import githubView from "../../assets/github-view.png";
+import githubEdit from "../../assets/github-edit.png";
 
 [The standardml/twelf repository on
 GitHub](https://github.com/standardml/twelf) contains both the source code for
@@ -11,7 +17,7 @@ code of Twelf are unlikely to be accepted unless you're working with Twelf's
 original authors, [Frank Pfenning](https://www.cs.cmu.edu/~fp/) and [Carsten
 Schürmann](https://www.itu.dk/people/carsten/).
 
-This website, on the other hand, welcomes contributions through GitHub's 
+This website, on the other hand, welcomes contributions through GitHub's
 [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests)
 mechanism. Any PRs that makes non-destructive changes to the website should
 be quickly accepted, in keeping with the legacy of twelf.org as "The Twelf
@@ -33,12 +39,20 @@ There's a link from every `/wiki/` page that lets you view the Twelf code on
 GitHub. If you're logged in to GitHub, you can click the pencil icon highlighted
 below to edit the file:
 
-![Viewing a Wiki Twelf file on GitHub](../../assets/github-view.png)
+<Image
+  src={githubView}
+  alt="Viewing a Wiki Twelf file on GitHub"
+  style="border: 1px solid black;"
+/>
 
 Once you've edited the file, the green "Commit changes" button will become
 active.
 
-![Editing a Wiki Twelf file on GitHub](../../assets/github-edit.png)
+<Image
+  src={githubEdit}
+  alt="Editing a Wiki Twelf file on GitHub"
+  style="border: 1px solid black;"
+/>
 
 Clicking that "**Commit changes**" button will open a modal: you can ignore the
 options and click the green button that says "**Propose changes**." That will

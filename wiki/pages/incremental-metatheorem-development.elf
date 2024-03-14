@@ -33,8 +33,6 @@ nat-less-immsucc : {N:nat} nat-less N (nat/s N) -> type.
 
 &lt;code&gt;set unsafe false&lt;/code&gt;
 
-As of 22 September, 2006, ``%trustme`` is only available in the [Subversion version of Twelf](/wiki/download/).
-
 The %trustme declaration makes Twelf's deductions unsound, of course, so should only be thought of as a development and debugging tool.
 
 ## Twelf 1.5R1 and earlier

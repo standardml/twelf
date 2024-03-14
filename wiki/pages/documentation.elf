@@ -1,51 +1,48 @@
-%%! title: "Documentation"
-%%! prev: false
+%%! title: "External documentation"
 %%! next: false
 
-%{! ## Learn Twelf on the wiki
+%{! 
 
-&lt;!-- in general, this section should be kept consistent with the main page --&gt;
+The Twelf [User's Guide](/wiki/users-guide/) was the basic reference manual
+for Twelf prior to the Twelf Wiki, and is still the authoritative source for
+some topics.
 
-* Read the [introductions to Twelf](/wiki/introductions-to-twelf/) first.
-* The [tutorials](/wiki/tutorials/) explain common Twelf tricks and techniques.
-* The [glossary](/wiki/glossary/) defines Twelf terminology.
-* The [case studies](/wiki/case-studies/) present interesting applications of Twelf.
-* Have a question? [Ask Twelf Elf](/wiki/ask-twelf-elf/)!
-&lt;!-- left off of the main page for now because it's not ready for primetime --&gt;
-* The [Twelf style guide](/wiki/twelf-style-guide/) discusses some best practices. There are also some suggested [naming conventions](/wiki/naming-conventions/).
-
-## Reference
-
-* The Twelf [User's Guide](/wiki/users-guide/) is the basic reference manual for Twelf.  
-* Active Twelf users should subscribe to the [mailing lists](/wiki/mailing-lists/).
-* The [LF bibliography](/wiki/bibliography-of-lf/) lists research papers about LF and Twelf.
-* Read about [research projects using Twelf](/wiki/research-projects-using-twelf/).
-
-## External documentation
-
-Besides information on this wiki, there have been a number of papers and tutorials explaining how to use Twelf for various purposes, as well as commentary on using Twelf.
+Besides information on this wiki, there have been a number of papers and
+tutorials explaining how to use Twelf for various purposes, as well as
+commentary on using Twelf.
 
 ### Tutorials
 
-* Andrew Appel's [http://www.cs.princeton.edu/~appel/twelf-tutorial/ Hints on Proving Theorems in Twelf] describes a particular methodology for using Twelf that is rather different than the strategy of proving [metatheorems](/wiki/metatheorem/) that predominates on this wiki (i.e. "the particular strange way they do it at Princeton").
-* John Boyland's [http://cs.nju.edu.cn/boyland/proof/using-twelf.html Using Twelf to Prove Type Theorems] is a tutorial and experience report (he has also published a number of [http://cs.nju.edu.cn/boyland/proof/ Twelf signatures]).
-* Dan Licata and Bob Harper have written a survey article called [http://www.cs.cmu.edu/~drl/pubs/hl06mechanizing/hl06mechanizing.pdf Mechanizing Metatheory in a Logical Framework].  This paper provides a more formal introduction to the modern way of thinking about LF and Twelf than this wiki does.  
-* Alberto Momigliano's [http://www.cs.nott.ac.uk/types06/slides/am.pdf A Practical Approach to Co-induction in Twelf] describes a technique for encoding Twelf-unfriendly co-inductive proofs as Twelf-friendly induction proofs (slides from a talk at TYPES 2006).
-* Susmit Sarkar has notes from a mini-course, [http://www.cl.cam.ac.uk/~ss726/twelf/ Mechanizing Metatheory in Twelf], at the University of Cambridge.
-* John Altidor's Twelf Tutorial [http://jgaltidor.github.io/typetheory_paper.pdf Report] and [http://jgaltidor.github.io/twelf_slides.pdf Presentation] are accessible without a strong background in programming language foundations.
+- Andrew Appel's [Hints on Proving Theorems in
+  Twelf](http://www.cs.princeton.edu/~appel/twelf-tutorial/) describes a
+  particular methodology for using Twelf that is rather different than the
+  strategy of proving [metatheorems](/wiki/metatheorem/) that predominates on
+  this wiki (also known as "the particular strange way they do it at
+  Princeton").
+- John Boyland's [Using Twelf to Prove Type
+  Theorems](https://cs.nju.edu.cn/_upload/tpl/00/aa/170/template170/proof/using-twelf.pdf)
+  john is a tutorial and experience report.
+- Dan Licata and Bob Harper have written a survey article called [Mechanizing
+  Metatheory in a Logical Framework](http://www.cs.cmu.edu/~drl/pubs/hl06mechanizing/hl06mechanizing.pdf).
+  This paper provides a more formal introduction to the modern way of thinking
+  about LF and Twelf than this site does.
+- Alberto Momigliano's [A Practical Approach to Co-induction in
+  Twelf](http://www.cs.nott.ac.uk/types06/slides/am.pdf) describes a technique
+  for encoding Twelf-unfriendly co-inductive proofs as Twelf-friendly induction
+  proofs (slides from a talk at TYPES 2006).
+- John Altidor's
+  [tutorial](http://jgaltidor.github.io/typetheory_paper.pdf) and
+  [slides](http://jgaltidor.github.io/twelf_slides.pdf) are accessible to folks
+  without a strong background in programming language foundations.
 
 ### Experience reports and commentary
 
-* [[poplmark:The POPLmark Challenge|The POPLmark Challenge]] has a page on [[poplmark:Twelf|Twelf]] and commentary on the POPLmark [[poplmark:submission from Carnegie Mellon|submission from Carnegie Mellon]] that uses Twelf.
-* Andrew Appel and Xavier Leroy's [http://www.inria.fr/rrrt/rr-5914.html A list-machine benchmark for mechanized metatheory] serves as both a tutorial and an experience report on using Twelf to prove theroems about compilers.
+- [The POPLmark Challenge](https://www.seas.upenn.edu/~plclub/poplmark/) has
+  commentary on the [POPLmark submission from Carnegie
+  Mellon](https://www.seas.upenn.edu/~plclub/poplmark/cmu.html) that uses Twelf.
+- Andrew Appel and Xavier Leroy's [A list-machine benchmark for mechanized
+  metatheory](https://www.cs.princeton.edu/~appel/listmachine/) serves as both
+  a tutorial and an experience report on using Twelf to prove theroems about
+  compilers.
 
-## Other
-
-Is there some form of documentation that should be on this wiki but isn't? Add it to [The Twelf Project:To do](/wiki/the-twelf-project-to-do/) list or [contribute](/wiki/the-twelf-project-contributing/) it. !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Documentation).
 !}%

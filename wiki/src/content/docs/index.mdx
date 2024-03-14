@@ -2,6 +2,8 @@
 title: The Twelf Project
 ---
 
+import Twelf from '../../components/Twelf.astro';
+
 [Twelf](/wiki/about-the-twelf-project/) is a language used to specify,
 implement, and prove properties of deductive systems such as programming
 languages and logics. [Large research projects using
@@ -10,10 +12,35 @@ language, a foundational proof-carrying-code system, and a type safety proof
 for Standard ML. Twelf is no longer undergoing active development, but it
 retains a community of users and remains a valuable tool for research.
 
-Visitors without a technical background are encouraged to read the [general
-description of Twelf](http://twelf.org/wiki/general-description-of-twelf/).
+Here's what it looks like to write Twelf:
 
-- The [installation instructions](/wiki/download/) can get you started.
+<Twelf code={`
+exp : type.
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+step : exp -> exp -> type.
+step/app : step (app (lam [x] E0 x) E2) (E0 E2).
+`}/>
+
+Here's what it looks like to run Twelf:
+
+<Twelf checked context={`
+exp : type.
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+step : exp -> exp -> type.
+step/app : step (app (lam [x] E0 x) E2) (E0 E2).
+`} code={`
+omega = app (lam [x] app x x) (lam [x] app x x).
+%query 1 1 step omega E.
+`}/>
+
+Visitors without a technical background are encouraged to read the [general
+description of Twelf](/wiki/general-description-of-twelf/).
+
+- The [installation instructions](/download/) can get you started.
 - [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf) is
   a mini-course on some of the most common ways of using Twelf.
 - The [glossary](/wiki/glossary/) and [documentation hub](/wiki/documentation/)

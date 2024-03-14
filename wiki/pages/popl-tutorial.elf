@@ -44,7 +44,7 @@ There will be a morning coffee break (10AM), lunch (12:30PM-1:30PM), and an afte
 
 The tutorial will be interactive, with participants writing Twelf code, so you should come with Twelf installed on your laptop.
 
-Pre-built binaries of Twelf are available for most operating systems: see the [download page](/wiki/download/).
+Pre-built binaries of Twelf are available for most operating systems: see the [download page](/download/).
 
 Otherwise:
 * you can build Twelf from the [http://twelf.plparty.org/builds/twelf-src.tar.gz source tarball].  You will need [http://www.mlton.org MLton] or [http://www.smlnj.org sml/nj]. 
