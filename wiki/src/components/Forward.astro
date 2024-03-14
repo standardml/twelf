@@ -1,31 +1,23 @@
----
-import mediawikiPages from "../assets/mediawiki-names.json";
-
-const page: false | string =
-  Astro.url.pathname.startsWith("/wiki/") &&
-  (Astro.url.pathname.endsWith("/")
-    ? Astro.url.pathname.slice(6, Astro.url.pathname.length - 1)
-    : Astro.url.pathname.slice(6)
-  ).toLowerCase();
-
-function isMediawikiPage(
-  page: string
-): page is keyof typeof mediawikiPages.forward {
-  return mediawikiPages.forward.hasOwnProperty(page);
-}
-
-const forward: false | string =
-  !!page && isMediawikiPage(page) && mediawikiPages.forward[page];
----
-
-<div>
-  {
-    forward && (
-      <>
-        Did you want to go to <a href={`/wiki/${forward}`}>/wiki/{forward}/</a>{" "}
-        instead?
-        <div />
-      </>
-    )
+<div id="possible-forward"></div>
+<script type="module" is:inline>
+  console.log("WHOPEE");
+  if (window.location.pathname.startsWith("/wiki/")) {
+    let possibleMediawikiPageName = window.location.pathname.slice(6);
+    if (possibleMediawikiPageName.endsWith("/")) {
+      possibleMediawikiPageName = possibleMediawikiPageName.slice(
+        0,
+        possibleMediawikiPageName.length - 1
+      );
+    }
+    fetch("/mediawiki-name-recovery-map.json")
+      .then((response) => response.json())
+      .then((response) => {
+        const forward = response[possibleMediawikiPageName];
+        if (forward) {
+          document.getElementById("possible-forward").innerHTML =
+            `The page you're looking for may be at
+             <a href="/wiki/${forward}/">/wiki/${forward}/</a>.`;
+        }
+      });
   }
-</div>
+</script>

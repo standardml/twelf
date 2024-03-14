@@ -18,6 +18,7 @@ export default defineConfig({
       logo: { src: "./src/assets/mediumelf.png" },
       plugins: [starlightLinksValidator()],
       description: "Home of the Twelf programming language",
+      favicon: "/favicon.ico",
       social: {
         github: "https://github.com/standardml/twelf",
       },
@@ -54,7 +55,7 @@ export default defineConfig({
               label: "Research with Twelf",
               link: "/wiki/research-projects-using-twelf/",
             },
-            { label: "External documentation", link: "/wiki/documentation/" }
+            { label: "External documentation", link: "/wiki/documentation/" },
           ],
         },
 
