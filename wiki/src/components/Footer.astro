@@ -1,5 +1,6 @@
 ---
-import mediawikiPages from "../assets/mediawiki-names.json";
+import type { Props } from "@astrojs/starlight/props";
+import mediawikiPages from "../assets/mediawiki-archive-recovery-map.json";
 import Pagination from "@astrojs/starlight/components/Pagination.astro";
 
 const page: false | string =
@@ -9,12 +10,12 @@ const page: false | string =
 
 function isMediawikiPage(
   page: string
-): page is keyof typeof mediawikiPages.archive {
-  return mediawikiPages.archive.hasOwnProperty(page);
+): page is keyof typeof mediawikiPages {
+  return mediawikiPages.hasOwnProperty(page);
 }
 
 const archive: false | { timestamp: string; page: string } =
-  !!page && isMediawikiPage(page) && mediawikiPages.archive[page];
+  !!page && isMediawikiPage(page) && mediawikiPages[page];
 ---
 
 <footer>
