@@ -1,20 +1,17 @@
 %%! title: "Tutorials"
 
-%{! :_If you are not already familiar with Twelf, you should read the [introductions to Twelf](/wiki/introductions-to-twelf/) before reading the tutorials on this page.  See the [documentation](/wiki/documentation/) page for other resources._
+%{! 
+_If you are not already familiar with Twelf, you should read the [introductions
+to Twelf](/wiki/introductions-to-twelf/) before reading the tutorials on this 
+page._
 
-Types of tutorials:
-* **[[#Proof techniques|Proof techniques]]:** learn helpful and common Twelf devices.
-* **[[#Troubleshooting|Troubleshooting]]:** learn how to diagnose and fix Twelf errors. 
-
-Feel free to write new tutorials and add them to this page.__NOTOC__
-
-These tutorials are also gathered in the [[:Category:tutorials|tutorial category]].  
+This page collects two types of tutorials. _Proof techniques_ cover helpful
+and common Twelf devices. _Troubleshooting guides_ discuss diagnosing and
+fixing Twelf errors.  
 
 ## Proof techniques
 
-&lt;!-- DRL says: header 2 has too much visual weight here --&gt;
-
-#### Beginner
+### Beginner
 
 * [Reformulating languages to use hypothetical judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/) - how to present judgements in a way that's easy to encode in LF.
 * [Holes in metatheorems](/wiki/incremental-metatheorem-development/) - how to assume lemmas while developing proofs.
@@ -28,7 +25,7 @@ These tutorials are also gathered in the [[:Category:tutorials|tutorial category
 * [Mutual induction](/wiki/mutual-induction/) - how to prove mutually inductive theorems
 * [Converting between implicit and explicit parameters](/wiki/converting-between-implicit-and-explicit-parameters/) - how to convert between implicit and explicit quantification of the parameters of a type family.
 
-#### Advanced
+### Advanced
 
 * [Strengthening](/wiki/strengthening/) - how to convince Twelf that a term does not depend on some assumptions.
 * Explicit termination metrics - how to use a termination metric other than the subderivation ordering.
@@ -50,10 +47,3 @@ For larger examples of Twelf in action, see see the [case studies](/wiki/case-st
 * [Understanding output freeness](/wiki/output-freeness/) - understanding a subtle part of output coverage checking.
 * [Debugging coverage errors](/wiki/debugging-coverage-errors/) - techniques for finding coverage errors.
 * [Constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/) - in general, you can't use them in the same [signature](/wiki/twelf-signature/). !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Tutorials).
-!}%

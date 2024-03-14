@@ -1,0 +1,11 @@
+pre.twelf-feedback,
+pre.twelf {
+  line-height: 1.4em;
+}
+
+:root {
+  --sl-text-h1: 2rem;
+  --sl-text-h2: 1.75rem;
+  --sl-text-h3: 1.125rem;
+  --sl-text-h4: 1.125rem;
+}

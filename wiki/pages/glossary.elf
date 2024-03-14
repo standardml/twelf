@@ -1,14 +1,14 @@
 %%! title: "Glossary"
 
-%{! This **glossary** should include most of the unfamiliar concepts that someone with an undergraduate-level understanding of type theory would encounter in the process of learning to use Twelf. Some of these links point to extensive tutorials, but in those cases the first paragraph or two should include a definition of the concept.
-
-Feel free to add new glossary entries to the list below.  If you encounter a piece of terminology or jargon you haven't seen and it isn't here already, or if a link doesn't answer your question, let us know on the [talk page](/wiki/talk-glossary/).
-
-\{\{keyword|nocat=\}\}
+%{! This **glossary** should include most of the unfamiliar concepts that
+someone with an undergraduate-level understanding of type theory would
+encounter in the process of learning to use Twelf. Some of these links point to
+extensive tutorials, but in those cases the first paragraph or two should
+include a definition of the concept.
 
 * [Adequacy](/wiki/adequacy/)
-* [Alpha-equivalence](/wiki/alpha-equivalence/) (i.e. "&lt;math&gt;\alpha&lt;/math&gt;-equivalence")
-* [Beta-equivalence](/wiki/beta-equivalence/) (i.e. "&lt;math&gt;\beta&lt;/math&gt;-equivalence")
+* [Alpha-equivalence](/wiki/alpha-equivalence/) (i.e. "α-equivalence")
+* [Beta-equivalence](/wiki/beta-equivalence/) (i.e. "β-equivalence")
 * [Canonical form](/wiki/canonical-form/)
 * [Canonical forms lemma](/wiki/canonical-forms-lemma/)
 * [Compatibility lemma](/wiki/respects-lemma/)
@@ -19,8 +19,8 @@ Feel free to add new glossary entries to the list below.  If you encounter a pie
 * [Effectiveness lemma](/wiki/effectiveness-lemma/)
 * [Equality](/wiki/equality/)
 * [Equivalence relation](/wiki/equivalence-relation/)
-* [Eta-equivalence](/wiki/eta-equivalence/) (i.e. "&lt;math&gt;\eta&lt;/math&gt;-equivalence")
-* [Eta-long form](/wiki/eta-equivalence/) (i.e. "&lt;math&gt;\eta&lt;/math&gt;-long form")
+* [Eta-equivalence](/wiki/eta-equivalence/) (i.e. "η-equivalence")
+* [Eta-long form](/wiki/eta-equivalence/) (i.e. "η-long form")
 * [Exchange lemma](/wiki/exchange-lemma/)
 * [Explicit parameter](/wiki/implicit-and-explicit-parameters/)
 * [Explicit context](/wiki/explicit-context/)
@@ -59,9 +59,3 @@ Feel free to add new glossary entries to the list below.  If you encounter a pie
 * [World checking](/wiki/percent-worlds/)
 * [World subsumption](/wiki/world-subsumption/) !}%
 
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Glossary).
-!}%

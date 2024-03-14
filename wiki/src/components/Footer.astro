@@ -1,13 +1,57 @@
 ---
+import mediawikiPages from "../assets/mediawiki-names.json";
+import Pagination from "@astrojs/starlight/components/Pagination.astro";
 
+const page: false | string =
+  Astro.props.entry.slug &&
+  Astro.props.entry.slug.startsWith("wiki/") &&
+  Astro.props.entry.slug.slice(5);
+
+function isMediawikiPage(
+  page: string
+): page is keyof typeof mediawikiPages.archive {
+  return mediawikiPages.archive.hasOwnProperty(page);
+}
+
+const archive: false | { timestamp: string; page: string } =
+  !!page && isMediawikiPage(page) && mediawikiPages.archive[page];
 ---
 
 <footer>
-  <div class="meta sl-flex">
+  <Pagination {...Astro.props} />
+  <div class="meta">
     {
-      Astro.props.entry.slug &&
-        Astro.props.entry.slug.startsWith("wiki/") &&
-        `You can edit this Wiki Twelf page on GitHub at https://github.com/standardml/twelf/blob/wiki/wiki/src/content/twelf/${Astro.props.entry.slug.slice(5)}.elf`
+      page && (
+        <div>
+          This page is written in <a href="/wiki-syntax/">Wiki Twelf</a>: it's
+          also valid Twelf! You can{" "}
+          <a
+            href={`https://github.com/standardml/twelf/blob/main/wiki/pages/${page}`}
+          >
+            view
+          </a>
+          or{" "}
+          <a
+            href={`https://github.com/standardml/twelf/blob/main/wiki/pages/${page}`}
+          >
+            edit
+          </a>
+          this page on Github.
+        </div>
+      )
+    }
+    {
+      archive && (
+        <div>
+          This page originally lived on the old Twelf Wiki. You can see the{" "}
+          <a
+            href={`https://web.archive.org/web/${archive.timestamp}/http://twelf.org/wiki/${archive.page}`}
+          >
+            wayback machine's version here
+          </a>
+          .
+        </div>
+      )
     }
   </div>
 </footer>

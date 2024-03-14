@@ -1,5 +1,7 @@
 ---
 title: Download Twelf
+prev: false
+next: false
 ---
 
 The current version of Twelf can be [downloaded from

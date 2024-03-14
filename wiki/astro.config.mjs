@@ -24,32 +24,37 @@ export default defineConfig({
       // editLink: { baseUrl: 'TODO' },
       head: [{ tag: "link", attrs: KATEX_CSS }],
       components: { Footer: "./src/components/Footer.astro" },
-      customCss: ["./src/styles/syntax.css"],
+      customCss: ["./src/styles/syntax.css", "./src/styles/wiki.css"],
       sidebar: [
         { label: "About", link: "/wiki/about-the-twelf-project/" },
         { label: "Download", link: "/download/" },
-        { label: "Documentation", link: "/wiki/documentation/" },
-        {
-          label: "Contributing",
-          link: "/wiki/the-twelf-project-contributing/",
-        },
         {
           label: "Learn Twelf",
           items: [
             { label: "Introductions", link: "/wiki/introductions-to-twelf/" },
             { label: "Tutorials", link: "/wiki/tutorials/" },
-            { label: "Case studies", link: "/wiki/case-studies/" },
-            { label: "Twelf glossary", link: "/wiki/twelf-glossary/" },
+            { label: "Language reference", link: "/wiki/users-guide/" },
+            { label: "Twelf glossary", link: "/wiki/glossary/" },
+            { label: "Style guide", link: "/wiki/twelf-style-guide/" },
           ],
+        },
+        {
+          label: "Case Studies",
+          link: "/wiki/case-studies",
+        },
+        {
+          label: "Contributing",
+          link: "/contributing/",
         },
         {
           label: "Reference",
           items: [
-            { label: "LF bibliography", link: "/wiki/bibliography-of-lf/" },
+            { label: "LF bibliography", link: "/bibliography/" },
             {
               label: "Research with Twelf",
               link: "/wiki/research-projects-using-twelf/",
             },
+            { label: "External documentation", link: "/wiki/documentation/" }
           ],
         },
 

@@ -1,0 +1,31 @@
+---
+import mediawikiPages from "../assets/mediawiki-names.json";
+
+const page: false | string =
+  Astro.url.pathname.startsWith("/wiki/") &&
+  (Astro.url.pathname.endsWith("/")
+    ? Astro.url.pathname.slice(6, Astro.url.pathname.length - 1)
+    : Astro.url.pathname.slice(6)
+  ).toLowerCase();
+
+function isMediawikiPage(
+  page: string
+): page is keyof typeof mediawikiPages.forward {
+  return mediawikiPages.forward.hasOwnProperty(page);
+}
+
+const forward: false | string =
+  !!page && isMediawikiPage(page) && mediawikiPages.forward[page];
+---
+
+<div>
+  {
+    forward && (
+      <>
+        Did you want to go to <a href={`/wiki/${forward}`}>/wiki/{forward}/</a>{" "}
+        instead?
+        <div />
+      </>
+    )
+  }
+</div>
