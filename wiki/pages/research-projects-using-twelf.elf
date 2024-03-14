@@ -1,6 +1,7 @@
 %%! title: "Research projects using Twelf"
 
 %{!
+
 Please add your research using Twelf to the links below.  We hope this
 collection of links will encourage collaboration among Twelf users and record
 how Twelf is being used in practice.  
@@ -32,3 +33,5 @@ your work wherever you think it fits best.
 * [The POPLmark Challenge](https://www.seas.upenn.edu/~plclub/poplmark/cmu.html) - A project aimed at increasing the overall use of theorem provers like Twelf in programming language design. A solution to the full challenge using Twelf submitted by a team at CMU [http://fling-l.seas.upenn.edu/~plclub/cgi-bin/poplmark/index.php?title=Submission_from_Carnegie_Mellon].
 * [Delphin](http://delphin.poswolsky.com/) - An integration of concepts from Twelf and functional programming languages.
 * [Elf](https://web.archive.org/web/20071012232336/http://www.cs.cmu.edu/~fp/elf.html) - The predecessor to Twelf.
+
+!}%
