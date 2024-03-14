@@ -27,7 +27,7 @@ export default defineConfig({
       customCss: ["./src/styles/syntax.css"],
       sidebar: [
         { label: "About", link: "/wiki/about-the-twelf-project/" },
-        { label: "Download", link: "/wiki/download/" },
+        { label: "Download", link: "/download/" },
         { label: "Documentation", link: "/wiki/documentation/" },
         {
           label: "Contributing",
