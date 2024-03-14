@@ -1,8 +1,11 @@
 <div id="possible-forward"></div>
 <script type="module" is:inline>
-  console.log("WHOPEE");
   if (window.location.pathname.startsWith("/wiki/")) {
-    let possibleMediawikiPageName = window.location.pathname.slice(6);
+    let possibleMediawikiPageName = window.location.pathname
+      .slice(6)
+      .toLowerCase()
+      .replaceAll("%20", "_")
+      .replaceAll(" ", "_");
     if (possibleMediawikiPageName.endsWith("/")) {
       possibleMediawikiPageName = possibleMediawikiPageName.slice(
         0,

@@ -22,7 +22,6 @@ export default defineConfig({
       social: {
         github: "https://github.com/standardml/twelf",
       },
-      // editLink: { baseUrl: 'TODO' },
       head: [{ tag: "link", attrs: KATEX_CSS }],
       components: { Footer: "./src/components/Footer.astro" },
       customCss: ["./src/styles/syntax.css", "./src/styles/wiki.css"],
@@ -58,26 +57,6 @@ export default defineConfig({
             { label: "External documentation", link: "/wiki/documentation/" },
           ],
         },
-
-        /*,
-        { label: "The Twelf Project" },
-        { label: "Download" },
-        {
-          label: "Documentation",
-          items: [
-            { label: "Introductions" },
-            { label: "Tutorials" },
-            { label: "Case studies" },
-            { label: "Glossary" },
-          ],
-        },
-        {
-          label: "Reference",
-          items: [
-            { label: "LF Bibliography" },
-            { label: "Research with Twelf" },
-          ],
-        }, */
       ],
     }),
   ],
