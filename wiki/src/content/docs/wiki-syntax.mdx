@@ -3,6 +3,10 @@ title: Syntax for Wiki Twelf pages
 ---
 
 import Twelf from "../../components/Twelf.astro";
+import Math from "../../components/Math.astro";
+import Guide from "../../components/Guide.astro";
+import Keyword from "../../components/Keyword.astro";
+import Todo from "../../components/Todo.astro";
 
 This website runs off of the [Astro Starlight](https://starlight.astro.build/)
 static site generator, which builds the website from markdown files (`.md`)
@@ -46,16 +50,22 @@ extended markdown file that the Astro Starlight SSG understands.`
 ---
 title: A simple Wiki Twelf file
 ---
+
 import Twelf from "../../../components/Twelf.astro";
 
 Here's code that defines the natural numbers: either zero `z`
 or `s N`, the successor of the natural number `z`.
 
-<Twelf code={`nat : type.
+<Twelf
+  code={`
+nat : type.
 z : nat.
-s : nat -> nat.`}/>
+s : nat -> nat.
+`}
+/>
 
 ## Level two heading
+
 The [`%freeze`](/wiki/percent-freeze) declaration freezes.
 ```
 
@@ -77,12 +87,12 @@ Within a Twelf section, code within `%{!! begin checked !!}%` and
 `%{!! end checked !!}%` lines will be displayed on the wiki along with
 the Twelf output of running that code in context.
 
-<Twelf code={`
+<Twelf
+  code={`
 %{!! begin checked !!}%
 three: nat = (s (s (s z))).
 %{!! end checked !!}%
-`}/>
-
+`} />
 
 This code will be checked in the context of the Twelf code in the page up to
 that point.
@@ -93,7 +103,7 @@ z : nat.
 s : nat -> nat.
 `} code={`
 three: nat = (s (s (s z))).
-`}/>
+`} />
 
 Within a Twelf section, code within `%{!! begin hidden !!}%` and
 `%{!! end hidden !!}%` lines will be omitted from the wiki, while remaining
@@ -106,7 +116,7 @@ part of the overall Twelf document.
 nat : type.
 times : nat -> nat -> nat.
 %{!! end hidden !!}%
-`}/>
+`} />
 
 ## Recognized behavior within Markdown sections
 
@@ -117,10 +127,10 @@ blocks is recognized:
 \`\`\`math
 \\bigvee_i \\mathcal{C}_i
 \`\`\`
-`}/>
+`} />
 
-It's possible to display syntax-highlighted Twelf code that doesn't appear
-in the regular flow of the document:
+It's possible to display syntax-highlighted Twelf code that doesn't appear in
+the regular flow of the document:
 
 <pre set:text={`
 \`\`\`twelf
@@ -130,7 +140,6 @@ fix : loop <- loop.
 %solve x : loop.
 \`\`\`
 `} />
-
 
 It's also possible to display checked Twelf code that shows its response:
 
@@ -142,9 +151,34 @@ nat : type.
 \`\`\`
 `} />
 
-These commands are important because they allow the wiki page itself to work
-as a complete Twelf file that loads correctly in Twelf, while still being
-able to contain, in what are effectively Twelf comments, non-running
-code examples.
+These commands are important because they allow the wiki page itself to work as
+a complete Twelf file that loads correctly in Twelf, while still being able to
+contain, in what are effectively Twelf comments, non-running code examples. 
 
+### Supported Astro components 
 
+The Astro static site generator supports adding additional features using
+[components](https://docs.astro.build/en/basics/astro-components/). The
+following components are imported into every Wiki Twelf file and can be used
+as needed in text:
+
+ * `<Math>` components display inline math: 
+   `<Math formula="e^{\pi \cdot i} = -1" />` renders as 
+   <Math formula="e^{\pi \cdot i} = -1" />
+ * `<Guide>` components display links to the pre-wiki Twelf documentation:
+   `"<Guide chapter="6" section="32">Constraint domains</Guide>"`
+   renders as
+   "<Guide chapter="6" section="32">Constraint domains</Guide>"
+ * `<Todo>` components display as red non-links, like this-page-does-not-exist
+   links in MediaWiki software: `<Todo>Reversing the polarity</Todo>` renders
+   as <Todo>Reversing the polarity</Todo>
+ * `<Keyword>` components appear at the bottom of pages that describe Twelf
+   directives: see the page for [`%covers`](/wiki/percent-covers/) for an
+   example, which uses `<Keyword name="covers"/> 
+
+Do not use `<Twelf>` or `<DisplayMath>` components in Wiki Twelf pages: 
+these should only be introduced to Wiki Twelf pages by translating Twelf code
+or from translating ```` ```twelf ````, ```` ```checkedtwelf ````, or
+```` ```math ```` blocks. Avoid importing additional components into specific
+Wiki Twelf pages: if more components are called for, they should be imported
+globally by editing the `elf-to-mdx.mjs` script.
