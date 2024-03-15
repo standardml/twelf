@@ -26,7 +26,7 @@
  *   server.sml here) is expose the rest of the Twelf server protocol
  *   here in a more uniform way, but string handling across the
  *   js-wasm-sml boundary is awkward. It may improve with the
- *   forthcoming wasi2 standard.
+ *   forthcoming wasip2 standard.
  *)
 
 val bref: CharArray.array option ref = ref NONE
