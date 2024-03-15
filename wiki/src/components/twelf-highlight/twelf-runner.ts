@@ -26,9 +26,7 @@ export async function twelfExec(prelude: string, code: string) {
             lines[4] !== "%% OK %%" ||
             !lines[5]?.startsWith("[Opening file")
           ) {
-            resolve(
-              `Unexpected output from Twelf:\n${lines[lines.length - 2]}`
-            );
+            resolve(`Unexpected output from Twelf:\n${lines.join("\n")}`);
           }
           resolve(
             lines
