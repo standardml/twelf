@@ -19,6 +19,14 @@
  *   buffer, which will result in various print statements. The caller
  *   is expected to implement the WASI fd_write endpoint so that they
  *   can see the output so printed.
+ *
+ * unsafe : bool -> unit
+ *   unsafe(u) has the side effect of setting the unsafe parameter to
+ *   u. What we'd like to do in the future (to avoid recapitulating
+ *   server.sml here) is expose the rest of the Twelf server protocol
+ *   here in a more uniform way, but string handling across the
+ *   js-wasm-sml boundary is awkward. It may improve with the
+ *   forthcoming wasi2 standard.
  *)
 
 val bref: CharArray.array option ref = ref NONE
@@ -42,3 +50,6 @@ val _ = e (fn () =>
 				  in
 					 codeOfStatus status
 				  end)
+
+val e = _export "unsafe": (bool -> unit) -> unit;
+val _ = e (fn (unsafe) => Twelf.unsafe := unsafe)
