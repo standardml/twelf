@@ -62,6 +62,7 @@ twelf-lib-mlton-wasi:
 		-format libexecutable \
 		-output bin/twelf.wasm \
 		-default-ann 'allowFFI true' \
+		-link-opt -Wl,--import-memory \
 		build/twelf-lib-mlton-wasi.mlb
 
 .PHONY: twelf-server-smlnj
