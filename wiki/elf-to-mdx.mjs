@@ -40,7 +40,7 @@ export function elfToMdx(elfFilename, elfFile) {
   let state = { type: "twelf", subtype: null, accum: [] };
 
   // Precondition: state.type === "twelf"
-  function reduceTwelfAccum(checked = false) {
+  function reduceTwelfAccum(checked = false, save = false) {
     mutablyTrimEmptyLines(state.accum);
     if (state.accum.length === 0) {
       body.push("");
@@ -58,6 +58,7 @@ export function elfToMdx(elfFilename, elfFile) {
         ""
       );
     }
+    if (save) twelfcontext.push(...state.accum);
     state.accum = [];
   }
 
@@ -101,7 +102,7 @@ export function elfToMdx(elfFilename, elfFile) {
         continue;
       }
       if (line.trim() === "%{!! end checked !!}%") {
-        reduceTwelfAccum(true);
+        reduceTwelfAccum(true, true);
         if (state.subtype !== "checked") {
           body.push(
             "# Error line " + lineNum + ", found unmatched `end checked`"
@@ -113,7 +114,7 @@ export function elfToMdx(elfFilename, elfFile) {
 
       /* Check for the end of a Twelf section */
       if (line.startsWith("%{!")) {
-        reduceTwelfAccum();
+        reduceTwelfAccum(false, true);
         if (state.subtype !== null) {
           body.push(
             "# Error line " +
@@ -127,8 +128,8 @@ export function elfToMdx(elfFilename, elfFile) {
         line = line.slice(3).trimStart();
         // FALLTHROUGH TO MARKDOWN PROCESSING SECTION
       } else {
-        twelfcontext.push(line);
         if (state.subtype !== "hidden") state.accum.push(line);
+        else twelfcontext.push(line);
         continue;
       }
     }
