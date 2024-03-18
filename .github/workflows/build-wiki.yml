@@ -38,10 +38,16 @@ jobs:
       - name: Build wiki
         run: cd wiki && npm i && npm run build
 
+      - name: Sanitize Artifact Name
+        run: |
+          name="${{ github.head_ref || github.ref_name }}"
+          name=$(echo -n "$name" | sed -e 's/[":<>\|*?\r\n\\\/]/-/g')
+          echo "ARTIFACT_NAME=$name" >> $GITHUB_ENV
+
       - name: Upload wiki as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wiki-ssg-${{ github.head_ref || github.ref_name }}
+          name: wiki-ssg-${{ env.ARTIFACT_NAME }}
           path: wiki/dist/
           compression-level: 9
           retention-days: 1
