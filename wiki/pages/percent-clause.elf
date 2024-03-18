@@ -6,15 +6,9 @@ This function of Twelf is incompatible with Twelf's ability to prove [metatheore
 
 ## See also
 
-*\{\{guide|title=Clause Definitions|chapter=5|section=29\}\}
-*[Tactical theorem proving](/wiki/tactical-theorem-proving/)
+- <Guide chapter="5" section="29">Clause Definitions</Guide>
+- [Tactical theorem proving](/wiki/tactical-theorem-proving/)
 
+<Keyword name="clause" />
 
-\{\{keyword|key=clause\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25clause).
 !}%

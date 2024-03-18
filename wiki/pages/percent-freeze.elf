@@ -47,7 +47,7 @@ thing : type.
 oops : (thing -> plus _ _ _) -> type.
 ```
 
-The subordination relation can be extended such that other non-frozen types depend on a frozen type, of course:
+The subordination relation can be extended such that other non-frozen types depend on a frozen type: we can make a new `thing` depend on `plus`, just not the other way around.
 
 ```checkedtwelf
 %freeze plus.
@@ -56,16 +56,10 @@ thing : type.
 okay : (plus _ _ _ -> thing) -> type.
 ```
 
-Because types are automatically frozen in common cases (see below), one may occasionally need to induce subordination relations in anticipation of code that follows freezing. This can be done as in the type ``oops`` above, before using ``%freeze`` or metatheory like ``%worlds``.
-
 ## Autofreeze
 
-Twelf CVS automatically freezes any family for which there has been a [``%worlds``](/wiki/percent-worlds/) declaration. This prevents mistakes where a metatheorem is proved for a type family but then that type family is extended, invalidating the theorem.
+Because types are automatically frozen for any family for which there has been a [``%worlds``](/wiki/percent-worlds/) declaration, or for any type family that depends on that family. This prevents mistakes where a metatheorem is proved for a type family but then that type family is extended, invalidating the theorem.
 
 <Keyword name="freeze"/>
 
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25freeze).
 !}%

@@ -23,9 +23,8 @@ Using this block in a ``%worlds`` declaration means that variables representing 
 ```
 ## Block definitions
 
-As of 1.7.1, block &lt;i&gt;definitions&lt;/i&gt; are now supported. !}%
-
-%{! (options removed from twelftag: import="new") !}%
+Block definitions allow multiple blocks to be combined:
+!}%
 
 typ : type.
 exp : typ -> type.
@@ -36,21 +35,17 @@ exp : typ -> type.
 
 %{! Using ``vars`` in a [``%worlds``](/wiki/percent-worlds/) declaration is the same as using ``typ-var | exp-var``, and in fact when Twelf prints out the ``%worlds`` declaration, block definitions will be automatically expanded. !}%
 
-%{! (options removed from twelftag: import="new" check="decl") !}%
-
+%{!! begin checked !!}%
 %worlds (vars) (exp _).
+%{!! end checked !!}%
 
 %{! ## See also
 
 * [``%worlds``](/wiki/percent-worlds/)
-* \{\{proving|title=Proving totality assertions in non-empty contexts\}\}
+* [Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/) in the Proving Metatheorems tutorial
 * [Totality assertion](/wiki/totality-assertion/)
 * <Guide chapter="9" section="53">Regular Worlds</Guide>
 
 <Keyword name="block"/>
 
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25block).
 !}%

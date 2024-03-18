@@ -72,9 +72,14 @@ cf : zero X 0
   <- not X X.
 
 %worlds () (nope _) (not _ _) (zero _ _).
-%covers zero +B -B'.
 
-%{! Although ``zero`` passes the coverage check, it always fails. ``cn`` matches all inputs, but then appeals to a subgoal (``nope``) that is empty and immediately fails. ``cz`` appeals recursively to ``zero``, but insists that its output be ``1``, so this also fails. ``cf`` appeals to the total relation ``not``, but in a way that constrains the output so that it also always fails (see [output freeness](/wiki/output-freeness/)). To get all of these tests, you must use the [%total](/wiki/percent-total/) declaration. Here, totality fails on the first case as expected:
+%{! The ``zero`` predicate passes the coverage check. !}%
+
+%{!! begin checked !!}%
+%covers zero +B -B'.
+%{!! end checked !!}%
+
+%{! Despite passing the input coverage check, calling `zero B _` for any `B` will always fail. ``cn`` matches all inputs, but then appeals to a subgoal (``nope``) that is empty and immediately fails. ``cz`` appeals recursively to ``zero``, but insists that its output be ``1``, so this also fails. ``cf`` appeals to the total relation ``not``, but in a way that constrains the output so that it also always fails (see [output freeness](/wiki/output-freeness/)). To get all of these tests, you must use the [%total](/wiki/percent-total/) declaration. Here, totality fails as expected: `nope` is not defined as total (because it's not!)
 
 ```checkedtwelf
 %total D (zero D _).
@@ -88,8 +93,4 @@ cf : zero X 0
 
 <Keyword name="covers" />
 
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25covers).
 !}%
