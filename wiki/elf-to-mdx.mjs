@@ -48,11 +48,10 @@ export function elfToMdx(elfFilename, elfFile) {
       body.push(
         "",
         "<Twelf " +
-          (checked
-            ? "checked context={`" +
-              escapeBacktickEnv(twelfcontext.join("\n")) +
-              "`} "
-            : "") +
+          (checked ? "checked " : "") +
+          "context={`" +
+          escapeBacktickEnv(twelfcontext.join("\n")) +
+          "`} " +
           "code={`" +
           escapeBacktickEnv(state.accum.join("\n")) +
           "`}/>",
