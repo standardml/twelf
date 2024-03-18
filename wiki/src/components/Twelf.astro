@@ -1,7 +1,8 @@
 ---
-import { spanHighlight } from "./twelf-highlight/tokenizer-highlighter";
-import { twelfTokenizer } from "./twelf-highlight/twelf-tokenizer";
-import { twelfExec } from "./twelf-highlight/twelf-runner";
+import { spanHighlight } from "./js/tokenizer-highlighter";
+import { twelfTokenizer } from "./js/twelf-tokenizer";
+import { twelfExec } from "./js/twelf-runner";
+import { getTwelfLiveLink } from "./js/twelf-wasm-encoder-v2";
 
 function trimSlightly(code: string): string {
   const code2 = code[0] === "\n" ? code.slice(1) : code;
@@ -10,7 +11,7 @@ function trimSlightly(code: string): string {
   return code3;
 }
 
-const { code = "" } = Astro.props;
+const { context = "", code = "" } = Astro.props;
 function htmlEscape(code: string) {
   return code
     .replaceAll("&", "&amp;")
@@ -45,17 +46,99 @@ const highlit = spanHighlight(twelfTokenizer, trimSlightly(code))
   .join("\n");
 
 const twelfResponse = await (Astro.props.checked
-  ? twelfExec(Astro.props.context || "", Astro.props.code || "")
+  ? twelfExec(context, code)
   : null);
 ---
 
-<pre class="twelf" set:html={highlit} />
-{twelfResponse ? <pre class="twelf-feedback" set:text={twelfResponse} /> : null}
+<div class="container">
+  <pre class="twelf" set:html={highlit} />
+  {
+    twelfResponse ? (
+      <pre class="twelf-feedback" set:text={twelfResponse} />
+    ) : null
+  }
+  <form action={await getTwelfLiveLink(context, code)}>
+    <button title="Explore in Twelf Live"
+      ><svg
+        viewBox="0 0 292 292"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M118 132.5L171 89L228 61L210 113L199.5 167.5L87 170L118 132.5Z"
+          fill="var(--hat-color"></path>
+        <path
+          d="M61 214.5L86.5 170L202 167.5L198.5 231.5L110.5 217L61 214.5Z"
+          fill="var(--hat-band)"></path>
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M234.104 57.305C235.203 58.7752 235.299 60.766 234.347 62.3354C228.975 71.1827 217.522 96.8478 212.432 125.78C205.05 167.742 204.882 194.082 204.751 214.665V214.667C204.729 218.069 204.708 221.313 204.656 224.445C210.732 224.798 216.546 225 222 225C237.568 225 250.75 224.053 260.558 223.084C265.463 222.6 269.525 222.11 272.64 221.729L273.501 221.623L273.502 221.623C276.08 221.306 278.164 221.05 279.32 221.003C281.803 220.904 283.897 222.837 283.996 225.32C284.096 227.803 282.163 229.897 279.68 229.996C278.916 230.027 277.182 230.239 274.181 230.607L273.735 230.662C270.6 231.046 266.454 231.546 261.442 232.041C251.417 233.031 237.932 234 222 234C199.61 234 171.57 230.709 144.67 227.531L144.052 227.458C117.169 224.283 91.5523 221.256 73.0592 221.5C44.3127 221.878 22.1121 230.57 14.7152 233.465L14.7069 233.469C14.5055 233.548 14.3151 233.622 14.1359 233.692C11.8207 234.596 9.21139 233.451 8.30789 231.136C7.40438 228.821 8.54881 226.211 10.864 225.308C11.0553 225.233 11.2595 225.153 11.4765 225.068C17.7 222.631 34.448 216.072 56.9094 213.521C62.2192 197.353 83.521 157.539 129.033 117.617C175.017 77.2798 214.685 59.5364 229.347 55.6502C231.122 55.1798 233.004 55.8347 234.104 57.305ZM195.745 214.824C195.725 217.97 195.707 220.962 195.663 223.833C179.869 222.613 162.72 220.601 145.726 218.593L144.574 218.457C118.111 215.331 92.0291 212.249 72.9408 212.5C70.8555 212.528 68.8029 212.597 66.7859 212.702C70.1329 204.279 77.0898 190.866 88.5741 174.948L197.306 172.123C195.902 189.519 195.817 203.219 195.745 214.824ZM198.126 163.099C199.271 151.729 200.987 138.89 203.568 124.22C207.53 101.702 215.186 81.0365 221.28 67.972C203.391 75.2611 171.366 92.4539 134.967 124.383C118.725 138.631 105.711 152.807 95.5026 165.765L198.126 163.099Z"
+          fill="var(--hat-outline)"></path>
+      </svg>
+    </button>
+  </form>
+</div>
 
 <style>
+  pre {
+    background-color: var(--sl-color-gray-7);
+    overflow-x: scroll;
+  }
   pre.twelf-feedback {
     margin-top: 0 !important;
     border-top: none;
     color: var(--astro-code-token-string-expression);
+  }
+  .container {
+    position: relative;
+    --icon-opacity: 0;
+  }
+  .container:hover {
+    --icon-opacity: 1;
+  }
+
+  /* Hat styling */
+  /* Many button styles stolen from Expressive Code */
+  button {
+    height: 32px;
+    width: 32px;
+    --hat-outline: var(--sl-color-text);
+    --hat-band: transparent;
+    --hat-color: var(--sl-color-gray-5);
+    border-radius: 3px;
+    border: 1px solid var(--sl-color-gray-5);
+    background-color: var(--sl-color-gray-7);
+    margin: 0;
+    padding: 0;
+    opacity: var(--icon-opacity);
+    transition-property: opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+  }
+
+  button:hover {
+    --hat-band: #ffffff;
+    --hat-color: #548953;
+    background-color: var(--sl-color-gray-5);
+    border-color: var(--sl-color-gray-4);
+  }
+
+  div.container button {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+  }
+
+  @media (pointer: coarse) {
+    button {
+      height: 40px;
+      width: 40px;
+      opacity: 1;
+    }
+    pre {
+      min-height: 52px;
+    }
   }
 </style>
