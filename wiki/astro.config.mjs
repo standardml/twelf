@@ -2,29 +2,18 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLinksValidator from "starlight-links-validator";
 
-const KATEX_CSS = {
-  rel: "stylesheet",
-  href: "https://www.unpkg.com/katex@0.16.9/dist/katex.css",
-  integrity:
-    "sha384-OH8qNTHoMMVNVcKdKewlipV4SErXqccxxlg6HC9Cwjr5oZu2AdBej1TndeCirael",
-  crossorigin: "anonymous",
-};
-
 // https://astro.build/config
 export default defineConfig({
+  site: "https://twelf.org",
   integrations: [
     starlight({
       title: "Twelf",
       logo: { src: "./src/assets/mediumelf.png" },
-      plugins: [starlightLinksValidator()],
       description: "Home of the Twelf programming language",
       favicon: "/favicon.ico",
       social: {
         github: "https://github.com/standardml/twelf",
       },
-      head: [{ tag: "link", attrs: KATEX_CSS }],
-      components: { Footer: "./src/components/Footer.astro" },
-      customCss: ["./src/styles/syntax.css", "./src/styles/wiki.css"],
       sidebar: [
         { label: "About", link: "/wiki/about-the-twelf-project/" },
         { label: "Download", link: "/download/" },
@@ -57,6 +46,13 @@ export default defineConfig({
             { label: "External documentation", link: "/wiki/documentation/" },
           ],
         },
+      ],
+      plugins: [starlightLinksValidator()],
+      components: { Footer: "./src/components/Footer.astro" },
+      customCss: [
+        "./node_modules/katex/dist/katex.css",
+        "./src/styles/syntax.css",
+        "./src/styles/wiki.css",
       ],
     }),
   ],
