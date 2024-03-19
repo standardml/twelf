@@ -52,8 +52,8 @@ jobs:
           compression-level: 9
           retention-days: 1
 
-    trigger-deploy:
-      if: github.repository == 'standardml/twelf' && ${{ github.head_ref == 'main' }}
-      steps:
-        - name: Call render.com deploy hook
-          run: curl ${{ secrets.RENDER_DEPLOY_URL }}
+  trigger-deploy:
+    if: github.repository == 'standardml/twelf' && ${{ github.head_ref == 'main' }}
+    steps:
+      - name: Call render.com deploy hook
+        run: curl ${{ secrets.RENDER_DEPLOY_URL }}
