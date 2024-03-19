@@ -51,3 +51,11 @@ jobs:
           path: wiki/dist/
           compression-level: 9
           retention-days: 1
+
+  trigger-deploy:
+    needs: build-wiki
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'main' }}
+    steps:
+      - name: Call render.com deploy hook
+        run: curl ${{ secrets.RENDER_DEPLOY_URL }}
