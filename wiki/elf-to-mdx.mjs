@@ -38,7 +38,8 @@ async function hashToHex(content) {
   );
   return Array.from(new Uint8Array(digest))
     .map((n) => n.toString(16).padStart(2, "0"))
-    .join("");
+    .join("")
+    .slice(0, 10);
 }
 
 export async function elfToMdx(elfFilename, elfFile) {
