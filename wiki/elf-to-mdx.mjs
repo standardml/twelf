@@ -80,7 +80,11 @@ export async function elfToMdx(elfFilename, elfFile) {
        */
       const hatJson = JSON.stringify({
         t: "setTextAndExec",
-        text: context + "\n\n\n\n" + state.accum.join("\n"),
+        text: (
+          context.trim() +
+          "\n\n\n\n" +
+          state.accum.join("\n").trim()
+        ).trim(),
       });
 
       /* Because both context and hatJson can get very big in files with many
