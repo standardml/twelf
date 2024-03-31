@@ -2,7 +2,7 @@
 title: To-do list, 2024
 ---
 
-The priority now is going through pages, turning mangled math into either ```` ```math ```` or `<Math formula="blah"/>` (or `<Math formula={`blah`}/>` which is, in rare cases, cleaner), removing un-translated twelf tags, comparing with the source website. See below for the full list. Pages that are actually edited this way get checked off below.
+The priority now is working major content and/or visual regressions caused by the transition to MediaWiki. 
 
 Steps:
 
@@ -11,11 +11,10 @@ Steps:
 - Guide links like `{{guide|chapter=2|section=4|title=Lexical Conventions}}` become
   `<Guide chapter="2" section="4">Lexical Conventions</Guide>`
 - `{{keyword|key=.}}` becomes `<Keyword name="."/>`
-- The footer "If anything looks wrong, you can refer to the" becomes just
-  "You can refer to the" if you've done a good job
 - Broken links become `<Todo>Broken link</Todo>`
-- Things with tutorial tags get the header `%%! tags: ["tutorial"]`
 - Remove `{{needs}}`, `{{discuss}}`, `{{case studies}}`, `{{undocumented}}` tags
+- The generated footer can be deleted - it's just there to link to the web archive, but that's now a built-in part of the footer
+- Pages should ideally get a `%%! description: "Blah blah blah"` since otherwise the search engines will just associate every page with the text "Home of the Twelf programming language" which is suboptimal
 
 Todos:
 
@@ -26,7 +25,9 @@ Todos:
 - [ ] Proper download page that's non-wiki
 - [ ] Proper documentation hub that's non-wiki
 - [ ] Keyword.astro template
-- [ ] Pages tagged "tutorial"
+
+Pages to cover:
+
 - [x] [%.](/wiki/percent-eof/)
 - [x] [%assert](/wiki/percent-assert/)
 - [x] [%block](/wiki/percent-block/)
