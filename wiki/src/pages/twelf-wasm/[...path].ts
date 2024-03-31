@@ -15,6 +15,7 @@ export function getStaticPaths() {
     { params: { path: "assets/twelf-icon.png" } },
     { params: { path: "assets/worker.js" } },
     { params: { path: "css/style.css" } },
+    { params: { path: "index.html" } },
   ];
 }
 
