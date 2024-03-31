@@ -3,6 +3,7 @@ import { spanHighlight } from "./js/tokenizer-highlighter";
 import { twelfTokenizer } from "./js/twelf-tokenizer";
 import { twelfExec } from "./js/twelf-runner";
 import { getTwelfLiveLink } from "./js/twelf-wasm-encoder-v2";
+import { readFileSync } from "fs";
 
 function trimSlightly(code: string): string {
   const code2 = code[0] === "\n" ? code.slice(1) : code;
@@ -11,7 +12,11 @@ function trimSlightly(code: string): string {
   return code3;
 }
 
-const { context = "", code = "" } = Astro.props;
+const { code = "" } = Astro.props;
+const context: string = Astro.props.contextFile
+  ? readFileSync(Astro.props.contextFile, "utf-8")
+  : Astro.props.context ?? "";
+
 function htmlEscape(code: string) {
   return code
     .replaceAll("&", "&amp;")

@@ -110,9 +110,7 @@ export async function elfToMdx(elfFilename, elfFile) {
         "",
         "<Twelf " +
           (checked ? "checked " : "") +
-          "context={`" +
-          escapeBacktickEnv(twelfcontext.join("\n")) +
-          "`} " +
+          `contextFile="${contextFile}" ` +
           "code={`" +
           escapeBacktickEnv(state.accum.join("\n")) +
           "`}/>",
@@ -128,7 +126,7 @@ export async function elfToMdx(elfFilename, elfFile) {
     if (state.type === "twelf") {
       /* Handle recognized special behavior within Twelf sections */
       if (line.trim() === "%{!! begin hidden !!}%") {
-        reduceTwelfAccum();
+        await reduceTwelfAccum();
         if (state.subtype !== null) {
           body.push(
             "# Error line " +
@@ -150,7 +148,7 @@ export async function elfToMdx(elfFilename, elfFile) {
         continue;
       }
       if (line.trim() === "%{!! begin checked !!}%") {
-        reduceTwelfAccum();
+        await reduceTwelfAccum();
         if (state.subtype !== null) {
           body.push(
             "# Error line " +
@@ -163,7 +161,7 @@ export async function elfToMdx(elfFilename, elfFile) {
         continue;
       }
       if (line.trim() === "%{!! end checked !!}%") {
-        reduceTwelfAccum(true, true);
+        await reduceTwelfAccum(true, true);
         if (state.subtype !== "checked") {
           body.push(
             "# Error line " + lineNum + ", found unmatched `end checked`"
@@ -175,7 +173,7 @@ export async function elfToMdx(elfFilename, elfFile) {
 
       /* Check for the end of a Twelf section */
       if (line.startsWith("%{!")) {
-        reduceTwelfAccum(false, true);
+        await reduceTwelfAccum(false, true);
         if (state.subtype !== null) {
           body.push(
             "# Error line " +
@@ -198,9 +196,9 @@ export async function elfToMdx(elfFilename, elfFile) {
     if (state.type === "markdown-block") {
       if (line.trimEnd() === "```") {
         if (state.subtype === "twelf") {
-          reduceTwelfAccum();
+          await reduceTwelfAccum();
         } else if (state.subtype === "checkedtwelf") {
-          reduceTwelfAccum(true);
+          await reduceTwelfAccum(true);
         } else {
           mutablyTrimEmptyLines(state.accum);
           body.push(
