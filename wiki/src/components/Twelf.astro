@@ -2,8 +2,8 @@
 import { spanHighlight } from "./js/tokenizer-highlighter";
 import { twelfTokenizer } from "./js/twelf-tokenizer";
 import { twelfExec } from "./js/twelf-runner";
-import { getTwelfLiveLink } from "./js/twelf-wasm-encoder-v2";
 import { readFileSync } from "fs";
+import { encodeWithJsonz } from "twelf-wasm";
 
 function trimSlightly(code: string): string {
   const code2 = code[0] === "\n" ? code.slice(1) : code;
@@ -16,6 +16,11 @@ const { code = "" } = Astro.props;
 const context: string = Astro.props.contextFile
   ? readFileSync(Astro.props.contextFile, "utf-8")
   : Astro.props.context ?? "";
+
+const liveLink = await encodeWithJsonz({
+  t: "setTextAndExec",
+  text: (context.trim() + "\n\n\n\n" + code.trim()).trim(),
+});
 
 function htmlEscape(code: string) {
   return code
@@ -62,7 +67,7 @@ const twelfResponse = await (Astro.props.checked
       <pre class="twelf-feedback" set:text={twelfResponse} />
     ) : null
   }
-  <form action={await getTwelfLiveLink(context, code)}>
+  <form action={`/twelf-wasm/#${liveLink}`}>
     <button title="Explore in Twelf Live"
       ><svg
         viewBox="0 0 292 292"
