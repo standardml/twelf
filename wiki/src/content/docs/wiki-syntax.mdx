@@ -127,17 +127,45 @@ times : nat -> nat -> nat.
 
 ### Extra `<Twelf/>` options
 
-The context for Twelf is used for two purposes: to inform the code that is loaded 
+The context for Twelf is used for two purposes: to inform the code that is loaded
 into the editor when you click on the hat, and to inform the configuration sent to
 the Twelf Live editor when you click on the hat.
 
 This can get very large and redundant in an automatically translated file with lots
 of Twelf sections, so these two purposes can be individually modified.
 
-If the parameter `contextFile` is passed instead of `context`, then the static site 
+If the parameter `contextFile` is passed instead of `context`, then the static site
 generator, when dealing with the Twelf component, context will read from the file.
 This allows the configured MDX files to be much smaller, but can still lead to large
-HTML assets, as the HTML assets will include the context in the "hat" links.
+HTML assets, as the HTML assets will include the context in the "hat" links. To deal
+with that problem, it's possible to overload the `UrlAction` (as defined by the
+[`twelf-wasm` package](https://www.npmjs.com/package/twelf-wasm)) by defining a
+hatAction parameter, which must be valid JSON.
+
+In general, this can be used to confusing effect: when we render this code...
+
+```mdx
+<Twelf
+  hatAction='{ "t": "setTextAndExec", "text": "surprise: type."}'
+  code={`nat: type.
+z: nat.
+s: nat -> nat.`}
+/>
+```
+
+...clicking hat will open up a file unrelated to the file we expected, as you can
+see by clicking on the hat in this example:
+
+<Twelf
+  hatAction='{ "t": "setTextAndExec", "text": "surprise: type."}'
+  code={`nat: type.
+z: nat.
+s: nat -> nat.`}
+/>
+
+That's not good, don't do that!
+The usual purpose for this will be to set `hatAction.t` to `getUrl` so that the actual
+Twelf code loaded by the editor can be provided outside of the URL itself.
 
 ## Recognized behavior within Markdown sections
 
@@ -203,5 +231,3 @@ or from translating ```` ```twelf ````, ```` ```checkedtwelf ````, or
 ```` ```math ```` blocks. Avoid importing additional components into specific
 Wiki Twelf pages: if more components are called for, they should be imported
 globally by editing the `elf-to-mdx.mjs` script.
-
-

@@ -108,10 +108,11 @@ export async function elfToMdx(elfFilename, elfFile) {
 
       body.push(
         "",
-        "<Twelf " +
-          (checked ? "checked " : "") +
-          `contextFile="${contextFile}" ` +
-          "code={`" +
+        "<Twelf" +
+          (checked ? " checked\n" : "\n") +
+          `  contextFile="${contextFile}"\n` +
+          `  hatAction='{ "t": "getUrl",  "url": "${hatJsonFile}" }'\n` +
+          "  code={`" +
           escapeBacktickEnv(state.accum.join("\n")) +
           "`}/>",
         ""

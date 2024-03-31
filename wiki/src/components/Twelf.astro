@@ -3,7 +3,7 @@ import { spanHighlight } from "./js/tokenizer-highlighter";
 import { twelfTokenizer } from "./js/twelf-tokenizer";
 import { twelfExec } from "./js/twelf-runner";
 import { readFileSync } from "fs";
-import { encodeWithJsonz } from "twelf-wasm";
+import { encodeWithJsonz, encodeWithJson } from "twelf-wasm";
 
 function trimSlightly(code: string): string {
   const code2 = code[0] === "\n" ? code.slice(1) : code;
@@ -17,10 +17,12 @@ const context: string = Astro.props.contextFile
   ? readFileSync(Astro.props.contextFile, "utf-8")
   : Astro.props.context ?? "";
 
-const liveLink = await encodeWithJsonz({
-  t: "setTextAndExec",
-  text: (context.trim() + "\n\n\n\n" + code.trim()).trim(),
-});
+const liveLink = Astro.props.hatAction
+  ? encodeWithJson(JSON.parse(Astro.props.hatAction))
+  : await encodeWithJsonz({
+      t: "setTextAndExec",
+      text: (context.trim() + "\n\n\n\n" + code.trim()).trim(),
+    });
 
 function htmlEscape(code: string) {
   return code
