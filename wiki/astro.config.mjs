@@ -11,6 +11,7 @@ export default defineConfig({
           "/twelf-wasm/": "/twelf-wasm/index.html",
         }
       : {},
+  trailingSlash: "always",
   integrations: [
     starlight({
       title: "Twelf",
