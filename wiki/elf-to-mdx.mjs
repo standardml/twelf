@@ -90,14 +90,22 @@ export async function elfToMdx(elfFilename) {
   let twelfcontext = [];
 
   /** @typedef {{ type: "twelf", subtype: null | "hidden" | "checked", accum: string[] }} TwelfState */
-  /** @typedef {      { type: "markdown-block", subtype: "math" | "twelf" | "checkedtwelf", accum: string[] }} MarkdownBlockState */
+  /** @typedef {{ type: "markdown-block", subtype: "math" | "twelf" | "checkedtwelf", accum: string[] }} MarkdownBlockState */
   /** @typedef {{ type: "markdown" }} MarkdownState */
   /** @type {TwelfState | MarkdownState | MarkdownBlockState} */
   let state = { type: "twelf", subtype: null, accum: [] };
 
   // Precondition: state.type === "twelf"
   async function reduceTwelfAccum(checked = false, save = false) {
-    if (state.type !== "twelf") throw new TypeError();
+    if (
+      !(
+        state.type === "twelf" ||
+        (state.type === "markdown-block" &&
+          (state.subtype === "twelf" || state.subtype === "checkedtwelf"))
+      )
+    ) {
+      throw new TypeError(`state ${state.type} - ${state.subtype}`);
+    }
     mutablyTrimEmptyLines(state.accum);
 
     if (state.accum.length === 0) {
@@ -291,7 +299,7 @@ import Todo from "../../../components/Todo.astro";
 
 {/* AUTOMATICALLY GENERATED FROM A .ELF FILE */}
 {/* DO NOT EDIT */}
-{/* EDIT ${elfFilename} INSTEAD */}
+{/* EDIT twelf/wiki/${elfFilename} INSTEAD */}
 
 ${body.join("\n")}
 `;

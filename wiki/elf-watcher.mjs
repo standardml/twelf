@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readdirSync, watch, writeFileSync } from "fs";
 import { argv } from "process";
 import { elfToMdx } from "./elf-to-mdx.mjs";
+import { join } from "path";
 
-const DIR_OF_WIKI = "twelf/wiki/";
 const DIR_OF_ELF = "pages";
 const DIR_OF_MDX = "src/content/docs/wiki";
 if (!existsSync(DIR_OF_MDX)) {
@@ -20,7 +20,7 @@ async function mdxOfFile(file) {
   const base = file.slice(0, file.length - 4);
   const mdxname = `${DIR_OF_MDX}/${base}.mdx`;
   console.log(`elf->mdx transforming ${file}`);
-  const mdxFile = await elfToMdx(DIR_OF_WIKI + elfname);
+  const mdxFile = await elfToMdx(elfname);
   writeFileSync(mdxname, mdxFile);
 }
 
