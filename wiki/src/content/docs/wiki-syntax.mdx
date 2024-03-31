@@ -92,31 +92,83 @@ the Twelf output of running that code in context.
 %{!! begin checked !!}%
 three: nat = (s (s (s z))).
 %{!! end checked !!}%
-`} />
+`}
+/>
 
 This code will be checked in the context of the Twelf code in the page up to
 that point.
 
-<Twelf checked context={`
+<Twelf
+  checked
+  context={`
 nat : type.
 z : nat.
 s : nat -> nat.
-`} code={`
+`}
+  code={`
 three: nat = (s (s (s z))).
-`} />
+`}
+/>
 
 Within a Twelf section, code within `%{!! begin hidden !!}%` and
 `%{!! end hidden !!}%` lines will be omitted from the wiki, while remaining
 part of the overall Twelf document.
 
-<Twelf code={`
+<Twelf
+  code={`
 %{!! begin hidden !!}%
 % These declarations are necessary but would interrupt
 % the flow of the page if we showed them in the wiki text:
 nat : type.
 times : nat -> nat -> nat.
 %{!! end hidden !!}%
-`} />
+`}
+/>
+
+### Extra `<Twelf/>` options
+
+The context for Twelf is used for two purposes: to inform the code that is loaded
+silently when `checked` is specified, and to inform the configuration sent to
+the Twelf Live editor when you click on the hat.
+
+This can get very large and redundant in an automatically translated file with lots
+of Twelf sections. Two extra parameters help to deal with that.
+
+If the parameter `contextFile` is passed instead of `context`, then the static site
+generator, when dealing with the Twelf component, context will read from the file.
+This allows the configured MDX files to be much smaller.
+
+Storing context in the filesystem can still lead to large generated
+HTML assets, as the HTML assets will include the context in the "hat" links. To deal
+with that problem, the `hatAction` parameter replaces the default `UrlAction` 
+sent to twelf-wasm (this type is defined by the
+[`twelf-wasm` package](https://www.npmjs.com/package/twelf-wasm)). This parameter
+must be valid JSON.
+
+This can be used to confusing effect: when we render this code...
+
+```mdx
+<Twelf
+  hatAction='{ "t": "setTextAndExec", "text": "surprise: type."}'
+  code={`nat: type.
+z: nat.
+s: nat -> nat.`}
+/>
+```
+
+...clicking the hat will open up twelf unrelated to the file we expected, as you can
+see by clicking on the hat in this example:
+
+<Twelf
+  hatAction='{ "t": "setTextAndExec", "text": "surprise: type."}'
+  code={`nat: type.
+z: nat.
+s: nat -> nat.`}
+/>
+
+That's not good, don't do that!
+The usual purpose for this will be to set `hatAction.t` to `getUrl` so that the actual
+Twelf code loaded by the editor can be provided at a separate URL.
 
 ## Recognized behavior within Markdown sections
 
