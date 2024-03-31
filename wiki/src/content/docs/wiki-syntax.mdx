@@ -92,31 +92,38 @@ the Twelf output of running that code in context.
 %{!! begin checked !!}%
 three: nat = (s (s (s z))).
 %{!! end checked !!}%
-`} />
+`}
+/>
 
 This code will be checked in the context of the Twelf code in the page up to
 that point.
 
-<Twelf checked context={`
+<Twelf
+  checked
+  context={`
 nat : type.
 z : nat.
 s : nat -> nat.
-`} code={`
+`}
+  code={`
 three: nat = (s (s (s z))).
-`} />
+`}
+/>
 
 Within a Twelf section, code within `%{!! begin hidden !!}%` and
 `%{!! end hidden !!}%` lines will be omitted from the wiki, while remaining
 part of the overall Twelf document.
 
-<Twelf code={`
+<Twelf
+  code={`
 %{!! begin hidden !!}%
 % These declarations are necessary but would interrupt
 % the flow of the page if we showed them in the wiki text:
 nat : type.
 times : nat -> nat -> nat.
 %{!! end hidden !!}%
-`} />
+`}
+/>
 
 ## Recognized behavior within Markdown sections
 
@@ -182,3 +189,4 @@ or from translating ```` ```twelf ````, ```` ```checkedtwelf ````, or
 ```` ```math ```` blocks. Avoid importing additional components into specific
 Wiki Twelf pages: if more components are called for, they should be imported
 globally by editing the `elf-to-mdx.mjs` script.
+
