@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, existsSync } from "fs";
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
 
 /*
@@ -18,19 +18,39 @@ if (!existsSync(join(DIR_PUBLIC_PATH, PUBLIC_PATH_OF_HAT_CODE))) {
   });
 }
 
+/**
+ * Escape a string to live within a format string in JS.
+ *
+ * @param {string} twelfcode
+ * @returns string
+ */
 function escapeBacktickEnv(twelfcode) {
-  return twelfcode.replaceAll("\\", "\\\\").replaceAll("`", "\\`");
+  return twelfcode
+    .replaceAll("\\", "\\\\")
+    .replaceAll("`", "\\`")
+    .replaceAll("$", "\\$");
 }
 
+/**
+ * Remove all the leading or trailing lines containing only whitespace
+ *
+ * @param {string[]} lines
+ */
 function mutablyTrimEmptyLines(lines) {
-  while (lines.length > 0 && lines[0].trim() === "") {
+  while (lines.length > 0 && lines[0]?.trim() === "") {
     lines.shift();
   }
-  while (lines.length > 0 && lines[lines.length - 1].trim() === "") {
+  while (lines.length > 0 && lines[lines.length - 1]?.trim() === "") {
     lines.pop();
   }
 }
 
+/**
+ * Hash a string and return a short digest as a sequence of hex digits
+ *
+ * @param {string} content
+ * @returns {Promise<string>}
+ */
 async function hashToHex(content) {
   const digest = await crypto.subtle.digest(
     "SHA-256",
@@ -42,32 +62,44 @@ async function hashToHex(content) {
     .slice(0, 10);
 }
 
-export async function elfToMdx(elfFilename, elfFile) {
+/**
+ * Process in a Wiki Twelf file and generate an Astro-ready MDX file.
+ *
+ * @param {string} elfFilename
+ *   The Elf file to process
+ * @returns {Promise<string>}
+ */
+export async function elfToMdx(elfFilename) {
+  const elfFile = readFileSync(elfFilename, "utf-8");
+
   /* Parse out header */
+  /** @type {string[]} */
   const header = [];
   let lineNum = 0;
   const input = elfFile.split("\n");
-  while (lineNum < input.length && input[lineNum].startsWith("%%! ")) {
-    header.push(input[lineNum].slice(4) + "\n");
+  while (lineNum < input.length && input[lineNum]?.startsWith("%%! ")) {
+    header.push(input[lineNum]?.slice(4) + "\n");
     lineNum += 1;
   }
 
   /* Parse out body */
 
+  /** @type {string[]} */
   let body = [];
+  /** @type {string[]} */
   let twelfcontext = [];
 
-  /*
-    type State
-      = { type: "twelf", subtype: null | "hidden" | "checked", accum: string list }
-      | { type: "markdown-block", subtype: "math" | "twelf" | "checkedtwelf", accum: string list }
-      | { type: "markdown" }
-  */
+  /** @typedef {{ type: "twelf", subtype: null | "hidden" | "checked", accum: string[] }} TwelfState */
+  /** @typedef {      { type: "markdown-block", subtype: "math" | "twelf" | "checkedtwelf", accum: string[] }} MarkdownBlockState */
+  /** @typedef {{ type: "markdown" }} MarkdownState */
+  /** @type {TwelfState | MarkdownState | MarkdownBlockState} */
   let state = { type: "twelf", subtype: null, accum: [] };
 
   // Precondition: state.type === "twelf"
   async function reduceTwelfAccum(checked = false, save = false) {
+    if (state.type !== "twelf") throw new TypeError();
     mutablyTrimEmptyLines(state.accum);
+
     if (state.accum.length === 0) {
       body.push("");
     } else {
@@ -79,14 +111,16 @@ export async function elfToMdx(elfFilename, elfFile) {
       /* The `hatJson` is the object that the Twelf Wasm editor should load (when
        * the hat icon is clicked on) in order to allow the code to be manipulated.
        */
-      const hatJson = JSON.stringify({
+      /** @type {import("twelf-wasm").UrlAction} */
+      const hatSetText = {
         t: "setTextAndExec",
         text: (
           context.trim() +
           "\n\n\n\n" +
           state.accum.join("\n").trim()
         ).trim(),
-      });
+      };
+      const hatJson = JSON.stringify(hatSetText);
 
       /* Because both context and hatJson can get very big in files with many
        * segments of Twelf code, we store them in files and put the URL in the
@@ -106,13 +140,15 @@ export async function elfToMdx(elfFilename, elfFile) {
         `${await hashToHex(hatJson)}.json`
       );
       writeFileSync(join(DIR_PUBLIC_PATH, hatJsonFile), hatJson);
+      /** @type {import("twelf-wasm").FragmentAction} */
+      const getUrl = { t: "getUrl", url: hatJsonFile };
 
       body.push(
         "",
         "<Twelf" +
           (checked ? " checked\n" : "\n") +
           `  contextFile="${contextFile}"\n` +
-          `  hatAction='{ "t": "getUrl",  "url": "${hatJsonFile}" }'\n` +
+          `  hatAction='${JSON.stringify(getUrl)}'\n` +
           "  code={`" +
           escapeBacktickEnv(state.accum.join("\n")) +
           "`}/>",
@@ -124,7 +160,7 @@ export async function elfToMdx(elfFilename, elfFile) {
   }
 
   for (; lineNum < input.length; lineNum++) {
-    let line = input[lineNum];
+    let line = input[lineNum] ?? "";
     if (state.type === "twelf") {
       /* Handle recognized special behavior within Twelf sections */
       if (line.trim() === "%{!! begin hidden !!}%") {

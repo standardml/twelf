@@ -12,7 +12,7 @@ function trimSlightly(code: string): string {
   return code3;
 }
 
-const { code = "" } = Astro.props;
+const { code = x() } = Astro.props;
 const context: string = Astro.props.contextFile
   ? readFileSync(Astro.props.contextFile, "utf-8")
   : Astro.props.context ?? "";

@@ -16,9 +16,9 @@
       .then((response) => response.json())
       .then((response) => {
         const forward = response[possibleMediawikiPageName];
-        if (forward) {
-          document.getElementById("possible-forward").innerHTML =
-            `The page you're looking for may be at
+        const elem = document.getElementById("possible-forward");
+        if (forward && elem) {
+          elem.innerHTML = `The page you're looking for may be at
              <a href="/wiki/${forward}/">/wiki/${forward}/</a>.`;
         }
       });
