@@ -1,7 +1,22 @@
+import { mkdirSync, writeFileSync, existsSync } from "fs";
+import { join } from "path";
+
 /*
-See wiki/src/content/docs/wiki-syntax.md for an explanation of
+See wiki/src/content/docs/wiki-syntax.mdx for an explanation of
 the Wiki Twelf format that this file is parsing
 */
+
+const DIR_OF_ELF_CACHE = "tmp/contexts";
+const DIR_PUBLIC_PATH = "public";
+const PUBLIC_PATH_OF_HAT_CODE = "hat-code";
+if (!existsSync(DIR_OF_ELF_CACHE)) {
+  mkdirSync(DIR_OF_ELF_CACHE, { recursive: true });
+}
+if (!existsSync(join(DIR_PUBLIC_PATH, PUBLIC_PATH_OF_HAT_CODE))) {
+  mkdirSync(join(DIR_PUBLIC_PATH, PUBLIC_PATH_OF_HAT_CODE), {
+    recursive: true,
+  });
+}
 
 function escapeBacktickEnv(twelfcode) {
   return twelfcode.replaceAll("\\", "\\\\").replaceAll("`", "\\`");
@@ -16,7 +31,17 @@ function mutablyTrimEmptyLines(lines) {
   }
 }
 
-export function elfToMdx(elfFilename, elfFile) {
+async function hashToHex(content) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(content)
+  );
+  return Array.from(new Uint8Array(digest))
+    .map((n) => n.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export async function elfToMdx(elfFilename, elfFile) {
   /* Parse out header */
   const header = [];
   let lineNum = 0;
@@ -40,11 +65,43 @@ export function elfToMdx(elfFilename, elfFile) {
   let state = { type: "twelf", subtype: null, accum: [] };
 
   // Precondition: state.type === "twelf"
-  function reduceTwelfAccum(checked = false, save = false) {
+  async function reduceTwelfAccum(checked = false, save = false) {
     mutablyTrimEmptyLines(state.accum);
     if (state.accum.length === 0) {
       body.push("");
     } else {
+      /* The `context` is the additional Twelf needed to check (without output)
+       * in order to display Twelf's response to the code in this Twelf component
+       */
+      const context = twelfcontext.join("\n");
+
+      /* The `hatJson` is the object that the Twelf Wasm editor should load (when
+       * the hat icon is clicked on) in order to allow the code to be manipulated.
+       */
+      const hatJson = JSON.stringify({
+        t: "setTextAndExec",
+        text: context + "\n\n\n\n" + state.accum.join("\n"),
+      });
+
+      /* Because both context and hatJson can get very big in files with many
+       * segments of Twelf code, we store them in files and put the URL in the
+       * Twelf tag.
+       *
+       * The directory of the Elf cache will be accessed by the Twelf component
+       * itself for server-side rendering, but the hat JSON needs to be served
+       * to users.
+       */
+      const contextFile = join(
+        DIR_OF_ELF_CACHE,
+        `${await hashToHex(context)}.elf`
+      );
+      writeFileSync(contextFile, context);
+      const hatJsonFile = join(
+        PUBLIC_PATH_OF_HAT_CODE,
+        `${await hashToHex(hatJson)}.json`
+      );
+      writeFileSync(join(DIR_PUBLIC_PATH, hatJsonFile), hatJson);
+
       body.push(
         "",
         "<Twelf " +
@@ -175,7 +232,7 @@ export function elfToMdx(elfFilename, elfFile) {
   }
 
   if (state.type === "twelf") {
-    reduceTwelfAccum();
+    await reduceTwelfAccum();
   } else {
     body.push("# Error: unclosed wiki-comment at end of file");
   }
