@@ -1,5 +1,87 @@
-%%! title: "Proving metatheorems:Representing the syntax of the natural numbers"
+%%! title: "Representing the syntax of the natural numbers"
+%%! description: "In this lesson, we introduce what it means for a Twelf signature to represent an informal mathematical object (Part of the introduction to proving metatheorems in Twelf)"
+%%! prev:
+%%!   label: Proving metatheorems with Twelf
+%%!   link: /wiki/proving-metatheorems-with-twelf/
+%%! next:
+%%!   label: Simply typed LF
+%%!   link: /wiki/proving-metatheorems-simply-typed-lf/
+
 %{!
-This page has been removed, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Representing_the_syntax_of_the_natural_numbers).
+
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
+
+To use Twelf, you need to know how to represent [deductive systems](/wiki/object-logic/) using the LF logical framework. LF is a very convenient language for representing deductive systems that involve <Todo>variable binding</Todo> and [hypothetical judgements](/wiki/hypothetical-judgment/), such as programming languages and logics. However, we won't see any examples of such uses of LF until [later](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/). The goal of the first part of this guide is to take a broad sweep through LF and Twelf; you will see how to represent and prove properties of a very simple language, which will prepare you for more sophisticated (and more impressive) content later on.
+
+Our first task is to introduce LF and see how to represent the syntax of a deductive system in it. We refer to a language that we are formalizing in LF as an [object language](/wiki/object-logic/) (the language that it is the _object_ of our study). In contrast, we sometimes refer to LF as the [meta-language](/wiki/meta-logic/). To keep things simple, we use the natural numbers as first example object language.
+
+## Natural numbers
+
+### Informal definition
+
+In informal mathematical notation ("informal" is used here in the sense of "not formalized"), the syntax of the natural numbers is defined by the following grammar:
+
+```math
+n ::= \mathsf{zero} \mid \mathsf{succ}(n)
+```
+
+That is, <Math formula="\mathsf{zero}"/> is a natural number, and if <Math formula="n"/> is a natural number, then <Math formula="\mathsf{succ}(n)"/> is as well.
+
+### LF representation
+
+LF is a typed lambda-calculus. We represent an object language in LF by writing an LF signature. A signature declares type and term constants. For example, this LF signature defines a type representing the natural numbers:
+
+!}%
+
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+%{!
+
+Intuitively, the LF type `nat` classifies the LF representations of natural numbers. The LF constant `z` corresponds to <Math formula="\mathsf{zero}"/> and the LF constant `s` corresponds to <Math formula="\mathsf{succ}"/>.
+
+- The signature declares that `z` has type `nat`, which makes sense because <Math formula="\mathsf{zero}"/> is a natural number.
+
+- The signature declares that `s` has function type `nat -> nat`. An LF term of function type can be applied to another LF term of the appropriate type to form a new term. For example, the constant `s` can be applied to the constant `z` to form the term `s z` representing the number <Math formula="\mathsf{succ}(\mathsf{zero})"/>. Then `s` can be applied to this term to form `s (s z)`, and so on. An informal natural number <Math formula="\mathsf{succ}(n)"/> is represented by the LF term `s N` where <Math formula="n"/> is represented by `N`.
+
+We can state the relationship between the informal presentation of the object language and its LF representation by giving an encoding judgement relating an informal object with its representation:
+
+```math
+{
+    {\,}
+    \over
+    {\mathsf{zero} \gg \mathtt{z}}
+}
+
+\qquad
+
+{
+    {n \gg N }
+    \over
+    {\mathsf{succ}(n) \gg \mathtt{s}(N)}
+}
+
+```
+
+## Adequacy
+
+Is this a _correct_ encoding of the natural numbers? In the LF methodology, the correctness criterion for an encoding is called [adequacy](/wiki/adequacy/):
+
+> **Adequacy**: An encoding is adequate iff it is an isomorphism between the informal object-language entities and the LF terms of the appropriate type.
+
+Adequacy permits any reasoning in or about an object language to be "ported" between the informal and LF descriptions. For example, if we prove a property about the LF representation, by adequacy, that property holds for the informal description as well. Adequacy ensures that the work we do using the formalization has bearing on the actual language that we had in mind to begin with.
+
+In this example, the informal object-language entity is the syntax of the natural numbers, and the appropriate LF type is `nat`. Thus, to satisfy adequacy, the above encoding judgement must be an isomorphism between informal natural numbers and LF terms of type `nat`. Because both the informal and LF representations are first order (there is no binding structure), adequacy requires only a simple bijection.
+
+To establish a bijection, we must show three things:
+
+1. If <Math formula="{n \gg N }"/> then <Math formula="n"/> is a well-formed number and <Math formula="{N}"/> is an LF term of type `nat`.
+2. For all <Math formula="n"/>, there exists a unique LF term such that <Math formula="{n \gg N }"/>.
+3. For all LF terms `N : nat`, there exists a unique <Math formula="n"/> such that <Math formula="{n \gg N }"/>.
+
+The first part establishes that the judgement <Math formula="{n \gg N }"/> relates informal numbers to LF terms of the appropriate type. The second and third show that this relation defines a function in both directions. Because we show that the same relation is functional in both directions, these functions are mutually inverse, establishing a bijection.
+
+The first part can be proved by a simple induction on the derivation of the encoding. The second can be proved by structural induction on <Math formula="n"/>. The third part states that all LF terms of type `nat` represent a unique informal number. It can be proved by induction on the structure of LF terms. To do so, we will need to give a more precise account of LF. 
+
 !}%

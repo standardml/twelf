@@ -1,4 +1,7 @@
 %%! title: "Proving metatheorems:Full LF"
+%%! prev: 
+%%!   label: Representing the judgements of the natural numbers
+%%!   link: /wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/
 
 %{! \{\{proving metatheorems
   | prev = Representing the judgements of the natural numbers
