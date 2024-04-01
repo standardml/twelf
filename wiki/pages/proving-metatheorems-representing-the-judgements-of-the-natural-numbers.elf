@@ -1,10 +1,16 @@
-%%! title: "Proving metatheorems:Representing the judgements of the natural numbers"
+%%! title: "Representing the judgements of the natural numbers"
+%%! description: "Using Twelf to describe simple relations dealing with natural numbers, such as judging whether numbers or even or describing addition  (Part of the introduction to proving metatheorems in Twelf)"
+%%! prev:
+%%!   label: Simply typed LF
+%%!   link: /wiki/proving-metatheorems-simply-typed-lf/
+%%! next:
+%%!   label: Full LF
+%%!   link: /wiki/proving-metatheorems-full-lf/
 
-%{! \{\{proving metatheorems
-  | prev = Simply typed LF
-  | prevname = Simply typed LF
-  | next = Full LF
-  | nextname = Full LF\}\}
+
+%{! 
+
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
 
 Now that we've seen how to represent the syntax of a deductive system, we turn to representing judgements.  Our first example is the judgement that a number is even.
 
@@ -12,66 +18,73 @@ Now that we've seen how to represent the syntax of a deductive system, we turn t
 
 ### Informal definition
 
-The judgement &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; holds when &lt;math&gt;\texttt\{\}n&lt;/math&gt; is even.  It is inductively defined by the following inference rules:
+The judgement <Math formula="\mathsf{even}(n)"/> holds when <Math formula="n"/> is even.  It is inductively defined by the following inference rules:
 
-&lt;table style="margin-left:auto;margin-right:auto" cellpadding="24"&gt;
-&lt;tr&gt;&lt;td&gt;
-&lt;math&gt;\{\qquad\} \over \{\mathsf\{even\}(\mathsf\{zero\})\}
-&lt;/math&gt;
-&lt;/td&gt;&lt;td&gt;
-&lt;math&gt;
-\{\mathsf\{even\}(n)\} \over \{\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(n)))\}
-&lt;/math&gt;
-&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;
+```math
+{ 
+  \over
+  {\mathsf{even}(\mathsf{zero})}
+}
+\qquad
+{
+  {\mathsf{even}(n)}
+  \over
+  {\mathsf{even}(\mathsf{succ}(\mathsf{succ}(n)))}
+}
+```
+
 
 ### LF representation
 
 In the previous sections, we saw how to represent object-language syntax as the inhabitants of LF types.  At a high level, the LF methodology for representing judgements is exactly analogous: we represent an object-language judgement with an LF type, where the inhabitants of this type correspond exactly to derivations of the judgement.
 
-However, to adequately represent judgements, we must generalize from simply-typed LF to dependently-typed LF.  A moment's thought reveals why a dependently-typed language is appropriate: Object-language judgements are parametrized by their subjects&mdash;for example &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; is parametrized by the number &lt;math&gt;\texttt\{\}n&lt;/math&gt; being judged to be even.  Consequently, to represent judgements themselves as LF types, we should consider LF types that are parametrized by the subjects of object-language judgements.  But the judgement subjects&mdash;the syntax of the language&mdash;are represented as LF terms.  Thus, to represent judgements themselves as LF types, it is natural to consider families of LF types parameterized by LF terms.  
+However, to adequately represent judgements, we must generalize from simply-typed LF to dependently-typed LF.  A moment's thought reveals why a dependently-typed language is appropriate: Object-language judgements are parametrized by their subjects&mdash;for example <Math formula="\mathsf{even}(n)"/> is parametrized by the number <Math formula="n"/> being judged to be even.  Consequently, to represent judgements themselves as LF types, we should consider LF types that are parametrized by the subjects of object-language judgements.  But the judgement subjects&mdash;the syntax of the language&mdash;are represented as LF terms.  Thus, to represent judgements themselves as LF types, it is natural to consider families of LF types parameterized by LF terms.  
 
-For example, we represent the judgement &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; using the following signature: !}%
+We represent the judgement <Math formula="\mathsf{even}(n)"/> using the following signature: !}%
     
-%{! (options removed from twelftag: hidden="true") !}%
-
+%{!! begin hidden !!}%
 nat : type.
 z   : nat.
 s   : nat -> nat.
-
-%{!  !}%
+%{!! end hidden !!}%
     
 even    : nat -> type.
 even-z  : even z.
 even-s  : {N:nat} even N -> even (s (s N)).
 
-%{! The first declaration says that ``even`` is a family of types indexed by a ``nat``.  This means that for every term ``N : nat``, there is a type ``even N``.  Note that the syntax ``-&gt;`` is overloaded: it is used to classify both type-level families and and term-level functions.  We then use this type
+%{! The first declaration says that ``even`` is a family of types indexed by a ``nat``.  This means that for every term ``N : nat``, there is a type ``even N``.  Note that the syntax ``->`` is overloaded: it is used to classify both type-level families and and term-level functions.  We then use this type
 family to define the types of two term constants.
 
-The first term constant, ``even-z``, has type ``even z``.  This constant represents the derivation that consists of the first inference rule above, which concludes &lt;math&gt;\mathsf\{even\}(\mathsf\{zero\})&lt;/math&gt;.  
+The first term constant, ``even-z``, has type ``even z``.  This constant represents the derivation that consists of the first inference rule above, which concludes <Math formula="\mathsf{even}(\mathsf{zero})"/>.
 
-The second term constant ``even-s``, corresponds to the second inference rule above, which, for any &lt;math&gt;\texttt\{\}n&lt;/math&gt;, constructs a derivation of &lt;math&gt;\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(n)))&lt;/math&gt; from a derivation of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.  To encode this inference rule, the constant ``even-s`` is given a [dependent function type](/wiki/dependent-types/).  
+The second term constant ``even-s``, corresponds to the second inference rule above, which, for any <Math formula="n"/>, constructs a derivation of <Math formula="\mathsf{even}(\mathsf{succ}(\mathsf{succ}(n)))"/> from a derivation of <Math formula="\mathsf{even}(n)"/>.  To encode this inference rule, the constant ``even-s`` is given a [dependent function type](/wiki/dependent-types/).  
 
-The syntax ``\{x:A1\} A2`` represents a dependent function type, which is a generalization of the ordinary function type ``A1 -&gt; A2`` that allows the argument term ``x`` to appear in ``A2``.  We write the ordinary function type ``-&gt;`` as a synonym when the argument is not free in the result type (i.e., ``A1 -&gt; A2`` means ``\{_:A1\} A2``).  Just as with the ordinary function type, LF terms of dependent function type can be applied to a term of the argument type to form a new term.
+The syntax ``{x:A1} A2`` is used to give a type to `even-s` (replacing the term variable `x` with `N`, the type `A1` with `nat`, and the type `A2` with `even N -> even (s (s N))`). This syntax represents a _dependent function type_, which is a generalization of the ordinary function type ``A1 -> A2`` that allows the argument term ``x`` to appear in ``A2``.  We write the ordinary function type ``->`` as a synonym when the argument is not free in the result type (i.e., ``A1 -> A2`` means ``{_:A1} A2``).  Just as with the ordinary function type, LF terms of dependent function type can be applied to a term of the argument type to form a new term.
 
 As an example, the constant ``even-s`` can be applied to a term ``N:nat`` and then a term of type 
-``even N`` _for that ``N``_ to create a term of type ``even (s (s N))`` (again, for that ``N``).  The dependent function type is used to bind the variable ``N`` in the type ``(even N -&gt; even (s (s N)))``, expressing that the inference rule is schematic in &lt;math&gt;\texttt\{\}n&lt;/math&gt;.
+``even N`` _for that ``N``_ to create a term of type ``even (s (s N))`` (again, for that ``N``). It looks like this: !}%
 
-When a term of dependent function type is applied to an argument, the argument is substituted into the result type.  For example, the term ``even-s z`` has type ``even z -&gt; even (s (s z))``—i.e., it is the specialization of the inference rule to &lt;math&gt;n = \mathsf\{zero\}&lt;/math&gt;.  Thus, the term
+%{!! begin checked !!}%
+test = even-s N D.
+%{!! end checked !!}%
 
-&lt;!-- syntax highlighting looks weird when it's not actually Twelf code --&gt;
-&lt;pre&gt;even-s z even-z
-&lt;/pre&gt;
+%{! The dependent function type is used to bind the variable ``N`` in the type ``(even N -> even (s (s N)))``, expressing that the inference rule is schematic in <Math formula="n"/>.
 
-(where we adopt the usual convention that application is left-associative) represents the derivation
+When a term of dependent function type is applied to an argument, the argument is substituted into the result type.  For example, the term ``even-s z`` has type ``even z -> even (s (s z))``—i.e., it is the specialization of the inference rule to <Math formula="n = \mathsf{zero}"/>.  That looks like this: !}%
 
-&lt;center&gt;
-&lt;math&gt;
-\{\overline\{\mathsf\{even\}(\mathsf\{zero\})\}\}
-\over 
-\{\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(\mathsf\{zero\})))\}
-&lt;/math&gt;
-&lt;/center&gt;
+%{!! begin checked !!}%
+two-is-even = even-s z even-z.
+%{!! end checked !!}%
+
+%{!
+
+This represents the derivation
+
+```math
+{\overline{\mathsf{even}(\mathsf{zero})}}
+\over
+{\mathsf{even}(\mathsf{succ}(\mathsf{succ}(\mathsf{zero})))}
+```
 
 The term ``even-s (s (s z)) (even-s z even-z)`` represents a derivation that 4 is even, and so on.
 
@@ -79,11 +92,9 @@ To summarize, dependently-typed LF refines the type level of simply-typed LF wit
 
 ### Adequacy
 
-To check that this LF representation is correct ([adequate](/wiki/adequacy/)), we must verify that there is a bijection between the derivations of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; and the LF terms of type ``even N`` where &lt;math&gt;n \gg N&lt;/math&gt;.  In particular, this LF signature adequately represents natural numbers and derivations of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; when considered in the empty LF context. It would not be adequate in contexts containing assumptions of the form ``x : nat`` (which don't correspond to any natural number) or ``d : even N`` (which don't correspond to any of the rules for deriving &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.
+To check that this LF representation is correct ([adequate](/wiki/adequacy/)), we must verify that there is a bijection between the derivations of <Math formula="\mathsf{even}(n)"/> and the LF terms of type ``even N`` where <Math formula="n \gg N"/>.  In particular, this LF signature adequately represents natural numbers and derivations of <Math formula="\mathsf{even}(n)"/> when considered in the empty LF context. It would not be adequate in contexts containing assumptions of the form ``x : nat`` (which don't correspond to any natural number) or ``d : even N`` (which don't correspond to any of the rules for deriving <Math formula="\mathsf{even}(n)"/>).
 
 Part of establishing this bijection requires reasoning by induction on the canonical forms of type ``even N``, which corresponds to rule induction on the informal judgement.  The definition of the encoding and the proof of adequacy are simple; interested readers are referred to the literature for examples.
-
-\{\{needs|references to the literature\}\}
 
 ## Addition
 
@@ -91,17 +102,18 @@ Part of establishing this bijection requires reasoning by induction on the canon
 
 Addition can be represented as a judgement relating two natural numbers to their sum:
 
-&lt;table style="margin-left:auto;margin-right:auto" cellpadding="24"&gt;
-&lt;tr&gt;&lt;td&gt;
-&lt;math&gt;\{\qquad\} \over \{\mathsf\{plus\}(\mathsf\{zero\},n_2,n_2)\}
-&lt;/math&gt;
-&lt;/td&gt;&lt;td&gt;
-&lt;math&gt;
-\{\mathsf\{plus\}(n_1,n_2,n_3)\} \over
-\{\mathsf\{plus\}(\mathsf\{succ\}(n_1), n_2, \mathsf\{succ\}(n_3))\}
-&lt;/math&gt;
-&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;
+```math
+{ 
+  \over
+  {\mathsf{plus}(\mathsf{zero},n_2,n_2)}
+}
+\qquad
+{
+  {\mathsf{plus}(n_1,n_2,n_3)}
+  \over
+  {\mathsf{plus}(\mathsf{succ}(n_1), n_2, \mathsf{succ}(n_3))}
+}
+```
 
 This judgement defines addition by induction on the first argument.
 
@@ -113,32 +125,21 @@ plus   : nat -> nat -> nat -> type.
 plus-z : {N2:nat} plus z N2 N2.
 plus-s : {N1:nat} {N2:nat} {N3:nat} plus N1 N2 N3 -> plus (s N1) N2 (s N3).
 
-%{! The type family ``plus`` is indexed by three terms of type ``nat`` because the informal judgement has three parameters.  The constants correspond to the two inference rules, inhabiting the type family with terms representing derivations.  For example, the term
+%{! The type family ``plus`` is indexed by three terms of type ``nat`` because the informal judgement has three parameters.  The constants correspond to the two inference rules, inhabiting the type family with terms representing derivations.  For example, this term represents a derivation that <Math formula="2+1 = 3"/>. !}%
 
-&lt;pre&gt;plus-s (s z) (s z) (s (s z)) 
-       (plus-s z (s z) (s z) 
-               (plus-z (s z)))
-&lt;/pre&gt;
+%{!! begin checked !!}%
+test2 = plus-s (s z) (s z) (s (s z)) 
+            (plus-s z (s z) (s z) 
+                (plus-z (s z))).
+%{!! end checked !!}%
 
-which has type ``plus (s (s z)) (s z) (s (s (s z)))``, represents a derivation that 2 + 1 = 3.
+%{!
 
 ### Adequacy
 
-To check correctness of this representation, we must verify that there is a bijection between derivations of &lt;math&gt;\mathsf\{plus\}(n_1,n_2,n_3)&lt;/math&gt; and LF terms of type
-``plus N1 N2 N3`` where &lt;math&gt;n_i \gg N_i&lt;/math&gt;.  Once again, the definition of the encoding judgement and the adequacy proof are simple.
+To check correctness of this representation, we must verify that there is a bijection between derivations of <Math formula="\mathsf{plus}(n_1,n_2,n_3)"/> and LF terms of type
+``plus N1 N2 N3`` where <Math formula="n_i \gg N_i"/>.  Once again, the definition of the encoding judgement and the adequacy proof are simple.
 
 These adequacy theorems will be more precise after we review the full language of dependently typed LF in the next section.
 
-
-\{\{proving metatheorems
-  | prev = Simply typed LF
-  | prevname = Simply typed LF
-  | next = Full LF
-  | nextname = Full LF\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Representing_the_judgements_of_the_natural_numbers).
 !}%
