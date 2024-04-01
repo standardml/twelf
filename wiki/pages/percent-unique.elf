@@ -1,14 +1,12 @@
 %%! title: "%unique"
+%%! description: "A %unique declaration attempts to automatically check that some positions in a relation uniquely determine the content of other positions"
+
 
 %{!
 
 A **``%unique``** declaration attempts to automatically check whether some positions of a relation (its outputs) are uniquely determined by some other positions (its inputs). Its syntax is similar to that of [``%mode``](/wiki/percent-mode/), except that in addition to being able to specify an argument to be an input (``+``), an output (``-``), or unmoded (``*``), you may also specify an argument to be a unique output (``-1``).
 
-Successful ``%unique`` declarations are used to simplify [coverage checking](/wiki/coverage-checking/), and they can easily be transformed into first-class [uniqueness lemmas](/wiki/uniqueness-lemma/).
-
-&lt;!--
-Currently there is no way to utilize the result of a successful ``%unique`` declaration and so its use is not suggested - an equivalent result can be established by a [uniqueness lemma](/wiki/uniqueness-lemma/).
---&gt;
+Successful ``%unique`` declarations are used to simplify [coverage checking](/wiki/coverage-checking/), and they can be transformed into first-class [uniqueness lemmas](/wiki/uniqueness-lemma/). Unfortunately, there is no automatic way of doing this transformation!
 
 ## Example
 
@@ -23,14 +21,14 @@ pz : plus z N N.
 ps : plus (s N1) N2 (s N3)
       <- plus N1 N2 N3.
 
-%{! We can then check for uniqueness using ``%unique`` (a [``%worlds``](/wiki/percent-worlds/) declaration is also required). !}%
+%{! We can then check for uniqueness using ``%unique`` (a [``%worlds``](/wiki/percent-worlds/) declaration is also required). 
 
-%{! (options removed from twelftag: check=decl discard=true) !}%
-
+```checkedtwelf
 %worlds () (plus _ _ _).
 %unique plus +N1 +N2 -1N3.
+```
 
-%{! If we had created a non-unique definition of ``plus``, for instance by adding an additional, broken version of ``ps2``, Twelf would have indicated an error upon checking for uniqueness:
+If we had created a non-unique definition of ``plus``, for instance by adding an additional, broken version of ``ps2``, Twelf would have indicated an error upon checking for uniqueness:
 
 ```checkedtwelf
 ps2 : plus (s N1) N2 N3
@@ -117,22 +115,8 @@ If we can show that ``plus``'s output is unique, though, the coverage checker ca
 
 ## See also
 
-&lt;bibtex&gt;@InProceedings\{
-  editor = "K.Slind and A.Bunker and G.Gopalakrishnan",
-  author = "Penny Anderson and Frank Pfenning",
-  title = "Verifying uniqueness in a logical framework",
-  booktitle = "Proceedings of the 17th International Conference on Theorem Proving in Higher Order Logics (TPHOLs'04)",
-  pages = "18-33",
-  month = "September",
-  year = "2004",
-  address = "Park City, Utah",
-  note = "Springer LNCS 3223",
-\}&lt;/bibtex&gt;
+- [_Verifying Uniqueness in a Logical Framework_](https://www.cs.cmu.edu/~fp/papers/tphols04.pdf), by Penny Anderson and Frank Pfenning
 
-<Keyword name="unique"/>
+<Keyword />
 
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25unique).
 !}%

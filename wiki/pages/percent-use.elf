@@ -1,4 +1,5 @@
 %%! title: "%use"
+%%! description: "A %use declaration activates one of Twelf's constraint domains"
 
 %{! A **``%use``** directive adds a [constraint domain](/wiki/constraint-domain/) to the current Twelf [signature](/wiki/twelf-signature/). 
 
@@ -7,13 +8,7 @@ Like some other directives, for instance [``%clause``](/wiki/percent-clause/), i
 ## See also
 
 * [Constraint domains](/wiki/constraint-domain/)
-* \{\{guide|chapter=6|section=32|title=Constraint domains\}\}
+* <Guide chapter="6" section="32">Constraint domains</Guide>
 
-\{\{keyword|key=use\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25use).
+<Keyword />
 !}%

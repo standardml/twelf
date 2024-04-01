@@ -1,4 +1,5 @@
 %%! title: "%freeze"
+%%! description: "A %freeze declaration prevents a type from being further extended"
 
 %{! The **``%freeze``** declaration _freezes_ a set of type families. A frozen family cannot be extended: new constants at that type cannot be added, nor can the [subordination](/wiki/subordination/) relation be extended such that the family could depend on other types. The [``%thaw``](/wiki/percent-thaw/) declaration can be used to reenable the extension of a type family.
 
@@ -60,6 +61,6 @@ okay : (plus _ _ _ -> thing) -> type.
 
 Because types are automatically frozen for any family for which there has been a [``%worlds``](/wiki/percent-worlds/) declaration, or for any type family that depends on that family. This prevents mistakes where a metatheorem is proved for a type family but then that type family is extended, invalidating the theorem.
 
-<Keyword name="freeze"/>
+<Keyword />
 
 !}%

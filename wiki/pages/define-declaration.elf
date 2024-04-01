@@ -1,6 +1,8 @@
-%%! title: "Define declaration"
+%%! title: "%define"
+%%! description: "A %define declaration lets the output of a %solve be used again later in an LF signature"
 
-%{! _The name of this article should be %define. There's a quirk of Unicode that causes this to not behave correctly._
+
+%{! 
 
 The **``%define``** declaration allows the outputs of a successful [``%solve``](/wiki/percent-solve/) declaration to be bound to a name which can be used later on in the context.
 
@@ -31,19 +33,20 @@ plus/s : plus (s N1) N2 (s N3)
 
 %{! We can use ``%define`` to define the natural number representing 7 by adding three and four. Note that we don't care about the proof witness in this particular case, just the output of the relation, so we put an underscore instead of an identifier to the left of the colon: !}%
     
-%{! (options removed from twelftag: check="decl") !}%
-
+%{!! begin checked !!}%
 %define n7 = N
 %solve _ : plus n4 n3 N.
+%{!! end checked !!}%
+
+%{! Now `n7` is a definition that can be used again. !}%
+
+%{!! begin checked !!}%
+%solve _ : plus n7 n7 N.
+%{!! end checked !!}%
+
 
 %{! ## See also
-* \{\{guide|chapter=3|section=10|title=Definitions\}\}
+* <Guide chapter="3" section="10">Definitions</Guide>
 
-\{\{keyword|key=define\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Define_declaration).
+<Keyword/>
 !}%

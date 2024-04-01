@@ -1,4 +1,5 @@
 %%! title: "%."
+%%! description: "The %. keyword stops parsing of a Twelf file immediately"
 
 %{! The **``%.``** keyword instructs Twelf to stop reading input in the current file. It is most useful in [emacs mode](/wiki/twelf-with-emacs/) to check some prefix of a file that you are currently working on.
 
@@ -19,6 +20,6 @@ Neither will anything else that gets put after the %.
 ## See also
 * <Guide chapter="2" section="4">Lexical Conventions</Guide>
 
-<Keyword name="."/>
+<Keyword />
 
 !}%

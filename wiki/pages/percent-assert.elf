@@ -1,4 +1,5 @@
 %%! title: "%assert"
+%%! description: "An %assert directive forces the theorem prover to accept a theorem"
 
 %{! The **``%assert``** directive instructs the [theorem prover](/wiki/theorem-prover/) to accept a previously stated theorem as true without trying to prove that theorem. This directive is thus analogous to a [`%trustme`](/wiki/percent-trustme/)[`%total`](/wiki/percent-total/) directive. Because it instructs Twelf to treat something as true without a proof, Twelf must be in [unsafe mode](/wiki/unsafe-mode/) to use this directive.
 
@@ -40,6 +41,6 @@ plus/s : plus (s N1) N2 (s N3) <- plus N1 N2 N3.
 * [Theorem prover](/wiki/theorem-prover/)
 * <Guide chapter="10" section="57">Theorem Prover</Guide>
 
-<Keyword name="assert"/>
+<Keyword />
 
 !}%

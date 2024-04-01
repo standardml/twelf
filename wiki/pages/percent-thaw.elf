@@ -1,6 +1,6 @@
 %%! title: "%thaw"
 
-%{! \{\{undocumented\}\}
+%{! 
 The **``%thaw``** directive allows previously [frozen](/wiki/percent-freeze/) type families to be extended with new [canonical forms](/wiki/canonical-form/). Because this can easily be used to invalidate [metatheorem](/wiki/metatheorem/)s, it is a directive that can only be used in [unsafe mode](/wiki/unsafe-mode/).
 
 If Twelf is in unsafe mode, the following code can be run to demonstrate **``%thaw``**: !}%
@@ -11,21 +11,22 @@ s : nat -> nat.
 
 %freeze nat.
 
-% Right here I could not declare a new constant of type nat
+%{! With `nat` frozen, it's impossible to extend `nat` without error.
 
+```checkedtwelf
+veryS: nat -> nat -> nat.
+```
+
+Because the Twelf Wiki runs in safe mode, this example won't work, but if you click the elf's hat to run this code in the live Twelf editor, you can toggle unsafe mode and see that `%thaw` allows `q` to be defined as a new `nat`.
+
+```checkedtwelf
 %thaw nat.
-
-% Now I can define a wacky new natural number
 q : nat.
+```
 
-%{! ## See also
+## See also
 
-* [Auto-freezing](/wiki/percent-freeze/)
-\{\{keyword|key=thaw\}\} !}%
+* [`%freeze`](/wiki/percent-freeze/)
 
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25thaw).
+<Keyword />
 !}%

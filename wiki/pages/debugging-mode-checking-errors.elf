@@ -1,0 +1,63 @@
+%%! title: Troubleshooting mode checking errors
+%%! description: There are some common pitfalls when dealing with mode checking, but many have simple solutions
+
+%{!
+There are some common pitfalls when you're dealing with [`%mode`](/wiki/percent-mode/) declarations.
+
+## Basic mode checking errors
+
+Say we give a definition of the natural numbers with addition: !}%
+
+nat: type.
+z: nat.
+s: nat -> nat.
+
+plus: nat -> nat -> nat -> type.
+%mode plus +N1 +N2 -N3.
+
+pz: plus z N N.
+ps: plus (s N1) N2 (s N3)
+     <- plus N1 N2 N3.
+
+%{! The input of `plus` is the first and second positions, and the output of `plus` is the third position, which means that whenever there are [ground](/wiki/ground/) objects in the first and second positions, that must force a ground object in the third position.
+
+If one of the output arguments is not forced to be a ground, which would be the case if the output of plus no longer matched the output of the [[subgoal]], then we get an error:
+
+```checkedtwelf
+px: plus (s N1) N2 (s N)
+     <- plus N1 N2 N3.
+```
+
+Another problem occurs when the _inputs_ to a subgoal are not known to be ground, which would happen if we mis-named one of the inputs to the subgoal.
+
+```checkedtwelf
+py: plus (s N1) N2 (s N3)
+     <- plus N N2 N3.
+```
+
+## Ordering subgoals
+
+Mode checking considers subgoals _in order_, i.e. from top to bottom when the subgoals are written out in the standard style using backwards arrows. The order of subgoals matters very much for mode checking. Say we have an identity function that maps inputs (the first position) to outputs (the second position). !}%
+
+id: nat -> nat -> type.
+%mode id +N1 -N2.
+
+id/refl: id N N.
+
+%{! The rule ``ps'`` below passes the mode checker, because the call to ``id`` takes the ground argument ``N1`` and creates a ground output ``N1'``, which is then used in the derivation for ``plus N1' N2 N3``.
+
+```checkedtwelf
+ps': plus (s N1) N2 (s N3)
+      <- id N1 N1'
+      <- plus N1' N2 N3.
+```
+
+However, if we reverse the order of the two subgoals, even though the result is logically equivalent, Twelf considers ``plus N1' N2 N3`` before ``id N1 N1'``, and so does consider ``N1'`` to be ground when it encounters it; thus, complaining accordingly:
+
+```checkedtwelf
+ps': plus (s N1) N2 (s N3)
+      <- plus N1' N2 N3
+      <- id N1 N1'.
+```
+
+!}%

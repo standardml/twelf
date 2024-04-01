@@ -1,29 +1,20 @@
 %%! title: "%subord"
+%%! description: "A %subord declaration directly extends the subordination relation."
 
-%{! \{\{undocumented|article\}\}
-
-The **``%subord``** declaration adds edges to the [subordination](/wiki/subordination/) relation.  This declaration is currently only available in Twelf CVS\{\{discuss|Version\}\} and may not yet be available in [TwelfTag](/wiki/twelftag/). 
+%{!
+The **``%subord``** declaration adds edges to the [subordination](/wiki/subordination/) relation. 
 
 ## Syntax
 
 The syntax is as follows:
 
-``%subord (t1 t1') ... (tn tn').``
+```
+%subord (t1 t1') ... (tn tn').
+```
 
 The type families ``ti'`` will then be treated as being dependent on the type family ``ti``.
 
-## Example
 
-\{\{needs|a good concise example.\}\}
+<Keyword />
 
-
-\{\{keyword|key=subord\}\}
-
-\{\{stub\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25subord).
 !}%

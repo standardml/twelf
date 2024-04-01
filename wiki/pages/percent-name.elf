@@ -1,4 +1,5 @@
 %%! title: "%name"
+%%! description: "A %name declaration can give Twelf's generated output more structure and clarity"
 
 %{! A **``%name``** declaration allows us to direct Twelf to name unnamed variables in a certain way, which can make it much easier to understand Twelf's output. Using a ``%name`` declaration is never required, but it often makes the task of proving [metatheorem](/wiki/metatheorem/)s significantly easier. More information can be found in the section on <Guide chapter="3" section="5">name preferences</Guide>.
 
@@ -69,6 +70,6 @@ _ = (step/app (step/app step/appabs)).
 %{! ## See also
 * <Guide chapter="3" section="5">Name preferences</Guide>
 
-<Keyword name="name"/>
+<Keyword />
 
 !}%

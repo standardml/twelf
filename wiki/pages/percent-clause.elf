@@ -1,4 +1,6 @@
 %%! title: "%clause"
+%%! description: "A %clause declaration influences the behavior of definitions in proof search"
+
 
 %{! The **``%clause``** keyword allows a constant that is defined to be used by Twelf during proof search. If **``%clause``** is not used, then Twelf will only perform proof search on constants that are declared in the [signature](/wiki/twelf-signature/).
 
@@ -9,6 +11,6 @@ This function of Twelf is incompatible with Twelf's ability to prove [metatheore
 - <Guide chapter="5" section="29">Clause Definitions</Guide>
 - [Tactical theorem proving](/wiki/tactical-theorem-proving/)
 
-<Keyword name="clause" />
+<Keyword />
 
 !}%

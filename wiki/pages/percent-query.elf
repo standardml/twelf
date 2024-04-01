@@ -1,4 +1,5 @@
 %%! title: "%query"
+%%! description: "A %query declaration allows flexible access to Twelf's logic programming functionality"
 
 %{! The **``%query``** declarations specify a type (that corresponds to a judgment by the [judgments as types](/wiki/judgment/) principle), and tells Twelf's [logic programming](/wiki/logic-programming/) engine to search for a proof of that judgment.
 
@@ -13,9 +14,9 @@ This means that some possible queries will always fail:
 * ``%query 6 6 ...`` means the same thing as ``%query * 6 ...``, because both mean "try six times, and find a solution every time"
 * ``%query * * ...`` will either keep coming up with more solutions forever (and will therefore not terminatie) or it will eventually fail to come up with a solution and so will fail.
 
-It also means there are often multiple ways to write the same query, as the example below demonstrates.
+It also means there are often multiple ways to write the same query, as the examples below demonstrate.
 
-## Example
+## Examples
 
 We will use the example of list membership to demonstrate ``%query`` because there may be multiple ways to find an element in a list (if that element occurs multiple times). !}%
 
@@ -58,7 +59,7 @@ member/skip : member A (B , L)
 %query * 0 member c sample-list.   % 
 ```
 
-### Confirming there are at least zero "c's" in the list (Try zero times (the query isn't even run))
+### Confirming there are at least zero "c's" in the list (the query isn't even run)
 ```checkedtwelf
 %query 8 0 member c sample-list.
 ```
@@ -86,6 +87,6 @@ Unlike [``%solve``](/wiki/percent-solve/), ``%query`` declarations do not allow 
 
 * <Guide chapter="5" section="23">Query Declaration</Guide>
 
-<Keyword name="query"/>
+<Keyword />
 
 !}%

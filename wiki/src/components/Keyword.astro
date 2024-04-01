@@ -1,6 +1,81 @@
 ---
 const { name = "." } = Astro.props;
 // Placeholder keyword template
+
+const keywords = {
+  ".": "percent-eof",
+  abbrev: "abbrev-declaration",
+  assert: "percent-assert",
+  block: "percent-block",
+  clause: "percent-clause",
+  covers: "percent-covers",
+  define: "define-declaration",
+  deterministic: "deterministic-declaration",
+  establish: "percent-establish",
+  freeze: "percent-freeze",
+  infix: "fixity-declaration",
+  prefix: "fixity-declaration",
+  postfix: "fixity-declaration",
+  mode: "percent-mode",
+  name: "percent-name",
+  prove: "percent-prove",
+  query: "percent-query",
+  querytabled: "percent-querytabled",
+  reduces: "percent-reduces",
+  solve: "percent-solve",
+  subord: "percent-subord",
+  tabled: "percent-tabled",
+  terminates: "percent-terminates",
+  thaw: "percent-thaw",
+  theorem: "percent-theorem",
+  total: "percent-total",
+  trustme: "percent-trustme",
+  unique: "percent-unique",
+  use: "percent-use",
+  worlds: "percent-worlds",
+};
 ---
 
-(placeholder keyword %{name})
+<div class="kw">
+  <div class="head">Twelf Keywords</div>
+  <div class="ul">
+    {
+      Object.entries(keywords).map(([kw, link]) =>
+        Astro.url.pathname.includes(`/${link}/`) ? (
+          <span class="li here">%{kw}</span>
+        ) : (
+          <span class="li">
+            <a href={`/wiki/${link}/`}>%{kw}</a>
+          </span>
+        )
+      )
+    }
+  </div>
+</div>
+<style>
+  .kw {
+    background-color: #eff;
+    border: 1px solid #aff;
+    font-size: 0.8rem;
+    padding-block: 8px;
+    padding-inline: 8px;
+  }
+
+  .head {
+    border-bottom: 1px solid #aff;
+    padding-bottom: 5px;
+  }
+
+  .ul {
+    padding-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1em;
+    margin-top: 5px !important;
+  }
+
+  .li {
+    list-style: none;
+    margin-top: 0;
+  }
+</style>
