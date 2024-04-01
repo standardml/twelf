@@ -48,12 +48,15 @@ export default defineConfig({
             {
               label: "Research with Twelf",
               link: "/wiki/research-projects-using-twelf/",
-            }
+            },
           ],
         },
       ],
       plugins: [starlightLinksValidator()],
-      components: { Footer: "./src/components/Footer.astro" },
+      components: {
+        Head: "./src/components/Head.astro",
+        Footer: "./src/components/Footer.astro",
+      },
       customCss: [
         "./node_modules/katex/dist/katex.css",
         "./src/styles/syntax.css",
