@@ -1,4 +1,5 @@
 %%! title: "%block"
+%%! description: "A %block declaration describes part of the potential shape of an LF context"
 
 %{! A **``%block``** declaration names a **block**, which is a partial description of an LF context. Blocks are composed into [regular worlds](/wiki/percent-worlds/) with [``%worlds``](/wiki/percent-worlds/) declarations, which describe the complete set of possible contexts for a type family. This description of the context is an important part of the [adequacy](/wiki/adequacy/) of the [metatheorem](/wiki/metatheorem/) established by a [``%total``](/wiki/percent-total/) declaration.
 
@@ -46,6 +47,6 @@ exp : typ -> type.
 * [Totality assertion](/wiki/totality-assertion/)
 * <Guide chapter="9" section="53">Regular Worlds</Guide>
 
-<Keyword name="block"/>
+<Keyword />
 
 !}%

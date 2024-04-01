@@ -2,7 +2,7 @@
 title: To-do list, 2024
 ---
 
-The priority now is going through pages, turning mangled math into either ```` ```math ```` or `<Math formula="blah"/>` (or `<Math formula={`blah`}/>` which is, in rare cases, cleaner), removing un-translated twelf tags, comparing with the source website. See below for the full list. Pages that are actually edited this way get checked off below.
+The priority now is working major content and/or visual regressions caused by the transition to MediaWiki. 
 
 Steps:
 
@@ -10,23 +10,28 @@ Steps:
   if it's inline, and ` ```math ` displaymath otherwise.
 - Guide links like `{{guide|chapter=2|section=4|title=Lexical Conventions}}` become
   `<Guide chapter="2" section="4">Lexical Conventions</Guide>`
-- `{{keyword|key=.}}` becomes `<Keyword name="."/>`
-- The footer "If anything looks wrong, you can refer to the" becomes just
-  "You can refer to the" if you've done a good job
+- `{{keyword|key=.}}` becomes `<Keyword />` (the Keyword component figures out which one it is)
 - Broken links become `<Todo>Broken link</Todo>`
-- Things with tutorial tags get the header `%%! tags: ["tutorial"]`
 - Remove `{{needs}}`, `{{discuss}}`, `{{case studies}}`, `{{undocumented}}` tags
+- The generated footer can be deleted - it's just there to link to the web archive, but that's now a built-in part of the footer
+- Pages should ideally get a `%%! description: "Blah blah blah"` since otherwise the search engines will just associate every page with the text "Home of the Twelf programming language" which is suboptimal
 
 Todos:
 
 - [ ] CMU POPLmark should be a case study
 - [ ] "Twelf subversion" and "Twelf CVS" aren't things anymore
 - [ ] Make "using twelf with(out)" emacs into the "next step" pages
-- [ ] Next/last links for case studies, introductions, and tutorials
-- [ ] Proper download page that's non-wiki
-- [ ] Proper documentation hub that's non-wiki
+- [x] Next/last links for learn twelf subsections
+- [ ] Next/last links for case studies
+- [ ] Next/last links for proving metatheorems
+- [ ] Next/last links for tutorialsd
+- [x] Proper download page that's non-wiki
+- [x] Proper documentation hub that's non-wiki
 - [ ] Keyword.astro template
-- [ ] Pages tagged "tutorial"
+- [x] Search for `<Keyword name=` and remove
+
+Pages to cover:
+
 - [x] [%.](/wiki/percent-eof/)
 - [x] [%assert](/wiki/percent-assert/)
 - [x] [%block](/wiki/percent-block/)
@@ -38,20 +43,20 @@ Todos:
 - [x] [%name](/wiki/percent-name/)
 - [x] [%prove](/wiki/percent-prove/)
 - [x] [%query](/wiki/percent-query/)
-- [ ] [%querytabled](/wiki/percent-querytabled/)
-- [ ] [%reduces](/wiki/percent-reduces/)
-- [ ] [%solve](/wiki/percent-solve/)
-- [ ] [%subord](/wiki/percent-subord/)
-- [ ] [%tabled](/wiki/percent-tabled/)
+- [x] [%querytabled](/wiki/percent-querytabled/)
+- [x] [%reduces](/wiki/percent-reduces/)
+- [x] [%solve](/wiki/percent-solve/)
+- [x] [%subord](/wiki/percent-subord/)
+- [x] [%tabled](/wiki/percent-tabled/)
 - [x] [%terminates](/wiki/percent-terminates/)
-- [ ] [%thaw](/wiki/percent-thaw/)
-- [ ] [%theorem](/wiki/percent-theorem/)
-- [ ] [%total](/wiki/percent-total/)
-- [ ] [%trustme](/wiki/percent-trustme/)
+- [x] [%thaw](/wiki/percent-thaw/)
+- [x] [%theorem](/wiki/percent-theorem/)
+- [x] [%total](/wiki/percent-total/)
+- [x] [%trustme](/wiki/percent-trustme/)
 - [x] [%unique](/wiki/percent-unique/)
-- [ ] [%use](/wiki/percent-use/)
+- [x] [%use](/wiki/percent-use/)
 - [x] [%worlds](/wiki/percent-worlds/)
-- [ ] [Abbrev declaration](/wiki/abbrev-declaration/)
+- [x] [Abbrev declaration](/wiki/abbrev-declaration/)
 - [ ] [About The Twelf Project](/wiki/about-the-twelf-project/)
 - [ ] [Abstract syntax](/wiki/abstract-syntax/)
 - [ ] [Ad hoc binding structures](/wiki/ad-hoc-binding-structures/)
@@ -127,7 +132,7 @@ Todos:
 - [ ] [Correctness of mergesort](/wiki/correctness-of-mergesort/)
 - [x] [Coverage checking](/wiki/coverage-checking/)
 - [x] [Debugging coverage errors](/wiki/debugging-coverage-errors/)
-- [ ] [Define declaration](/wiki/define-declaration/)
+- [x] [Define declaration](/wiki/define-declaration/)
 - [ ] [Dependent types](/wiki/dependent-types/)
 - [x] [Deterministic declaration](/wiki/deterministic-declaration/)
 - [ ] [Division over the natural numbers](/wiki/division-over-the-natural-numbers/)
@@ -153,7 +158,7 @@ Todos:
 - [ ] [File:TWELFLIVE-3.png](/wiki/file-twelflive-3-png/)
 - [ ] [File:Tom Twelfelf2.jpg](/wiki/file-tom-twelfelf2-jpg/)
 - [ ] [First-order encodings](/wiki/first-order-encodings/)
-- [ ] [Fixity declaration](/wiki/fixity-declaration/)
+- [x] [Fixity declaration](/wiki/fixity-declaration/)
 - [x] [Focusing](/wiki/focusing/)
 - [ ] [Function](/wiki/function/)
 - [ ] [General description of Twelf](/wiki/general-description-of-twelf/)
@@ -553,3 +558,7 @@ Todos:
 - [ ] [What's new](/wiki/whats-new/)
 - [ ] [World subsumption](/wiki/world-subsumption/)
 - [ ] [Zermelo Frankel](/wiki/zermelo-frankel/)
+
+Wish list
+
+- Document %partial (see http://tom7.org/papers/modal-types-for-mobile-code.pdf)

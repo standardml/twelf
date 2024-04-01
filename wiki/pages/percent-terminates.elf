@@ -1,6 +1,7 @@
 %%! title: "%terminates"
+%%! declaration: "A %terminates declaration checks that a type family, when run as a well-moded logic program, will succeed or fail in a finite amount of time."
 
-%{! A **[%terminates](/wiki/percent-terminates/)** declaration provides checks that a program will either succeed or fail in a finite amount of time when given [ground](/wiki/ground/) inputs.
+%{! A `%terminates` declaration checks that a program will either succeed or fail in a finite amount of time when given [ground](/wiki/ground/) inputs.
 
 A [``%total``](/wiki/percent-total/) declaration uses the same syntax as a ``%terminates`` declaration.
 
@@ -134,11 +135,9 @@ lsz : listsum z nil z.
 lsl : listsum z (cons N L) M <- listsum N L M.
 lss : listsum (s N) L (s M) <- listsum N L M.
 
-%{!
-```checkedtwelf
+%{!! begin checked !!}%
 %terminates {L N} (listsum N L M).
-```
-!}%
+%{!! end checked !!}%
 
 %{! ### Mutual, lexicographic ordering
 
@@ -183,11 +182,9 @@ small : nat -> nat -> nat -> type.
 %{! These requirements are encoded in the declaration below. The ordering of the patterns declares ``small`` to be smaller than ``big``, and either the second argument (``B1`` and ``B2``) gets smaller, or else it gets no bigger and the first
 argument (``A1`` and ``A2``) gets smaller. !}%
 
-%{!
-```checkedtwelf
+%{!! begin checked !!}%
 %terminates {(B1 B2) (A1 A2)} (small A2 B2 _) (big A1 B1 _).
-```
-!}%
+%{!! end checked !!}%
 
 %{! ## Troubleshooting
 
@@ -208,13 +205,8 @@ declaration.
 
 * <Guide chapter="8" section="45">Termination</Guide>
 * [``%total``](/wiki/percent-total/)
-* [[Lexicographic induction]]
+* <Todo>Lexicographic induction</Todo>
 * [Mutual induction](/wiki/mutual-induction/)
 
-<Keyword name="terminates"/>
-
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25terminates).
+<Keyword />
 !}%

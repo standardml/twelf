@@ -1,4 +1,5 @@
 %%! title: "%covers"
+%%! description: "A %covers declaration checks input coverage for a type family"
 
 %{! A **``%covers``** declaration checks [input coverage](/wiki/coverage-checking/) for a type family, which is one of the two kinds of [coverage checking](/wiki/coverage-checking/) that Twelf performs. Running a [``%total``](/wiki/percent-total/) declaration checks input coverage as well as [output coverage](/wiki/coverage-checking/).
 
@@ -91,6 +92,6 @@ cf : zero X 0
 * [Input coverage](/wiki/coverage-checking/)
 * [Coverage checking](/wiki/coverage-checking/)
 
-<Keyword name="covers" />
+<Keyword />
 
 !}%

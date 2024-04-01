@@ -1,6 +1,8 @@
-%%! title: "User's Guide"
+%%! title: "Language references"
 
 %{! 
+## Twelf User's Guide
+
 The current version of the Twelf **User's Guide** is for Twelf version 1.4.
 While it does not describe all the features of Twelf 1.7, it is still the
 most authoritative reference for the language's syntax.
@@ -10,5 +12,12 @@ It is available in
 * [Postscript](https://www.cs.cmu.edu/~twelf/guide-1-4/twelf.ps)
 * [Gzipped Postscript](https://www.cs.cmu.edu/~twelf/guide-1-4/twelf.ps.gz)
 * [PDF](https://www.cs.cmu.edu/~twelf/guide-1-4/twelf.pdf)
+
+## Documentation on twelf.org
+
+Most of Twelf's keywords are also documented on the wiki, including some that
+are not covered in the User's Guide:
+
+<Keyword />
 
 !}%

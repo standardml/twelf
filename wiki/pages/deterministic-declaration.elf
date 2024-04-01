@@ -1,4 +1,5 @@
-%%! title: "Deterministic declaration"
+%%! title: "%determinstic"
+%%! description: "A %determinstic declaration changes the behavior of proof search, eliminating some forms of backtracking"
 
 %{! The **``%determinstic``** declaration influences the way [logic programming](/wiki/logic-programming/) behaves in Twelf. If a type family is deterministic, then once Twelf finds a single solution through logic programming search it cannot backtrack to find different solutions.
 
@@ -79,10 +80,6 @@ searchfor : tree -> label -> type.
 * <Guide chapter="5" section="30">Deterministic Type Families</Guide>
 * [Cut](https://en.wikipedia.org/wiki/Cut_(logic_programming)) on Wikipedia
 
-<Keyword name="deterministic"/>
+<Keyword />
 
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Deterministic_declaration).
 !}%

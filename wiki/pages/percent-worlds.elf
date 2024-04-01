@@ -1,4 +1,5 @@
 %%! title: "%worlds"
+%%! description: "A %worlds declaration defines the regular worlds that applies to an LF type family"
 
 %{! A **world** (or **worlds**) is a set of [LF](/wiki/lf/) contexts.
 
@@ -17,6 +18,8 @@ z : nat.
 s : nat -> nat.
 
 max : nat -> nat -> nat -> type.
+%mode max +N1 +N2 -N3.
+
 mzz : max z z z.
 mzs : max z (s N) (s N).
 msz : max (s N) z (s N).
@@ -28,13 +31,12 @@ mss : max (s N1) (s N2) (s N)
 ### Totality of ``max`` in the empty context
 
 The judgement ``max`` defined in this signature is a [total](/wiki/percent-total/) relation on natural numbers, or LF terms of type ``nat`` in the empty LF context.  We specify this totality assertion in Twelf with the following declarations:
-!}%
 
-%mode max +N1 +N2 -N3.
+```checkedtwelf
 %worlds () (max _ _ _).
 %total T (max T _ _).
+```
 
-%{!
 The ``%worlds`` declaration does not mention any blocks; the world ``()*`` describes only the empty LF context.
 
 ### Non-totality of ``max`` in an extended context
@@ -46,9 +48,7 @@ The following [``%block``](/wiki/percent-block/) declaration defines the block `
 ```checkedtwelf
 %block random_nat : block {x: nat}.
 
-%mode max +N1 +N2 -N3.
 %worlds (random_nat) (max _ _ _).
-
 %total T (max T _ _).
 ```
 
@@ -94,28 +94,43 @@ This is because ``height/lam`` adds variables to the LF context, so saying that 
 
 The correct world for this type family consists of blocks of the form defined in the following [``%block``](/wiki/percent-block/) declaration called ``var-height``.  These blocks specify that whenever a new variable with type ``exp`` is added to the context, it is added along with a derivation of ``height x (s z)``. The type family ``height`` adequately represents the notion of height that we have in mind in this world.  Moreover, it also world-checks in this world: !}%
 
+%{!! begin hidden !!}%
+%worlds () (max _ _ _).
+%total T (max T _ _).
+%{!! end hidden !!}%
+
+%{!! begin checked !!}%
+
 %block var-height : block {x: exp}{_: height x (s z)}.
 
 %mode height +E -N.
 %worlds (var-height) (height _ _).
 
+%{!! end checked !!}%
+
 %{! Indeed, the type family is total in this world as well: !}%
+
+%{!! begin checked !!}%
 
 %total T (height T _).
 
+%{!! end checked !!}%
+
 %{! ### Subordination and world subsumption
 
-It should be interesting that ``max`` can be called by ``height``, even though ``height`` is defined for non-empty LF contexts.  Technically, these contexts are not in the world for ``max``, so the call to ``max`` from ``height`` would seem to be a world violation.  However, Twelf knows, by keeping track of the [subordination](/wiki/subordination/) relation, that any ``var-height`` blocks can never change the [canonical forms](/wiki/canonical-form/) of ``nat`` or ``max``. The [[Twelf server]] will print out the current subordination relation if you type in ``Print.subord``. For the example above, this is the subordination relation:
+It should be interesting that ``max`` can be called by ``height``, even though ``height`` is defined for non-empty LF contexts.  Technically, these contexts are not in the world for ``max``, so the call to ``max`` from ``height`` would seem to be a world violation.  However, Twelf knows, by keeping track of the [subordination](/wiki/subordination/) relation, that any ``var-height`` blocks can never change the [canonical forms](/wiki/canonical-form/) of ``nat`` or ``max``. The <Todo>Twelf server</Todo> will print out the current subordination relation if you type in ``Print.subord``. For the example above, this is the subordination relation:
 
-&lt;code&gt;%% OK %%
+```
+%% OK %%
 Print.subord
-nat #&gt; nat
-max #&gt; max nat
-exp #&gt; exp
-height #&gt; height exp max nat
-%% OK %%&lt;/code&gt;
+nat #> nat
+max #> max nat
+exp #> exp
+height #> height exp max nat
+%% OK %%
+```
 
-The line ``max #&gt; max nat`` means that the canonical forms (i.e. the possible derivations) of ``max`` will not change unless the definitions of ``max`` or ``nat`` are changed. Because the block ``var-height`` does not add any declarations that are subordinate to either of these types, it is permissible to call ``max`` from within an LF context that includes blocks of the form ``var-height``.
+The line ``max #> max nat`` means that the canonical forms (i.e. the possible derivations) of ``max`` will not change unless the definitions of ``max`` or ``nat`` are changed. Because the block ``var-height`` does not add any declarations that are subordinate to either of these types, it is permissible to call ``max`` from within an LF context that includes blocks of the form ``var-height``.
 This is an instance of what is called [world subsumption](/wiki/world-subsumption/), which is the criterion under which a type family in one world can be called from a type family in another.
 
 ## See also
@@ -125,10 +140,5 @@ This is an instance of what is called [world subsumption](/wiki/world-subsumptio
 * <Guide chapter="9" section="53">Regular Worlds</Guide>
 * The case study [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/) uses regular worlds heavily.
 
-<Keyword name="worlds"/>
-
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/%25worlds).
+<Keyword />
 !}%

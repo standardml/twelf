@@ -37,10 +37,10 @@ function escapeBacktickEnv(twelfcode) {
  * @param {string[]} lines
  */
 function mutablyTrimEmptyLines(lines) {
-  while (lines.length > 0 && lines[0]?.trim() === "") {
+  while (lines[0]?.trim() === "") {
     lines.shift();
   }
-  while (lines.length > 0 && lines[lines.length - 1]?.trim() === "") {
+  while (lines[lines.length - 1]?.trim() === "") {
     lines.pop();
   }
 }
@@ -172,7 +172,7 @@ export async function elfToMdx(elfFilename) {
     if (state.type === "twelf") {
       /* Handle recognized special behavior within Twelf sections */
       if (line.trim() === "%{!! begin hidden !!}%") {
-        await reduceTwelfAccum();
+        await reduceTwelfAccum(false, true);
         if (state.subtype !== null) {
           body.push(
             "# Error line " +
@@ -194,7 +194,7 @@ export async function elfToMdx(elfFilename) {
         continue;
       }
       if (line.trim() === "%{!! begin checked !!}%") {
-        await reduceTwelfAccum();
+        await reduceTwelfAccum(false, true);
         if (state.subtype !== null) {
           body.push(
             "# Error line " +

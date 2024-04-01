@@ -48,8 +48,7 @@ export default defineConfig({
             {
               label: "Research with Twelf",
               link: "/wiki/research-projects-using-twelf/",
-            },
-            { label: "External documentation", link: "/wiki/documentation/" },
+            }
           ],
         },
       ],

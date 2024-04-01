@@ -1,15 +1,13 @@
 %%! title: "Tutorials"
 
 %{! 
-_If you are not already familiar with Twelf, you should read the [introductions
-to Twelf](/wiki/introductions-to-twelf/) before reading the tutorials on this 
-page._
 
-This page collects two types of tutorials. _Proof techniques_ cover helpful
-and common Twelf devices. _Troubleshooting guides_ discuss diagnosing and
-fixing Twelf errors.  
+⚠️ All the tutorials on this page assume some familiarity with Twelf. If you are just getting started, check out [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) or one of the other [introductions to Twelf](/wiki/introductions-to-twelf/). ⚠️
+
 
 ## Proof techniques
+
+These tutorials cover helpful and common Twelf devices. Many of these proof techniques are also demonstrated by various [case studies](/wiki/case-studies/).
 
 ### Beginner
 
@@ -43,7 +41,14 @@ For larger examples of Twelf in action, see see the [case studies](/wiki/case-st
 
 ## Troubleshooting
 
+These tutorials cover diagnosing and fixing Twelf errors.  
+
+
 * [Error messages](/wiki/error-messages/) - brief explanations of (and remedies for) common Twelf error messages.
+* [Troubleshooting mode checking errors](/wiki/debugging-mode-checking-errors/)
 * [Understanding output freeness](/wiki/output-freeness/) - understanding a subtle part of output coverage checking.
 * [Debugging coverage errors](/wiki/debugging-coverage-errors/) - techniques for finding coverage errors.
-* [Constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/) - in general, you can't use them in the same [signature](/wiki/twelf-signature/). !}%
+* [Constraint domains and coverage checking](/wiki/constraint-domains-and-coverage-checking/) - in general, you can't use them in the same [signature](/wiki/twelf-signature/).
+
+
+!}%
