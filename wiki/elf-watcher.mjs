@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, watch, writeFileSync } from "fs";
 import { argv } from "process";
 import { elfToMdx } from "./elf-to-mdx.mjs";
-import { join } from "path";
 
 const DIR_OF_ELF = "pages";
 const DIR_OF_MDX = "src/content/docs/wiki";

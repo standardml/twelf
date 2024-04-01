@@ -104,7 +104,7 @@ export async function elfToMdx(elfFilename) {
           (state.subtype === "twelf" || state.subtype === "checkedtwelf"))
       )
     ) {
-      throw new TypeError(`state ${state.type} - ${state.subtype}`);
+      throw new TypeError(`state ${state.type} - ${state.type !== 'markdown' ? state.subtype : 'none'}`);
     }
     mutablyTrimEmptyLines(state.accum);
 
