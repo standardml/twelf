@@ -149,7 +149,7 @@ export async function elfToMdx(elfFilename) {
       );
       writeFileSync(join(DIR_PUBLIC_PATH, hatJsonFile), hatJson);
       /** @type {import("twelf-wasm").FragmentAction} */
-      const getUrl = { t: "getUrl", url: hatJsonFile };
+      const getUrl = { t: "getUrl", url: "/" + hatJsonFile };
 
       body.push(
         "",
