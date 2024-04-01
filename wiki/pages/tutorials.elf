@@ -2,13 +2,12 @@
 
 %{! 
 
-⚠️ All the tutorials on this page assume some familiarity with Twelf. If you are just getting started, checkout [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) or one of the other [introductions to Twelf](/wiki/introductions-to-twelf/). ⚠️
+⚠️ All the tutorials on this page assume some familiarity with Twelf. If you are just getting started, check out [Proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/) or one of the other [introductions to Twelf](/wiki/introductions-to-twelf/). ⚠️
 
-This page collects two types of tutorials. _Proof techniques_ cover helpful
-and common Twelf devices. _Troubleshooting guides_ discuss diagnosing and
-fixing Twelf errors.  
 
 ## Proof techniques
+
+These tutorials cover helpful and common Twelf devices. Many of these proof techniques are also demonstrated by various [case studies](/wiki/case-studies/).
 
 ### Beginner
 
@@ -41,6 +40,9 @@ fixing Twelf errors.
 For larger examples of Twelf in action, see see the [case studies](/wiki/case-studies/).
 
 ## Troubleshooting
+
+These tutorials cover diagnosing and fixing Twelf errors.  
+
 
 * [Error messages](/wiki/error-messages/) - brief explanations of (and remedies for) common Twelf error messages.
 * [Troubleshooting mode checking errors](/wiki/debugging-mode-checking-errors/)

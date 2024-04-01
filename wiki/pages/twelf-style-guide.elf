@@ -154,9 +154,8 @@ plus-nat/z : plus-nat z N N.
 plus-nat/s : plus-nat (s N1) N2 (s N3)
                <- plus-nat N1 N2 N3.
 
-%{! ### Metatheorems
+%{! ### Metatheorems: Identifier names
 
-#### Identifier names
 
 Each metatheorem is given a name in Twelf. There are two ways in which someone might consider naming their metatheorems. If you are defining a metatheorem that defines an admissible rule, it may be reasonable to use the convention used for showing inference rules: !}%
     
@@ -168,7 +167,7 @@ plus-nat/z-alt : {N} plus-nat N z N -> type.
 plus-comm : plus-nat N1 N2 N3 -> plus-nat N2 N1 N3 -> type.
 %mode plus-comm +D1 -D2.
 
-%{! #### Case names
+%{! ### Metatheorems: Case names
 
 The cases in a metatheoretic proof almost never need to be referred to, so it is common to name the labels for every individual case ``-``. This may, however, make it more difficult to correlate error messages with specific rules, and so should be done with care. !}%
     
