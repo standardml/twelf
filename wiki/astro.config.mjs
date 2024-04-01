@@ -5,12 +5,11 @@ import starlightLinksValidator from "starlight-links-validator";
 // https://astro.build/config
 export default defineConfig({
   site: "https://twelf.org",
-  redirects:
-    import.meta.env.MODE === "development"
-      ? {
-          "/twelf-wasm/": "/twelf-wasm/index.html",
-        }
-      : {},
+  redirects: import.meta.env.DEV
+    ? {
+        "/twelf-wasm/": "https://jcreedcmu.github.io/twelf-wasm/",
+      }
+    : {},
   trailingSlash: "always",
   integrations: [
     starlight({
