@@ -1,5 +1,5 @@
 %%! title: "Proving metatheorems with Twelf"
-%%! description: "Our favorite tutorial for getting started with Twelf"
+%%! description: "Our favorite tutorial for getting started with Twelf as a tool for describing programming languages and logical systems and proving properties of those systems"
 %%! next: 
 %%!   label: Representing the syntax of the natural numbers
 %%!   link: /wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/

@@ -1,4 +1,7 @@
-%%! title: "Proving metatheorems:Proving totality assertions about the natural numbers"
+%%! title: "Proving totality assertions about the natural numbers"
+%%! prev: 
+%%!   label: Representing the judgements of the natural numbers
+%%!   link: /wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/
 
 %{! \{\{proving metatheorems
   | next = Proving metatheorems about the natural numbers
