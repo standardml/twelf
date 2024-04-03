@@ -69,7 +69,7 @@ const twelfResponse = await (Astro.props.checked
       <pre class="twelf-feedback" set:text={twelfResponse} />
     ) : null
   }
-  <form action={`/twelf-wasm/#${liveLink}`}>
+  <form action={`/twelf-wasm/#${liveLink}`} target="_blank">
     <button title="Explore in Twelf Live"
       ><svg
         viewBox="0 0 292 292"
