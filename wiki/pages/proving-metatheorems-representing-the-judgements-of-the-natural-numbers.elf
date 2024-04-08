@@ -1,5 +1,5 @@
 %%! title: "Representing the judgements of the natural numbers"
-%%! description: "Using Twelf to describe simple relations dealing with natural numbers, such as judging whether numbers or even or describing addition  (Part of the introduction to proving metatheorems in Twelf)"
+%%! description: "Using Twelf to describe simple relations dealing with natural numbers, such as judging whether numbers or even or describing addition (Part of the introduction to proving metatheorems in Twelf)"
 %%! prev:
 %%!   label: Simply typed LF
 %%!   link: /wiki/proving-metatheorems-simply-typed-lf/

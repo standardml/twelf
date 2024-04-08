@@ -1,5 +1,5 @@
 %%! title: "Simply typed LF"
-%%! description: "A simplified version of LF makes it easier to explain to fundamental concepts, canonical forms and hereditary substitution  (Part of the introduction to proving metatheorems in Twelf)"
+%%! description: "A simplified version of LF makes it easier to explain to fundamental concepts, canonical forms and hereditary substitution (Part of the introduction to proving metatheorems in Twelf)"
 %%! prev: 
 %%!   label: Representing the syntax of the natural numbers
 %%!   link: /wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/

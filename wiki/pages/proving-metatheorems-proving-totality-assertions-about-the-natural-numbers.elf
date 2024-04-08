@@ -1,19 +1,18 @@
 %%! title: "Proving totality assertions about the natural numbers"
+%%! description: "Showing that addition is a total relation, and introducing Twelf's totality checking and error messages (Part of the introduction to proving metatheorems in Twelf)"
 %%! prev: 
 %%!   label: Representing the judgements of the natural numbers
 %%!   link: /wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/
+%%! next:
+%%!   label: Proving metatheorems about the natural numbers
+%%!   link: /wiki/proving-metatheorems-proving-metatheorems-about-the-natural-numbers/
 
-%{! \{\{proving metatheorems
-  | next = Proving metatheorems about the natural numbers
-  | nextname = Proving metatheorems
-  | prev = Full LF
-  | prevname = Full LF\}\}
+%{! 
 
-In this section, we will use Twelf to mechanize proofs of [metatheorems](/wiki/metatheorem/), which are statements about an object language.
-First, we recap the signature we have defined to this point, using the conveniences afforded by Twelf: !}%
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
+
+In this section, we will use Twelf to mechanize proofs of [metatheorems](/wiki/metatheorem/), which are statements about an object language. First, we recap the signature we have defined to this point, using the conveniences afforded by Twelf: !}%
     
-%{! (options removed from twelftag: export="base") !}%
-
 nat : type.
 z   : nat.
 s   : nat -> nat.
@@ -30,23 +29,21 @@ plus-s : plus (s N1) N2 (s N3)
 
 %{! ## Totality assertions
 
-&lt;!--- ENH: could be better --&gt;
-
-A type family such as ``plus`` defines a relation among its indices, where indices are related iff their instance of the family is inhabited by an LF term.  For example, ``plus`` defines a relation between three terms of type ``nat``.  The terms (``s (s z)``, ``s z``, ``s (s (s z))``) are related by this relation (because 2 + 1 = 3), but the terms (``z``, ``s z``, ``s (s (s z))``) are not.
+A type family such as ``plus`` defines a relation among its indices, where indices are related iff their instance of the family is inhabited by an LF term.  For example, ``plus`` defines a relation between three terms of type ``nat``.  The terms (``s (s z)``, ``s z``, ``s (s (s z))``) are related by this relation (because <Math formula="2 + 1 = 3"/>), but the terms (``z``, ``s z``, ``s (s (s z))``) are not.
 
 [Totality assertions](/wiki/totality-assertion/) are one class of statements about LF type families. A totality assertion for a type family is specified by designating some index positions as inputs and others positions as outputs.  We call this specification the [mode](/wiki/percent-mode/) of the totality assertion.  Given a mode specification, the totality assertion asserts that for all inputs, there exist outputs that stand in the relation. Using ``plus`` as an example, if we designate the first two positions as inputs and the third position as an output, this specifies the following totality assertion:
 
-: For all ``N1:nat`` and ``N2:nat``, there exist ``N3:nat`` and ``D:plus N1 N2 N3``.
+> For all ``N1:nat`` and ``N2:nat``, there exist ``N3:nat`` where ``D:plus N1 N2 N3``.
 
 That is, the sum of any two natural numbers exists.  Designating instead the first position as output and second and third positions as inputs defines the following totality assertion:
 
-: For all ``N2:nat`` and ``N3:nat``, there exist ``N1:nat`` and ``D:plus N1 N2 N3``.
+> For all ``N2:nat`` and ``N3:nat``, there exist ``N1:nat`` where ``D:plus N1 N2 N3``.
 
-Of course, this totality assertion is false, as ``N3 - N2`` might not be a natural number.
+This second totality assertion is false, as ``N3 - N2`` might not be a natural number. Specifically, there is no ``N1`` such that ``plus N1 (s z) z`` is inhabited. 
 
 A totality assertion for an LF type family corresponds with the standard notion of totality for the relation defined by the family.  Proving a relation total is different from showing that the relation defines a function, as the outputs of a total relation are not necessarily unique&mdash;the relation may relate particular inputs to more than one collection of outputs.
 
-We may prove a totality assertion by induction on canonical forms.  For example, we can prove the first above totality assertion by induction on ``N1:nat``.  The second totality assertion above is actually false&mdash;for example, there is no ``N1`` such that ``plus N1 (s z) z`` is inhabited. 
+We may prove a totality assertion by induction on canonical forms.  For example, we can prove the first above totality assertion by induction on ``N1:nat``.  
 
 Totality assertions for LF type families are actually more general than we have discussed so far.  The above examples consider only terms that are well-typed without mentioning LF variables. In general, it is useful to state totality assertions about all terms that are well-typed in any LF context in a particular [world](/wiki/percent-worlds/), which is a set of LF contexts.  Thus, a totality assertion is specified by both a mode declaration and a world declaration.  For the time being, we will consider totality assertions that are stated for the world containing only the empty LF context (i.e., totality assertions about closed terms), so we defer further discussion of worlds.
 
@@ -54,12 +51,9 @@ Totality assertions for LF type families are actually more general than we have 
 
 You can use Twelf to verify totality assertions about LF type families.  For example, to verify the totality assertion
 
-: For all ``N1:nat`` and ``N2:nat``, there exist ``N3:nat`` and ``D:plus N1 N2 N3``. 
+> For all ``N1:nat`` and ``N2:nat``, there exist ``N3:nat`` and ``D:plus N1 N2 N3``. 
 
-you enter the following Twelf declarations: !}%
-    
-%{! (options removed from twelftag: import="base" export="mwt") !}%
-%{! 
+you enter the following Twelf declarations:
 
 ```checkedtwelf
 %% declare totality assertion
@@ -82,10 +76,16 @@ In this case, Twelf succeeds in proving this assertion.
 Twelf proves a totality assertion for a type family such as ``plus`` by checking several properties.  These properties, taken together, constitute a proof by induction on canonical forms that the type family defines a total relation.  
 
 ### Mode
-&lt;!-- Do not change the name of this section without fixing the reference in %mode --&gt;
+
 Twelf checks that each constant inhabiting the type family is _well-moded_.  Roughly, this means that the inputs to the conclusion of a constant determine the inputs of the first premise, and that these together with the outputs of the first premise determine the inputs of the second premise, and so on, until the outputs of all the premises determine the outputs of the conclusion.
 
 For example, the constant 
+
+!}%
+%{!! begin hidden !!}%
+%mode plus +N1 +N2 -N3.
+%{!! end hidden !!}%
+%{!
 
 ```twelf
 plus-s : plus (s N1) N2 (s N3)
@@ -160,24 +160,23 @@ Here, we insisted that the output of the premise be the number ``N2`` that we pu
 
 Mode, worlds, termination, and output coverage ensure that each constant really does cover the part of the relation indicated by its conclusion.  For example, if ``plus`` passes these four checks, we know that ``plus-z`` and ``plus-s`` cover ``(z, N2, N2)`` and ``(s N1, N2, s N3)``, respectively.  What else is necessary to know that ``plus`` defines a total relation?  We need to know that all the constants inhabiting ``plus``, taken together, cover all of the inputs.  Input coverage checks exactly this.  
 
-For example, if we forgot ``plus-z``, input coverage for ``plus`` would fail.  For example: 
+For example, if we forgot ``plus-z``, input coverage for ``plus`` would fail.  That would look like this:
     
 ```checkedtwelf
-%mode plus +N1 +N2 -N3.
-plus' : nat -> nat -> nat -> type.
-%mode plus' +N1 +N2 -X3.
+plus : nat -> nat -> nat -> type.
+%mode plus +N1 +N2 -X3.
 
-plus-s' : plus' (s N1) N2 (s N3)
-          <- plus' N1 N2 N3.
+plus-s : plus (s N1) N2 (s N3)
+          <- plus N1 N2 N3.
 
-%worlds () (plus' _ _ _).
-%total N1 (plus' N1 _ _).
+%worlds () (plus _ _ _).
+%total N1 (plus N1 _ _).
 ```
 
 Here's an analogy that might be helpful: You can think of each constant of a type as being a clause in an ML pattern matching declaration.  Then input coverage is like the exhaustiveness checker for pattern matching.
 The type family ``plus`` is exhaustive, but this ``plus'`` is not.
 
-Twelf checks input coverage by [[splitting]] the input types to case-analyze the various constants that could have been used to inhabit them.  For ``plus``, Twelf splits the first ``nat`` argument ``N1``, and then checks that the cases ``plus z N2 N2`` and ``plus (s N1) N2 N3`` are covered.  Fortunately, these are exactly the cases we wrote down.  If we had case-analyzed further in the definition of the judgement (e.g., if the definition of ``plus`` case-analyzed the second argument as well), Twelf would continue splitting the input space.  Because Twelf separates termination checking and coverage checking, the constants defining a type family do not need to follow any particular primitive recursion schema—the constants may pattern-match the inputs in a general manner.
+Twelf checks input coverage by <Todo>splitting</Todo> the input types to case-analyze the various constants that could have been used to inhabit them.  For ``plus``, Twelf splits the first ``nat`` argument ``N1``, and then checks that the cases ``plus z N2 N2`` and ``plus (s N1) N2 N3`` are covered.  Fortunately, these are exactly the cases we wrote down.  If we had case-analyzed further in the definition of the judgement (e.g., if the definition of ``plus`` case-analyzed the second argument as well), Twelf would continue splitting the input space.  Because Twelf separates termination checking and coverage checking, the constants defining a type family do not need to follow any particular primitive recursion schema—the constants may pattern-match the inputs in a general manner.
 
 ## When Twelf checks what
 
@@ -195,7 +194,9 @@ If any constant in a type family fails mode, worlds, or output coverage, then mo
 
 An LF signature can be interpreted as a logic program, where the constants defining a type family are viewed as rules for searching for derivations of that type family.  For example, we can use Twelf to add numbers as follows: !}%
 
+%{!! begin checked !!}%
 %solve D : plus (s z) (s z) N.
+%{!! end checked !!}%
 
 %{! This [%solve](/wiki/percent-solve/) declaration asks Twelf to find an ``N`` and a derivation ``D`` that ``plus (s z) (s z) N``.  Of course, Twelf responds that 1 + 1 = 2.  
 
@@ -214,15 +215,4 @@ To start proving metatheorems, it is not necessary to have a thorough understand
 
 In this section, we have seen how to ask Twelf to verify totality assertions for LF type families.  To see why we have spent so much time on totality assertions, proceed to the next section.  
 
-\{\{proving metatheorems
-  | next = Proving metatheorems about the natural numbers
-  | nextname = Proving metatheorems
-  | prev = Full LF
-  | prevname = Full LF\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_totality_assertions_about_the_natural_numbers).
 !}%
