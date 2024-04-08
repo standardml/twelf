@@ -1,0 +1,83 @@
+%%! title: "Solution: plus is commutative"
+%%! description: "Proving that plus is commutative (Part of the introduction to proving metatheorems in Twelf)"
+
+%{!
+
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
+
+Exercise 1 from [the part 1 exercises](/wiki/proving-metatheorems-summary-the-natural-numbers/): State and prove a metatheorem showing that ``plus`` is commutative. 
+
+Starting with the preliminaries:
+
+!}%
+
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+plus   : nat -> nat -> nat -> type.
+plus-z : plus z N2 N2.
+plus-s : plus (s N1) N2 (s N3)
+          <- plus N1 N2 N3.
+
+%{! The theorem may be stated: !}%
+    
+plus-commutes : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
+%mode plus-commutes +D1 -D2.
+
+%{! However, before we prove this theorem, we first prove two lemmas.  The first says that for any natural number <Math formula="x"/>&lt;math&gt;n&lt;/math&gt;, <Math formula="x"/>&lt;math&gt;n+0=n&lt;/math&gt;.  This is similar to the constant ``plus-z``, but the order of the arguments to ``plus`` has been changed: !}%
+
+plus-zero-id :  {N1 : nat} plus N1 z N1 -> type.
+%mode plus-zero-id +N -D.
+
+pzidz : plus-zero-id
+         z
+         plus-z.
+
+pzids : plus-zero-id
+         (s N)
+         (plus-s D : plus (s N) z (s N))
+          <- plus-zero-id N D.
+
+%worlds () (plus-zero-id _ _).
+%total N (plus-zero-id N _).
+
+%{! Our second lemma states that if <Math formula="x"/>&lt;math&gt;\mathsf\{plus\}(n_1,n_2,n_3)&lt;/math&gt; then <Math formula="x"/>&lt;math&gt;\mathsf\{plus\}(n_1, \mathsf\{succ\}(n_2), \mathsf\{succ\}(n_3))&lt;/math&gt;.  This lemma is similar to the constant ``plus-s``, but the order of the arguments to ``plus`` has been changed: !}%
+    
+plus-flip : plus N1 N2 N3 -> plus N1 (s N2) (s N3) -> type.
+%mode plus-flip +D1 -D2.
+
+pfz : plus-flip 
+       _
+       plus-z.
+
+pfs : plus-flip
+       (plus-s Dplus : plus (s N1) N2 (s N3))
+       (plus-s DIH   : plus (s N1) (s N2) (s (s N3)))
+         <- plus-flip Dplus DIH.
+
+%worlds () (plus-flip _ _).
+%total D (plus-flip D _).
+
+%{! Finally, using these two lemmas, we may prove the theorem itself: !}%
+
+plus-commutes : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
+%mode plus-commutes +D1 -D2.
+
+pcz : plus-commutes
+       _
+       D
+        <- plus-zero-id N1 D.
+       
+pcs : plus-commutes       
+       (plus-s Dplus: plus (s N1') N2 (s N3'))
+       D
+        <- plus-commutes Dplus DIH
+        <- plus-flip DIH D.
+
+%{! The theorem checks: given a derivation of `plus N1 N2 N3`, there exists a derivation of `plus N2 N1 N3`. !}%
+
+%{!! begin checked !!}%
+%worlds () (plus-commutes _ _).
+%total D (plus-commutes D _).
+%{!! end checked !!}%

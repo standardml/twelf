@@ -1,0 +1,32 @@
+%%! title: "Solution: defining the odd numbers"
+%%! description: "Defining the odd numbers (Part of the introduction to proving metatheorems in Twelf)"
+
+%{!
+
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
+
+Exercise 2 from [the part 1 exercises](/wiki/proving-metatheorems-summary-the-natural-numbers/): Define the odd numbers with a judgement analogous to the ``even`` judgement defined above.
+
+Starting with the preliminaries:
+
+!}%
+
+nat : type.
+z   : nat.
+s   : nat -> nat.
+
+plus   : nat -> nat -> nat -> type.
+plus-z : plus z N2 N2.
+plus-s : plus (s N1) N2 (s N3)
+          <- plus N1 N2 N3.
+
+even   : nat -> type.
+even-z : even z.
+even-s : even (s (s N)) 
+          <- even N.
+
+%{! The definition of `odd` looks much like the definition of `even`. !}%
+
+odd   : nat -> type.
+odd-1 : odd (s z).
+odd-s : odd N -> odd (s (s N)).
