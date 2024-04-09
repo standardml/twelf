@@ -171,7 +171,7 @@ soe : sum-odd-even
 
 The most straightforward approach here reuses [`succ-odd` from Exercise 3](/wiki/proving-metatheorems-solutions-odd-even-succ/) in exactly the same way as the "expected" solution to the previous theorem reused `succ-even`.
 
-First, we'll 
+First, we'll repeat the proof of `succ-odd` from Exercise 3:
 !}%
 
 succ-odd : odd N -> even (s N) -> type.
