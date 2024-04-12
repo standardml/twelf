@@ -1,133 +1,214 @@
 %%! title: "Reformulating languages to use hypothetical judgements"
+%%! description: "Using parallel reduction in the lambda calculus, this article explores different ways to use LF to represent relations that have special cases for variables."
 
-%{! It's easy to represent [hypothetical judgement](/wiki/hypothetical-judgment/)s in LF, exploiting [higher-order](/wiki/higher-order-judgements/) representation techniques.  This tutorial presents some object-language judgements which are **not** typically phrased as hypothetical judgements, but can easily be reformulated as such, making the correspondence with their LF representation quite clear.  
-In particular, we discuss parallel reduction and complete development for the lambda-calculus; thanks to [[User:rpollack]] for suggesting this example.
+%{! It's easy to represent [hypothetical judgements](/wiki/hypothetical-judgment/) in LF, exploiting [higher-order](/wiki/higher-order-judgements/) representation techniques.  This tutorial presents some object-language judgements which are **not** typically phrased as hypothetical judgements, but can easily be reformulated as such, making the correspondence with their LF representation quite clear. In particular, we discuss parallel reduction and complete development for the lambda-calculus; thanks to Randy Pollack for suggesting this example.
 
-Before reading this tutorial, you should learn about hypothetical judgements and their representation in LF: [Proving metatheorems: Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/) shows how object-language hypothetical judgements can be represented using LF binding. [Proving metatheorems: Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/) shows an additional example, and discusses proving totality assertions about higher-order judgements. [Proving metatheorems: Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) shows how to use totality assertions to prove metatheorems about higher-order judgements. 
+Before reading this tutorial, you should learn about hypothetical judgements and their representation in LF:
+
+ - [Representing the judgements of the STLC](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/) shows how object-language hypothetical judgements can be represented using LF binding.
+ - [Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/) shows an additional example, and discusses proving totality assertions about higher-order judgements.
+ - [Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/) shows how to use totality assertions to prove metatheorems about higher-order judgements. 
 
 ## Syntax is a hypothetical judgement
 
 First, we need to define the syntax of the untyped lambda-calculus:
 
-&lt;code&gt;
-M ::= x | lam x.M | app M1 M2
-&lt;/code&gt;
+```math
+M ::= x \mid \mathsf{lam}(x.M) \mid \mathsf{app}(M_1, M_2)
+```
 
-A traditional story about this definition is that variables ``x`` are some piece of first-order data such as strings or de Bruijn indices, ``lam x.M`` is a binder (which means it can be &lt;math&gt;\alpha&lt;/math&gt;-converted and can be substituted for) and so on.
+A traditional story about this definition is that variables <Math formula="x"/> are some piece of first-order data such as strings or de Bruijn indices, <Math formula="\mathsf{lam}(x.M)"/> is a binder (which means it can be <Math formula="\alpha"/>-converted and can be substituted for) and so on.
 
-However, suppose we were given a single untyped datatype of tree-structured data with binding as a primitive notion, where such trees consist of variables ``x``, binders ``x.t``, and applications of constants such as ``lam`` and ``app``.  Then we can save ourselves the trouble of recapitulating the construction of binding for each object language by simply carving out those trees that represent the language in question.    We can do so with a hypothetical judgement of the form ``x1 trm ... xn trm |- M trm``, where the subjects of the judgement ``trm`` are untyped binding trees.  This judgement is defined as follows:
+However, suppose we were given a single untyped datatype of tree-structured data with binding as a primitive notion, where such trees  <Math formula="t"/> consist of variables <Math formula="x"/>, binders  <Math formula="x.t"/>, and applications of constants such as  <Math formula="\mathsf{lam}"/> and  <Math formula="\mathsf{app}"/>.  Then we can save ourselves the trouble of recapitulating the construction of binding for each object language by simply carving out those trees that represent the language in question.    We can do so with a hypothetical judgement of the form 
 
-&lt;code&gt;
-x trm in G
-----------
-G |- x trm
+```math
+x_1\,\mathtt{trm} \; \ldots \; x_n\,\mathtt{trm} \vdash M\,\mathtt{trm} 
+```
 
-G |- M1 trm  G |- M2 trm
--------------------------
-G |- (app M1 M2) trm
+where the subjects of the judgement "<Math formula="\_\,\mathtt{trm}"/>" are untyped binding trees.  This judgement is defined as follows:
 
+```math
+{
+   {x\,\mathtt{trm} \in \Gamma}
+   \over
+   {\Gamma \vdash x\,\mathtt{trm}}
+}
+\qquad
+{
+   {\Gamma \vdash M_1\,\mathsf{trm} \qquad \Gamma \vdash M_2\,\mathsf{trm}}
+   \over
+   {\Gamma \vdash \mathsf{app}(M_1, M_2)\,\mathtt{trm}}
+}
+```
 
-G , x trm |- M trm
-------------------
-G |- lam (x.M) trm
-&lt;/code&gt;
+```math
+{
+   {\Gamma, x\,\mathtt{trm} \vdash M\,\mathtt{trm}}
+   \over
+   {\Gamma \vdash \mathsf{lam}(x.M)\,\mathtt{trm}}
+}
+```
 
-A variable is a term if it was assumed to be a term; at a binder, we extend the context by assuming a new term.  The important point about this style of definition is that variables are inherently  _scoped_ and given meaning only by assumption: ``x`` is only meaningful if we are in a context where we have some assumptions about it.  Consequently, ``x1 trm ... xn trm |- M trm`` captures exactly the terms with free variables ``x1``...``xn``.  
+A variable is a term if it was assumed to be a term; at a binder, we extend the context by assuming a new term.  The important point about this style of definition is that variables are inherently  _scoped_ and given meaning only by assumption: <Math formula="x"/> is only meaningful if we are in a context where we have some assumptions about it.  Consequently, 
+
+```math
+x_1\,\mathtt{trm} \; \ldots \; x_n\,\mathtt{trm} \vdash M\,\mathtt{trm} 
+```
+
+captures exactly the terms <Math formula="M"/> with free variables <Math formula="x_1"/>...<Math formula="x_n"/>.  
 
 When you're working with an inherently scoped type of binding trees, you can't give an unconditional definition of what it means to be a term with rules like  
 
-&lt;code&gt;
------
-x trm
-
-M trm
--------------
-lam (x.M) trm
-&lt;/code&gt;
+```math
+\color{red}
+{
+   \over
+   {x\,\mathtt{trm}}
+}
+\qquad
+{
+   M\,\mathtt{trm}
+   \over
+   \mathsf{lam}(x.M)\,\mathtt{trm}
+}
+```
 
 where the first rule means "all those trees that happen to be variables are terms": it would break the abstraction of variables-as-scoped-data to state a rule about all those trees that happen to be variables.    
 
 The moral of the story is that syntax with binding can be thought of as a hypothetical judgement.
-The LF encoding of this syntax can be thought of as an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of the above judgement ``x1 trm ... xn trm |- M trm``. LF provides typed binding trees, so we can define terms by specifying typed operators, rather than a predicate over untyped trees: !}%
+The LF encoding of this syntax can be thought of as an [intrinsic encoding](/wiki/intrinsic-and-extrinsic-encodings/) of the above judgement <Math formula="\Gamma \vdash M\,\mathtt{trm}"/>. LF provides _typed_ binding trees, so we can define terms by specifying typed operators, rather than a predicate over untyped trees: !}%
     
 trm : type.
 lam : (trm -> trm) -> trm.
 app : trm -> trm -> trm.
 
-%{! Then the judgement ``x1 trm ... xn trm |- M trm`` becomes the LF judgement 
-``x1 : trm ... xn : trm |- M : trm`` where ``x`` and ``M`` are LF variables and terms.
+%{! Then this judgement: 
+
+```math
+x_1\,\mathtt{trm} \; \ldots \; x_n\,\mathtt{trm} \vdash M\,\mathtt{trm} 
+```
+
+becomes the following LF judgment:
+
+```math
+x_1 : \mathtt{trm} \; \ldots \; x_n : \mathtt{trm} \vdash M : \mathtt{trm} 
+```
+
+where the <Math formula="x_i"/> and <Math formula="M"/> are LF variables and terms.
 
 ## Parallel reduction
 
-Parallel reduction is traditionally defined as follows.  For conciseness, we write ``\x.M`` for ``lam x.M`` and ``M1 M2`` for ``app M1 M2``
+Parallel reduction is traditionally defined as follows.  For conciseness, we write <Math formula="\lambda x.M"/> instead of <Math formula="\mathsf{lam}(x.M)"/> and <Math formula="M_1\,M_2"/> instead of <Math formula="\mathsf{app}(M_1,M_2)"/>
 
-&lt;pre&gt;
-------- var
-x =&gt; x
- 
-M =&gt; M'  N =&gt; N'
--------------------- beta
-(\x.M) N =&gt; M'[N'/x]
+```math
+{
+   \over
+   x \Rightarrow x
+}\mathit{var}
+\qquad
+{
+   M \Rightarrow M' \qquad N \Rightarrow N'
+   \over
+   (\lambda x.M)\,N \Rightarrow M'[N'/x]
+}\mathit{beta}
+```
 
-M =&gt; M'  N =&gt; N'
----------------- app
-(M N) =&gt; (M' N')
+```math
+{
+   M \Rightarrow M' \qquad N \Rightarrow N'
+   \over
+   M\,N \Rightarrow M'\,N'
+}\mathit{app}
+\qquad
+{
+   M \Rightarrow M'
+   \over
+   \lambda x.M \Rightarrow \lambda x.M'
+}\mathit{lam}
+```
 
-   M =&gt; N
-------------- lam
-\x.M =&gt; \x.N
-&lt;/pre&gt;
+But there's a problem with this presentation: it's not explicit about scoping! The first rule has the exact same problem as the "bad" rule above that had <Math formula="x\,\mathtt{trm}"/> as a premise and no conclusion.
 
-However, if we want to treat variables as scoped data, we must be explicit about scoping:
+If we want to treat variables as scoped data, we must be explicit about scoping. This suggests the following presentation:
 
-&lt;pre&gt;
-G ::= . | G , x trm
+```math
+\Gamma ::= \cdot \mid \Gamma, x\,\mathtt{trm}
+```
+```math
+{
+   x\,\mathtt{trm} \in \Gamma
+   \over
+   \Gamma \vdash x \Rightarrow x
+}\mathit{var}
+\qquad
+{
+   \Gamma, x\,\mathtt{trm} \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash (\lambda x.M)\,N \Rightarrow M'[N'/x]
+}\mathit{beta}
+```
+```math
+{
+   \Gamma \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash M\,N \Rightarrow M'\,N'
+}\mathit{app}
+\qquad
+{
+   \Gamma, x\,\mathtt{trm} \vdash M \Rightarrow M'
+   \over
+   \Gamma \vdash \lambda x.M \Rightarrow \lambda x.M'
+}\mathit{lam}
+```
 
-x trm in G
------------ var
-G |- x =&gt; x
- 
-G, x trm |- M =&gt; M'  G |- N =&gt; N'
---------------------------------- beta
-G |- (\x.M) N =&gt; M'[N'/x]
+Now at least the judgement only talks about well-scoped data. However, the <Math formula="\mathit{var}"/> rule that concludes <Math formula="\Gamma \vdash x \Rightarrow x"/> can be a stumbling block for encoding in LF. It has the form "derive <Math formula="\Gamma \vdash J'"/> if <Math formula="J \in \Gamma"/>" where <Math formula="J"/> and <Math formula="J'"/> are _different judgements_. That's not one of the structural principles of a [hypothetical judgement](/wiki/hypothetical-judgment/), and allowing this strange sort of access to the context could invalidate the substitution principle (if I substitute for <Math formula="J"/>, I can no longer derive <Math formula="J'"/>!).  So what are we to do?
 
-G |- M =&gt; M'  G |- N =&gt; N'
--------------------------- app
-G |- (M N) =&gt; (M' N')
-
-G, x trm |- M =&gt; N
-------------------- lam
-G |- \x.M =&gt; \x.N
-&lt;/pre&gt;
-
-Now at least the judgement only talks about well-scoped data. However, the ``var`` rule is somewhat problematic.  In the abstract, it says "derive ``G |- J'`` if ``J`` is in ``G``", where ``J`` and ``J'`` are _different judgements_.  This isn't one of the structural principles of a [hypothetical judgement](/wiki/hypothetical-judgment/), and allowing this strange sort of access to the context could invalidate the substitution principle (if I substitute for ``J``, I can no longer derive ``J'``!).  So what are we to do?
+We'll give three possibilities here. The third is in some sense the "most faithful" to the informal specification above. However, when one is not committed to a specific presentation, it's often best to let the formalization guide the informal specification!
 
 ### Reformulation 1: Hypothetical reductions
 
-While a rule that says "derive ``G |- J'`` if ``J`` is in ``G``" is suspicious, a rule that says 
-"derive ``G |- **J**`` if ``J`` is in ``G``" is just the usual hypothesis/identity axiom that we expect from all hypothetical judgements.  So, one solution is to change the notion of context we consider so that ``var`` is just an instance of hypothesis.  In particular, whenever we assume a variable ``x trm``, we also _assume_ a derivation ``x =&gt; x``:
+While a rule that says "derive <Math formula="\Gamma \vdash J'"/> if <Math formula="J \in \Gamma"/>" is suspicious, a rule that says 
+"derive <Math formula="\Gamma \vdash J"/> if <Math formula="J \in \Gamma"/>" is just the usual hypothesis/identity axiom that we expect from all hypothetical judgements.  So, one solution is to change the notion of context we consider so that <Math formula="\mathit{var}"/> is just an instance of hypothesis.  Whenever we assume a variable <Math formula="x\,\mathtt{trm}"/>, we also _assume_ a derivation <Math formula="x \Rightarrow x"/>:
 
-&lt;pre&gt;
-G ::= . | G , x trm,x =&gt; x
+```math
+\Gamma ::= \cdot \mid \Gamma, x\,\mathtt{trm}, x \Rightarrow x
+```
+```math
+{
+   x \Rightarrow x \in \Gamma
+   \over
+   \Gamma \vdash x \Rightarrow x
+}\mathit{var}_1
+\qquad
+{
+   \Gamma, x\,\mathtt{trm}, x \Rightarrow x \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash (\lambda x.M)\,N \Rightarrow M'[N'/x]
+}\mathit{beta}_1
+```
+```math
+{
+   \Gamma \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash M\,N \Rightarrow M'\,N'
+}\mathit{app}_1
+\qquad
+{
+   \Gamma, x\,\mathtt{trm}, x \Rightarrow x \vdash M \Rightarrow M'
+   \over
+   \Gamma \vdash \lambda x.M \Rightarrow \lambda x.M'
+}\mathit{lam}_1
+```
 
-x =&gt; x in G
------------ var
-G |- x =&gt; x
- 
-G, x trm, x =&gt; x |- M =&gt; M'  G |- N =&gt; N'
------------------------------------------ beta
-G |- (\x.M) N =&gt; M'[N'/x]
-
-G |- M =&gt; M'  G |- N =&gt; N'
--------------------------- app
-G |- (M N) =&gt; (M' N')
-
-G, x trm, x =&gt; x |- M =&gt; N
---------------------------- lam
-G |- \x.M =&gt; \x.N
-&lt;/pre&gt;
-
-Now the ``var`` rule is unobjectionable.  In the premies of the rules ``beta`` and ``lam``, which deal with binding forms, the context is extended with the assumption that ``x =&gt; x`` for the bound variable ``x``.  The derivations of this version are isomorphic to the first definition of ``G |- M =&gt; N``, but the ``var`` rule here has a more generally acceptable form. 
+In this presentation, the  <Math formula="\mathit{var}"/>  rule is totally unobjectionable.  In the premies of the rules  <Math formula="\mathit{beta}"/>  and  <Math formula="\mathit{lam}"/> , which deal with binding forms, the context is extended with the assumption that  <Math formula="x \Rightarrow x"/>  for the bound variable  <Math formula="x"/> .  The derivations of this version are isomorphic to the first definition of  <Math formula="\Gamma \vdash M \Rightarrow N"/> , but the <Math formula="\mathit{var}"/> rule here works as a use of hypothetical judgements. 
 
 The LF representation of this formulation is quite direct: !}%
     
@@ -145,40 +226,73 @@ The LF representation of this formulation is quite direct: !}%
 %block =>b : block {x : trm} {=>/x : x => x}.
 %worlds (=>b) (=> _ _).
 
-%{! Derivations using ``var`` are represented by LF variables representing the reduction assumptions in ``G``.  The Twelf ``%worlds`` declaration documents the form of ``G`` in our informal definition.
+%{! Derivations using <Math formula="\mathit{var}"/> are represented by LF variables representing the reduction assumptions in <Math formula="\Gamma"/>.  The Twelf ``%worlds`` declaration documents the form of <Math formula="\Gamma"/>  in our informal definition.
+
+#### Adequacy
+
+This is an [adequate encoding](/wiki/adequacy/) of the informal judgment we started with: there's a 1-to-1 correspondence between derivations like this with the rules subscripted with <Math formula="1"/>:
+
+```math
+x_1\,\mathtt{trm}, x_1 \Rightarrow x_1, \ldots, x_k\,\mathtt{trm}, x_k \Rightarrow x_k \vdash M \Rightarrow M'
+```
+
+and with LF derivations $D$ such that the following is derivable according to the rules of LF:
+
+```math
+x_1 : \mathtt{trm}, d_1 : x_1 \Rightarrow x_1, \ldots x_k : \mathtt{trm}, d_k : x_k \Rightarrow x_k \vdash D : M \Rightarrow M'
+```
+
 
 #### Substitution
 
 This reformulation elucidates a substitution principle for parallel reduction, as an instance of the general substitution principle for hypothetical judgements: 
 
-: If ``G, x trm, x =&gt; x |- M =&gt; N`` and ``G |- M' trm`` and ``G |- M' =&gt; M'`` then ``[M'/x]M =&gt; [M'/x]N``
+> If <Math formula="\Gamma, x\,\mathtt{trm}, x \Rightarrow x \vdash M \Rightarrow N"/>\
+> and <Math formula="\Gamma \vdash M'\,\mathtt{trm}"/>\
+> and <Math formula="\Gamma \vdash M' \Rightarrow M'"/>,\
+> then <Math formula="\Gamma \vdash [M'/x]M \Rightarrow [M'/x]N"/>.
 
 In the LF representation, this substitution principle comes "for free" from the general substitution principle for LF terms.
 
-### Reformulation 2: Change the definition
+### Reformulation 2: Change the relation
 
 Another option is to change the definition of the judgement so that it doesn't have a variable-specific rule.  In this case, we can generalize the variable rule to a general reflexivity rule:
 
-&lt;pre&gt;
-G ::= . | G , x trm
+```math
+\Gamma ::= \cdot \mid \Gamma, x\,\mathtt{trm}
+```
+```math
+{
+   \over
+   \Gamma \vdash M \Rightarrow M
+}\mathit{refl}_2
+\qquad
+{
+   \Gamma, x\,\mathtt{trm} \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash (\lambda x.M)\,N \Rightarrow M'[N'/x]
+}\mathit{beta}_2
+```
+```math
+{
+   \Gamma \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash M\,N \Rightarrow M'\,N'
+}\mathit{app}_2
+\qquad
+{
+   \Gamma, x\,\mathtt{trm} \vdash M \Rightarrow M'
+   \over
+   \Gamma \vdash \lambda x.M \Rightarrow \lambda x.M'
+}\mathit{lam}_2
+```
 
------------ refl
-G |- M =&gt; M
- 
-G, x trm |- M =&gt; M'  G |- N =&gt; N'
---------------------------------- beta
-G |- (\x.M) N =&gt; M'[N'/x]
-
-G |- M =&gt; M'  G |- N =&gt; N'
--------------------------- app
-G |- (M N) =&gt; (M' N')
-
-G, x trm |- M =&gt; N
-------------------- lam
-G |- \x.M =&gt; \x.N
-&lt;/pre&gt;
-
-In this case, this reformulation changes the structure of derivations (these are **not** isomorphic to what we started with) but does not change the relation defined by them, as reflexivity was admissible above.  This reformulation clearly would not be an option if reflexivity were not admissible, as in the example of complete development (below).
+This is a _different definition_ than the informal one we started with: derivations
+with the rules subscripted <Math formula="2"/> are _not_ isomorphic to those subscripted  <Math formula="1"/>. However, the while this change changes the possible derivations, it does not change the relation <Math formula="M \Rightarrow N"/>, because reflexivity was admissible before. Maybe that's an acceptable change, that actually simplifies the definition.
 
 The LF representation looks like this: !}%
     
@@ -197,55 +311,239 @@ The LF representation looks like this: !}%
 %block trmb : block {x : trm}.
 %worlds (trmb) (=> _ _).
 
-%{! ### Reformulation 3 : tagged variables
 
-(coming soon!)
+
+%{!
+
+#### Substitution
+
+The substitution principle implied by this LF development looks a bit simpler than the previous one, though this is only because it lacks the premise <Math formula="\Gamma \vdash M' \Rightarrow M'"/>, which as we've previously mentioned is always derivable even in the first reformulation.
+
+> If <Math formula="\Gamma, x\,\mathtt{trm} \vdash M \Rightarrow N"/>\
+> and <Math formula="\Gamma \vdash M'\,\mathtt{trm}"/>\
+> then <Math formula="\Gamma \vdash [M'/x]M \Rightarrow [M'/x]N"/>.
+
+### Reformulation 3 : Tagged variables
+
+If we're really committed to the original informal specification, with the rule that said we could immediately derive the reflexive conclusion <Math formula="\Gamma \vdash x \Rightarrow x"/> when <Math formula="x" /> was specifically a variable in the context, then it's possible to capture that by having an new judgment <Math formula="x\,\mathtt{isvar}"/>, which is only ever derivable from a hypothetical judgment.
+
+```math
+\Gamma ::= \cdot \mid \Gamma, x\,\mathtt{trm}, x\,\mathtt{isvar}
+```
+
+Then, we can use the <Math formula="x\,\mathtt{isvar}"/> judgment as a regular, uncontroversial hypothetical judgment, where a premise <Math formula="J \in \Gamma"/> allows you to prove the conclusion <Math formula="\Gamma \vdash J"/>
+
+```math
+{
+   x\,\mathtt{isvar} \in \Gamma
+   \over
+   \Gamma \vdash x\,\mathtt{isvar}
+}
+\qquad
+{
+   \Gamma \vdash M\,\mathtt{isvar}
+   \over
+   \Gamma \vdash M \Rightarrow M
+}
+```
+
+This presentation is pedantically appropriate, but it's entirely more common to take these two rules and compress them into the single on-paper rule <Math formula="\mathit{var}_3"/> shown below:
+
+```math
+{
+   x\,\mathtt{isvar} \in \Gamma
+   \over
+   \Gamma \vdash x \Rightarrow x
+}\mathit{var}_3
+\qquad
+{
+   \Gamma, x\,\mathtt{trm}, x\,\mathtt{isvar} \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash (\lambda x.M)\,N \Rightarrow M'[N'/x]
+}\mathit{beta}_3
+```
+```math
+{
+   \Gamma \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash M\,N \Rightarrow M'\,N'
+}\mathit{app}_3
+\qquad
+{
+   \Gamma, x\,\mathtt{trm}, x\,\mathtt{isvar} \vdash M \Rightarrow M'
+   \over
+   \Gamma \vdash \lambda x.M \Rightarrow \lambda x.M'
+}\mathit{lam}_3
+```
+
+When all is said and done, this actually looks a lot like the first reformulation, but we're using a one place relation <Math formula="\mathtt{isvar}"/> instead of the two-place relation where hypothetical occurrences are, by invariant, always reflexive.
+
+Unlike the first reformulation, where the <Math formula="\mathit{var}_1"/> rule came "for free" from LF, this formulation has four rules. The rule looks a little different in LF than in the on-paper derivation, because we use the uppercase `M` in LF instead of the lowercase <Math formula="x"/> in <Math formula="\mathit{var}_3"/>, but the meaning is the same, since we will only ever derive a term of type `isvar M` when `M` is a variable in the context.
+
+!}%
+
+=> : trm -> trm -> type.  %infix none 10 =>.
+isvar : trm -> type.
+
+=>/var  : M => M 
+          <- isvar M.
+=>/beta : (app (lam M) N) => M' N'
+          <- ({x:trm} isvar x -> M x => M' x) 
+          <- N => N'.
+=>/app  : (app M N) => (app M' N')
+          <- N => N'
+          <- M => M'.
+=>/lam  : lam M => lam M'
+          <- ({x:trm} isvar x -> M x => M' x).
+
+%block isvarb : block {x : trm} {isvar/x : isvar x}.
+%worlds (isvarb) (isvar _) (=> _ _).
+
+
+%{!
+
+#### Substitution
+
+As always when we are defining judgments in non-closed worlds, LF provides us a substitution principle for free. But, this time, the substitution principle is basically useless:
+
+> If <Math formula="\Gamma, x\,\mathtt{trm}, x \Rightarrow x \vdash M \Rightarrow N"/>\
+> and <Math formula="\Gamma \vdash M'\,\mathtt{trm}"/>\
+> and <Math formula="\Gamma \vdash M'\,\mathtt{isvar}"/>,\
+> then <Math formula="\Gamma \vdash [M'/x]M \Rightarrow [M'/x]N"/>.
+
+We only ever get to prove <Math formula="\Gamma \vdash M'\,\mathtt{isvar}"/> when <Math formula="M'"/> is a variable! The for-free substitution properties in the last two formulations actually told us something, but here we've got. It _is_ possible to prove the substitution theorem that we expect --- the same substitution theorem that LF gave for free in the first reformulation --- but we have to prove a metatheorem to do so. It's quite a bit of development for what is, at the end of the day, a straightforward proof by induction:
+
+!}%
+
+subst : ({x : trm}{d : isvar x} M x => N x) -> M' => M' -> M M' => N M' -> type.
+%mode subst +D1 +D2 -D3.
+
+- : subst ([x][dx: isvar x] =>/var dx) (D2: M' => M') D2.
+- : subst ([x][dx: isvar x] =>/var D) (D2: M' => M') (=>/var D).
+
+- : subst 
+      ([x][dx: isvar x] =>/beta
+           (D1 x dx : M2 x => N2 x) 
+           ([y][dy: isvar y] D1' x dx y dy : M1 x y => N1 x y))
+      (D2: M' => M')
+      (=>/beta D3 D3' : app (lam [y] M1 M' y) (M2 M') => N1 M' (N2 M'))
+   <- subst D1 D2 (D3: M2 M' => N2 M')
+   <- ({y}{dy: isvar y} subst ([x][dx: isvar x] D1' x dx y dy) D2 
+           (D3' y dy : M1 M' y => N1 M' y)).
+
+- : subst 
+      ([x][dx: isvar x] =>/app (D1 x dx : M1 x => N1 x) (D1' x dx : M2 x => N2 x))
+      (D2: M' => M')
+      (=>/app D3 D3' : app (M1 M') (M2 M') => app (N1 M') (N2 M'))
+   <- subst D1 D2 (D3 : M1 M' => N1 M')
+   <- subst D1' D2 (D3' : M2 M' => N2 M').
+
+- : subst 
+      ([x][dx: isvar x] =>/lam 
+           ([y][dy: isvar y] D1 x dx y dy : M x y => N x y))
+      (D2: M' => M')
+      (=>/lam D3 : (lam [y] M M' y) => (lam [y] N M' y))
+   <- ({y}{dy: isvar y} subst ([x][dx: isvar x] D1 x dx y dy) D2 
+           (D3 y dy : M M' y => N M' y)).
+
+%{! The `%worlds` for the metatheorem is the same `isvarb` block used in the third reformulation. !}%
+
+%{!! begin checked !!}%
+%worlds (isvarb) (subst _ _ _).
+%total T (subst T _ _).
+%{!! end checked !!}%
+
+
+%{!
+
+### Conclusion: the cost of losing substitution 
+
+The third reformulation above was almost without a doubt the one most akin to the initial presentation. But the cost was that the substitution principle needed to be established separately, which requires a bit of work.
+
+This is sometimes the correct call: in the development of [structural focalization](/wiki/focusing/) on the wiki, there were two "focal substitution principles." It was ultimately the most convenient to balance clarity and convenience prove one of the two principles by hand (as in the third reformulation above) while letting the other be inhereted from LF's substitution principles (as in the first two reformulations above).
 
 ## Complete development
-Parallel reduction is non-deterministic: any left-hand term that can be reduced by the ``beta`` rule can also be reduced by the ``app`` rule.  Complete development is a restriction of parallel reduction where ``beta`` takes precedence over ``app``.  In each step of complete development, all of the beta-redices in the left-hand term are reduced.
+
+Parallel reduction is non-deterministic: any left-hand term that can be reduced by the ``beta`` rule can also be reduced by the ``app`` rule, which is why the relation can be reflexive.  Complete development is a restriction of parallel reduction where ``beta`` takes precedence over ``app``.  In each step of complete development, all of the beta-redices in the left-hand term are reduced.
 
 Informally, we add a side condition to the ``app`` rule:
-&lt;pre&gt;
-G |- M ==&gt; M'  G |- N ==&gt; N'  (M is not a lambda)
------------------------------------------------- app
-G |- (M N) ==&gt; (M' N')
-&lt;/pre&gt;
 
-How can we state this side condition more precisely?  We need a judgement ``notlam M`` which holds whenever ``M`` is not ``\x.M'``.  It's easy to define this as a hypothetical judgement if we choose our contexts correctly:
+```math
+{
+   \Gamma \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \qquad
+   (M \textit{ is not a lambda})
+   \over
+   \Gamma \vdash M\,N \Rightarrow M'\,N'
+}\mathit{app}
+```
 
-&lt;pre&gt;
-G ::= . | G , x trm, notlam x
 
-notlam x in G
--------------
-G |- notlam x
+How can we state this side condition more precisely?  We need a judgement <Math formula="M\,\mathtt{notlam}"/> which holds whenever <Math formula="M"/> does not have the form <Math formula="\lambda x.M'"/>.  It's easy to define this as a hypothetical judgement if we choose our contexts correctly:
 
------------------------
-G |- notlam (app M1 M2)
-&lt;/pre&gt;
+```math
+\Gamma ::= \cdot \mid \Gamma, x\,\mathtt{trm}, x\,\mathtt{notlam}
+```
+```math
+{
+   x\,\mathtt{notlam} \in \Gamma
+   \over
+   \Gamma \vdash x\,\mathtt{notlam}
+}
+\qquad
+{
+   \over
+   \Gamma \vdash (M_1\,M_2)\,\mathtt{notlam}
+}
+```
 
 That is, with each variable, we make the additional assumption that it is not a lambda.
 
 Then complete development is easy to define:
-&lt;pre&gt;
-G ::= . | G , x trm, notlam x, x ==&gt; x
 
-x ==&gt; x in G
------------- var
-G |- x ==&gt; x
- 
-G, x trm, notlam x, x =&gt; x |- M ==&gt; M'  G |- N ==&gt; N'
------------------------------------------------------ beta
-G |- (\x.M) N ==&gt; M'[N'/x]
-
-G |- M ==&gt; M'  G |- N ==&gt; N'  G |- notlam M
--------------------------------------------- app
-G |- (M N) ==&gt; (M' N')
-
-G, x trm, notlam x, x =&gt; x |- M ==&gt; N
-------------------------------------- lam
-G |- \x.M ==&gt; \x.N
-&lt;/pre&gt;
+```math
+\Gamma ::= \cdot \mid \Gamma, x\,\mathtt{trm}, x\,\mathtt{notlam}, x \Rightarrow x
+```
+```math
+{
+   x \Rightarrow x \in \Gamma
+   \over
+   \Gamma \vdash x \Rightarrow x
+}\mathit{var}_c
+```
+```math
+{
+   \Gamma, x\,\mathtt{trm}, x\,\mathtt{notlam}, x \Rightarrow x \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \over
+   \Gamma \vdash (\lambda x.M)\,N \Rightarrow M'[N'/x]
+}\mathit{beta}_c
+```
+```math
+{
+   \Gamma \vdash M \Rightarrow M'
+   \qquad
+   \Gamma \vdash N \Rightarrow N'
+   \qquad
+   M\,\mathtt{notlam}
+   \over
+   \Gamma \vdash M\,N \Rightarrow M'\,N'
+}\mathit{app}_c
+```
+```math
+{
+   \Gamma, x\,\mathtt{trm}, x\,\mathtt{notlam}, x \Rightarrow x \vdash M \Rightarrow M'
+   \over
+   \Gamma \vdash \lambda x.M \Rightarrow \lambda x.M'
+}\mathit{lam}_c
+```
 
 The LF representation is direct: !}%
     
@@ -259,8 +557,6 @@ notlam/app : notlam (app _ _).
 
 Then complete development is a simple twist on parallel reduction: !}%
     
-%{! (options removed from twelftag: check="true") !}%
-
 ==> : trm -> trm -> type.  %infix none 10 ==>.
 
 ==>/beta : (app (lam M) N) ==> M' N'
@@ -269,7 +565,7 @@ Then complete development is a simple twist on parallel reduction: !}%
 ==>/app  : (app M N) ==> (app M' N')
           <- N ==> N'
           <- M ==> M'
-	  <- notlam M.
+	       <- notlam M.
 ==>/lam  : lam M ==> lam M'
           <- ({x:trm} notlam x -> x ==> x -> M x ==> M' x).
 
@@ -280,21 +576,40 @@ Then complete development is a simple twist on parallel reduction: !}%
 
 #### Substitution
 
-As above, this formulation gives a "free" substitution principle for complete development: if we have a complete development derivation ``G , x trm, notlam x, x ==&gt; x |- M ==&gt; N`` 
-and ``G |- M' trm`` and ``G |- notlam M'`` and `` G |- M' ==&gt; M'``
-then  ``G |- M[M'/x] ==&gt; N[M'/x]``.  The form of the context ensures that we need a derivation of ``notlam M'`` to make this substitution: it's not obvious that you can substitute lambdas for variables while preserving complete development, since you'd have to replace instances of ``app`` with something else.    
+As above, this formulation gives a "free" substitution principle for complete development: 
+
+> If <Math formula="\Gamma, x\,\mathtt{trm}, x\,\mathtt{notlam}, x \Rightarrow x \vdash M \Rightarrow N"/>\
+> and <Math formula="\Gamma \vdash M'\,\mathtt{trm}"/>\
+> and <Math formula="\Gamma \vdash M'\,\mathtt{notlam}"/>\
+> and <Math formula="\Gamma \vdash M' \Rightarrow M'"/>,\
+> then <Math formula="\Gamma \vdash M[M'/x] \Rightarrow N[M'/x]"/>.
+
+The form of the context ensures that we need a derivation of <Math formula="M\,\mathtt{notlam}"/> to make this substitution. This restriction is similar to the restriction that made the third reformulation's "free" substitution principle useless, but it's more reasonable in this case:  it's not obvious that you can substitute lambdas for variables while preserving complete development, since you'd have to replace instances of ``app`` with something else.
+
+#### Examples
+
+We can give a few examples of parallel reduction in action using the [`%query`](/wiki/percent-query/) mechanism.
+
+!}%
+
+%{!! begin checked !!}%
+%query 1 * app (lam [x] app x x) (lam [x] app x x) ==> N.
+%{!! end checked !!}%
+
+%{!! begin checked !!}%
+z = lam [f] lam [x] x.
+s = lam [n] lam [f] lam [x] app f (app (app n f) x).
+
+%query 1 * app (app s z) (lam [f] lam [x] app f (app f x)) ==> N.
+%{!! end checked !!}%
+
+
+%{!
 
 ## See also
 
 * [Hypothetical judgement](/wiki/hypothetical-judgment/)s
 * [Higher-order judgement](/wiki/higher-order-judgements/)s
-* The case study on [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/) for some proofs about the judgements defined here, illustrating the use of [regular world](/wiki/percent-worlds/)s.
+* The case study on [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/) for some proofs about the judgements defined here, illustrating the use of [regular worlds](/wiki/percent-worlds/).
 
-\{\{tutorial\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Reformulating_languages_to_use_hypothetical_judgements).
 !}%

@@ -8,7 +8,7 @@
 We define a tree with labeled nodes, and a distinguished tree ``testtree``. 
 
 <center>
-![A starry night sky.](../../../assets/smalltree.png)
+![Visual description of a balanced tree with four labeled leaves.](/src/assets/smalltree.png)
 
 Graphical representation of the tree ``testtree`` used in this example.
 </center>

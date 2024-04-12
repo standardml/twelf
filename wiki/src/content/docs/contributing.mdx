@@ -61,12 +61,15 @@ open a new page: ignore the options and click "**Create pull request**."
 
 ### Making bigger changes (running the site locally)
 
-If you [check out the Twelf repository on
-GitHub](https://github.com/standardml/twelf), you can preview the website by
-running the following commands:
+The only software you need to build and preview changes on your own computer is
+git (so you can download the Twelf repository where this wiki lives) and 
+[npm](https://nodejs.org/en/download/package-manager), which facilitates
+downloading the JavaScript code that powers this website. You can download the
+repository and preview the website by running the following commands:
 
 ```bash
-cd wiki
+git clone https://github.com/standardml/twelf.git
+cd twelf/wiki
 npm install
 npm run dev
 ```
