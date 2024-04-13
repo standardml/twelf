@@ -1,12 +1,18 @@
-%%! title: "Proving metatheorems:Proving metatheorems about the STLC"
+%%! title: "Proving metatheorems about the simply-typed lambda calculus"
+%%! description: "We can see that proving type preservation for the simply-typed lambda calculus is not fundamentally different from proving theorems about the natural numbers (Part of the introduction to proving metatheorems in Twelf)"
+%%! prev:
+%%!   label: "Representing the judgements of th STLC"
+%%!   link: /wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/
+%%! next:
+%%!   label: "Proving totality assertions in non-empty contexts"
+%%!   link: /wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/
 
-%{! \{\{proving metatheorems
-  | prev = Representing the judgements of the STLC
-  | prevname = Representing judgements
-  | next = Proving totality assertions in non-empty contexts
-  | nextname = Proving totality assertions in non-empty contexts\}\}
 
-In this section, we show how to prove type preservation for the STLC.  As you will see, this theorem is really no harder than the metatheorems about the natural numbers that we proved above.  For reference, we recap the entire LF signature representing the STLC: !}%
+%{! 
+
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
+
+In this section, we show how to prove type preservation for the STLC.  As you will see, this theorem is really no harder than the metatheorems about the natural numbers that we proved above.  For reference, we recap the entire LF signature representing the STLC, both the [syntax](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) and [judgements](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/): !}%
     
 %% Syntax
 
@@ -48,8 +54,6 @@ step-app-beta : step (app (lam T2 ([x] E x)) E2) (E E2)
 
 Here is a complete Twelf proof of preservation for the STLC: !}%
     
-%{! (options removed from twelftag: check="true") !}%
-
 preserv : step E E' -> of E T -> of E' T -> type.                                                                                                                     
 %mode preserv +Dstep +Dof -Dof'.                                                                                                                                      
                                                                                                                                                                       
@@ -73,25 +77,30 @@ preserv-app-beta : preserv
                             (of-lam (([x] [dx] DofE x dx)                                                                                                             
                                        : {x : tm} {dx : of x T2} of (E x) T)))                                                                                        
                     (DofE E2 DofE2).                                                                                                                                  
-                                                                                                                                                                      
-%worlds () (preserv _ _ _).                                                                                                                                           
+%{!! begin checked !!}%
+%worlds () (preserv _ _ _).
 %total D (preserv D _ _).
+%{!! end checked !!}%
 
 %{! Now, let's examine the pieces of the proof in more detail.
 
-**Correctness of the theorem statement.** We should check that this Twelf theorem statement actually corresponds to the notion of type preservation that we have in mind, which is stated as follows:
+### Correctness of the theorem statement.
 
-: If &lt;math&gt;e \mapsto e'&lt;/math&gt; and &lt;math&gt;\cdot \vdash e : \tau&lt;/math&gt; then &lt;math&gt;\cdot \vdash e' : \tau&lt;/math&gt;.  
+We should check that this Twelf theorem statement actually corresponds to the notion of type preservation that we have in mind, which is stated as follows:
+
+> If <Math formula="e \mapsto e'"/> and <Math formula="\cdot \vdash e : \tau"/>, then <Math formula="\cdot \vdash e' : \tau"/>.
 
 This corresponds to the following statement about LF terms:
 
-: If ``Dstep : step E E'`` and ``Dof : of E T`` then ``Dof' : of E' T``.
+> If ``Dstep : step E E'`` and ``Dof : of E T`` then ``Dof' : of E' T``.
 
-By adequacy, these two theorem statements are equivalent; note that closed LF terms represent closed object-language terms and typing derivations in the empty object-language context.  
+By adequacy, these two theorem statements are equivalent; note that closed (i.e. no free variables) LF terms correspond to closed object-language terms and typing derivations in the empty object-language context.  
 
 The above totality assertion for the type family ``preserv`` clearly implies this statement.  Thus, the Twelf proof proves the informal statement of preservation.
 
-**Reading the cases.**  As we have discussed, the LF constants implementing a proof correspond to the cases of an informal proof.  For preservation, the three LF constants correspond to the three cases of an informal proof by induction on the dynamic semantics derivation, where in each case we invert the static semantics derivation.  For example, in the case ``preserv-app-1`` for ``step-app-1``, we invert the typing derivation for the application, appeal to the inductive hypothesis (the premise of type ``preserv``), and then use ``of-app`` to derive the result.  The other two cases use similar inversions.  Because of the higher-order representation of the hypothetical typing judgement, there is no need for a substitution lemma in the case ``preserv-app-beta``: the LF term ``DofE`` representing the hypothetical derivation can simply be applied to the derivation ``DofE2``.  
+### Reading the cases
+
+As we have discussed, the LF constants implementing a proof correspond to the cases of an informal proof.  For preservation, the three LF constants correspond to the three cases of an informal proof by induction on the dynamic semantics derivation, where in each case we invert the static semantics derivation.  For example, in the case ``preserv-app-1`` for ``step-app-1``, we invert the typing derivation for the application, appeal to the inductive hypothesis (the premise of type ``preserv``), and then use ``of-app`` to derive the result.  The other two cases use similar inversions.  Because of the higher-order representation of the hypothetical typing judgement, there is no need for a substitution lemma in the case ``preserv-app-beta``: the LF term ``DofE`` representing the hypothetical derivation can simply be applied to the derivation ``DofE2``.  
 
 The ``%total`` directive asks Twelf to verify that ``preserv`` defines a total relation—i.e., that it is a correct proof.  We call attention to a few of Twelf's checks:
 * **Termination:** In all premises, the dynamic semantics derivation is a subterm of the input dynamic semantics derivation.  In this proof, it happens that the typing derivation is always smaller as well, so we could equivalently have verified totality by induction on the second argument.  
@@ -103,15 +112,4 @@ Other properties of the STLC are proved elsewhere on this wiki.  Several [tutori
 
 The next section of this introduction describes one new piece of Twelf machinery: the ability to prove totality assertions for non-empty contexts.
 
-\{\{proving metatheorems
-  | prev = Representing the judgements of the STLC
-  | prevname = Representing judgements
-  | next = Proving totality assertions in non-empty contexts
-  | nextname = Proving totality assertions in non-empty contexts\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_metatheorems_about_the_STLC).
 !}%
