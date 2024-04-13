@@ -608,8 +608,8 @@ s = lam [n] lam [f] lam [x] app f (app (app n f) x).
 
 ## See also
 
-* [Hypothetical judgement](/wiki/hypothetical-judgment/)s
-* [Higher-order judgement](/wiki/higher-order-judgements/)s
+* [Hypothetical judgements](/wiki/hypothetical-judgment/)
+* [Higher-order judgements](/wiki/higher-order-judgements/)
 * The case study on [Church-Rosser via complete development](/wiki/church-rosser-via-complete-development/) for some proofs about the judgements defined here, illustrating the use of [regular worlds](/wiki/percent-worlds/).
 
 !}%
