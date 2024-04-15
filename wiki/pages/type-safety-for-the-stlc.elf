@@ -1,0 +1,119 @@
+%%! title: "Type safety for the simply-typed lambda calculus"
+%%! description: "Proving type safety from progress and preservation in the simply-typed lambda calculus"
+%%! import: simply-typed-lambda-calculus.elf
+
+%{!
+
+This page incorporates the [simply typed lambda calculus](/wiki/simply-typed-lambda-calculus/) with just functions and the unit type.
+This is the exact same system that is discussed in the [introduction to proving metatheorems in Twelf](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/).
+
+The motto of type safety, attributed to Robin Milner, is that "well-typed programs can't go wrong." That means program that initially passes the static semantics will be free of undefined behavior: after an arbitrary number of steps, a program is either in a valid halting state (for the STLC, this means it is a _value_) or it can take another step according to the operational semantics. This means that there's always a way for an unfinished program to take a step according to the operational semantics: a well-typed program can't get "stuck."
+
+### Multistep evaluation
+
+Multistep evaluation <Math formula="e \mapsto^* e'"/> is easy to define as an inductive definition by using single-step evaluation <Math formula="e \mapsto e'"/>.
+
+```math
+{
+    \over
+    e \mapsto^* e
+}\textit{multistep-stop}
+\qquad
+{
+    e_1 \mapsto e_2
+    \qquad
+    e_2 \mapsto^* e_3
+    \over
+    e_1 \mapsto^* e_3
+}\textit{multistep-go}
+```
+
+This definition translates straightforwardly into Twelf:
+
+!}%
+
+multistep      : tm -> tm -> type.
+
+multistep-stop : multistep E E.
+multistep-go   : multistep E1 E3
+                   <- step E1 E2
+                   <- multistep E2 E3.
+
+%worlds () (multistep _ _).
+
+%{!
+
+### Stating the safety theorem
+
+This definition can used to make the motto "well-typed programs can't go wrong" into a formal logical statement:
+
+> **Type safety**: if <Math formula="\cdot \vdash e : \tau"/> and <Math formula="e \mapsto^* e'"/>, then either <Math formula="e'\,\mathtt{value}"/> or there exists an <Math formula="e''"/> such that <Math formula="e' \mapsto e''"/>.
+
+Twelf doesn't have a direct way of encoding the "or" part of the conclusion, but the workaround is simple: we define a new relation `val-or-step E` that is true if either `E` is a value or `E` can take a step:
+
+!}%
+
+val-or-step      : tm -> type.
+
+val-or-step-val  : val-or-step E
+                    <- value E.
+vos-or-step-step : val-or-step E
+                    <- step E E'.
+
+%{!
+
+With that auxillary definition, the statement of type safety is straightforward:
+
+!}%
+
+safety : of E T -> multistep E E' -> val-or-step E' -> type.
+%mode safety +D1 +D2 -D3.
+
+%{!
+
+The "safety = progress + preservation" formula derives the safety property by proving two lemmas. Preservation (and the preservation proof here is [exactly the same as the proof presented in the introduction to proving metatheorems in Twelf](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/)).
+
+## Preservation
+
+The statement of preservation for a programming language is as follows:
+
+> If <Math formula="e \mapsto e'"/> and <Math formula="\cdot \vdash e : \tau"/>, then <Math formula="\cdot \vdash e' : \tau"/>.
+
+It's common 
+
+!}%
+
+preserv : step E E' -> of E T -> of E' T -> type.                                                                                                                     
+%mode preserv +Dstep +Dof -Dof'.                                                                                                                                      
+                                                                                                                                                                      
+preserv-app-1    : preserv                                                                                                                                            
+                    (step-app-1 (DstepE1 : step E1 E1'))                                                                                                              
+                    (of-app (DofE2 : of E2 T2)                                                                                                                        
+                            (DofE1 : of E1 (arrow T2 T)))                                                                                                             
+                    (of-app DofE2 DofE1')                                                                                                                             
+                    <- preserv DstepE1 DofE1 (DofE1' : of E1' (arrow T2 T)).                                                                                          
+                                                                                                                                                                      
+preserv-app-2    : preserv                                                                                                                                            
+                    (step-app-2 (DstepE2 : step E2 E2') (DvalE1 : value E1))                                                                                          
+                    (of-app (DofE2 : of E2 T2)                                                                                                                        
+                            (DofE1 : of E1 (arrow T2 T)))                                                                                                             
+                    (of-app DofE2' DofE1)                                                                                                                             
+                    <- preserv DstepE2 DofE2 (DofE2' : of E2' T2).                                                                                                    
+                                                                                                                                                                      
+preserv-app-beta : preserv                                                                                                                                            
+                    (step-app-beta (Dval : value E2))                                                                                                                 
+                    (of-app (DofE2 : of E2 T2)                                                                                                                        
+                            (of-lam (([x] [dx] DofE x dx)                                                                                                             
+                                       : {x : tm} {dx : of x T2} of (E x) T)))                                                                                        
+                    (DofE E2 DofE2).                                                                                                                                  
+%{!! begin checked !!}%
+%worlds () (preserv _ _ _).
+%total D (preserv D _ _).
+%{!! end checked !!}%
+
+
+%{!
+
+## Progress
+
+!}%
