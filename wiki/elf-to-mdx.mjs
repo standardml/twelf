@@ -90,7 +90,6 @@ export async function elfToMdx(elfFilename, prelude = []) {
   let body = [];
   /** @type {string[]} */
   let twelfcontext = prelude.slice();
-  console.log(twelfcontext);
 
   /** @typedef {{ type: "twelf", subtype: null | "hidden" | "checked", accum: string[] }} TwelfState */
   /** @typedef {{ type: "markdown-block", subtype: "math" | "twelf" | "checkedtwelf", accum: string[] }} MarkdownBlockState */
