@@ -1,12 +1,11 @@
 %%! title: "Proving metatheorems about the simply-typed lambda calculus"
 %%! description: "We can see that proving type preservation for the simply-typed lambda calculus is not fundamentally different from proving theorems about the natural numbers (Part of the introduction to proving metatheorems in Twelf)"
 %%! prev:
-%%!   label: "Representing the judgements of th STLC"
+%%!   label: "Representing the judgements of the STLC"
 %%!   link: /wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/
 %%! next:
-%%!   label: "Proving totality assertions in non-empty contexts"
-%%!   link: /wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/
-
+%%!   label: "The STLC: summary and exercises"
+%%!   link: /wiki/proving-metatheorems-summary-the-stlc/
 
 %{! 
 
