@@ -1,4 +1,5 @@
 import { readdirSync, writeFileSync } from "fs";
+import { getImportedPrelude } from "../wiki/elf-wiki-imports.mjs";
 
 /* Only files that are broken *on purpose* (because they're templates
  * meant to be filled out as exercises) should be added here.
@@ -35,7 +36,11 @@ for (const file of readdirSync(WIKI_TWELF_LOC)) {
     const base = file.slice(0, file.length - 4);
     if (IGNORED_WIKI_FILES.has(base)) continue;
     const cfg = base + ".cfg";
-    writeFileSync(WIKI_TWELF_LOC + cfg, file);
+    const dependencies = getImportedPrelude(WIKI_TWELF_LOC, file);
+    writeFileSync(
+      WIKI_TWELF_LOC + cfg,
+      dependencies.map(({ file }) => file + "\n") + file
+    );
     cfgs.push(
       `test${
         UNSAFE_WIKI_FILES.has(base) ? "Unsafe" : ""

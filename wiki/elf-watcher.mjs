@@ -1,85 +1,12 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  watch,
-  writeFileSync,
-} from "fs";
+import { existsSync, mkdirSync, readdirSync, watch, writeFileSync } from "fs";
 import { argv } from "process";
 import { elfToMdx } from "./elf-to-mdx.mjs";
+import { getImportedPrelude } from "./elf-wiki-imports.mjs";
 
 const DIR_OF_ELF = "pages";
 const DIR_OF_MDX = "src/content/docs/wiki";
 if (!existsSync(DIR_OF_MDX)) {
   mkdirSync("src/content/docs/wiki");
-}
-
-/**
- * Read the file's header to get all of the imported elf files
- * (in reverse order)
- *
- * @param {string} contents
- */
-function getImportedFilenames(contents) {
-  /**@type {string[]} */
-  const importStatements = [];
-
-  for (const line of contents.split("\n")) {
-    if (!line.startsWith("%%! ")) break;
-    if (line.startsWith("%%! import: ")) {
-      importStatements.push(line.slice(12).trim());
-    }
-  }
-
-  return importStatements;
-}
-
-/**
- * Uses a DFS traversal
- *
- * @param {Set<string>} known
- *   Avoids double-importing by tracking all the filenames ever added to `accum` in the process of this traversal
- * @param {{file: string, contents: string}[]} accum
- *   Accumulates the files, making sure that files are added after their dependencies
- * @param {string} elfname
- *   Name of an ELF file that is a dependency of the file we're trying to load
- */
-function dfsAccumImportedPrelude(known, accum, elfname) {
-  if (!elfname.match(/^[a-zA-Z.\-_0-9]*[.]elf*$/)) {
-    throw new Error(
-      `Imported path ${elfname} invalid: must include only letters, numbers, dashes, and underscores and end in .elf`
-    );
-  }
-  const contents = readFileSync(`${DIR_OF_ELF}/${elfname}`).toString("utf-8");
-  for (const importElf in getImportedFilenames(contents)) {
-    if (!known.has(importElf)) {
-      known.add(importElf);
-      dfsAccumImportedPrelude(known, accum, importElf);
-    }
-  }
-  accum.push({ file: elfname, contents });
-}
-
-/**
- *
- * @param {string} elfname
- */
-function getImportedPrelude(elfname) {
-  /**@type {Set<string>} */
-  const known = new Set();
-
-  /**@type {{file: string, contents: string}[]} */
-  const dependencies = [];
-
-  for (const file of getImportedFilenames(
-    readFileSync(elfname).toString("utf-8")
-  )) {
-    known.add(file);
-    dfsAccumImportedPrelude(known, dependencies, file);
-  }
-
-  return dependencies;
 }
 
 /**
@@ -93,7 +20,7 @@ async function mdxOfFile(file) {
   const mdxname = `${DIR_OF_MDX}/${base}.mdx`;
   try {
     console.log(`elf->mdx transforming ${file}`);
-    const prelude = getImportedPrelude(elfname);
+    const prelude = getImportedPrelude(`${DIR_OF_ELF}/`, file);
     const mdxFile = await elfToMdx(
       elfname,
       prelude.map(({ file, contents }) => `%%! file: ${file}\n${contents}\n`)
