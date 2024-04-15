@@ -22,6 +22,8 @@ This introduction assumes this story is somewhat familiar to you. If not, you sh
  - Her paper includes a Twelf appendix, which makes her and her readers much more confident that the theorems in the paper are actually true.  
  - When someone goes to extend the language, he has a formal, machine-checkable artifact that he can study or perhaps even reuse directly.
 
+This tutorial pays a lot of attention to the question "how do I know that what I wrote down and proved on paper, and what I wrote down and proved in Twelf, are exactly the same thing?" Checking that these two things are the same is called [adequacy](/wiki/adequacy/), and it's an important problem _whenever_ you're using a theorem proving like Twelf, Agda, or Rocq. But it definitely has the flavor of "checking lots of fiddly details," and so it's reasonable to skip discussions of adequacy in this tutorial if you're exploring Twelf for the first time. 
+
 ### First order representations: The natural numbers
 
 The first layer of this introduction uses a _very_ simple deductive system, the [natural numbers](/wiki/natural-numbers/) with addition, to introduce the Twelf methodology.
@@ -41,12 +43,13 @@ The second layer tells the same story for a programming language with variable b
  8. [Representing syntax](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/)
  9. [Representing judgements](/wiki/proving-metatheorems-representing-the-judgements-of-the-stlc/)
  10. [Proving metatheorems](/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/)
+ 11. [Summary and exercises](/wiki/proving-metatheorems-summary-the-stlc/)
 
 ### Beyond the simply-typed lambda calculus
 
 The third layer presents some more-interesting proofs and introduces one additional feature of Twelf, the ability to do proofs about open terms. 
 
- 11. [Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/)
- 12. [Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/)
- 13. [Summary](/wiki/proving-metatheorems-summary-the-stlc/) ([Answers to exercises](/wiki/proving-metatheorems-stlc-answers-to-exercises/)) 
+ 12. [Proving totality assertions in non-empty contexts](/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/)
+ 13. [Proving metatheorems in non-empty contexts](/wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/)
+
 !}%

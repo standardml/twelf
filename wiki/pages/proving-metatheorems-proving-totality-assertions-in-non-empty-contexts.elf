@@ -1,19 +1,21 @@
-%%! title: "Proving metatheorems:Proving totality assertions in non-empty contexts"
+%%! title: "Proving totality assertions in non-empty contexts"
+%%! prev:
+%%!   label: "The STLC: summary and exercises"
+%%!   link: /wiki/proving-metatheorems-summary-the-stlc/
+%%! next:
+%%!   label: Proving metatheorems in non-empty contexts
+%%!   link: /wiki/proving-metatheorems-proving-metatheorems-in-non-empty-contexts/
 
-%{! \{\{proving metatheorems
-  | next = Proving metatheorems in non-empty contexts
-  | nextname = Proving metatheorems in non-empty contexts
-  | prev = Proving metatheorems about the STLC
-  | prevname = Proving metatheorems\}\}
+%{! 
+
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
 
 So far, we have only proved relations total in the empty LF context.  In this section, we discuss proving totality assertions for relations in more general contexts.  As a motivating example, we define a judgement that computes the size of a STLC term.  
 
 ## Definition of Size
 
-The definition of size uses the definitions of [natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/), [addition judgement](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), and [STLC term syntax](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) from earlier in this article. !}%
+The definition of size uses the definitions of [natural numbers](/wiki/proving-metatheorems-representing-the-syntax-of-the-natural-numbers/), [addition judgement](/wiki/proving-metatheorems-representing-the-judgements-of-the-natural-numbers/), and [STLC term syntax](/wiki/proving-metatheorems-representing-the-syntax-of-the-stlc/) from earlier in this introduction: !}%
     
-%{! (options removed from twelftag: export="syntax" hidden="true") !}%
-
 tp    : type.
 unit  : tp.
 arrow : tp -> tp -> tp.
@@ -38,14 +40,14 @@ plus-s : plus (s N1) N2 (s N3)
 %total N (plus N _ _).
 
 %{! Informally, we define the size of a term as follows:
-* &lt;math&gt;\mathsf\{\}|x| = 1&lt;/math&gt;
-* &lt;math&gt;|\langle\rangle| = 1&lt;/math&gt;
-* &lt;math&gt;|e_1 \; e_2| = 1 + |e_1| + |e_2|&lt;/math&gt;
-* &lt;math&gt;\mathsf\{\}|\lambda x:\tau.e| = 1 + |e|&lt;/math&gt;
+* <Math formula="|x| = 1"/>
+* <Math formula="|\langle\rangle| = 1"/>
+* <Math formula="|e_1 \, e_2| = 1 + |e_1| + |e_2"/>
+* <Math formula="|\lambda x{:}\tau.e| = 1 + |e|"/>
 
 We define this function in LF using the following judgement: !}%
     
-%{! (options removed from twelftag: check="true" import="syntax" export="preworld") !}%
+%{!! begin checked !!}%
 
 size       : tm -> nat -> type.
 %mode size +E -N.
@@ -60,6 +62,9 @@ size-app   : size (app E1 E2) (s N)
 		<- size E2 N2 
 		<- plus N1 N2 N.
 
+%{!! end checked !!}%
+
+
 %{! The only subtlety in this judgement is that we have recast size as a hypothetical judgement: each variable ``x:tm`` in the context is assumed to have size 1.  Correspondingly, the premise of the ``lam`` case extends the context with such an assumption for the bound variable.  
 
 ## World Declarations
@@ -73,8 +78,6 @@ We would like to assert that every term has a size.  However, because the defini
 The worlds declaration fails because ``size`` does not stay in the empty context.
 
 To give an appropriate worlds declaration for this type family, we must first specify the form of the contexts in which we consider it.  We do so with a block declaration: !}%
-    
-%{! (options removed from twelftag: import="preworld" export="withworld") !}%
 
 %block size-block : block {x : tm} {_ : size x (s z)}.
 %worlds (size-block) (size _ _).
@@ -110,9 +113,9 @@ Formalizing this reasoning requires knowing when terms of one type can appear in
 
 Using subordination, we define world subsumption as follows:
 
-: **World subsumption:** A world ``W'`` subsumes a world ``W`` for a type family ``a`` iff for all contexts Γ' in ``W'``, there exists a context Γ in ``W`` such that Γ and Γ' are equal when restricted to only the declarations at types subordinate to ``a``.
+> **World subsumption:** A world ``W'`` subsumes a world ``W`` for a type family ``a`` iff for all contexts Γ' in ``W'``, there exists a context Γ in ``W`` such that Γ and Γ' are equal when restricted to only the declarations at types subordinate to ``a``.
 
-For example, ``(size-block)*`` subsumes the world containing only the empty context for ``plus``.  On the other hand, the world ``(\{x:nat\})*`` does not subsume the world containing only the empty context for ``plus``, because adding variables representing more natural numbers is relevant to ``plus``.
+For example, ``(size-block)*`` subsumes the world containing only the empty context for ``plus``.  On the other hand, the world ``({x:nat})*`` does not subsume the world containing only the empty context for ``plus``, because adding variables representing more natural numbers is relevant to ``plus``.
 
 Using world subsumption, we refine our notion of world checking as follows. A constant world checks iff
 - The world of a type family subsumes the world of each of its premises.
@@ -125,7 +128,7 @@ Under this more permissive definition, the ``plus`` premise of ``size`` is deeme
 
 We now return to the role a world declaration has in specifying totality assertions.  The above mode and world declarations for ``size`` declare the following totality assertion:
 
-: For all LF contexts Γ in ``(size-block)*``, if ``Γ \{\{vdash\}\} E : tm`` then there exist ``N`` such that ``Γ \{\{vdash\}\} N : nat`` and ``D`` such that ``Γ \{\{vdash\}\} D : size E N``.
+> For all LF contexts Γ in ``(size-block)*``, if ``Γ ⊢ E : tm`` then there exist ``N`` such that ``Γ ⊢ N : nat`` and ``D`` such that ``Γ ⊢ D : size E N``.
 
 There are two things to note about this totality assertion:
 - It generalizes those that we have seen before, where the world always contained only the empty context and consequently the assertion was about closed terms.
@@ -135,9 +138,9 @@ Twelf verifies totality assertions in non-empty contexts in the same manner as b
 
 In this case, Twelf succeeds in proving the totality of ``size``. !}%
     
-%{! (options removed from twelftag: check="true" import="withworld" export="withtotal") !}%
-
+%{!! begin checked !!}%
 %total E (size E _).
+%{!! end checked !!}%
 
 %{! ## Example world errors
 
@@ -208,8 +211,4 @@ size-app   : size (app E1 E2) (s N)
 This definition world checks because the context in ``size-lam`` is of the form specified by the world declaration.  However, the type family ``size`` does not define a total relation because it does not cover 
 variables ``x:tm`` in the LF context.  A total relation must cover both the LF constants in the signature and the LF variables in all contexts in the world.
 
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Proving_totality_assertions_in_non-empty_contexts).
 !}%

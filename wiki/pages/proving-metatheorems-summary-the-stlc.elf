@@ -1,9 +1,15 @@
-%%! title: "Proving metatheorems:Summary: the STLC"
+%%! title: "Summary and exercises: the simply-typed lambda calculus"
+%%! description: "In the conclusion of Part 2 of the introduction to proving metatheorems in Twelf, we summarize takeaways and present some exercises to extend the simply typed lambda calculus (Part of the introduction to proving metatheorems in Twelf)"
+%%! prev:
+%%!    label: "Proving metatheorems about the STLC"
+%%!    link: "/wiki/proving-metatheorems-proving-metatheorems-about-the-stlc/"
+%%! next:
+%%!    label: "Proving totality assertions in non-empty contexts"
+%%!    link: "/wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/"
 
-%{! \{\{proving metatheorems
-  | nonext = 
-  | prev = Proving metatheorems in non-empty contexts
-  | prevname = Proving metatheorems in non-empty contexts\}\}
+%{!
+
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
 
 ## Take-aways
 
@@ -19,22 +25,96 @@ Now that you've made it through this introduction, you have the basic tools you 
 
 ## Test yourself
 
-_This section is under development; if you try other examples at this point, please add them here._
+Here are a few suggestions for additional explorations:
 
-Before going on to the next section, you may wish to test yourself with the following exercises.  Then see the [answers](/wiki/proving-metatheorems-stlc-answers-to-exercises/).
+### Adding features to the simply-typed lambda calculus
 
-- Add product types (&lt;math&gt;\tau_1 \times \tau_2&lt;/math&gt;) to the STLC and extend the proof of preservation to cover this new type.
-- _Add your exercises here!_
+A standard extension of the simply-typed lambda calculus is _pairs_:
 
+```math
+{
+  \Gamma \vdash e_1 : \tau_1
+  \qquad
+  \Gamma \vdash e_2 : \tau_2
+  \over
+  \Gamma \vdash \langle e_1, e_2 \rangle : \tau_1 \times \tau_2
+}\mathit{of\textit{-}pair}
+```
+```math
+{
+  \Gamma \vdash e : \tau_1 \times \tau_2
+  \over
+  \Gamma \vdash \pi_1\,e : \tau_1
+}\mathit{of\textit{-}proj_1}
+\qquad
+{
+  \Gamma \vdash e : \tau_1 \times \tau_2
+  \over
+  \Gamma \vdash \pi_2\,e : \tau_1
+}\mathit{of\textit{-}proj_2}
+```
 
-\{\{proving metatheorems
-  | nonext = 
-  | prev = Proving metatheorems in non-empty contexts
-  | prevname = Proving metatheorems in non-empty contexts\}\} !}%
+The dynamic semantics of pairs have a number of rules, but they are all relatively straightforward:
 
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Proving_metatheorems:Summary:_the_STLC).
+```math
+{
+  e_1 \, \mathtt{value}
+  \qquad
+  e_2 \, \mathtt{value}
+  \over
+  \langle e_1, e_2 \rangle \, \mathtt{value}
+}\mathit{value\textit{-}pair}
+```
+```math
+{
+  e_1 \mapsto e_1'
+  \over
+  \langle e_1 , e_2 \rangle \mapsto \langle e_1', e_2 \rangle
+}\mathit{step\textit{-}pair_1}
+\qquad
+{
+  e_1 \, \mathtt{value}
+  \qquad
+  e_2 \mapsto e_2'
+  \over
+  \langle e_1 , e_2 \rangle \mapsto \langle e_1, e_2' \rangle
+}\mathit{step\textit{-}pair_2}
+```
+```math
+{
+  e \mapsto e'
+  \over
+  \pi_1 \, e \mapsto \pi_1 \, e'
+}\mathit{step\textit{-}proj_1}
+\qquad
+{
+  e \mapsto e'
+  \over
+  \pi_2\,  e \mapsto \pi_2 \, e'
+}\mathit{step\textit{-}proj_2}
+```
+```math
+{
+  e_1 \, \mathtt{value}
+  \qquad
+  e_2 \, \mathtt{value}
+  \over
+  \pi_1 \, \langle e_1 , e_2 \rangle \mapsto e_1
+}\mathit{step\textit{-}proj\textit{-}beta_1}
+\qquad
+{
+  e_1 \, \mathtt{value}
+  \qquad
+  e_2 \, \mathtt{value}
+  \over
+  \pi_2 \, \langle e_1 , e_2 \rangle \mapsto e_2
+}\mathit{step\textit{-}proj\textit{-}beta_2}
+```
+
+Add these to your formalization of the simply-typed lambda calculus and extend the proof of preservation to cover this new type.
+
+## Next steps
+
+You now have everything you need to start proving metatheorems with Twelf! The [proof techniques covered in the tutorials](/wiki/tutorials/) are likely to be valuable as you continue. If you're interested in proving progress for the simply typed lambda calculus formulation, you'll do well to start by learning about [output factoring](/wiki/output-factoring/).
+
 !}%

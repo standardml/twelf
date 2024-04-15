@@ -4,8 +4,11 @@
 %{! When checking coverage of [metatheorem](/wiki/metatheorem/)s, a common problem arises because the [output coverage](/wiki/coverage-checking/) checker only considers each rule in isolation. The proof transformation technique for addressing this problem is known as **output factoring**.
 
 The primary symptom of the problem is if Twelf fails when checking an %total declaration and gives this sort of error:
-&lt;code&gt;Totality: Output of subgoal not covered
-Output coverage error ...&lt;/code&gt;
+
+```
+Totality: Output of subgoal not covered
+Output coverage error ...
+```
 
 ## Even and odd
 

@@ -1,10 +1,13 @@
 %%! title: "Proving metatheorems:Proving metatheorems in non-empty contexts"
+%%! prev:
+%%!    label: "Proving totality assertions in non-empty contexts"
+%%!    link: /wiki/proving-metatheorems-proving-totality-assertions-in-non-empty-contexts/
 
-%{! \{\{proving metatheorems
-  | next = Summary: the STLC
-  | nextname = Summary
-  | prev = Proving metatheorems about the STLC
-  | prevname = Proving metatheorems\}\}
+%{! 
+
+_This page is part of the introduction to [proving metatheorems with Twelf](/wiki/proving-metatheorems-with-twelf/)._
+
+(This part of the tutorial isn't cleaned up from the transition from MediaWiki, the archived page may have better formatting)
 
 By using Twelf's ability to prove totality assertions for type families in general worlds, we can mechanize metatheorems about open LF terms.  We prove a simple metatheorem about the judgement ``size E N`` as an example. !}%
     
