@@ -57,7 +57,7 @@ val-or-step      : tm -> type.
 
 val-or-step-val  : val-or-step E
                     <- value E.
-vos-or-step-step : val-or-step E
+val-or-step-step : val-or-step E
                     <- step E E'.
 
 %{!
@@ -75,37 +75,40 @@ The "safety = progress + preservation" formula derives the safety property by pr
 
 ## Preservation
 
-The statement of preservation for a programming language is as follows:
+The statement of preservation for the STLC is as follows:
 
 > If <Math formula="e \mapsto e'"/> and <Math formula="\cdot \vdash e : \tau"/>, then <Math formula="\cdot \vdash e' : \tau"/>.
-
-It's common 
 
 !}%
 
 preserv : step E E' -> of E T -> of E' T -> type.                                                                                                                     
 %mode preserv +Dstep +Dof -Dof'.                                                                                                                                      
                                                                                                                                                                       
-preserv-app-1    : preserv                                                                                                                                            
-                    (step-app-1 (DstepE1 : step E1 E1'))                                                                                                              
-                    (of-app (DofE2 : of E2 T2)                                                                                                                        
-                            (DofE1 : of E1 (arrow T2 T)))                                                                                                             
-                    (of-app DofE2 DofE1')                                                                                                                             
-                    <- preserv DstepE1 DofE1 (DofE1' : of E1' (arrow T2 T)).                                                                                          
+- : preserv (step-app-1 (DstepE1 : step E1 E1'))                                                                                                              
+        (of-app (DofE2 : of E2 T2)                                                                                                                        
+                (DofE1 : of E1 (arrow T2 T)))                                                                                                             
+        (of-app DofE2 DofE1')                                                                                                                             
+        <- preserv DstepE1 DofE1 (DofE1' : of E1' (arrow T2 T)).                                                                                          
                                                                                                                                                                       
-preserv-app-2    : preserv                                                                                                                                            
-                    (step-app-2 (DstepE2 : step E2 E2') (DvalE1 : value E1))                                                                                          
-                    (of-app (DofE2 : of E2 T2)                                                                                                                        
-                            (DofE1 : of E1 (arrow T2 T)))                                                                                                             
-                    (of-app DofE2' DofE1)                                                                                                                             
-                    <- preserv DstepE2 DofE2 (DofE2' : of E2' T2).                                                                                                    
+- : preserv (step-app-2 (DstepE2 : step E2 E2') (DvalE1 : value E1))                                                                                          
+        (of-app (DofE2 : of E2 T2)                                                                                                                        
+                (DofE1 : of E1 (arrow T2 T)))                                                                                                             
+        (of-app DofE2' DofE1)                                                                                                                             
+        <- preserv DstepE2 DofE2 (DofE2' : of E2' T2).                                                                                                    
                                                                                                                                                                       
-preserv-app-beta : preserv                                                                                                                                            
-                    (step-app-beta (Dval : value E2))                                                                                                                 
-                    (of-app (DofE2 : of E2 T2)                                                                                                                        
-                            (of-lam (([x] [dx] DofE x dx)                                                                                                             
-                                       : {x : tm} {dx : of x T2} of (E x) T)))                                                                                        
-                    (DofE E2 DofE2).                                                                                                                                  
+- : preserv (step-app-beta (Dval : value E2))                                                                                                                 
+        (of-app (DofE2 : of E2 T2)                                                                                                                        
+                (of-lam (([x] [dx] DofE x dx)                                                                                                             
+                        : {x : tm} {dx : of x T2} of (E x) T)))                                                                                        
+        (DofE E2 DofE2).
+
+%{! 
+
+Preservation can be established by induction on the expression <Math formula="e"/>, by induction on the typing dervation <Math formula="\cdot \vdash e : \tau"/>, or by induction on the step relation <Math formula="e \mapsto e'"/>. We give a termination ordering here that corresponds to the third option:
+
+!}%
+
+
 %{!! begin checked !!}%
 %worlds () (preserv _ _ _).
 %total D (preserv D _ _).
@@ -116,4 +119,127 @@ preserv-app-beta : preserv
 
 ## Progress
 
+The statement of progress for a programming language like this one is:
+
+> If <Math formula="\cdot \vdash e : \tau"/>, then either <Math formula="e\,\mathtt{value}"/> or there exists an <Math formula="e'"/> such that <Math formula="e \mapsto e'"/>.
+
+We'll operate by induction over the typing derivation: the statement in Twelf uses the `val-or-step` judgment described above.
+
 !}%
+
+progress : of E T -> val-or-step E -> type.
+%mode progress +Dof -Dvos.
+
+%{!
+
+Proceeding by induction over the typing derivation, two of the cases are very simple, since `empty` is a value and so is any function `lam [x] E x`. 
+
+!}%
+
+- : progress of-empty (val-or-step-val value-empty).
+
+- : progress (of-lam ([x] [dx] DofE x dx)) (val-or-step-val value-lam).
+
+%{! 
+
+### The application case and output factoring
+
+On paper, the progress case for application <Math formula="e_1 \,e_2"/> goes as follows:
+
+* We have subderivations <Math formula="\cdot \vdash e_1 \vdash \tau' \rightarrow \tau"/> and  <Math formula="\cdot \vdash e_2 : \tau'"/>for some <Math formula="\tau'"/>.
+* By induction on these two subderivations, either <Math formula="e_1"/> steps or is a value, and either <Math formula="e_2"/> steps or is a value.
+* If <Math formula="e_1"/> steps  to <Math formula="e_1'"/>, then <Math formula="e_1\,e_2 \mapsto e_1'\,e_2"/>
+* Otherwise, if  <Math formula="e_2"/> steps  to <Math formula="e_2'"/>, then <Math formula="e_2\,e_2 \mapsto e_1\,e_2'"/>
+* Otherwise, <Math formula="e_1"/> and <Math formula="e_2"/> are both values. By a [canonical forms lemma](/wiki/canonical-forms-lemma/), it must be the case that <Math formula="e_1 = \lambda x.e_0"/> for some <Math formula="e_0"/>, and so <Math formula="e_1\,e_2 \mapsto e_0[e_2/x]"/>.
+
+A _natural_ way to state these cases and conclude the proof would be as follows:
+
+```checkedtwelf
+- : progress (of-app DofE2 DofE1) (val-or-step-step (step-app-1 DstepE1))
+     <- progress DofE1 (val-or-step-step DstepE1).
+- : progress (of-app DofE2 DofE1) (val-or-step-step (step-app-2 DstepE2 DvalE1))
+     <- progress DofE1 (val-or-step-val DvalE1)
+     <- progress DofE2 (val-or-step-step DstepE2).
+- : progress (of-app DofE2 DofE1) (val-or-step-step (step-app-beta DvalE2))
+     <- progress DofE1 (val-or-step-val value-lam)
+     <- progress DofE2 (val-or-step-val DvalE2).
+
+%worlds () (progress _ _).
+%total D (progress D _).
+```
+
+But this is asking Twelf to do a lot, more than its relatively simple coverage checking algorithm can handle in its present form. This kind of reasoning, where we need to do different things depending on the result of the inductive call, is exactly when we need to use [output factoring](/wiki/output-factoring/).
+
+In this case, output factoring looks like adding a lemma that represents what we know after we make the two inductive calls in the on-paper progress lemma.
+
+> If <Math formula="\cdot \vdash e_1 : \tau' \rightarrow \tau"/>,\
+> and <Math formula="\cdot \vdash e_2 : \tau'"/>,
+> and <Math formula="e_1"/> is a value or there exists an <Math formula="e_1'"/> such that <Math formula="e_1 \mapsto e_1'"/>,\
+> and <Math formula="e_2"/> is a value or there exists an <Math formula="e_1'"/> such that <Math formula="e_1 \mapsto e_1'"/>,\
+> then <Math formula="e_1\,e_2"/> is a value or there exists an <Math formula="e'"/> such that 
+<Math formula="e_1\,e_2 \mapsto e'"/>.
+
+Or, in Twelf: !}%
+
+progress-app : of E1 (arrow T' T)
+                -> of E2 T'
+                -> val-or-step E1
+                -> val-or-step E2
+                -> val-or-step (app E1 E2)
+                -> type.
+%mode progress-app +DofE1 +DofE2 +DvosE1 +DvosE2 -Dvos.
+
+- : progress-app DofE2 DofE1 (val-or-step-step DstepE1) _ 
+     (val-or-step-step (step-app-1 DstepE1)).
+- : progress-app DofE2 DofE1 (val-or-step-val DvalE1) (val-or-step-step DstepE2) 
+     (val-or-step-step (step-app-2 DstepE2 DvalE1)).
+- : progress-app DofE2 DofE1 (val-or-step-val value-lam) (val-or-step-val DvalE2) 
+     (val-or-step-step (step-app-beta DvalE2)).
+
+%{! These cases includes the appeal to the canonical forms lemma that we saw in the informal proof: the page on [canonical forms lemmas](/wiki/canonical-forms-lemma/) discusses when canonical forms can be established "for free" like this. 
+
+There's no induction in this output factoring lemma, so the `%total` statement doesn't need any arguments. !}%
+
+%{!! begin checked !!}%
+%worlds () (progress-app _ _ _ _ _).
+%total {} (progress-app _ _ _ _ _).
+%{!! end checked !!}%
+
+
+%{!
+
+### Completing the progress proof 
+
+The application case of progress is just one case that directly appeals to the `progress-app` lemma, instead of the three cases from our failed attempt.
+
+!}%
+
+- : progress (of-app DofE2 DofE1) Dvalorstep
+     <- progress DofE1 DvalorstepE1
+     <- progress DofE2 DvalorstepE2
+     <- progress-app DofE1 DofE2 DvalorstepE1 DvalorstepE2 Dvalorstep.
+
+%worlds () (progress _ _).
+%total (D) (progress D _).
+
+%{! ### Variations
+
+When using output factoring lemmas, there are usually lots of ways of moving things around. Two variations you might want to try yourself:
+
+1. At least one of the arguments of `progress-app` can be removed: identify which one and prove progress without that argument.
+2. The application case doesn't need to output `val-or-step (app E1 E2)`, because `app E1 E2` always steps. Try re-proving `progress-app` where the output is `step (app E1 E2) E3`, and then fix the proof of `progress` accordingly.
+
+## Safety
+
+The proof of safety from the beginning directly proceeds by induction over the definition of multi-step evaluation, appealing to progress in one case and preservation in the other.
+
+!}%
+
+- : safety Dof multistep-stop Dvalorstep 
+     <- progress Dof Dvalorstep.
+- : safety Dof (multistep-go Dmultistep Dsinglestep) Dvalorstep
+     <- preserv Dsinglestep Dof Dof'
+     <- safety Dof' Dmultistep Dvalorstep.
+
+%worlds () (safety _ _ _).
+%total (Dmultistep) (safety _ Dmultistep _).

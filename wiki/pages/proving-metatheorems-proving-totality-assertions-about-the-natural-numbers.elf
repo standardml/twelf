@@ -142,7 +142,7 @@ plus-bad-output : plus (s N1) N2 (s (s N3))
 
 Here we have insisted that the output of the premise has the form ``s N3`` for some ``N3``.  Twelf correctly reports an output coverage error because this condition can fail (for example, if the premise was ``plus-z : plus z z z``).  
 
-Pattern-matching the output of a premise is like an [[inversion]] step in a proof: you're insisting that the premise derivation must conclude a particular fact that is more specific than the judgement form itself.   For Twelf to accept a relation as total, Twelf must notice that all of these inversions are permissible.  Twelf permits such inversions when it is readily apparent that they are justified, and those inversions that Twelf does not accept can be proved explicitly.
+Pattern-matching the output of a premise is like an <Todo>inversion</Todo> step in a proof: you're insisting that the premise derivation must conclude a particular fact that is more specific than the judgement form itself.   For Twelf to accept a relation as total, Twelf must notice that all of these inversions are permissible.  Twelf permits such inversions when it is readily apparent that they are justified, and those inversions that Twelf does not accept can be proved explicitly.
 
 In this example, we got an output coverage error because we constrained the output of the premise by insisting it be formed by a particular constant.  The other way to get output coverage errors is to insist that the output of a premise be a variable that occurs elsewhere in the type.  For example:
 
