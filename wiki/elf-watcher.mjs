@@ -23,11 +23,12 @@ if (!existsSync(DIR_OF_MDX)) {
 async function mdxOfFile(file) {
   const elfname = `${DIR_OF_ELF}/${file}`;
   if (!file.endsWith(".elf") || !existsSync(elfname)) return;
+
   const base = file.slice(0, file.length - 4);
   const cfgname = `${DIR_OF_ELF}/${base}.cfg`;
   const mdxname = `${DIR_OF_MDX}/${base}.mdx`;
+  console.log(`elf->mdx transforming ${file}`);
   try {
-    console.log(`elf->mdx transforming ${file}`);
     const prelude = getImportedPrelude(`${DIR_OF_ELF}/`, file);
     const mdxFile = await elfToMdx(
       elfname,
