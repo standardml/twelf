@@ -58,7 +58,7 @@ twelf-server-mlton:
 
 .PHONY: twelf-lib-mlton-wasi
 twelf-lib-mlton-wasi:
-	$(mlton) -target wasm32-unknown-wasi \
+	$(mlton) -target wasm32-wasi \
 		-format libexecutable \
 		-output bin/twelf.wasm \
 		-default-ann 'allowFFI true' \
