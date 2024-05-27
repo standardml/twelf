@@ -1,16 +1,23 @@
 %%! title: "Hypothetical judgment"
+%%! description: "Representing judgments that makes use of hypothetical assumptions."
 
 %{! A [judgment](/wiki/judgment/) is a statement derivable in a particular object logic. A **hypothetical judgment** is a judgment that makes use of hypothetical assumptions. On paper, we often represent a set of hypothetical assumptions using a context:
 
-&lt;math&gt;\{ \Gamma, A \mbox\{ true\} \vdash B \mbox\{ true\} \over \Gamma \vdash A \Rightarrow B \mbox\{ true\} \}&lt;/math&gt;
+```math
+{
+  \Gamma, A \textrm{ true} \vdash B \textrm{ true}
+  \over
+  \Gamma \vdash A \Rightarrow B \textrm{ true}
+}
+```
 
-We name the judgment that proves the truth of a proposition &lt;math&gt;\Gamma \vdash C \mbox\{ true\}&lt;/math&gt;, which can be read as "Under the assumptions &lt;math&gt;\texttt\{\}\Gamma&lt;/math&gt;, &lt;math&gt;\texttt\{\}A&lt;/math&gt; is true." The context is the sequence of assumptions &lt;math&gt;\Gamma = A_1 \mbox\{ true\}, \ldots, A_n \mbox\{ true\}&lt;/math&gt;. 
+We name the judgment that proves the truth of a proposition <Math formula="\Gamma \vdash C\textrm{ true}"/>, which can be read as "Under the assumptions <Math formula="\Gamma"/>, <Math formula="A"/> is true." The context is the sequence of assumptions <Math formula="\Gamma = A_1\textrm{ true}, \ldots, A_n\textrm{ true}"/>.
 
 With an ordinary hypothetical context, we may freely coalesce repeated assumptions, add extra unused assumptions, and to reorder the assumptions in the context. (Formally, these are the properties of contraction, weakening, and exchange.) 
 
-Additionally, a context in a hypothetical judgment should satisfy the identity and substitution properties. Identity simply means that we should be able to use our hypotheses -- &lt;math&gt;\Gamma, A \mbox\{ true\} \vdash A \mbox\{ true\}&lt;/math&gt;. Substitution  means that if we have a proof tree showing &lt;math&gt;\Gamma, A \mbox\{ true\} \vdash B \mbox\{ true\}&lt;/math&gt;, and another proof tree &lt;math&gt;\Gamma \vdash A \mbox\{ true\}&lt;/math&gt;, then we should be able to substitute the second tree into the first, replacing hypothesis &lt;math&gt;\texttt\{\}A \mbox\{ true\}&lt;/math&gt; and producing a new tree proving &lt;math&gt;\Gamma \vdash B \mbox\{ true\}&lt;/math&gt;.
+Additionally, a context in a hypothetical judgment should satisfy the identity and substitution properties. Identity simply means that we should be able to use our hypotheses -- <Math formula="\Gamma, A\textrm{ true} \vdash A\textrm{ true}"/>. Substitution  means that if we have a proof tree showing <Math formula="\Gamma, A\textrm{ true} \vdash B\textrm{ true}"/>, and another proof tree <Math formula="\Gamma \vdash A\textrm{ true}"/>, then we should be able to substitute the second tree into the first, replacing hypothesis <Math formula="A\textrm{ true}"/> and producing a new tree proving <Math formula="\Gamma \vdash B\textrm{ true}"/>.
 
-This sample rule is the implication introduction rule, which says that &lt;math&gt;A \Rightarrow B&lt;/math&gt; is true if we can show &lt;math&gt;\texttt\{\}B&lt;/math&gt; is true under the hypothetical assumption &lt;math&gt;\texttt\{\}A \mbox\{ true\}&lt;/math&gt;. 
+This sample rule is the implication introduction rule, which says that <Math formula="A \Rightarrow B"/> is true if we can show <Math formula="B"/> is true under the hypothetical assumption <Math formula="A\textrm{ true}"/>.
 
 In the LF methodology, we represent the hypothetical context of our object language's judgment using the LF context itself. (See [higher-order judgment](/wiki/higher-order-judgements/).)
 
@@ -24,15 +31,8 @@ true : prop -> type.
 imp/intro : true (A ==> B) <-
               (true A -> true B).
 
-%{! Here, we represent the hypothetical assumption that &lt;math&gt;\texttt\{\}A \mbox\{ true\}&lt;/math&gt; using an LF hypothesis of type ``A true``. We can see this clearly if we write down the proof term for the proof of the tautology ``P ==&gt; P``: !}%
+%{! Here, we represent the hypothetical assumption that <Math formula="A\textrm{ true}"/> using an LF hypothesis of type ``A true``. We can see this clearly if we write down the proof term for the proof of the tautology ``P ==> P``: !}%
     
 taut : true (P ==> P)= imp/intro ([ptrue : true P] ptrue).
 
-%{! Within the scope of the function argument to ``imp/intro``, we assume that we have a proof of ``P true`` (which we creatively named ``ptrue``). This assumption lets us show that ``P true`` holds, and that lets us show that ``(P ==&gt; P) true``. !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Hypothetical_judgment).
-!}%
+%{! Within the scope of the function argument to ``imp/intro``, we assume that we have a proof of ``P true`` (which we creatively named ``ptrue``). This assumption lets us show that ``P true`` holds, and that lets us show that ``(P ==> P) true``. !}%
