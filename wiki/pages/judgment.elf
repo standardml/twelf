@@ -1,60 +1,64 @@
 %%! title: "Judgment"
+%%! description: "Judgments and the judgments as types principle."
 
 %{! In the context of this wiki, we use the word **judgment** (or **judgement**) to refer to a relation that is defined inductively by a collection of inference rules.  The **judgments as types principle** is a name for the methodology by which judgments are represented in LF.
 
 ## A judgment in standard notation
 
-For example, we can define a judgment that a [natural number](/wiki/natural-numbers/) is even. The judgement &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; holds when &lt;math&gt;\texttt\{\}n&lt;/math&gt; is even.  It is inductively defined by the following inference rules:
+For example, we can define a judgment that a [natural number](/wiki/natural-numbers/) is even. The judgement <Math formula="\mathsf{even}(n)"/> holds when <Math formula="n"/> is even.  It is inductively defined by the following inference rules:
 
-&lt;table style="margin-left:auto;margin-right:auto" cellpadding="24"&gt;
-&lt;tr&gt;&lt;td&gt;
-&lt;math&gt;\{\qquad\} \over \{\mathsf\{even\}(\mathsf\{zero\})\}
-&lt;/math&gt;
-&lt;/td&gt;&lt;td&gt;
-&lt;math&gt;
-\{\mathsf\{even\}(n)\} \over \{\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(n)))\}
-&lt;/math&gt;
-&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;
+```math
+{
+  \over
+  \mathsf{even}(\mathsf{zero})
+}
+\qquad
+{
+  \mathsf{even}(n)
+  \over
+  \mathsf{even}(\mathsf{succ}(\mathsf{succ}(n)))
+}
+```
 
 ## Judgments as types
 
 A judgment is represented in LF using the **judgments as types** methodology: we represent a judgment with an LF type, where the inhabitants of this type correspond exactly to derivations of the judgement.
 
-For example, we represent the judgment &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt; using the following signature: !}%
+For example, we represent the judgment <Math formula="\mathsf{even}(n)"/> using the following signature: !}%
     
-%{! (options removed from twelftag: hidden="true") !}%
+%{!! begin hidden !!}%
 
 nat : type.
 z   : nat.
 s   : nat -> nat.
 
-%{!  !}%
+%{!! end hidden !!}%
     
 even    : nat -> type.
 even-z  : even z.
 even-s  : {N:nat} even N -> even (s (s N)).
 
-%{! The first declaration says that ``even`` is a family of types indexed by a ``nat``.  This means that for every term ``N : nat``, there is a type ``even N``.  Note that the syntax ``-&gt;`` is overloaded: it is used to classify both type-level families and term-level functions.  We then use this type family to define the types of two term constants.
+%{! The first declaration says that ``even`` is a family of types indexed by a ``nat``.  This means that for every term ``N : nat``, there is a type ``even N``.  Note that the syntax ``->`` is overloaded: it is used to classify both type-level families and term-level functions.  We then use this type family to define the types of two term constants.
 
-The first term constant, ``even-z``, has type ``even z``.  This constant represents the derivation that consists of the first inference rule above, which concludes &lt;math&gt;\mathsf\{even\}(\mathsf\{zero\})&lt;/math&gt;.  
+The first term constant, ``even-z``, has type ``even z``.  This constant represents the derivation that consists of the first inference rule above, which concludes <Math formula="\mathsf{even}(\mathsf{zero})"/>.  
 
-The second term constant ``even-s``, corresponds to the second inference rule above, which, for any &lt;math&gt;\texttt\{\}n&lt;/math&gt;, constructs a derivation of &lt;math&gt;\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(n)))&lt;/math&gt; from a derivation of &lt;math&gt;\mathsf\{even\}(n)&lt;/math&gt;.  To encode this inference rule, the constant ``even-s`` is given a [dependent function type](/wiki/dependent-types/).  
+The second term constant ``even-s``, corresponds to the second inference rule above, which, for any <Math formula="n"/>, constructs a derivation of <Math formula="\mathsf{even}(\mathsf{succ}(\mathsf{succ}(n)))"/> from a derivation of <Math formula="\mathsf{even}(n)"/>.  To encode this inference rule, the constant ``even-s`` is given a [dependent function type](/wiki/dependent-types/).  
 
 For example, the LF term
-&lt;!-- syntax highlighting looks weird when it's not actually Twelf code --&gt;
-&lt;pre&gt;even-s z even-z
-&lt;/pre&gt;
+{/* syntax highlighting looks weird when it's not actually Twelf code */}
+```
+even-s z even-z
+```
 
 represents the derivation
 
-&lt;center&gt;
-&lt;math&gt;
-\{\overline\{\mathsf\{even\}(\mathsf\{zero\})\}\}
-\over 
-\{\mathsf\{even\}(\mathsf\{succ\}(\mathsf\{succ\}(\mathsf\{zero\})))\}
-&lt;/math&gt;
-&lt;/center&gt;
+```math
+{
+  \overline{\mathsf{even}(\mathsf{zero})}
+  \over
+  \mathsf{even}(\mathsf{succ}(\mathsf{succ}(\mathsf{zero})))
+}
+```
 
 The term ``even-s (s (s z)) (even-s z even-z)`` represents a derivation that 4 is even, and so on.
 
@@ -63,11 +67,4 @@ The term ``even-s (s (s z)) (even-s z even-z)`` represents a derivation that 4 i
 * [Hypothetical judgement](/wiki/hypothetical-judgment/)s can be represented in LF in a [higher-order](/wiki/higher-order-judgements/) manner, using LF binding to represent hypotheses.  
 * The [introductions to Twelf](/wiki/introductions-to-twelf/) discuss how judgments are represented in LF in more detail.
 
-\{\{stub\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Judgment).
 !}%
