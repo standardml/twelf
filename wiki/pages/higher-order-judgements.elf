@@ -1,6 +1,7 @@
 %%! title: "Higher-order judgements"
+%%! description: "Representing hypothetical judgments in LF using higher-order types."
 
-%{! When representing [judgment](/wiki/judgment/)s in [LF](/wiki/lf/), it is often possible to represent [hypothetical judgment](/wiki/hypothetical-judgment/)s using LF binding.  We call this representation technique**higher-order judgments_ because judgments are represented using higher-order types in LF.  Higher-order representations are advantageous because hypothetical judgment properties such as [weakening](/wiki/weakening-lemma/), [exchange](/wiki/exchange-lemma/), and [substitution](/wiki/substitution-lemma/) are inherited "for free" from the corresponding properties of LF.
+%{! When representing [judgment](/wiki/judgment/)s in [LF](/wiki/lf/), it is often possible to represent [hypothetical judgment](/wiki/hypothetical-judgment/)s using LF binding.  We call this representation technique _higher-order judgments_ because judgments are represented using higher-order types in LF.  Higher-order representations are advantageous because hypothetical judgment properties such as [weakening](/wiki/weakening-lemma/), [exchange](/wiki/exchange-lemma/), and [substitution](/wiki/substitution-lemma/) are inherited "for free" from the corresponding properties of LF.
 
 ## Example
 
@@ -8,30 +9,51 @@
 
 As an example, we use the typing judgment for the [simply-typed lambda calculus](/wiki/simply-typed-lambda-calculus/).  This calculus has the following syntax:
 
-&lt;math&gt;\texttt\{\}\tau ::= \texttt\{unit\} \,|\, \tau_1 \rightarrow \tau_2&lt;/math&gt;
+```math
+\tau ::= \texttt{unit} \,|\, \tau_1 \rightarrow \tau_2
+```
+```math
+\texttt{e} ::= x \,|\, \langle\rangle \,|\, \lambda x :\tau . e\ |\, e_1\ e_2
+```
 
-&lt;math&gt;\texttt\{\}e ::= x \,|\, \langle\rangle \,|\, \lambda x :\tau . e \,|\, e_1 e_2&lt;/math&gt;
+The terms are the variable <Math formula="x"/>, the empty pair (which has type ``unit``), lambda abstraction (with a type annotation), and application.
 
-The terms are the variable &lt;math&gt;x&lt;/math&gt;, the empty pair (which has type ``unit``), lambda abstraction (with a type annotation), and application.
+The typing rules for the simply typed lambda calculus use a typing context <Math formula="\gamma"/>; containing assumptions of the form <Math formula="x : \tau"/>. Such a context is well-formed when all variables in it are distinct.
 
-The typing rules for the simply typed lambda calculus use a typing context &lt;math&gt;\texttt\{\}\gamma&lt;/math&gt; containing assumptions of the form &lt;math&gt;\mathsf\{\}x : \tau&lt;/math&gt;. Such a context is well-formed when all variables in it are distinct.
-
-&lt;math&gt;\{ \; \over \gamma, x : \tau, \gamma' \vdash x : \tau\}\,\mbox\{of-var\}&lt;/math&gt;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-&lt;math&gt;\{ \gamma , x : \tau_2 \vdash e : \tau \over \gamma \vdash \lambda x:\tau_2.e : (\tau_2 \rightarrow \tau)\}\,\mbox\{of-lam\}&lt;/math&gt;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-
-&lt;math&gt;\{ \; \over \gamma \vdash \langle\rangle : \texttt\{unit\}\}\,\mbox\{of-empty\}&lt;/math&gt;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-&lt;math&gt;\{ \gamma \vdash e_1 : (\tau_2 \rightarrow \tau) \qquad \gamma \vdash e_2 : \tau_2 \over \gamma \vdash e_1 e_2 : \tau\}\,\mbox\{of-app\}&lt;/math&gt;
+```math
+{
+  \over
+  \gamma, x : \tau, \gamma' \vdash x : \tau
+}\textit{of-var}
+\qquad
+{
+  \gamma, x: \tau_2 \vdash e : \tau
+  \over
+  \gamma \vdash \lambda x:\tau_2.e : (\tau_2 \rightarrow \tau)
+}\textit{of-lam}
+```
+```math
+{
+  \over
+  \gamma \vdash \langle\rangle : \texttt{unit}
+}\textit{of-empty}
+\qquad
+{
+  \gamma \vdash e_1 : (\tau_2 \rightarrow \tau)
+  \qquad
+  \gamma \vdash e_2 : \tau_2
+  \over
+  \gamma \vdash \lambda x:\tau_2.e : (\tau_2 \rightarrow \tau)
+}\textit{of-app}
+```
 
 This is a _hypothetical judgement_, which means that the following structural properties are true:
-* Hypothesis: &lt;math&gt;\gamma,x : \tau \vdash x : \tau&lt;/math&gt;.
-* Weakening: if &lt;math&gt;\gamma \vdash e : \tau&lt;/math&gt; and &lt;math&gt;\mathsf\{\}x&lt;/math&gt; is fresh then &lt;math&gt;\gamma,x:\tau' \vdash e : \tau&lt;/math&gt;.
-* Exchange: if &lt;math&gt;\gamma,x:\tau_1,y:\tau_2 \vdash e : \tau&lt;/math&gt; then &lt;math&gt;\gamma,y:\tau_2,x:\tau_1 \vdash e : \tau&lt;/math&gt;.
-* Substitution: if &lt;math&gt;\gamma,x : \tau' \vdash e : \tau&lt;/math&gt; and &lt;math&gt;\gamma \vdash e' : \tau'&lt;/math&gt; then &lt;math&gt;\gamma \vdash \{e'/x\}e : \tau&lt;/math&gt;.
+* Hypothesis: <Math formula="\gamma, x : \tau \vdash x : \tau"/> is derivable.
+* Weakening: if <Math formula="\gamma \vdash e : \tau"/> and <Math formula="x"/> is fresh then <Math formula="\gamma, y: \tau_2, x: \tau_1 \vdash e : \tau"/>.
+* Exchange: if <Math formula="\gamma, x : \tau_1, y : \tau_2 \vdash e : \tau"/> then <Math formula="\gamma, y : \tau_2, x : \tau_1 \vdash e : \tau"/>.
+* Substitution: if <Math formula="\gamma, x : \tau' \vdash e : \tau"/> and <Math formula="\gamma \vdash e' : \tau'"/> then <Math formula="\gamma \vdash \{e'/x\}e : \tau"/>.
 
-Hypothesis is derivable by the rule &lt;math&gt;\mbox\{of-var\}&lt;/math&gt;.  Weakening, exchange, and substitution are admissible.
+Hypothesis is derivable by the rule <Math formula="\textit{of-var}"/>.  Weakening, exchange, and substitution are admissible.
 
 ### LF representation
 
@@ -48,7 +70,7 @@ lam : tp -> (tm -> tm) -> tm.
 
 %{! Terms are represented using [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/).
 
-As an example of higher-order representations of judgments, we use LF binding to represent the object-language typing judgement.  The following LF signature represents the above judgement &lt;math&gt;\gamma \vdash e : \tau&lt;/math&gt; with the LF type family ``of``. !}%
+As an example of higher-order representations of judgments, we use LF binding to represent the object-language typing judgement.  The following LF signature represents the above judgement <Math formula="\gamma \vdash e : \tau"/> with the LF type family ``of``. !}%
     
 of       : tm -> tp -> type.
 of-empty : of empty unit.
@@ -58,21 +80,21 @@ of-app   : of (app E1 E2) T
             <- of E1 (arrow T2 T)
             <- of E2 T2.
 
-%{! The first thing to note is that the type family is indexed by a ``tm`` and a ``tp`` but **not** a representation of the context &lt;math&gt;\gamma&lt;/math&gt;.  The reason for this is that we identify the object-language context with the LF context.  Specifically, an object-language assumption &lt;math&gt;x:\tau&lt;/math&gt; does two things:
-* It binds the variable &lt;math&gt;\mathsf\{\}x&lt;/math&gt;.
-* It declares a typing assumption &lt;math&gt;x : \tau&lt;/math&gt;.
+%{! The first thing to note is that the type family is indexed by a ``tm`` and a ``tp`` but **not** a representation of the context <Math formula="\gamma"/>;.  The reason for this is that we identify the object-language context with the LF context.  Specifically, an object-language assumption <Math formula="x:\tau"/> does two things:
+* It binds the variable <Math formula="x"/>.
+* It declares a typing assumption <Math formula="x : \tau"/>.
 
-Thus, an object-language assumption &lt;math&gt;x:\tau&lt;/math&gt; is represented by the following two LF assumptions:
+Thus, an object-language assumption <Math formula="x: \tau"/> is represented by the following two LF assumptions:
 
-``x : tm,  dx : of x T `` (where ``T`` is the encoding of &lt;math&gt;\tau&lt;/math&gt;).  
+``x : tm,  dx : of x T `` (where ``T`` is the encoding of <Math formula="\tau"/>).  
 
-The first LF variable represents an object-language term ``x``, as per the encoding of syntax in the previous section.  The second variable represents a derivation that ``of x T``.  Consequently, there is no LF constant corresponding to the rule &lt;math&gt;\mbox\{of-var\}&lt;/math&gt;; uses of this rule are represented by uses of the corresponding LF variable ``dx``.
+The first LF variable represents an object-language term ``x``, as per the encoding of syntax in the previous section.  The second variable represents a derivation that ``of x T``.  Consequently, there is no LF constant corresponding to the rule <Math formula="\textit{of-var}"/>; uses of this rule are represented by uses of the corresponding LF variable ``dx``.
 
 This representation of hypotheses gives rise to the higher-order premise of the constant ``of-lam``, which has type 
 
-``\{x: tm\} of x T2 -&gt; of (E x) T``
+``{x: tm} of x T2 -> of (E x) T``
 
-An LF term of this type has the form ``([x] [dx: of x T2] M)``, where ``M : of (E x) T`` _in an LF context extended with ``x : tm,  dx : of x T2``_.  Thus, ``M`` is the representation of an object-language derivation under the additional assumption &lt;math&gt;\mathsf\{\}x:\tau&lt;/math&gt;.
+An LF term of this type has the form ``([x] [dx: of x T2] M)``, where ``M : of (E x) T`` _in an LF context extended with ``x : tm,  dx : of x T2``_.  Thus, ``M`` is the representation of an object-language derivation under the additional assumption <Math formula="x:\tau"/>.
 
 The constants ``of-empty`` and ``of-app`` correspond to the informal inference rules of the same name.
 
@@ -81,11 +103,4 @@ The constants ``of-empty`` and ``of-app`` correspond to the informal inference r
 * [Reformulating languages to use hypothetical judgements](/wiki/reformulating-languages-to-use-hypothetical-judgements/)
 * [higher-order abstract syntax](/wiki/higher-order-abstract-syntax/)
 
-\{\{stub\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Higher-order_judgements).
 !}%
