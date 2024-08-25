@@ -2,7 +2,7 @@
 
 %{! &lt;font face="Lucida Sans Unicode"&gt;⊕&lt;/font&gt;&lt;noinclude&gt;
 
-This template renders the _linear or_ (latex \oplus) symbol, with workarounds for Internet Explorer. Use it by typing &lt;nowiki&gt;\{\{oplus\}\}&lt;/nowiki&gt; in an article.
+This template renders the _linear or_ (latex \oplus) symbol, with workarounds for Internet Explorer. Use it by typing &lt;nowiki&gt;⊕&lt;/nowiki&gt; in an article.
 
 &lt;/noinclude&gt; !}%
 

@@ -114,7 +114,7 @@ contra : true A W -> false A W -> #.
       (false A W' -> #) ->
       (false (? A) W -> #).
 
-%{! Unlike the natural deduction, this presentation of the \{\{box\}\} and \{\{dia\}\} connectives is completely standard. !}%
+%{! Unlike the natural deduction, this presentation of the □ and ⋄ connectives is completely standard. !}%
     
 % conjunction
 &T :
@@ -331,7 +331,7 @@ x_& : xm (A & B) W ([&t] &T ([at][bt] D1 &t at bt) &t)
 
 %{! ## Natural deduction to sequent calculus
 
-The admissibility of excluded middle allows us to straightforwardly translate natural deduction proofs to sequent calculus proofs. The theorem we prove is that if Γ;Δ \{\{vdash\}\} A @ W then Γ # A * W, Δ. Operationally, we can think of this as follows: if we have a program of type _A_, then we can pass the result of that program to a continuation expecting _A_ to get a contradiction. !}%
+The admissibility of excluded middle allows us to straightforwardly translate natural deduction proofs to sequent calculus proofs. The theorem we prove is that if Γ;Δ ⊦ A @ W then Γ # A * W, Δ. Operationally, we can think of this as follows: if we have a program of type _A_, then we can pass the result of that program to a continuation expecting _A_ to get a contradiction. !}%
     
 %%% Translation from natural deduction to sequent calculus.
 
@@ -551,7 +551,7 @@ xs-throwhit  : xs D ([u] throw (E u) u) (D B W' F)
 
 %{! ## Sequent calculus to natural deduction
 
-With substitution defined, we can now translate sequent calculus proofs back into C5 natural deduction. The theorem we prove is that if Γ # Δ then ∀C. ∀ω. Γ; Δ \{\{vdash\}\} C @ ω. !}%
+With substitution defined, we can now translate sequent calculus proofs back into C5 natural deduction. The theorem we prove is that if Γ # Δ then ∀C. ∀ω. Γ; Δ ⊦ C @ ω. !}%
     
 %%% Translation from Sequent Calculus to Natural Deduction
 

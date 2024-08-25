@@ -243,7 +243,7 @@ For pedagogical parsimony, we have defined greater-than in terms of addition, so
 
 By adequacy, this theorem can be recast as the following statement about LF terms:
 
-: For all Γ in ``(size-block)*``, if ``Γ \{\{vdash\}\} E' : tm`` and ``Γ \{\{vdash\}\} D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ \{\{vdash\}\} D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ \{\{vdash\}\} Dplus : plus Ndiff N N'``.
+: For all Γ in ``(size-block)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
 
 Considering arbitrary contexts in the world ``(size-block)*`` is necessary to capture the informal theorem statement, which ranges over all possibly-open terms <Math formula="\mathsf{}e"/> and <Math formula="\mathsf{}e'"/>.  The ``size`` derivation for the term <Math formula="\mathsf{}e"/> with a distinguished free variable <Math formula="\mathsf{}x"/> is represented by an LF term of higher type ``\{x:tm\} size x (s z) -&gt; size (E x) N``.  
 
@@ -452,11 +452,11 @@ subst-size : {E' : tm}
 
 We set out to prove
 
-: For all Γ in ``(size-block)*``, if ``Γ \{\{vdash\}\} E' : tm`` and ``Γ \{\{vdash\}\} D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ \{\{vdash\}\} D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ \{\{vdash\}\} Dplus : plus Ndiff N N'``.
+: For all Γ in ``(size-block)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
 
 But the corrected Twelf proof actually proves
 
-: For all Γ in ``(ssblock)*``, if ``Γ \{\{vdash\}\} E' : tm`` and ``Γ \{\{vdash\}\} D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ \{\{vdash\}\} D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ \{\{vdash\}\} Dplus : plus Ndiff N N'``.
+: For all Γ in ``(ssblock)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
 
 Did we prove the right theorem?  Not necessarily: it is possible that the contexts in ``(ssblock)*`` do not cover all open terms, or that they include inadequate derivations of ``plus Ndiff N N'``.  Thus, there is a danger here: we need to check that the second statement implies the first to see that we proved the right theorem.  
 

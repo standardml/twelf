@@ -4,7 +4,7 @@
 
 ## Cut
 
-For a sequent calculus Γ \{\{darrow\}\} C, where Γ holds hypotheses and the proposition C is the conclusion, the statement of cut is as follows: If Γ \{\{darrow\}\} A and Γ,A \{\{darrow\}\} C then Γ \{\{darrow\}\} C.
+For a sequent calculus Γ ⇒ C, where Γ holds hypotheses and the proposition C is the conclusion, the statement of cut is as follows: If Γ ⇒ A and Γ,A ⇒ C then Γ ⇒ C.
 
 Often, logicians will include cut in the sequent calculus as a rule:
 
@@ -35,7 +35,7 @@ Suppose we have the following sequent calculus:
 &lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;
 
-The logic supports only the \{\{top\}\}, ∧, and ⊃ connectives to simplify this tutorial. In LF, we encode the sequent calculus as follows: !}%
+The logic supports only the ⊤, ∧, and ⊃ connectives to simplify this tutorial. In LF, we encode the sequent calculus as follows: !}%
     
 prop : type.    %name prop A.
 top : prop.
@@ -85,7 +85,7 @@ closed : cut A D ([Ha] E') E'.
 
 %{! If ``D`` is the ``init`` rule used to conclude ``conc A`` from ``hyp A``, then Γ includes ``hyp A`` already, so we can satisfy the hypothesis in ``E`` by simply using the ``A`` that is already around (case ``initD``).
 
-If ``E`` is the ``init`` rule used to conclude ``conc C`` from ``hyp A`` (so ``A`` = ``C``), then ``D`` is a proof of Γ \{\{darrow\}\} C, so ``F`` is just ``D`` (case ``initE``).
+If ``E`` is the ``init`` rule used to conclude ``conc C`` from ``hyp A`` (so ``A`` = ``C``), then ``D`` is a proof of Γ ⇒ C, so ``F`` is just ``D`` (case ``initE``).
 
 It's also possible that ``E`` is the ``init`` rule used to conclude ``conc C`` from some other hypothesis ``C`` in Γ. In this case, ``E`` doesn't use the hypothesis ``A`` at all, so ``E`` can be strengthened to produce the output derivation ``F`` which doesn't depend on ``A``. In fact, we can easily generalize this case to any derivation ``E`` that does not use the hypothesis ``A``; this is the ``closed`` case. (When we write ``([Ha] E')``, the variable ``E'``&mdash;which is implicitly quantified at the outside of the goal&mdash;cannot depend on the lambda-bound variable ``Ha``. This is how we indicate the derivation is closed with respect to its argument.)
 
@@ -93,7 +93,7 @@ It's also possible that ``E`` is the ``init`` rule used to conclude ``conc C`` f
 
 The most interesting cases are those where the cut formula ``A`` is concluded with a right rule in ``D``, and used with a left rule in ``E``. These are known as _principal cuts_.
 
-There is no principal cut for \{\{top\}\} because there is no left rule, so the easiest one will be ``A ∧ B``: !}%
+There is no principal cut for ⊤ because there is no left rule, so the easiest one will be ``A ∧ B``: !}%
     
 andC : cut (and A B) (andR D1 D2) ([Hab : hyp (and A B)] andL ([Ha : hyp A] [Hb : hyp B] E' Hab Ha Hb) Hab) F
     <- ({Ha} {Hb} cut (and A B) (andR D1 D2) ([Hab] E' Hab Ha Hb) (F1 Ha Hb))
