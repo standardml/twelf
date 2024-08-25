@@ -268,11 +268,11 @@ substitutions.
 %{! 
 
 If the left-hand side is a β-reduction 
-``(λx.ea) eb =&gt; [e1b/x] e1a`` but the right-hand side is not, then we 
+``(λx.ea) eb => [e1b/x] e1a`` but the right-hand side is not, then we 
 know that the right-hand side reduction must be 
-``(λx.ea) eb =&gt; (λx.e2a) e2b``.
+``(λx.ea) eb => (λx.e2a) e2b``.
 
-Unfortunately, then we have two options - either ``λx.ea =&gt; λx.e2a`` by
+Unfortunately, then we have two options - either ``λx.ea => λx.e2a`` by
 ``reduce/refl`` and ``reduce/lam``. The ``reduce/refl`` case
 is essentially just an inconvenience caused by allowing identity reductions
 anywhere (not just at variables).

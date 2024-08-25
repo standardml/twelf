@@ -100,7 +100,7 @@ andC : cut (and A B) (andR D1 D2) ([Hab : hyp (and A B)] andL ([Ha : hyp A] [Hb 
     <- ({Hb} cut A D1 ([Ha] F1 Ha Hb) (F2 Hb))
     <- cut B D2 ([Hb] F2 Hb) F.
 
-%{! We identify the case where ``D`` is an instance of ``andR``, and ``E`` is ``andL`` acting on the hypothesis of the cut formula. (The hypothetical derivation ``E`` is represented as a LF function taking the hypothesis ``A ∧ B``; we identify the case where this specific hypothesis is used by ``andL`` by passing that bound variable (``Hab``) to the ``andL`` constant.) We have a subderivation ``E'`` of  ``conc C`` under hypotheses ``hyp (and A B)``, ``hyp A``, and ``hyp B``. We must eliminate each of these to produce ``F``. In the first subgoal we eliminate the ``and A B`` hypothesis. ``D`` itself is a derivation of ``conc (and A B)`` in Γ, so we want to appeal to the IH on ``D`` and ``E'``. There are a few things to notice. First, we did not name ``D`` (indeed there is no way to do so) because we pattern matched against it as an application of ``andR``; therefore, in the inductive call we have to build up ``D`` again as ``andR D1 D2``. Second, ``E'`` is not of the correct type for the inductive call, because it is a curried function of three arguments, not one. We therefore must make the subgoal higher order: we hypothesize the existence of ``Ha`` and ``Hb`` (of type ``hyp A`` and ``hyp B`` respectively). We then form the term of type ``hyp (and A B) -&gt; conc C`` by abstracting the hypothesis we seek to eliminate (``Hab``) and applying ``E'`` to it and the Π-bound ``Ha`` and ``Hb``. Because this inductive call is in a context including ``Ha`` and ``Hb``, the resulting derivation ``F1`` depends on those two variables as well.
+%{! We identify the case where ``D`` is an instance of ``andR``, and ``E`` is ``andL`` acting on the hypothesis of the cut formula. (The hypothetical derivation ``E`` is represented as a LF function taking the hypothesis ``A ∧ B``; we identify the case where this specific hypothesis is used by ``andL`` by passing that bound variable (``Hab``) to the ``andL`` constant.) We have a subderivation ``E'`` of  ``conc C`` under hypotheses ``hyp (and A B)``, ``hyp A``, and ``hyp B``. We must eliminate each of these to produce ``F``. In the first subgoal we eliminate the ``and A B`` hypothesis. ``D`` itself is a derivation of ``conc (and A B)`` in Γ, so we want to appeal to the IH on ``D`` and ``E'``. There are a few things to notice. First, we did not name ``D`` (indeed there is no way to do so) because we pattern matched against it as an application of ``andR``; therefore, in the inductive call we have to build up ``D`` again as ``andR D1 D2``. Second, ``E'`` is not of the correct type for the inductive call, because it is a curried function of three arguments, not one. We therefore must make the subgoal higher order: we hypothesize the existence of ``Ha`` and ``Hb`` (of type ``hyp A`` and ``hyp B`` respectively). We then form the term of type ``hyp (and A B) -> conc C`` by abstracting the hypothesis we seek to eliminate (``Hab``) and applying ``E'`` to it and the Π-bound ``Ha`` and ``Hb``. Because this inductive call is in a context including ``Ha`` and ``Hb``, the resulting derivation ``F1`` depends on those two variables as well.
 
 We then want to do the same thing to eliminate the hypotheses for ``A`` and ``B``. In the second subgoal, we prove that for all derivations of ``hyp B`` (Π-bound variable ``Hb``), we can cut ``D1`` with the result of the previous induction ``F1`` to get ``F2``, which only depends on ``Hb``. Finally, in the third subgoal we eliminate the ``hyp B`` hypothesis to produce a derivation of ``conc C`` in the ambient Γ with no extra assumptions, which is what we need for ``F``.
 
@@ -114,7 +114,7 @@ impC : cut (imp A B) (impR ([Ha] D' Ha))
     <- cut A F1 D' (F3 : conc B)
     <- cut B F3 F2 F.
 
-%{! The ``impC`` case works in much the same way. We first cut the ``A ⊃ B`` hypothesis from both subderivations ``E1`` and ``E2``. We then have ``F1 : conc A`` and ``F2 : hyp B -&gt; conc C``. To get ``F3 : conc B`` we cut the ``hyp A`` from ``D' : hyp A -&gt; conc B`` using ``F1`` (note that in this inductive call, derivations from the "``D`` side" and "``E`` side" have switched roles!). Finally, we cut the ``hyp B`` from ``F2`` to get the result ``F``.
+%{! The ``impC`` case works in much the same way. We first cut the ``A ⊃ B`` hypothesis from both subderivations ``E1`` and ``E2``. We then have ``F1 : conc A`` and ``F2 : hyp B -> conc C``. To get ``F3 : conc B`` we cut the ``hyp A`` from ``D' : hyp A -> conc B`` using ``F1`` (note that in this inductive call, derivations from the "``D`` side" and "``E`` side" have switched roles!). Finally, we cut the ``hyp B`` from ``F2`` to get the result ``F``.
 
 ### Left-commutative cuts
 
@@ -128,7 +128,7 @@ impLLC : cut A (impL D1 ([Hb] D2 Hb) Hi) E
                (impL D1 F2 Hi)
       <- ({Hb} cut A (D2 Hb) E (F2 Hb)).
 
-%{! In the ``andLLC``, ``D : conc A`` is an instance of ``andL``. We proceed by hypothesizing the ``Ha : hyp A1`` and ``Hb : hyp B1`` that ``D' : hyp A1 -&gt; hyp B1 -&gt; conc A`` depends on, so that we may cut it against ``E``. The resulting derivation ``F'`` then also depends on a ``hyp A1`` and ``hyp B1``; we wrap it with an instance of the ``andL`` rule. In these commutative cases, we find rules that do not involve the cut formula, work underneath them inductively, and then re-apply the rule to the cut-free proof we obtained. The ``impLLC`` case follows the same pattern.
+%{! In the ``andLLC``, ``D : conc A`` is an instance of ``andL``. We proceed by hypothesizing the ``Ha : hyp A1`` and ``Hb : hyp B1`` that ``D' : hyp A1 -> hyp B1 -> conc A`` depends on, so that we may cut it against ``E``. The resulting derivation ``F'`` then also depends on a ``hyp A1`` and ``hyp B1``; we wrap it with an instance of the ``andL`` rule. In these commutative cases, we find rules that do not involve the cut formula, work underneath them inductively, and then re-apply the rule to the cut-free proof we obtained. The ``impLLC`` case follows the same pattern.
 
 ### Right-commutative cuts
 
@@ -169,7 +169,7 @@ We can now state and check the metatheorem: that for every [ground](/wiki/ground
 
 %{! We proved the admissibility of cut for a small sequent calculus with only a few connectives. Experience shows that this same strategy works for more complex logics. For instance, the case study on [Classical S5](/wiki/classical-s5/) includes a cut theorem for a classical modal logic. It also formalizes the translations between natural deduction and the sequent calculus.
 
-``&gt;All code from this tutorial``. `` check="true"&gt;Twelf's output from this tutorial``.
+``>All code from this tutorial``. `` check="true">Twelf's output from this tutorial``.
 
 
 ## See also

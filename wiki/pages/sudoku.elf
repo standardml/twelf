@@ -169,7 +169,7 @@ bo : boardok
 (4 // 3 // 2  //  1 // 8 // 7  //  6 // 9 // 5  // nil) ///
 (6 // 1 // 8  //  5 // 9 // 2  //  3 // 7 // 4  // nil) /// nill).
 
-%{! ``&gt;All code from this tutorial``. `` check="true"&gt;Twelf's output from this tutorial``.
+%{! ``>All code from this tutorial``. `` check="true">Twelf's output from this tutorial``.
 
 
 \{\{case study\}\}[Category:Twelf code](/wiki/category-twelf-code/) !}%

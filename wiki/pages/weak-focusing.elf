@@ -559,7 +559,7 @@ d0 : {a:atm pos} {b:atm pos} conc (' a * ' b -o up (' b * ' a))
 
 %{! This first example is already in "focused form" - invertible rules
 are applied only "before" upR is applied to prove 
-``|- (a + b) -&gt; up (a + b)`` |check=decl !}%
+``|- (a + b) -> up (a + b)`` |check=decl !}%
 %query 1 *
    {a: atm pos}{b: atm pos} 
    cp- (-oR ([h: hyp (atom a + atom b)]

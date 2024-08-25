@@ -656,7 +656,7 @@ lem10-2-2 : fill EC E0 E -> instr E0 E0' -> fill EC E0' E'
 
 %{! ## Twelf Output
 
-The `` check="true"&gt;output`` for the above. !}%
+The `` check="true">output`` for the above. !}%
 
 %{!
 -----

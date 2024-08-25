@@ -129,13 +129,13 @@ notnot/0 : notnot (not/0 N1) (not/1 N2) EQ'
 %worlds () (notnot _ _ _).
 %total D (notnot D _ _).
 
-%{! Here we pass in the constructors ``1 : bin -&gt; bin`` and ``0 : bin -&gt; bin`` as ``F``. The functions could arbitrary complex, like ``[b] 0 (1 (1 b))``.
+%{! Here we pass in the constructors ``1 : bin -> bin`` and ``0 : bin -> bin`` as ``F``. The functions could arbitrary complex, like ``[b] 0 (1 (1 b))``.
 
 This generalization technique usually only works when equality is defined as Twelf identity, because of the arbitrariness of the function passed in. When it can be used, it can substantially reduce the number of compatibility lemmas that one needs to state.
 
 \{\{needs|a description of some more advanced/tasteless generalization tricks\}\}
 
-``&gt;All code from this tutorial``. `` check="true"&gt;Twelf's output from this tutorial``.
+``>All code from this tutorial``. `` check="true">Twelf's output from this tutorial``.
 
 \{\{tutorial\}\} !}%
 

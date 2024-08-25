@@ -50,7 +50,7 @@ Let-binding is represented using [higher-order abstract syntax](/wiki/higher-ord
 <Math formula="\mathsf{let} \, x \, = e_1 \, \mathsf{in} \, e_2"/> is
 represented by ``let e_1 ([x] e_2)``; an LF variable is used to
 represent the bound-variable.  So the body of the ``let`` has LF
-type ``(exp -&gt; exp)``.
+type ``(exp -> exp)``.
 
 !}%
 

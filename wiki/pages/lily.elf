@@ -3240,7 +3240,7 @@ strictness21_rule : strictness21 N (terminate Ev) Evs (terminate Ev')
 % covers strictness21 +N +Ev -S -Term.
 %total {} (strictness21 _ _ _ _).
 
-%{! ``&gt;See all code for this case study``. `` check="true"&gt;See Twelf's output``.
+%{! ``>See all code for this case study``. `` check="true">See Twelf's output``.
 
 [Category:Twelf code](/wiki/category-twelf-code/)
 \{\{case study\}\} !}%

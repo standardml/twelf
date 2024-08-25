@@ -10,7 +10,7 @@ The trunk is be available from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/tw
 
 ### Tags
 
-Any tag is be accessible from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/tags/&lt;BRANCH NAME&gt;``. The tags as of April 10 are the following:
+Any tag is be accessible from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/tags/&lt;BRANCH NAME>``. The tags as of April 10 are the following:
 
 &lt;code&gt;delphin_last_merge_main
 elphin
@@ -55,7 +55,7 @@ twelf-poly&lt;/code&gt;
 
 ### Branches
 
-Any branch is be accessible from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/branches/&lt;BRANCH NAME&gt;``. The branches as of April 10 are the following:
+Any branch is be accessible from ``svn co https:&#047;&#047;cvs.concert.cmu.edu/twelf/branches/&lt;BRANCH NAME>``. The branches as of April 10 are the following:
 
 &lt;code&gt;carsten-12-09
 delphin_last_merge_main

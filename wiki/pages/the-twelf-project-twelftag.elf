@@ -51,7 +51,7 @@ step : exp -> exp -> type.
 
 You can link to a collection of all the code that has been presented so far by using ````&gt;`` tags in the same way you would use ``&lt;a href=...&gt;`` tags in normal HTML code.
 
-As an example, ````&gt;OMG link!````, will appear like this: ``&gt;OMG link!``, pointing to the four lines of code declared so far throughout the file.
+As an example, ````&gt;OMG link!````, will appear like this: ``>OMG link!``, pointing to the four lines of code declared so far throughout the file.
 
 The filenames are just the MD5 hashes of the code which they contain; the [http://twelf.plparty.org/code code directory] contains all these stored files.
 
@@ -81,7 +81,7 @@ step/appabs : step (app (abs [x] E x) E') (E E').
 
 %{! You may notice that the link above links to a file "twelf.plparty.org/code/&lt;obvious md5 hash&gt;.chk". The code that was checked is just at "twelf.plparty.org/code/&lt;exact sameobvious md5 hash&gt;" - that is, without the ".chk".
 
-You can use ```` check=true&gt;`` to link to the Twelf output of checking the most recent code instead of just linking to that code code - so ```` check=true&gt;See?```` just duplicates the link that was automatically entered in above. `` check=true&gt;See?``. This works even if you haven't set ``check=true`` in any of your ``(twelf)`` tags; you could just avoid using the ``check=true`` option in your code in favor of causing checks only with ```` check=true&gt;``.
+You can use ```` check=true&gt;`` to link to the Twelf output of checking the most recent code instead of just linking to that code code - so ```` check=true>See?```` just duplicates the link that was automatically entered in above. `` check=true&gt;See?``. This works even if you haven't set ``check=true`` in any of your ``(twelf)`` tags; you could just avoid using the ``check=true`` option in your code in favor of causing checks only with ```` check=true>``.
 
 ### The ``check=decl`` option
 
@@ -150,9 +150,9 @@ s : nat -> nat.
 nat/z : nat.
 nat/s : nat -> nat.
 
-%{! `` import="natsimple"&gt;See the simple code``
+%{! `` import="natsimple">See the simple code``
 
-`` import="natverbose"&gt;See the verbose code``&lt;/pre&gt; !}%
+`` import="natverbose">See the verbose code``&lt;/pre&gt; !}%
     
 %{! (options removed from twelftag: import="nat") !}%
 
@@ -172,9 +172,9 @@ s : nat -> nat.
 nat/z : nat.
 nat/s : nat -> nat.
 
-%{! `` import="natsimple"&gt;See the simple code``
+%{! `` import="natsimple">See the simple code``
 
-`` import="natverbose"&gt;See the verbose code``
+`` import="natverbose">See the verbose code``
 
 ### The ``hidden=true`` option
 
@@ -203,7 +203,7 @@ plus/z : plus z N N.
 plus/s : plus (s N1) N2 (s N3)
           <- plus N1 N2 N3.
 
-%{! `` import="natsimple"&gt;See the hidden code added to the existing natural number development.`` !}%
+%{! `` import="natsimple">See the hidden code added to the existing natural number development.`` !}%
 
 %{!
 -----

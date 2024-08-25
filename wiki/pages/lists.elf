@@ -290,7 +290,7 @@ append-rev : rev L1 L2 L3 -> rev LA LB LC -> append LC L3 LT -> rev L2 L1 L3' ->
 %worlds () (append-rev _ _ _ _ _ _ _).
 %total [D E] (append-rev E D _ _ _ _ _).
 
-%{! ``&gt;See the Twelf code for this example`` - `` check=true&gt;See Twelf's output``
+%{! ``>See the Twelf code for this example`` - `` check=true>See Twelf's output``
 
 \{\{case study\}\} !}%
 

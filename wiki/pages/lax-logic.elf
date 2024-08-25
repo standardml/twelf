@@ -377,7 +377,7 @@ the metric.) !}%
 means that the ``t+-`` and ``t-+`` rules can add an arbitrary 
 number of shifts. Read in the reverse direction, the translation is not 
 very nondeterminstic; however "``P -o up 0``" can still be translated
-to either "``not M``" or "``M =&gt; (not' tt')``," which are different
+to either "``not M``" or "``M => (not' tt')``," which are different
 source logic expressions. !}%
 
 trans : metric -> prop' -> {S} prop S -> type. %name trans TR.

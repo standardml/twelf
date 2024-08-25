@@ -243,9 +243,9 @@ For pedagogical parsimony, we have defined greater-than in terms of addition, so
 
 By adequacy, this theorem can be recast as the following statement about LF terms:
 
-: For all Γ in ``(size-block)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
+: For all Γ in ``(size-block)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -> size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
 
-Considering arbitrary contexts in the world ``(size-block)*`` is necessary to capture the informal theorem statement, which ranges over all possibly-open terms <Math formula="\mathsf{}e"/> and <Math formula="\mathsf{}e'"/>.  The ``size`` derivation for the term <Math formula="\mathsf{}e"/> with a distinguished free variable <Math formula="\mathsf{}x"/> is represented by an LF term of higher type ``\{x:tm\} size x (s z) -&gt; size (E x) N``.  
+Considering arbitrary contexts in the world ``(size-block)*`` is necessary to capture the informal theorem statement, which ranges over all possibly-open terms <Math formula="\mathsf{}e"/> and <Math formula="\mathsf{}e'"/>.  The ``size`` derivation for the term <Math formula="\mathsf{}e"/> with a distinguished free variable <Math formula="\mathsf{}x"/> is represented by an LF term of higher type ``\{x:tm\} size x (s z) -> size (E x) N``.  
 
 We can prove this theorem in Twelf by giving a relation that satisfies the following totality assertion: !}%
     
@@ -357,7 +357,7 @@ subst-size : {E' : tm}
 %worlds (size-block) (subst-size _ _ _ _).
 
 %{! By now, you should be getting good at reading relational Twelf proofs of metatheorems as the informal proofs they represent.  This proof is slightly more involved than those that we have seen before, but it involves no new machinery.  We call out some of the tricky parts of the proof:
-* The proof inducts over and case-analyzes the LF term of type ``\{x:tm\} size x (s z) -&gt; size (E x) N``.  By inversion, such a term has the form ``[x] [dx] M`` where ``M : size (E x) N``.  Thus, the proof includes one case for each possible ``M``.  This includes each constructor of type ``size``, along with the distinguished variable ``x``.  
+* The proof inducts over and case-analyzes the LF term of type ``\{x:tm\} size x (s z) -> size (E x) N``.  By inversion, such a term has the form ``[x] [dx] M`` where ``M : size (E x) N``.  Thus, the proof includes one case for each possible ``M``.  This includes each constructor of type ``size``, along with the distinguished variable ``x``.  
 * Make sure you understand why each constant world checks: The ``subst-size`` premise of the case for ``size-lam`` is in an extended context, but that this context stays in the appropriate world.  Additionally, by world subsumption, ``(size-block)*`` subsumes the world containing only the empty context for the arithmetic lemmas.  
 
 However, the totality check fails:
@@ -452,11 +452,11 @@ subst-size : {E' : tm}
 
 We set out to prove
 
-: For all Γ in ``(size-block)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
+: For all Γ in ``(size-block)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -> size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
 
 But the corrected Twelf proof actually proves
 
-: For all Γ in ``(ssblock)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
+: For all Γ in ``(ssblock)*``, if ``Γ ⊦ E' : tm`` and ``Γ ⊦ D : \{x:tm\} size x (s z) -> size (E x) N`` and ``Γ ⊦ D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ ⊦ Dplus : plus Ndiff N N'``.
 
 Did we prove the right theorem?  Not necessarily: it is possible that the contexts in ``(ssblock)*`` do not cover all open terms, or that they include inadequate derivations of ``plus Ndiff N N'``.  Thus, there is a danger here: we need to check that the second statement implies the first to see that we proved the right theorem.  
 

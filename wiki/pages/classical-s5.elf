@@ -621,7 +621,7 @@ sn-=>T : seqnd (=>T ([af : false A W] D1 af) ([bt] D2 bt)
 		   ([a*] F1 a* cc ww)
 		   (FF cc ww)).
 
-%{! There are two ways to translate the ``=&gt;F`` rule; we can avoid using ``letcc`` if we like. We give both, taking advantage of the fact that LF relations need not be deterministic functions. !}%
+%{! There are two ways to translate the ``=>F`` rule; we can avoid using ``letcc`` if we like. We give both, taking advantage of the fact that LF relations need not be deterministic functions. !}%
     
 % letcc-free version
 % u : A=>B |- throw \x:A . [[ c:B. throw \unused:A.c to u / ... ]](IH) to u
@@ -714,7 +714,7 @@ sn-?F : seqnd (?F ([af'] D af') F?)
 
 %total (D T F) (seqnd D FF) (truend T N) (falsend F M).
 
-%{! ``&gt;All code from this case study``. `` check="true"&gt;Twelf's output from this case study``.
+%{! ``>All code from this case study``. `` check="true">Twelf's output from this case study``.
 
 [Category:Twelf code](/wiki/category-twelf-code/)
 \{\{case study\}\} !}%

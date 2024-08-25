@@ -16,7 +16,7 @@ The [LF](/wiki/lf/) type theory is defined so that all well-typed terms are **ca
 
 <DisplayMath formula=" M ::= R \, | \, \lambda x. M "/>
 
-In Twelf's concrete syntax, the type <Math formula="\texttt{}\Pi x:A_1.A_2"/> is written ``\{x:A1\} A2``, the kind <Math formula="\texttt{}\Pi x:A.K"/> is written ``\{x:A\} K``, and the term <Math formula="\texttt{}\lambda x.M"/> is written ``[x] M``.  The type families include both dependent function types and applications <Math formula="A \, M"/> of type families to terms.  The kind level classifies type families. Type families of kind <Math formula="\texttt{type}"/> classify terms. Type families that are not yet fully instantiated have kinds <Math formula=" {x:A} K"/>.  In both types and kinds, we use ``-&gt;`` as an abbreviation when the argument is not free in the result.  
+In Twelf's concrete syntax, the type <Math formula="\texttt{}\Pi x:A_1.A_2"/> is written ``\{x:A1\} A2``, the kind <Math formula="\texttt{}\Pi x:A.K"/> is written ``\{x:A\} K``, and the term <Math formula="\texttt{}\lambda x.M"/> is written ``[x] M``.  The type families include both dependent function types and applications <Math formula="A \, M"/> of type families to terms.  The kind level classifies type families. Type families of kind <Math formula="\texttt{type}"/> classify terms. Type families that are not yet fully instantiated have kinds <Math formula=" {x:A} K"/>.  In both types and kinds, we use ``->`` as an abbreviation when the argument is not free in the result.  
 
 ## Motivation for canonical forms
 
@@ -34,7 +34,7 @@ If you have encountered [beta-reduction](/wiki/beta-equivalence/) and [eta-expan
 
 We do not present the typing rules for canonical forms here (see, e.g., _Mechanizing Metatheory_&lt;ref&gt;\{\{bibtex:hl07mechanizing\}\}&lt;/ref&gt;).  However, we note two details:
 
-Terms <Math formula="\texttt{}R"/> are only canonical at base type <Math formula="\texttt{}a"/>, not at function type.  For example, the constant ``s`` is _not_ a canonical form of type ``nat -&gt; nat``.  However, the term <Math formula="\lambda x.\texttt{s} x"/>, which is equivalent, is a canonical form.  
+Terms <Math formula="\texttt{}R"/> are only canonical at base type <Math formula="\texttt{}a"/>, not at function type.  For example, the constant ``s`` is _not_ a canonical form of type ``nat -> nat``.  However, the term <Math formula="\lambda x.\texttt{s} x"/>, which is equivalent, is a canonical form.  
 
 In a dependently typed language, the application typing rules must substitute the argument into the body of the dependent function type:
 

@@ -58,8 +58,8 @@ reduce/beta : reduce (app (lam E1) E2) (E1' E2')
 
 The substitution theorem says that if we have a term ``e`` with 
 ``x`` free that reduces to ``e'`` (with ``x`` still free)
-and ``e&lt;sub&gt;arg&lt;/sub&gt;`` reduces to ``e'&lt;sub&gt;arg&lt;/sub&gt;``, 
-then ``[e&lt;sub&gt;arg&lt;/sub&gt;/x]e`` reduces to ``[e'&lt;sub&gt;arg&lt;/sub&gt;/x]e'``. 
+and ``e&lt;sub>arg&lt;/sub>`` reduces to ``e'&lt;sub>arg&lt;/sub>``, 
+then ``[e&lt;sub>arg&lt;/sub>/x]e`` reduces to ``[e'&lt;sub>arg&lt;/sub>/x]e'``. 
 
 The proof is by induction on the structure of the term with the free variable.
 

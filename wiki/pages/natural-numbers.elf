@@ -31,7 +31,7 @@ p-s: plus (s N1) N2 (s N3)
 
 %{! The first line defines the judgment, declaring ``plus`` to be a type family indexed by three terms of type ``nat``. 
 
-The second line declares that for any natural number ``N``, ``p-z`` is an object of type ``plus z N N``, which corresponds to the axiom p-z above. The ``N`` is an [implicit parameter](/wiki/implicit-and-explicit-parameters/) - it is treated as a bound variable by Twelf, which you can see by `` check="true"&gt;looking at Twelf's output`` after checking the above code. 
+The second line declares that for any natural number ``N``, ``p-z`` is an object of type ``plus z N N``, which corresponds to the axiom p-z above. The ``N`` is an [implicit parameter](/wiki/implicit-and-explicit-parameters/) - it is treated as a bound variable by Twelf, which you can see by `` check="true">looking at Twelf's output`` after checking the above code. 
 
 The third line says that ``p-s`` is a type constructor that, given an object ``D`` of type ``plus N1 N2 N3`` (where ``N1``, ``N2``, and ``N3`` are all implicit parameters that can
 be treated as metavariables), produces an object, ``p-s D``, with type ``plus (s N1) N2 (s N3)``. This corresponds to the rule p-s, which given a derivation of <Math formula="\texttt{plus}(N_1,N_2,N_3)"/> allows us to conclude <Math formula="\texttt{plus}(\texttt{s}(N_1),N_2,\texttt{s}(N_3))"/>.
