@@ -3,7 +3,7 @@
 %{! 
 In this case study, we give a simple proof of the diamond property of
 untyped parallel reduction.  The proof, due to 
-Masako Takahashi (Parallel Reductions in &lt;math&gt;\lambda&lt;/math&gt;-Calculus, 
+Masako Takahashi (Parallel Reductions in <Math formula="\lambda"/>-Calculus, 
 Information and Computation 118(1), 1995) makes use of a auxilary relation called complete
 developement.  This case study is a good example of proving
 metatheorems in [regular worlds](/wiki/percent-worlds/): we use several different worlds, and

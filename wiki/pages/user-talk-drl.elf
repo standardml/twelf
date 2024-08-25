@@ -2,7 +2,7 @@
 
 %{! Hello! I actually like the monospaced presentation better:
 
-&lt;math&gt;\texttt\{even\}(N) \over \texttt\{even\}(s \, (s \, N))&lt;/math&gt;
+<DisplayMath formula="\texttt{even}(N) \over \texttt{even}(s \, (s \, N))"/>
 
 You've got admin rights, btw. — [Rob](/wiki/user-rsimmons/) (and his [talk](/wiki/user-talk-rsimmons/)) 16:02, 23 October 2006 (EDT)
 

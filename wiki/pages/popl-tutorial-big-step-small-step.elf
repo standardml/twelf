@@ -7,7 +7,7 @@ to a value v in many little steps if and only if it evaluates to v in one
 big step.
 
 There are five tasks:
-* Complete a compatibility lemma that if &lt;math&gt;e \mapsto^* e'&lt;/math&gt;, then &lt;math&gt;v~e \mapsto^* v~e'&lt;/math&gt;
+* Complete a compatibility lemma that if <Math formula="e \mapsto^* e'"/>, then <Math formula="v~e \mapsto^* v~e'"/>
 * Prove the backward direction (big-step evaluation implies small-step evaluation)
 * Prove three cases of the expansion lemma.
 * Prove the forward direction (small-step evaluation implies big-step evaluation) for a "convienent" definition of multi-step.

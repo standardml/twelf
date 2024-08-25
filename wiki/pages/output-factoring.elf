@@ -90,7 +90,7 @@ aeo_succ : always_even_or_odd (s X) D'
 
 Another example where output factoring comes up is the progress theorem for a programming language:
 
-: If &lt;math&gt;\mathsf\{\}e : \tau&lt;/math&gt; then &lt;math&gt;e \; \mathsf\{value\}&lt;/math&gt; or &lt;math&gt;e \mapsto e'&lt;/math&gt;.
+: If <Math formula="\mathsf{}e : \tau"/> then <Math formula="e \; \mathsf{value}"/> or <Math formula="e \mapsto e'"/>.
 
 A typical case of progress makes an inductive call on a subderivation and then case-analyzes whether the result is a value or takes a step.  This reasoning must be factored off into lemmas to avoid output coverage problems.
 

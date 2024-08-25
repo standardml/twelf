@@ -85,7 +85,7 @@ ps : plus (s N1) N2 (s N3)
 id : nat -> nat -> type.
 refl : id N N.
 
-%{! Then we can say that for any &lt;math&gt;N_1&lt;/math&gt; and &lt;math&gt;N_2&lt;/math&gt;, if both &lt;math&gt;N_1 + N_2 = M&lt;/math&gt; and &lt;math&gt;N_1 + N_2 = M'&lt;/math&gt;, then in fact &lt;math&gt;M = M'&lt;/math&gt;. !}%
+%{! Then we can say that for any <Math formula="N_1"/> and <Math formula="N_2"/>, if both <Math formula="N_1 + N_2 = M"/> and <Math formula="N_1 + N_2 = M'"/>, then in fact <Math formula="M = M'"/>. !}%
 
 plus-unique : plus N1 N2 M -> plus N1 N2 M' -> id M M' -> type.
 %mode plus-unique +D +D' -Did.

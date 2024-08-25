@@ -48,7 +48,7 @@ prop : type.                            %name prop A.
 ?E : ? A @ W -> ({o:world} A @ o -> C @ W) -> C @ W.
 ?G : ? A @ W' -> ? A @ W.
 
-%{! There are two modal connectives: &lt;math&gt;\Box A&lt;/math&gt;, written ``!A`` and &lt;math&gt;\Diamond A&lt;/math&gt;, written ``?A``. These two connectives are expressed in a non-standard way. The introduction and elimination forms all take place at the same world, and we give mobility forms ``!G`` and ``?G`` that allow us to move modal terms from world to world. !}%
+%{! There are two modal connectives: <Math formula="\Box A"/>, written ``!A`` and <Math formula="\Diamond A"/>, written ``?A``. These two connectives are expressed in a non-standard way. The introduction and elimination forms all take place at the same world, and we give mobility forms ``!G`` and ``?G`` that allow us to move modal terms from world to world. !}%
     
 % Conjunction
 & : prop -> prop -> prop.

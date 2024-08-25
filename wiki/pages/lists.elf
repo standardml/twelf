@@ -6,7 +6,7 @@
 
 This standard definition of lists in Twelf . We first define what the list elements are: in this example they are just an arbitrary type ``elem``. This example is parametric in the type of the elements, so you can change this definition to anything you like.
 
-&lt;math&gt;e ::= \texttt\{a\} \,|\, \texttt\{b\} \,|\, \texttt\{c\}(e)&lt;/math&gt; !}%
+<DisplayMath formula="e ::= \texttt{a} \,|\, \texttt{b} \,|\, \texttt{c}(e)"/> !}%
     
 %{! (options removed from twelftag: hidden="true") !}%
 
@@ -23,7 +23,7 @@ c : elem -> elem.
 
 %{! The important defintion is the one of lists. There are two ways of constructing a Twelf object of type ``list``. The first is the constructor for the empty list ``nil``. The second is the constructor ``cons`` that given an object of type ``elem`` and an object of type ``list`` creates a list with elem as head and list as tail.
 
-&lt;math&gt;l ::= \texttt\{nil\} \,|\, e :: l&lt;/math&gt; !}%
+<DisplayMath formula="l ::= \texttt{nil} \,|\, e :: l"/> !}%
     
 list : type. %name list Ls.
 
@@ -62,9 +62,9 @@ eq-cong-cons : {E} eq L1 L2 -> eq (cons E L1) (cons E L2) -> type.
 %total {} (eq-cong-cons _ _ _).
 
 %{! ## Reversal
-There are at least two very common operations on lists: Reverse and Append. Lists form a semigroup with the opeation append &lt;math&gt;\cdot \diamonds \cdot&lt;/math&gt; and the empty list as right and left unit. If we define an operation &lt;math&gt;f(x,y) = y \diamonds x&lt;/math&gt; then reverse &lt;math&gt;(\cdot)^\top&lt;/math&gt; is an isomorphism between the semigroups (lists,&lt;math&gt;\diamonds&lt;/math&gt;,nil) and (lists,f,nil).
+There are at least two very common operations on lists: Reverse and Append. Lists form a semigroup with the opeation append <Math formula="\cdot \diamonds \cdot"/> and the empty list as right and left unit. If we define an operation <Math formula="f(x,y) = y \diamonds x"/> then reverse <Math formula="(\cdot)^\top"/> is an isomorphism between the semigroups (lists,<Math formula="\diamonds"/>,nil) and (lists,f,nil).
 ### Definition
-I will use the standard logic programming way of encoding reversal. In the following ``rev`` will be a ternary relation where the first two elements are input and the third is output. The invariant is &lt;math&gt;\forall a,b,c. a^\top \bowtie b = c&lt;/math&gt;, where &lt;math&gt;\bowtie&lt;/math&gt; is concatenation, thus &lt;math&gt;a^\top=b&lt;/math&gt; is obtained by ``rev a nil b``. We will later see that &lt;math&gt;\bowtie&lt;/math&gt; can be thought of as &lt;math&gt;\diamonds&lt;/math&gt;. !}%
+I will use the standard logic programming way of encoding reversal. In the following ``rev`` will be a ternary relation where the first two elements are input and the third is output. The invariant is <Math formula="\forall a,b,c. a^\top \bowtie b = c"/>, where <Math formula="\bowtie"/> is concatenation, thus <Math formula="a^\top=b"/> is obtained by ``rev a nil b``. We will later see that <Math formula="\bowtie"/> can be thought of as <Math formula="\diamonds"/>. !}%
     
 rev : list -> list -> list -> type.
 %mode rev +Ls +Ls'' -Ls'.
@@ -93,7 +93,7 @@ rev-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> rev L1 L3 L5 -> rev L2 L4 L6 -> typ
 %total {} (rev-eq _ _ _ _ _).
 
 %{! ### Determinism
-As the Twelf definition only states that rev is a relation we need to prove that it indeed is a function. Namely &lt;math&gt;\forall a,b,c,d. a^\top \diamonds b = c \land a^\top \diamonds b = d \Rightarrow c = d&lt;/math&gt;. !}%
+As the Twelf definition only states that rev is a relation we need to prove that it indeed is a function. Namely <Math formula="\forall a,b,c,d. a^\top \diamonds b = c \land a^\top \diamonds b = d \Rightarrow c = d"/>. !}%
     
 rev-determ : rev Ls Ls' Ls3 -> rev Ls Ls' Ls4 -> eq Ls3 Ls4 -> type.
 %mode rev-determ +R +R' -Q.
@@ -106,7 +106,7 @@ rev-determ : rev Ls Ls' Ls3 -> rev Ls Ls' Ls4 -> eq Ls3 Ls4 -> type.
 
 %{! ### Double reversal
 Reverse is an isomorphism that turn out to be its own inverse.
-&lt;math&gt;\forall a,b,c. a^\top = b \land b^\top = c \Rightarrow a = c&lt;/math&gt;. !}%
+<Math formula="\forall a,b,c. a^\top = b \land b^\top = c \Rightarrow a = c"/>. !}%
     
 revrev-id-lem : rev Ls Ls' Ls'' -> rev Ls'' nil Ls4 -> rev Ls' Ls Ls6 -> eq Ls6 Ls4 -> type.
 %mode revrev-id-lem +R +R' +R'' -Q.
@@ -132,7 +132,7 @@ revrev-id : rev A nil B -> rev B nil A -> type.
 %total {} (revrev-id _ _).
 
 %{! ### Injectivity
-As reverse has an inverse it is injective &lt;math&gt;\forall a,b,c. a^\top = c \land b^\top = c \Rightarrow a = b&lt;/math&gt;. !}%
+As reverse has an inverse it is injective <Math formula="\forall a,b,c. a^\top = c \land b^\top = c \Rightarrow a = b"/>. !}%
     
 rev-injective : rev Ls nil Ls' -> rev Ls'' nil Ls' -> eq Ls Ls'' -> type.
 %mode rev-injective +R +R' -Q.
@@ -177,7 +177,7 @@ append-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> append L1 L3 L5 -> append L2 L4 
 %total {} (append-eq _ _ _ _ _).
 
 %{! ### Units
-We need to prove that ``nil`` is the right and left unit of the semigroup &lt;math&gt;\forall a. a \diamonds nil = nil \diamonds a = a&lt;/math&gt;. The later is by axiom and the former is by this lemma. !}%
+We need to prove that ``nil`` is the right and left unit of the semigroup <Math formula="\forall a. a \diamonds nil = nil \diamonds a = a"/>. The later is by axiom and the former is by this lemma. !}%
     
 append-eq-nil : {L1} append L1 nil L1 -> type.
 %mode append-eq-nil +L -A.
@@ -189,7 +189,7 @@ append-eq-nil : {L1} append L1 nil L1 -> type.
 %worlds () (append-eq-nil _ _).
 %total D (append-eq-nil D _).
 
-%{! Sometimes it is helpful to reason with equalities like &lt;math&gt;\forall a b. a \diamonds nil = b \Rightarrow a = b&lt;/math&gt;. !}%
+%{! Sometimes it is helpful to reason with equalities like <Math formula="\forall a b. a \diamonds nil = b \Rightarrow a = b"/>. !}%
     
 append-eq-nil : append L1 nil L2 -> eq L1 L2 -> type.
 %mode append-eq-nil +A -E.
@@ -202,7 +202,7 @@ append-eq-nil : append L1 nil L2 -> eq L1 L2 -> type.
 %total D (append-eq-nil D _).
 
 %{! ### Determinism
-As with reverse we need to show that append is indeed a function &lt;math&gt;\forall a,b,c,c'. a \diamonds b = c \land a \diamonds b = c' \Rightarrow c = c'&lt;/math&gt;. !}%
+As with reverse we need to show that append is indeed a function <Math formula="\forall a,b,c,c'. a \diamonds b = c \land a \diamonds b = c' \Rightarrow c = c'"/>. !}%
     
 append-determ : append L1 L2 L3 -> append L1 L2 L4 -> eq L3 L4 -> type.
 %mode append-determ +A1 +A2 -E.
@@ -216,7 +216,7 @@ append-determ : append L1 L2 L3 -> append L1 L2 L4 -> eq L3 L4 -> type.
 %total D (append-determ D _ _).
 
 %{! ### Associativity
-We need to prove that append is associative &lt;math&gt;\forall a,b,c.(a \diamonds b) \diamonds c = a \diamonds (b \diamonds c)&lt;/math&gt;. !}%
+We need to prove that append is associative <Math formula="\forall a,b,c.(a \diamonds b) \diamonds c = a \diamonds (b \diamonds c)"/>. !}%
     
 append-assoc1 : append L1 L2 L3 -> append L3 L4 L5 -> append L2 L4 L6 -> append L1 L6 L5 -> type.
 %mode append-assoc1 +A1 +A2 -A3 -A4.
@@ -242,7 +242,7 @@ append-assoc2 : append L1 L2 L3 -> append L3 L4 L5 -> append L2 L4 L6 -> append 
 
 %{! ## Append and reversal
 I promissed to prove that ``rev`` is an isomorphism. Lets start by a few lemmas.
-First &lt;math&gt;\forall a,b,c.b^\top \bowtie (a^\top \bowtie c) = (a \diamonds b)^\top \bowtie c&lt;/math&gt;. !}%
+First <Math formula="\forall a,b,c.b^\top \bowtie (a^\top \bowtie c) = (a \diamonds b)^\top \bowtie c"/>. !}%
     
 append-rev1 : append L1 L2 L3 -> rev L1 L4 L5 -> rev L2 L5 L6 -> rev L3 L4 L6 -> type.
 %mode append-rev1 +A +R1 +R2 -R3.
@@ -254,7 +254,7 @@ append-rev1 : append L1 L2 L3 -> rev L1 L4 L5 -> rev L2 L5 L6 -> rev L3 L4 L6 ->
 %worlds () (append-rev1 _ _ _ _).
 %total D (append-rev1 D _ _ _).
 
-%{! And second &lt;math&gt;\forall a,b,c.(a^\top \bowtie b)\diamonds c = a^\top \bowtie (b \diamonds c)&lt;/math&gt;. If we let &lt;math&gt;b = nil&lt;/math&gt; then we get &lt;math&gt;a^\top \diamonds c = a^\top \bowtie c&lt;/math&gt;, which shows how we can think of &lt;math&gt;\bowtie&lt;/math&gt; as &lt;math&gt;\diamonds&lt;/math&gt;. !}%
+%{! And second <Math formula="\forall a,b,c.(a^\top \bowtie b)\diamonds c = a^\top \bowtie (b \diamonds c)"/>. If we let <Math formula="b = nil"/> then we get <Math formula="a^\top \diamonds c = a^\top \bowtie c"/>, which shows how we can think of <Math formula="\bowtie"/> as <Math formula="\diamonds"/>. !}%
     
 append-rev2 : rev L1 L2 L3 -> append L2 L4 L5 -> append L3 L4 L6 -> rev L1 L5 L6 -> type.
 %mode append-rev2 +R +A +A' -R'.
@@ -269,9 +269,8 @@ append-rev2 : rev L1 L2 L3 -> append L2 L4 L5 -> append L3 L4 L6 -> rev L1 L5 L6
 %worlds () (append-rev2 _ _ _ _).
 %total D (append-rev2 D _ _ _).
 
-%{! And here we go. &lt;math&gt;\forall a,b,c,d. (a^\top \bowtie b) \diamonds (c^\top \bowtie d)
-# ((d^\top \bowtie c) \diamonds (b^\top \bowtie a))^\top &lt;/math&gt; which boils down to
-&lt;math&gt;\forall a,c.a^\top \diamonds c^\top = (c \diamonds a)^\top = f(c^\top,a^\top) &lt;/math&gt;, whence reverse is a homeomorphism. This combined with the fact that reverse is its own inverse we get that reverse is an isomorphism. !}%
+%{! And here we go. <Math formula="\forall a,b,c,d. (a^\top \bowtie b) \diamonds (c^\top \bowtie d) # ((d^\top \bowtie c) \diamonds (b^\top \bowtie a))^\top "/> which boils down to
+<Math formula="\forall a,c.a^\top \diamonds c^\top = (c \diamonds a)^\top = f(c^\top,a^\top) "/>, whence reverse is a homeomorphism. This combined with the fact that reverse is its own inverse we get that reverse is an isomorphism. !}%
     
 append-rev : rev L1 L2 L3 -> rev LA LB LC -> append LC L3 LT -> rev L2 L1 L3' -> 
              rev LB LA LC' -> append L3' LC' LT' -> rev LT' nil LT -> type.

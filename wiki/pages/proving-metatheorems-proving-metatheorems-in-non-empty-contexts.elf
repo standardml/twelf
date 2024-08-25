@@ -233,11 +233,11 @@ size-app   : size (app E1 E2) (s N)
 
 We prove that substitution never decreases the size of a term.  The informal theorem statement is as follows:
 
-: For all terms &lt;math&gt;e'&lt;/math&gt; and &lt;math&gt;e&lt;/math&gt;, &lt;math&gt;|e| \le |\{e'/x\}e|&lt;/math&gt;.
+: For all terms <Math formula="e'"/> and <Math formula="e"/>, <Math formula="|e| \le |{e'/x}e|"/>.
 
 We can restate this theorem relationally as follows:
 
-: For all terms &lt;math&gt;\mathsf\{\}e'&lt;/math&gt; and &lt;math&gt;\mathsf\{\}e&lt;/math&gt;, if &lt;math&gt;\mathsf\{\}|e| = n&lt;/math&gt; and &lt;math&gt;\mathsf\{\}|\{e'/x\}e| = n'&lt;/math&gt; then there exists an &lt;math&gt;\mathsf\{\}n_&lt;/math&gt; such that &lt;math&gt;\mathsf\{\}n_ + n = n'&lt;/math&gt;.
+: For all terms <Math formula="\mathsf{}e'"/> and <Math formula="\mathsf{}e"/>, if <Math formula="\mathsf{}|e| = n"/> and <Math formula="\mathsf{}|{e'/x}e| = n'"/> then there exists an <Math formula="\mathsf{}n_"/> such that <Math formula="\mathsf{}n_ + n = n'"/>.
 
 For pedagogical parsimony, we have defined greater-than in terms of addition, so that we do not need to introduce any additional judgements on numbers here.  Additionally, because ``size`` defines a function, we are free to assume or conclude the derivations of ``size`` as is convenient; in this case, the proof is slightly simpler if we assume these derivations.  
 
@@ -245,7 +245,7 @@ By adequacy, this theorem can be recast as the following statement about LF term
 
 : For all Γ in ``(size-block)*``, if ``Γ \{\{vdash\}\} E' : tm`` and ``Γ \{\{vdash\}\} D : \{x:tm\} size x (s z) -&gt; size (E x) N`` and ``Γ \{\{vdash\}\} D' : size (E E') N'`` then there exist ``Ndiff`` and ``Dplus`` such that ``Γ \{\{vdash\}\} Dplus : plus Ndiff N N'``.
 
-Considering arbitrary contexts in the world ``(size-block)*`` is necessary to capture the informal theorem statement, which ranges over all possibly-open terms &lt;math&gt;\mathsf\{\}e&lt;/math&gt; and &lt;math&gt;\mathsf\{\}e'&lt;/math&gt;.  The ``size`` derivation for the term &lt;math&gt;\mathsf\{\}e&lt;/math&gt; with a distinguished free variable &lt;math&gt;\mathsf\{\}x&lt;/math&gt; is represented by an LF term of higher type ``\{x:tm\} size x (s z) -&gt; size (E x) N``.  
+Considering arbitrary contexts in the world ``(size-block)*`` is necessary to capture the informal theorem statement, which ranges over all possibly-open terms <Math formula="\mathsf{}e"/> and <Math formula="\mathsf{}e'"/>.  The ``size`` derivation for the term <Math formula="\mathsf{}e"/> with a distinguished free variable <Math formula="\mathsf{}x"/> is represented by an LF term of higher type ``\{x:tm\} size x (s z) -&gt; size (E x) N``.  
 
 We can prove this theorem in Twelf by giving a relation that satisfies the following totality assertion: !}%
     

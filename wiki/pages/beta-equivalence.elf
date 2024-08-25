@@ -4,19 +4,19 @@
 
 Consider the simply-typed lambda-calculus with arrow types.
 
-&lt;math&gt;A ::= a \mid A_1 \rightarrow A_2&lt;/math&gt;
+<DisplayMath formula="A ::= a \mid A_1 \rightarrow A_2"/>
 
-&lt;math&gt;e ::= x \mid \lambda x\{:\}A.\, e \mid e_1\ e_2&lt;/math&gt;
+<DisplayMath formula="e ::= x \mid \lambda x{:}A.\, e \mid e_1\ e_2"/>
 
-The beta-equivalence induced by the arrow type &lt;math&gt;A \rightarrow B&lt;/math&gt; says that the elimination form &lt;math&gt;e_1\ e_2&lt;/math&gt; "cancels" the introduction form &lt;math&gt;\lambda x\{:\}A.\, e&lt;/math&gt;; formally, it is the least [congruence relation](/wiki/congruence-relation/) &lt;math&gt;\texttt\{\}e_1 =_\beta e_2&lt;/math&gt; closed under the &lt;math&gt;\texttt\{\}\beta&lt;/math&gt; axiom:
+The beta-equivalence induced by the arrow type <Math formula="A \rightarrow B"/> says that the elimination form <Math formula="e_1\ e_2"/> "cancels" the introduction form <Math formula="\lambda x{:}A.\, e"/>; formally, it is the least [congruence relation](/wiki/congruence-relation/) <Math formula="\texttt{}e_1 =_\beta e_2"/> closed under the <Math formula="\texttt{}\beta"/> axiom:
 
-&lt;math&gt;\{\; \over (\lambda x\{:\}A.\, e_1)\ e_2 =_\beta [e_2/x] e_1\} \beta&lt;/math&gt;
+<DisplayMath formula="{\; \over (\lambda x{:}A.\, e_1)\ e_2 =_\beta [e_2/x] e_1} \beta"/>
 
 Beta-equivalence is usually oriented to the right yielding a notion of _beta-reduction_.  For example:
 
-&lt;math&gt;(\lambda x\{:\}A.\, e_1)\ e_2 \Longrightarrow_\beta [e_2/x] e_1&lt;/math&gt;
+<DisplayMath formula="(\lambda x{:}A.\, e_1)\ e_2 \Longrightarrow_\beta [e_2/x] e_1"/>
 
-The term on the left-hand side of the &lt;math&gt;\texttt\{\}\beta&lt;/math&gt; axiom is called a _beta-redex_, and the term on the right-hand side is its _beta-reduct_.  A term with no beta-redexes is called _beta-normal_.  Being beta-normal is one aspect of being [canonical](/wiki/canonical-form/). !}%
+The term on the left-hand side of the <Math formula="\texttt{}\beta"/> axiom is called a _beta-redex_, and the term on the right-hand side is its _beta-reduct_.  A term with no beta-redexes is called _beta-normal_.  Being beta-normal is one aspect of being [canonical](/wiki/canonical-form/). !}%
 
 %{!
 -----

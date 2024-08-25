@@ -107,7 +107,7 @@ bit-flip-unique-alt : id-bit B1 B1'
 
 As a slightly more-involved example of a uniqueness lemma, we can prove that the operational semantics of the simply typed λ-calculus are deterministic:
 
-: If &lt;math&gt;e \mapsto e'&lt;/math&gt; and &lt;math&gt;e \mapsto e_&lt;/math&gt; then &lt;math&gt;\mathsf\{\}e' = e_&lt;/math&gt;.
+: If <Math formula="e \mapsto e'"/> and <Math formula="e \mapsto e_"/> then <Math formula="\mathsf{}e' = e_"/>.
 
 Here, equality of terms means syntactic identity modulo α-equivalence
 

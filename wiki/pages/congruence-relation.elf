@@ -4,23 +4,15 @@
 
 Consider the untyped lambda-calculus:
 
-&lt;math&gt;e ::= x \mid \lambda x.\, e \mid e_1\ e_2&lt;/math&gt;
+<DisplayMath formula="e ::= x \mid \lambda x.\, e \mid e_1\ e_2"/>
 
-A congruence relation &lt;math&gt;\texttt\{\}e_1 = e_2&lt;/math&gt; must be closed under the equivalence rules,
+A congruence relation <Math formula="\texttt{}e_1 = e_2"/> must be closed under the equivalence rules,
 
-&lt;math&gt;
-  \{\; \over e = e\} \mbox\{refl\} \qquad
-  \{ e_1 = e_2 \over e_2 = e_1 \} \mbox\{symm\} \qquad
-  \{ e_1 = e_2 \qquad e_2 = e_3 \over e_1 = e_3 \} \mbox\{trans\},
-&lt;/math&gt;
+<DisplayMath formula="   {\; \over e = e} \mbox{refl} \qquad   { e_1 = e_2 \over e_2 = e_1 } \mbox{symm} \qquad   { e_1 = e_2 \qquad e_2 = e_3 \over e_1 = e_3 } \mbox{trans}, "/>
 
 and the compatibility rules,
 
-&lt;math&gt;
-  \{\; \over x = x\} \qquad
-  \{ e_1 = e_2 \over \lambda x.\, e_1 = \lambda x.\, e_2 \} \qquad
-  \{ e_1 = e_1' \qquad e_2 = e_2' \over e_1\ e_2 = e_1'\ e_2' \}.
-&lt;/math&gt; !}%
+<DisplayMath formula="   {\; \over x = x} \qquad   { e_1 = e_2 \over \lambda x.\, e_1 = \lambda x.\, e_2 } \qquad   { e_1 = e_1' \qquad e_2 = e_2' \over e_1\ e_2 = e_1'\ e_2' }. "/> !}%
 
 %{!
 -----

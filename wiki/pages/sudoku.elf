@@ -1,7 +1,7 @@
 %%! title: "Sudoku"
 
 %{! [[Image:sudokuexample.svg|thumb|right|300px|Example Sudoku puzzle]]
-In the **Sudoku** puzzle, a 9x9 board must be filled with the numbers &lt;math&gt;1 \ldots 9&lt;/math&gt; such that no row, column, or box contains the same digit twice.
+In the **Sudoku** puzzle, a 9x9 board must be filled with the numbers <Math formula="1 \ldots 9"/> such that no row, column, or box contains the same digit twice.
 
 \{\{needs|to be completed\}\} !}%
     

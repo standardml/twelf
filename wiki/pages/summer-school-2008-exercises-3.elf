@@ -4,8 +4,8 @@
 
 Add explicit polymorphism to MinML and prove type safety:
 
-- Add a type &lt;math&gt;\forall \alpha.\tau&lt;/math&gt;
-- Add terms &lt;math&gt;\Lambda \alpha.e&lt;/math&gt; and &lt;math&gt;e [\tau]&lt;/math&gt;, with the appropriate typing rules and dynamic semantics
+- Add a type <Math formula="\forall \alpha.\tau"/>
+- Add terms <Math formula="\Lambda \alpha.e"/> and <Math formula="e [\tau]"/>, with the appropriate typing rules and dynamic semantics
 - Extend the type safety proof to cover the new cases.
 
 You can start from either encoding:

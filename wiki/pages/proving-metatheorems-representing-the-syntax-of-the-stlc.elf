@@ -74,7 +74,7 @@ The adequacy theorem for terms shows that the LF operations correctly implement 
 
 ### Adequacy for terms
 
-There is a bijection <Math formula="e \gg \mathtt{E}"/> &lt;math&gt;e \gg \texttt\{E\}&lt;/math&gt; between (α-equivalence classes of) STLC terms <Math formula="e"/> with free variables in <Math formula="x_1,\ldots,x_n"/> and (α-equivalence classes of) LF terms ``E : tm`` in the LF context ``x1:tm, ..., xn:tm``.  
+There is a bijection <Math formula="e \gg \mathtt{E}"/> <Math formula="e \gg \texttt{E}"/> between (α-equivalence classes of) STLC terms <Math formula="e"/> with free variables in <Math formula="x_1,\ldots,x_n"/> and (α-equivalence classes of) LF terms ``E : tm`` in the LF context ``x1:tm, ..., xn:tm``.  
 
 Moreover, this bijection is compositional in the following sense: if <Math formula="e \gg \mathtt{E}"/> and <Math formula="e' \gg \texttt{E'}"/> then <Math formula="\{e'/x\}e \gg \texttt{[E'/x] E}"/>.  
 

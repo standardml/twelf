@@ -3,11 +3,8 @@
 %{! TODO (delete from this page when done):
 
 basic:
-* &lt;math&gt;\gg&lt;/math&gt;  http://en.wikipedia.org/wiki/List_of_mathematical_symbols shows it as "much greater than."  I see it in 
-&lt;math&gt;
-n \gg N \over
-\mathsf\{succ\}(n) \gg \texttt\{s\}(N)
-&lt;/math&gt;
+* <Math formula="\gg"/>  http://en.wikipedia.org/wiki/List_of_mathematical_symbols shows it as "much greater than."  I see it in 
+<Math formula=" n \gg N \over \mathsf{succ}(n) \gg \texttt{s}(N) "/>
 
 high priority:
 * [%total](/wiki/percent-total/) !}%

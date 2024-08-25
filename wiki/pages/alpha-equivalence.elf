@@ -4,11 +4,11 @@
 
 Consider the untyped lambda-calculus.
 
-&lt;math&gt;e ::= x \mid \lambda x.\, e \mid e_1\ e_2&lt;/math&gt;
+<DisplayMath formula="e ::= x \mid \lambda x.\, e \mid e_1\ e_2"/>
 
-Alpha-equivalence for terms &lt;math&gt;\texttt\{\}e&lt;/math&gt; is the least [congruence relation](/wiki/congruence-relation/) &lt;math&gt;\texttt\{\}e_1 =_\alpha e_2&lt;/math&gt; closed under the &lt;math&gt;\texttt\{\}\alpha&lt;/math&gt; axiom:
+Alpha-equivalence for terms <Math formula="\texttt{}e"/> is the least [congruence relation](/wiki/congruence-relation/) <Math formula="\texttt{}e_1 =_\alpha e_2"/> closed under the <Math formula="\texttt{}\alpha"/> axiom:
 
-&lt;math&gt;\{(y \not = x \,and\, y \not\in \mathit\{FV\}(e)) \over \lambda x.\, e =_\alpha \lambda y.\,  [y/x]e\}\alpha&lt;/math&gt;
+<DisplayMath formula="{(y \not = x \,and\, y \not\in \mathit{FV}(e)) \over \lambda x.\, e =_\alpha \lambda y.\,  [y/x]e}\alpha"/>
 
 Alpha-equivalence generalizes in a straightforward manner to any term language with binding structure.
 

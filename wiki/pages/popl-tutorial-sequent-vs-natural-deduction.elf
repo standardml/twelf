@@ -24,7 +24,7 @@ imp : prop -> prop -> prop.
 
 ## Natural Deduction Inference Rules
 
-Natural deduction deals with a single judgment, &lt;math&gt;\texttt\{true\}~A&lt;/math&gt;.
+Natural deduction deals with a single judgment, <Math formula="\texttt{true}~A"/>.
 
 !}%
 
@@ -61,7 +61,7 @@ impE  : true B
 
 With the same grammar of propositions, we can define a sequent
 calculus with different judgments for the left and the right of
-the sequent (&lt;math&gt;\texttt\{hyp\}~A&lt;/math&gt; for the left and &lt;math&gt;\texttt\{conc\}~A&lt;/math&gt; for the right).
+the sequent (<Math formula="\texttt{hyp}~A"/> for the left and <Math formula="\texttt{conc}~A"/> for the right).
 
 !}%
 
@@ -102,7 +102,7 @@ cut  : conc B
 
 %{! 
 
-The natural deduction system exists in a world with arbitrary assumptions &lt;math&gt;\texttt\{hyp\}~A&lt;/math&gt;.
+The natural deduction system exists in a world with arbitrary assumptions <Math formula="\texttt{hyp}~A"/>.
 
 !}%
 

@@ -386,10 +386,10 @@ id-lam^-cong : id-exp^ E E' -> id-exp^ (lam^ E) (lam^ E') -> type.
 %{! The key operations on de Bruijn terms are a binding and unbinding
 operation - essentially, bind takes a free (HOAS) variable and makes it
 a different free (de Bruijn) variable. 
-By way of an example, if we have &lt;math&gt;x,y \vdash (\lambda 1 x) y&lt;/math&gt;,
-then binding &lt;math&gt;x&lt;/math&gt; will result in 
-&lt;math&gt;y \vdash (\lambda 1 2) y&lt;/math&gt;, and binding &lt;math&gt;y&lt;/math&gt; will 
-result in &lt;math&gt;x \vdash (\lambda 1 x) 1&lt;/math&gt;.
+By way of an example, if we have <Math formula="x,y \vdash (\lambda 1 x) y"/>,
+then binding <Math formula="x"/> will result in 
+<Math formula="y \vdash (\lambda 1 2) y"/>, and binding <Math formula="y"/> will 
+result in <Math formula="x \vdash (\lambda 1 x) 1"/>.
 
 Unfortunately, the structural metric ends up being included in both
 ``bind`` and ``unbind``, which complicates the otherwise relatively
@@ -811,13 +811,13 @@ exp-->db-->exp : exp-->db E E^ -> db-->exp E^ E -> type.
 %{! ## Examples !}%
 
 %{! It's also a good idea to run a [``%query``](/wiki/percent-query/) on some examples as
-a sanity check. First, we translate the Church numeral "4," &lt;math&gt;\lambda f.\lambda x.f(f(f(f x)))&lt;/math&gt; from a
+a sanity check. First, we translate the Church numeral "4," <Math formula="\lambda f.\lambda x.f(f(f(f x)))"/> from a
 HOAS to a de Bruijn index representation. |check=decl !}%
 
 %query 1 * exp-->db 
    (lam [f] lam [x] app f (app f (app f (app f x)))) DB.
 
-%{! Next, we translate the Church boolean operator "Not," &lt;math&gt;\lambda p . p (\lambda x . \lambda y . y) (\lambda x . \lambda y . x)&lt;/math&gt; from a
+%{! Next, we translate the Church boolean operator "Not," <Math formula="\lambda p . p (\lambda x . \lambda y . y) (\lambda x . \lambda y . x)"/> from a
 Bruijn index to a HOAS representation. |check=decl !}%
 
 %query 1 * db-->exp 

@@ -8,7 +8,7 @@ For a sequent calculus Γ \{\{darrow\}\} C, where Γ holds hypotheses and the pr
 
 Often, logicians will include cut in the sequent calculus as a rule:
 
-&lt;math&gt;\{ \{ \Gamma \Rightarrow A \qquad \Gamma, A \Rightarrow C \}\over\{ \Gamma \Rightarrow C  \} \}\{\quad \rm cut \}&lt;/math&gt;
+<DisplayMath formula="{ { \Gamma \Rightarrow A \qquad \Gamma, A \Rightarrow C }\over{ \Gamma \Rightarrow C  } }{\quad \rm cut }"/>
 
 They then prove that any proof that uses the cut rule can be transformed into a proof without cut (thus, "cut elimination"). In Twelf, it will be simpler to prove cut as a metatheorem ("admissibility of cut") over a sequent calculus with no cut rule.
 
@@ -19,19 +19,19 @@ Suppose we have the following sequent calculus:
 &lt;!-- nb. in this math code we use \supset for implication --&gt;
 &lt;table style="margin-left:auto;margin-right:auto" cellpadding="24"&gt;
 &lt;tr&gt;&lt;td&gt;
-&lt;math&gt;\{ \{ \qquad \}\over\{ \Gamma, C \Rightarrow C  \} \}\{\quad \rm init \}&lt;/math&gt;
+<Math formula="{ { \qquad }\over{ \Gamma, C \Rightarrow C  } }{\quad \rm init }"/>
 &lt;/td&gt;&lt;td&gt;
-&lt;math&gt;\{ \{ \qquad \}\over\{\Gamma \Rightarrow \top\} \}\{\quad \top\rm R\}&lt;/math&gt;
+<Math formula="{ { \qquad }\over{\Gamma \Rightarrow \top} }{\quad \top\rm R}"/>
 &lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;
-&lt;math&gt;\{ \{ \Gamma \Rightarrow A \qquad \Gamma \Rightarrow B \}\over\{ \Gamma \Rightarrow A \land B  \} \}\{\quad \land\rm R  \}&lt;/math&gt;
+<Math formula="{ { \Gamma \Rightarrow A \qquad \Gamma \Rightarrow B }\over{ \Gamma \Rightarrow A \land B  } }{\quad \land\rm R  }"/>
 &lt;/td&gt;&lt;td&gt;
-&lt;math&gt;\{ \{ \Gamma, A \land B, A, B \Rightarrow C \}\over\{ \Gamma, A \land B \Rightarrow C  \} \}\{\quad \land\rm L  \}&lt;/math&gt;
+<Math formula="{ { \Gamma, A \land B, A, B \Rightarrow C }\over{ \Gamma, A \land B \Rightarrow C  } }{\quad \land\rm L  }"/>
 &lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;
-&lt;math&gt;\{ \{ \Gamma, A \Rightarrow B \}\over\{ \Gamma \Rightarrow A \supset B  \} \}\{\quad \supset\rm R  \}&lt;/math&gt;
+<Math formula="{ { \Gamma, A \Rightarrow B }\over{ \Gamma \Rightarrow A \supset B  } }{\quad \supset\rm R  }"/>
 &lt;/td&gt;&lt;td&gt;
-&lt;math&gt;\{ \{ \Gamma, A \supset B \Rightarrow A \qquad \Gamma, A \supset B, B \Rightarrow C\}\over\{ \Gamma, A \supset B \Rightarrow C  \} \}\{\quad \supset\rm L  \}&lt;/math&gt;
+<Math formula="{ { \Gamma, A \supset B \Rightarrow A \qquad \Gamma, A \supset B, B \Rightarrow C}\over{ \Gamma, A \supset B \Rightarrow C  } }{\quad \supset\rm L  }"/>
 &lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;
 

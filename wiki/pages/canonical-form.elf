@@ -8,33 +8,25 @@ The [LF](/wiki/lf/) type theory is defined so that all well-typed terms are **ca
 
 ## Syntax of LF
 
-&lt;math&gt;
-K ::= \texttt\{type\} \, | \, \Pi x:A. K 
-&lt;/math&gt;
+<DisplayMath formula=" K ::= \texttt{type} \, | \, \Pi x:A. K  "/>
 
-&lt;math&gt;
-A ::= b \, | \, A \, M \, | \, \Pi x:A_1. A_2 
-&lt;/math&gt;
+<DisplayMath formula=" A ::= b \, | \, A \, M \, | \, \Pi x:A_1. A_2  "/>
 
-&lt;math&gt;
-R ::= c \, | \, x \, | \, R \, M 
-&lt;/math&gt;
+<DisplayMath formula=" R ::= c \, | \, x \, | \, R \, M  "/>
 
-&lt;math&gt;
-M ::= R \, | \, \lambda x. M
-&lt;/math&gt;
+<DisplayMath formula=" M ::= R \, | \, \lambda x. M "/>
 
-In Twelf's concrete syntax, the type &lt;math&gt;\texttt\{\}\Pi x:A_1.A_2&lt;/math&gt; is written ``\{x:A1\} A2``, the kind &lt;math&gt;\texttt\{\}\Pi x:A.K&lt;/math&gt; is written ``\{x:A\} K``, and the term &lt;math&gt;\texttt\{\}\lambda x.M&lt;/math&gt; is written ``[x] M``.  The type families include both dependent function types and applications &lt;math&gt;A \, M&lt;/math&gt; of type families to terms.  The kind level classifies type families. Type families of kind &lt;math&gt;\texttt\{type\}&lt;/math&gt; classify terms. Type families that are not yet fully instantiated have kinds &lt;math&gt; \{x:A\} K&lt;/math&gt;.  In both types and kinds, we use ``-&gt;`` as an abbreviation when the argument is not free in the result.  
+In Twelf's concrete syntax, the type <Math formula="\texttt{}\Pi x:A_1.A_2"/> is written ``\{x:A1\} A2``, the kind <Math formula="\texttt{}\Pi x:A.K"/> is written ``\{x:A\} K``, and the term <Math formula="\texttt{}\lambda x.M"/> is written ``[x] M``.  The type families include both dependent function types and applications <Math formula="A \, M"/> of type families to terms.  The kind level classifies type families. Type families of kind <Math formula="\texttt{type}"/> classify terms. Type families that are not yet fully instantiated have kinds <Math formula=" {x:A} K"/>.  In both types and kinds, we use ``-&gt;`` as an abbreviation when the argument is not free in the result.  
 
 ## Motivation for canonical forms
 
-The above syntax describes what we call _[canonical form](/wiki/canonical-form/)s_.  Note what is _not_ a canonical form: there is no syntactic way to apply a lambda-abstraction &lt;math&gt;\texttt\{\}\lambda x.M&lt;/math&gt; to an argument.  Based on your past experience with programming languages, it may seem strange to define LF so that only canonical forms exist—we are not allowed to write down any programs that have any computation left to do.  However, this restriction makes sense if you think about our methodology for representing object languages in LF.  For example, we represent [natural numbers](/wiki/natural-numbers/) with the following LF signature: !}%
+The above syntax describes what we call _[canonical form](/wiki/canonical-form/)s_.  Note what is _not_ a canonical form: there is no syntactic way to apply a lambda-abstraction <Math formula="\texttt{}\lambda x.M"/> to an argument.  Based on your past experience with programming languages, it may seem strange to define LF so that only canonical forms exist—we are not allowed to write down any programs that have any computation left to do.  However, this restriction makes sense if you think about our methodology for representing object languages in LF.  For example, we represent [natural numbers](/wiki/natural-numbers/) with the following LF signature: !}%
     
 nat : type.
 z   : nat.
 s   : nat -> nat.
 
-%{! For this representation to be [adequate](/wiki/adequacy/), the only LF terms of type ``nat`` must be ``z``, ``s z``, ``s (s z)``, and so on.  It is easy to see that non-canonical LF terms interfere with this encoding.  For example, the LF term &lt;math&gt;(\lambda x. \texttt\{s\} \, x) \, \texttt\{z\}&lt;/math&gt; would have type ``nat``, but it is not the representation of any informal natural number. 
+%{! For this representation to be [adequate](/wiki/adequacy/), the only LF terms of type ``nat`` must be ``z``, ``s z``, ``s (s z)``, and so on.  It is easy to see that non-canonical LF terms interfere with this encoding.  For example, the LF term <Math formula="(\lambda x. \texttt{s} \, x) \, \texttt{z}"/> would have type ``nat``, but it is not the representation of any informal natural number. 
 
 ## Canonical LF
 
@@ -42,15 +34,13 @@ If you have encountered [beta-reduction](/wiki/beta-equivalence/) and [eta-expan
 
 We do not present the typing rules for canonical forms here (see, e.g., _Mechanizing Metatheory_&lt;ref&gt;\{\{bibtex:hl07mechanizing\}\}&lt;/ref&gt;).  However, we note two details:
 
-Terms &lt;math&gt;\texttt\{\}R&lt;/math&gt; are only canonical at base type &lt;math&gt;\texttt\{\}a&lt;/math&gt;, not at function type.  For example, the constant ``s`` is _not_ a canonical form of type ``nat -&gt; nat``.  However, the term &lt;math&gt;\lambda x.\texttt\{s\} x&lt;/math&gt;, which is equivalent, is a canonical form.  
+Terms <Math formula="\texttt{}R"/> are only canonical at base type <Math formula="\texttt{}a"/>, not at function type.  For example, the constant ``s`` is _not_ a canonical form of type ``nat -&gt; nat``.  However, the term <Math formula="\lambda x.\texttt{s} x"/>, which is equivalent, is a canonical form.  
 
 In a dependently typed language, the application typing rules must substitute the argument into the body of the dependent function type:
 
-&lt;math&gt;
-\{R : \Pi x : A. B \;\;\;\; M : A \over R \; M : [M/x]B\}
-&lt;/math&gt;
+<DisplayMath formula=" {R : \Pi x : A. B \;\;\;\; M : A \over R \; M : [M/x]B} "/>
 
-In LF, this substitution is in fact a [hereditary substitution](/wiki/hereditary-substitution/), ensuring that the terms embedded in the result of the substitution are in canonical form.  The typing rule for family applications &lt;math&gt;\mathsf\{\}A \; M&lt;/math&gt; has a similar substitution into the result kind.
+In LF, this substitution is in fact a [hereditary substitution](/wiki/hereditary-substitution/), ensuring that the terms embedded in the result of the substitution are in canonical form.  The typing rule for family applications <Math formula="\mathsf{}A \; M"/> has a similar substitution into the result kind.
 
 ## See also
 * See the [introductions to Twelf](/wiki/introductions-to-twelf/) to learn how object languages are represented as the canonical forms of LF.
