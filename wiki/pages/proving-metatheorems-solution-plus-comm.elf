@@ -25,7 +25,7 @@ plus-s : plus (s N1) N2 (s N3)
 plus-commutes : plus N1 N2 N3 -> plus N2 N1 N3 -> type.
 %mode plus-commutes +D1 -D2.
 
-%{! However, before we prove this theorem, we first prove two lemmas.  The first says that for any natural number <Math formula="x"/>&lt;math&gt;n&lt;/math&gt;, <Math formula="x"/>&lt;math&gt;n+0=n&lt;/math&gt;.  This is similar to the constant ``plus-z``, but the order of the arguments to ``plus`` has been changed: !}%
+%{! However, before we prove this theorem, we first prove two lemmas.  The first says that for any natural number <Math formula="x"/><Math formula="n"/>, <Math formula="x"/><Math formula="n+0=n"/>.  This is similar to the constant ``plus-z``, but the order of the arguments to ``plus`` has been changed: !}%
 
 plus-zero-id :  {N1 : nat} plus N1 z N1 -> type.
 %mode plus-zero-id +N -D.
@@ -42,7 +42,7 @@ pzids : plus-zero-id
 %worlds () (plus-zero-id _ _).
 %total N (plus-zero-id N _).
 
-%{! Our second lemma states that if <Math formula="x"/>&lt;math&gt;\mathsf\{plus\}(n_1,n_2,n_3)&lt;/math&gt; then <Math formula="x"/>&lt;math&gt;\mathsf\{plus\}(n_1, \mathsf\{succ\}(n_2), \mathsf\{succ\}(n_3))&lt;/math&gt;.  This lemma is similar to the constant ``plus-s``, but the order of the arguments to ``plus`` has been changed: !}%
+%{! Our second lemma states that if <Math formula="x"/><Math formula="\mathsf{plus}(n_1,n_2,n_3)"/> then <Math formula="x"/><Math formula="\mathsf{plus}(n_1, \mathsf{succ}(n_2), \mathsf{succ}(n_3))"/>.  This lemma is similar to the constant ``plus-s``, but the order of the arguments to ``plus`` has been changed: !}%
     
 plus-flip : plus N1 N2 N3 -> plus N1 (s N2) (s N3) -> type.
 %mode plus-flip +D1 -D2.

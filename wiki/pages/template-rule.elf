@@ -3,13 +3,13 @@
 %{! &lt;strong&gt;This template does not work because template arguments are not expanded inside the &lt;nowiki&gt;&lt;math&gt;&lt;/nowiki&gt; tag in the current MediaWiki. Any workarounds?&lt;/strong&gt;
 
 
-&lt;math&gt;\{ \{ \{\{\{1\}\}\} \}\over\{ \{\{\{2\}\}\}  \} \}\{\quad \rm \{\{\{3\}\}\} \}&lt;/math&gt;&lt;noinclude&gt;
+<DisplayMath formula="{ { {{{1}}} }\over{ {{{2}}}  } }{\quad \rm {{{3}}} }"/>&lt;noinclude&gt;
 
 &lt;s&gt;Render an inference rule. Use: \{&lt;nowiki&gt;\{&lt;/nowiki&gt;rule|premise1 \qquad premise2 ...|conclusion|name&lt;nowiki&gt;\}&lt;/nowiki&gt;\}.
 
 It produces:
 
-&lt;math&gt;\{\{premise1 \qquad premise2 \qquad ...\}\over\{conclusion\}\}\{\quad \rm name\}&lt;/math&gt;
+<DisplayMath formula="{{premise1 \qquad premise2 \qquad ...}\over{conclusion}}{\quad \rm name}"/>
 &lt;/s&gt;
 
 &lt;/noinclude&gt; !}%

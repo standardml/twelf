@@ -25,11 +25,11 @@ This page describes a bijection between closed de Bruijn indices and closed
 HOAS terms, and proves that bijection correct. 
 We will use a modified version of de Bruijn indices - it was easier to 
 start counting from 0, whereas true de Bruijn indices count from 1. The 
-bijection is defined using two relations, ``exp--&gt;db`` and 
-``db--&gt;exp``. We prove the bijection is correct in four steps:
+bijection is defined using two relations, ``exp-->db`` and 
+``db-->exp``. We prove the bijection is correct in four steps:
 
-- ``exp--&gt;db`` is a total and unique relation between HOAS to de Bruijn terms, and can therefore be thought of as the function _e2d_.
-- ``db--&gt;exp`` is a total and unique relation between de Bruijn terms to HOAS, and can therefore be thought of as the function _d2e_.
+- ``exp-->db`` is a total and unique relation between HOAS to de Bruijn terms, and can therefore be thought of as the function _e2d_.
+- ``db-->exp`` is a total and unique relation between de Bruijn terms to HOAS, and can therefore be thought of as the function _d2e_.
 - For all closed de Bruijn terms E, _d2e_(_e2d_ E) = E
 - For all closed HOAS terms E, _e2d_ (_d2e_ E) = E
 
@@ -386,10 +386,10 @@ id-lam^-cong : id-exp^ E E' -> id-exp^ (lam^ E) (lam^ E') -> type.
 %{! The key operations on de Bruijn terms are a binding and unbinding
 operation - essentially, bind takes a free (HOAS) variable and makes it
 a different free (de Bruijn) variable. 
-By way of an example, if we have &lt;math&gt;x,y \vdash (\lambda 1 x) y&lt;/math&gt;,
-then binding &lt;math&gt;x&lt;/math&gt; will result in 
-&lt;math&gt;y \vdash (\lambda 1 2) y&lt;/math&gt;, and binding &lt;math&gt;y&lt;/math&gt; will 
-result in &lt;math&gt;x \vdash (\lambda 1 x) 1&lt;/math&gt;.
+By way of an example, if we have <Math formula="x,y \vdash (\lambda 1 x) y"/>,
+then binding <Math formula="x"/> will result in 
+<Math formula="y \vdash (\lambda 1 2) y"/>, and binding <Math formula="y"/> will 
+result in <Math formula="x \vdash (\lambda 1 x) 1"/>.
 
 Unfortunately, the structural metric ends up being included in both
 ``bind`` and ``unbind``, which complicates the otherwise relatively
@@ -450,8 +450,8 @@ unbind/lam : unbind (lam^ E1) ([v][iv] lam^ (E1' v iv))
 %{! ### Properties of bind and unbind !}%
 
 %{! Now we will show that bind and unbind are inverses of each other,
-which mirrors the proof we will eventually prove about the ``exp-&gt;db``
-and ``db-&gt;exp`` being inverses of each other. In particular, in 
+which mirrors the proof we will eventually prove about the ``exp->db``
+and ``db->exp`` being inverses of each other. In particular, in 
 ``unbind-uniq`` we need to use [reasoning from false](/wiki/reasoning-from-false/) along with a
 special lemma. 
 
@@ -644,7 +644,7 @@ uniq->db : exp->db E2 C Et E^
 %{! ### de Bruijn to HOAS !}%
 
 %{! It is here that we will need to use the ``etree`` [structural metric](/wiki/structural-metrics/)
-to provide a usable termination argument for ``db-&gt;exp``. !}%
+to provide a usable termination argument for ``db->exp``. !}%
 
 db->exp : {Et} exp^ z Et -> {E} case E -> type.
 %mode db->exp +ET +E^ -E -C.
@@ -755,7 +755,7 @@ be less useful in practice than the ones already proven because the
 closed world assumption makes them less general, but they more concisely
 state what was done. !}%
 
-%{! * ``exp--&gt;db`` is a total and unique relation between HOAS to de Bruijn terms, and can therefore be thought of as the function _e2d_. !}%
+%{! * ``exp-->db`` is a total and unique relation between HOAS to de Bruijn terms, and can therefore be thought of as the function _e2d_. !}%
 
 exp-->db : exp -> exp^ z Et -> type.
 exp-->db/ : exp-->db E E^ 
@@ -772,7 +772,7 @@ uniq-->db : exp-->db E E1 -> exp-->db E E2 -> id-exp^ E1 E2 -> type.
 %worlds () (uniq-->db _ _ _).
 %total {} (uniq-->db _ _ _).
 
-%{! * ``db--&gt;exp`` is a total and unique relation between de Bruijn terms to HOAS, and can therefore be thought of as the function _d2e_. !}%
+%{! * ``db-->exp`` is a total and unique relation between de Bruijn terms to HOAS, and can therefore be thought of as the function _d2e_. !}%
 
 db-->exp : exp^ z Et -> exp -> type.
 db-->exp/ : db-->exp E^ E
@@ -811,13 +811,13 @@ exp-->db-->exp : exp-->db E E^ -> db-->exp E^ E -> type.
 %{! ## Examples !}%
 
 %{! It's also a good idea to run a [``%query``](/wiki/percent-query/) on some examples as
-a sanity check. First, we translate the Church numeral "4," &lt;math&gt;\lambda f.\lambda x.f(f(f(f x)))&lt;/math&gt; from a
+a sanity check. First, we translate the Church numeral "4," <Math formula="\lambda f.\lambda x.f(f(f(f x)))"/> from a
 HOAS to a de Bruijn index representation. |check=decl !}%
 
 %query 1 * exp-->db 
    (lam [f] lam [x] app f (app f (app f (app f x)))) DB.
 
-%{! Next, we translate the Church boolean operator "Not," &lt;math&gt;\lambda p . p (\lambda x . \lambda y . y) (\lambda x . \lambda y . x)&lt;/math&gt; from a
+%{! Next, we translate the Church boolean operator "Not," <Math formula="\lambda p . p (\lambda x . \lambda y . y) (\lambda x . \lambda y . x)"/> from a
 Bruijn index to a HOAS representation. |check=decl !}%
 
 %query 1 * db-->exp 

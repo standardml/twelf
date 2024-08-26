@@ -5,7 +5,7 @@
 
 _This article is about proving an [object language](/wiki/object-logic/) lemma. For the notion of canonical form within LF itself, see [canonical form](/wiki/canonical-form/)._
 
-In a standard proofs of <Todo>type safety</Todo>, the [progress](/wiki/canonical-forms-lemma/) theorem requires **canonical forms** lemmas about the values in a language. These lemmas are usually in the form "If e is a value and \{\{vdash\}\} e : T, then e is of some form appropriate for T". A specific example would be "If e is a value and \{\{vdash\}\} e : T1 → T2, then e is of the form λx:T1.e'".
+In a standard proofs of <Todo>type safety</Todo>, the [progress](/wiki/canonical-forms-lemma/) theorem requires **canonical forms** lemmas about the values in a language. These lemmas are usually in the form "If e is a value and ⊦ e : T, then e is of some form appropriate for T". A specific example would be "If e is a value and ⊦ e : T1 → T2, then e is of the form λx:T1.e'".
 
 Depending on the complexity of the type system, there are two general ways to state and prove these lemmas.  In some cases, Twelf's input coverage can give you the canonical forms lemma for free.  In other cases, you must state and prove canonical forms explicitly using [equality](/wiki/equality/).  
 

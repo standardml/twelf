@@ -175,29 +175,28 @@ We can now define a compositional translation from lambda terms to combinator
 terms in the standard way.  The translation appeals to a function called
 _bracket abstraction_ which simulates binding in the combinator calculus.
 
-Bracket abstraction is usually written &lt;math&gt;[x] N&lt;/math&gt; where &lt;math&gt;N&lt;/math&gt;
-is a combinator term, and &lt;math&gt;x&lt;/math&gt; is a variable potentially free in
-&lt;math&gt;N&lt;/math&gt;.  (Be careful not to confuse these brackets with Twelf's syntax
+Bracket abstraction is usually written <Math formula="[x] N"/> where <Math formula="N"/>
+is a combinator term, and <Math formula="x"/> is a variable potentially free in
+<Math formula="N"/>.  (Be careful not to confuse these brackets with Twelf's syntax
 for lambda abstraction.)  It is defined inductively over the term
-&lt;math&gt;N&lt;/math&gt;:
+<Math formula="N"/>:
 
 &lt;blockquote&gt;
-&lt;math&gt;[x]&lt;/math&gt; &lt;math&gt;x = I&lt;/math&gt;&lt;br&gt;
-&lt;math&gt;[x]&lt;/math&gt; &lt;math&gt;N = K&lt;/math&gt; &lt;math&gt;N&lt;/math&gt;
-    (where &lt;math&gt;x&lt;/math&gt; not free in &lt;math&gt;N&lt;/math&gt;)&lt;br&gt;
-&lt;math&gt;[x]&lt;/math&gt; &lt;math&gt;N_1&lt;/math&gt; &lt;math&gt;N_2 =
-    S&lt;/math&gt; &lt;math&gt;([x]&lt;/math&gt; &lt;math&gt;N_1)&lt;/math&gt;
-             &lt;math&gt;([x]&lt;/math&gt; &lt;math&gt;N_2)&lt;/math&gt;&lt;br&gt;
+<Math formula="[x]"/> <Math formula="x = I"/>&lt;br&gt;
+<Math formula="[x]"/> <Math formula="N = K"/> <Math formula="N"/>
+    (where <Math formula="x"/> not free in <Math formula="N"/>)&lt;br&gt;
+<Math formula="[x]"/> <Math formula="N_1"/> <Math formula="N_2 =     S"/> <Math formula="([x]"/> <Math formula="N_1)"/>
+             <Math formula="([x]"/> <Math formula="N_2)"/>&lt;br&gt;
 &lt;/blockquote&gt;
 
-Using it, we can define a translation on lambda-terms, &lt;math&gt;M^*&lt;/math&gt;, where
-&lt;math&gt;M&lt;/math&gt; is a lambda-term, as follows:
+Using it, we can define a translation on lambda-terms, <Math formula="M^*"/>, where
+<Math formula="M"/> is a lambda-term, as follows:
 
 &lt;blockquote&gt;
-&lt;math&gt;x^* = x&lt;/math&gt;&lt;br&gt;
-&lt;math&gt;(M_1&lt;/math&gt; &lt;math&gt;M_2)^*&lt;/math&gt; =
-    &lt;math&gt;M_1^*&lt;/math&gt; &lt;math&gt;M_2^*&lt;/math&gt;&lt;br&gt;
-&lt;math&gt;(\lambda x.&lt;/math&gt; &lt;math&gt;M)^* = [x]&lt;/math&gt; &lt;math&gt;M^*&lt;/math&gt;
+<Math formula="x^* = x"/>&lt;br&gt;
+<Math formula="(M_1"/> <Math formula="M_2)^*"/> =
+    <Math formula="M_1^*"/> <Math formula="M_2^*"/>&lt;br&gt;
+<Math formula="(\lambda x."/> <Math formula="M)^* = [x]"/> <Math formula="M^*"/>
 &lt;/blockquote&gt;
 
 Note that in the definition of bracket abstraction, we need not consider a

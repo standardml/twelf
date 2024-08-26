@@ -101,13 +101,13 @@ bit-flip-unique-alt : id-bit B1 B1'
 %worlds () (bit-flip-unique-alt _ _ _ _).
 %total {} (bit-flip-unique-alt _ _ _ _).
 
-%{! However, this alternate formulation is equivalent to the above uniqueness lemma.  It is easy to see that this lemma implies the above, as we can always call this lemma with ``id-bit/refl``.  To prove the other direction, we can compose the above uniqueness lemma with a [respects lemma](/wiki/respects-lemma/) showing that ``bit-flip`` respects equality.  `` import=alt&gt;Here is an example`` of proving ``bit-flip-unique-alt`` using a uniqueness lemma and a respects lemma (`` import=alt check=true&gt;here is Twelf's output``).  Because the [respects lemma](/wiki/respects-lemma/) will often be necessary for other reasons, it is usually preferable to prove it and the above uniqueness lemma, rather than the composed version presented here.
+%{! However, this alternate formulation is equivalent to the above uniqueness lemma.  It is easy to see that this lemma implies the above, as we can always call this lemma with ``id-bit/refl``.  To prove the other direction, we can compose the above uniqueness lemma with a [respects lemma](/wiki/respects-lemma/) showing that ``bit-flip`` respects equality.  `` import=alt>Here is an example`` of proving ``bit-flip-unique-alt`` using a uniqueness lemma and a respects lemma (`` import=alt check=true>here is Twelf's output``).  Because the [respects lemma](/wiki/respects-lemma/) will often be necessary for other reasons, it is usually preferable to prove it and the above uniqueness lemma, rather than the composed version presented here.
 
 ## Bigger example: determinism of evaluation
 
 As a slightly more-involved example of a uniqueness lemma, we can prove that the operational semantics of the simply typed λ-calculus are deterministic:
 
-: If &lt;math&gt;e \mapsto e'&lt;/math&gt; and &lt;math&gt;e \mapsto e_&lt;/math&gt; then &lt;math&gt;\mathsf\{\}e' = e_&lt;/math&gt;.
+: If <Math formula="e \mapsto e'"/> and <Math formula="e \mapsto e_"/> then <Math formula="\mathsf{}e' = e_"/>.
 
 Here, equality of terms means syntactic identity modulo α-equivalence
 

@@ -84,8 +84,8 @@ identity : {E} reduce E E -> type.
 
 The substitution theorem says that if we have a term ``e`` with 
 ``x`` free that reduces to ``e'`` (with ``x`` still free)
-and ``e&lt;sub&gt;arg&lt;/sub&gt;`` reduces to ``e'&lt;sub&gt;arg&lt;/sub&gt;``, 
-then ``[e&lt;sub&gt;arg&lt;/sub&gt;/x]e`` reduces to ``[e'&lt;sub&gt;arg&lt;/sub&gt;/x]e'``. 
+and ``e&lt;sub>arg&lt;/sub>`` reduces to ``e'&lt;sub>arg&lt;/sub>``, 
+then ``[e&lt;sub>arg&lt;/sub>/x]e`` reduces to ``[e'&lt;sub>arg&lt;/sub>/x]e'``. 
 
 The proof is by induction on the structure of the term with the free variable.
 
@@ -306,9 +306,9 @@ substitutions.
 %{! 
 
 If the left-hand side is a β-reduction 
-``(λx.ea) eb =&gt; [e1b/x] e1a`` but the right-hand side is not, then we 
+``(λx.ea) eb => [e1b/x] e1a`` but the right-hand side is not, then we 
 know that the right-hand side reduction must be 
-``(λx.ea) eb =&gt; (λx.e2a) e2b``, which means it is a 
+``(λx.ea) eb => (λx.e2a) e2b``, which means it is a 
 ``reduce/lam`` hiding inside a ``reduce/app``.
 
 The first subcase:

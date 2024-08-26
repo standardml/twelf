@@ -12,9 +12,9 @@
 
 In on-paper notation, the syntax of the natural numbers is given as follows:
 
-&lt;math&gt;n ::= \mathsf\{z\} \, | \, \mathsf\{s\}(n)&lt;/math&gt;
+<DisplayMath formula="n ::= \mathsf{z} \, | \, \mathsf{s}(n)"/>
 
-That is, &lt;math&gt;\mathsf\{z\}&lt;/math&gt; is a natural number, and if &lt;math&gt;n&lt;/math&gt; is a natural number, then &lt;math&gt;\mathsf\{s\}(n)&lt;/math&gt; is as well.
+That is, <Math formula="\mathsf{z}"/> is a natural number, and if <Math formula="n"/> is a natural number, then <Math formula="\mathsf{s}(n)"/> is as well.
 
 We represent natural numbers as an LF type ``nat`` with two constants generating LF terms of that type:
 
@@ -34,13 +34,9 @@ Next, we define addition as a judgement relating two natural numbers to their su
 
 &lt;table style="margin-left:auto;margin-right:auto" cellpadding="24"&gt;
 &lt;tr&gt;&lt;td&gt;
-&lt;math&gt;\{\qquad\} \over \{\mathsf\{add\}(\mathsf\{z\},n,n)\}
-&lt;/math&gt;
+<Math formula="{\qquad} \over {\mathsf{add}(\mathsf{z},n,n)} "/>
 &lt;/td&gt;&lt;td&gt;
-&lt;math&gt;
-\{\mathsf\{add\}(m,n,p)\} \over
-\{\mathsf\{add\}(\mathsf\{s\}(m), n, \mathsf\{s\}(p))\}
-&lt;/math&gt;
+<Math formula=" {\mathsf{add}(m,n,p)} \over {\mathsf{add}(\mathsf{s}(m), n, \mathsf{s}(p))} "/>
 &lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;
 

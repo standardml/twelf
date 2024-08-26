@@ -51,14 +51,14 @@ use' : prop -> type.
 %{! For instance, the ``use'``
 corresponding to ``(⊃E (⊃E (⊃E (var x) N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;)
 N&lt;sub&gt;3&lt;/sub&gt;)`` is 
-``x · (⊃Z (⊃Z (⊃Z end N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;) N&lt;sub&gt;3&lt;/sub&gt;)`` --- 
+``x · (⊃Z (⊃Z (⊃Z end N&lt;sub>1&lt;/sub>) N&lt;sub>2&lt;/sub>) N&lt;sub>3&lt;/sub>)`` --- 
 the head variable ``x`` has been brought out to the top of the term, but
-the subterm ``N&lt;sub&gt;1&lt;/sub&gt;`` is still nested more deeply
-than the subterms ``N&lt;sub&gt;2&lt;/sub&gt;`` and
-``N&lt;sub&gt;3&lt;/sub&gt;``. In a conversion to spine form,
+the subterm ``N&lt;sub>1&lt;/sub>`` is still nested more deeply
+than the subterms ``N&lt;sub>2&lt;/sub>`` and
+``N&lt;sub>3&lt;/sub>``. In a conversion to spine form,
 we would not only expose the head variable ``x`` but would make 
-``N&lt;sub&gt;1&lt;/sub&gt;`` the "least deeply nested" subterm and make
-``N&lt;sub&gt;3&lt;/sub&gt;`` the "most deeply nested" subterm. !}%
+``N&lt;sub>1&lt;/sub>`` the "least deeply nested" subterm and make
+``N&lt;sub>3&lt;/sub>`` the "most deeply nested" subterm. !}%
 
 %{! ## Zipping and unzipping !}%
 

@@ -3,7 +3,7 @@
 %{! 
 In this case study, we give a simple proof of the diamond property of
 untyped parallel reduction.  The proof, due to 
-Masako Takahashi (Parallel Reductions in &lt;math&gt;\lambda&lt;/math&gt;-Calculus, 
+Masako Takahashi (Parallel Reductions in <Math formula="\lambda"/>-Calculus, 
 Information and Computation 118(1), 1995) makes use of a auxilary relation called complete
 developement.  This case study is a good example of proving
 metatheorems in [regular worlds](/wiki/percent-worlds/): we use several different worlds, and
@@ -79,7 +79,7 @@ but we will prove this fact ourselves below. !}%
 
 %{! 
 Below, we will want to work in a world where both parallel reduction and complete development exist.  
-Thus, we define a block that includes all the assumptions in both ``=&gt;b`` and ``==&gt;b``:
+Thus, we define a block that includes all the assumptions in both ``=>b`` and ``==>b``:
 !}%
 %block =>&==>b : block 
 		  {x : trm} 
@@ -149,7 +149,7 @@ First, we prove a lemma showing that an application reduces if its components do
 %total {} (==>-tot/app _ _ _ _).
 
 %{! 
-Note that the world ``==&gt;b`` is the minimal one in which both ``==&gt;`` and ``lam-or-not`` make sense,
+Note that the world ``==>b`` is the minimal one in which both ``==>`` and ``lam-or-not`` make sense,
 so it is the most appropriate world to use here.
 !}%
 
@@ -170,7 +170,7 @@ so it is the most appropriate world to use here.
      <- ==>-tot/app Dlon De De' D.
 
 %{! 
-This lemma at least needs the assumptions in ``==&gt;b`` for complete development to be adequately represented.
+This lemma at least needs the assumptions in ``==>b`` for complete development to be adequately represented.
 Additionally, because the above case uses ``decide`` as a lemma, we need to ensure that its assumptions are in 
 the world we choose here.  Additionally, to show that variables reduce, we need a theorem case in the context.
 Thus, we arrive at the following block:
@@ -187,12 +187,12 @@ Thus, we arrive at the following block:
 %total D (==>-tot D _).
 
 %{! 
-Why may we call ``decide`` from contexts made up of ``==&gt;totb`` blocks when decide was only stated for
+Why may we call ``decide`` from contexts made up of ``==>totb`` blocks when decide was only stated for
 contexts made up of ``decideb`` blocks?  In general, extending the context could create new cases that
 ``decide`` would be unable to handle.  However, in this instance, both of the new assumptions, which have types
-``==&gt;`` and ``==&gt;-tot``, are irrelevant (in[[subordinate]]) to ``decide``, 
+``==>`` and ``==>-tot``, are irrelevant (in[[subordinate]]) to ``decide``, 
 so Twelf permits this world subsumption.  That is, ``decide`` is only concerned with ``trm``s and derivations of
-``notlam`` and derivations of ``decide`` itself, and neither ``==&gt;`` nor ``==&gt;-tot`` assumptions 
+``notlam`` and derivations of ``decide`` itself, and neither ``==>`` nor ``==>-tot`` assumptions 
 influence those types.
 !}%
 
@@ -340,8 +340,8 @@ where the complete development was by the application rule, and the parallel red
 	((Dm : \{x\} x =&gt; x -&gt; (M_ x) =&gt; (M' x)) x prx).
 &lt;/twelf&gt;
 
-From the inductive hypotheses, we know that ``M_ x =&gt; M' x`` for all ``x`` and that ``N_ =&gt; N'``.
-However, we need to prove that ``M_ N_ =&gt; app (lam M') N'``.  By ``subst``, we can get that the left-hand side reduces
+From the inductive hypotheses, we know that ``M_ x => M' x`` for all ``x`` and that ``N_ => N'``.
+However, we need to prove that ``M_ N_ => app (lam M') N'``.  By ``subst``, we can get that the left-hand side reduces
 to the **beta-reduction** of the right-hand side, but there the proof breaks down.
 
 !}%
@@ -367,13 +367,13 @@ dia : (M => M') -> (M => M'') -> (M' => N) -> (M'' => N) -> type.
      <- tri D==>middle Dright Drightmiddle.
 
 %{! 
-Because we call both ``==&gt;-tot`` and ``tri``, 
+Because we call both ``==>-tot`` and ``tri``, 
 we need to maintain all the assumptions of both of them.  
-This is the block ``=&gt;&==&gt;b`` extended with the theorem cases for
-``decide`` and ``==&gt;-tot`` (a.k.a.
-``==&gt;-totb`` extended with a parallel reduction assumption).
+This is the block ``=>&==>b`` extended with the theorem cases for
+``decide`` and ``==>-tot`` (a.k.a.
+``==>-totb`` extended with a parallel reduction assumption).
 Twelf verifies the world subsumption showing that 
-``==&gt;-tot`` and ``tri`` remain true under such extensions of 
+``==>-tot`` and ``tri`` remain true under such extensions of 
 the context.
 !}%
 
@@ -420,7 +420,7 @@ sound : E ==> E' -> E => E' -> type.
 	   sound (Dm  x nlx cdx) (Dm' x prx)).
 
 %{! For this theorem, we need both complete development and parallel reduction,
-as well as a theorem case, so we extend ``=&gt;&==&gt;b`` as follows:
+as well as a theorem case, so we extend ``=>&==>b`` as follows:
 !}%
 
 %block soundb : block 
@@ -488,7 +488,7 @@ id-func : ({x : trm} id (E x) (E' x))
 %{! 
 
 Twelf rules out the off-diagonal cases for us.  For example, an ``app`` vs. ``beta`` 
-case would have a contradictory derivation of ``notlam (lam _)`` as an argument to ``==&gt;/app``.
+case would have a contradictory derivation of ``notlam (lam _)`` as an argument to ``==>/app``.
 
 !}%
 

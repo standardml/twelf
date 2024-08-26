@@ -65,11 +65,11 @@ atm : polarity -> type.                 %name atm Q q.
 %{! Fairtlough and Mendler's presentation of lax logic has a slight
 inconsistancy: the logic's syntax is defined as 
 
-&lt;math&gt;M ::= Q \mid \mathsf\{true\} \mid \mathsf\{false\} \mid M \wedge M \mid M \vee M \mid M \supset M \mid \neg M \mid \{\bigcirc\}M&lt;/math&gt;
+<DisplayMath formula="M ::= Q \mid \mathsf{true} \mid \mathsf{false} \mid M \wedge M \mid M \vee M \mid M \supset M \mid \neg M \mid {\bigcirc}M"/>
 
-However, rules are given for neither &lt;math&gt;\mathsf\{true\}&lt;/math&gt; nor 
-&lt;math&gt;\mathsf\{false\}&lt;/math&gt;. A reasonable approach seemed to be to define
-&lt;math&gt;\mathsf\{false\}&lt;/math&gt; as &lt;math&gt;\neg \mathsf\{true\}&lt;/math&gt;. !}%
+However, rules are given for neither <Math formula="\mathsf{true}"/> nor 
+<Math formula="\mathsf{false}"/>. A reasonable approach seemed to be to define
+<Math formula="\mathsf{false}"/> as <Math formula="\neg \mathsf{true}"/>. !}%
 
 prop' : type.                           %name prop' M.
 
@@ -86,15 +86,15 @@ ff'    : prop' = not' tt'.
 
 %{! Fairtlough and Mendler present a Genzen-style intuitionstic sequent
 calculus for propositional lax logic in terms of sequents
-&lt;math&gt;\Gamma \vdash \Delta&lt;/math&gt;, where &lt;math&gt;\Gamma&lt;/math&gt; is a finite
-list of _hypotheses_ and &lt;math&gt;\Delta&lt;/math&gt; is either 0 or 1 
-_assertions_. To prove &lt;math&gt;\Gamma \vdash&lt;/math&gt; is to say that the
-hypotheses in &lt;math&gt;\Gamma&lt;/math&gt; are contradictory, to prove
-&lt;math&gt;\Gamma \vdash M&lt;/math&gt; is to say that the hypotheses in 
-&lt;math&gt;\Gamma&lt;/math&gt; establish the proposition &lt;math&gt;M&lt;/math&gt;. 
+<Math formula="\Gamma \vdash \Delta"/>, where <Math formula="\Gamma"/> is a finite
+list of _hypotheses_ and <Math formula="\Delta"/> is either 0 or 1 
+_assertions_. To prove <Math formula="\Gamma \vdash"/> is to say that the
+hypotheses in <Math formula="\Gamma"/> are contradictory, to prove
+<Math formula="\Gamma \vdash M"/> is to say that the hypotheses in 
+<Math formula="\Gamma"/> establish the proposition <Math formula="M"/>. 
 
 We represent the hypotheses using the LF context; each 
-&lt;math&gt;M \in \Gamma&lt;/math&gt; becomes an LF variable of type ``hyp' M``, and
+<Math formula="M \in \Gamma"/> becomes an LF variable of type ``hyp' M``, and
 we use the world ``bl_hyp'`` to describe all such contexts. !}%
 
 hyp' : prop' -> type.
@@ -102,8 +102,8 @@ hyp' : prop' -> type.
 
 %{! We represent the conclusion as ``conc' T D``, where
 * ``T`` is a metric capturing the shape of the derivation
-* ``D`` = ``conc-#'`` represents proving a contradiction &lt;math&gt;\Gamma \vdash &lt;/math&gt;; we abbreviate ``conc' T conc-#'`` as ``# T``.
-* ``D`` = ``conc-true' M`` represents proving &lt;math&gt;\Gamma \vdash M&lt;/math&gt;; we abbreviate ``conc' T (conc-true' M)`` as ``true' T M``. !}%
+* ``D`` = ``conc-#'`` represents proving a contradiction <Math formula="\Gamma \vdash "/>; we abbreviate ``conc' T conc-#'`` as ``# T``.
+* ``D`` = ``conc-true' M`` represents proving <Math formula="\Gamma \vdash M"/>; we abbreviate ``conc' T (conc-true' M)`` as ``true' T M``. !}%
 
 conseq' : type.                         %name conseq' D.
 conc-# : conseq'.                       % Contradiction, length 0
@@ -118,84 +118,39 @@ a sequent needs to be justified by [adequacy](/wiki/adequacy/), it is less of an
 other changes we have made to the system. 
 
 As previously mentioned, 
-Fairtlough and Mendler's system had no rule for &lt;math&gt;\mathsf\{true\}&lt;/math&gt;,
-and we need no rule for &lt;math&gt;\mathsf\{false\}&lt;/math&gt; as we defined it in terms
-of &lt;math&gt;\mathsf\{true\}&lt;/math&gt;. We do not write rules for
+Fairtlough and Mendler's system had no rule for <Math formula="\mathsf{true}"/>,
+and we need no rule for <Math formula="\mathsf{false}"/> as we defined it in terms
+of <Math formula="\mathsf{true}"/>. We do not write rules for
 weakening on the left or exchange on the left, as those are provided "for free"
 by the encoding into LF. In addition, we embed contraction into every
 left rule:
 
-&lt;center&gt;F&amp;M left conjunction rule: &lt;math&gt;\frac\{\Gamma, A, B \vdash \Delta\}\{\Gamma, A \wedge B \vdash \Delta\}&lt;/math&gt;
+&lt;center&gt;F&amp;M left conjunction rule: <Math formula="\frac{\Gamma, A, B \vdash \Delta}{\Gamma, A \wedge B \vdash \Delta}"/>
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
-Our left conjunction rule: &lt;math&gt;\frac\{\Gamma, A \wedge B, A, B \vdash \Delta\}\{\Gamma, A \wedge B \vdash \Delta\}&lt;/math&gt;&lt;/center&gt;
+Our left conjunction rule: <Math formula="\frac{\Gamma, A \wedge B, A, B \vdash \Delta}{\Gamma, A \wedge B \vdash \Delta}"/>&lt;/center&gt;
 
 With those caveats, we will continue to consider our source logic, presented
 here, to have the essential character of Fairtlough and Mendler's. 
 
 #### Rules on paper
 
-&lt;center&gt;&lt;math&gt;\frac
-\{~~~\}
-\{\Gamma \vdash \mathsf\{true\}\}
-\{\mathsf\{true\}\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash M \qquad \Gamma \vdash N\}
-\{\Gamma \vdash M \wedge N\}
-\{\wedge\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, M \wedge N, M, N \vdash \Delta\}
-\{\Gamma, M \wedge N \vdash \Delta\}
-\{\wedge\}L&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {~~~} {\Gamma \vdash \mathsf{true}} {\mathsf{true}}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash M \qquad \Gamma \vdash N} {\Gamma \vdash M \wedge N} {\wedge}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, M \wedge N, M, N \vdash \Delta} {\Gamma, M \wedge N \vdash \Delta} {\wedge}L"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{\Gamma \vdash M\}
-\{\Gamma \vdash M \vee N\}
-\{\vee\}R_1&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash N\}
-\{\Gamma \vdash M \vee N\}
-\{\vee\}R_2&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, M \vee N, M \vdash \Delta \qquad \Gamma, M \vee N, N \vdash \Delta\}
-\{\Gamma \vdash \Delta\}
-\{\vee\}L&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {\Gamma \vdash M} {\Gamma \vdash M \vee N} {\vee}R_1"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash N} {\Gamma \vdash M \vee N} {\vee}R_2"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, M \vee N, M \vdash \Delta \qquad \Gamma, M \vee N, N \vdash \Delta} {\Gamma \vdash \Delta} {\vee}L"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{\Gamma, M \vdash N\}
-\{\Gamma \vdash M \supset N\}
-\{\supset\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, M \supset N \vdash M \qquad \Gamma, M \supset N, N \vdash \Delta\}
-\{\Gamma, M \supset N \vdash \Delta\}
-\{\supset\}L&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, M \vdash\}
-\{\Gamma \vdash \neg M\}
-\{\neg\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, \neg M \vdash M\}
-\{\Gamma, \neg M \vdash\}
-\{\neg\}L&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {\Gamma, M \vdash N} {\Gamma \vdash M \supset N} {\supset}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, M \supset N \vdash M \qquad \Gamma, M \supset N, N \vdash \Delta} {\Gamma, M \supset N \vdash \Delta} {\supset}L"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, M \vdash} {\Gamma \vdash \neg M} {\neg}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, \neg M \vdash M} {\Gamma, \neg M \vdash} {\neg}L"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{\Gamma \vdash M\}
-\{\Gamma \vdash \{\bigcirc\} M\}
-\{\bigcirc\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, \{\bigcirc\} M, M \vdash \{\bigcirc\} N\}
-\{\Gamma, \{\bigcirc\} M \vdash \{\bigcirc\} N\}
-\{\bigcirc\}L&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {\Gamma \vdash M} {\Gamma \vdash {\bigcirc} M} {\bigcirc}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, {\bigcirc} M, M \vdash {\bigcirc} N} {\Gamma, {\bigcirc} M \vdash {\bigcirc} N} {\bigcirc}L"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{~~~\}
-\{\Gamma, M \vdash M\}
-\{id\}&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash M \qquad \Gamma, M \vdash \Delta\}
-\{\Gamma \vdash \Delta\}
-\{cut\}&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash\}
-\{\Gamma \vdash M\}
-\{weakR\}&lt;/math&gt;&lt;/center&gt; !}%
+&lt;center&gt;<Math formula="\frac {~~~} {\Gamma, M \vdash M} {id}"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash M \qquad \Gamma, M \vdash \Delta} {\Gamma \vdash \Delta} {cut}"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash} {\Gamma \vdash M} {weakR}"/>&lt;/center&gt; !}%
 
 %{! #### Rules in Twelf !}%
 
@@ -247,28 +202,28 @@ weakR' : # T -> true' (x T) M.
 
 %{! ## Polarized judgmental lax logic !}%
 
-%{! Polarized lax logic loses the &lt;math&gt;\neg&lt;/math&gt; but distinguishes
-between two different kinds of conjunction, &lt;math&gt;\wedge^+&lt;/math&gt; and 
-&lt;math&gt;\wedge^-&lt;/math&gt;, and two variants of &lt;math&gt;\mathsf\{true\}&lt;/math&gt;
+%{! Polarized lax logic loses the <Math formula="\neg"/> but distinguishes
+between two different kinds of conjunction, <Math formula="\wedge^+"/> and 
+<Math formula="\wedge^-"/>, and two variants of <Math formula="\mathsf{true}"/>
 which are the units of the two kinds of conjunction.
 
 _Every_ proposition has a polarity, not just atomic propositions, and
 this limits what we can write down. For instance, we cannot
-write &lt;math&gt;\top \vee 0&lt;/math&gt;, because &lt;math&gt;\vee&lt;/math&gt; expectes two
-positive things and &lt;math&gt;\top&lt;/math&gt; is negative. We could either write
-&lt;math&gt;1 \vee 0&lt;/math&gt;, or else we could write 
-&lt;math&gt;(\{\downarrow\}\top) \vee 0&lt;/math&gt;.
+write <Math formula="\top \vee 0"/>, because <Math formula="\vee"/> expectes two
+positive things and <Math formula="\top"/> is negative. We could either write
+<Math formula="1 \vee 0"/>, or else we could write 
+<Math formula="({\downarrow}\top) \vee 0"/>.
 
 The full language of propositions is:
 
-&lt;math&gt;A ::= P \mid N&lt;/math&gt;
+<DisplayMath formula="A ::= P \mid N"/>
 
-&lt;math&gt;P ::= Q^+ \mid \{\downarrow\}N \mid 1 \mid 0 \mid P \wedge^+ P \mid P \vee P&lt;/math&gt;
+<DisplayMath formula="P ::= Q^+ \mid {\downarrow}N \mid 1 \mid 0 \mid P \wedge^+ P \mid P \vee P"/>
 
-&lt;math&gt;N ::= Q^- \mid \{\uparrow\}P \mid \top \mid N \wedge^- N \mid P \supset N \mid \{\bigcirc\}P&lt;/math&gt;
+<DisplayMath formula="N ::= Q^- \mid {\uparrow}P \mid \top \mid N \wedge^- N \mid P \supset N \mid {\bigcirc}P"/>
 
 The Twelf versions of the the connectives resemble ones from linear logic, 
-but we mean unrestricted implication &lt;math&gt;P \supset N&lt;/math&gt;
+but we mean unrestricted implication <Math formula="P \supset N"/>
 when we write ``P -o N``, not linear implication. !}%
 
 prop : polarity -> type.                %name prop A.
@@ -294,8 +249,8 @@ hyp : prop S -> type.
 %block bl_hyp : some {S: polarity} {A: prop S} block {h: hyp A}.
 
 %{! We are always trying to prove one of two _judgments,_ and so our
-sequents either take the form &lt;math&gt;\Gamma \vdash A~true&lt;/math&gt; (&lt;math&gt;A&lt;/math&gt;
-is true) or &lt;math&gt;\Gamma \vdash A~lax&lt;/math&gt; (&lt;math&gt;A&lt;/math&gt; is true
+sequents either take the form <Math formula="\Gamma \vdash A~true"/> (<Math formula="A"/>
+is true) or <Math formula="\Gamma \vdash A~lax"/> (<Math formula="A"/> is true
 under a constraint). !}%
 
 conseq : type.                          %name conseq J.
@@ -315,98 +270,35 @@ idconc/refl : idconc D D.
 
 %{! #### Rules on paper
 
-&lt;center&gt;&lt;math&gt;\frac
-\{~~~\}
-\{\Gamma, Q^+ \vdash Q^+~true\}
-\{init\}^+&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{~~~\}
-\{\Gamma, Q^- \vdash Q^-~true\}
-\{init\}^-&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash A~true\}
-\{\Gamma \vdash A~lax\}
-\{lax\}R&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {~~~} {\Gamma, Q^+ \vdash Q^+~true} {init}^+"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {~~~} {\Gamma, Q^- \vdash Q^-~true} {init}^-"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash A~true} {\Gamma \vdash A~lax} {lax}R"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{\Gamma \vdash P~true\}
-\{\Gamma \vdash \{\uparrow\}P~true\}
-\{\uparrow\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, \{\uparrow\}P, P \vdash J\}
-\{\Gamma, \{\uparrow\}P \vdash J\}
-\{\uparrow\}L&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash N~true\}
-\{\Gamma \vdash \{\downarrow\}N~true\}
-\{\downarrow\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, \{\downarrow\}N, N \vdash J\}
-\{\Gamma, \{\downarrow\}N \vdash J\}
-\{\downarrow\}L&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {\Gamma \vdash P~true} {\Gamma \vdash {\uparrow}P~true} {\uparrow}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, {\uparrow}P, P \vdash J} {\Gamma, {\uparrow}P \vdash J} {\uparrow}L"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash N~true} {\Gamma \vdash {\downarrow}N~true} {\downarrow}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, {\downarrow}N, N \vdash J} {\Gamma, {\downarrow}N \vdash J} {\downarrow}L"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{~~~\}
-\{\Gamma \vdash 1~true\}
-\{1\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash P_1~true \qquad \Gamma \vdash P_2~true\}
-\{\Gamma \vdash P_1 \wedge^+ P_2~true\}
-\{\wedge^+\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, P_1 \wedge^+ P_2, P_1, P_2 \vdash J\}
-\{\Gamma, P_1 \wedge^+ P_2 \vdash J\}
-\{\wedge^+\}L&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {~~~} {\Gamma \vdash 1~true} {1}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash P_1~true \qquad \Gamma \vdash P_2~true} {\Gamma \vdash P_1 \wedge^+ P_2~true} {\wedge^+}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, P_1 \wedge^+ P_2, P_1, P_2 \vdash J} {\Gamma, P_1 \wedge^+ P_2 \vdash J} {\wedge^+}L"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{~~~\}
-\{\Gamma \vdash \top~true\}
-\{\top\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash N_1~true \qquad \Gamma \vdash N_2~true\}
-\{\Gamma \vdash N_1 \wedge^- N_2~true\}
-\{\wedge^-\}R&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {~~~} {\Gamma \vdash \top~true} {\top}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash N_1~true \qquad \Gamma \vdash N_2~true} {\Gamma \vdash N_1 \wedge^- N_2~true} {\wedge^-}R"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{\Gamma, N_1 \wedge^+ N_2, N_1 \vdash J\}
-\{\Gamma, N_1 \wedge^+ N_2 \vdash J\}
-\{\wedge^-\}L_1&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, N_1 \wedge^+ N_2, N_2 \vdash J\}
-\{\Gamma, N_1 \wedge^+ N_2 \vdash J\}
-\{\wedge^-\}L_2&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {\Gamma, N_1 \wedge^+ N_2, N_1 \vdash J} {\Gamma, N_1 \wedge^+ N_2 \vdash J} {\wedge^-}L_1"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, N_1 \wedge^+ N_2, N_2 \vdash J} {\Gamma, N_1 \wedge^+ N_2 \vdash J} {\wedge^-}L_2"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{\Gamma \vdash P_1~true\}
-\{\Gamma \vdash P_1 \vee P_2~true\}
-\{\vee\}R_1&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma \vdash P_2~true\}
-\{\Gamma \vdash P_1 \vee P_2~true\}
-\{\vee\}R_2&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, P_1 \vee P_2, P_1 \vdash J \qquad \Gamma, P_1 \vee P_2, P_2 \vdash J\}
-\{\Gamma, P_1 \vee P_2 \vdash J\}
-\{\vee\}R&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {\Gamma \vdash P_1~true} {\Gamma \vdash P_1 \vee P_2~true} {\vee}R_1"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma \vdash P_2~true} {\Gamma \vdash P_1 \vee P_2~true} {\vee}R_2"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, P_1 \vee P_2, P_1 \vdash J \qquad \Gamma, P_1 \vee P_2, P_2 \vdash J} {\Gamma, P_1 \vee P_2 \vdash J} {\vee}R"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{\Gamma, P \vdash N~true\}
-\{\Gamma \vdash P \supset N~true\}
-\{\supset\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, P_1 \supset P_2 \vdash P_1 \qquad \Gamma, P_1 \supset P_2, P_2 \vdash J\}
-\{\Gamma, P_1 \supset P_2 \vdash J\}
-\{\supset\}L&lt;/math&gt;&lt;/center&gt;
+&lt;center&gt;<Math formula="\frac {\Gamma, P \vdash N~true} {\Gamma \vdash P \supset N~true} {\supset}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, P_1 \supset P_2 \vdash P_1 \qquad \Gamma, P_1 \supset P_2, P_2 \vdash J} {\Gamma, P_1 \supset P_2 \vdash J} {\supset}L"/>&lt;/center&gt;
 
 &lt;br/&gt;
 
-&lt;center&gt;&lt;math&gt;\frac
-\{\Gamma \vdash P~lax\}
-\{\Gamma \vdash \{\bigcirc\}P~true\}
-\{\bigcirc\}R&lt;/math&gt;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;math&gt;\frac
-\{\Gamma, \{\bigcirc\}P, P \vdash A~lax\}
-\{\Gamma, \{\bigcirc\}P \vdash A~lax\}
-\{\bigcirc\}L&lt;/math&gt;&lt;/center&gt; !}%
+&lt;center&gt;<Math formula="\frac {\Gamma \vdash P~lax} {\Gamma \vdash {\bigcirc}P~true} {\bigcirc}R"/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<Math formula="\frac {\Gamma, {\bigcirc}P, P \vdash A~lax} {\Gamma, {\bigcirc}P \vdash A~lax} {\bigcirc}L"/>&lt;/center&gt; !}%
 
 %{! #### Rules in Twelf !}%
 
@@ -485,7 +377,7 @@ the metric.) !}%
 means that the ``t+-`` and ``t-+`` rules can add an arbitrary 
 number of shifts. Read in the reverse direction, the translation is not 
 very nondeterminstic; however "``P -o up 0``" can still be translated
-to either "``not M``" or "``M =&gt; (not' tt')``," which are different
+to either "``not M``" or "``M => (not' tt')``," which are different
 source logic expressions. !}%
 
 trans : metric -> prop' -> {S} prop S -> type. %name trans TR.
@@ -568,9 +460,9 @@ trans-complhyp : hyp' A -> trans Mt A S C -> hyp C -> type.
 %{! ### Correspondence !}%
 
 %{! A corollary to the  theorem we will state below will say "If
-&lt;math&gt;\vdash A~true&lt;/math&gt; and &lt;math&gt;M~\texttt\{trans\}~A&lt;/math&gt;, then 
-&lt;math&gt;\vdash M&lt;/math&gt;." However, if there is no &lt;math&gt;M&lt;/math&gt; such that 
-&lt;math&gt;M~\texttt\{trans\}~A&lt;/math&gt;, then the theorem will be vacuously true, 
+<Math formula="\vdash A~true"/> and <Math formula="M~\texttt{trans}~A"/>, then 
+<Math formula="\vdash M"/>." However, if there is no <Math formula="M"/> such that 
+<Math formula="M~\texttt{trans}~A"/>, then the theorem will be vacuously true, 
 which is not our intent. Therefore, we need to establish that our translations
 of propositions and conclusions are _correspondences_ 
 (left- and right-total). 
@@ -657,10 +549,10 @@ section in order to have confidence that our target logic was reasonable. !}%
 
 %{! ### Identity !}%
 
-%{! For all propositions &lt;math&gt;A&lt;/math&gt;, there exists a derivation of
-&lt;math&gt;A \vdash A~true&lt;/math&gt;. 
+%{! For all propositions <Math formula="A"/>, there exists a derivation of
+<Math formula="A \vdash A~true"/>. 
 
-The proof is by induction on the formula &lt;math&gt;A&lt;/math&gt;. !}%
+The proof is by induction on the formula <Math formula="A"/>. !}%
 
 identity : {A} (hyp A -> true A) -> type.
 %mode identity +A -D.
@@ -698,11 +590,11 @@ identity : {A} (hyp A -> true A) -> type.
 ``cut`` is the main theorem, and ``lcut`` is the cut principle
 for lax truth.
 
-* If &lt;math&gt;\Gamma \vdash A~true&lt;/math&gt; and &lt;math&gt;\Gamma, A \vdash J&lt;/math&gt;, then &lt;math&gt;\Gamma \vdash J&lt;/math&gt; (``cut``)
-* If &lt;math&gt;\Gamma \vdash A~lax&lt;/math&gt; and &lt;math&gt;\Gamma, A \vdash C~lax&lt;/math&gt;, then &lt;math&gt;\Gamma \vdash C~lax&lt;/math&gt; (``lcut``)
+* If <Math formula="\Gamma \vdash A~true"/> and <Math formula="\Gamma, A \vdash J"/>, then <Math formula="\Gamma \vdash J"/> (``cut``)
+* If <Math formula="\Gamma \vdash A~lax"/> and <Math formula="\Gamma, A \vdash C~lax"/>, then <Math formula="\Gamma \vdash C~lax"/> (``lcut``)
 
 The proofs are by mutual lexographic induction; either the principal cut 
-formula &lt;math&gt;A&lt;/math&gt; gets smaller, or else the principal cut formula
+formula <Math formula="A"/> gets smaller, or else the principal cut formula
 stays the same and one or both of the input derivations get smaller. The proof
 is entirely standard other than the need for extra commutative cuts for
 ``tlax``; more explanation is available at the article on
@@ -971,7 +863,7 @@ proposition are equivalent). Equivalence will be necessary for the completeness
 theorem in order to translate the identity rule in the source logic into the 
 target logic.
 
-* If &lt;math&gt;M~\texttt\{trans\}~A_1&lt;/math&gt; and &lt;math&gt;\Gamma \vdash A_1~true&lt;/math&gt; and &lt;math&gt;M~\texttt\{trans\}~A_2&lt;/math&gt;, then &lt;math&gt;\Gamma \vdash A_2~true&lt;/math&gt;.
+* If <Math formula="M~\texttt{trans}~A_1"/> and <Math formula="\Gamma \vdash A_1~true"/> and <Math formula="M~\texttt{trans}~A_2"/>, then <Math formula="\Gamma \vdash A_2~true"/>.
 
 The theorem is proved by simultaneous induction on the unordered pair of the 
 two translations, and therefore suffers from an annoying lack of expressivity
@@ -1135,9 +1027,9 @@ trans-equivX: trans _ M _ A1 -> true A1 -> trans _ M _ A2 -> true A2 -> type.
 
 %{! ### Soundness !}%
 
-%{! * If &lt;math&gt;\Gamma \vdash J&lt;/math&gt; and &lt;math&gt;\Gamma'~\texttt\{trans\}~\Gamma&lt;/math&gt; and &lt;math&gt;\Delta~\texttt\{trans\}~J&lt;/math&gt;, then &lt;math&gt;\Gamma' \vdash \Delta&lt;/math&gt; (``trans-sound``)
+%{! * If <Math formula="\Gamma \vdash J"/> and <Math formula="\Gamma'~\texttt{trans}~\Gamma"/> and <Math formula="\Delta~\texttt{trans}~J"/>, then <Math formula="\Gamma' \vdash \Delta"/> (``trans-sound``)
 
-Proved by induction on the target logic derivation &lt;math&gt;\Gamma \vdash J&lt;/math&gt;. !}%
+Proved by induction on the target logic derivation <Math formula="\Gamma \vdash J"/>. !}%
 
 trans-sound : conc C -> trans-conc Mt C' C -> conc' Mc C' -> type.
 %mode trans-sound +C +T -C'.
@@ -1158,35 +1050,23 @@ with the main theorem, and establishes a pattern that will continue in the
 completeness theorem. 
 
 One case in particular is worth pointing out. We have
-&lt;math&gt;\Gamma \vdash \{\uparrow\} 0~true&lt;/math&gt; in the target logic using the
+<Math formula="\Gamma \vdash {\uparrow} 0~true"/> in the target logic using the
 rule ``upR``, which gives us a subderivation 
-&lt;math&gt;\Gamma \vdash 0~true&lt;/math&gt;, and we are
-translating into a contradiction &lt;math&gt;\Gamma' \vdash&lt;/math&gt; in the 
-target logic (let &lt;math&gt;\Gamma'&lt;/math&gt; be the translated 
-&lt;math&gt;\Gamma&lt;/math&gt;).  
+<Math formula="\Gamma \vdash 0~true"/>, and we are
+translating into a contradiction <Math formula="\Gamma' \vdash"/> in the 
+target logic (let <Math formula="\Gamma'"/> be the translated 
+<Math formula="\Gamma"/>).  
 
 By the induction hypothesis we have
-&lt;math&gt;\Gamma' \vdash \mathsf\{false\}&lt;/math&gt;, 
-which we have defined to be &lt;math&gt;\Gamma' \vdash \neg \mathsf\{true\}&lt;/math&gt;. 
-We need to prove, however, &lt;math&gt;\Gamma' \vdash&lt;/math&gt;. Let 
+<Math formula="\Gamma' \vdash \mathsf{false}"/>, 
+which we have defined to be <Math formula="\Gamma' \vdash \neg \mathsf{true}"/>. 
+We need to prove, however, <Math formula="\Gamma' \vdash"/>. Let 
 [me](/wiki/user-rsimmons/) know if I'm wrong, but the only way I could figure out
 how to do this was by using the cut rule in the source logic, which means
 that we do _not_ get cut elimination "for free" in the source logic by virtue
 of cut admissibility in the target logic.
 
-&lt;math&gt;
-\frac
-\{\frac
- \{~~~~\}
- \{\Gamma \vdash \neg\mathsf\{true\}\}
- \{i.h.\}\qquad 
- \frac
- \{\frac\{\}\{\Gamma, \neg\mathsf\{true\}\vdash\mathsf\{true\}\}\{\mathsf\{true\}R\}\}
- \{\Gamma, \neg\mathsf\{true\}\vdash\}\}
- \{\neg\}L
-\{\Gamma \vdash\}
-\{cut\}
-&lt;/math&gt;
+<DisplayMath formula=" \frac {\frac  {~~~~}  {\Gamma \vdash \neg\mathsf{true}}  {i.h.}\qquad   \frac  {\frac{}{\Gamma, \neg\mathsf{true}\vdash\mathsf{true}}{\mathsf{true}R}}  {\Gamma, \neg\mathsf{true}\vdash}}  {\neg}L {\Gamma \vdash} {cut} "/>
 
 This awkwardness is a result of the slight mismatch between falsehood in 
 the target logic and contradiction in the source logic, and is part of
@@ -1298,7 +1178,7 @@ trans-imp : {D: conc C}
 
 %{! ### Completeness !}%
 
-%{! * If &lt;math&gt;\Gamma' \vdash \Delta&lt;/math&gt; and &lt;math&gt;\Gamma'~\texttt\{trans\}~\Gamma&lt;/math&gt; and &lt;math&gt;\Delta~\texttt\{trans\}~J&lt;/math&gt;, then &lt;math&gt;\Gamma \vdash J&lt;/math&gt;.
+%{! * If <Math formula="\Gamma' \vdash \Delta"/> and <Math formula="\Gamma'~\texttt{trans}~\Gamma"/> and <Math formula="\Delta~\texttt{trans}~J"/>, then <Math formula="\Gamma \vdash J"/>.
 
 By lexographic induction on the first derivation's metric and then
 the second derivation's metric. For every left rule, we need a mutually
@@ -1497,16 +1377,16 @@ was left-total. !}%
 %{! Due to the mismatch between
 the lax judgment and the circle, we need three cases for translating identity. 
 The first case is the most important one and is straightforward, however: we
-are translating &lt;math&gt;\Gamma', M \vdash M&lt;/math&gt; and need to show
-&lt;math&gt;\Gamma, A_M \vdash A_M~true&lt;/math&gt;, 
-where &lt;math&gt;M~\texttt\{trans\}~A_M&lt;/math&gt;. 
+are translating <Math formula="\Gamma', M \vdash M"/> and need to show
+<Math formula="\Gamma, A_M \vdash A_M~true"/>, 
+where <Math formula="M~\texttt{trans}~A_M"/>. 
 
 Identity is a terminal rule, so we will not use induction here. 
-We know because &lt;math&gt;M&lt;/math&gt; is a hypothesis that there is 
-a hypothesis &lt;math&gt;A&lt;/math&gt; such that 
-&lt;math&gt;M~\texttt\{trans\}~A&lt;/math&gt;, and so by the identity principle we can prove
-&lt;math&gt;\Gamma, A \vdash A~true&lt;/math&gt;; then, ``trans-equiv`` allows
-us to prove &lt;math&gt;\Gamma, A_M \vdash A_M~true&lt;/math&gt;, which is what we 
+We know because <Math formula="M"/> is a hypothesis that there is 
+a hypothesis <Math formula="A"/> such that 
+<Math formula="M~\texttt{trans}~A"/>, and so by the identity principle we can prove
+<Math formula="\Gamma, A \vdash A~true"/>; then, ``trans-equiv`` allows
+us to prove <Math formula="\Gamma, A_M \vdash A_M~true"/>, which is what we 
 actually need. !}%
 
 - : trans-compl' (id' (H': hyp' M)) (tc (T: trans _ M S Am)) E
@@ -1516,9 +1396,9 @@ actually need. !}%
 
 %{! When we are translating to a lax judgment in the target language, what we
 get out of the translation isn't exactly what we want, we need
-&lt;math&gt;\Gamma \vdash A~lax&lt;/math&gt; but the best we can get is 
-&lt;math&gt;\Gamma \vdash \{\bigcirc\}P~true&lt;/math&gt; or 
-&lt;math&gt;\Gamma \vdash \{\bigcirc\}\{\downarrow\}N~true&lt;/math&gt;. However, we can 
+<Math formula="\Gamma \vdash A~lax"/> but the best we can get is 
+<Math formula="\Gamma \vdash {\bigcirc}P~true"/> or 
+<Math formula="\Gamma \vdash {\bigcirc}{\downarrow}N~true"/>. However, we can 
 use inversion lemmas (and lax cut, in the second case) to get what we need.
 !}%
 

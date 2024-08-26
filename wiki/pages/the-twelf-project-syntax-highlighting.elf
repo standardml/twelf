@@ -1,12 +1,12 @@
 %%! title: "The Twelf Project:Syntax highlighting"
 
-%{! Syntax highlighting on this website is enabled by [[metawikipedia:GeSHiCodeTag Extension | GeSHiCodeTag]] running on the [http://qbnz.com/highlighter/ General Syntax Highlighter]. A prototype [syntax highlighting extension](/wiki/the-twelf-project-geshi-twelf-extension/) has been written for the Twelf Wiki that can be enabled by using the ``&lt;code twelf&gt;&lt;/code&gt;``, but this is depreciated; the syntax highlighter called when using the ``&lt;twelf&gt;`` tag of [[Project:TwelfTag|TwelfTag]] is written in Haskell.
+%{! Syntax highlighting on this website is enabled by [[metawikipedia:GeSHiCodeTag Extension | GeSHiCodeTag]] running on the [http://qbnz.com/highlighter/ General Syntax Highlighter]. A prototype [syntax highlighting extension](/wiki/the-twelf-project-geshi-twelf-extension/) has been written for the Twelf Wiki that can be enabled by using the ``&lt;code twelf>&lt;/code>``, but this is depreciated; the syntax highlighter called when using the ``&lt;twelf>`` tag of [[Project:TwelfTag|TwelfTag]] is written in Haskell.
 
 As a result, the GeSHi Twelf extensions has bugs that will not be fixed; however, the GeSHi code extension remains for backward-compatability and for highlighting code in languages besides Twelf.
 
 ## Using Syntax Highlighting
 
-A full list of supported languages is below - GeSHi comes with support for the PHP, C, OCaml, and others. The best way to enter code is to use the ``&lt;code language&gt;`` tag, where "language" is the language you want to use - GeSHi will print out the list of languages it supports if the one you pick is not one it recognizes. Furthermore, a tag without a language option, i.e. ``&lt;code&gt;``, is a useful way to insert preformatted text into the pages. So this code:
+A full list of supported languages is below - GeSHi comes with support for the PHP, C, OCaml, and others. The best way to enter code is to use the ``&lt;code language>`` tag, where "language" is the language you want to use - GeSHi will print out the list of languages it supports if the one you pick is not one it recognizes. Furthermore, a tag without a language option, i.e. ``&lt;code>``, is a useful way to insert preformatted text into the pages. So this code:
 
 &lt;pre&gt;&lt;code twelf&gt;plus_s : plus (s N1) N2 (s N3)
 	  &lt;- plus N1 N2 N3.&lt;/code&gt;&lt;/pre&gt;

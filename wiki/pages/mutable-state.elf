@@ -43,13 +43,13 @@ which can be added—the typing rules will ensure that natural numbers
 representing heap locations cannot be confused with natural numbers that may 
 be added.
 
-* ``n N`` - integrates natural numbers into the language as &lt;math&gt;\mathsf\{n\}(n)&lt;/math&gt;, where &lt;math&gt;\texttt\{\}n&lt;/math&gt; is a natural number 0, 1, 2...
-* ``E1 + E2`` - addition, &lt;math&gt;\texttt\{\}e_1 + e_2&lt;/math&gt;
-* ``ref E`` - creating a reference cell, &lt;math&gt;\mathsf\{ref\}(e)&lt;/math&gt;
-* ``! E`` - dereferencing a reference cell, &lt;math&gt;\texttt\{\}!e&lt;/math&gt;
-* ``gets E1 E2`` - updating a reference cell, &lt;math&gt;\texttt\{\}e_1 := e_2&lt;/math&gt;
-* ``loc L`` - locations (not available to the programmer), &lt;math&gt;\mathsf\{loc\}(l)&lt;/math&gt;, where &lt;math&gt;\texttt\{\}l&lt;/math&gt; is an abstract location.
-* ``let E1 ([x] E2 x)`` - let statements &lt;math&gt;\mathsf\{let~\} x = e_1 \mathsf\{~in~\} e_2&lt;/math&gt;
+* ``n N`` - integrates natural numbers into the language as <Math formula="\mathsf{n}(n)"/>, where <Math formula="\texttt{}n"/> is a natural number 0, 1, 2...
+* ``E1 + E2`` - addition, <Math formula="\texttt{}e_1 + e_2"/>
+* ``ref E`` - creating a reference cell, <Math formula="\mathsf{ref}(e)"/>
+* ``! E`` - dereferencing a reference cell, <Math formula="\texttt{}!e"/>
+* ``gets E1 E2`` - updating a reference cell, <Math formula="\texttt{}e_1 := e_2"/>
+* ``loc L`` - locations (not available to the programmer), <Math formula="\mathsf{loc}(l)"/>, where <Math formula="\texttt{}l"/> is an abstract location.
+* ``let E1 ([x] E2 x)`` - let statements <Math formula="\mathsf{let~} x = e_1 \mathsf{~in~} e_2"/>
 !}%
 
 %abbrev location = nat. 
@@ -686,11 +686,9 @@ safe-step : safety T ST (run-step R E) NS
 %{! 
 ## Example
 
-We will define the following simple program as ``prog1``, and use Twelf's [logic programming](/wiki/logic-programming/) abilities to actually run the typechecker ``of E T`` and multi-step evaluation ``run S E S' E'``. Because ``gets`` returns the result of the assignment in the same way C does, &lt;math&gt;\texttt\{\}y&lt;/math&gt; should have the same value as &lt;math&gt;\texttt\{\}!x&lt;/math&gt; at the end of the program, namely 4.
+We will define the following simple program as ``prog1``, and use Twelf's [logic programming](/wiki/logic-programming/) abilities to actually run the typechecker ``of E T`` and multi-step evaluation ``run S E S' E'``. Because ``gets`` returns the result of the assignment in the same way C does, <Math formula="\texttt{}y"/> should have the same value as <Math formula="\texttt{}!x"/> at the end of the program, namely 4.
 
-&lt;math&gt;\begin\{array\}\{l\}\mathsf\{let~\}x = \mathsf\{ref\}(2 + 1) \mathsf\{~in\}\\
-\mathsf\{let~\}y = x := !x + 1\mathsf\{~in~\}\\
-!x + 1\end\{array\}&lt;/math&gt;
+<DisplayMath formula="\begin{array}{l}\mathsf{let~}x = \mathsf{ref}(2 + 1) \mathsf{~in}\\ \mathsf{let~}y = x := !x + 1\mathsf{~in~}\\ !x + 1\end{array}"/>
 !}%
 
 prog1 = 

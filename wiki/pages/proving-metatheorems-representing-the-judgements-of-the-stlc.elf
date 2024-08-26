@@ -84,7 +84,7 @@ Thus, an object-language assumption <Math formula="x : \tau"/> is represented by
 
 The first LF variable represents an object-language term ``x``, as per the encoding of syntax in the previous section.  The second variable represents a derivation that ``of x T``.  Consequently, there is no LF constant corresponding to the rule <Math formula="\mathit{of\textit{-}var}"/> because uses of this rule are represented by uses of the corresponding LF variable ``dx``.
 
-This representation of hypotheses gives rise to the higher-order premise of the constant ``of-lam``, which has type ``{x: tm} of x T2 -&gt; of (E x) T``
+This representation of hypotheses gives rise to the higher-order premise of the constant ``of-lam``, which has type ``{x: tm} of x T2 -> of (E x) T``
 
 An LF term of this type has the form ``([x] [dx: of x T2] M)``, where ``M : of (E x) T`` _in an LF context extended with ``x : tm,  dx : of x T2``_.  Thus, ``M`` is the representation of an object-language derivation under the additional assumption <Math formula="x : \tau"/>>.
 

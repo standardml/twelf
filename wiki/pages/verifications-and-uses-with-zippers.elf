@@ -6,7 +6,7 @@ call was made on a term that had been unzipped.
 In this article, we give a different solution. This system has something of the flavor of a [[spine form]] presentation; however, as we discussed in the 
 [hereditary substitution with zippers](/wiki/hereditary-substitution-with-a-zipper/), it is still much closer to a natural deduction system - the analogue of the natural deduction term ``atm (⊃E (⊃E (⊃E (var x) N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;)
 N&lt;sub&gt;3&lt;/sub&gt;)`` in the natural deduction system is 
-``atm x (⊃E (⊃E (⊃E end N&lt;sub&gt;1&lt;/sub&gt;) N&lt;sub&gt;2&lt;/sub&gt;) N&lt;sub&gt;3&lt;/sub&gt;)`` in this version of "natural deduction" - the form of proofs stays the same
+``atm x (⊃E (⊃E (⊃E end N&lt;sub>1&lt;/sub>) N&lt;sub>2&lt;/sub>) N&lt;sub>3&lt;/sub>)`` in this version of "natural deduction" - the form of proofs stays the same
 with the exception that the head variable ``x`` has been pulled out into the front. !}%
 
 %{! ## Propositions and rules !}%

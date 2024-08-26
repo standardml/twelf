@@ -341,7 +341,7 @@ tocpsv+/- : tocpsv+ WV CTi WCV'
          <- ttoct_fun CTo CTi EQ
          <- cofv_resp WCV EQ WCV'.
 
-%{! Both work the same way. We take the type translation as input (``CTi``), then invoke the version of the theorem that returns it as output (``CTo``). Suppose ``CTi : ttoct A A'`` and ``CTo : ttoct A A'&lt;nowiki&gt;&lt;/nowiki&gt;'``. We just need to show that the output of that theorem (``K`` or ``WCV``), which depends on ``A'&lt;nowiki&gt;&lt;/nowiki&gt;'``, works for the type ``A'``. We simply verify that ``A'`` and ``A''`` are equal with our lemma ``ttoct_fun``, and then use the fact that the outputs respect equality on types (``wcc_resp`` or ``cofv_resp``) to do so.
+%{! Both work the same way. We take the type translation as input (``CTi``), then invoke the version of the theorem that returns it as output (``CTo``). Suppose ``CTi : ttoct A A'`` and ``CTo : ttoct A A'&lt;nowiki>&lt;/nowiki>'``. We just need to show that the output of that theorem (``K`` or ``WCV``), which depends on ``A'&lt;nowiki>&lt;/nowiki>'``, works for the type ``A'``. We simply verify that ``A'`` and ``A''`` are equal with our lemma ``ttoct_fun``, and then use the fact that the outputs respect equality on types (``wcc_resp`` or ``cofv_resp``) to do so.
 
 
 The translation of the expressions ``fst`` and ``snd`` are illustrative: !}%

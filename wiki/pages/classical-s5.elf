@@ -48,7 +48,7 @@ prop : type.                            %name prop A.
 ?E : ? A @ W -> ({o:world} A @ o -> C @ W) -> C @ W.
 ?G : ? A @ W' -> ? A @ W.
 
-%{! There are two modal connectives: &lt;math&gt;\Box A&lt;/math&gt;, written ``!A`` and &lt;math&gt;\Diamond A&lt;/math&gt;, written ``?A``. These two connectives are expressed in a non-standard way. The introduction and elimination forms all take place at the same world, and we give mobility forms ``!G`` and ``?G`` that allow us to move modal terms from world to world. !}%
+%{! There are two modal connectives: <Math formula="\Box A"/>, written ``!A`` and <Math formula="\Diamond A"/>, written ``?A``. These two connectives are expressed in a non-standard way. The introduction and elimination forms all take place at the same world, and we give mobility forms ``!G`` and ``?G`` that allow us to move modal terms from world to world. !}%
     
 % Conjunction
 & : prop -> prop -> prop.
@@ -114,7 +114,7 @@ contra : true A W -> false A W -> #.
       (false A W' -> #) ->
       (false (? A) W -> #).
 
-%{! Unlike the natural deduction, this presentation of the \{\{box\}\} and \{\{dia\}\} connectives is completely standard. !}%
+%{! Unlike the natural deduction, this presentation of the □ and ⋄ connectives is completely standard. !}%
     
 % conjunction
 &T :
@@ -331,7 +331,7 @@ x_& : xm (A & B) W ([&t] &T ([at][bt] D1 &t at bt) &t)
 
 %{! ## Natural deduction to sequent calculus
 
-The admissibility of excluded middle allows us to straightforwardly translate natural deduction proofs to sequent calculus proofs. The theorem we prove is that if Γ;Δ \{\{vdash\}\} A @ W then Γ # A * W, Δ. Operationally, we can think of this as follows: if we have a program of type _A_, then we can pass the result of that program to a continuation expecting _A_ to get a contradiction. !}%
+The admissibility of excluded middle allows us to straightforwardly translate natural deduction proofs to sequent calculus proofs. The theorem we prove is that if Γ;Δ ⊦ A @ W then Γ # A * W, Δ. Operationally, we can think of this as follows: if we have a program of type _A_, then we can pass the result of that program to a continuation expecting _A_ to get a contradiction. !}%
     
 %%% Translation from natural deduction to sequent calculus.
 
@@ -551,7 +551,7 @@ xs-throwhit  : xs D ([u] throw (E u) u) (D B W' F)
 
 %{! ## Sequent calculus to natural deduction
 
-With substitution defined, we can now translate sequent calculus proofs back into C5 natural deduction. The theorem we prove is that if Γ # Δ then ∀C. ∀ω. Γ; Δ \{\{vdash\}\} C @ ω. !}%
+With substitution defined, we can now translate sequent calculus proofs back into C5 natural deduction. The theorem we prove is that if Γ # Δ then ∀C. ∀ω. Γ; Δ ⊦ C @ ω. !}%
     
 %%% Translation from Sequent Calculus to Natural Deduction
 
@@ -621,7 +621,7 @@ sn-=>T : seqnd (=>T ([af : false A W] D1 af) ([bt] D2 bt)
 		   ([a*] F1 a* cc ww)
 		   (FF cc ww)).
 
-%{! There are two ways to translate the ``=&gt;F`` rule; we can avoid using ``letcc`` if we like. We give both, taking advantage of the fact that LF relations need not be deterministic functions. !}%
+%{! There are two ways to translate the ``=>F`` rule; we can avoid using ``letcc`` if we like. We give both, taking advantage of the fact that LF relations need not be deterministic functions. !}%
     
 % letcc-free version
 % u : A=>B |- throw \x:A . [[ c:B. throw \unused:A.c to u / ... ]](IH) to u
@@ -714,7 +714,7 @@ sn-?F : seqnd (?F ([af'] D af') F?)
 
 %total (D T F) (seqnd D FF) (truend T N) (falsend F M).
 
-%{! ``&gt;All code from this case study``. `` check="true"&gt;Twelf's output from this case study``.
+%{! ``>All code from this case study``. `` check="true">Twelf's output from this case study``.
 
 [Category:Twelf code](/wiki/category-twelf-code/)
 \{\{case study\}\} !}%

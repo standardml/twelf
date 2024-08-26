@@ -24,7 +24,7 @@
 :This often happens when passing too many “parameters” to a theorem.
 
 ; **No mode declaration for XXX**
-: If a theorem includes a relation in its proof (rather than a theorem _about_ the relation) you get this error, assuming you haven't declared modes on your relation. The location of the offending relation may a variable declaration where the variable isn't used: ``\{T:plus X Y Z\}`` converts into a an arrow type ``plus X Y Z -&gt;`` if ``T`` isn't used.
+: If a theorem includes a relation in its proof (rather than a theorem _about_ the relation) you get this error, assuming you haven't declared modes on your relation. The location of the offending relation may a variable declaration where the variable isn't used: ``\{T:plus X Y Z\}`` converts into a an arrow type ``plus X Y Z ->`` if ``T`` isn't used.
 
 ;Omitted term has ambiguous hyperkind
 :This only happens in pathological cases, see [ambiguous hyperkind](/wiki/ambiguous-hyperkind/).

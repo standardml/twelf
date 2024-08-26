@@ -2226,8 +2226,8 @@ elab_r_exists : synth ER A
 (elab_m_exists D1 _)
 (elab_r_exists D2 _).
 
-%{! ``&gt;All Twelf code for this tutorial.``
-`` check="true"&gt;See Twelf's output.``
+%{! ``>All Twelf code for this tutorial.``
+`` check="true">See Twelf's output.``
 
 \{\{case study\}\} !}%
 
