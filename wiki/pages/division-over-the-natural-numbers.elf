@@ -11,114 +11,114 @@ uninhabited : type.
 
 nat : type.
 
-nat/z	: nat.
-nat/s	: nat -> nat.
+nat/z : nat.
+nat/s : nat -> nat.
 
 %{! Relations about arithmetic over the natural numbers are defined in the standard way. !}%
     
 nat-plus : nat -> nat -> nat -> type.
 
-nat-plus/z	: nat-plus nat/z N N.
+nat-plus/z : nat-plus nat/z N N.
 
-nat-plus/s	: nat-plus (nat/s N1) N2 (nat/s N3)
-		   <- nat-plus N1 N2 N3.
+nat-plus/s : nat-plus (nat/s N1) N2 (nat/s N3)
+              <- nat-plus N1 N2 N3.
 
 
 
 nat-mult : nat -> nat -> nat -> type.
 
-nat-mult/z      : nat-mult nat/z N nat/z.
+nat-mult/z : nat-mult nat/z N nat/z.
 
-nat-mult/s      : nat-mult (nat/s N1) N2 N3'
-                   <- nat-plus N2 N3 N3'
-                   <- nat-mult N1 N2 N3.
+nat-mult/s : nat-mult (nat/s N1) N2 N3'
+              <- nat-plus N2 N3 N3'
+              <- nat-mult N1 N2 N3.
 
 
 
 nat-less : nat -> nat -> type.
 
-nat-less/z	: nat-less nat/z (nat/s _).
+nat-less/z : nat-less nat/z (nat/s _).
 
-nat-less/s	: nat-less (nat/s N1) (nat/s N2)
-		   <- nat-less N1 N2. 
+nat-less/s : nat-less (nat/s N1) (nat/s N2)
+              <- nat-less N1 N2. 
 
 
 
-nat-leq	: nat -> nat -> type.
+nat-leq : nat -> nat -> type.
 
-nat-leq/z	: nat-leq nat/z _.
+nat-leq/z : nat-leq nat/z _.
 
-nat-leq/s	: nat-leq (nat/s N1) (nat/s N2)
-		   <- nat-leq N1 N2.
+nat-leq/s : nat-leq (nat/s N1) (nat/s N2)
+             <- nat-leq N1 N2.
 
 
 
 nat-compare : nat -> nat -> type.
 
-nat-compare/less	: nat-compare N1 N2
-			   <- nat-less N1 N2.
+nat-compare/less : nat-compare N1 N2
+                    <- nat-less N1 N2.
 
-nat-compare/leq		: nat-compare N1 N2
-			   <- nat-leq N2 N1.
+nat-compare/leq  : nat-compare N1 N2
+                    <- nat-leq N2 N1.
 
 
 
 % nat-divmod DIVIDEND DIVISOR QUOTIENT REMAINDER
 
-nat-divmod	: nat -> nat -> nat -> nat -> type.
+nat-divmod : nat -> nat -> nat -> nat -> type.
 
-nat-divmod/base	: nat-divmod N1 N2 nat/z N1
-		   <- nat-less N1 N2.
+nat-divmod/base : nat-divmod N1 N2 nat/z N1
+                   <- nat-less N1 N2.
 
-nat-divmod/rec	: nat-divmod N1 N2 (nat/s N3) N4
-		   <- nat-divmod N1' N2 N3 N4
-		   <- nat-plus N2 N1' N1.
+nat-divmod/rec  : nat-divmod N1 N2 (nat/s N3) N4
+                   <- nat-divmod N1' N2 N3 N4
+                   <- nat-plus N2 N1' N1.
 
 %{! Some basic properties about arithmetic. !}%
     
-nat-leq-plus	: nat-leq N1 N2
-		   -> nat-plus N1 _ N2
-		   -> type.
+nat-leq-plus : nat-leq N1 N2
+                -> nat-plus N1 _ N2
+                -> type.
 %mode nat-leq-plus +D1 -D2.
 
--	: nat-leq-plus nat-leq/z nat-plus/z.
+- : nat-leq-plus nat-leq/z nat-plus/z.
 
--	: nat-leq-plus (nat-leq/s DLQ) (nat-plus/s DNP)
-	   <- nat-leq-plus DLQ DNP.
+- : nat-leq-plus (nat-leq/s DLQ) (nat-plus/s DNP)
+      <- nat-leq-plus DLQ DNP.
 
 %worlds () (nat-leq-plus _ _).
 %total {D1} (nat-leq-plus D1 _).
 
 
 
-nat-compare-resp-s	: nat-compare N1 N2
-			   -> nat-compare (nat/s N1) (nat/s N2)
-			   -> type.
+nat-compare-resp-s : nat-compare N1 N2
+                      -> nat-compare (nat/s N1) (nat/s N2)
+                      -> type.
 %mode nat-compare-resp-s +D1 -D2.
 
--	: nat-compare-resp-s (nat-compare/less DL) 
-	   (nat-compare/less (nat-less/s DL)).
+- : nat-compare-resp-s (nat-compare/less DL) 
+     (nat-compare/less (nat-less/s DL)).
 
--	: nat-compare-resp-s (nat-compare/leq DLQ) 
-	   (nat-compare/leq (nat-leq/s DLQ)).
+- : nat-compare-resp-s (nat-compare/leq DLQ) 
+     (nat-compare/leq (nat-leq/s DLQ)).
 
 %worlds () (nat-compare-resp-s _ _).
 %total {} (nat-compare-resp-s _ _).
 
 
 
-can-nat-compare	: {N1}{N2}
-		   nat-compare N1 N2
-		   -> type.
+can-nat-compare : {N1}{N2}
+                   nat-compare N1 N2
+                   -> type.
 %mode can-nat-compare +D1 +D2 -D3.
 
--	: can-nat-compare _ _ (nat-compare/less nat-less/z).
+- : can-nat-compare _ _ (nat-compare/less nat-less/z).
 
--	: can-nat-compare _ _ (nat-compare/leq nat-leq/z).
+- : can-nat-compare _ _ (nat-compare/leq nat-leq/z).
 
--	: can-nat-compare (nat/s N1) (nat/s N2) DC'
-	   <- can-nat-compare N1 N2 DC
-	   <- nat-compare-resp-s DC DC'.
+- : can-nat-compare (nat/s N1) (nat/s N2) DC'
+     <- can-nat-compare N1 N2 DC
+     <- nat-compare-resp-s DC DC'.
 
 %worlds () (can-nat-compare _ _ _).
 %total {D1} (can-nat-compare D1 _ _).
@@ -147,94 +147,96 @@ nat-plus-assoc : nat-plus N1 N2 N12
                   -> type.
 %mode nat-plus-assoc +D1 +D2 +D3 -D4.
 
--       : nat-plus-assoc nat-plus/z DP nat-plus/z DP.
+- : nat-plus-assoc nat-plus/z DP nat-plus/z DP.
 
--       : nat-plus-assoc (nat-plus/s DP1) DP2 (nat-plus/s DP3) (nat-plus/s DP4)
-           <- nat-plus-assoc DP1 DP2 DP3 DP4.
+- : nat-plus-assoc (nat-plus/s DP1) DP2 (nat-plus/s DP3) (nat-plus/s DP4)
+     <- nat-plus-assoc DP1 DP2 DP3 DP4.
 
 %worlds () (nat-plus-assoc _ _ _ _).
 %total (D1) (nat-plus-assoc D1 _ _ _).
 
 %{! The first proof about division: The remainder is less than the divisor! !}%
     
-nat-divmod-mod-less	: nat-divmod N1 N2 N3 N4
-			   -> nat-less N4 N2
-			   -> type. 
+nat-divmod-mod-less : nat-divmod N1 N2 N3 N4
+                       -> nat-less N4 N2
+                       -> type. 
+nat-divmod-mod-less : nat-divmod N1 N2 N3 N4
+                       -> nat-less N4 N2
+                       -> type. 
 %mode nat-divmod-mod-less +D1 -D2.
 
--	: nat-divmod-mod-less (nat-divmod/base DL) DL.
+- : nat-divmod-mod-less (nat-divmod/base DL) DL.
 
--	: nat-divmod-mod-less (nat-divmod/rec _ DDM) DL
-	   <- nat-divmod-mod-less DDM DL.
+- : nat-divmod-mod-less (nat-divmod/rec _ DDM) DL
+     <- nat-divmod-mod-less DDM DL.
 
 %worlds () (nat-divmod-mod-less _ _).
 %total {D1} (nat-divmod-mod-less D1 _).
 
 %{! Division by zero does not happen. !}%
     
-nat-divmod-z-uninhabited	: nat-divmod N1 nat/z N3 N4
-				   -> uninhabited
-				   -> type.
+nat-divmod-z-uninhabited : nat-divmod N1 nat/z N3 N4
+                            -> uninhabited
+                            -> type.
 %mode nat-divmod-z-uninhabited +D1 -D2.
 
--	: nat-divmod-z-uninhabited (nat-divmod/rec nat-plus/z DDM) DU
-	   <- nat-divmod-z-uninhabited DDM DU.
+- : nat-divmod-z-uninhabited (nat-divmod/rec nat-plus/z DDM) DU
+     <- nat-divmod-z-uninhabited DDM DU.
 
 %worlds () (nat-divmod-z-uninhabited _ _).
 %total {D1} (nat-divmod-z-uninhabited D1 _).
 
 %{! The following theorem uses the ``%reduces`` directive to verify that if a non-zero number is added to ``N2``, then the result is strictly larger than ``N2`` in the sub-term sense. This is powerful information, because Twelf verifies well-founded inductions over sub-term orderings. !}%
-    
-nat-plus-reduces-s	: {N2}{N3}
-			   nat-plus (nat/s N1) N2 N3
-			   -> type.
+
+nat-plus-reduces-s : {N2}{N3}
+                      nat-plus (nat/s N1) N2 N3
+                      -> type.
 %mode nat-plus-reduces-s +D1 +D2 +D3.
 
--	: nat-plus-reduces-s _ _ (nat-plus/s nat-plus/z).
+- : nat-plus-reduces-s _ _ (nat-plus/s nat-plus/z).
 
--	: nat-plus-reduces-s _ _ (nat-plus/s DL)
-	   <- nat-plus-reduces-s _ _ DL.
+- : nat-plus-reduces-s _ _ (nat-plus/s DL)
+     <- nat-plus-reduces-s _ _ DL.
 
 %worlds () (nat-plus-reduces-s _ _ _).
 %reduces N2 < N3 (nat-plus-reduces-s N2 N3 _).
 %total {D1} (nat-plus-reduces-s _ _ D1).
 
 %{! The highlight of this example. Division is possible for any dividend as long as the divisor is non-zero. This proof is by induction over the dividend, which does get smaller as inductive calls are made. However, because Twelf can not figure this out on its own, calls to nat-plus-reduces-s are required so that this proof passes the totality checker. !}%
-    
-can-nat-divmod*	: {N1}
-		   nat-compare N1 (nat/s N2)
-		   -> nat-divmod N1 (nat/s N2) N3 N4
-		   -> type.
+
+can-nat-divmod* : {N1} nat-compare N1 (nat/s N2)
+                   -> nat-divmod N1 (nat/s N2) N3 N4
+                   -> type.
 %mode can-nat-divmod* +D1 +D2 -D3.
 
--	: can-nat-divmod* _ (nat-compare/less DL) (nat-divmod/base DL).
+- : can-nat-divmod* _ (nat-compare/less DL) (nat-divmod/base DL).
 
--	: can-nat-divmod* N1 (nat-compare/leq DLQ) (nat-divmod/rec DP DDM)
-	   <- nat-leq-plus DLQ DP
-	   <- nat-plus-reduces-s N1' N1 DP
-	   <- can-nat-compare N1' (nat/s N2) DC
-	   <- can-nat-divmod* N1' DC DDM.
+- : can-nat-divmod* N1 (nat-compare/leq DLQ) (nat-divmod/rec DP DDM)
+     <- nat-leq-plus DLQ DP
+     <- nat-plus-reduces-s N1' N1 DP
+     <- can-nat-compare N1' (nat/s N2) DC
+     <- can-nat-divmod* N1' DC DDM.
 
 %worlds () (can-nat-divmod* _ _ _).
 %total {D1} (can-nat-divmod* D1 _ _).
 
 
 
-can-nat-divmod	: {N1}{N2}
-		   nat-divmod N1 (nat/s N2) N3 N4
-		   -> type.
+can-nat-divmod : {N1}{N2} 
+                  nat-divmod N1 (nat/s N2) N3 N4
+                  -> type.
 %mode can-nat-divmod +D1 +D2 -D3.
 
--	: can-nat-divmod N1 N2 DDM
-	   <- can-nat-compare N1 (nat/s N2) DC
-	   <- can-nat-divmod* N1 DC DDM.
+- : can-nat-divmod N1 N2 DDM
+     <- can-nat-compare N1 (nat/s N2) DC
+     <- can-nat-divmod* N1 DC DDM.
 
 %worlds () (can-nat-divmod _ _ _).
 %total {} (can-nat-divmod _ _ _).
 
 %{! It is also useful to know the definition of division is correct with respect to multiplication. !}%
-    
-%{! (options removed from twelftag: check="true") !}%
+
+%{!! begin checked !!}%
 
 nat-divmod-correct : nat-divmod N1 N2 N3 N4
                       -> nat-mult N3 N2 N3'
@@ -242,24 +244,18 @@ nat-divmod-correct : nat-divmod N1 N2 N3 N4
                       -> type.
 %mode nat-divmod-correct +D1 -D2 -D3.
 
--       : nat-divmod-correct (nat-divmod/base _) nat-mult/z nat-plus/z.
+- : nat-divmod-correct (nat-divmod/base _) nat-mult/z nat-plus/z.
 
--       : nat-divmod-correct (nat-divmod/rec DP DD) (nat-mult/s DM DP'') DP'''
-           <- nat-divmod-correct DD DM DP'
-           <- can-nat-plus N2 N3' DP''
-           <- nat-plus-assoc DP'' DP' DP DP'''.
+- : nat-divmod-correct (nat-divmod/rec DP DD) (nat-mult/s DM DP'') DP'''
+     <- nat-divmod-correct DD DM DP'
+     <- can-nat-plus N2 N3' DP''
+     <- nat-plus-assoc DP'' DP' DP DP'''.
 
 %worlds () (nat-divmod-correct _ _ _).
 %total (D1) (nat-divmod-correct D1 _ _).
 
+%{!! end checked !!}%
+
 %{! In the above code, the division algorithm for natural numbers was defined. A few interesting properties about this judgment were proven. The first is that the remainder computed is strictly less than the divisor. The second is that the judgment is not inhabited when the divisor is zero. The third is an [effectiveness lemma](/wiki/effectiveness-lemma/) which shows that this judgment is inhabited for any dividend and any divisor greater than zero. Finally, the division relation was shown to be correct with respect to multiplication.
 
-\{\{case study\}\}
-[Category:Twelf code](/wiki/category-twelf-code/) !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Division_over_the_natural_numbers).
 !}%
