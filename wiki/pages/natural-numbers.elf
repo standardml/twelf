@@ -1,12 +1,14 @@
 %%! title: "Natural numbers"
 
-%{! The **natural numbers** are the numbers 0, 1, 2, etc. The term is generally used to indicate a specific technique of representing natural numbers as either zero or the successor of some other natural number - 0, s(0), s(s(0)), etc - as in [[w:Peano arithmetic|Peano arithmetic]], a technique also sometimes referred to as **unary numbers.**
+%{! The **natural numbers** are the numbers 0, 1, 2, etc. The term is generally used to indicate a specific technique of representing natural numbers as either zero or the successor of some other natural number - 0, s(0), s(s(0)), etc - as in <Todo>Peano arithmetic</Todo>, a technique also sometimes referred to as **unary numbers.**
 
 ## Natural numbers in Twelf
 
 Natural numbers in Twelf are usually defined in a similar way. Mathematically, natural numbers can be defined as zero or the successor of some other natural number:
 
-<DisplayMath formula="\texttt{}n ::= 0 \,|\, \texttt{s}(n)"/>
+```math
+n ::= 0 \,|\, \texttt{s}(n)
+```
 
 This representation translates easily into Twelf: !}%
     
@@ -20,31 +22,70 @@ s: nat -> nat.
 
 The addition of these natural numbers is defined by the judgment <Math formula="\texttt{plus}(N_1,N_2,N_3)"/>, where <Math formula="N_1"/>, <Math formula="N_2"/>, and <Math formula="N_3"/> are natural numbers. In the definition below, capital letters stand for metavariables that can range over all natural numbers. 
 
-<DisplayMath formula="{\qquad \over \texttt{plus}(0,N,N)}{\mbox{p-z}}"/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <Math formula="{\texttt{plus}(N_1,N_2,N_3) \over \texttt{plus}(\texttt{s}(N_1),N_2,\texttt{s}(N_3))}{\mbox{p-s}}"/>
+```math
+{
+    \over
+    \texttt{plus}(0,N,N)
+}\mathit{p\textit{-}z}
+```
+
+```math
+{
+    \texttt{plus}(N_1,N_2,N_3) 
+    \over 
+    \texttt{plus}(\texttt{s}(N_1),N_2,\texttt{s}(N_3))
+}{\mathit{p\textit{-}s}}
+```
 
 These judgments also translate cleanly into Twelf: !}%
+
+%{!! begin checked !!}%
     
-plus: nat -> nat -> nat -> type.
-p-z: plus z N N.
-p-s: plus (s N1) N2 (s N3)
-      <- plus N1 N2 N3.
+plus : nat -> nat -> nat -> type.
+p-z  : plus z N N.
+p-s  : plus (s N1) N2 (s N3)
+        <- plus N1 N2 N3.
+
+%{!! end checked !!}%
 
 %{! The first line defines the judgment, declaring ``plus`` to be a type family indexed by three terms of type ``nat``. 
 
-The second line declares that for any natural number ``N``, ``p-z`` is an object of type ``plus z N N``, which corresponds to the axiom p-z above. The ``N`` is an [implicit parameter](/wiki/implicit-and-explicit-parameters/) - it is treated as a bound variable by Twelf, which you can see by `` check="true">looking at Twelf's output`` after checking the above code. 
+The second line declares that for any natural number ``N``, ``p-z`` is an object of type ``plus z N N``, which corresponds to the axiom p-z above. The ``N`` is an [implicit parameter](/wiki/implicit-and-explicit-parameters/) - it is treated as a bound variable by Twelf, which you can see by looking at Twelf's output after checking the above code. 
 
 The third line says that ``p-s`` is a type constructor that, given an object ``D`` of type ``plus N1 N2 N3`` (where ``N1``, ``N2``, and ``N3`` are all implicit parameters that can
 be treated as metavariables), produces an object, ``p-s D``, with type ``plus (s N1) N2 (s N3)``. This corresponds to the rule p-s, which given a derivation of <Math formula="\texttt{plus}(N_1,N_2,N_3)"/> allows us to conclude <Math formula="\texttt{plus}(\texttt{s}(N_1),N_2,\texttt{s}(N_3))"/>.
 
 Consider this derivation which encodes the fact that <Math formula="2 + 1 = 3"/>:
 
-<DisplayMath formula=" {{{\;} \over { \texttt{plus}(0,\;\;\texttt{s}(0),\;\;\texttt{s}(0))}}{\mbox{p-z}} \over {{ \texttt{plus}(\texttt{s}(0),\;\;\texttt{s}(0),\;\;\texttt{s}(\texttt{s}(0)))} \over { \texttt{plus}(\texttt{s}(\texttt{s}(0)),\;\;\texttt{s}(0),\;\;\texttt{s}(\texttt{s}(\texttt{s}(0))))}}{\mbox{p-s}}}{\mbox{p-s}} "/>
+
+```math
+{
+  {
+    \over 
+    {
+      \texttt{plus}(0,\;\;\texttt{s}(0),\;\;\texttt{s}(0))
+    }
+  }{\mathit{p\textit{-}z}}
+  \over
+  {
+    {
+      \texttt{plus}(\texttt{s}(0),\;\;\texttt{s}(0),\;\;\texttt{s}(\texttt{s}(0)))
+    }
+    \over 
+    {
+      \texttt{plus}(\texttt{s}(\texttt{s}(0)),\;\;\texttt{s}(0),\;\;\texttt{s}(\texttt{s}(\texttt{s}(0))))
+    }
+  }{\mathit{p\textit{-}s}}
+}{\mathit{p\textit{-}s}}
+```
 
 This can be represented in Twelf by applying the type constructor ``p-s`` to the object ``p-z`` twice: !}%
     
-%{! (options removed from twelftag: check=decl) !}%
+%{!! begin checked !!}%
 
 2+1=3 : plus (s (s z)) (s z) (s (s (s z))) = p-s (p-s p-z).
+
+%{!! end checked !!}%
 
 %{! ## See also
 
@@ -54,11 +95,4 @@ This can be represented in Twelf by applying the type constructor ``p-s`` to the
 
 ## External link
 
-* [http://en.wikipedia.org/wiki/Natural_numbers Natural numbers at Wikipedia] !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Natural_numbers).
-!}%
+* [Natural numbers at Wikipedia](http://en.wikipedia.org/wiki/Natural_numbers) !}%

@@ -6,27 +6,24 @@
 
 The concrete syntax of a simple language might look like this:
 
-&lt;code&gt;if 1 = 2 then 1 + if true then 3 else 6 else 6&lt;/code&gt;
+`if 1 = 2 then 1 + if true then 3 else 6 else 6`
 
 and the abstract syntax in a language like ML might look like this:
 
-&lt;code&gt;If(Eq(Num(1),Num(2)),
+```
+If(Eq(Num(1),Num(2)),
    Plus(Num(1),If(True,Num(3),Num(6))),
-   Num(6))&lt;/code&gt; 
+   Num(6))
+```
 
 and the same abstract syntax in a language like Twelf might look like this:
 
-&lt;code&gt;(if (eq (num 1) (num 2)) 
+```
+(if (eq (num 1) (num 2)) 
     (plus (num 1) (if true (num 3) (num 6)))
-    (num 6))&lt;/code&gt;
+    (num 6));
+```
 
 ## See also
 
 [Higher-order abstract syntax](/wiki/higher-order-abstract-syntax/) !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Abstract_syntax).
-!}%

@@ -24,7 +24,9 @@ void: type. %freeze void.
 
 0 = z.
 1 = s 0.
-%{! ... and continuing on to 25 |hidden = true !}%
+%{! ... and continuing on to 25 !}%
+
+%{!! begin hidden !!}%
 2 = s 1.
 3 = s 2.
 4 = s 3.
@@ -49,6 +51,7 @@ void: type. %freeze void.
 23 = s 22.
 24 = s 23.
 25 = s 24.
+%{!! end hidden !!}%
 
 
 %{! ## Equality and inequality !}%
@@ -56,28 +59,28 @@ void: type. %freeze void.
 %{! ### Definitions !}%
 
 %% equality
-id-nat	    : nat -> nat -> type.
+id-nat : nat -> nat -> type.
 id-nat/refl : id-nat N N.
 
 %% less than
 lt-nat   : nat -> nat -> type.
 lt-nat/z : lt-nat z (s N).
 lt-nat/s : lt-nat (s N1) (s N2)
-	    <- lt-nat N1 N2.
+            <- lt-nat N1 N2.
 
 %% less than or equal to
 leq-nat    : nat -> nat -> type.
 leq-nat/eq : leq-nat N1 N2
-	      <- id-nat N1 N2.
+              <- id-nat N1 N2.
 leq-nat/lt : leq-nat N1 N2
-	      <- lt-nat N1 N2.
+              <- lt-nat N1 N2.
 
 %% not equal
-neq-nat : nat -> nat -> type.
+neq-nat    : nat -> nat -> type.
 neq-nat/gt : neq-nat N1 N2
-	      <- lt-nat N2 N1.
+              <- lt-nat N2 N1.
 neq-nat/lt : neq-nat N1 N2
-	      <- lt-nat N1 N2.
+              <- lt-nat N1 N2.
 
 
 
@@ -214,7 +217,7 @@ id-nat/dec : id-nat (s N1) (s N2) -> id-nat N1 N2 -> type.
 
 
 leq-nat-resp : id-nat N1 N1' 
-		-> id-nat N2 N2' -> leq-nat N1 N2 -> leq-nat N1' N2' -> type.
+                -> id-nat N2 N2' -> leq-nat N1 N2 -> leq-nat N1' N2' -> type.
 %mode leq-nat-resp +X1 +X2 +X3 -X4.
 
 - : leq-nat-resp id-nat/refl id-nat/refl D D.
@@ -225,7 +228,7 @@ leq-nat-resp : id-nat N1 N1'
 
 
 lt-nat-resp : id-nat N1 N1' 
-	       -> id-nat N2 N2' -> lt-nat N1 N2 -> lt-nat N1' N2' -> type.
+               -> id-nat N2 N2' -> lt-nat N1 N2 -> lt-nat N1' N2' -> type.
 %mode lt-nat-resp +D1 +D2 +D3 -D.
 
 - : lt-nat-resp id-nat/refl id-nat/refl D D.
@@ -236,7 +239,7 @@ lt-nat-resp : id-nat N1 N1'
 
 
 neq-nat-resp : id-nat N1 N1' 
-		-> id-nat N2 N2' -> neq-nat N1 N2 -> neq-nat N1' N2' -> type.
+                -> id-nat N2 N2' -> neq-nat N1 N2 -> neq-nat N1' N2' -> type.
 %mode neq-nat-resp +X1 +X2 +X3 -X4.
 
 - : neq-nat-resp id-nat/refl id-nat/refl D D.
@@ -306,7 +309,7 @@ dichotomy-nat/gt : lt-nat N1 N2 -> dichotomy-nat N2 N1.
 dichotomy-nat/id : id-nat N1 N2 -> dichotomy-nat N1 N2.
 
 can-dichotomy-nat/s : dichotomy-nat N1 N2 
-		       -> dichotomy-nat (s N1) (s N2) -> type.
+                       -> dichotomy-nat (s N1) (s N2) -> type.
 %mode can-dichotomy-nat/s +D1 -D2.
 
 - : can-dichotomy-nat/s (dichotomy-nat/gt D) (dichotomy-nat/gt (lt-nat/s D)).
@@ -329,12 +332,3 @@ can-dichotomy-nat : {N1}{N2} dichotomy-nat N1 N2 -> type.
 
 %worlds () (can-dichotomy-nat _ _ _).
 %total T (can-dichotomy-nat T _ _).
-
-%{! \{\{case study\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Natural_numbers_with_inequality).
-!}%
