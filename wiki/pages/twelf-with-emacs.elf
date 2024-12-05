@@ -18,23 +18,31 @@ these two lines (just replace `somewhere` with wherever you put your Twelf):
 
 Add the following to your Emacs configuration file, which should be the file .emacs in your home directory. 
 
-&lt;code&gt;(setq twelf-root "/somewhere/twelf/")
-(load (concat twelf-root "emacs/twelf-init.el"))&lt;/code&gt;
+```
+(setq twelf-root "/somewhere/twelf/")
+(load (concat twelf-root "emacs/twelf-init.el"))
+```
 
 For instance, if the directory where you unpacked the tarball is ``/usr/local/twelf``, then you'll want those two lines to be:
 
-&lt;code&gt;(setq twelf-root "/usr/local/twelf/")
-(load (concat twelf-root "emacs/twelf-init.el"))&lt;/code&gt;
+```
+(setq twelf-root "/usr/local/twelf/")
+(load (concat twelf-root "emacs/twelf-init.el"))
+```
 
 If your Twelf directory is ``/home/foo/stuff/logic/twelf``, then you'll want those lines to be:
 
-&lt;code&gt;(setq twelf-root "/home/foo/stuff/logic/twelf/")
-(load (concat twelf-root "emacs/twelf-init.el"))&lt;/code&gt;
+```
+(setq twelf-root "/home/foo/stuff/logic/twelf/")
+(load (concat twelf-root "emacs/twelf-init.el"))
+```
 
 If you used the default Windows installer, you'll want those to lines to be 
 
-&lt;code&gt;(setq twelf-root "C:\\Program Files\\Twelf\\")
-(load (concat twelf-root "emacs\\twelf-init.el"))&lt;/code&gt;
+```
+(setq twelf-root "C:\\Program Files\\Twelf\\")
+(load (concat twelf-root "emacs\\twelf-init.el"))
+```
 
 Exit Emacs and restart it.
 
@@ -47,7 +55,9 @@ Exit Emacs and restart it.
 
 Start Emacs in some directory (for the purposes of this description, we'll assume it's ``~/tmp/twelf``. Create the **configuration file** ``sources.cfg`` with the following text in it:
 
-&lt;code&gt;sometwelf.elf&lt;/code&gt;
+```
+sometwelf.elf
+```
 
 Save the file (by using CTRL-x CTRL-s in Emacs).
 
@@ -83,19 +93,25 @@ Only reloading the configuration clears the state of Twelf. Even reloading will 
 
 Assuming you still have ``sometwelf.elf`` open in emacs, hit CTRL-c CTRL-c. If ``sometwelf.elf`` has unsaved changes, you will be asked:
 
-&lt;code&gt;File not in current configuration. Save? (yes or no)&lt;/code&gt;
+```
+File not in current configuration. Save? (yes or no)
+```
 
 Type yes.
 
 You will then be asked:
 
-&lt;code&gt;Visit config file: (default sources.cfg) ~/tmp/twelf/&lt;/code&gt;
+```
+Visit config file: (default sources.cfg) ~/tmp/twelf/
+```
 
 This is asking for the location of the sources.cfg file you saved when following the instructions above; the default option is the correct one. Just hit ENTER.
 
 You will then be asked:
 
-&lt;code&gt;Twelf server: (default twelf-server) /something/bin/&lt;/code&gt;
+```
+Twelf server: (default twelf-server) /something/bin/
+```
 This is asking which Twelf binary you want to run; the default should already be correct, just hit ENTER.
 
 This will process your configuration file, which in turn says to process ``sometwelf.elf``.
@@ -119,14 +135,7 @@ For more info on the emacs mode, see \{\{guide|chapter=13|section=74|title=Emacs
 
 ## Hacks
 
-If you use multiple frames with Emacs, ``twelf-mode`` annoyingly pops up the Twelf server buffer in the current frame, even if it is already shown in another frame. To avoid this, set ``display-buffer-reuse-frames`` to ``t``. Now, you will still have the problem that although the buffer is shown, it does not scroll to the bottom; to fix this you need to edit ``twelf.el`` and change &lt;code&gt;(get-buffer-window twelf-server-buffer)&lt;/code&gt; to &lt;code&gt;(get-buffer-window twelf-server-buffer t)&lt;/code&gt;.
+If you use multiple frames with Emacs, ``twelf-mode`` annoyingly pops up the Twelf server buffer in the current frame, even if it is already shown in another frame. To avoid this, set ``display-buffer-reuse-frames`` to ``t``. Now, you will still have the problem that although the buffer is shown, it does not scroll to the bottom; to fix this you need to edit ``twelf.el`` and change ``(get-buffer-window twelf-server-buffer)`` to ``(get-buffer-window twelf-server-buffer t)``.
 
 ## See also
-* \{\{guide|chapter=13|section=74|title=Emacs Interface\}\} !}%
-
-%{!
------
-This page was copied from the MediaWiki version of the Twelf Wiki.
-If anything looks wrong, you can refer to the
-[wayback machine's version here](https://web.archive.org/web/20240303030303/http://twelf.org/wiki/Twelf_with_Emacs).
-!}%
+<Guide chapter="13" section="74">Emacs Interface</Guide> !}%
