@@ -66,11 +66,6 @@ Feel free to adopt a topic and leave the topic here if you'd like to work on it 
 | Rob?
 | _Could use improvement_
 |-
-| **Rewrite intro**
-| The intro on the [main page](/wiki/main-page/) sucks, and includes a link begging for editing.
-| ?
-| _Needed_
-|-
 | **Twelf.el**
 | consolidate emacs hacks for new twelf.el?
 * Karl has some, I know. I have a few too. &nbsp;&mdash;&nbsp;[Tom 7](/wiki/user-tom7/) 18:02, 5 October 2006 (EDT)
@@ -185,7 +180,7 @@ I've drafted the article, but I invite people to point out points that require c
 | **Done for now**
 |-
 | **Learning Twelf**
-| A prominent page that leads prospective users to an appropriate tutorial, should they like to learn about or learn Twelf. (appears in the lower right corner of the [Main Page](/wiki/main-page/)
+| A prominent page that leads prospective users to an appropriate tutorial, should they like to learn about or learn Twelf. (appears in the lower right corner of the [Main Page](/)
 | Rob
 | **Done (the portal part)**
 |- 
