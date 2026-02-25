@@ -1028,7 +1028,7 @@ read a file name from the minibuffer."
 (defun looked-at-nth-int (n)
   (let ((str (looked-at-nth n)))
     (if (null str) nil
-      (string-to-int str))))
+      (string-to-number str))))
 
 (defun twelf-error-parser (pt)
   "Standard parser for Twelf errors.
@@ -1610,9 +1610,9 @@ server buffer."
            (setq default-directory expanded-dir)
            (pwd)))
 	;;((string-match "^set\\s +chatter\\s +\\([0-9]\\)+" input)
-	;;  (setq twelf-chatter (string-to-int (looked-at-string input 1))))
+	;;  (setq twelf-chatter (string-to-number (looked-at-string input 1))))
 	;; ((string-match "^set\\s +Trace\\.detail\\s +\\([0-9]\\)+" input)
-	;; (setq twelf-trace-detail (string-to-int (looked-at-string input 1))))
+	;; (setq twelf-trace-detail (string-to-number (looked-at-string input 1))))
 	((string-match "^set\\s-+\\(\\S-+\\)\\s-+\\(\\w+\\)" input)
 	 (if (assoc (looked-at-string input 1) *twelf-track-parms*)
 	     (set (cdr (assoc (looked-at-string input 1) *twelf-track-parms*))
@@ -2026,7 +2026,7 @@ Starts a Twelf servers if necessary."
   (let ((input (read-string "Limit (* or nat): ")))
     (if (equal input "*")
 	input
-      (let ((n (string-to-int input)))
+      (let ((n (string-to-number input)))
 	(if (and (integerp n) (> n 0))
 	    (int-to-string n)
 	  (error "Number must be non-negative integer"))))))

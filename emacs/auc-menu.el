@@ -101,7 +101,7 @@ DOC is the documentation string, and MENU is a Lucid style menu."
 
 ;;; Emacs 18
 
-((< (string-to-int emacs-version) 19)
+((< (string-to-number emacs-version) 19)
 
 (defun easy-menu-do-define (symbol maps doc menu)
   (fset symbol (symbol-function 'ignore)))
@@ -244,7 +244,7 @@ Call this from 'activate-menubar-hook' to implement dynamic menus."
 
 (defun easy-menu-add (menu &optional map)
   (and (string-match "^19\\.\\([0-9]+\\)" emacs-version)
-       (< 22 (string-to-int (substring emacs-version
+       (< 22 (string-to-number (substring emacs-version
 				       (match-beginning 1) (match-end 1))))
        (x-popup-menu nil menu)))
 
