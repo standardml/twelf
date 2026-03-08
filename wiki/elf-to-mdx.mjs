@@ -67,9 +67,11 @@ async function hashToHex(content) {
  *
  * @param {string} elfFilename
  *   The Elf file to process
+ * @param {string[]} prelude
+ *   Any Elf prelude that should get appended to the Twelf context
  * @returns {Promise<string>}
  */
-export async function elfToMdx(elfFilename) {
+export async function elfToMdx(elfFilename, prelude = []) {
   const elfFile = readFileSync(elfFilename, "utf-8");
 
   /* Parse out header */
@@ -87,7 +89,7 @@ export async function elfToMdx(elfFilename) {
   /** @type {string[]} */
   let body = [];
   /** @type {string[]} */
-  let twelfcontext = [];
+  let twelfcontext = prelude.slice();
 
   /** @typedef {{ type: "twelf", subtype: null | "hidden" | "checked", accum: string[] }} TwelfState */
   /** @typedef {{ type: "markdown-block", subtype: "math" | "twelf" | "checkedtwelf", accum: string[] }} MarkdownBlockState */
@@ -104,7 +106,11 @@ export async function elfToMdx(elfFilename) {
           (state.subtype === "twelf" || state.subtype === "checkedtwelf"))
       )
     ) {
-      throw new TypeError(`state ${state.type} - ${state.type !== 'markdown' ? state.subtype : 'none'}`);
+      throw new TypeError(
+        `state ${state.type} - ${
+          state.type !== "markdown" ? state.subtype : "none"
+        }`
+      );
     }
     mutablyTrimEmptyLines(state.accum);
 
