@@ -27,7 +27,7 @@ your work wherever you think it fits best.
 * [Substructural Languages](http://www.cs.cornell.edu/people/fluet/twelf/index.html) - Twelf code from some of Matthew Fluet's papers on substructural languages.
 * [Self-Adjusting Computation](http://www.cs.cmu.edu/~jdonham/aml-proof/) - [Jake Donham's](/wiki/user-jaked/) formalization of a consistency proof of non-deterministic semantics.
 * [Elaborating Intersection and Union Types](https://arxiv.org/abs/1206.5386) — Jana Dunfield's proofs about an elaboration semantics.
-
+* [STELF](https://github.com/wizard7377/stelf), [Shibboleth](https://github.com/wizard7377/shibboleth), and [OCaml Basis](https://github.com/wizard7377/basis) - Asher Frost's project centered around porting Twelf to OCaml. Shibboleth was the tool created to roughly transform the source code to OCaml, and also attempts to be a general purpose converter of SML to OCaml. The OCaml Basis library is a port of the [SML Basis library](https://smlfamily.github.io/Basis/) to OCaml to accompany both of these projects.
 ## Related projects
 
 * [The POPLmark Challenge](https://www.seas.upenn.edu/~plclub/poplmark/cmu.html) - A project aimed at increasing the overall use of theorem provers like Twelf in programming language design. A solution to the full challenge using Twelf submitted by a team at CMU [http://fling-l.seas.upenn.edu/~plclub/cgi-bin/poplmark/index.php?title=Submission_from_Carnegie_Mellon].
@@ -35,3 +35,4 @@ your work wherever you think it fits best.
 * [Elf](https://web.archive.org/web/20071012232336/http://www.cs.cmu.edu/~fp/elf.html) - The predecessor to Twelf.
 
 !}%
+
