@@ -7,7 +7,7 @@
 **Twelf** is a piece of computer software, and it is also a computer language understood by the Twelf software. This is a common ambiguity in computer systems - you can "install Java on your computer" (Java, a piece of computer software), or you can "write programs in Java for work" (Java, the computer language that is understood and interpreted by the software).
 
 <center>
-![A Twelf file open in Emacs, showing Twelf's output and the "Server OK" message that means Twelf loaded the file with no errors.](/src/assets/serverok.png)
+![A Twelf file open in Emacs, showing Twelf's output and the "Server OK" message that means Twelf loaded the file with no errors.](../../../assets/serverok.png)
 
 _Using Twelf with the Emacs text editor. The red, blue, and black text at the top is Twelf code, and the black text at the bottom is the output from the Twelf program reading the code._
 </center>
