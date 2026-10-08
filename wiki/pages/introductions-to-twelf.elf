@@ -23,12 +23,12 @@
   This paper provides a more formal introduction to the modern way of thinking
   about LF and Twelf than this site does.
 - Alberto Momigliano's [A Practical Approach to Co-induction in
-  Twelf](http://www.cs.nott.ac.uk/types06/slides/am.pdf) describes a technique
+  Twelf](https://momigliano.di.unimi.it/talks/pact.pdf) describes a technique
   for encoding Twelf-unfriendly co-inductive proofs as Twelf-friendly induction
   proofs (slides from a talk at TYPES 2006).
 - John Altidor's
-  [tutorial](http://jgaltidor.github.io/typetheory_paper.pdf) and
-  [slides](http://jgaltidor.github.io/twelf_slides.pdf) are accessible to folks
+  [tutorial](https://jgaltidor.github.io/typetheory_paper/typetheory_paper.pdf) and
+  [slides](https://jgaltidor.github.io/twelf_slides/twelf_slides.pdf) are accessible to folks
   without a strong background in programming language foundations.
 
 ### Experience reports and commentary
